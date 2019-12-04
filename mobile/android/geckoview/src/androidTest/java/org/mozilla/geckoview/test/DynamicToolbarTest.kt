@@ -243,4 +243,45 @@ class DynamicToolbarTest : BaseSessionTest() {
         assertThat("'resize' event on window should be fired when the dynamc toolbar is completely hidden",
                    promise.value as Boolean, equalTo(true))
     }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun windowInnerHeight() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        // We intentionally use FIXED_BOTTOM instead of FIXED_VH in this test since
+        // FIXED_VH has `minimum-scale=0.5` thus we can't properly test window.innerHeight
+        // with FXIED_VH for now due to bug 1598487.
+        mainSession.loadTestPath(BaseSessionTest.FIXED_BOTTOM)
+        mainSession.waitForPageStop()
+
+        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
+
+        for (i in 1..dynamicToolbarMaxHeight - 1) {
+            val promise = sessionRule.session.evaluatePromiseJS("""
+               new Promise(resolve => {
+                 window.visualViewport.addEventListener('resize', resolve(window.innerHeight));
+               });
+            """.trimIndent())
+
+            // Simulate the dynamic toolbar is going to be hidden.
+            sessionRule.display?.run { setVerticalClipping(-i) }
+            assertThat("window.innerHeight should not be changed in response to the dynamc toolbar transition",
+                       promise.value as Double, closeTo(SCREEN_HEIGHT / 2 / pixelRatio, .01))
+        }
+
+        val promise = sessionRule.session.evaluatePromiseJS("""
+            new Promise(resolve => {
+                window.addEventListener('resize', () => { resolve(window.innerHeight); }, { once: true });
+            });
+        """.trimIndent())
+
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+        assertThat("window.innerHeight should be changed when the dynamc toolbar is completely hidden",
+                   promise.value as Double, closeTo(SCREEN_HEIGHT / pixelRatio, .01))
+    }
 }
