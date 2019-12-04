@@ -57,6 +57,8 @@ urlbar-default-notification-anchor =
     .tooltiptext = Open message panel
 urlbar-geolocation-notification-anchor =
     .tooltiptext = Open location request panel
+urlbar-xr-notification-anchor =
+    .tooltiptext = Open virtual reality permission panel
 urlbar-storage-access-anchor =
     .tooltiptext = Open browsing activity permission panel
 urlbar-translate-notification-anchor =
@@ -84,6 +86,8 @@ urlbar-tip-help-icon =
 
 urlbar-geolocation-blocked =
     .tooltiptext = You have blocked location information for this website.
+urlbar-xr-blocked =
+    .tooltiptext = You have blocked virtual reality device access for this website.
 urlbar-web-notifications-blocked =
     .tooltiptext = You have blocked notifications for this website.
 urlbar-camera-blocked =

@@ -41,6 +41,7 @@ window.onmessage = function(event) {
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
   <button id="geo" onclick="requestGeo()">Geolocation</button>
+  <button id="xr" onclick="navigator.getVRDisplays()">XR</button>
   <button id="desktop-notification" onclick="Notification.requestPermission()">Notifications</button>
   <button id="push" onclick="requestPush()">Push Notifications</button>
   <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>
