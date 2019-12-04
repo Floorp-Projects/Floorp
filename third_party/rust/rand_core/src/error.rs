@@ -9,169 +9,182 @@
 //! Error types
 
 use core::fmt;
-
-#[cfg(feature="std")]
-use std::error::Error as stdError;
-#[cfg(feature="std")]
-use std::io;
-
-/// Error kind which can be matched over.
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
-pub enum ErrorKind {
-    /// Feature is not available; not recoverable.
-    /// 
-    /// This is the most permanent failure type and implies the error cannot be
-    /// resolved simply by retrying (e.g. the feature may not exist in this
-    /// build of the application or on the current platform).
-    Unavailable,
-    /// General failure; there may be a chance of recovery on retry.
-    /// 
-    /// This is the catch-all kind for errors from known and unknown sources
-    /// which do not have a more specific kind / handling method.
-    /// 
-    /// It is suggested to retry a couple of times or retry later when
-    /// handling; some error sources may be able to resolve themselves,
-    /// although this is not likely.
-    Unexpected,
-    /// A transient failure which likely can be resolved or worked around.
-    /// 
-    /// This error kind exists for a few specific cases where it is known that
-    /// the error likely can be resolved internally, but is reported anyway.
-    Transient,
-    /// Not ready yet: recommended to try again a little later.
-    /// 
-    /// This error kind implies the generator needs more time or needs some
-    /// other part of the application to do something else first before it is
-    /// ready for use; for example this may be used by external generators
-    /// which require time for initialization.
-    NotReady,
-    #[doc(hidden)]
-    __Nonexhaustive,
-}
-
-impl ErrorKind {
-    /// True if this kind of error may resolve itself on retry.
-    /// 
-    /// See also `should_wait()`.
-    pub fn should_retry(self) -> bool {
-        self != ErrorKind::Unavailable
-    }
-    
-    /// True if we should retry but wait before retrying
-    /// 
-    /// This implies `should_retry()` is true.
-    pub fn should_wait(self) -> bool {
-        self == ErrorKind::NotReady
-    }
-    
-    /// A description of this error kind
-    pub fn description(self) -> &'static str {
-        match self {
-            ErrorKind::Unavailable => "permanently unavailable",
-            ErrorKind::Unexpected => "unexpected failure",
-            ErrorKind::Transient => "transient failure",
-            ErrorKind::NotReady => "not ready yet",
-            ErrorKind::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
+use core::num::NonZeroU32;
 
 
 /// Error type of random number generators
-/// 
-/// This is a relatively simple error type, designed for compatibility with and
-/// without the Rust `std` library. It embeds a "kind" code, a message (static
-/// string only), and an optional chained cause (`std` only). The `kind` and
-/// `msg` fields can be accessed directly; cause can be accessed via
-/// `std::error::Error::cause` or `Error::take_cause`. Construction can only be
-/// done via `Error::new` or `Error::with_cause`.
-#[derive(Debug)]
+///
+/// In order to be compatible with `std` and `no_std`, this type has two
+/// possible implementations: with `std` a boxed `Error` trait object is stored,
+/// while with `no_std` we merely store an error code.
 pub struct Error {
-    /// The error kind
-    pub kind: ErrorKind,
-    /// The error message
-    pub msg: &'static str,
     #[cfg(feature="std")]
-    cause: Option<Box<stdError + Send + Sync>>,
+    inner: Box<dyn std::error::Error + Send + Sync + 'static>,
+    #[cfg(not(feature="std"))]
+    code: NonZeroU32,
 }
 
 impl Error {
-    /// Create a new instance, with specified kind and a message.
-    pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
+    /// Construct from any type supporting `std::error::Error`
+    /// 
+    /// Available only when configured with `std`.
+    /// 
+    /// See also `From<NonZeroU32>`, which is available with and without `std`.
+    #[cfg(feature="std")]
+    #[inline]
+    pub fn new<E>(err: E) -> Self
+    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>
+    {
+        Error { inner: err.into() }
+    }
+    
+    /// Reference the inner error (`std` only)
+    /// 
+    /// When configured with `std`, this is a trivial operation and never
+    /// panics. Without `std`, this method is simply unavailable.
+    #[cfg(feature="std")]
+    #[inline]
+    pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
+        &*self.inner
+    }
+    
+    /// Unwrap the inner error (`std` only)
+    /// 
+    /// When configured with `std`, this is a trivial operation and never
+    /// panics. Without `std`, this method is simply unavailable.
+    #[cfg(feature="std")]
+    #[inline]
+    pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
+        self.inner
+    }
+    
+    /// Codes below this point represent OS Errors (i.e. positive i32 values).
+    /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
+    /// reserved for use by the `rand` and `getrandom` crates.
+    pub const INTERNAL_START: u32 = 1 << 31;
+
+    /// Codes at or above this point can be used by users to define their own
+    /// custom errors.
+    pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
+
+    /// Extract the raw OS error code (if this error came from the OS)
+    ///
+    /// This method is identical to `std::io::Error::raw_os_error()`, except
+    /// that it works in `no_std` contexts. If this method returns `None`, the
+    /// error value can still be formatted via the `Diplay` implementation.
+    #[inline]
+    pub fn raw_os_error(&self) -> Option<i32> {
         #[cfg(feature="std")] {
-            Error { kind, msg, cause: None }
+            if let Some(e) = self.inner.downcast_ref::<std::io::Error>() {
+                return e.raw_os_error();
+            }
+        }
+        match self.code() {
+            Some(code) if u32::from(code) < Self::INTERNAL_START =>
+                Some(u32::from(code) as i32),
+            _ => None,
+        }
+    }
+
+    /// Retrieve the error code, if any.
+    /// 
+    /// If this `Error` was constructed via `From<NonZeroU32>`, then this method
+    /// will return this `NonZeroU32` code (for `no_std` this is always the
+    /// case). Otherwise, this method will return `None`.
+    #[inline]
+    pub fn code(&self) -> Option<NonZeroU32> {
+        #[cfg(feature="std")] {
+            self.inner.downcast_ref::<ErrorCode>().map(|c| c.0)
         }
         #[cfg(not(feature="std"))] {
-            Error { kind, msg }
+            Some(self.code)
         }
     }
-    
-    /// Create a new instance, with specified kind, message, and a
-    /// chained cause.
-    /// 
-    /// Note: `stdError` is an alias for `std::error::Error`.
-    /// 
-    /// If not targetting `std` (i.e. `no_std`), this function is replaced by
-    /// another with the same prototype, except that there are no bounds on the
-    /// type `E` (because both `Box` and `stdError` are unavailable), and the
-    /// `cause` is ignored.
-    #[cfg(feature="std")]
-    pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
-        where E: Into<Box<stdError + Send + Sync>>
-    {
-        Error { kind, msg, cause: Some(cause.into()) }
-    }
-    
-    /// Create a new instance, with specified kind, message, and a
-    /// chained cause.
-    /// 
-    /// In `no_std` mode the *cause* is ignored.
-    #[cfg(not(feature="std"))]
-    pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
-        Error { kind, msg }
-    }
-    
-    /// Take the cause, if any. This allows the embedded cause to be extracted.
-    /// This uses `Option::take`, leaving `self` with no cause.
-    #[cfg(feature="std")]
-    pub fn take_cause(&mut self) -> Option<Box<stdError + Send + Sync>> {
-        self.cause.take()
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        #[cfg(feature="std")] {
+            write!(f, "Error {{ inner: {:?} }}", self.inner)
+        }
+        #[cfg(all(feature="getrandom", not(feature="std")))] {
+            getrandom::Error::from(self.code).fmt(f)
+        }
+        #[cfg(not(feature="getrandom"))] {
+            write!(f, "Error {{ code: {} }}", self.code)
+        }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         #[cfg(feature="std")] {
-            if let Some(ref cause) = self.cause {
-                return write!(f, "{} ({}); cause: {}",
-                        self.msg, self.kind.description(), cause);
-            }
+            write!(f, "{}", self.inner)
         }
-        write!(f, "{} ({})", self.msg, self.kind.description())
+        #[cfg(all(feature="getrandom", not(feature="std")))] {
+            getrandom::Error::from(self.code).fmt(f)
+        }
+        #[cfg(not(feature="getrandom"))] {
+            write!(f, "error code {}", self.code)
+        }
+    }
+}
+
+impl From<NonZeroU32> for Error {
+    #[inline]
+    fn from(code: NonZeroU32) -> Self {
+        #[cfg(feature="std")] {
+            Error { inner: Box::new(ErrorCode(code)) }
+        }
+        #[cfg(not(feature="std"))] {
+            Error { code }
+        }
+    }
+}
+
+#[cfg(feature="getrandom")]
+impl From<getrandom::Error> for Error {
+    #[inline]
+    fn from(error: getrandom::Error) -> Self {
+        #[cfg(feature="std")] {
+            Error { inner: Box::new(error) }
+        }
+        #[cfg(not(feature="std"))] {
+            Error { code: error.code() }
+        }
     }
 }
 
 #[cfg(feature="std")]
-impl stdError for Error {
-    fn description(&self) -> &str {
-        self.msg
-    }
-
-    fn cause(&self) -> Option<&stdError> {
-        self.cause.as_ref().map(|e| e.as_ref() as &stdError)
+impl std::error::Error for Error {
+    #[inline]
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.inner.source()
     }
 }
 
 #[cfg(feature="std")]
-impl From<Error> for io::Error {
+impl From<Error> for std::io::Error {
+    #[inline]
     fn from(error: Error) -> Self {
-        use std::io::ErrorKind::*;
-        match error.kind {
-            ErrorKind::Unavailable => io::Error::new(NotFound, error),
-            ErrorKind::Unexpected |
-            ErrorKind::Transient => io::Error::new(Other, error),
-            ErrorKind::NotReady => io::Error::new(WouldBlock, error),
-            ErrorKind::__Nonexhaustive => unreachable!(),
+        if let Some(code) = error.raw_os_error() {
+            std::io::Error::from_raw_os_error(code)
+        } else {
+            std::io::Error::new(std::io::ErrorKind::Other, error)
         }
     }
 }
+
+#[cfg(feature="std")]
+#[derive(Debug, Copy, Clone)]
+struct ErrorCode(NonZeroU32);
+
+#[cfg(feature="std")]
+impl fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error code {}", self.0)
+    }
+}
+
+#[cfg(feature="std")]
+impl std::error::Error for ErrorCode {}

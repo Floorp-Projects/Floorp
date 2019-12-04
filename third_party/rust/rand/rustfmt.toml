@@ -1,0 +1,30 @@
+# This rustfmt file is added for configuration, but in practice much of our
+# code is hand-formatted, frequently with more readable results.
+
+# Comments:
+normalize_comments = true
+wrap_comments = false
+format_doc_comments = true
+comment_width = 90      # small excess is okay but prefer 80
+
+# Arguments:
+use_small_heuristics = "max"
+fn_args_density = "compressed"
+fn_single_line = false
+overflow_delimited_expr = true
+where_single_line = true
+
+# enum_discrim_align_threshold = 20
+# struct_field_align_threshold = 20
+
+# Compatibility:
+edition = "2018"        # we require compatibility back to 1.32.0
+
+# Misc:
+blank_lines_upper_bound = 2
+reorder_impl_items = true
+# report_todo = "Unnumbered"
+# report_fixme = "Unnumbered"
+
+# Ignored files:
+ignore = []

@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cssparser-macros"
-version = "0.3.6"
+version = "0.6.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "Procedural macros for cssparser"
 documentation = "https://docs.rs/cssparser-macros/"
@@ -22,15 +23,6 @@ repository = "https://github.com/servo/rust-cssparser"
 [lib]
 path = "lib.rs"
 proc-macro = true
-[dependencies.phf_codegen]
-version = "0.7"
-
-[dependencies.proc-macro2]
-version = "1"
-
-[dependencies.procedural-masquerade]
-version = "0.1"
-
 [dependencies.quote]
 version = "1"
 

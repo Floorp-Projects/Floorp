@@ -1,16 +1,15 @@
 SipHash implementation for Rust
 ===============================
 
-SipHash was recently removed from rust-core.
+This crates implements SipHash-2-4 and SipHash-1-3 in Rust.
 
-This crate brings `SipHasher`, `SipHasher13` and `SipHash24` back.
 It is based on the original implementation from rust-core and exposes the
 same API.
 
-In addition, it can return 128-bit tags.
+It also implements SipHash variants returning 128-bit tags.
 
 The `sip` module implements the standard 64-bit mode, whereas the `sip128`
-module implements the experimental 128-bit mode.
+module implements the 128-bit mode.
 
 Usage
 -----
@@ -18,7 +17,7 @@ In `Cargo.toml`:
 
 ```toml
 [dependencies]
-siphasher = "~0.1"
+siphasher = "0.3"
 ```
 
 64-bit mode:

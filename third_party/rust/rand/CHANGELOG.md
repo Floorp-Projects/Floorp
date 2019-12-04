@@ -8,12 +8,70 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.7.2] - 2019-09-16
+### Fixes
+- Fix dependency on `rand_core` 0.5.1 (#890)
+
+### Additions
+- Unit tests for value stability of distributions added (#888)
+
+## [0.7.1] - 2019-09-13
+### Fixes
+- Fix `no_std` behaviour, appropriately enable c2-chacha's `std` feature (#844)
+- `alloc` feature in `no_std` is available since Rust 1.36 (#856)
+- Fix or squelch issues from Clippy lints (#840)
+
+### Additions
+- Add a `no_std` target to CI to continously evaluate `no_std` status (#844)
+- `WeightedIndex`: allow adjusting a sub-set of weights (#866)
+
+## [0.7.0] - 2019-06-28
+
+### Fixes
+- Fix incorrect pointer usages revealed by Miri testing (#780, #781)
+- Fix (tiny!) bias in `Uniform` for 8- and 16-bit ints (#809)
+
+### Crate
+- Bumped MSRV (min supported Rust version) to 1.32.0
+- Updated to Rust Edition 2018  (#823, #824)
+- Removed dependence on `rand_xorshift`, `rand_isaac`, `rand_jitter` crates (#759, #765)
+- Remove dependency on `winapi` (#724)
+- Removed all `build.rs` files (#824)
+- Removed code already deprecated in version 0.6 (#757)
+- Removed the serde1 feature (It's still available for backwards compatibility, but it does not do anything. #830)
+- Many documentation changes
+
+### rand_core
+- Updated to `rand_core` 0.5.0
+- `Error` type redesigned with new API (#800)
+- Move `from_entropy` method to `SeedableRng` and remove `FromEntropy` (#800)
+- `SeedableRng::from_rng` is now expected to be value-stable (#815)
+
+### Standard RNGs
+- OS interface moved from `rand_os` to new `getrandom` crate (#765, [getrandom](https://github.com/rust-random/getrandom))
+- Use ChaCha for `StdRng` and `ThreadRng` (#792)
+- Feature-gate `SmallRng` (#792)
+- `ThreadRng` now supports `Copy` (#758)
+- Deprecated `EntropyRng` (#765)
+- Enable fork protection of ReseedingRng without `std` (#724)
+
+### Distributions
+- Many distributions have been moved to `rand_distr` (#761)
+- `Bernoulli::new` constructor now returns a `Result` (#803)
+- `Distribution::sample_iter` adjusted for more flexibility (#758)
+- Added `distributions::weighted::alias_method::WeightedIndex` for `O(1)` sampling (#692)
+- Support sampling `NonZeroU*` types with the `Standard` distribution (#728)
+- Optimised `Binomial` distribution sampling (#735, #740, #752)
+- Optimised SIMD float sampling (#739)
+
+### Sequences
+- Make results portable across 32- and 64-bit by using `u32` samples for `usize` where possible (#809)
 
 ## [0.6.5] - 2019-01-28
 ### Crates
 - Update `rand_core` to 0.4 (#703)
 - Move `JitterRng` to its own crate (#685)
-- Add a warm-bindgen test crate (#696)
+- Add a wasm-bindgen test crate (#696)
 
 ### Platforms
 - Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng

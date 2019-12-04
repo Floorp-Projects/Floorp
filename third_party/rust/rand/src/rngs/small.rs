@@ -8,37 +8,42 @@
 
 //! A small fast RNG
 
-use {RngCore, SeedableRng, Error};
+use rand_core::{RngCore, SeedableRng, Error};
 
-#[cfg(all(all(rustc_1_26, not(target_os = "emscripten")), target_pointer_width = "64"))]
-type Rng = ::rand_pcg::Pcg64Mcg;
-#[cfg(not(all(all(rustc_1_26, not(target_os = "emscripten")), target_pointer_width = "64")))]
-type Rng = ::rand_pcg::Pcg32;
+#[cfg(all(not(target_os = "emscripten"), target_pointer_width = "64"))]
+type Rng = rand_pcg::Pcg64Mcg;
+#[cfg(not(all(not(target_os = "emscripten"), target_pointer_width = "64")))]
+type Rng = rand_pcg::Pcg32;
 
-/// An RNG recommended when small state, cheap initialization and good
-/// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
-/// efficient on the current platform, **without consideration for cryptography
-/// or security**. The size of its state is much smaller than for [`StdRng`].
+/// A small-state, fast non-crypto PRNG
 ///
-/// Reproducibility of output from this generator is however not required, thus
-/// future library versions may use a different internal generator with
-/// different output. Further, this generator may not be portable and can
-/// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG.
-/// Refer to [The Book](https://rust-random.github.io/book/guide-rngs.html).
-/// 
+/// `SmallRng` may be a good choice when a PRNG with small state, cheap
+/// initialization, good statistical quality and good performance are required.
+/// It is **not** a good choice when security against prediction or
+/// reproducibility are important.
 ///
-/// The current algorithm is [`Pcg64Mcg`][rand_pcg::Pcg64Mcg] on 64-bit platforms with Rust version
-/// 1.26 and later, or [`Pcg32`][rand_pcg::Pcg32] otherwise. Both are found in
-/// the [rand_pcg] crate.
+/// This PRNG is **feature-gated**: to use, you must enable the crate feature
+/// `small_rng`.
+///
+/// The algorithm is deterministic but should not be considered reproducible
+/// due to dependence on platform and possible replacement in future
+/// library versions. For a reproducible generator, use a named PRNG from an
+/// external crate, e.g. [rand_pcg] or [rand_chacha].
+/// Refer also to [The Book](https://rust-random.github.io/book/guide-rngs.html).
+///
+/// The PRNG algorithm in `SmallRng` is chosen to be
+/// efficient on the current platform, without consideration for cryptography
+/// or security. The size of its state is much smaller than [`StdRng`].
+/// The current algorithm is [`Pcg64Mcg`](rand_pcg::Pcg64Mcg) on 64-bit
+/// platforms and [`Pcg32`](rand_pcg::Pcg32) on 32-bit platforms. Both are
+/// implemented by the [rand_pcg] crate.
 ///
 /// # Examples
 ///
-/// Initializing `SmallRng` with a random seed can be done using [`FromEntropy`]:
+/// Initializing `SmallRng` with a random seed can be done using [`SeedableRng::from_entropy`]:
 ///
 /// ```
-/// # use rand::Rng;
-/// use rand::FromEntropy;
+/// use rand::{Rng, SeedableRng};
 /// use rand::rngs::SmallRng;
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
@@ -66,9 +71,9 @@ type Rng = ::rand_pcg::Pcg32;
 ///     .collect();
 /// ```
 ///
-/// [`FromEntropy`]: crate::FromEntropy
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
+/// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 #[derive(Clone, Debug)]
 pub struct SmallRng(Rng);
@@ -84,10 +89,12 @@ impl RngCore for SmallRng {
         self.0.next_u64()
     }
 
+    #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest);
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
@@ -96,10 +103,12 @@ impl RngCore for SmallRng {
 impl SeedableRng for SmallRng {
     type Seed = <Rng as SeedableRng>::Seed;
 
+    #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
         SmallRng(Rng::from_seed(seed))
     }
 
+    #[inline(always)]
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
         Rng::from_rng(rng).map(SmallRng)
     }

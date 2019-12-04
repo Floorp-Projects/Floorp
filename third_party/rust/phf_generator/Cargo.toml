@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,14 +11,30 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "phf_generator"
-version = "0.7.24"
+version = "0.8.0"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 description = "PHF generation logic"
 license = "MIT"
 repository = "https://github.com/sfackler/rust-phf"
+
+[[bin]]
+name = "gen_hash_test"
+required-features = ["criterion"]
+
+[[bench]]
+name = "benches"
+harness = false
+[dependencies.criterion]
+version = "0.3"
+optional = true
+
 [dependencies.phf_shared]
-version = "0.7.24"
+version = "0.8.0"
 
 [dependencies.rand]
-version = "0.6"
+version = "0.7"
+features = ["small_rng"]
+[dev-dependencies.criterion]
+version = "0.3"

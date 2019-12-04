@@ -6,7 +6,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation.
 
@@ -30,7 +30,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.6"
+rand = "0.7"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
@@ -38,10 +38,22 @@ To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
 ## Versions
 
+Rand libs have inter-dependencies and make use of the
+[semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
+compatible across crate versions. (This is especially important for `RngCore`
+and `SeedableRng`.) A few crate releases are thus compatibility shims,
+depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
+`0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and
+`rand_core_0_3_0::SeedableRng` are distinct, incompatible traits, which can
+cause build errors. Usually, running `cargo update` is enough to fix any issues.
+
 The Rand lib is not yet stable, however we are careful to limit breaking changes
 and warn via deprecation wherever possible. Patch versions never introduce
 breaking changes. The following minor versions are supported:
 
+-   Version 0.7 was released in June 2019, moving most non-uniform distributions
+    to an external crate, moving `from_entropy` to `SeedableRng`, and many small
+    changes and fixes.
 -   Version 0.6 was released in November 2018, redesigning the `seq` module,
     moving most PRNGs to external crates, and many small changes.
 -   Version 0.5 was released in May 2018, as a major reorganisation
@@ -57,8 +69,9 @@ reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Rust version requirements
 
-Since version 0.5, Rand requires **Rustc version 1.22 or greater**.
-Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
+Since version 0.7, Rand requires **Rustc version 1.32 or greater**.
+Rand 0.5 requires Rustc 1.22 or greater while versions
+0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.
 
@@ -66,52 +79,37 @@ Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
-To avoid bumping the required version unnecessarily, we use a `build.rs` script
-to auto-detect the compiler version and enable certain features or change code
-paths automatically. Since this makes it easy to unintentionally make use of
-features requiring a more recent Rust version, we recommend testing with a
-pinned version of Rustc if you require compatibility with a specific version.
-
 ## Crate Features
 
-Rand is built with the `std` and `rand_os` features enabled by default:
+Rand is built with these features enabled by default:
 
--   `std` enables functionality dependent on the `std` lib and implies `alloc`
-    and `rand_os`
--   `rand_os` enables the `rand_os` crate, `rngs::OsRng` and enables its usage;
-    the continued existance of this feature is not guaranteed so users are
-    encouraged to specify `std` instead
+-   `std` enables functionality dependent on the `std` lib
+-   `alloc` (implied by `std`) enables functionality requiring an allocator (when using this feature in `no_std`, Rand requires Rustc version 1.36 or greater)
+-   `getrandom` (implied by `std`) is an optional dependency providing the code
+    behind `rngs::OsRng`
 
-The following optional features are available:
+Optionally, the following dependencies can be enabled:
 
-- `alloc` can be used instead of `std` to provide `Vec` and `Box`.
-- `log` enables some logging via the `log` crate.
-- `nightly` enables all unstable features (`simd_support`).
-- `serde1` enables serialization for some types, via Serde version 1.
-- `simd_support` enables uniform sampling of SIMD types (integers and floats).
-- `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
-  combined with `cargo-web`.
-- `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via
-  [`wasm-bindgen`]
+-   `log` enables logging via the `log` crate
+-   `stdweb` implies `getrandom/stdweb` to enable
+    `getrandom` support on `wasm32-unknown-unknown`
+    (will be removed in rand 0.8; activate via `getrandom` crate instead)
+-   `wasm-bindgen` implies `getrandom/wasm-bindgen` to enable
+    `getrandom` support on `wasm32-unknown-unknown`
+    (will be removed in rand 0.8; activate via `getrandom` crate instead)
 
-[`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
+Additionally, these features configure Rand:
 
-`no_std` mode is activated by setting `default-features = false`; this removes
-functionality depending on `std`:
+-   `small_rng` enables inclusion of the `SmallRng` PRNG
+-   `nightly` enables all experimental features
+-   `simd_support` (experimental) enables sampling of SIMD values
+    (uniformly random SIMD integers and floats)
 
-- `thread_rng()`, and `random()` are not available, as they require thread-local
-  storage and an entropy source.
-- `OsRng` and `EntropyRng` are unavailable.
-- `JitterRng` code is still present, but a nanosecond timer must be provided via
-  `JitterRng::new_with_timer`
-- Since no external entropy is available, it is not possible to create
-  generators with fresh seeds using the `FromEntropy` trait (user must provide
-  a seed).
-- Several non-linear distributions distributions are unavailable since `exp`
-  and `log` functions are not provided in `core`.
-- Large parts of the `seq`-uence module are unavailable, unless the `alloc`
-  feature is used (several APIs and many implementations require `Vec`).
-
+Rand supports limited functionality in `no_std` mode (enabled via
+`default-features = false`). In this case, `OsRng` and `from_entropy` are
+unavailable (unless `getrandom` is enabled), large parts of `seq` are
+unavailable (unless `alloc` is enabled), and `thread_rng` and `random` are
+unavailable.
 
 # License
 

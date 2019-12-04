@@ -3,9 +3,7 @@ use core::borrow::Borrow;
 use core::iter::IntoIterator;
 use core::fmt;
 
-use PhfHash;
-use map;
-use Map;
+use crate::{map, Map, PhfHash};
 
 /// An immutable set constructed at compile time.
 ///

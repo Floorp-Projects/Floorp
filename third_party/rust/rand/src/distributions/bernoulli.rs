@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution.
 
-use Rng;
-use distributions::Distribution;
+use crate::Rng;
+use crate::distributions::Distribution;
 
 /// The Bernoulli distribution.
 ///
@@ -20,7 +20,7 @@ use distributions::Distribution;
 /// ```rust
 /// use rand::distributions::{Bernoulli, Distribution};
 ///
-/// let d = Bernoulli::new(0.3);
+/// let d = Bernoulli::new(0.3).unwrap();
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a Bernoulli distribution", v);
 /// ```
@@ -61,12 +61,15 @@ const ALWAYS_TRUE: u64 = ::core::u64::MAX;
 // in `no_std` mode.
 const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
 
+/// Error type returned from `Bernoulli::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BernoulliError {
+    /// `p < 0` or `p > 1`.
+    InvalidProbability,
+}
+
 impl Bernoulli {
     /// Construct a new `Bernoulli` with the given probability of success `p`.
-    ///
-    /// # Panics
-    ///
-    /// If `p < 0` or `p > 1`.
     ///
     /// # Precision
     ///
@@ -77,12 +80,12 @@ impl Bernoulli {
     /// a multiple of 2<sup>-64</sup>. (Note that not all multiples of
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
-    pub fn new(p: f64) -> Bernoulli {
+    pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
         if p < 0.0 || p >= 1.0 {
-            if p == 1.0 { return Bernoulli { p_int: ALWAYS_TRUE } }
-            panic!("Bernoulli::new not called with 0.0 <= p <= 1.0");
+            if p == 1.0 { return Ok(Bernoulli { p_int: ALWAYS_TRUE }) }
+            return Err(BernoulliError::InvalidProbability);
         }
-        Bernoulli { p_int: (p * SCALE) as u64 }
+        Ok(Bernoulli { p_int: (p * SCALE) as u64 })
     }
 
     /// Construct a new `Bernoulli` with the probability of success of
@@ -91,19 +94,16 @@ impl Bernoulli {
     ///
     /// If `numerator == denominator` then the returned `Bernoulli` will always
     /// return `true`. If `numerator == 0` it will always return `false`.
-    ///
-    /// # Panics
-    ///
-    /// If `denominator == 0` or `numerator > denominator`.
-    ///
     #[inline]
-    pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
-        assert!(numerator <= denominator);
-        if numerator == denominator {
-            return Bernoulli { p_int: ::core::u64::MAX }
+    pub fn from_ratio(numerator: u32, denominator: u32) -> Result<Bernoulli, BernoulliError> {
+        if numerator > denominator {
+            return Err(BernoulliError::InvalidProbability);
         }
-        let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
-        Bernoulli { p_int }
+        if numerator == denominator {
+            return Ok(Bernoulli { p_int: ALWAYS_TRUE })
+        }
+        let p_int = ((f64::from(numerator) / f64::from(denominator)) * SCALE) as u64;
+        Ok(Bernoulli { p_int })
     }
 }
 
@@ -119,15 +119,15 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use Rng;
-    use distributions::Distribution;
+    use crate::Rng;
+    use crate::distributions::Distribution;
     use super::Bernoulli;
 
     #[test]
     fn test_trivial() {
-        let mut r = ::test::rng(1);
-        let always_false = Bernoulli::new(0.0);
-        let always_true = Bernoulli::new(1.0);
+        let mut r = crate::test::rng(1);
+        let always_false = Bernoulli::new(0.0).unwrap();
+        let always_true = Bernoulli::new(1.0).unwrap();
         for _ in 0..5 {
             assert_eq!(r.sample::<bool, _>(&always_false), false);
             assert_eq!(r.sample::<bool, _>(&always_true), true);
@@ -137,17 +137,18 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_average() {
         const P: f64 = 0.3;
         const NUM: u32 = 3;
         const DENOM: u32 = 10;
-        let d1 = Bernoulli::new(P);
-        let d2 = Bernoulli::from_ratio(NUM, DENOM);
+        let d1 = Bernoulli::new(P).unwrap();
+        let d2 = Bernoulli::from_ratio(NUM, DENOM).unwrap();
         const N: u32 = 100_000;
 
         let mut sum1: u32 = 0;
         let mut sum2: u32 = 0;
-        let mut rng = ::test::rng(2);
+        let mut rng = crate::test::rng(2);
         for _ in 0..N {
             if d1.sample(&mut rng) {
                 sum1 += 1;
@@ -161,5 +162,16 @@ mod test {
 
         let avg2 = (sum2 as f64) / (N as f64);
         assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
+    }
+    
+    #[test]
+    fn value_stability() {
+        let mut rng = crate::test::rng(3);
+        let distr = Bernoulli::new(0.4532).unwrap();
+        let mut buf = [false; 10];
+        for x in &mut buf {
+            *x = rng.sample(&distr);
+        }
+        assert_eq!(buf, [true, false, false, true, false, false, true, true, true, true]);
     }
 }

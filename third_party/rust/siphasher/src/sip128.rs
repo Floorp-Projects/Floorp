@@ -24,6 +24,21 @@ pub struct Hash128 {
     pub h2: u64,
 }
 
+impl From<u128> for Hash128 {
+    fn from(v: u128) -> Self {
+        Hash128 {
+            h1: v as u64,
+            h2: (v >> 64) as u64,
+        }
+    }
+}
+
+impl Into<u128> for Hash128 {
+    fn into(self) -> u128 {
+        (self.h1 as u128) | ((self.h2 as u128) << 64)
+    }
+}
+
 /// An implementation of SipHash128 1-3.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SipHasher13 {
@@ -54,9 +69,9 @@ struct Hasher<S: Sip> {
     k0: u64,
     k1: u64,
     length: usize, // how many bytes we've processed
-    state: State, // hash State
-    tail: u64, // unprocessed bytes le
-    ntail: usize, // how many bytes in tail are valid
+    state: State,  // hash State
+    tail: u64,     // unprocessed bytes le
+    ntail: usize,  // how many bytes in tail are valid
     _marker: PhantomData<S>,
 }
 
@@ -73,35 +88,43 @@ struct State {
 }
 
 macro_rules! compress {
-    ($state:expr) => ({
+    ($state:expr) => {{
         compress!($state.v0, $state.v1, $state.v2, $state.v3)
-    });
-    ($v0:expr, $v1:expr, $v2:expr, $v3:expr) =>
-    ({
-        $v0 = $v0.wrapping_add($v1); $v1 = $v1.rotate_left(13); $v1 ^= $v0;
+    }};
+    ($v0:expr, $v1:expr, $v2:expr, $v3:expr) => {{
+        $v0 = $v0.wrapping_add($v1);
+        $v1 = $v1.rotate_left(13);
+        $v1 ^= $v0;
         $v0 = $v0.rotate_left(32);
-        $v2 = $v2.wrapping_add($v3); $v3 = $v3.rotate_left(16); $v3 ^= $v2;
-        $v0 = $v0.wrapping_add($v3); $v3 = $v3.rotate_left(21); $v3 ^= $v0;
-        $v2 = $v2.wrapping_add($v1); $v1 = $v1.rotate_left(17); $v1 ^= $v2;
+        $v2 = $v2.wrapping_add($v3);
+        $v3 = $v3.rotate_left(16);
+        $v3 ^= $v2;
+        $v0 = $v0.wrapping_add($v3);
+        $v3 = $v3.rotate_left(21);
+        $v3 ^= $v0;
+        $v2 = $v2.wrapping_add($v1);
+        $v1 = $v1.rotate_left(17);
+        $v1 ^= $v2;
         $v2 = $v2.rotate_left(32);
-    });
+    }};
 }
 
 /// Load an integer of the desired type from a byte stream, in LE order. Uses
 /// `copy_nonoverlapping` to let the compiler generate the most efficient way
 /// to load it from a possibly unaligned address.
 ///
-/// Unsafe because: unchecked indexing at i..i+size_of(int_ty)
+/// Unsafe because: unchecked indexing at `i..i+size_of(int_ty)`
 macro_rules! load_int_le {
-    ($buf:expr, $i:expr, $int_ty:ident) =>
-    ({
-       debug_assert!($i + mem::size_of::<$int_ty>() <= $buf.len());
-       let mut data = 0 as $int_ty;
-       ptr::copy_nonoverlapping($buf.get_unchecked($i),
-                                &mut data as *mut _ as *mut u8,
-                                mem::size_of::<$int_ty>());
-       data.to_le()
-    });
+    ($buf:expr, $i:expr, $int_ty:ident) => {{
+        debug_assert!($i + mem::size_of::<$int_ty>() <= $buf.len());
+        let mut data = 0 as $int_ty;
+        ptr::copy_nonoverlapping(
+            $buf.get_unchecked($i),
+            &mut data as *mut _ as *mut u8,
+            mem::size_of::<$int_ty>(),
+        );
+        data.to_le()
+    }};
 }
 
 /// Load an u64 using up to 7 bytes of a byte slice.
@@ -145,6 +168,11 @@ impl SipHasher {
     pub fn new_with_keys(key0: u64, key1: u64) -> SipHasher {
         SipHasher(SipHasher24::new_with_keys(key0, key1))
     }
+
+    /// Get the keys used by this hasher
+    pub fn keys(&self) -> (u64, u64) {
+        (self.0.hasher.k0, self.0.hasher.k1)
+    }
 }
 
 impl Hasher128 for SipHasher {
@@ -165,7 +193,14 @@ impl SipHasher13 {
     /// Creates a `SipHasher13` that is keyed off the provided keys.
     #[inline]
     pub fn new_with_keys(key0: u64, key1: u64) -> SipHasher13 {
-        SipHasher13 { hasher: Hasher::new_with_keys(key0, key1) }
+        SipHasher13 {
+            hasher: Hasher::new_with_keys(key0, key1),
+        }
+    }
+
+    /// Get the keys used by this hasher
+    pub fn keys(&self) -> (u64, u64) {
+        (self.hasher.k0, self.hasher.k1)
     }
 }
 
@@ -187,7 +222,14 @@ impl SipHasher24 {
     /// Creates a `SipHasher24` that is keyed off the provided keys.
     #[inline]
     pub fn new_with_keys(key0: u64, key1: u64) -> SipHasher24 {
-        SipHasher24 { hasher: Hasher::new_with_keys(key0, key1) }
+        SipHasher24 {
+            hasher: Hasher::new_with_keys(key0, key1),
+        }
+    }
+
+    /// Get the keys used by this hasher
+    pub fn keys(&self) -> (u64, u64) {
+        (self.hasher.k0, self.hasher.k1)
     }
 }
 
@@ -281,7 +323,7 @@ impl<S: Sip> Hasher<S> {
         S::d_rounds(&mut state);
         let h2 = state.v0 ^ state.v1 ^ state.v2 ^ state.v3;
 
-        Hash128 { h1: h1, h2: h2 }
+        Hash128 { h1, h2 }
     }
 }
 
@@ -346,7 +388,7 @@ impl<S: Sip> hash::Hasher for Hasher<S> {
 
         if self.ntail != 0 {
             needed = 8 - self.ntail;
-            self.tail |= unsafe { u8to64_le(msg, 0, cmp::min(length, needed)) } << 8 * self.ntail;
+            self.tail |= unsafe { u8to64_le(msg, 0, cmp::min(length, needed)) } << (8 * self.ntail);
             if length < needed {
                 self.ntail += length;
                 return;
@@ -408,8 +450,8 @@ impl<S: Sip> Default for Hasher<S> {
 
 #[doc(hidden)]
 trait Sip {
-    fn c_rounds(&mut State);
-    fn d_rounds(&mut State);
+    fn c_rounds(_: &mut State);
+    fn d_rounds(_: &mut State);
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -450,7 +492,7 @@ impl Sip for Sip24Rounds {
 
 impl Hash128 {
     /// Convert into a 16-bytes vector
-    pub fn into_bytes(&self) -> [u8; 16] {
+    pub fn as_bytes(&self) -> [u8; 16] {
         let mut bytes = [0u8; 16];
         let h1 = self.h1.to_le();
         let h2 = self.h2.to_le();
@@ -459,5 +501,21 @@ impl Hash128 {
             ptr::copy_nonoverlapping(&h2 as *const _ as *const u8, bytes.get_unchecked_mut(8), 8);
         }
         bytes
+    }
+
+    /// Convert into a `u128`
+    #[inline]
+    pub fn as_u128(&self) -> u128 {
+        let h1 = self.h1.to_le();
+        let h2 = self.h2.to_le();
+        h1 as u128 | ((h2 as u128) << 64)
+    }
+
+    /// Convert into `(u64, u64)`
+    #[inline]
+    pub fn as_u64(&self) -> (u64, u64) {
+        let h1 = self.h1.to_le();
+        let h2 = self.h2.to_le();
+        (h1, h2)
     }
 }

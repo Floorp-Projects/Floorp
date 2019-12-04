@@ -6,7 +6,7 @@
 [[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_pcg)
 [![API](https://docs.rs/rand_pcg/badge.svg)](https://docs.rs/rand_pcg)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Implements a selection of PCG random number generators.
 
@@ -24,7 +24,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_pcg)
 -   [API documentation (docs.rs)](https://docs.rs/rand_pcg)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_pcg/CHANGELOG.md)
 
 
 ## Crate Features

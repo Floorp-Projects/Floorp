@@ -4,10 +4,10 @@
 
 //! https://drafts.csswg.org/css-syntax/#urange
 
+use crate::tokenizer::Token;
+use crate::{BasicParseError, Parser, ToCss};
 use std::char;
 use std::fmt;
-use tokenizer::Token;
-use {BasicParseError, Parser, ToCss};
 
 /// One contiguous range of code points.
 ///
