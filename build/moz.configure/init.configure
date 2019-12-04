@@ -1247,7 +1247,7 @@ option('--enable-update-channel',
 
 @depends('--enable-update-channel')
 def update_channel(channel):
-    if channel[0] == '':
+    if not channel or channel[0] == '':
         return 'default'
     return channel[0].lower()
 
