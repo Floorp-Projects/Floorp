@@ -89,7 +89,6 @@ var PermissionUITelemetry = {
 
     let commonPermissions = [
       "geo",
-      "xr",
       "desktop-notification",
       "camera",
       "microphone",
