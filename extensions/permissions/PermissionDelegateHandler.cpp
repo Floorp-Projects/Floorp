@@ -44,6 +44,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(PermissionDelegateHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PermissionDelegateHandler)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PermissionDelegateHandler)
+  NS_INTERFACE_MAP_ENTRY(nsIPermissionDelegateHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -65,6 +66,31 @@ const DelegateInfo* PermissionDelegateHandler::GetPermissionDelegateInfo(
   }
 
   return nullptr;
+}
+
+NS_IMETHODIMP
+PermissionDelegateHandler::MaybeUnsafePermissionDelegate(
+    const nsTArray<nsCString>& aTypes, bool* aMaybeUnsafe) {
+  *aMaybeUnsafe = false;
+  if (!StaticPrefs::permissions_delegation_enabled()) {
+    return NS_OK;
+  }
+
+  for (auto& type : aTypes) {
+    const DelegateInfo* info =
+        GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(type));
+    if (!info) {
+      continue;
+    }
+
+    nsAutoString featureName(info->mFeatureName);
+    if (FeaturePolicyUtils::IsFeatureUnsafeAllowedAll(mDocument, featureName)) {
+      *aMaybeUnsafe = true;
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }
 
 /* static */
