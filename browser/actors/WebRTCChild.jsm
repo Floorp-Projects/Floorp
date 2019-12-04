@@ -284,14 +284,40 @@ function prompt(
   // So, what you are looking at here is not a real nsIContentPermissionRequest, but
   // something that looks really similar and will be transmitted to webrtcUI.jsm
   // for showing the prompt.
+  // Note that we basically do the permission delegate check in
+  // nsIContentPermissionRequest, but because webrtc uses their own prompting
+  // system, we should manually apply the delegate policy here. Permission
+  // should be delegated using Feature Policy and top principal
+  const shouldDelegatePermission =
+    Services.prefs.getBoolPref("permissions.delegation.enabled", false) &&
+    Services.prefs.getBoolPref("dom.security.featurePolicy.enabled", false);
+
+  const origin = shouldDelegatePermission
+    ? aContentWindow.top.document.nodePrincipal.origin
+    : aContentWindow.document.nodePrincipal.origin;
+
+  let secondOrigin = undefined;
+  if (shouldDelegatePermission) {
+    const permDelegateHandler = aContentWindow.document.permDelegateHandler.QueryInterface(
+      Ci.nsIPermissionDelegateHandler
+    );
+    if (permDelegateHandler.maybeUnsafePermissionDelegate(requestTypes)) {
+      // We are going to prompt both first party and third party origin.
+      // SecondOrigin should be third party
+      secondOrigin = aContentWindow.document.nodePrincipal.origin;
+    }
+  }
+
   let request = {
     callID: aCallID,
     windowID: aWindowID,
-    origin: aContentWindow.document.nodePrincipal.origin,
+    origin,
+    secondOrigin,
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
     isHandlingUserInput: aIsHandlingUserInput,
     isThirdPartyOrigin,
+    shouldDelegatePermission,
     requestTypes,
     sharingScreen,
     sharingAudio,
