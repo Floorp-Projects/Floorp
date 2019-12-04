@@ -2585,6 +2585,16 @@ void GCMarker::enterWeakMarkingMode() {
       }
     }
   }
+
+#ifdef DEBUG
+  for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
+    for (auto r = zone->gcWeakKeys().all(); !r.empty(); r.popFront()) {
+      for (auto markable : r.front().value) {
+        MOZ_ASSERT(markable.weakmap->mapColor, "unmarked weakmaps in weak keys table");
+      }
+    }
+  }
+#endif
 }
 
 void GCMarker::leaveWeakMarkingMode() {
