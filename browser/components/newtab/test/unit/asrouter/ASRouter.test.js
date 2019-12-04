@@ -2544,6 +2544,19 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("_triggerHandler_kiosk", () => {
+    it("should not call #onMessage", () => {
+      const getter = sandbox.stub();
+      getter.returns(true);
+      sandbox.stub(global.BrowserHandler, "kiosk").get(getter);
+      sinon.spy(Router, "onMessage");
+      const target = {};
+      const trigger = { id: "FAKE_TRIGGER", param: "some fake param" };
+      Router._triggerHandler(target, trigger);
+      assert.notCalled(Router.onMessage);
+    });
+  });
+
   describe("#UITour", () => {
     let showMenuStub;
     const highlightTarget = { target: "target" };
