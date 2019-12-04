@@ -53,6 +53,11 @@ Value FinalizationRecordObject::holdings() const {
   return getReservedSlot(HoldingsSlot);
 }
 
+bool FinalizationRecordObject::wasCleared() const {
+  MOZ_ASSERT_IF(!group(), holdings().isUndefined());
+  return !group();
+}
+
 void FinalizationRecordObject::clear() {
   MOZ_ASSERT(group());
   setReservedSlot(GroupSlot, NullValue());
@@ -83,7 +88,7 @@ const JSClassOps FinalizationRecordVectorObject::classOps_ = {
 /* static */
 FinalizationRecordVectorObject* FinalizationRecordVectorObject::create(
     JSContext* cx) {
-  auto records = cx->make_unique<RecordVector>(cx->zone());
+  auto records = cx->make_unique<FinalizationRecordVector>(cx->zone());
   if (!records) {
     return nullptr;
   }
@@ -114,14 +119,13 @@ void FinalizationRecordVectorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   fop->delete_(obj, rv->records(), MemoryUse::FinalizationRecordVector);
 }
 
-inline FinalizationRecordVectorObject::RecordVector*
-FinalizationRecordVectorObject::records() {
-  return static_cast<RecordVector*>(privatePtr());
+inline FinalizationRecordVector* FinalizationRecordVectorObject::records() {
+  return static_cast<FinalizationRecordVector*>(privatePtr());
 }
 
-inline const FinalizationRecordVectorObject::RecordVector*
-FinalizationRecordVectorObject::records() const {
-  return static_cast<const RecordVector*>(privatePtr());
+inline const FinalizationRecordVector* FinalizationRecordVectorObject::records()
+    const {
+  return static_cast<const FinalizationRecordVector*>(privatePtr());
 }
 
 inline void* FinalizationRecordVectorObject::privatePtr() const {
@@ -225,8 +229,8 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  Rooted<UniquePtr<HoldingsVector>> holdings(
-      cx, cx->make_unique<HoldingsVector>(cx->zone()));
+  Rooted<UniquePtr<FinalizationRecordVector>> holdings(
+      cx, cx->make_unique<FinalizationRecordVector>(cx->zone()));
   if (!holdings) {
     return false;
   }
@@ -240,8 +244,8 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
   group->initReservedSlot(CleanupCallbackSlot, ObjectValue(*cleanupCallback));
   InitReservedSlot(group, RegistrationsSlot, registrations.release(),
                    MemoryUse::FinalizationGroupRegistrations);
-  InitReservedSlot(group, HoldingsToBeCleanedUpSlot, holdings.release(),
-                   MemoryUse::FinalizationGroupHoldingsVector);
+  InitReservedSlot(group, RecordsToBeCleanedUpSlot, holdings.release(),
+                   MemoryUse::FinalizationGroupRecordVector);
   group->initReservedSlot(IsQueuedForCleanupSlot, BooleanValue(false));
   group->initReservedSlot(IsCleanupJobActiveSlot, BooleanValue(false));
 
@@ -252,7 +256,7 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
 /* static */
 void FinalizationGroupObject::trace(JSTracer* trc, JSObject* obj) {
   auto group = &obj->as<FinalizationGroupObject>();
-  if (HoldingsVector* holdings = group->holdingsToBeCleanedUp()) {
+  if (FinalizationRecordVector* holdings = group->recordsToBeCleanedUp()) {
     holdings->trace(trc);
   }
   if (ObjectWeakMap* registrations = group->registrations()) {
@@ -263,8 +267,8 @@ void FinalizationGroupObject::trace(JSTracer* trc, JSObject* obj) {
 /* static */
 void FinalizationGroupObject::finalize(JSFreeOp* fop, JSObject* obj) {
   auto group = &obj->as<FinalizationGroupObject>();
-  fop->delete_(obj, group->holdingsToBeCleanedUp(),
-               MemoryUse::FinalizationGroupHoldingsVector);
+  fop->delete_(obj, group->recordsToBeCleanedUp(),
+               MemoryUse::FinalizationGroupRecordVector);
   fop->delete_(obj, group->registrations(),
                MemoryUse::FinalizationGroupRegistrations);
 }
@@ -285,13 +289,13 @@ ObjectWeakMap* FinalizationGroupObject::registrations() const {
   return static_cast<ObjectWeakMap*>(value.toPrivate());
 }
 
-FinalizationGroupObject::HoldingsVector*
-FinalizationGroupObject::holdingsToBeCleanedUp() const {
-  Value value = getReservedSlot(HoldingsToBeCleanedUpSlot);
+FinalizationRecordVector* FinalizationGroupObject::recordsToBeCleanedUp()
+    const {
+  Value value = getReservedSlot(RecordsToBeCleanedUpSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
-  return static_cast<HoldingsVector*>(value.toPrivate());
+  return static_cast<FinalizationRecordVector*>(value.toPrivate());
 }
 
 bool FinalizationGroupObject::isQueuedForCleanup() const {
@@ -302,11 +306,11 @@ bool FinalizationGroupObject::isCleanupJobActive() const {
   return getReservedSlot(IsCleanupJobActiveSlot).toBoolean();
 }
 
-void FinalizationGroupObject::queueHoldingsToBeCleanedUp(
-    const Value& holdings) {
+void FinalizationGroupObject::queueRecordToBeCleanedUp(
+    FinalizationRecordObject* record) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!holdingsToBeCleanedUp()->append(holdings)) {
-    oomUnsafe.crash("FinalizationGroupObject::queueHoldingsToBeCleanedUp");
+  if (!recordsToBeCleanedUp()->append(record)) {
+    oomUnsafe.crash("FinalizationGroupObject::queueRecordsToBeCleanedUp");
   }
 }
 
@@ -501,20 +505,33 @@ bool FinalizationGroupObject::unregister(JSContext* cx, unsigned argc,
 
   RootedObject unregisterToken(cx, &args[0].toObject());
 
+  // 5. Let removed be false.
+  bool removed = false;
+
+  // 6. For each Record { [[Target]], [[Holdings]], [[UnregisterToken]] } cell
+  //    that is an element of finalizationGroup.[[Cells]], do
+  //    a. If SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
+  //       i. Remove cell from finalizationGroup.[[Cells]].
+  //       ii. Set removed to true.
+
   RootedObject obj(cx, group->registrations()->lookup(unregisterToken));
   if (obj) {
     auto* records = obj->as<FinalizationRecordVectorObject>().records();
     MOZ_ASSERT(records);
     MOZ_ASSERT(!records->empty());
     for (FinalizationRecordObject* record : *records) {
-      // Clear the fields of this record; it will be removed from the target's
-      // list when it is next swept.
-      record->clear();
+      if (!record->wasCleared()) {
+        // Clear the fields of this record; it will be removed from the target's
+        // list when it is next swept.
+        record->clear();
+        removed = true;
+      }
     }
     group->registrations()->remove(unregisterToken);
   }
 
-  args.rval().setBoolean(bool(obj));
+  // 7. Return removed.
+  args.rval().setBoolean(removed);
   return true;
 }
 
@@ -557,7 +574,7 @@ bool FinalizationGroupObject::cleanupSome(JSContext* cx, unsigned argc,
     }
   }
 
-  if (!cleanupQueuedHoldings(cx, group, cleanupCallback)) {
+  if (!cleanupQueuedRecords(cx, group, cleanupCallback)) {
     return false;
   }
 
@@ -568,14 +585,14 @@ bool FinalizationGroupObject::cleanupSome(JSContext* cx, unsigned argc,
 // CleanupFinalizationGroup ( finalizationGroup [ , callback ] )
 // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-group
 /* static */
-bool FinalizationGroupObject::cleanupQueuedHoldings(
+bool FinalizationGroupObject::cleanupQueuedRecords(
     JSContext* cx, HandleFinalizationGroupObject group,
     HandleObject callbackArg) {
   MOZ_ASSERT(cx->compartment() == group->compartment());
 
   // 2. If CheckForEmptyCells(finalizationGroup) is false, return.
-  HoldingsVector* holdings = group->holdingsToBeCleanedUp();
-  size_t initialLength = holdings->length();
+  FinalizationRecordVector* records = group->recordsToBeCleanedUp();
+  size_t initialLength = records->length();
   if (initialLength == 0) {
     return true;
   }
@@ -607,12 +624,12 @@ bool FinalizationGroupObject::cleanupQueuedHoldings(
   RootedValue rval(cx);
   bool ok = Call(cx, callback, UndefinedHandleValue, iteratorVal, &rval);
 
-  // Remove holdings that were iterated over.
+  // Remove records that were iterated over.
   size_t index = iterator->index();
-  MOZ_ASSERT(index <= holdings->length());
-  MOZ_ASSERT(initialLength <= holdings->length());
+  MOZ_ASSERT(index <= records->length());
+  MOZ_ASSERT(initialLength <= records->length());
   if (index > 0) {
-    holdings->erase(holdings->begin(), holdings->begin() + index);
+    records->erase(records->begin(), records->begin() + index);
   }
 
   // 7. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to false.
@@ -696,10 +713,9 @@ size_t FinalizationIteratorObject::index() const {
   return size_t(i);
 }
 
-void FinalizationIteratorObject::incIndex() {
-  int32_t i = index();
-  MOZ_ASSERT(i < INT32_MAX);
-  setReservedSlot(IndexSlot, Int32Value(i + 1));
+void FinalizationIteratorObject::setIndex(size_t i) {
+  MOZ_ASSERT(i <= INT32_MAX);
+  setReservedSlot(IndexSlot, Int32Value(int32_t(i)));
 }
 
 void FinalizationIteratorObject::clearFinalizationGroup() {
@@ -742,17 +758,27 @@ bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
   //    a. Choose any such cell.
   //    b. Remove cell from finalizationGroup.[[Cells]].
   //    c. Return CreateIterResultObject(cell.[[Holdings]], false).
-  auto* holdings = group->holdingsToBeCleanedUp();
+  FinalizationRecordVector* records = group->recordsToBeCleanedUp();
   size_t index = iterator->index();
-  MOZ_ASSERT(index <= holdings->length());
-  if (index < holdings->length() && index < INT32_MAX) {
-    RootedValue value(cx, (*holdings)[index]);
-    JSObject* result = CreateIterResultObject(cx, value, false);
+  MOZ_ASSERT(index <= records->length());
+
+  // Advance until we find a record that hasn't been unregistered.
+  while (index < records->length() && index < INT32_MAX &&
+         (*records)[index]->wasCleared()) {
+    index++;
+    iterator->setIndex(index);
+  }
+
+  if (index < records->length() && index < INT32_MAX) {
+    RootedFinalizationRecordObject record(cx, (*records)[index]);
+    RootedValue holdings(cx, record->holdings());
+    JSObject* result = CreateIterResultObject(cx, holdings, false);
     if (!result) {
       return false;
     }
 
-    iterator->incIndex();
+    record->clear();
+    iterator->setIndex(index + 1);
 
     args.rval().setObject(*result);
     return true;

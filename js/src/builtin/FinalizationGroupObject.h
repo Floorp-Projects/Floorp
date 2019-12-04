@@ -102,24 +102,27 @@ class FinalizationRecordObject : public NativeObject {
 
   FinalizationGroupObject* group() const;
   Value holdings() const;
+  bool wasCleared() const;
   void clear();
 };
 
-// A JS object containing a vector of finalization records. Used as the values
-// in the registration weakmap.
+// A vector of FinalizationRecordObjects.
+using FinalizationRecordVector =
+    GCVector<HeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
+
+// A JS object that wraps a FinalizationRecordVector. Used as the values in the
+// registration weakmap.
 class FinalizationRecordVectorObject : public NativeObject {
   enum { RecordsSlot = 0, SlotCount };
 
  public:
-  using RecordVector =
-      GCVector<HeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
 
   static const JSClass class_;
 
   static FinalizationRecordVectorObject* create(JSContext* cx);
 
-  RecordVector* records();
-  const RecordVector* records() const;
+  FinalizationRecordVector* records();
+  const FinalizationRecordVector* records() const;
 
   bool isEmpty() const;
 
@@ -140,31 +143,29 @@ class FinalizationGroupObject : public NativeObject {
   enum {
     CleanupCallbackSlot = 0,
     RegistrationsSlot,
-    HoldingsToBeCleanedUpSlot,
+    RecordsToBeCleanedUpSlot,
     IsQueuedForCleanupSlot,
     IsCleanupJobActiveSlot,
     SlotCount
   };
 
  public:
-  using HoldingsVector = GCVector<HeapPtrValue, 0, ZoneAllocPolicy>;
-
   static const JSClass class_;
   static const JSClass protoClass_;
 
   JSObject* cleanupCallback() const;
   ObjectWeakMap* registrations() const;
-  HoldingsVector* holdingsToBeCleanedUp() const;
+  FinalizationRecordVector* recordsToBeCleanedUp() const;
   bool isQueuedForCleanup() const;
   bool isCleanupJobActive() const;
 
-  void queueHoldingsToBeCleanedUp(const Value& holdings);
+  void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
   void setQueuedForCleanup(bool value);
   void setCleanupJobActive(bool value);
 
-  static bool cleanupQueuedHoldings(JSContext* cx,
-                                    HandleFinalizationGroupObject group,
-                                    HandleObject callback = nullptr);
+  static bool cleanupQueuedRecords(JSContext* cx,
+                                   HandleFinalizationGroupObject group,
+                                   HandleObject callback = nullptr);
 
  private:
   static const JSClassOps classOps_;
@@ -203,7 +204,7 @@ class FinalizationIteratorObject : public NativeObject {
   FinalizationGroupObject* finalizationGroup() const;
   size_t index() const;
 
-  void incIndex();
+  void setIndex(size_t index);
   void clearFinalizationGroup();
 
  private:
