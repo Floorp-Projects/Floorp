@@ -11,6 +11,7 @@
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
+#include "nsIURL.h"
 
 namespace mozilla {
 class EventChainPostVisitor;

@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/FileBlobImpl.h"
 #include "nsAnonymousTemporaryFile.h"
+#include "nsIFileStreams.h"
 #include "TemporaryFileBlobImpl.h"
 
 namespace mozilla {

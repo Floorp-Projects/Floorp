@@ -8,6 +8,7 @@
 #define mozilla_dom_FetchDriver_h
 
 #include "nsIChannelEventSink.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"

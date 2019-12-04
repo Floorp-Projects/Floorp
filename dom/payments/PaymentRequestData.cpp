@@ -7,6 +7,7 @@
 #include "mozilla/dom/PaymentRequestBinding.h"
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
+#include "nsISupportsPrimitives.h"
 #include "nsUnicharUtils.h"
 #include "PaymentRequestData.h"
 #include "PaymentRequestUtils.h"

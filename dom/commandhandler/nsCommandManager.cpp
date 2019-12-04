@@ -10,11 +10,15 @@
 #include "nsIControllers.h"
 #include "nsIObserver.h"
 
+#include "nsIComponentManager.h"
+
 #include "nsServiceManagerUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
+#include "nsIFocusManager.h"
 
 #include "nsCOMArray.h"
 

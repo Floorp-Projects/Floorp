@@ -24,6 +24,7 @@
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "imgIRequest.h"
+#include "imgILoader.h"
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
 #include "nsPresContext.h"

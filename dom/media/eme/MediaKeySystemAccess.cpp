@@ -12,6 +12,7 @@
 #include "DecoderTraits.h"
 #include "GMPUtils.h"
 #include "MediaContainerType.h"
+#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/dom/MediaKeySession.h"

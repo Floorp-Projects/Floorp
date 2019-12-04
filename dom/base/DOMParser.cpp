@@ -12,6 +12,8 @@
 #include "SystemPrincipal.h"
 #include "nsIStreamListener.h"
 #include "nsStringStream.h"
+#include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsCRT.h"
 #include "nsStreamUtils.h"
 #include "nsContentUtils.h"

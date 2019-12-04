@@ -17,6 +17,8 @@
 #include "nsIContent.h"
 #include "nsICollation.h"
 #include "mozilla/dom/Document.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIServiceManager.h"
 #include "nsXULContentUtils.h"
 #include "nsLayoutCID.h"
 #include "nsString.h"

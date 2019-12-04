@@ -8,6 +8,8 @@
 #include "nsIDocumentEncoder.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIFormControl.h"
 #include "nsWidgetsCID.h"
@@ -21,6 +23,7 @@
 
 #include "nsIDocShell.h"
 #include "nsIContentViewerEdit.h"
+#include "nsIClipboardHelper.h"
 #include "nsISelectionController.h"
 
 #include "nsPIDOMWindow.h"
@@ -29,6 +32,8 @@
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
+#include "nsISimpleEnumerator.h"
 #include "nsGenericHTMLElement.h"
 
 // image copy stuff

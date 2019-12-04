@@ -26,6 +26,8 @@
 #include "mozilla/mscom/EnsureMTA.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIGfxInfo.h"
+#include "nsIWindowsRegKey.h"
 #include "nsIXULRuntime.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWindowsHelpers.h"

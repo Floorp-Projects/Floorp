@@ -8,6 +8,7 @@
 #define mozilla_dom_Fetch_h
 
 #include "nsAutoPtr.h"
+#include "nsIStreamLoader.h"
 
 #include "nsCOMPtr.h"
 #include "nsError.h"

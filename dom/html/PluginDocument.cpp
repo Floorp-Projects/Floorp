@@ -14,6 +14,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
 #include "nsObjectLoadingContent.h"

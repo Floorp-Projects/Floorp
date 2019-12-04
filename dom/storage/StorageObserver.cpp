@@ -13,6 +13,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIPermission.h"
 #include "nsIIDNService.h"
 #include "nsICookiePermission.h"

@@ -11,6 +11,7 @@
 #include "mozilla/dom/Promise.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
+#include "nsIXPConnect.h"
 
 namespace mozilla {
 namespace dom {

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_IPCBlobInputStreamThread_h
 #define mozilla_dom_IPCBlobInputStreamThread_h
 
+#include "nsIObserverService.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 

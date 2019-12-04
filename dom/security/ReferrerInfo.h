@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIReferrerInfo.h"
+#include "nsISerializable.h"
 #include "nsIHttpChannel.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Maybe.h"

@@ -13,6 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsRefPtrHashtable.h"
+#include "nsIXPConnect.h"
 
 class nsIGlobalObject;
 class nsQueryActor;

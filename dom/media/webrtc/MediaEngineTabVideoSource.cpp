@@ -21,8 +21,10 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsITabSource.h"
 #include "VideoUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
 #include "MediaTrackConstraints.h"
 #include "Tracing.h"
 

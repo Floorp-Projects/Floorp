@@ -10,6 +10,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIServiceManager.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
 #include "nsIPrincipal.h"

@@ -11,6 +11,7 @@
 #include "nsLiteralString.h"
 #include "nsCRTGlue.h"
 #include "mozilla/Base64.h"
+#include "nsISimpleEnumerator.h"
 #include "prio.h"
 #include "nsIConsoleService.h"
 #include "mozIGeckoMediaPluginService.h"

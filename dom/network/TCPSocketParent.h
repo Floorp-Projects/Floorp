@@ -11,6 +11,7 @@
 #include "mozilla/net/PTCPSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
+#include "nsISocketFilter.h"
 #include "js/TypeDecls.h"
 
 #define TCPSOCKETPARENT_CID                          \

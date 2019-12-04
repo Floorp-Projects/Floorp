@@ -13,8 +13,10 @@
 #include "mozilla/EndianUtils.h"
 #include "nsClassHashtable.h"
 #include "prio.h"
+#include "mozIGeckoMediaPluginService.h"
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsISimpleEnumerator.h"
 
 namespace mozilla {
 namespace gmp {

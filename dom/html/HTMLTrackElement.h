@@ -13,6 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
+#include "nsIHttpChannel.h"
 
 class nsIContent;
 

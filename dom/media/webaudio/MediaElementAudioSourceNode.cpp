@@ -7,6 +7,7 @@
 #include "MediaElementAudioSourceNode.h"
 #include "mozilla/dom/MediaElementAudioSourceNodeBinding.h"
 #include "AudioDestinationNode.h"
+#include "nsIScriptError.h"
 #include "AudioNodeTrack.h"
 #include "MediaStreamTrack.h"
 

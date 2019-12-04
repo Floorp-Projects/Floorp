@@ -6,6 +6,7 @@
 
 #include "PerformanceEntry.h"
 #include "MainThreadUtils.h"
+#include "nsIURI.h"
 
 using namespace mozilla::dom;
 

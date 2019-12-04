@@ -11,6 +11,7 @@
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "nsContentUtils.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsNetUtil.h"
 #include "nsURLParsers.h"
 

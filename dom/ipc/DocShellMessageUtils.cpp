@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DocShellMessageUtils.h"
+#include "nsISerializable.h"
 #include "nsSerializationHelper.h"
 
 namespace mozilla {

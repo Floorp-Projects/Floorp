@@ -17,6 +17,8 @@
 #include "nsIScriptContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIPrincipal.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/ReflowInput.h"
 #include "nsIObjectLoadingContent.h"

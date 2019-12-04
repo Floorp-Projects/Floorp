@@ -63,8 +63,10 @@
 
 #include "nsISelectionController.h"  //for the enums
 #include "nsCopySupport.h"
+#include "nsIClipboard.h"
 #include "nsIFrameInlines.h"
 #include "nsRefreshDriver.h"
+#include "nsIBidiKeyboard.h"
 
 #include "nsError.h"
 #include "nsViewManager.h"

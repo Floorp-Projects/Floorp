@@ -7,6 +7,7 @@
 
 #include "nsIndexedDBProtocolHandler.h"
 
+#include "nsIURIMutator.h"
 #include "nsStandardURL.h"
 
 using namespace mozilla::net;

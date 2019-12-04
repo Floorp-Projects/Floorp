@@ -16,6 +16,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
+#include "nsIInputStream.h"
 
 namespace mozilla {
 namespace dom {

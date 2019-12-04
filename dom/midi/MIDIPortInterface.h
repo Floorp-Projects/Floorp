@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MIDIPortInterface_h
 #define mozilla_dom_MIDIPortInterface_h
 
+#include "nsIObserver.h"
 #include "mozilla/dom/MIDIPortBinding.h"
 
 namespace mozilla {

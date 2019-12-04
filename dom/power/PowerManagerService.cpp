@@ -11,6 +11,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsIDOMWakeLockListener.h"
+#include "nsIObserverService.h"
 #include "PowerManagerService.h"
 #include "WakeLock.h"
 

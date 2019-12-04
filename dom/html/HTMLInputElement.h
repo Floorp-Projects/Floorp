@@ -20,6 +20,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
+#include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
 #include "nsIFilePicker.h"

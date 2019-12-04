@@ -9,6 +9,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentTransformer.h"
 #include "nsCharsetSource.h"
+#include "nsIPrincipal.h"
 #include "txURIUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"

@@ -20,6 +20,7 @@
 #include "txPatternParser.h"
 #include "txStringUtils.h"
 #include "txXSLTFunctions.h"
+#include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
