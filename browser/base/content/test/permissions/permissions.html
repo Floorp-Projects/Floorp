@@ -21,8 +21,9 @@ function requestPush() {
 function requestGeo() {
   return navigator.geolocation.getCurrentPosition(() => {
     parent.postMessage("allow", "*");
-  }, () => {
-    parent.postMessage("deny", "*");
+  }, error => {
+    // PERMISSION_DENIED = 1
+    parent.postMessage(error.code == 1 ? "deny" : "allow", "*");
   });
 }
 
