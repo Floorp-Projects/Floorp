@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Tests keyboard selection within and clicks on UrlbarUtils.RESULT_TYPE.TIP
+// results.
+
 "use strict";
 
-const MEGABAR_PREF = "browser.urlbar.megabar";
 const HELP_URL = "about:mozilla";
 const TIP_URL = "about:about";
-
-// Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
 
 /**
  * A test provider.
@@ -67,7 +67,7 @@ add_task(async function tipIsSecondResult() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
+    waitForFocus,
   });
 
   Assert.equal(
@@ -120,14 +120,22 @@ add_task(async function tipIsSecondResult() {
     "The third element should be selected."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await BrowserTestUtils.waitForCondition(() => {
-    info("Waiting for one-off to become selected.");
-    let oneOff = document.querySelector(
-      ".urlbarView .search-panel-one-offs .searchbar-engine-one-off-item:first-child"
+  // If this test is running alone, the one-offs will rebuild themselves when
+  // the view is opened above, and they may not be visible yet.  Wait for the
+  // first one to become visible before trying to select it.
+  await TestUtils.waitForCondition(() => {
+    return (
+      gURLBar.view.oneOffSearchButtons.buttons.firstElementChild &&
+      BrowserTestUtils.is_visible(
+        gURLBar.view.oneOffSearchButtons.buttons.firstElementChild
+      )
     );
-    return oneOff.hasAttribute("selected");
-  });
+  }, "Waiting for first one-off to become visible.");
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await TestUtils.waitForCondition(() => {
+    return gURLBar.view.oneOffSearchButtons.selectedButton;
+  }, "Waiting for one-off to become selected.");
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
     -1,
@@ -168,7 +176,7 @@ add_task(async function tipIsOnlyResult() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
+    waitForFocus,
   });
 
   Assert.equal(
@@ -253,7 +261,7 @@ add_task(async function tipHasNoHelpButton() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
+    waitForFocus,
   });
 
   Assert.equal(
@@ -289,13 +297,9 @@ add_task(async function tipHasNoHelpButton() {
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  await BrowserTestUtils.waitForCondition(() => {
-    info("Waiting for one-off to become selected.");
-    let oneOff = document.querySelector(
-      ".urlbarView .search-panel-one-offs .searchbar-engine-one-off-item:first-child"
-    );
-    return oneOff.hasAttribute("selected");
-  });
+  await TestUtils.waitForCondition(() => {
+    return gURLBar.view.oneOffSearchButtons.selectedButton;
+  }, "Waiting for one-off to become selected.");
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
     -1,
@@ -338,31 +342,79 @@ add_task(async function mouseSelection() {
   let provider = new TipTestProvider(matches);
   UrlbarProvidersManager.registerProvider(provider);
 
+  // Click the help button.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
+    waitForFocus,
   });
-  let element = document.querySelector(".urlbarView-row .urlbarView-tip-help");
+  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  let helpButton = row._elements.get("helpButton");
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
-  await loadPromise;
+  await Promise.all([
+    loadPromise,
+    UrlbarTestUtils.promisePopupClose(window, () => {
+      EventUtils.synthesizeMouseAtCenter(helpButton, {});
+    }),
+  ]);
   Assert.equal(
     gURLBar.value,
     HELP_URL,
     "Should have navigated to the tip's help page."
   );
 
+  // Click the main button.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
+    waitForFocus,
   });
-  element = document.querySelector(".urlbarView-row .urlbarView-tip-button");
+  row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  let mainButton = row._elements.get("tipButton");
   loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  EventUtils.synthesizeMouseAtCenter(element, {}, element.ownerGlobal);
-  await loadPromise;
+  await Promise.all([
+    loadPromise,
+    UrlbarTestUtils.promisePopupClose(window, () => {
+      EventUtils.synthesizeMouseAtCenter(mainButton, {});
+    }),
+  ]);
   Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
+
+  // Click inside the tip but outside the buttons.  Nothing should happen.  Make
+  // the result the heuristic to check that the selection on the main button
+  // isn't lost.
+  matches[0].heuristic = true;
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus,
+  });
+  row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    0,
+    "The main button's index should be selected initially"
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElement(window),
+    row._elements.get("tipButton"),
+    "The main button element should be selected initially"
+  );
+  EventUtils.synthesizeMouseAtCenter(row, {});
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 500));
+  Assert.ok(gURLBar.view.isOpen, "The view should remain open");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    0,
+    "The main button's index should remain selected"
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElement(window),
+    row._elements.get("tipButton"),
+    "The main button element should remain selected"
+  );
+  await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarProvidersManager.unregisterProvider(provider);
 });
