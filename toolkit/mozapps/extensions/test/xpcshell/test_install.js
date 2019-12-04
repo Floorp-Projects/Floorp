@@ -102,15 +102,6 @@ const GETADDONS_JSON = {
   ],
 };
 
-const COMPAT_JSON = {
-  page_size: 25,
-  page_count: 1,
-  count: 0,
-  next: null,
-  previous: null,
-  results: [],
-};
-
 function checkInstall(install, expected) {
   for (let [key, value] of Object.entries(expected)) {
     if (value instanceof Ci.nsIURI) {
@@ -766,12 +757,6 @@ add_task(async function test_18_1() {
   Services.prefs.setCharPref(
     PREF_GETADDONS_BYIDS,
     "http://example.com/getaddons.json"
-  );
-
-  AddonTestUtils.registerJSON(testserver, "/compat.json", COMPAT_JSON);
-  Services.prefs.setCharPref(
-    PREF_COMPAT_OVERRIDES,
-    "http://example.com/compat.json"
   );
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);

@@ -30,11 +30,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "Blocklist",
   "resource://gre/modules/Blocklist.jsm"
 );
@@ -453,8 +448,6 @@ UpdateParser.prototype = {
  *         Ignore maxVersion when testing if an update matches. Optional.
  * @param  aIgnoreStrictCompat
  *         Ignore strictCompatibility when testing if an update matches. Optional.
- * @param  aCompatOverrides
- *         AddonCompatibilityOverride objects to match against. Optional.
  * @return true if the update is compatible with the application/platform
  */
 function matchesVersions(
@@ -462,21 +455,8 @@ function matchesVersions(
   aAppVersion,
   aPlatformVersion,
   aIgnoreMaxVersion,
-  aIgnoreStrictCompat,
-  aCompatOverrides
+  aIgnoreStrictCompat
 ) {
-  if (aCompatOverrides) {
-    let override = AddonRepository.findMatchingCompatOverride(
-      aUpdate.version,
-      aCompatOverrides,
-      aAppVersion,
-      aPlatformVersion
-    );
-    if (override && override.type == "incompatible") {
-      return false;
-    }
-  }
-
   if (aUpdate.strictCompatibility && !aIgnoreStrictCompat) {
     aIgnoreMaxVersion = false;
   }
@@ -576,8 +556,6 @@ var AddonUpdateChecker = {
    *         When determining compatible updates, ignore maxVersion. Optional.
    * @param  aIgnoreStrictCompat
    *         When determining compatible updates, ignore strictCompatibility. Optional.
-   * @param  aCompatOverrides
-   *         Array of AddonCompatibilityOverride to take into account. Optional.
    * @return an update object if one matches or null if not
    */
   async getNewestCompatibleUpdate(
@@ -585,8 +563,7 @@ var AddonUpdateChecker = {
     aAppVersion,
     aPlatformVersion,
     aIgnoreMaxVersion,
-    aIgnoreStrictCompat,
-    aCompatOverrides
+    aIgnoreStrictCompat
   ) {
     if (!aAppVersion) {
       aAppVersion = Services.appinfo.version;
@@ -616,8 +593,7 @@ var AddonUpdateChecker = {
           aAppVersion,
           aPlatformVersion,
           aIgnoreMaxVersion,
-          aIgnoreStrictCompat,
-          aCompatOverrides
+          aIgnoreStrictCompat
         )
       ) {
         newest = update;

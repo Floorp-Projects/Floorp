@@ -27,10 +27,6 @@ add_task(async function test_app_addons() {
     PREF_GETADDONS_BYIDS,
     `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`
   );
-  Services.prefs.setCharPref(
-    PREF_COMPAT_OVERRIDES,
-    `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`
-  );
 
   gServer.registerPathHandler("/get", (request, response) => {
     do_throw("Unexpected request to server.");

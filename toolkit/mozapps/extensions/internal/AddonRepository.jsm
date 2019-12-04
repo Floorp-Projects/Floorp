@@ -50,7 +50,6 @@ const PREF_GETADDONS_CACHE_ID_ENABLED =
   "extensions.%ID%.getAddons.cache.enabled";
 const PREF_GETADDONS_BROWSEADDONS = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS = "extensions.getAddons.get.url";
-const PREF_COMPAT_OVERRIDES = "extensions.getAddons.compatOverides.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS =
   "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_DB_SCHEMA = "extensions.getAddons.databaseSchema";
@@ -64,19 +63,16 @@ const DEFAULT_METADATA_UPDATETHRESHOLD_SEC = 172800; // two days
 const DEFAULT_CACHE_TYPES = "extension,theme,locale,dictionary";
 
 const FILE_DATABASE = "addons.json";
-const DB_SCHEMA = 5;
+const DB_SCHEMA = 6;
 const DB_MIN_JSON_SCHEMA = 5;
 const DB_BATCH_TIMEOUT_MS = 50;
 
 const BLANK_DB = function() {
   return {
     addons: new Map(),
-    compatOverrides: new Map(),
     schema: DB_SCHEMA,
   };
 };
-
-const TOOLKIT_ID = "toolkit@mozilla.org";
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.repository";
@@ -366,37 +362,6 @@ var AddonRepository = {
   },
 
   /**
-   * Get any compatibility override information for the given add-on id.
-   *
-   * @param aId
-   *        The id of the add-on to fetch compatibiltiy override data for.
-   * @returns Promise
-   *          A Promise which resolves with the compatibility override
-   *          data for the given add-on, if any is available.
-   */
-  async getCompatibilityOverrides(aId) {
-    await AddonDatabase.openConnection();
-    return AddonDatabase.getCompatOverrides(aId);
-  },
-
-  /**
-   * Synchronously get any compatibility override information for
-   * the given add-on id.
-   *
-   * @param aId
-   *        The id of the add-on to fetch compatibiltiy override data for.
-   * @returns object
-   *          Compatibility override data for the given add-on, if any is
-   *          available.  Note that this method does not do any I/O so if
-   *          the database has not been read and cacheAddons() has not been
-   *          called for the given id, this may return null even when there
-   *          is a compatibility override for the addon.
-   */
-  getCompatibilityOverridesSync(aId) {
-    return AddonDatabase.getCompatOverrides(aId);
-  },
-
-  /**
    * Asynchronously get a cached add-on by id. The add-on (or null if the
    * add-on is not found) is passed to the specified callback. If caching is
    * disabled, null is passed to the specified callback.
@@ -524,38 +489,22 @@ var AddonRepository = {
   },
 
   /**
-   * Fetch both addon metadata and compatibility override data for
-   * a set of addons.
+   * Fetch addon metadata for a set of addons.
    *
    * @param {array<string>} aIDs
    *                        A list of addon IDs to fetch information about.
    *
-   * @returns {object}
-   *          The returned object has two properties: `addons`, which is an
-   *          array of AddonSearchResult objects containing the addon metadata,
-   *          and `overrides, which is an array of compatibility override
-   *          objects.
+   * @returns {array<AddonSearchResult>}
    */
   async _getFullData(aIDs) {
-    let metadataPromise = this.getAddonsByIDs(aIDs, false);
-
-    let overridesPromise = this._fetchPaged(
-      aIDs,
-      PREF_COMPAT_OVERRIDES,
-      results => results.map(entry => this._parseCompatEntry(entry))
-    );
-    let addons = [],
-      overrides = [];
+    let addons = [];
     try {
-      [addons, overrides] = await Promise.all([
-        metadataPromise,
-        overridesPromise,
-      ]);
+      addons = await this.getAddonsByIDs(aIDs, false);
     } catch (err) {
       logger.error(`Error in addon metadata check: ${err.message}`);
     }
 
-    return { addons, overrides };
+    return addons;
   },
 
   /**
@@ -580,8 +529,8 @@ var AddonRepository = {
       return [];
     }
 
-    let { addons, overrides } = await this._getFullData(ids);
-    await AddonDatabase.update(addons, overrides);
+    let addons = await this._getFullData(ids);
+    await AddonDatabase.update(addons);
 
     return Array.from(addons.values());
   },
@@ -613,9 +562,9 @@ var AddonRepository = {
       return;
     }
 
-    let { addons, overrides } = await this._getFullData(addonsToCache);
+    let addons = await this._getFullData(addonsToCache);
 
-    AddonDatabase.repopulate(addons, overrides);
+    AddonDatabase.repopulate(addons);
 
     // Always call AddonManager updateAddonRepositoryData after we refill the cache
     await AddonManagerPrivate.updateAddonRepositoryData();
@@ -713,67 +662,6 @@ var AddonRepository = {
     return addon;
   },
 
-  /*
-   * Creates an AddonCompatibilityOverride by parsing an entry from the AMO API.
-   *
-   * @param  aEntry
-   *         An entry from the AMO compat overrides API to parse.
-   * @return Result object containing the parsed AddonCompatibilityOverride
-   */
-  _parseCompatEntry(aEntry) {
-    let compat = {
-      id: aEntry.addon_guid,
-      compatRanges: null,
-    };
-
-    for (let range of aEntry.version_ranges) {
-      if (!range.addon_min_version) {
-        logger.debug("Compatibility override is missing min_version.");
-        continue;
-      }
-      if (!range.addon_max_version) {
-        logger.debug("Compatibility override is missing max_version.");
-        return null;
-      }
-
-      let override = new AddonManagerPrivate.AddonCompatibilityOverride(
-        "incompatible"
-      );
-      override.minVersion = range.addon_min_version;
-      override.maxVersion = range.addon_max_version;
-
-      for (let app of range.applications) {
-        if (app.guid != Services.appinfo.ID && app.guid != TOOLKIT_ID) {
-          continue;
-        }
-        if (!app.min_version || !app.max_version) {
-          continue;
-        }
-
-        override.appID = app.guid;
-        override.appMinVersion = app.min_version;
-        override.appMaxVersion = app.max_version;
-        if (app.id != TOOLKIT_ID) {
-          break;
-        }
-      }
-
-      if (!override.appID) {
-        logger.debug(
-          "Compatibility override is missing a valid application range."
-        );
-        continue;
-      }
-
-      if (compat.compatRanges === null) {
-        compat.compatRanges = [];
-      }
-      compat.compatRanges.push(override);
-    }
-
-    return compat;
-  },
-
   // Create url from preference, returning null if preference does not exist
   _formatURLPref(aPreference, aSubstitutions = {}) {
     let url = Services.prefs.getCharPref(aPreference, "");
@@ -789,34 +677,6 @@ var AddonRepository = {
     });
 
     return Services.urlFormatter.formatURL(url);
-  },
-
-  // Find a AddonCompatibilityOverride that matches a given aAddonVersion and
-  // application/platform version.
-  findMatchingCompatOverride(
-    aAddonVersion,
-    aCompatOverrides,
-    aAppVersion,
-    aPlatformVersion
-  ) {
-    for (let override of aCompatOverrides) {
-      let appVersion = null;
-      if (override.appID == TOOLKIT_ID) {
-        appVersion = aPlatformVersion || Services.appinfo.platformVersion;
-      } else {
-        appVersion = aAppVersion || Services.appinfo.version;
-      }
-
-      if (
-        Services.vc.compare(override.minVersion, aAddonVersion) <= 0 &&
-        Services.vc.compare(aAddonVersion, override.maxVersion) <= 0 &&
-        Services.vc.compare(override.appMinVersion, appVersion) <= 0 &&
-        Services.vc.compare(appVersion, override.appMaxVersion) <= 0
-      ) {
-        return override;
-      }
-    }
-    return null;
   },
 
   flush() {
@@ -927,23 +787,13 @@ var AddonDatabase = {
 
         Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
 
-        // Convert the addon and compat override objects as necessary
+        // Convert the addon objects as necessary
         // and store them in our in-memory copy of the database.
         for (let addon of inputDB.addons) {
           let id = addon.id;
 
           let entry = this._parseAddon(addon);
           this.DB.addons.set(id, entry);
-
-          if (entry.compatibilityOverrides) {
-            this.DB.compatOverrides.set(id, entry.compatibilityOverrides);
-          }
-        }
-
-        if (inputDB.compatOverrides) {
-          for (let entry of inputDB.compatOverrides) {
-            this.DB.compatOverrides.set(entry.id, entry.compatRanges);
-          }
         }
 
         this._loaded = true;
@@ -1014,12 +864,7 @@ var AddonDatabase = {
     let json = {
       schema: this.DB.schema,
       addons: Array.from(this.DB.addons.values()),
-      compatOverrides: [],
     };
-
-    for (let [id, overrides] of this.DB.compatOverrides.entries()) {
-      json.compatOverrides.push({ id, compatRanges: overrides });
-    }
 
     await OS.File.writeAtomic(this.jsonFile, JSON.stringify(json), {
       tmpPath: `${this.jsonFile}.tmp`,
@@ -1076,28 +921,15 @@ var AddonDatabase = {
   },
 
   /**
-   * Get an individual compatibility override from the in-memory cache.
-   * Note: calling this function before the database is read will
-   * return undefined.
-   *
-   * @param {string} aId The id of the addon to retrieve.
-   */
-  getCompatOverrides(aId) {
-    return this.DB.compatOverrides.get(aId);
-  },
-
-  /**
    * Asynchronously repopulates the database so it only contains the
    * specified add-ons
    *
    * @param {Map} aAddons
    *              Add-ons to repopulate the database with.
-   * @param {Map} aCompatOverrides
-   *              Compatibility overrides to repopulate the database with.
    */
-  repopulate(aAddons, aCompatOverrides) {
+  repopulate(aAddons) {
     this.DB = BLANK_DB();
-    this._update(aAddons, aCompatOverrides);
+    this._update(aAddons);
 
     let now = Math.round(Date.now() / 1000);
     logger.debug(
@@ -1107,36 +939,28 @@ var AddonDatabase = {
   },
 
   /**
-   * Asynchronously insert new addons and/or overrides into the database.
+   * Asynchronously insert new addons into the database.
    *
    * @param {Map} aAddons
    *              Add-ons to insert/update in the database
-   * @param {Map} aCompatOverrides
-   *              Compatibility overrides to insert/update in the database
    */
-  async update(aAddons, aCompatOverrides) {
+  async update(aAddons) {
     await this.openConnection();
 
-    this._update(aAddons, aCompatOverrides);
+    this._update(aAddons);
 
     this.save();
   },
 
   /**
-   * Merge the given addons and overrides into the database.
+   * Merge the given addons into the database.
    *
    * @param {Map} aAddons
    *              Add-ons to insert/update in the database
-   * @param {Map} aCompatOverrides
-   *              Compatibility overrides to insert/update in the database
    */
-  _update(aAddons, aCompatOverrides) {
+  _update(aAddons) {
     for (let addon of aAddons) {
       this.DB.addons.set(addon.id, this._parseAddon(addon));
-    }
-
-    for (let entry of aCompatOverrides) {
-      this.DB.compatOverrides.set(entry.id, entry.compatRanges);
     }
 
     this.save();
