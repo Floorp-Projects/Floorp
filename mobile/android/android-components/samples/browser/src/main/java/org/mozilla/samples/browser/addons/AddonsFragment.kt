@@ -23,17 +23,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
-import org.mozilla.samples.browser.addons.AddOnsFragment.CustomViewHolder.AddOnViewHolder
-import org.mozilla.samples.browser.addons.AddOnsFragment.CustomViewHolder.SectionViewHolder
+import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.AddonViewHolder
+import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.SectionViewHolder
 import org.mozilla.samples.browser.addons.PermissionsDialogFragment.PromptsStyling
 import org.mozilla.samples.browser.ext.components
 
 /**
  * Fragment use for managing add-ons.
  */
-class AddOnsFragment : Fragment(), View.OnClickListener {
+class AddonsFragment : Fragment(), View.OnClickListener {
     private lateinit var recyclerView: RecyclerView
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -62,12 +62,12 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         recyclerView = rootView.findViewById(R.id.add_ons_list)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         scope.launch {
-            val addOns = requireContext().components.addOnProvider.getAvailableAddOns()
+            val addons = requireContext().components.addonProvider.getAvailableAddons()
 
             scope.launch(Dispatchers.Main) {
-                val adapter = AddOnsAdapter(
-                    this@AddOnsFragment,
-                    addOns
+                val adapter = AddonsAdapter(
+                    this@AddonsFragment,
+                    addons
                 )
                 recyclerView.adapter = adapter
             }
@@ -77,9 +77,9 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
     /**
      * An adapter for displaying add-on items.
      */
-    inner class AddOnsAdapter(
+    inner class AddonsAdapter(
         private val clickListener: View.OnClickListener,
-        addons: List<AddOn>
+        addons: List<Addon>
     ) : RecyclerView.Adapter<CustomViewHolder>() {
         private val items: List<Any>
 
@@ -104,7 +104,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             return SectionViewHolder(view, titleView)
         }
 
-        private fun createAddonViewHolder(parent: ViewGroup): AddOnViewHolder {
+        private fun createAddonViewHolder(parent: ViewGroup): AddonViewHolder {
             val context = parent.context
             val inflater = LayoutInflater.from(context)
             val view = inflater.inflate(R.layout.add_ons_item, parent, false)
@@ -114,7 +114,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             val ratingView = view.findViewById<RatingBar>(R.id.rating)
             val userCountView = view.findViewById<TextView>(R.id.users_count)
             val addButton = view.findViewById<ImageView>(R.id.add_button)
-            return AddOnViewHolder(
+            return AddonViewHolder(
                 view,
                 iconView,
                 titleView,
@@ -128,7 +128,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         override fun getItemCount() = items.size
 
         override fun getItemViewType(position: Int): Int {
-            val isSection = items[position] !is AddOn
+            val isSection = items[position] !is Addon
             return if (isSection) VIEW_HOLDER_TYPE_SECTION else VIEW_HOLDER_TYPE_ADDON
         }
 
@@ -137,7 +137,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
 
             when (holder) {
                 is SectionViewHolder -> bindSection(holder, item as Section)
-                is AddOnViewHolder -> bindAddon(holder, item as AddOn)
+                is AddonViewHolder -> bindAddon(holder, item as Addon)
             }
         }
 
@@ -145,9 +145,9 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             holder.titleView.setText(section.title)
         }
 
-        private fun bindAddon(holder: AddOnViewHolder, addOn: AddOn) {
+        private fun bindAddon(holder: AddonViewHolder, addon: Addon) {
             val context = holder.itemView.context
-            addOn.rating?.let {
+            addon.rating?.let {
                 val userCount = context.getString(R.string.add_on_user_rating_count)
                 val ratingContentDescription =
                     context.getString(R.string.add_on_rating_content_description)
@@ -157,12 +157,12 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
                 holder.userCountView.text = String.format(userCount, getFormattedAmount(it.reviews))
             }
 
-            holder.titleView.text = addOn.translatableName.translate()
-            holder.summaryView.text = addOn.translatableSummary.translate()
-            holder.itemView.tag = addOn
+            holder.titleView.text = addon.translatableName.translate()
+            holder.summaryView.text = addon.translatableSummary.translate()
+            holder.itemView.tag = addon
             holder.itemView.setOnClickListener(clickListener)
-            holder.addButton.isVisible = !addOn.installed
-            val listener = if (!addOn.installed) {
+            holder.addButton.isVisible = !addon.installed
+            val listener = if (!addon.installed) {
                 clickListener
             } else {
                 null
@@ -170,7 +170,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             holder.addButton.setOnClickListener(listener)
 
             scope.launch {
-                val iconBitmap = context.components.addOnProvider.getAddOnIconBitmap(addOn)
+                val iconBitmap = context.components.addonProvider.getAddonIconBitmap(addon)
 
                 iconBitmap?.let {
                     MainScope().launch {
@@ -180,7 +180,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             }
         }
 
-        private fun createListWithSections(addons: List<AddOn>): List<Any> {
+        private fun createListWithSections(addons: List<Addon>): List<Any> {
             // We want to have the installed add-ons first in the list.
             val sortedAddons = addons.sortedBy { !it.installed }
 
@@ -219,7 +219,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         /**
          * A view holder for displaying add-on items.
          */
-        class AddOnViewHolder(
+        class AddonViewHolder(
             view: View,
             val iconView: ImageView,
             val titleView: TextView,
@@ -234,12 +234,12 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         val context = view.context
         when (view.id) {
             R.id.add_button -> {
-                val addOn = (((view.parent) as View).tag as AddOn)
-                showPermissionDialog(addOn)
+                val addon = (((view.parent) as View).tag as Addon)
+                showPermissionDialog(addon)
             }
             R.id.add_on_item -> {
-                val intent = Intent(context, InstalledAddOnDetailsActivity::class.java)
-                intent.putExtra("add_on", view.tag as AddOn)
+                val intent = Intent(context, InstalledAddonDetailsActivity::class.java)
+                intent.putExtra("add_on", view.tag as Addon)
                 context.startActivity(intent)
             }
             else -> {
@@ -255,12 +255,12 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         return fragmentManager?.findFragmentByTag(PERMISSIONS_DIALOG_FRAGMENT_TAG) as? PermissionsDialogFragment
     }
 
-    private fun showPermissionDialog(addOn: AddOn) {
+    private fun showPermissionDialog(addon: Addon) {
 
         val dialog = PermissionsDialogFragment.newInstance(
-            addOnId = addOn.id,
-            title = addOn.translatableName.translate(),
-            permissions = addOn.translatePermissions(),
+            addonId = addon.id,
+            title = addon.translatableName.translate(),
+            permissions = addon.translatePermissions(),
             promptsStyling = PromptsStyling(
                 gravity = Gravity.BOTTOM,
                 shouldWidthMatchParent = true

@@ -15,25 +15,25 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_add_on_settings.*
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
 
 /**
  * An activity to show the settings of an add-on.
  */
-class AddOnSettingsActivity : AppCompatActivity() {
+class AddonSettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_on_settings)
 
-        val addOn = requireNotNull(intent.getParcelableExtra<AddOn>("add_on"))
-        title = addOn.translatableName.translate()
+        val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
+        title = addon.translatableName.translate()
 
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.addOnSettingsContainer, AddOnSettingsFragment.create(addOn))
+            .replace(R.id.addonSettingsContainer, AddonSettingsFragment.create(addon))
             .commit()
     }
 
@@ -46,13 +46,13 @@ class AddOnSettingsActivity : AppCompatActivity() {
     /**
      * A fragment to show the settings of an add-on with [EngineView].
      */
-    class AddOnSettingsFragment : Fragment() {
-        private lateinit var addOn: AddOn
+    class AddonSettingsFragment : Fragment() {
+        private lateinit var addon: Addon
         private lateinit var engineObserver: EngineSession.Observer
         private lateinit var engineSession: EngineSession
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-            addOn = requireNotNull(arguments?.getParcelable("add_on"))
+            addon = requireNotNull(arguments?.getParcelable("add_on"))
             engineSession = components.engine.createSession()
             engineObserver = object : EngineSession.Observer {
                 override fun onLoadRequest(
@@ -72,10 +72,10 @@ class AddOnSettingsActivity : AppCompatActivity() {
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
-            addOnSettingsEngineView.render(engineSession)
+            addonSettingsEngineView.render(engineSession)
 
             // update the url after add_on and web_extension link
-            engineSession.loadUrl(addOn.siteUrl)
+            engineSession.loadUrl(addon.siteUrl)
         }
 
         override fun onDestroyView() {
@@ -86,11 +86,11 @@ class AddOnSettingsActivity : AppCompatActivity() {
 
         companion object {
             /**
-             * Create an [AddOnSettingsFragment] with add_on as a required parameter.
+             * Create an [AddonSettingsFragment] with add_on as a required parameter.
              */
-            fun create(addOn: AddOn) = AddOnSettingsFragment().apply {
+            fun create(addon: Addon) = AddonSettingsFragment().apply {
                 arguments = Bundle().apply {
-                    putParcelable("add_on", addOn)
+                    putParcelable("add_on", addon)
                 }
             }
         }

@@ -33,7 +33,7 @@ import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
-import mozilla.components.feature.addons.amo.AddOnCollectionProvider
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
@@ -54,7 +54,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
-import org.mozilla.samples.browser.addons.AddOnsActivity
+import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
@@ -127,8 +127,8 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val addOnProvider by lazy {
-        AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    val addonProvider by lazy {
+        AddonCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
     }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
@@ -190,7 +190,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
             },
             SimpleBrowserMenuItem("Add-ons") {
-                val intent = Intent(applicationContext, AddOnsActivity::class.java)
+                val intent = Intent(applicationContext, AddonsActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 applicationContext.startActivity(intent)
             },

@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import mozilla.components.support.test.any
 import mozilla.components.support.test.file.loadResourceAsString
 import mozilla.components.support.test.mock
@@ -29,10 +29,10 @@ import java.util.Date
 import java.io.InputStream
 
 @RunWith(AndroidJUnit4::class)
-class AddOnCollectionProviderTest {
+class AddonCollectionProviderTest {
 
     @Test
-    fun `getAvailableAddOns - with a successful status response must contain add-ons`() {
+    fun `getAvailableAddons - with a successful status response must contain add-ons`() {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -42,62 +42,62 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
+        val provider = AddonCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
-            val addOns = provider.getAvailableAddOns()
-            val addOn = addOns.first()
+            val addons = provider.getAvailableAddons()
+            val addon = addons.first()
 
-            assertTrue(addOns.isNotEmpty())
+            assertTrue(addons.isNotEmpty())
 
             // Add-on details
-            assertEquals("607454", addOn.id)
-            assertEquals("2015-04-25T07:26:22Z", addOn.createdAt)
-            assertEquals("2019-10-24T09:28:41Z", addOn.updatedAt)
+            assertEquals("607454", addon.id)
+            assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
+            assertEquals("2019-10-24T09:28:41Z", addon.updatedAt)
             assertEquals(
                 "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
-                addOn.iconUrl
+                addon.iconUrl
             )
             assertEquals(
                 "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-                addOn.siteUrl
+                addon.siteUrl
             )
             assertEquals(
                 "https://addons.mozilla.org/firefox/downloads/file/3428595/ublock_origin-1.23.0-an+fx.xpi?src=",
-                addOn.downloadUrl
+                addon.downloadUrl
             )
             assertEquals(
                 "menus",
-                addOn.permissions.first()
+                addon.permissions.first()
             )
             assertEquals(
                 "uBlock Origin",
-                addOn.translatableName["ca"]
+                addon.translatableName["ca"]
             )
             assertEquals(
                 "Finalment, un blocador eficient que utilitza pocs recursos de memòria i processador.",
-                addOn.translatableSummary["ca"]
+                addon.translatableSummary["ca"]
             )
-            assertTrue(addOn.translatableDescription.getValue("ca").isNotBlank())
-            assertEquals("1.23.0", addOn.version)
+            assertTrue(addon.translatableDescription.getValue("ca").isNotBlank())
+            assertEquals("1.23.0", addon.version)
 
             // Authors
-            assertEquals("11423598", addOn.authors.first().id)
-            assertEquals("Raymond Hill", addOn.authors.first().name)
-            assertEquals("gorhill", addOn.authors.first().username)
+            assertEquals("11423598", addon.authors.first().id)
+            assertEquals("Raymond Hill", addon.authors.first().name)
+            assertEquals("gorhill", addon.authors.first().username)
             assertEquals(
                 "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-                addOn.authors.first().url
+                addon.authors.first().url
             )
 
             // Ratings
-            assertEquals(4.7003F, addOn.rating!!.average, 0.7003F)
-            assertEquals(9930, addOn.rating!!.reviews)
+            assertEquals(4.7003F, addon.rating!!.average, 0.7003F)
+            assertEquals(9930, addon.rating!!.reviews)
         }
     }
 
     @Test
-    fun `getAvailableAddOns - with a successful status response must handle empty values`() {
+    fun `getAvailableAddons - with a successful status response must handle empty values`() {
         val jsonResponse = loadResourceAsString("/collection_with_empty_values.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -108,38 +108,38 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
+        val provider = AddonCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
-            val addOns = provider.getAvailableAddOns()
-            val addOn = addOns.first()
+            val addons = provider.getAvailableAddons()
+            val addon = addons.first()
 
-            assertTrue(addOns.isNotEmpty())
+            assertTrue(addons.isNotEmpty())
 
             // Add-on
-            assertEquals("", addOn.id)
-            assertEquals("", addOn.createdAt)
-            assertEquals("", addOn.updatedAt)
-            assertEquals("", addOn.iconUrl)
-            assertEquals("", addOn.siteUrl)
-            assertEquals("", addOn.version)
-            assertEquals("", addOn.downloadUrl)
-            assertTrue(addOn.permissions.isEmpty())
-            assertTrue(addOn.translatableName.isEmpty())
-            assertTrue(addOn.translatableSummary.isEmpty())
-            assertEquals("", addOn.translatableDescription.getValue("ca"))
+            assertEquals("", addon.id)
+            assertEquals("", addon.createdAt)
+            assertEquals("", addon.updatedAt)
+            assertEquals("", addon.iconUrl)
+            assertEquals("", addon.siteUrl)
+            assertEquals("", addon.version)
+            assertEquals("", addon.downloadUrl)
+            assertTrue(addon.permissions.isEmpty())
+            assertTrue(addon.translatableName.isEmpty())
+            assertTrue(addon.translatableSummary.isEmpty())
+            assertEquals("", addon.translatableDescription.getValue("ca"))
 
             // Authors
-            assertTrue(addOn.authors.isEmpty())
+            assertTrue(addon.authors.isEmpty())
             verify(mockedClient).fetch(Request(url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons"))
 
             // Ratings
-            assertNull(addOn.rating)
+            assertNull(addon.rating)
         }
     }
 
     @Test
-    fun `getAvailableAddOns - with a not successful status will return an empty list`() {
+    fun `getAvailableAddons - with a not successful status will return an empty list`() {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
         val mockedMockedBody = mock<Response.Body>()
@@ -148,16 +148,16 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(500)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
+        val provider = AddonCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
-            val addOns = provider.getAvailableAddOns()
-            assertTrue(addOns.isEmpty())
+            val addons = provider.getAvailableAddons()
+            assertTrue(addons.isEmpty())
         }
     }
 
     @Test
-    fun `getAvailableAddOns - returns cached result only if allowed and not expired`() {
+    fun `getAvailableAddons - returns cached result only if allowed and not expired`() {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -167,24 +167,24 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = spy(AddOnCollectionProvider(testContext, client = mockedClient))
+        val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
 
         runBlocking {
-            provider.getAvailableAddOns(false)
+            provider.getAvailableAddons(false)
             verify(provider, never()).readFromDiskCache()
 
             whenever(provider.cacheExpired(testContext)).thenReturn(true)
-            provider.getAvailableAddOns(true)
+            provider.getAvailableAddons(true)
             verify(provider, never()).readFromDiskCache()
 
             whenever(provider.cacheExpired(testContext)).thenReturn(false)
-            provider.getAvailableAddOns(true)
+            provider.getAvailableAddons(true)
             verify(provider).readFromDiskCache()
         }
     }
 
     @Test
-    fun `getAvailableAddOns - writes response to cache if configured`() {
+    fun `getAvailableAddons - writes response to cache if configured`() {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -194,28 +194,28 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = spy(AddOnCollectionProvider(testContext, client = mockedClient))
-        val cachingProvider = spy(AddOnCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
+        val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
+        val cachingProvider = spy(AddonCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
 
         runBlocking {
-            provider.getAvailableAddOns()
+            provider.getAvailableAddons()
             verify(provider, never()).writeToDiskCache(jsonResponse)
 
-            cachingProvider.getAvailableAddOns()
+            cachingProvider.getAvailableAddons()
             verify(cachingProvider).writeToDiskCache(jsonResponse)
         }
     }
 
     @Test
-    fun `getAvailableAddOns - cache expiration check`() {
-        var provider = spy(AddOnCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = -1))
+    fun `getAvailableAddons - cache expiration check`() {
+        var provider = spy(AddonCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = -1))
         whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
         assertTrue(provider.cacheExpired(testContext))
 
         whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
         assertTrue(provider.cacheExpired(testContext))
 
-        provider = spy(AddOnCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = 10))
+        provider = spy(AddonCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = 10))
         whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
         assertTrue(provider.cacheExpired(testContext))
 
@@ -227,7 +227,7 @@ class AddOnCollectionProviderTest {
     }
 
     @Test
-    fun `getAddOnIconBitmap - with a successful status will return a bitmap`() {
+    fun `getAddonIconBitmap - with a successful status will return a bitmap`() {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
         val stream: InputStream = javaClass.getResourceAsStream("/png/mozac.png")!!.buffered()
@@ -237,8 +237,8 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
-        val addOn = AddOn(
+        val provider = AddonCollectionProvider(testContext, client = mockedClient)
+        val addon = Addon(
                 id = "id",
                 authors = mock(),
                 categories = mock(),
@@ -250,13 +250,13 @@ class AddOnCollectionProviderTest {
         )
 
         runBlocking {
-            val bitmap = provider.getAddOnIconBitmap(addOn)
+            val bitmap = provider.getAddonIconBitmap(addon)
             assertTrue(bitmap is Bitmap)
         }
     }
 
     @Test
-    fun `getAddOnIconBitmap - with an unsuccessful status will return null`() {
+    fun `getAddonIconBitmap - with an unsuccessful status will return null`() {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
         val mockedMockedBody = mock<Response.Body>()
@@ -265,8 +265,8 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(500)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
-        val addOn = AddOn(
+        val provider = AddonCollectionProvider(testContext, client = mockedClient)
+        val addon = Addon(
                 id = "id",
                 authors = mock(),
                 categories = mock(),
@@ -278,7 +278,7 @@ class AddOnCollectionProviderTest {
         )
 
         runBlocking {
-            val bitmap = provider.getAddOnIconBitmap(addOn)
+            val bitmap = provider.getAddonIconBitmap(addon)
             assertNull(bitmap)
         }
     }

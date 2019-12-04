@@ -14,7 +14,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
 
 private const val LEARN_MORE_URL =
@@ -27,18 +27,18 @@ class PermissionsDetailsActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_on_permissions)
-        val addOn = requireNotNull(intent.getParcelableExtra<AddOn>("add_on"))
-        title = addOn.translatableName.translate()
+        val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
+        title = addon.translatableName.translate()
 
-        bindPermissions(addOn)
+        bindPermissions(addon)
 
         bindLearnMore()
     }
 
-    private fun bindPermissions(addOn: AddOn) {
+    private fun bindPermissions(addon: Addon) {
         val recyclerView = findViewById<RecyclerView>(R.id.add_ons_permissions)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        val sortedPermissions = addOn.translatePermissions().map { stringId ->
+        val sortedPermissions = addon.translatePermissions().map { stringId ->
             getString(stringId)
         }.sorted()
         recyclerView.adapter = PermissionsAdapter(sortedPermissions)

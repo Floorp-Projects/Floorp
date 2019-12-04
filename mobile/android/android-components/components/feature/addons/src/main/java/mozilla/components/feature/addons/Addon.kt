@@ -13,8 +13,8 @@ import kotlinx.android.parcel.Parcelize
  *
  * @property id The unique ID of this add-on.
  * @property authors List holding information about the add-on authors.
- * @property installed Indicates if this [AddOn] is installed or not, defaults to false.
- * @property enabled Indicates if this [AddOn] is enabled to interact with web content or not,
+ * @property installed Indicates if this [Addon] is installed or not, defaults to false.
+ * @property enabled Indicates if this [Addon] is enabled to interact with web content or not,
  * defaults to false.
  * @property categories List of categories the add-on belongs to.
  * @property downloadUrl The (absolute) URL to download the add-on file (eg xpi).
@@ -33,7 +33,7 @@ import kotlinx.android.parcel.Parcelize
  * @property updatedAt The date of the last time the add-on was updated by its developer(s).
  */
 @Parcelize
-data class AddOn(
+data class Addon(
     val id: String,
     val authors: List<Author>,
     val categories: List<String>,
@@ -79,7 +79,7 @@ data class AddOn(
     ) : Parcelable
 
     /**
-     * Returns a list of id resources per each item on the [AddOn.permissions] list.
+     * Returns a list of id resources per each item on the [Addon.permissions] list.
      */
     fun translatePermissions(): List<Int> {
         return permissions.mapNotNull { it -> permissionToTranslation[it] }

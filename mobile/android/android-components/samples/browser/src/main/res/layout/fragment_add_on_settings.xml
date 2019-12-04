@@ -9,7 +9,7 @@
     android:layout_height="match_parent">
 
     <mozilla.components.concept.engine.EngineView
-        android:id="@+id/addOnSettingsEngineView"
+        android:id="@+id/addonSettingsEngineView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
