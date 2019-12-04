@@ -247,10 +247,22 @@ function withCommonPathPrefixRemoved(pathArray) {
   );
 }
 
+class UnhandledCaseError extends Error {
+  /**
+   * @param {never} value - Check that
+   * @param {string} typeName - A friendly type name.
+   */
+  constructor(value, typeName) {
+    super(`There was an unhandled case for "${typeName}": ${value}`);
+    this.name = "UnhandledCaseError";
+  }
+}
+
 module.exports = {
   formatFileSize,
   makeExponentialScale,
   scaleRangeWithClamping,
   calculateOverhead,
   withCommonPathPrefixRemoved,
+  UnhandledCaseError,
 };
