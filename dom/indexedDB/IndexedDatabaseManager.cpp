@@ -209,6 +209,13 @@ void MaxPreloadExtraRecordsPrefChangeCallback(const char* aPrefName,
   // require adaptations in ActorsParent.cpp
 }
 
+auto DatabaseNameMatchPredicate(const nsAString* const aName) {
+  MOZ_ASSERT(aName);
+  return [aName](const auto& fileManager) {
+    return fileManager->DatabaseName() == *aName;
+  };
+}
+
 }  // namespace
 
 IndexedDatabaseManager::IndexedDatabaseManager()
@@ -864,9 +871,7 @@ already_AddRefed<FileManager> FileManagerInfo::GetFileManager(
 
   const auto end = managers.cend();
   const auto foundIt =
-      std::find_if(managers.cbegin(), end, [&aName](const auto& fileManager) {
-        return fileManager->DatabaseName() == aName;
-      });
+      std::find_if(managers.cbegin(), end, DatabaseNameMatchPredicate(&aName));
 
   return foundIt != end ? RefPtr<FileManager>{*foundIt}.forget() : nullptr;
 }
@@ -919,9 +924,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManager(
   auto& managers = GetArray(aPersistenceType);
   const auto end = managers.cend();
   const auto foundIt =
-      std::find_if(managers.cbegin(), end, [&aName](const auto& fileManager) {
-        return fileManager->DatabaseName() == aName;
-      });
+      std::find_if(managers.cbegin(), end, DatabaseNameMatchPredicate(&aName));
 
   if (foundIt != end) {
     (*foundIt)->Invalidate();
