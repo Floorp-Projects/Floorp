@@ -130,6 +130,7 @@ include = [
   "TouchAction",
   "WillChange",
   "TextDecorationLine",
+  "TextUnderlinePosition",
   "TextTransform",
   "TextOverflow",
   "MozListReversed",
@@ -336,6 +337,14 @@ renaming_overrides_prefixing = true
 "TextTransform" = """
   static inline StyleTextTransform None();
   inline bool IsNone() const;
+"""
+
+"TextUnderlinePosition" = """
+  static inline StyleTextUnderlinePosition Auto();
+  inline bool IsAuto() const;
+  inline bool IsUnder() const;
+  inline bool IsLeft() const;
+  inline bool IsRight() const;
 """
 
 # TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE

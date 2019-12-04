@@ -56,6 +56,7 @@ hide-types = [
 bitfield-enums = [
     "nsChangeHint",
     "mozilla::OriginFlags",
+    "mozilla::StyleTextUnderlinePosition",
 ]
 rusty-enums = [
     "nsCompatibility",
@@ -479,6 +480,7 @@ cbindgen-types = [
     { gecko = "StyleWillChange", servo = "values::specified::box_::WillChange" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "values::computed::TextTransform" },
+    { gecko = "StyleTextUnderlinePosition", servo = "values::computed::TextUnderlinePosition" },
     { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
     { gecko = "StyleOwned", servo = "gecko_bindings::sugar::ownership::Owned" },
     { gecko = "StyleOwnedOrNull", servo = "gecko_bindings::sugar::ownership::OwnedOrNull" },
