@@ -38,7 +38,6 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
-#include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsPresContext.h"
 

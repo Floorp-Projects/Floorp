@@ -6,7 +6,6 @@
 #include "txMozillaXMLOutput.h"
 
 #include "mozilla/dom/Document.h"
-#include "nsIDocShell.h"
 #include "nsIScriptElement.h"
 #include "nsCharsetSource.h"
 #include "nsIRefreshURI.h"
@@ -16,7 +15,6 @@
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
 #include "txLog.h"
-#include "nsIConsoleService.h"
 #include "nsNameSpaceManager.h"
 #include "txStringUtils.h"
 #include "txURIUtils.h"

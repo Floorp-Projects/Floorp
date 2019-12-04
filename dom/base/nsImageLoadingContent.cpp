@@ -20,7 +20,6 @@
 #include "nsContentList.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIURI.h"
-#include "nsILoadGroup.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"

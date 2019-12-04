@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FontTableURIProtocolHandler.h"
-#include "nsIURIMutator.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
 #include "nsSimpleURI.h"

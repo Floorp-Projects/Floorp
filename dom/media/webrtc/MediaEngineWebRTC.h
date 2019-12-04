@@ -31,8 +31,6 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 #include "prcvar.h"

@@ -12,7 +12,6 @@
 #include "mozilla/ClearOnShutdown.h"
 
 #include "nsPrintfCString.h"
-#include "nsIScriptSecurityManager.h"
 
 // XXX need another bug to move this to a common header.
 #ifdef DISABLE_ASSERTS_FOR_FUZZING

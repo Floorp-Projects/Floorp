@@ -61,7 +61,6 @@
 #include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
 #include "nsIDocShell.h"
-#include "nsIContentViewer.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
@@ -92,7 +91,6 @@
 #include "nsPrintfCString.h"
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
-#include "nsIScriptError.h"
 //#include "nsWidgetsCID.h"
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
@@ -102,7 +100,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "GeckoProfiler.h"
 #include "mozilla/Preferences.h"
-#include "nsIStyleSheetService.h"
 #include "nsContentPermissionHelper.h"
 #include "nsCSSPseudoElements.h"  // for PseudoStyleType
 #include "nsNetUtil.h"

@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 #include "nsXULAppAPI.h"
 #include "PresentationSessionRequest.h"
 #include "PresentationTerminateRequest.h"

@@ -9,6 +9,7 @@
 #include "mozilla/dom/XULTooltipElement.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsCTooltipTextProvider.h"
+#include "nsITooltipTextProvider.h"
 
 namespace mozilla {
 namespace dom {

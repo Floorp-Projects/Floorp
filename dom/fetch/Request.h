@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_Request_h
 #define mozilla_dom_Request_h
 
-#include "nsIContentPolicy.h"
 #include "nsISupportsImpl.h"
 #include "nsWrapperCache.h"
 

@@ -19,7 +19,6 @@
 #include "nsString.h"
 #include "nsAtom.h"
 #include "nsIPrincipal.h"
-#include "nsIURI.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"

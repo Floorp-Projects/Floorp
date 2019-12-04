@@ -9,11 +9,7 @@
 #include "LocalStorageManager.h"
 #include "StorageUtils.h"
 
-#include "nsIObserverService.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsICookiePermission.h"
 
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StorageBinding.h"

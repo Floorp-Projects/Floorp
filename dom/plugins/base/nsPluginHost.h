@@ -16,7 +16,6 @@
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
 #include "nsWeakReference.h"
-#include "nsIPrompt.h"
 #include "MainThreadUtils.h"
 #include "nsTArray.h"
 #include "nsINamed.h"

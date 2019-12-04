@@ -7,8 +7,6 @@
 #include "XMLHttpRequestWorker.h"
 
 #include "nsIDOMEventListener.h"
-#include "nsIRunnable.h"
-#include "nsIXPConnect.h"
 
 #include "jsapi.h"  // JS::AutoValueArray
 #include "jsfriendapi.h"

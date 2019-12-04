@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
-#include "nsIPresentationService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
