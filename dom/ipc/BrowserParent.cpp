@@ -903,14 +903,6 @@ void BrowserParent::InitRendering() {
   layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
   AddBrowserParentToTable(layersId, this);
 
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  if (frameLoader) {
-    nsIFrame* frame = frameLoader->GetPrimaryFrameOfOwningContent();
-    if (frame) {
-      frame->InvalidateFrame();
-    }
-  }
-
   TextureFactoryIdentifier textureFactoryIdentifier;
   mRemoteLayerTreeOwner.GetTextureFactoryIdentifier(&textureFactoryIdentifier);
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
