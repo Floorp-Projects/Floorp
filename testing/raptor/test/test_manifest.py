@@ -59,7 +59,6 @@ VALID_MANIFESTS = [{
     'alert_threshold': 2.0,
     'apps': 'geckoview',
     'browser_cycles': 10,
-    'cold': True,
     'lower_is_better': False,
     'manifest': 'valid_details_2',
     'measure': 'fcp',

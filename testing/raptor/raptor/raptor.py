@@ -625,6 +625,7 @@ class Browsertime(Perftest):
         # add test specific preferences
         LOG.info("setting test-specific Firefox preferences")
         self.profile.set_preferences(json.loads(raw_prefs))
+        self.remove_mozprofile_delimiters_from_profile()
 
     def run_test_setup(self, test):
         super(Browsertime, self).run_test_setup(test)

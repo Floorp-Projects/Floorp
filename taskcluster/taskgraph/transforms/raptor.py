@@ -28,6 +28,7 @@ raptor_description_schema = Schema({
         [basestring]
     ),
     Optional('raptor-test'): basestring,
+    Optional('raptor-subtests'): [basestring],
     Optional('activity'): optionally_keyed_by(
         'app',
         basestring
@@ -157,7 +158,15 @@ def split_pageload(config, tests):
 
         assert 'raptor-test' in test
         test['description'] += " using cold pageload"
-        test['raptor-test'] += '-cold'
+
+        # for raptor-webext to run cold we just call the corresponding '-cold' test name; but
+        # for raptor browsertime we leave the raptor test name as/is and will set the '--cold'
+        # command line argument instead via settting test['cold'] to true
+        if test['test-name'].startswith('browsertime-tp6'):
+            test['cold'] = True
+        else:
+            test['raptor-test'] += '-cold'
+
         test['max-run-time'] = 3000
         test['test-name'] += '-cold'
         test['try-name'] += '-cold'
@@ -200,6 +209,40 @@ def build_condprof_tests(config, tests):
 
 
 @transforms.add
+def split_browsertime_page_load_by_url(config, tests):
+
+    for test in tests:
+
+        # for tests that have 'raptor-subtests' listed, we want to create a separate
+        # test job for every subtest (i.e. split out each page-load URL into its own job)
+        subtests = test.pop('raptor-subtests', None)
+        if not subtests:
+            yield test
+            continue
+
+        chunk_number = 0
+
+        for subtest in subtests:
+
+            # create new test job
+            chunked = deepcopy(test)
+
+            # only run the subtest/single URL
+            chunked['test-name'] += "-{}".format(subtest)
+            chunked['try-name'] += "-{}".format(subtest)
+            chunked['raptor-test'] = subtest
+
+            # set treeherder symbol and description
+            chunk_number += 1
+            group, symbol = split_symbol(test['treeherder-symbol'])
+            symbol += "-{}".format(chunk_number)
+            chunked['treeherder-symbol'] = join_symbol(group, symbol)
+            chunked['description'] += "-{}".format(subtest)
+
+            yield chunked
+
+
+@transforms.add
 def add_extra_options(config, tests):
     for test in tests:
         extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
@@ -210,6 +253,11 @@ def add_extra_options(config, tests):
 
         if 'app' in test:
             extra_options.append('--app={}'.format(test.pop('app')))
+
+        # for browsertime tp6 cold page-load jobs we need to set the '--cold' cmd line arg
+        if test['test-name'].startswith('browsertime-tp6'):
+            if test.pop('cold', False) is True:
+                extra_options.append('--cold')
 
         if 'activity' in test:
             extra_options.append('--activity={}'.format(test.pop('activity')))

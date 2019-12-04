@@ -983,10 +983,12 @@ raptor-jetstream2-firefox-profiling:
         fetch:
             - jetstream2
 
-browsertime-tp6-1:
-    description: "Raptor (browsertime) tp6-1"
-    raptor-test: raptor-tp6-1
-    run-on-projects: ['mozilla-central','integration', 'try']
+browsertime-tp6:
+    description: "Raptor (browsertime) tp6 page-load tests"
+    raptor-test: tp6
+    raptor-subtests: ['amazon', 'bing-search', 'facebook', 'google-search',
+                      'google-slides', 'wikipedia', 'yahoo-news', 'youtube']
+    run-on-projects: ['mozilla-central', 'integration', 'try']
     apps: ['firefox', 'chrome']
     variants:
         by-app:
@@ -1002,7 +1004,7 @@ browsertime-tp6-1:
             chrome:
                 - .*shippable[^-qr].*
             default: []
-    treeherder-symbol: Btime(tp6-1)
+    treeherder-symbol: Btime(tp6)
     max-run-time: 4000
     tier: 3
     condprof: True

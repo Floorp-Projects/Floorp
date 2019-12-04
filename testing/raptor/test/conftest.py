@@ -90,7 +90,9 @@ def create_args():
                      page_timeout=None,
                      test_url_params=None,
                      host=None,
-                     run_local=True)
+                     run_local=True,
+                     browsertime=True,
+                     cold=False)
 
     def inner(**kwargs):
         for next_arg in kwargs:
