@@ -7544,11 +7544,6 @@
   value: false
   mirror: always
 
-- name: telemetry.number_of_site_origin.min_interval
-  type: uint32_t
-  value: 300000
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "test."
 #---------------------------------------------------------------------------
