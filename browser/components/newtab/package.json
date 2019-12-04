@@ -90,11 +90,6 @@
   "main": "bootstrap.js",
   "repository": "mozilla/activity-stream",
   "config": {
-    "default_locale": "en-US",
-    "/*": "NB: This directory is *not* 'locales' to avoid mercurial hook for uplifts.",
-    "**": "It contains the source default locale strings to be exported for localization",
-    "*/": "and is the path used to update translated strings and to prerender strings.",
-    "locales_dir": "locales-src",
     "mc_dir": "../mozilla-central"
   },
   "scripts": {
@@ -108,7 +103,6 @@
     "prebuildmc": "rimraf $npm_package_config_mc_dir/browser/components/newtab/",
     "buildmc:bundle": "npm run  bundle",
     "buildmc:copy": "rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/",
-    "buildmc:fluentExport": "cpx \"$npm_package_config_locales_dir/*.ftl\" $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/",
     "buildmc:copyPingCentre": "cpx \"ping-centre/PingCentre.jsm\" $npm_package_config_mc_dir/browser/modules",
     "builduplift": "npm-run-all builduplift:*",
     "prebuilduplift": "npm run prebuildmc",
@@ -129,7 +123,6 @@
     "watchmc:css": "npm run bundle:css && npm run bundle:css -- --source-map-embed --source-map-contents -w",
     "importmc": "npm-run-all importmc:*",
     "importmc:src": "rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .",
-    "importmc:ftl": "rsync -a $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/ $npm_package_config_locales_dir",
     "testmc": "npm-run-all testmc:*",
     "testmc:lint": "npm run lint",
     "testmc:build": "npm run bundle:webpack",
