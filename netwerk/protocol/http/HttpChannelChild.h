@@ -148,6 +148,15 @@ class HttpChannelChild final : public PHttpChannelChild,
       const ResourceTimingStructArgs& aTiming,
       const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
       const bool& aIsLastPartOfMultiPart) override;
+  mozilla::ipc::IPCResult RecvOnTransportAndData(
+      const nsresult& aChannelStatus, const nsresult& aTransportStatus,
+      const uint64_t& aOffset, const uint32_t& aCount,
+      const nsCString& aData) override;
+
+  mozilla::ipc::IPCResult RecvOnStopRequest(
+      const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
+      const TimeStamp& aLastActiveTabOptHit,
+      const nsHttpHeaderArray& aResponseTrailers) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
       const uint32_t& registrarId, const URIParams& newURI,
