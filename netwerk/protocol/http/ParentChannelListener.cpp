@@ -96,7 +96,7 @@ ParentChannelListener::OnStopRequest(nsIRequest* aRequest,
 
   // If we're not a multi-part channel, then we can drop mListener and break the
   // reference cycle. If we are, then this might be called again, so wait for
-  // AllPartsStopped instead.
+  // OnAfterLastPart instead.
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
   if (!multiPartChannel) {
     mNextListener = nullptr;
