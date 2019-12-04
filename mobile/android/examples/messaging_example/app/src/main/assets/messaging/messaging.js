@@ -8,6 +8,6 @@ if (manifest) {
     .then(response => response.json())
     .then(json => {
       let message = { type: "WPAManifest", manifest: json };
-      window.browser.runtime.sendNativeMessage("browser", message);
+      browser.runtime.sendNativeMessage("browser", message);
     });
 }

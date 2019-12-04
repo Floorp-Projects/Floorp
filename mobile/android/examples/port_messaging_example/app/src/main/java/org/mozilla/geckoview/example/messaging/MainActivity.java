@@ -33,14 +33,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         WebExtension.PortDelegate portDelegate = new WebExtension.PortDelegate() {
-            public WebExtension.Port port = null;
-
+            @Override
             public void onPortMessage(final @NonNull Object message,
                                       final @NonNull WebExtension.Port port) {
                 Log.d("PortDelegate", "Received message from WebExtension: "
                         + message);
             }
 
+            @Override
             public void onDisconnect(final @NonNull WebExtension.Port port) {
                 // This port is not usable anymore.
                 if (port == mPort) {
@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         WebExtension.MessageDelegate messageDelegate = new WebExtension.MessageDelegate() {
+            @Override
             @Nullable
             public void onConnect(final @NonNull WebExtension.Port port) {
                 mPort = port;

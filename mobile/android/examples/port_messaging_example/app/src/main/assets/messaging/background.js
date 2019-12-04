@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Establish connection with app
-let port = window.browser.runtime.connectNative("browser");
+let port = browser.runtime.connectNative("browser");
 port.onMessage.addListener(response => {
   // Let's just echo the message back
   port.postMessage(`Received: ${JSON.stringify(response)}`);
