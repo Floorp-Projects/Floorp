@@ -115,12 +115,10 @@ async function startTest(test) {
     "checking vout.currentTime after seeking and playing through again");
 
   v.src = test.name + "?1";
-  v.play();
   vout.play();
+  await v.play();
 
-  while (v.currentTime == 0) {
-    await new Promise(r => v.ontimeupdate = r);
-  }
+  isnot(vout.srcObject.getTracks().length, 0, "There are some output tracks");
 
   vout.onended = unexpected;
   vout.srcObject.onremovetrack = unexpected;
