@@ -1745,6 +1745,16 @@ async function reftestWait(url, remote) {
     await reftestWaitRemoved(win, root);
     await paintComplete(win, remote);
   }
+  if (
+    win.innerWidth < document.documentElement.scrollWidth ||
+    win.innerHeight < document.documentElement.scrollHeight
+  ) {
+    logger.warn(
+      `${url} overflows viewport (width: ${
+        document.documentElement.scrollWidth
+      }, height: ${document.documentElement.scrollHeight})`
+    );
+  }
 }
 
 function documentLoad(win, url) {
