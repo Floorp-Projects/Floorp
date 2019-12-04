@@ -7,6 +7,7 @@ package mozilla.components.feature.push
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.`when`
@@ -19,9 +20,9 @@ class DeliveryManagerTest {
         assertEquals(PushType.Services, pushType)
     }
 
-    @Test(expected = NoSuchElementException::class)
-    fun `exception thrown if serviceType not found`() {
-        DeliveryManager.serviceForChannelId("992a0f0542383f1ea5ef51b7cf4ea6c4")
+    @Test
+    fun `unknown channelIDs handled gracefully`() {
+        assertNull(DeliveryManager.serviceForChannelId("992a0f0542383f1ea5ef51b7cf4ea6c4"))
     }
 
     @Test
