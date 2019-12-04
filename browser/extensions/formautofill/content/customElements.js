@@ -19,12 +19,12 @@
       "resource://gre/actors/AutoCompleteParent.jsm"
     );
 
-    let browser = AutoCompleteParent.getCurrentBrowser();
-    if (!browser) {
+    let actor = AutoCompleteParent.getCurrentActor();
+    if (!actor) {
       return;
     }
 
-    browser.sendMessageToActor(msgName, data, "FormAutofill");
+    actor.manager.getActor("FormAutofill").sendAsyncMessage(msgName, data);
   }
 
   class MozAutocompleteProfileListitemBase extends MozElements.MozRichlistitem {
@@ -204,10 +204,12 @@
        * the exact category that we're going to fill in.
        *
        * @private
+       * @param {Object} data
+       *        Message data
        * @param {string[]} data.categories
        *        The categories of all the fields contained in the selected address.
        */
-      this._updateWarningNote = ({ data } = {}) => {
+      this.updateWarningNote = data => {
         let categories =
           data && data.categories ? data.categories : this._allFieldCategories;
         // If the length of categories is 1, that means all the fillable fields are in the same
@@ -257,12 +259,11 @@
     }
 
     _onCollapse() {
-      /* global messageManager */
       if (this.showWarningText) {
-        messageManager.removeMessageListener(
-          "FormAutofill:UpdateWarningMessage",
-          this._updateWarningNote
+        let { FormAutofillParent } = ChromeUtils.import(
+          "resource://formautofill/FormAutofillParent.jsm"
         );
+        FormAutofillParent.removeMessageObserver(this);
       }
       this._itemBox.removeAttribute("no-warning");
     }
@@ -293,11 +294,11 @@
       this.showWarningText = this._allFieldCategories && this._focusedCategory;
 
       if (this.showWarningText) {
-        messageManager.addMessageListener(
-          "FormAutofill:UpdateWarningMessage",
-          this._updateWarningNote
+        let { FormAutofillParent } = ChromeUtils.import(
+          "resource://formautofill/FormAutofillParent.jsm"
         );
-        this._updateWarningNote();
+        FormAutofillParent.addMessageObserver(this);
+        this.updateWarningNote();
       } else {
         this._itemBox.setAttribute("no-warning", "true");
       }
