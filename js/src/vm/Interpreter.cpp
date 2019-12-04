@@ -5258,7 +5258,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   } else {
     obj->setGroup(group);
 
-    if (!IsInsideNursery(obj)) {
+    if (!withTemplateGroup) {
       AutoSweepObjectGroup sweep(group);
       if (PreliminaryObjectArray* preliminaryObjects =
               group->maybePreliminaryObjects(sweep)) {
