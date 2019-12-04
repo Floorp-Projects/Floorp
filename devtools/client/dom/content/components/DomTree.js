@@ -115,15 +115,20 @@ class DomTree extends Component {
     // Reps to render all values. The code also specifies default rep
     // used for data types that don't have its own specific template.
     const renderValue = props => {
-      return Rep(
-        Object.assign({}, props, {
-          onDOMNodeMouseOver,
-          onDOMNodeMouseOut,
-          onInspectIconClick,
-          defaultRep: Grip,
-          cropLimit: 50,
-        })
-      );
+      const repProps = Object.assign({}, props, {
+        onDOMNodeMouseOver,
+        onDOMNodeMouseOut,
+        onInspectIconClick,
+        defaultRep: Grip,
+        cropLimit: 50,
+      });
+
+      // Object can be an objectFront, while Rep always expect grips.
+      if (props && props.object && props.object.getGrip) {
+        repProps.object = props.object.getGrip();
+      }
+
+      return Rep(repProps);
     };
 
     return TreeView({
