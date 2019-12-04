@@ -51,6 +51,10 @@ interface BrowsingContext {
   // The inRDMPane flag indicates whether or not Responsive Design Mode is
   // active for the browsing context.
   attribute boolean inRDMPane;
+
+  // Extension to give chrome JS the ability to set the window screen
+  // orientation while in RDM.
+  void setRDMPaneOrientation(OrientationType type, float rotationAngle);
 };
 
 [Exposed=Window, ChromeOnly]

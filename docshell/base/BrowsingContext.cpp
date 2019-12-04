@@ -52,6 +52,17 @@ extern mozilla::LazyLogModule gAutoplayPermissionLog;
 #define AUTOPLAY_LOG(msg, ...) \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
+namespace IPC {
+// Allow serialization and deserialization of OrientationType over IPC
+template <>
+struct ParamTraits<mozilla::dom::OrientationType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::OrientationType,
+          mozilla::dom::OrientationType::Portrait_primary,
+          mozilla::dom::OrientationType::Landscape_secondary> {};
+
+}  // namespace IPC
+
 namespace mozilla {
 namespace dom {
 
