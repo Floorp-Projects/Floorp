@@ -203,4 +203,44 @@ class DynamicToolbarTest : BaseSessionTest() {
                    height, equalTo(expectedHeight.toString() + "px"))
     }
 
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun resizeEvents() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
+        mainSession.waitForPageStop()
+
+        for (i in 1..dynamicToolbarMaxHeight - 1) {
+            val promise = sessionRule.session.evaluatePromiseJS("""
+                new Promise(resolve => {
+                    let fired = false;
+                    window.addEventListener('resize', () => { fired = true; }, { once: true });
+                    // Note that `resize` event is fired just before rAF callbacks, so under ideal
+                    // circumstances waiting for a rAF should be sufficient, even if it's not sufficient
+                    // unexpected resize event(s) will be caught in the next loop.
+                    requestAnimationFrame(() => { resolve(fired); });
+                });
+            """.trimIndent())
+
+            // Simulate the dynamic toolbar is going to be hidden.
+            sessionRule.display?.run { setVerticalClipping(-i) }
+            assertThat("'resize' event on window should not be fired in response to the dynamc toolbar transition",
+                       promise.value as Boolean, equalTo(false));
+        }
+
+        val promise = sessionRule.session.evaluatePromiseJS("""
+            new Promise(resolve => {
+                window.addEventListener('resize', () => { resolve(true); }, { once: true });
+            });
+        """.trimIndent())
+
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+        assertThat("'resize' event on window should be fired when the dynamc toolbar is completely hidden",
+                   promise.value as Boolean, equalTo(true))
+    }
 }
