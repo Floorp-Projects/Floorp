@@ -244,18 +244,21 @@ class FaviconLoad {
       }
     }
 
-    let canStoreIcon = true;
-    // Don't store icons responding with Cache-Control: no-store.
-    try {
-      if (
-        this.channel instanceof Ci.nsIHttpChannel &&
-        this.channel.isNoStoreResponse()
-      ) {
-        canStoreIcon = false;
-      }
-    } catch (ex) {
-      if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-        throw ex;
+    // By default don't store icons added after "pageshow".
+    let canStoreIcon = this.icon.beforePageShow;
+    if (canStoreIcon) {
+      // Don't store icons responding with Cache-Control: no-store.
+      try {
+        if (
+          this.channel instanceof Ci.nsIHttpChannel &&
+          this.channel.isNoStoreResponse()
+        ) {
+          canStoreIcon = false;
+        }
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+          throw ex;
+        }
       }
     }
 
@@ -600,6 +603,12 @@ class FaviconLoader {
     this.actor = actor;
     this.iconInfos = [];
 
+    // Icons added after onPageShow() are likely added by modifying <link> tags
+    // through javascript; we want to avoid storing those permanently because
+    // they are probably used to show badges, and many of them could be
+    // randomly generated. This boolean can be used to track that case.
+    this.beforePageShow = true;
+
     // For every page we attempt to find a rich icon and a tab icon. These
     // objects take care of the load process for each.
     this.richIconLoader = new IconLoader(actor);
@@ -637,6 +646,7 @@ class FaviconLoader {
   addIconFromLink(aLink, aIsRichIcon) {
     let iconInfo = makeFaviconFromLink(aLink, aIsRichIcon);
     if (iconInfo) {
+      iconInfo.beforePageShow = this.beforePageShow;
       this.iconInfos.push(iconInfo);
       this.iconTask.arm();
       return true;
@@ -657,6 +667,7 @@ class FaviconLoader {
       isRichIcon: false,
       type: TYPE_ICO,
       node: this.actor.document,
+      beforePageShow: this.beforePageShow,
     });
     this.iconTask.arm();
   }
@@ -667,6 +678,7 @@ class FaviconLoader {
       this.iconTask.disarm();
       this.loadIcons();
     }
+    this.beforePageShow = false;
   }
 
   onPageHide() {
