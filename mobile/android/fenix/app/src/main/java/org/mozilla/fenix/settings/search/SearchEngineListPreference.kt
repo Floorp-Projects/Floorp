@@ -167,12 +167,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
                 .getString(R.string.search_delete_search_engine_success_message, engine.name),
             undoActionTitle = context.getString(R.string.snackbar_deleted_undo),
             onCancel = {
-                val defaultEngine = context.components.search.provider.getDefaultEngine(context)
-
-                searchEngineList = searchEngineList.copy(
-                    list = searchEngineList.list + engine,
-                    default = defaultEngine
-                )
+                searchEngineList = context.components.search.provider.installedSearchEngines(context)
 
                 refreshSearchEngineViews(context)
             },
