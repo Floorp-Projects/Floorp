@@ -14,7 +14,6 @@
 
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
-#include "nsIRequest.h"
 #include "nsISupportsImpl.h"
 #include "nsIWeakReferenceUtils.h"
 

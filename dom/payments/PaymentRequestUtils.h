@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_PaymentRequestUtils_h
 #define mozilla_dom_PaymentRequestUtils_h
 
-#include "nsIArray.h"
 #include "nsTArray.h"
 
 namespace mozilla {

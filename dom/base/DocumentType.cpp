@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsNodeInfoManager.h"
-#include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/DocumentTypeBinding.h"

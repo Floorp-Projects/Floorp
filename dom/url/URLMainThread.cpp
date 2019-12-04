@@ -11,8 +11,6 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "nsIURL.h"
-#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {

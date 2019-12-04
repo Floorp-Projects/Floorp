@@ -7,8 +7,6 @@
 #ifndef mozilla_Selection_h__
 #define mozilla_Selection_h__
 
-#include "nsIWeakReference.h"
-
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/PresShell.h"

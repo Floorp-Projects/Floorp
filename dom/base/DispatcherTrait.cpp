@@ -8,7 +8,6 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/SchedulerGroup.h"
-#include "nsINamed.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

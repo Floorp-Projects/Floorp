@@ -10,7 +10,6 @@
 #include <iterator>
 
 #include "MediaEngineSource.h"
-#include "nsIScriptError.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/MediaManager.h"
 

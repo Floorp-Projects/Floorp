@@ -20,7 +20,6 @@
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
 #include "nsIInputStream.h"
-#include "nsISeekableStream.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {

@@ -14,9 +14,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
 namespace IPC {

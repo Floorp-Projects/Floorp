@@ -7,7 +7,6 @@
 #include "Performance.h"
 
 #include "GeckoProfiler.h"
-#include "nsIDocShell.h"
 #include "nsRFPService.h"
 #include "PerformanceEntry.h"
 #include "PerformanceMainThread.h"

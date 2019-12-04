@@ -21,7 +21,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIRequest.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Promise.h"
 #include "nsAttrValue.h"

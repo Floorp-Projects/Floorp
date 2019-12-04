@@ -8,7 +8,6 @@
 #define mozilla_dom_workers_scriptloader_h__
 
 #include "mozilla/dom/WorkerCommon.h"
-#include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
 
 class nsIPrincipal;

@@ -19,7 +19,6 @@
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
-#include "nsIRunnable.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 

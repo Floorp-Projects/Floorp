@@ -44,7 +44,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsISensitiveInfoHiddenURI.h"
-#include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWebNavigation.h"
 #include "nsIXPConnect.h"

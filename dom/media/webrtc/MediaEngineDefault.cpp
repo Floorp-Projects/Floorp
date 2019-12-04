@@ -14,10 +14,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsIFile.h"
-#include "nsIFilePicker.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "SineWaveGenerator.h"
 #include "Tracing.h"
 

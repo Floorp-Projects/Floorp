@@ -11,10 +11,8 @@
 #include "mozilla/MediaManager.h"
 #include "MediaTrackConstraints.h"
 #include "nsContentUtils.h"
-#include "nsIEventTarget.h"
 #include "nsINamed.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIPermissionManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 

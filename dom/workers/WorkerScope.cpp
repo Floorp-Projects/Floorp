@@ -40,7 +40,6 @@
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/dom/Document.h"
-#include "nsIServiceWorkerManager.h"
 #include "nsIScriptError.h"
 
 #ifdef ANDROID

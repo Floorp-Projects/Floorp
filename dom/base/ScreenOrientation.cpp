@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScreenOrientation.h"
-#include "nsIDeviceSensors.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsGlobalWindow.h"

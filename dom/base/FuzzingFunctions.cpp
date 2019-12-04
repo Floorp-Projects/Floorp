@@ -8,7 +8,6 @@
 
 #include "nsJSEnvironment.h"
 #include "js/GCAPI.h"
-#include "mozIDOMWindow.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/TextEvents.h"

@@ -34,7 +34,6 @@
 
 #include "nsIBFCacheEntry.h"
 #include "mozilla/dom/Document.h"
-#include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 
 #ifdef XP_WIN

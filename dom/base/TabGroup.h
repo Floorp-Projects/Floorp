@@ -9,7 +9,6 @@
 
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
-#include "nsIPrincipal.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 

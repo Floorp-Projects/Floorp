@@ -13,7 +13,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimeStamp.h"
-#include "nsIDocShell.h"
 #include "nsINamed.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/PopupBlocker.h"

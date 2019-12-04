@@ -13,7 +13,6 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGlobalWindow.h"
-#include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {

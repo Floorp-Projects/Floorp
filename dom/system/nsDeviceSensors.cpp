@@ -12,12 +12,9 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIServiceManager.h"
-#include "nsIServiceManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_device.h"
 #include "mozilla/Attributes.h"
-#include "nsIPermissionManager.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"

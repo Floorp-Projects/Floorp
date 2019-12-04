@@ -10,7 +10,6 @@
 #include <AudioToolbox/AudioToolbox.h>
 #include "PlatformDecoderModule.h"
 #include "mozilla/Vector.h"
-#include "nsIThread.h"
 #include "AudioConverter.h"
 
 namespace mozilla {
