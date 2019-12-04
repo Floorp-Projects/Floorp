@@ -156,6 +156,9 @@ def create_parser(mach_interface=False):
     add_arg('--installerpath', dest="installerpath", default=None, type=str,
             help="Location where Android browser APK was extracted to before installation.")
 
+    # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
+    add_arg('--cold', dest="cold", action="store_true",
+            help="Enable cold page-load for browsertime tp6")
     # Arguments for invoking browsertime.
     add_arg('--browsertime', dest='browsertime', default=False, action="store_true",
             help="Whether to use browsertime to execute pageload tests")

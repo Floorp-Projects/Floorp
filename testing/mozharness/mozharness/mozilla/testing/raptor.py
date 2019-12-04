@@ -248,6 +248,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": [],
             "help": "A preference to set. Must be a key-value pair separated by a ':'."
         }],
+        [["--cold"], {
+            "action": "store_true",
+            "dest": "cold",
+            "default": False,
+            "help": "Enable cold page-load for browsertime tp6",
+        }],
 
     ] + testing_config_options + \
         copy.deepcopy(code_coverage_config_options) + \
@@ -507,6 +513,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--memory-test'])
         if self.config.get('cpu_test', False):
             options.extend(['--cpu-test'])
+        if self.config.get('cold', False):
+            options.extend(['--cold'])
         if self.config.get('enable_webrender', False):
             options.extend(['--enable-webrender'])
         if self.config.get('with_conditioned_profile', False):

@@ -10,7 +10,7 @@ from six.moves.urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode, un
 
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
-from utils import transform_platform
+from utils import transform_platform, transform_subtest
 from constants.raptor_tests_constants import YOUTUBE_PLAYBACK_MEASURE
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -313,6 +313,15 @@ def get_raptor_test_list(args, oskey):
         LOG.info("configuring settings for test %s" % next_test['name'])
         max_page_cycles = next_test.get('page_cycles', 1)
 
+        # if using playback, the playback recording info may need to be transformed
+        if next_test.get('playback') is not None:
+            next_test['playback_pageset_manifest'] = \
+                transform_subtest(next_test['playback_pageset_manifest'],
+                                  next_test['name'])
+            next_test['playback_recordings'] = \
+                transform_subtest(next_test['playback_recordings'],
+                                  next_test['name'])
+
         if args.gecko_profile is True:
             next_test['gecko_profile'] = True
             LOG.info('gecko-profiling enabled')
@@ -361,7 +370,20 @@ def get_raptor_test_list(args, oskey):
             LOG.info("setting browser-cycles to %d as specified on cmd line" % args.browser_cycles)
             next_test['browser_cycles'] = args.browser_cycles
 
-        if next_test.get("cold", "false") == "true":
+        # for browsertime jobs, cold page-load mode is determined by command line argument; for
+        # raptor-webext jobs cold page-load is determined by the 'cold' key in test manifest INI
+        _running_cold = False
+        if args.browsertime is True:
+            if args.cold is True:
+                _running_cold = True
+            else:
+                # running warm page-load so ignore browser-cycles if it was provided (set to 1)
+                next_test['browser_cycles'] = 1
+        else:
+            if next_test.get("cold", "false") == "true":
+                _running_cold = True
+
+        if _running_cold:
             # when running in cold mode, set browser-cycles to the page-cycles value; as we want
             # the browser to restart between page-cycles; and set page-cycles to 1 as we only
             # want 1 single page-load for every browser-cycle

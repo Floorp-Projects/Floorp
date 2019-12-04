@@ -310,7 +310,7 @@ raptor-fetch-chromium:
     - raptor-jetstream2-chromium
 
 browsertime:
-    - browsertime-tp6-1
+    - browsertime-tp6
     - browsertime-speedometer
 
 # Raptor desktop power tests
