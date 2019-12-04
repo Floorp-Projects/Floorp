@@ -4856,7 +4856,7 @@
 # text underline position
 - name: layout.css.text-underline-position.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # text decoration thickness
