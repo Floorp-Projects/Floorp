@@ -26,6 +26,8 @@ static void TestFPD(const nsAString& spec, const nsAString& fpd) {
   ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
   attrs.SetFirstPartyDomain(true, url);
   EXPECT_TRUE(attrs.mFirstPartyDomain.Equals(fpd));
+
+  TestSuffix(attrs);
 }
 
 TEST(OriginAttributes, Suffix_default)
