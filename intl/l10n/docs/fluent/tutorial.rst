@@ -101,7 +101,7 @@ a more complex example like:
 
   ### These messages correspond to security and privacy user interface.
   ###
-  ### Please, choose simple and non-threatening language when localizing
+  ### Please choose simple and non-threatening language when localizing
   ### to help user feel in control when interacting with the UI.
 
   ## General Section
@@ -127,7 +127,7 @@ a more complex example like:
   
   update-application-info =
       You are using { -brand-short-name } Version: { $version }.
-      <span>Please, read the <a>privacy policy</a>.</span>
+      Please read the <a>privacy policy</a>.
 
 The above, of course, is a particular selection of complex strings intended to exemplify
 the new features and concepts introduced by Fluent.
@@ -200,10 +200,8 @@ The value can be a whole fragment of DOM:
 
 .. code-block:: html
 
-  <p data-l10n-id="update-application-info" data-l10n-args="{'version': '60.0'}">
-    <span class="bold">
-      <a href="http://www.mozilla.org/privacy" />
-    </span>
+  <p data-l10n-id="update-application-info" data-l10n-args='{"version": "60.0"}'>
+    <a data-l10n-name="privacy-url" href="http://www.mozilla.org/privacy" />
   </p>
 
 .. code-block:: fluent
@@ -211,7 +209,7 @@ The value can be a whole fragment of DOM:
   -brand-short-name = Firefox
   update-application-info =
       You are using { -brand-short-name } Version: { $version }.
-      <span>Please, read the <a>privacy policy</a>.</span>
+      Please read the <a data-l10n-name="privacy-url">privacy policy</a>.
 
 
 Fluent will overlay the translation onto the source fragment preserving attributes like
@@ -220,11 +218,9 @@ inside. The resulting localized content will look like this:
 
 .. code-block:: html
 
-  <p data-l10n-id="update-application-info" data-l10n-args="{'version': '60.0'}">
+  <p data-l10n-id="update-application-info" data-l10n-args='{"version": "60.0"}'">
     You are using Firefox Version: 60.0.
-    <span class="bold">
-      Please, read the <a href="http://www.mozilla.org/privacy">privacy policy</a>.
-    </span>
+    Please read the <a href="http://www.mozilla.org/privacy">privacy policy</a>.
   </p>
 
 
@@ -287,9 +283,9 @@ facilitates encoding l10n arguments as JSON:
 
 .. code-block:: javascript
 
-  document.l10n.setAttributes(element "containers-disable-alert-ok-button", {
+  document.l10n.setAttributes(element, "containers-disable-alert-ok-button", {
     tabCount: 5
-  }
+  });
 
 __ https://github.com/projectfluent/fluent/wiki/Good-Practices-for-Developers
 
