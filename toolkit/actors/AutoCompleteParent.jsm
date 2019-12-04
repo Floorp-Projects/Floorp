@@ -148,10 +148,6 @@ class AutoCompleteParent extends JSWindowActorParent {
     }
   }
 
-  static getCurrentActor() {
-    return currentActor;
-  }
-
   static getCurrentBrowser() {
     return currentBrowserWeakRef ? currentBrowserWeakRef.get() : null;
   }
