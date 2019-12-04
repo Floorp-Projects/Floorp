@@ -7,7 +7,6 @@ import React, { PureComponent } from "react";
 import { showMenu } from "devtools-contextmenu";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
-import { createObjectFront } from "../../client/firefox";
 import { features } from "../../utils/prefs";
 
 import {
@@ -228,7 +227,6 @@ class Scopes extends PureComponent<Props, State> {
             disableWrap={true}
             dimTopLevelWindow={true}
             openLink={openLink}
-            createObjectFront={grip => createObjectFront(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}

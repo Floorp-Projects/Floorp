@@ -5,7 +5,7 @@
 // @flow
 
 import type { SettledValue, FulfilledValue } from "./utils/async-value";
-import type { SourcePayload } from "./client/firefox/types";
+import type { SourcePayload, LongStringFront } from "./client/firefox/types";
 import type { SourceActorId, SourceActor } from "./reducers/source-actors";
 import type { SourceBase } from "./reducers/sources";
 
@@ -361,8 +361,8 @@ export type Expression = {
   value: Object,
   from: string,
   updating: boolean,
-  exception?: string,
-  error?: string,
+  exception?: string | LongStringFront,
+  error?: string | LongStringFront,
 };
 
 /**

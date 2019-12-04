@@ -19,7 +19,7 @@ import {
   getThreadContext,
 } from "../../selectors";
 import { getValue } from "../../utils/expressions";
-import { createObjectFront } from "../../client/firefox";
+import { getGrip, getFront } from "../../utils/evaluation-result";
 
 import { CloseButton } from "../shared/Button";
 import { debounce } from "lodash";
@@ -246,12 +246,20 @@ class Expressions extends Component<Props, State> {
       return;
     }
 
-    const { value } = getValue(expression);
+    let value = getValue(expression);
+    let front = null;
+    if (value && value.unavailable !== true) {
+      value = getGrip(value);
+      front = getFront(value);
+    }
 
     const root = {
       name: expression.input,
       path: input,
-      contents: { value },
+      contents: {
+        value,
+        front,
+      },
     };
 
     return (
@@ -267,7 +275,6 @@ class Expressions extends Component<Props, State> {
                 this.editExpression(expression, index);
               }
             }}
-            createObjectFront={grip => createObjectFront(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}
