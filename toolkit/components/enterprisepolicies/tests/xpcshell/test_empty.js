@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function test_app_update_URL() {
+add_task(async function test_empty_toplevel() {
   await setupPolicyEngineWithJson({
     policies: {},
   });
