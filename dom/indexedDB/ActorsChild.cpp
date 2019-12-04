@@ -532,9 +532,7 @@ auto DeserializeStructuredCloneFiles(
         RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
         MOZ_ASSERT(blob);
 
-        const DebugOnly<StructuredCloneFile*> file =
-            files.EmplaceBack(StructuredCloneFile::eBlob, std::move(blob));
-        MOZ_ASSERT(file);
+        files.EmplaceBack(StructuredCloneFile::eBlob, std::move(blob));
 
         break;
       }
@@ -546,9 +544,7 @@ auto DeserializeStructuredCloneFiles(
 
         switch (blobOrMutableFile.type()) {
           case BlobOrMutableFile::Tnull_t: {
-            const DebugOnly<StructuredCloneFile*> file =
-                files.EmplaceBack(StructuredCloneFile::eMutableFile);
-            MOZ_ASSERT(file);
+            files.EmplaceBack(StructuredCloneFile::eMutableFile);
 
             break;
           }
@@ -564,9 +560,7 @@ auto DeserializeStructuredCloneFiles(
                 static_cast<IDBMutableFile*>(actor->GetDOMObject());
             MOZ_ASSERT(mutableFile);
 
-            const DebugOnly<StructuredCloneFile*> file =
-                files.EmplaceBack(mutableFile);
-            MOZ_ASSERT(file);
+            files.EmplaceBack(mutableFile);
 
             actor->ReleaseDOMObject();
 
@@ -593,15 +587,12 @@ auto DeserializeStructuredCloneFiles(
               Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
           MOZ_ASSERT(blob);
 
-          const DebugOnly<StructuredCloneFile*> file = files.EmplaceBack(
-              StructuredCloneFile::eStructuredClone, std::move(blob));
-          MOZ_ASSERT(file);
+          files.EmplaceBack(StructuredCloneFile::eStructuredClone,
+                            std::move(blob));
         } else {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
-          const DebugOnly<StructuredCloneFile*> file =
-              files.EmplaceBack(StructuredCloneFile::eStructuredClone);
-          MOZ_ASSERT(file);
+          files.EmplaceBack(StructuredCloneFile::eStructuredClone);
         }
 
         break;
@@ -611,9 +602,7 @@ auto DeserializeStructuredCloneFiles(
       case StructuredCloneFile::eWasmCompiled: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
-        const DebugOnly<StructuredCloneFile*> file =
-            files.EmplaceBack(serializedFile.type());
-        MOZ_ASSERT(file);
+        files.EmplaceBack(serializedFile.type());
 
         // Don't set mBlob, support for storing WebAssembly.Modules has been
         // removed in bug 1469395. Support for de-serialization of
