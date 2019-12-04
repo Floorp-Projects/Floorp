@@ -20,6 +20,7 @@
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProcessSwitchRequestor.h"
 #include "nsIRedirectResultListener.h"
+#include "nsIMultiPartChannel.h"
 
 #define DOCUMENT_LOAD_LISTENER_IID                   \
   {                                                  \
@@ -55,7 +56,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIParentChannel,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
-                             public nsIProcessSwitchRequestor {
+                             public nsIProcessSwitchRequestor,
+                             public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(const dom::PBrowserOrId& aIframeEmbedding,
                                 nsILoadContext* aLoadContext,
@@ -80,6 +82,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIPROCESSSWITCHREQUESTOR
+  NS_DECL_NSIMULTIPARTCHANNELLISTENER
 
   // We suspend the underlying channel when replacing ourselves with
   // the real listener channel.
@@ -313,10 +316,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // we want to use when redirecting the child, or doing a process switch.
   // 0 means redirection is not started.
   uint32_t mRedirectChannelId = 0;
-  // Set to true if we called Suspend on mChannel to initiate our redirect.
-  // This isn't currently set when we do a process swap, since that gets
-  // initiated in nsHttpChannel.
-  bool mSuspendedChannel = false;
+  // Set to true once we initiate the redirect to a real channel (either
+  // via a process switch or a same-process redirect, and Suspend the
+  // underlying channel.
+  bool mInitiatedRedirectToRealChannel = false;
   // Set to true if we're currently in the middle of replacing this with
   // a new channel connected a different process.
   bool mDoingProcessSwitch = false;
