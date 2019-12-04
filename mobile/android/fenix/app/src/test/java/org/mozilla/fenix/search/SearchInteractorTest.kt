@@ -13,8 +13,8 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.verify
+import io.mockk.mockkObject
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -23,9 +23,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
@@ -51,6 +52,13 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
+
+        every {
+            context.getSharedPreferences(
+                PREF_FILE_SEARCH_ENGINES,
+                Context.MODE_PRIVATE
+            )
+        } returns mockk(relaxed = true)
 
         val searchController: SearchController = DefaultSearchController(
             context,
@@ -121,12 +129,21 @@ class SearchInteractorTest {
         val context: HomeActivity = mockk()
         val store: SearchFragmentStore = mockk()
         val state: SearchFragmentState = mockk()
+        val searchEngine = SearchEngineSource.Default(mockk(relaxed = true))
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.openToBrowserAndLoad(any(), any(), any()) } just Runs
 
         every { store.state } returns state
         every { state.session } returns null
+        every { state.searchEngineSource } returns searchEngine
+
+        every {
+            context.getSharedPreferences(
+                PREF_FILE_SEARCH_ENGINES,
+                Context.MODE_PRIVATE
+            )
+        } returns mockk(relaxed = true)
 
         val searchController: SearchController = DefaultSearchController(
             context,
@@ -161,6 +178,13 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
+
+        every {
+            context.getSharedPreferences(
+                PREF_FILE_SEARCH_ENGINES,
+                Context.MODE_PRIVATE
+            )
+        } returns mockk(relaxed = true)
 
         val searchController: SearchController = DefaultSearchController(
             context,

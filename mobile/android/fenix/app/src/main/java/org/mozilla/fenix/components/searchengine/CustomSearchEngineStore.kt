@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.searchengine
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineParser
@@ -126,5 +127,6 @@ object CustomSearchEngineStore {
     }
 
     private const val PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines"
-    private const val PREF_FILE_SEARCH_ENGINES = "custom-search-engines"
+    @VisibleForTesting
+    const val PREF_FILE_SEARCH_ENGINES = "custom-search-engines"
 }
