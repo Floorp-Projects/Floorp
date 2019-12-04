@@ -363,26 +363,18 @@ struct FullIndexMetadata {
 
 typedef nsRefPtrHashtable<nsUint64HashKey, FullIndexMetadata> IndexTable;
 
+// Can be instantiated either on the QuotaManager IO thread or on a
+// versionchange transaction thread. These threads can never race so this is
+// totally safe.
 struct FullObjectStoreMetadata {
-  ObjectStoreMetadata mCommonMetadata;
+  ObjectStoreMetadata mCommonMetadata = {0, nsString(), KeyPath(0), false};
   IndexTable mIndexes;
 
   // These two members are only ever touched on a transaction thread!
-  int64_t mNextAutoIncrementId;
-  int64_t mCommittedAutoIncrementId;
+  int64_t mNextAutoIncrementId = 0;
+  int64_t mCommittedAutoIncrementId = 0;
 
-  bool mDeleted;
-
- public:
-  FullObjectStoreMetadata()
-      : mCommonMetadata(0, nsString(), KeyPath(0), false),
-        mNextAutoIncrementId(0),
-        mCommittedAutoIncrementId(0),
-        mDeleted(false) {
-    // This can happen either on the QuotaManager IO thread or on a
-    // versionchange transaction thread. These threads can never race so this is
-    // totally safe.
-  }
+  FlippedOnce<false> mDeleted;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullObjectStoreMetadata);
 
@@ -14917,12 +14909,12 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  foundMetadata->mDeleted = true;
+  foundMetadata->mDeleted.Flip();
 
   DebugOnly<bool> foundTargetId = false;
   const bool isLastObjectStore = std::all_of(
       dbMetadata->mObjectStores.begin(), dbMetadata->mObjectStores.end(),
-      [&foundTargetId, aObjectStoreId](const auto& objectStoreEntry) {
+      [&foundTargetId, aObjectStoreId](const auto& objectStoreEntry) -> bool {
         if (uint64_t(aObjectStoreId) == objectStoreEntry.GetKey()) {
           foundTargetId = true;
           return true;
