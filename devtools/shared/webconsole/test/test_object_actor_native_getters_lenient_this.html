@@ -17,60 +17,36 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function startTest()
-{
+async function startTest() {
   removeEventListener("load", startTest);
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
-}
-
-function onAttach(aState, aResponse)
-{
-  onConsoleCall = onConsoleCall.bind(null, aState);
-  aState.webConsoleFront.on("consoleAPICall", onConsoleCall);
-
+  const onConsoleApiCall = state.webConsoleFront.once("consoleAPICall");
   const docAsProto = Object.create(document);
-
   top.console.log("hello", docAsProto);
-}
+  const {message} = await onConsoleApiCall;
 
-function onConsoleCall(aState, aPacket)
-{
   info("checking the console API call packet");
-
-  checkConsoleAPICall(aPacket.message, {
+  checkConsoleAPICall(message, {
     level: "log",
     filename: /test_object_actor/,
-    functionName: "onAttach",
+    functionName: "startTest",
     arguments: ["hello", {
       type: "object",
       actor: /[a-z]/,
     }],
   });
 
-  aState.webConsoleFront.off("consoleAPICall", onConsoleCall);
-
   info("inspecting object properties");
-  const args = aPacket.message.arguments;
-  onProperties = onProperties.bind(null, aState);
+  const args = message.arguments;
 
-  const client = new ObjectFront(aState.dbgClient, args[1]);
-  client.getPrototypeAndProperties().then(onProperties);
-}
+  const {ownProperties, safeGetterValues} = await args[1].getPrototypeAndProperties();
 
-function onProperties(aState, aResponse)
-{
-  const props = aResponse.ownProperties;
-  let keys = Object.keys(props);
-  info(keys.length + " ownProperties: " + keys);
+  is(Object.keys(ownProperties).length, 0, "number of properties");
+  is(Object.keys(safeGetterValues).length, 0, "number of safe getters");
 
-  is(keys.length, 0, "number of properties");
-  keys = Object.keys(aResponse.safeGetterValues);
-  is(keys.length, 0, "number of safe getters");
-
-  closeDebugger(aState, function() {
-    SimpleTest.finish();
-  });
+  await closeDebugger(state);
+  SimpleTest.finish();
 }
 
 addEventListener("load", startTest);

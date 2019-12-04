@@ -10,7 +10,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
@@ -40,21 +40,25 @@ async function test_object_grip(debuggee, threadFront) {
         },
       });
     `,
-    async objClient => {
-      const obj1 = (await objClient.getPropertyValue("obj1", null)).value
-        .return;
-      const obj2 = (await objClient.getPropertyValue("obj2", null)).value
-        .return;
+    async objectFront => {
+      const obj1 = (await objectFront.getPropertyValue(
+        "obj1",
+        null
+      )).value.return.getGrip();
+      const obj2 = (await objectFront.getPropertyValue(
+        "obj2",
+        null
+      )).value.return.getGrip();
 
-      const context = threadFront.pauseGrip(
-        (await objClient.getPropertyValue("context", null)).value.return
-      );
-      const sum = threadFront.pauseGrip(
-        (await objClient.getPropertyValue("sum", null)).value.return
-      );
-      const error = threadFront.pauseGrip(
-        (await objClient.getPropertyValue("error", null)).value.return
-      );
+      info(`Retrieve "context" function reference`);
+      const context = (await objectFront.getPropertyValue("context", null))
+        .value.return;
+      info(`Retrieve "sum" function reference`);
+      const sum = (await objectFront.getPropertyValue("sum", null)).value
+        .return;
+      info(`Retrieve "error" function reference`);
+      const error = (await objectFront.getPropertyValue("error", null)).value
+        .return;
 
       assert_response(await context.apply(obj1, [obj1]), {
         return: "correct context",

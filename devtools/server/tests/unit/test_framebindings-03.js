@@ -43,25 +43,29 @@ function test_pause_frame() {
     const objClient = gThreadFront.pauseGrip(env.object);
     const response = await objClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.PI.value, Math.PI);
-    Assert.equal(response.ownProperties.cos.value.type, "object");
-    Assert.equal(response.ownProperties.cos.value.class, "Function");
-    Assert.ok(!!response.ownProperties.cos.value.actor);
+    Assert.equal(response.ownProperties.cos.value.getGrip().type, "object");
+    Assert.equal(response.ownProperties.cos.value.getGrip().class, "Function");
+    Assert.ok(!!response.ownProperties.cos.value.actorID);
 
     await gThreadFront.resume();
     threadFrontTestFinished();
   });
 
   /* eslint-disable */
-  gDebuggee.eval("(" + function () {
-    function stopMe(number) {
-      var a;
-      var r = number;
-      with (Math) {
-        a = PI * r * r;
-        debugger;
-      }
-    }
-    stopMe(10);
-  } + ")()");
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function stopMe(number) {
+          var a;
+          var r = number;
+          with (Math) {
+            a = PI * r * r;
+            debugger;
+          }
+        }
+        stopMe(10);
+      } +
+      ")()"
+  );
   /* eslint-enable */
 }

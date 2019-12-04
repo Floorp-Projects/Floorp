@@ -393,10 +393,11 @@ function check_symbol(descr, data, isUnsafe) {
 }
 
 function check_prototype(proto, data, isUnsafe) {
+  const protoGrip = proto && proto.getGrip ? proto.getGrip() : proto;
   if (isUnsafe) {
-    deepEqual(proto.type, data.protoType, "Got the right prototype type.");
+    deepEqual(protoGrip.type, data.protoType, "Got the right prototype type.");
   } else {
-    check_grip(proto, data, true);
+    check_grip(protoGrip, data, true);
   }
 }
 

@@ -17,29 +17,31 @@ add_task(
 
         Assert.equal(args[0].class, "Object");
 
-        const objClient = threadFront.pauseGrip(args[0]);
-        let response = await objClient.getPrototypeAndProperties();
-        Assert.equal(response.ownProperties.x.configurable, true);
-        Assert.equal(response.ownProperties.x.enumerable, true);
-        Assert.equal(response.ownProperties.x.writable, true);
-        Assert.equal(response.ownProperties.x.value, 10);
+        const objectFront = threadFront.pauseGrip(args[0]);
+        const {
+          ownProperties,
+          prototype,
+        } = await objectFront.getPrototypeAndProperties();
+        Assert.equal(ownProperties.x.configurable, true);
+        Assert.equal(ownProperties.x.enumerable, true);
+        Assert.equal(ownProperties.x.writable, true);
+        Assert.equal(ownProperties.x.value, 10);
 
-        Assert.equal(response.ownProperties.y.configurable, true);
-        Assert.equal(response.ownProperties.y.enumerable, true);
-        Assert.equal(response.ownProperties.y.writable, true);
-        Assert.equal(response.ownProperties.y.value, "kaiju");
+        Assert.equal(ownProperties.y.configurable, true);
+        Assert.equal(ownProperties.y.enumerable, true);
+        Assert.equal(ownProperties.y.writable, true);
+        Assert.equal(ownProperties.y.value, "kaiju");
 
-        Assert.equal(response.ownProperties.a.configurable, true);
-        Assert.equal(response.ownProperties.a.enumerable, true);
-        Assert.equal(response.ownProperties.a.get.type, "object");
-        Assert.equal(response.ownProperties.a.get.class, "Function");
-        Assert.equal(response.ownProperties.a.set.type, "undefined");
+        Assert.equal(ownProperties.a.configurable, true);
+        Assert.equal(ownProperties.a.enumerable, true);
+        Assert.equal(ownProperties.a.get.getGrip().type, "object");
+        Assert.equal(ownProperties.a.get.getGrip().class, "Function");
+        Assert.equal(ownProperties.a.set.type, "undefined");
 
-        Assert.ok(response.prototype != undefined);
+        Assert.ok(prototype != undefined);
 
-        const protoClient = threadFront.pauseGrip(response.prototype);
-        response = await protoClient.getOwnPropertyNames();
-        Assert.ok(response.ownPropertyNames.toString != undefined);
+        const { ownPropertyNames } = await prototype.getOwnPropertyNames();
+        Assert.ok(ownPropertyNames.toString != undefined);
 
         await threadFront.resume();
         resolve();

@@ -39,9 +39,19 @@ function test_thread_lifetime() {
       // Verify that the promoted actor is returned again.
       Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
       // Now that we've resumed, release the thread-lifetime grip.
-      const objFront = new ObjectFront(gClient, pauseGrip);
+      const objFront = new ObjectFront(
+        gThreadFront.conn,
+        gThreadFront.targetFront,
+        gThreadFront,
+        pauseGrip
+      );
       await objFront.release();
-      const objFront2 = new ObjectFront(gClient, pauseGrip);
+      const objFront2 = new ObjectFront(
+        gThreadFront.conn,
+        gThreadFront.targetFront,
+        gThreadFront,
+        pauseGrip
+      );
 
       try {
         await objFront2

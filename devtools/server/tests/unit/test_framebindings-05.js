@@ -30,9 +30,9 @@ function test_pause_frame() {
     const objClient = gThreadFront.pauseGrip(env.object);
     let response = await objClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.PI.value, Math.PI);
-    Assert.equal(response.ownProperties.cos.value.type, "object");
-    Assert.equal(response.ownProperties.cos.value.class, "Function");
-    Assert.ok(!!response.ownProperties.cos.value.actor);
+    Assert.equal(response.ownProperties.cos.value.getGrip().type, "object");
+    Assert.equal(response.ownProperties.cos.value.getGrip().class, "Function");
+    Assert.ok(!!response.ownProperties.cos.value.actorID);
 
     // Skip the global lexical scope.
     const parentEnv = env.parent.parent;
@@ -42,9 +42,12 @@ function test_pause_frame() {
     response = await parentClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.a.value, Math.PI * 100);
     Assert.equal(response.ownProperties.r.value, 10);
-    Assert.equal(response.ownProperties.Object.value.type, "object");
-    Assert.equal(response.ownProperties.Object.value.class, "Function");
-    Assert.ok(!!response.ownProperties.Object.value.actor);
+    Assert.equal(response.ownProperties.Object.value.getGrip().type, "object");
+    Assert.equal(
+      response.ownProperties.Object.value.getGrip().class,
+      "Function"
+    );
+    Assert.ok(!!response.ownProperties.Object.value.actorID);
 
     await gThreadFront.resume();
     threadFrontTestFinished();

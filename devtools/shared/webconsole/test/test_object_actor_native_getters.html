@@ -16,24 +16,30 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let expectedProps = [];
-let expectedSafeGetters = [];
-
-function startTest()
-{
+async function startTest() {
   removeEventListener("load", startTest);
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
-}
-
-function onAttach(aState, aResponse)
-{
-  onConsoleCall = onConsoleCall.bind(null, aState);
-  aState.webConsoleFront.on("consoleAPICall", onConsoleCall);
-
+  const onConsoleAPICall = state.webConsoleFront.once("consoleAPICall");
   top.console.log("hello", document);
+  const {message} = await onConsoleAPICall;
 
-  expectedProps = {
+  info("checking the console API call packet");
+  checkConsoleAPICall(message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "startTest",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  info("inspecting object properties");
+  const args = message.arguments;
+  const {ownProperties, safeGetterValues} = await args[1].getPrototypeAndProperties();
+
+  const expectedProps = {
     "location": {
       get: {
         type: "object",
@@ -42,62 +48,26 @@ function onAttach(aState, aResponse)
       },
     },
   };
+  ok(Object.keys(ownProperties).length >= Object.keys(expectedProps).length, 
+    "number of properties");
 
-  expectedSafeGetters = {
+  info("check ownProperties");
+  checkObject(ownProperties, expectedProps);
+
+  info("check safeGetterValues");
+  checkObject(safeGetterValues, {
     "title": {
       getterValue: /native getters in object actors/,
       getterPrototypeLevel: 2,
     },
     "styleSheets": {
-      getterValue: /\[object Object\]/,
+      getterValue: /Front for obj\//,
       getterPrototypeLevel: 2,
     },
-  };
-}
-
-function onConsoleCall(aState, aPacket)
-{
-  info("checking the console API call packet");
-
-  checkConsoleAPICall(aPacket.message, {
-    level: "log",
-    filename: /test_object_actor/,
-    functionName: "onAttach",
-    arguments: ["hello", {
-      type: "object",
-      actor: /[a-z]/,
-    }],
   });
 
-  aState.webConsoleFront.off("consoleAPICall", onConsoleCall);
-
-  info("inspecting object properties");
-  const args = aPacket.message.arguments;
-  onProperties = onProperties.bind(null, aState);
-
-  const client = new ObjectFront(aState.dbgClient, args[1]);
-  client.getPrototypeAndProperties().then(onProperties);
-}
-
-function onProperties(aState, aResponse)
-{
-  const props = aResponse.ownProperties;
-  const keys = Object.keys(props);
-  info(keys.length + " ownProperties: " + keys);
-
-  ok(keys.length >= Object.keys(expectedProps).length, "number of properties");
-
-  info("check ownProperties");
-  checkObject(props, expectedProps);
-  info("check safeGetterValues");
-  checkObject(aResponse.safeGetterValues, expectedSafeGetters);
-
-  expectedProps = [];
-  expectedSafeGetters = [];
-
-  closeDebugger(aState, function() {
-    SimpleTest.finish();
-  });
+  await closeDebugger(state);
+  SimpleTest.finish();
 }
 
 addEventListener("load", startTest);

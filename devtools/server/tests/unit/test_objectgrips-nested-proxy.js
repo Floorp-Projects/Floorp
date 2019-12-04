@@ -18,9 +18,13 @@ add_task(
         const { proxyTarget, proxyHandler } = await objClient.getProxySlots();
 
         strictEqual(grip.class, "Proxy", "Its a proxy grip.");
-        strictEqual(proxyTarget.class, "Proxy", "The target is also a proxy.");
         strictEqual(
-          proxyHandler.class,
+          proxyTarget.getGrip().class,
+          "Proxy",
+          "The target is also a proxy."
+        );
+        strictEqual(
+          proxyHandler.getGrip().class,
           "Proxy",
           "The handler is also a proxy."
         );
