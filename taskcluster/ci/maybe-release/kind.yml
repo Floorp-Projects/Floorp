@@ -25,6 +25,10 @@ job-defaults:
                 - project:releng:ship-it:server:staging
                 - project:releng:ship-it:action:create-new-release
     run-on-projects: []
+    treeherder:
+        symbol: Rel(maybe-trigger)
+        tier: 1
+        kind: build
 
 jobs:
     firefox:
@@ -32,9 +36,13 @@ jobs:
         shipping-product: firefox
         worker:
             phase: push_firefox
+        treeherder:
+            platform: firefox-release/opt
 
     devedition:
         name: maybe-release-devedition
         shipping-product: devedition
         worker:
             phase: push_devedition
+        treeherder:
+            platform: devedition-release/opt
