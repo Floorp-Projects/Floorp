@@ -11,6 +11,9 @@ const {
 const {
   propertyIteratorSpec,
 } = require("devtools/shared/specs/property-iterator");
+const {
+  getAdHocFrontOrPrimitiveGrip,
+} = require("devtools/shared/fronts/object");
 
 /**
  * A PropertyIteratorFront provides a way to access to property names and
@@ -20,47 +23,43 @@ const {
  * from ObjectFront.enumProperties.
  */
 class PropertyIteratorFront extends FrontClassWithSpec(propertyIteratorSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-    this._client = client;
+  form(data) {
+    this.actorID = data.actor;
+    this.count = data.count;
   }
 
-  get actor() {
-    return this._grip.actor;
+  async slice(start, count) {
+    const result = await super.slice({ start, count });
+    return this._onResult(result);
   }
 
-  /**
-   * Get the total number of properties available in the iterator.
-   */
-  get count() {
-    return this._grip.count;
+  async all() {
+    const result = await super.all();
+    return this._onResult(result);
   }
 
-  /**
-   * Get one or more property names that correspond to the positions in the
-   * indexes parameter.
-   *
-   * @param indexes Array
-   *        An array of property indexes.
-   */
-  names(indexes) {
-    return super.names({ indexes });
-  }
+  _onResult(result) {
+    if (!result.ownProperties) {
+      return result;
+    }
 
-  /**
-   * Get a set of following property value(s).
-   *
-   * @param start Number
-   *        The index of the first property to fetch.
-   * @param count Number
-   *        The number of properties to fetch.
-   */
-  slice(start, count) {
-    return super.slice({ start, count });
-  }
+    // The result packet can have multiple properties that hold grips which we may need
+    // to turn into fronts.
+    const gripKeys = ["value", "getterValue", "get", "set"];
 
-  form(form) {
-    this._grip = form;
+    Object.entries(result.ownProperties).forEach(([key, descriptor]) => {
+      if (descriptor) {
+        for (const gripKey of gripKeys) {
+          if (descriptor.hasOwnProperty(gripKey)) {
+            result.ownProperties[key][gripKey] = getAdHocFrontOrPrimitiveGrip(
+              descriptor[gripKey],
+              this
+            );
+          }
+        }
+      }
+    });
+    return result;
   }
 }
 

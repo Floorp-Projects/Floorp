@@ -258,7 +258,12 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
       return this._pauseGrips[grip.actor];
     }
 
-    const objectFront = new ObjectFront(this.client, grip);
+    const objectFront = new ObjectFront(
+      this.conn,
+      this.targetFront,
+      this,
+      grip
+    );
     this._pauseGrips[grip.actor] = objectFront;
     return objectFront;
   }
