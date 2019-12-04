@@ -869,16 +869,22 @@ class nsTextFrame : public nsFrame {
     nscolor mColor;
     uint8_t mStyle;
 
+    // The text-underline-position property; affects the underline offset only
+    // if mTextUnderlineOffset is auto.
+    const mozilla::StyleTextUnderlinePosition mTextUnderlinePosition;
+
     LineDecoration(nsIFrame* const aFrame, const nscoord aOff,
-                   const mozilla::StyleTextDecorationLength& aUnderline,
+                   mozilla::StyleTextUnderlinePosition aUnderlinePosition,
+                   const mozilla::StyleTextDecorationLength& aUnderlineOffset,
                    const mozilla::StyleTextDecorationLength& aDecThickness,
                    const nscolor aColor, const uint8_t aStyle)
         : mFrame(aFrame),
           mBaselineOffset(aOff),
-          mTextUnderlineOffset(aUnderline),
+          mTextUnderlineOffset(aUnderlineOffset),
           mTextDecorationThickness(aDecThickness),
           mColor(aColor),
-          mStyle(aStyle) {}
+          mStyle(aStyle),
+          mTextUnderlinePosition(aUnderlinePosition) {}
 
     LineDecoration(const LineDecoration& aOther)
         : mFrame(aOther.mFrame),
@@ -886,12 +892,14 @@ class nsTextFrame : public nsFrame {
           mTextUnderlineOffset(aOther.mTextUnderlineOffset),
           mTextDecorationThickness(aOther.mTextDecorationThickness),
           mColor(aOther.mColor),
-          mStyle(aOther.mStyle) {}
+          mStyle(aOther.mStyle),
+          mTextUnderlinePosition(aOther.mTextUnderlinePosition) {}
 
     bool operator==(const LineDecoration& aOther) const {
       return mFrame == aOther.mFrame && mStyle == aOther.mStyle &&
              mColor == aOther.mColor &&
              mBaselineOffset == aOther.mBaselineOffset &&
+             mTextUnderlinePosition == aOther.mTextUnderlinePosition &&
              mTextUnderlineOffset == aOther.mTextUnderlineOffset &&
              mTextDecorationThickness == aOther.mTextDecorationThickness;
     }
