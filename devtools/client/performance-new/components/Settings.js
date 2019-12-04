@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-/* eslint-disable react/prop-types */
 
 /**
  * @typedef {Object} StateProps
@@ -34,7 +33,6 @@
  */
 
 /**
- * @typedef {import("react")} React
  * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  * @typedef {import("../@types/perf").State} StoreState
  * @typedef {StateProps & DispatchProps} Props

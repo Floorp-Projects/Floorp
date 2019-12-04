@@ -244,6 +244,24 @@ class ActorReadyGeckoProfilerInterface {
     }
     return Services.profiler.GetFeatures();
   }
+
+  /**
+   * @param {string} type
+   * @param {() => void} listener
+   */
+  on(type, listener) {
+    // This is a stub for TypeScript. This function is assigned by the EventEmitter
+    // decorator.
+  }
+
+  /**
+   * @param {string} type
+   * @param {() => void} listener
+   */
+  off(type, listener) {
+    // This is a stub for TypeScript. This function is assigned by the EventEmitter
+    // decorator.
+  }
 }
 
 exports.ActorReadyGeckoProfilerInterface = ActorReadyGeckoProfilerInterface;
