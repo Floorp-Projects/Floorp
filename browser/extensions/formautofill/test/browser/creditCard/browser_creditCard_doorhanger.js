@@ -149,6 +149,61 @@ add_task(async function test_submit_untouched_creditCard_form() {
   await removeAllRecords();
 });
 
+add_task(async function test_submit_untouched_creditCard_form_iframe() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+
+  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
+    async function(browser) {
+      let iframeBC = browser.browsingContext.getChildren()[0];
+      await openPopupForSubframe(browser, iframeBC, "form #cc-name");
+      EventUtils.synthesizeKey("VK_DOWN", {});
+      EventUtils.synthesizeKey("VK_RETURN", {});
+      await osKeyStoreLoginShown;
+      await SpecialPowers.spawn(iframeBC, [], async function() {
+        let form = content.document.getElementById("form");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+  await onUsed;
+
+  creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card");
+  is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+  await removeAllRecords();
+});
+
 add_task(async function test_submit_changed_subset_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
