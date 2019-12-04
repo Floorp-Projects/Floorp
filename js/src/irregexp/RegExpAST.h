@@ -357,14 +357,24 @@ class RegExpCapture : public RegExpTree
     virtual bool IsAnchoredAtEnd() override;
     virtual Interval CaptureRegisters() override;
     virtual bool IsCapture() override;
-    virtual int min_match() override { return body_->min_match(); }
-    virtual int max_match() override { return body_->max_match(); }
+    virtual int min_match() override { return captured_body()->min_match(); }
+    virtual int max_match() override { return captured_body()->max_match(); }
     RegExpTree* body() { return body_; }
     int index() { return index_; }
     static int StartRegister(int index) { return index * 2; }
     static int EndRegister(int index) { return index * 2 + 1; }
 
   private:
+    RegExpTree* captured_body() {
+        // In pathological cases where captures are deeply nested,
+        // like /((...((a))...))/, skip to the innermost capture
+        // without a recursive call, to avoid stack overflow.
+        RegExpCapture* curr = this;
+        while (curr->body()->IsCapture()) {
+            curr = curr->body()->AsCapture();
+        }
+        return curr->body();
+    }
     RegExpTree* body_;
     int index_;
 };
