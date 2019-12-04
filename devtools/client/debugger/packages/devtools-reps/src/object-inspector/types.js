@@ -116,9 +116,6 @@ export type Props = {
   roots: Array<Node>,
   disableWrap: boolean,
   dimTopLevelWindow: boolean,
-  releaseActor: string => void,
-  createObjectFront: CreateObjectFront,
-  createLongStringFront: CreateLongStringFront,
   onFocus: ?(Node) => any,
   onActivate: ?(Node) => any,
   onDoubleClick: ?(

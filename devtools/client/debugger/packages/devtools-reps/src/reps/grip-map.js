@@ -151,9 +151,9 @@ function getEntries(props, entries, indexes) {
       entryValue.value !== undefined ? entryValue.value : entryValue;
 
     return PropRep({
-      name: key,
+      name: key && key.getGrip ? key.getGrip() : key,
       equal: " \u2192 ",
-      object: value,
+      object: value && value.getGrip ? value.getGrip() : value,
       mode: MODE.TINY,
       onDOMNodeMouseOver,
       onDOMNodeMouseOut,
