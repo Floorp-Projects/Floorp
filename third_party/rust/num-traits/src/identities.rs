@@ -2,16 +2,15 @@ use core::num::Wrapping;
 use core::ops::{Add, Mul};
 
 /// Defines an additive identity element for `Self`.
+///
+/// # Laws
+///
+/// ```{.text}
+/// a + 0 = a       ∀ a ∈ Self
+/// 0 + a = a       ∀ a ∈ Self
+/// ```
 pub trait Zero: Sized + Add<Self, Output = Self> {
     /// Returns the additive identity element of `Self`, `0`.
-    ///
-    /// # Laws
-    ///
-    /// ```{.text}
-    /// a + 0 = a       ∀ a ∈ Self
-    /// 0 + a = a       ∀ a ∈ Self
-    /// ```
-    ///
     /// # Purity
     ///
     /// This function should return the same result at all times regardless of
@@ -20,8 +19,12 @@ pub trait Zero: Sized + Add<Self, Output = Self> {
     // This cannot be an associated constant, because of bignums.
     fn zero() -> Self;
 
+    /// Sets `self` to the additive identity element of `Self`, `0`.
+    fn set_zero(&mut self) {
+        *self = Zero::zero();
+    }
+
     /// Returns `true` if `self` is equal to the additive identity.
-    #[inline]
     fn is_zero(&self) -> bool;
 }
 
@@ -66,21 +69,26 @@ where
     fn is_zero(&self) -> bool {
         self.0.is_zero()
     }
+
+    fn set_zero(&mut self) {
+        self.0.set_zero();
+    }
+
     fn zero() -> Self {
         Wrapping(T::zero())
     }
 }
 
 /// Defines a multiplicative identity element for `Self`.
+///
+/// # Laws
+///
+/// ```{.text}
+/// a * 1 = a       ∀ a ∈ Self
+/// 1 * a = a       ∀ a ∈ Self
+/// ```
 pub trait One: Sized + Mul<Self, Output = Self> {
     /// Returns the multiplicative identity element of `Self`, `1`.
-    ///
-    /// # Laws
-    ///
-    /// ```{.text}
-    /// a * 1 = a       ∀ a ∈ Self
-    /// 1 * a = a       ∀ a ∈ Self
-    /// ```
     ///
     /// # Purity
     ///
@@ -89,6 +97,11 @@ pub trait One: Sized + Mul<Self, Output = Self> {
     /// `static mut`s.
     // This cannot be an associated constant, because of bignums.
     fn one() -> Self;
+
+    /// Sets `self` to the multiplicative identity element of `Self`, `1`.
+    fn set_one(&mut self) {
+        *self = One::one();
+    }
 
     /// Returns `true` if `self` is equal to the multiplicative identity.
     ///
@@ -110,6 +123,10 @@ macro_rules! one_impl {
             #[inline]
             fn one() -> $t {
                 $v
+            }
+            #[inline]
+            fn is_one(&self) -> bool {
+                *self == $v
             }
         }
     };
@@ -138,6 +155,10 @@ impl<T: One> One for Wrapping<T>
 where
     Wrapping<T>: Mul<Output = Wrapping<T>>,
 {
+    fn set_one(&mut self) {
+        self.0.set_one();
+    }
+
     fn one() -> Self {
         Wrapping(T::one())
     }

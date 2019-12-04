@@ -47,6 +47,7 @@
 //! It's easy to generate large random numbers:
 //!
 //! ```rust
+//! # #[cfg(feature = "rand")]
 //! extern crate rand;
 //! extern crate num_bigint as bigint;
 //!
@@ -72,23 +73,34 @@
 //!
 //! ## Compatibility
 //!
-//! The `num-bigint` crate is tested for rustc 1.8 and greater.
+//! The `num-bigint` crate is tested for rustc 1.15 and greater.
 
-#![doc(html_root_url = "https://docs.rs/num-bigint/0.1")]
+#![doc(html_root_url = "https://docs.rs/num-bigint/0.2")]
+// We don't actually support `no_std` yet, and probably won't until `alloc` is stable.  We're just
+// reserving this ability with the "std" feature now, and compilation will fail without.
+#![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(any(feature = "rand", test))]
+#[cfg(feature = "rand")]
 extern crate rand;
-#[cfg(feature = "rustc-serialize")]
-extern crate rustc_serialize;
 #[cfg(feature = "serde")]
 extern crate serde;
 
 extern crate num_integer as integer;
 extern crate num_traits as traits;
+#[cfg(feature = "quickcheck")]
+extern crate quickcheck;
 
 use std::error::Error;
-use std::num::ParseIntError;
 use std::fmt;
+
+#[macro_use]
+mod macros;
+
+mod bigint;
+mod biguint;
+
+#[cfg(feature = "rand")]
+mod bigrand;
 
 #[cfg(target_pointer_width = "32")]
 type UsizePromotion = u32;
@@ -100,57 +112,95 @@ type IsizePromotion = i32;
 #[cfg(target_pointer_width = "64")]
 type IsizePromotion = i64;
 
-#[derive(Debug, PartialEq)]
-pub enum ParseBigIntError {
-    ParseInt(ParseIntError),
-    Other,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseBigIntError {
+    kind: BigIntErrorKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum BigIntErrorKind {
+    Empty,
+    InvalidDigit,
+}
+
+impl ParseBigIntError {
+    fn __description(&self) -> &str {
+        use BigIntErrorKind::*;
+        match self.kind {
+            Empty => "cannot parse integer from empty string",
+            InvalidDigit => "invalid digit found in string",
+        }
+    }
+
+    fn empty() -> Self {
+        ParseBigIntError {
+            kind: BigIntErrorKind::Empty,
+        }
+    }
+
+    fn invalid() -> Self {
+        ParseBigIntError {
+            kind: BigIntErrorKind::InvalidDigit,
+        }
+    }
 }
 
 impl fmt::Display for ParseBigIntError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &ParseBigIntError::ParseInt(ref e) => e.fmt(f),
-            &ParseBigIntError::Other => "failed to parse provided string".fmt(f),
-        }
+        self.__description().fmt(f)
     }
 }
 
 impl Error for ParseBigIntError {
     fn description(&self) -> &str {
-        "failed to parse bigint/biguint"
+        self.__description()
     }
 }
-
-impl From<ParseIntError> for ParseBigIntError {
-    fn from(err: ParseIntError) -> ParseBigIntError {
-        ParseBigIntError::ParseInt(err)
-    }
-}
-
-#[cfg(test)]
-use std::hash;
-
-#[cfg(test)]
-fn hash<T: hash::Hash>(x: &T) -> u64 {
-    use std::hash::{BuildHasher, Hasher};
-    use std::collections::hash_map::RandomState;
-    let mut hasher = <RandomState as BuildHasher>::Hasher::new();
-    x.hash(&mut hasher);
-    hasher.finish()
-}
-
-#[macro_use]
-mod macros;
-
-mod biguint;
-mod bigint;
 
 pub use biguint::BigUint;
 pub use biguint::ToBigUint;
-pub use biguint::big_digit;
-pub use biguint::big_digit::{BigDigit, DoubleBigDigit, ZERO_BIG_DIGIT};
 
-pub use bigint::Sign;
 pub use bigint::BigInt;
+pub use bigint::Sign;
 pub use bigint::ToBigInt;
-pub use bigint::RandBigInt;
+
+#[cfg(feature = "rand")]
+pub use bigrand::{RandBigInt, RandomBits, UniformBigInt, UniformBigUint};
+
+mod big_digit {
+    /// A `BigDigit` is a `BigUint`'s composing element.
+    pub type BigDigit = u32;
+
+    /// A `DoubleBigDigit` is the internal type used to do the computations.  Its
+    /// size is the double of the size of `BigDigit`.
+    pub type DoubleBigDigit = u64;
+
+    /// A `SignedDoubleBigDigit` is the signed version of `DoubleBigDigit`.
+    pub type SignedDoubleBigDigit = i64;
+
+    // `DoubleBigDigit` size dependent
+    pub const BITS: usize = 32;
+
+    const LO_MASK: DoubleBigDigit = (-1i32 as DoubleBigDigit) >> BITS;
+
+    #[inline]
+    fn get_hi(n: DoubleBigDigit) -> BigDigit {
+        (n >> BITS) as BigDigit
+    }
+    #[inline]
+    fn get_lo(n: DoubleBigDigit) -> BigDigit {
+        (n & LO_MASK) as BigDigit
+    }
+
+    /// Split one `DoubleBigDigit` into two `BigDigit`s.
+    #[inline]
+    pub fn from_doublebigdigit(n: DoubleBigDigit) -> (BigDigit, BigDigit) {
+        (get_hi(n), get_lo(n))
+    }
+
+    /// Join two `BigDigit`s into one `DoubleBigDigit`
+    #[inline]
+    pub fn to_doublebigdigit(hi: BigDigit, lo: BigDigit) -> DoubleBigDigit {
+        DoubleBigDigit::from(lo) | (DoubleBigDigit::from(hi) << BITS)
+    }
+}

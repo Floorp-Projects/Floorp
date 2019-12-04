@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 use std::cmp;
-use std::cmp::Ordering::{self, Less, Greater, Equal};
+use std::cmp::Ordering::{self, Equal, Greater, Less};
 use std::iter::repeat;
 use std::mem;
 use traits;
-use traits::{Zero, One};
+use traits::{One, Zero};
 
 use biguint::BigUint;
 
@@ -12,86 +12,44 @@ use bigint::BigInt;
 use bigint::Sign;
 use bigint::Sign::{Minus, NoSign, Plus};
 
-#[allow(non_snake_case)]
-pub mod big_digit {
-    /// A `BigDigit` is a `BigUint`'s composing element.
-    pub type BigDigit = u32;
-
-    /// A `DoubleBigDigit` is the internal type used to do the computations.  Its
-    /// size is the double of the size of `BigDigit`.
-    pub type DoubleBigDigit = u64;
-
-    pub const ZERO_BIG_DIGIT: BigDigit = 0;
-
-    // `DoubleBigDigit` size dependent
-    pub const BITS: usize = 32;
-
-    pub const BASE: DoubleBigDigit = 1 << BITS;
-    const LO_MASK: DoubleBigDigit = (-1i32 as DoubleBigDigit) >> BITS;
-
-    #[inline]
-    fn get_hi(n: DoubleBigDigit) -> BigDigit {
-        (n >> BITS) as BigDigit
-    }
-    #[inline]
-    fn get_lo(n: DoubleBigDigit) -> BigDigit {
-        (n & LO_MASK) as BigDigit
-    }
-
-    /// Split one `DoubleBigDigit` into two `BigDigit`s.
-    #[inline]
-    pub fn from_doublebigdigit(n: DoubleBigDigit) -> (BigDigit, BigDigit) {
-        (get_hi(n), get_lo(n))
-    }
-
-    /// Join two `BigDigit`s into one `DoubleBigDigit`
-    #[inline]
-    pub fn to_doublebigdigit(hi: BigDigit, lo: BigDigit) -> DoubleBigDigit {
-        (lo as DoubleBigDigit) | ((hi as DoubleBigDigit) << BITS)
-    }
-}
-
-use big_digit::{BigDigit, DoubleBigDigit};
+use big_digit::{self, BigDigit, DoubleBigDigit, SignedDoubleBigDigit};
 
 // Generic functions for add/subtract/multiply with carry/borrow:
 
 // Add with carry:
 #[inline]
-fn adc(a: BigDigit, b: BigDigit, carry: &mut BigDigit) -> BigDigit {
-    let (hi, lo) = big_digit::from_doublebigdigit((a as DoubleBigDigit) + (b as DoubleBigDigit) +
-                                                  (*carry as DoubleBigDigit));
-
-    *carry = hi;
+fn adc(a: BigDigit, b: BigDigit, acc: &mut DoubleBigDigit) -> BigDigit {
+    *acc += DoubleBigDigit::from(a);
+    *acc += DoubleBigDigit::from(b);
+    let lo = *acc as BigDigit;
+    *acc >>= big_digit::BITS;
     lo
 }
 
 // Subtract with borrow:
 #[inline]
-fn sbb(a: BigDigit, b: BigDigit, borrow: &mut BigDigit) -> BigDigit {
-    let (hi, lo) = big_digit::from_doublebigdigit(big_digit::BASE + (a as DoubleBigDigit) -
-                                                  (b as DoubleBigDigit) -
-                                                  (*borrow as DoubleBigDigit));
-    // hi * (base) + lo == 1*(base) + ai - bi - borrow
-    // => ai - bi - borrow < 0 <=> hi == 0
-    *borrow = (hi == 0) as BigDigit;
+fn sbb(a: BigDigit, b: BigDigit, acc: &mut SignedDoubleBigDigit) -> BigDigit {
+    *acc += SignedDoubleBigDigit::from(a);
+    *acc -= SignedDoubleBigDigit::from(b);
+    let lo = *acc as BigDigit;
+    *acc >>= big_digit::BITS;
     lo
 }
 
 #[inline]
-pub fn mac_with_carry(a: BigDigit, b: BigDigit, c: BigDigit, carry: &mut BigDigit) -> BigDigit {
-    let (hi, lo) = big_digit::from_doublebigdigit((a as DoubleBigDigit) +
-                                                  (b as DoubleBigDigit) * (c as DoubleBigDigit) +
-                                                  (*carry as DoubleBigDigit));
-    *carry = hi;
+pub fn mac_with_carry(a: BigDigit, b: BigDigit, c: BigDigit, acc: &mut DoubleBigDigit) -> BigDigit {
+    *acc += DoubleBigDigit::from(a);
+    *acc += DoubleBigDigit::from(b) * DoubleBigDigit::from(c);
+    let lo = *acc as BigDigit;
+    *acc >>= big_digit::BITS;
     lo
 }
 
 #[inline]
-pub fn mul_with_carry(a: BigDigit, b: BigDigit, carry: &mut BigDigit) -> BigDigit {
-    let (hi, lo) = big_digit::from_doublebigdigit((a as DoubleBigDigit) * (b as DoubleBigDigit) +
-                                                  (*carry as DoubleBigDigit));
-
-    *carry = hi;
+pub fn mul_with_carry(a: BigDigit, b: BigDigit, acc: &mut DoubleBigDigit) -> BigDigit {
+    *acc += DoubleBigDigit::from(a) * DoubleBigDigit::from(b);
+    let lo = *acc as BigDigit;
+    *acc >>= big_digit::BITS;
     lo
 }
 
@@ -106,7 +64,7 @@ fn div_wide(hi: BigDigit, lo: BigDigit, divisor: BigDigit) -> (BigDigit, BigDigi
     debug_assert!(hi < divisor);
 
     let lhs = big_digit::to_doublebigdigit(hi, lo);
-    let rhs = divisor as DoubleBigDigit;
+    let rhs = DoubleBigDigit::from(divisor);
     ((lhs / rhs) as BigDigit, (lhs % rhs) as BigDigit)
 }
 
@@ -120,6 +78,16 @@ pub fn div_rem_digit(mut a: BigUint, b: BigDigit) -> (BigUint, BigDigit) {
     }
 
     (a.normalized(), rem)
+}
+
+pub fn rem_digit(a: &BigUint, b: BigDigit) -> BigDigit {
+    let mut rem: DoubleBigDigit = 0;
+    for &digit in a.data.iter().rev() {
+        rem = (rem << big_digit::BITS) + DoubleBigDigit::from(digit);
+        rem %= DoubleBigDigit::from(b);
+    }
+
+    rem as BigDigit
 }
 
 // Only for the Add impl:
@@ -137,14 +105,16 @@ pub fn __add2(a: &mut [BigDigit], b: &[BigDigit]) -> BigDigit {
     if carry != 0 {
         for a in a_hi {
             *a = adc(*a, 0, &mut carry);
-            if carry == 0 { break }
+            if carry == 0 {
+                break;
+            }
         }
     }
 
-    carry
+    carry as BigDigit
 }
 
-/// /Two argument addition of raw slices:
+/// Two argument addition of raw slices:
 /// a += b
 ///
 /// The caller _must_ ensure that a is big enough to store the result - typically this means
@@ -169,33 +139,49 @@ pub fn sub2(a: &mut [BigDigit], b: &[BigDigit]) {
     if borrow != 0 {
         for a in a_hi {
             *a = sbb(*a, 0, &mut borrow);
-            if borrow == 0 { break }
+            if borrow == 0 {
+                break;
+            }
         }
     }
 
     // note: we're _required_ to fail on underflow
-    assert!(borrow == 0 && b_hi.iter().all(|x| *x == 0),
-            "Cannot subtract b from a because b is larger than a.");
+    assert!(
+        borrow == 0 && b_hi.iter().all(|x| *x == 0),
+        "Cannot subtract b from a because b is larger than a."
+    );
+}
+
+// Only for the Sub impl. `a` and `b` must have same length.
+#[inline]
+pub fn __sub2rev(a: &[BigDigit], b: &mut [BigDigit]) -> BigDigit {
+    debug_assert!(b.len() == a.len());
+
+    let mut borrow = 0;
+
+    for (ai, bi) in a.iter().zip(b) {
+        *bi = sbb(*ai, *bi, &mut borrow);
+    }
+
+    borrow as BigDigit
 }
 
 pub fn sub2rev(a: &[BigDigit], b: &mut [BigDigit]) {
     debug_assert!(b.len() >= a.len());
 
-    let mut borrow = 0;
-
     let len = cmp::min(a.len(), b.len());
     let (a_lo, a_hi) = a.split_at(len);
     let (b_lo, b_hi) = b.split_at_mut(len);
 
-    for (a, b) in a_lo.iter().zip(b_lo) {
-        *b = sbb(*a, *b, &mut borrow);
-    }
+    let borrow = __sub2rev(a_lo, b_lo);
 
     assert!(a_hi.is_empty());
 
     // note: we're _required_ to fail on underflow
-    assert!(borrow == 0 && b_hi.iter().all(|x| *x == 0),
-            "Cannot subtract b from a because b is larger than a.");
+    assert!(
+        borrow == 0 && b_hi.iter().all(|x| *x == 0),
+        "Cannot subtract b from a because b is larger than a."
+    );
 }
 
 pub fn sub_sign(a: &[BigDigit], b: &[BigDigit]) -> (Sign, BigUint) {
@@ -242,11 +228,7 @@ pub fn mac_digit(acc: &mut [BigDigit], b: &[BigDigit], c: BigDigit) {
 /// Three argument multiply accumulate:
 /// acc += b * c
 fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
-    let (x, y) = if b.len() < c.len() {
-        (b, c)
-    } else {
-        (c, b)
-    };
+    let (x, y) = if b.len() < c.len() { (b, c) } else { (c, b) };
 
     // We use three algorithms for different input sizes.
     //
@@ -349,8 +331,8 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
         // Not required, but the adds go faster if we drop any unneeded 0s from the end:
         p.normalize();
 
-        add2(&mut acc[b..],        &p.data[..]);
-        add2(&mut acc[b * 2..],    &p.data[..]);
+        add2(&mut acc[b..], &p.data[..]);
+        add2(&mut acc[b * 2..], &p.data[..]);
 
         // Zero out p before the next multiply:
         p.data.truncate(0);
@@ -360,8 +342,8 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
         mac3(&mut p.data[..], x0, y0);
         p.normalize();
 
-        add2(&mut acc[..],         &p.data[..]);
-        add2(&mut acc[b..],        &p.data[..]);
+        add2(&mut acc[..], &p.data[..]);
+        add2(&mut acc[b..], &p.data[..]);
 
         // p1 = (x1 - x0) * (y1 - y0)
         // We do this one last, since it may be negative and acc can't ever be negative:
@@ -369,7 +351,7 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
         let (j1_sign, j1) = sub_sign(y1, y0);
 
         match j0_sign * j1_sign {
-            Plus    => {
+            Plus => {
                 p.data.truncate(0);
                 p.data.extend(repeat(0).take(len));
 
@@ -377,22 +359,22 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
                 p.normalize();
 
                 sub2(&mut acc[b..], &p.data[..]);
-            },
-            Minus   => {
+            }
+            Minus => {
                 mac3(&mut acc[b..], &j0.data[..], &j1.data[..]);
-            },
-            NoSign  => (),
+            }
+            NoSign => (),
         }
-
     } else {
         // Toom-3 multiplication:
         //
         // Toom-3 is like Karatsuba above, but dividing the inputs into three parts.
         // Both are instances of Toom-Cook, using `k=3` and `k=2` respectively.
         //
-        // FIXME: It would be nice to have comments breaking down the operations below.
-
-        let i = y.len()/3 + 1;
+        // The general idea is to treat the large integers digits as
+        // polynomials of a certain degree and determine the coefficients/digits
+        // of the product of the two via interpolation of the polynomial product.
+        let i = y.len() / 3 + 1;
 
         let x0_len = cmp::min(x.len(), i);
         let x1_len = cmp::min(x.len() - x0_len, i);
@@ -400,34 +382,105 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
         let y0_len = i;
         let y1_len = cmp::min(y.len() - y0_len, i);
 
+        // Break x and y into three parts, representating an order two polynomial.
+        // t is chosen to be the size of a digit so we can use faster shifts
+        // in place of multiplications.
+        //
+        // x(t) = x2*t^2 + x1*t + x0
         let x0 = BigInt::from_slice(Plus, &x[..x0_len]);
         let x1 = BigInt::from_slice(Plus, &x[x0_len..x0_len + x1_len]);
         let x2 = BigInt::from_slice(Plus, &x[x0_len + x1_len..]);
 
+        // y(t) = y2*t^2 + y1*t + y0
         let y0 = BigInt::from_slice(Plus, &y[..y0_len]);
         let y1 = BigInt::from_slice(Plus, &y[y0_len..y0_len + y1_len]);
         let y2 = BigInt::from_slice(Plus, &y[y0_len + y1_len..]);
 
+        // Let w(t) = x(t) * y(t)
+        //
+        // This gives us the following order-4 polynomial.
+        //
+        // w(t) = w4*t^4 + w3*t^3 + w2*t^2 + w1*t + w0
+        //
+        // We need to find the coefficients w4, w3, w2, w1 and w0. Instead
+        // of simply multiplying the x and y in total, we can evaluate w
+        // at 5 points. An n-degree polynomial is uniquely identified by (n + 1)
+        // points.
+        //
+        // It is arbitrary as to what points we evaluate w at but we use the
+        // following.
+        //
+        // w(t) at t = 0, 1, -1, -2 and inf
+        //
+        // The values for w(t) in terms of x(t)*y(t) at these points are:
+        //
+        // let a = w(0)   = x0 * y0
+        // let b = w(1)   = (x2 + x1 + x0) * (y2 + y1 + y0)
+        // let c = w(-1)  = (x2 - x1 + x0) * (y2 - y1 + y0)
+        // let d = w(-2)  = (4*x2 - 2*x1 + x0) * (4*y2 - 2*y1 + y0)
+        // let e = w(inf) = x2 * y2 as t -> inf
+
+        // x0 + x2, avoiding temporaries
         let p = &x0 + &x2;
+
+        // y0 + y2, avoiding temporaries
         let q = &y0 + &y2;
 
+        // x2 - x1 + x0, avoiding temporaries
         let p2 = &p - &x1;
+
+        // y2 - y1 + y0, avoiding temporaries
         let q2 = &q - &y1;
 
+        // w(0)
         let r0 = &x0 * &y0;
-        let r4 = &x2 * &y2;
-        let r1 = (p + x1) * (q + y1);
-        let r2 = &p2 * &q2;
-        let r3 = ((p2 + x2)*2 - x0) * ((q2 + y2)*2 - y0);
 
+        // w(inf)
+        let r4 = &x2 * &y2;
+
+        // w(1)
+        let r1 = (p + x1) * (q + y1);
+
+        // w(-1)
+        let r2 = &p2 * &q2;
+
+        // w(-2)
+        let r3 = ((p2 + x2) * 2 - x0) * ((q2 + y2) * 2 - y0);
+
+        // Evaluating these points gives us the following system of linear equations.
+        //
+        //  0  0  0  0  1 | a
+        //  1  1  1  1  1 | b
+        //  1 -1  1 -1  1 | c
+        // 16 -8  4 -2  1 | d
+        //  1  0  0  0  0 | e
+        //
+        // The solved equation (after gaussian elimination or similar)
+        // in terms of its coefficients:
+        //
+        // w0 = w(0)
+        // w1 = w(0)/2 + w(1)/3 - w(-1) + w(2)/6 - 2*w(inf)
+        // w2 = -w(0) + w(1)/2 + w(-1)/2 - w(inf)
+        // w3 = -w(0)/2 + w(1)/6 + w(-1)/2 - w(1)/6
+        // w4 = w(inf)
+        //
+        // This particular sequence is given by Bodrato and is an interpolation
+        // of the above equations.
         let mut comp3: BigInt = (r3 - &r1) / 3;
         let mut comp1: BigInt = (r1 - &r2) / 2;
         let mut comp2: BigInt = r2 - &r0;
-        comp3 = (&comp2 - comp3)/2 + &r4*2;
+        comp3 = (&comp2 - comp3) / 2 + &r4 * 2;
         comp2 = comp2 + &comp1 - &r4;
         comp1 = comp1 - &comp3;
 
-        let result = r0 + (comp1 << 32*i) + (comp2 << 2*32*i) + (comp3 << 3*32*i) + (r4 << 4*32*i);
+        // Recomposition. The coefficients of the polynomial are now known.
+        //
+        // Evaluate at w(t) where t is our given base to get the result.
+        let result = r0
+            + (comp1 << 32 * i)
+            + (comp2 << 2 * 32 * i)
+            + (comp3 << 3 * 32 * i)
+            + (r4 << 4 * 32 * i);
         let result_pos = result.to_biguint().unwrap();
         add2(&mut acc[..], &result_pos.data);
     }
@@ -446,20 +499,68 @@ pub fn scalar_mul(a: &mut [BigDigit], b: BigDigit) -> BigDigit {
     for a in a.iter_mut() {
         *a = mul_with_carry(*a, b, &mut carry);
     }
-    carry
+    carry as BigDigit
 }
 
-pub fn div_rem(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
+pub fn div_rem(mut u: BigUint, mut d: BigUint) -> (BigUint, BigUint) {
     if d.is_zero() {
         panic!()
     }
     if u.is_zero() {
         return (Zero::zero(), Zero::zero());
     }
-    if d.data == [1] {
-        return (u.clone(), Zero::zero());
-    }
+
     if d.data.len() == 1 {
+        if d.data == [1] {
+            return (u, Zero::zero());
+        }
+        let (div, rem) = div_rem_digit(u, d.data[0]);
+        // reuse d
+        d.data.clear();
+        d += rem;
+        return (div, d);
+    }
+
+    // Required or the q_len calculation below can underflow:
+    match u.cmp(&d) {
+        Less => return (Zero::zero(), u),
+        Equal => {
+            u.set_one();
+            return (u, Zero::zero());
+        }
+        Greater => {} // Do nothing
+    }
+
+    // This algorithm is from Knuth, TAOCP vol 2 section 4.3, algorithm D:
+    //
+    // First, normalize the arguments so the highest bit in the highest digit of the divisor is
+    // set: the main loop uses the highest digit of the divisor for generating guesses, so we
+    // want it to be the largest number we can efficiently divide by.
+    //
+    let shift = d.data.last().unwrap().leading_zeros() as usize;
+    let (q, r) = if shift == 0 {
+        // no need to clone d
+        div_rem_core(u, &d)
+    } else {
+        div_rem_core(u << shift, &(d << shift))
+    };
+    // renormalize the remainder
+    (q, r >> shift)
+}
+
+pub fn div_rem_ref(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
+    if d.is_zero() {
+        panic!()
+    }
+    if u.is_zero() {
+        return (Zero::zero(), Zero::zero());
+    }
+
+    if d.data.len() == 1 {
+        if d.data == [1] {
+            return (u.clone(), Zero::zero());
+        }
+
         let (div, rem) = div_rem_digit(u.clone(), d.data[0]);
         return (div, rem.into());
     }
@@ -478,9 +579,27 @@ pub fn div_rem(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
     // want it to be the largest number we can efficiently divide by.
     //
     let shift = d.data.last().unwrap().leading_zeros() as usize;
-    let mut a = u << shift;
-    let b = d << shift;
 
+    let (q, r) = if shift == 0 {
+        // no need to clone d
+        div_rem_core(u.clone(), d)
+    } else {
+        div_rem_core(u << shift, &(d << shift))
+    };
+    // renormalize the remainder
+    (q, r >> shift)
+}
+
+/// an implementation of Knuth, TAOCP vol 2 section 4.3, algorithm D
+///
+/// # Correctness
+///
+/// This function requires the following conditions to run correctly and/or effectively
+///
+/// - `a > b`
+/// - `d.data.len() > 1`
+/// - `d.data.last().unwrap().leading_zeros() == 0`
+fn div_rem_core(mut a: BigUint, b: &BigUint) -> (BigUint, BigUint) {
     // The algorithm works by incrementally calculating "guesses", q0, for part of the
     // remainder. Once we have any number q0 such that q0 * b <= a, we can set
     //
@@ -497,13 +616,17 @@ pub fn div_rem(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
 
     let bn = *b.data.last().unwrap();
     let q_len = a.data.len() - b.data.len() + 1;
-    let mut q = BigUint { data: vec![0; q_len] };
+    let mut q = BigUint {
+        data: vec![0; q_len],
+    };
 
     // We reuse the same temporary to avoid hitting the allocator in our inner loop - this is
     // sized to hold a0 (in the common case; if a particular digit of the quotient is zero a0
     // can be bigger).
     //
-    let mut tmp = BigUint { data: Vec::with_capacity(2) };
+    let mut tmp = BigUint {
+        data: Vec::with_capacity(2),
+    };
 
     for j in (0..q_len).rev() {
         /*
@@ -529,12 +652,12 @@ pub fn div_rem(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
          * smaller numbers.
          */
         let (mut q0, _) = div_rem_digit(a0, bn);
-        let mut prod = &b * &q0;
+        let mut prod = b * &q0;
 
         while cmp_slice(&prod.data[..], &a.data[j..]) == Greater {
             let one: BigUint = One::one();
             q0 = q0 - one;
-            prod = prod - &b;
+            prod = prod - b;
         }
 
         add2(&mut q.data[j..], &q0.data[..]);
@@ -544,9 +667,9 @@ pub fn div_rem(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
         tmp = q0;
     }
 
-    debug_assert!(a < b);
+    debug_assert!(&a < b);
 
-    (q.normalized(), a >> shift)
+    (q.normalized(), a)
 }
 
 /// Find last set bit
@@ -641,9 +764,10 @@ pub fn cmp_slice(a: &[BigDigit], b: &[BigDigit]) -> Ordering {
 
 #[cfg(test)]
 mod algorithm_tests {
-    use {BigDigit, BigUint, BigInt};
-    use Sign::Plus;
+    use big_digit::BigDigit;
     use traits::Num;
+    use Sign::Plus;
+    use {BigInt, BigUint};
 
     #[test]
     fn test_sub_sign() {

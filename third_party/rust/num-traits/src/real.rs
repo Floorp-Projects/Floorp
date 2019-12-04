@@ -1,4 +1,6 @@
-use std::ops::Neg;
+#![cfg(any(feature = "std", feature = "libm"))]
+
+use core::ops::Neg;
 
 use {Float, Num, NumCast};
 
@@ -11,7 +13,7 @@ use {Float, Num, NumCast};
 /// See [this Wikipedia article](https://en.wikipedia.org/wiki/Real_data_type)
 /// for a list of data types that could meaningfully implement this trait.
 ///
-/// This trait is only available with the `std` feature.
+/// This trait is only available with the `std` feature, or with the `libm` feature otherwise.
 pub trait Real: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// Returns the smallest finite value that this type can represent.
     ///

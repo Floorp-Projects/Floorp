@@ -195,10 +195,11 @@ checked_impl_unary!(CheckedNeg, checked_neg, isize);
 #[cfg(has_i128)]
 checked_impl_unary!(CheckedNeg, checked_neg, i128);
 
-/// Performs a left shift that returns `None` on overflow.
+/// Performs a left shift that returns `None` on shifts larger than
+/// the type width.
 pub trait CheckedShl: Sized + Shl<u32, Output = Self> {
-    /// Shifts a number to the left, checking for overflow. If overflow happens,
-    /// `None` is returned.
+    /// Checked shift left. Computes `self << rhs`, returning `None`
+    /// if `rhs` is larger than or equal to the number of bits in `self`.
     ///
     /// ```
     /// use num_traits::CheckedShl;
@@ -240,10 +241,11 @@ checked_shift_impl!(CheckedShl, checked_shl, isize);
 #[cfg(has_i128)]
 checked_shift_impl!(CheckedShl, checked_shl, i128);
 
-/// Performs a right shift that returns `None` on overflow.
+/// Performs a right shift that returns `None` on shifts larger than
+/// the type width.
 pub trait CheckedShr: Sized + Shr<u32, Output = Self> {
-    /// Shifts a number to the left, checking for overflow. If overflow happens,
-    /// `None` is returned.
+    /// Checked shift right. Computes `self >> rhs`, returning `None`
+    /// if `rhs` is larger than or equal to the number of bits in `self`.
     ///
     /// ```
     /// use num_traits::CheckedShr;

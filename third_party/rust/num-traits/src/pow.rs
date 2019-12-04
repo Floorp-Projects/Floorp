@@ -152,28 +152,29 @@ pow_impl!(Wrapping<isize>);
 // pow_impl!(usize, u64);
 // pow_impl!(isize, u64);
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 mod float_impls {
     use super::Pow;
+    use Float;
 
-    pow_impl!(f32, i8, i32, f32::powi);
-    pow_impl!(f32, u8, i32, f32::powi);
-    pow_impl!(f32, i16, i32, f32::powi);
-    pow_impl!(f32, u16, i32, f32::powi);
-    pow_impl!(f32, i32, i32, f32::powi);
-    pow_impl!(f64, i8, i32, f64::powi);
-    pow_impl!(f64, u8, i32, f64::powi);
-    pow_impl!(f64, i16, i32, f64::powi);
-    pow_impl!(f64, u16, i32, f64::powi);
-    pow_impl!(f64, i32, i32, f64::powi);
-    pow_impl!(f32, f32, f32, f32::powf);
-    pow_impl!(f64, f32, f64, f64::powf);
-    pow_impl!(f64, f64, f64, f64::powf);
+    pow_impl!(f32, i8, i32, <f32 as Float>::powi);
+    pow_impl!(f32, u8, i32, <f32 as Float>::powi);
+    pow_impl!(f32, i16, i32, <f32 as Float>::powi);
+    pow_impl!(f32, u16, i32, <f32 as Float>::powi);
+    pow_impl!(f32, i32, i32, <f32 as Float>::powi);
+    pow_impl!(f64, i8, i32, <f64 as Float>::powi);
+    pow_impl!(f64, u8, i32, <f64 as Float>::powi);
+    pow_impl!(f64, i16, i32, <f64 as Float>::powi);
+    pow_impl!(f64, u16, i32, <f64 as Float>::powi);
+    pow_impl!(f64, i32, i32, <f64 as Float>::powi);
+    pow_impl!(f32, f32, f32, <f32 as Float>::powf);
+    pow_impl!(f64, f32, f64, <f64 as Float>::powf);
+    pow_impl!(f64, f64, f64, <f64 as Float>::powf);
 }
 
 /// Raises a value to the power of exp, using exponentiation by squaring.
 ///
-/// Note that `0⁰` (`pow(0, 0)`) returnes `1`. Mathematically this is undefined.
+/// Note that `0⁰` (`pow(0, 0)`) returns `1`. Mathematically this is undefined.
 ///
 /// # Example
 ///
@@ -211,7 +212,7 @@ pub fn pow<T: Clone + One + Mul<T, Output = T>>(mut base: T, mut exp: usize) -> 
 
 /// Raises a value to the power of exp, returning `None` if an overflow occurred.
 ///
-/// Note that `0⁰` (`checked_pow(0, 0)`) returnes `Some(1)`. Mathematically this is undefined.
+/// Note that `0⁰` (`checked_pow(0, 0)`) returns `Some(1)`. Mathematically this is undefined.
 ///
 /// Otherwise same as the `pow` function.
 ///

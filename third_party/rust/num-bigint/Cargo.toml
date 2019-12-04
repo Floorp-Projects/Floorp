@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,8 +12,9 @@
 
 [package]
 name = "num-bigint"
-version = "0.1.44"
+version = "0.2.3"
 authors = ["The Rust Project Developers"]
+build = "build.rs"
 description = "Big integer implementation for Rust"
 homepage = "https://github.com/rust-num/num-bigint"
 documentation = "https://docs.rs/num-bigint"
@@ -22,6 +23,8 @@ keywords = ["mathematics", "numerics", "bignum"]
 categories = ["algorithms", "data-structures", "science"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-num/num-bigint"
+[package.metadata.docs.rs]
+features = ["std", "serde", "rand", "quickcheck"]
 
 [[bench]]
 name = "bigint"
@@ -33,30 +36,46 @@ name = "factorial"
 name = "gcd"
 
 [[bench]]
+name = "roots"
+
+[[bench]]
 name = "shootout-pidigits"
 harness = false
 [dependencies.num-integer]
-version = "0.1.36"
+version = "0.1.39"
 default-features = false
 
 [dependencies.num-traits]
-version = "0.2.0"
-features = ["std"]
+version = "0.2.7"
+default-features = false
+
+[dependencies.quickcheck]
+version = "0.8"
+optional = true
+default-features = false
+
+[dependencies.quickcheck_macros]
+version = "0.8"
+optional = true
 default-features = false
 
 [dependencies.rand]
-version = ">= 0.3.14, < 0.5.0"
+version = "0.5"
+features = ["std"]
 optional = true
-
-[dependencies.rustc-serialize]
-version = "0.3.19"
-optional = true
+default-features = false
 
 [dependencies.serde]
-version = ">= 0.7.0, < 0.9.0"
+version = "1.0"
+features = ["std"]
 optional = true
-[dev-dependencies.rand]
-version = ">= 0.3.14, < 0.5.0"
+default-features = false
+[dev-dependencies.serde_test]
+version = "1.0"
+[build-dependencies.autocfg]
+version = "0.1.2"
 
 [features]
-default = ["rand", "rustc-serialize"]
+default = ["std"]
+i128 = ["num-integer/i128", "num-traits/i128"]
+std = ["num-integer/std", "num-traits/std"]

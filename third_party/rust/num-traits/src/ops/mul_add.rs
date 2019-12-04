@@ -18,7 +18,7 @@
 /// // 100.0
 /// let abs_difference = (m.mul_add(x, b) - (m*x + b)).abs();
 ///
-/// assert!(abs_difference <= f32::EPSILON);
+/// assert!(abs_difference <= 100.0 * f32::EPSILON);
 /// ```
 pub trait MulAdd<A = Self, B = Self> {
     /// The resulting type after applying the fused multiply-add.
@@ -34,23 +34,23 @@ pub trait MulAddAssign<A = Self, B = Self> {
     fn mul_add_assign(&mut self, a: A, b: B);
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 impl MulAdd<f32, f32> for f32 {
     type Output = Self;
 
     #[inline]
     fn mul_add(self, a: Self, b: Self) -> Self::Output {
-        f32::mul_add(self, a, b)
+        <Self as ::Float>::mul_add(self, a, b)
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 impl MulAdd<f64, f64> for f64 {
     type Output = Self;
 
     #[inline]
     fn mul_add(self, a: Self, b: Self) -> Self::Output {
-        f64::mul_add(self, a, b)
+        <Self as ::Float>::mul_add(self, a, b)
     }
 }
 
@@ -71,19 +71,19 @@ mul_add_impl!(MulAdd for isize usize i8 u8 i16 u16 i32 u32 i64 u64);
 #[cfg(has_i128)]
 mul_add_impl!(MulAdd for i128 u128);
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 impl MulAddAssign<f32, f32> for f32 {
     #[inline]
     fn mul_add_assign(&mut self, a: Self, b: Self) {
-        *self = f32::mul_add(*self, a, b)
+        *self = <Self as ::Float>::mul_add(*self, a, b)
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 impl MulAddAssign<f64, f64> for f64 {
     #[inline]
     fn mul_add_assign(&mut self, a: Self, b: Self) {
-        *self = f64::mul_add(*self, a, b)
+        *self = <Self as ::Float>::mul_add(*self, a, b)
     }
 }
 
@@ -140,7 +140,7 @@ mod tests {
 
                         let abs_difference = (MulAdd::mul_add(m, x, b) - (m*x + b)).abs();
 
-                        assert!(abs_difference <= $t::EPSILON);
+                        assert!(abs_difference <= 46.4 * $t::EPSILON);
                     }
                 )+
             };
