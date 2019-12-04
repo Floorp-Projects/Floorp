@@ -36,6 +36,7 @@ const propertyIteratorSpec = generateActorSpec({
       request: {},
       response: RetVal("propertyiterator.data"),
     },
+    release: { release: true },
   },
 });
 

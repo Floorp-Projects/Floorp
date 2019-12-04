@@ -9,51 +9,44 @@ const {
   registerFront,
 } = require("devtools/shared/protocol");
 const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
+const {
+  getAdHocFrontOrPrimitiveGrip,
+} = require("devtools/shared/fronts/object");
 
 /**
- * A SymbolIteratorFront provides a way to access to symbols
- * of an object efficiently, slice by slice.
- *
- * @param client DebuggerClient
- *        The debugger client parent.
- * @param grip Object
- *        A SymbolIteratorActor grip returned by the protocol via
- *        BrowsingContextTargetActor.enumSymbols request.
+ * A SymbolIteratorFront is used as a front end for the SymbolIterator that is
+ * created on the server, hiding implementation details.
  */
 class SymbolIteratorFront extends FrontClassWithSpec(symbolIteratorSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-    this._client = client;
+  form(data) {
+    this.actorID = data.actor;
+    this.count = data.count;
   }
 
-  get actor() {
-    return this._grip.actor;
+  async slice(start, count) {
+    const result = await super.slice({ start, count });
+    return this._onResult(result);
   }
 
-  /**
-   * Get the total number of symbols available in the iterator.
-   */
-  get count() {
-    return this._grip.count;
+  async all() {
+    const result = await super.all();
+    return this._onResult(result);
   }
 
-  /**
-   * Get a set of following symbols.
-   *
-   * @param start Number
-   *        The index of the first symbol to fetch.
-   * @param count Number
-   *        The number of symbols to fetch.
-   * @param callback Function
-   *        The function called when we receive the symbols.
-   */
-  slice(start, count) {
-    const argumentObject = { start, count };
-    return super.slice(argumentObject);
-  }
+  _onResult(result) {
+    if (!result.ownSymbols) {
+      return result;
+    }
 
-  form(form) {
-    this._grip = form;
+    result.ownSymbols.forEach((item, i) => {
+      if (item && item.descriptor) {
+        result.ownSymbols[i].descriptor.value = getAdHocFrontOrPrimitiveGrip(
+          item.descriptor.value,
+          this
+        );
+      }
+    });
+    return result;
   }
 }
 
