@@ -1,0 +1,70 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
+// Test that a favicon with Cache-Control: no-store is not stored in Places.
+
+const TEST_SITE = "http://example.net";
+const ICON_URL =
+  TEST_SITE + "/browser/browser/base/content/test/favicons/no-store.png";
+const PAGE_URL =
+  TEST_SITE + "/browser/browser/base/content/test/favicons/no-store.html";
+
+async function cleanup() {
+  Services.cache2.clear();
+  await PlacesTestUtils.clearFavicons();
+  await PlacesUtils.history.clear();
+}
+
+add_task(async function browser_loader() {
+  await cleanup();
+  let iconPromise = waitForFaviconMessage(true, ICON_URL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
+  registerCleanupFunction(async () => {
+    await cleanup();
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  let { iconURL } = await iconPromise;
+  is(iconURL, ICON_URL, "Should have seen the expected icon.");
+
+  // Ensure the favicon has not been stored.
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve, reject) => {
+    PlacesUtils.favicons.getFaviconURLForPage(
+      Services.io.newURI(PAGE_URL),
+      foundIconURI => {
+        if (foundIconURI) {
+          reject(new Error("An icon has been stored " + foundIconURI.spec));
+        }
+        resolve();
+      }
+    );
+  });
+});
+
+add_task(async function places_loader() {
+  await cleanup();
+
+  // Ensure the favicon is not stored even if Places is directly invoked.
+  await PlacesTestUtils.addVisits(PAGE_URL);
+  let faviconData = new Map();
+  faviconData.set(PAGE_URL, ICON_URL);
+  // We can't wait for the promise due to bug 740457, so we race with a timer.
+  await Promise.race([
+    PlacesTestUtils.addFavicons(faviconData),
+    /* eslint-disable mozilla/no-arbitrary-setTimeout */
+    new Promise(resolve => setTimeout(resolve, 1000)),
+  ]);
+  await new Promise((resolve, reject) => {
+    PlacesUtils.favicons.getFaviconURLForPage(
+      Services.io.newURI(PAGE_URL),
+      foundIconURI => {
+        if (foundIconURI) {
+          reject(new Error("An icon has been stored " + foundIconURI.spec));
+        }
+        resolve();
+      }
+    );
+  });
+});
