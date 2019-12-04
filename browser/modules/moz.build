@@ -128,7 +128,6 @@ with Files("ZoomUI.jsm"):
 BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
     'test/browser/formValidation/browser.ini',
-    'test/browser/SiteOriginTelemetry/browser.ini',
 ]
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
