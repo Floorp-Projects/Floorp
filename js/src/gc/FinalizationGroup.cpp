@@ -70,7 +70,7 @@ void GCRuntime::sweepFinalizationGroups(Zone* zone) {
         auto record = &obj->as<FinalizationRecordObject>();
         FinalizationGroupObject* group = record->group();
         if (group) {
-          group->queueHoldingsToBeCleanedUp(record->holdings());
+          group->queueRecordToBeCleanedUp(record);
           queueFinalizationGroupForCleanup(group);
         }
       }
@@ -106,6 +106,6 @@ void GCRuntime::queueFinalizationGroupForCleanup(
 bool GCRuntime::cleanupQueuedFinalizationGroup(
     JSContext* cx, HandleFinalizationGroupObject group) {
   group->setQueuedForCleanup(false);
-  bool ok = FinalizationGroupObject::cleanupQueuedHoldings(cx, group);
+  bool ok = FinalizationGroupObject::cleanupQueuedRecords(cx, group);
   return ok;
 }
