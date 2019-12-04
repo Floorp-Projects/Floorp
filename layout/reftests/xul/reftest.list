@@ -1,4 +1,5 @@
 == chrome://reftest/content/xul/css-flex-1.xhtml css-flex-1-ref.html
+== chrome://reftest/content/xul/css-grid-with-xul-item-1.xhtml chrome://reftest/content/xul/css-grid-with-xul-item-1-ref.xhtml
 
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
