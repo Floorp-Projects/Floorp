@@ -4,13 +4,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getStr } = require("../utils/l10n");
 const { parseUserAgent } = require("../utils/ua");
 const Types = require("../types");
+
+const DeviceInfo = createFactory(require("./DeviceInfo"));
 
 loader.lazyRequireGetter(
   this,
@@ -95,20 +100,61 @@ class DeviceSelector extends PureComponent {
     });
   }
 
-  render() {
+  createTitle(device) {
+    if (!device) {
+      return null;
+    }
+
+    const { browser, os } = parseUserAgent(device.userAgent);
+    let title = device.name;
+    if (os) {
+      title += ` ${os.name}`;
+      if (os.version) {
+        title += ` ${os.version}`;
+      }
+    }
+    if (browser) {
+      title += ` ${browser.name} ${browser.version}`;
+    }
+
+    return title;
+  }
+
+  getSelectedDevice() {
     const { devices, selectedDevice } = this.props;
+
+    if (!selectedDevice) {
+      return null;
+    }
+
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
+        if (selectedDevice === device.name) {
+          return device;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  render() {
+    const { devices } = this.props;
+
+    const device = this.getSelectedDevice();
+    const title = this.createTitle(device);
 
     return dom.button(
       {
         id: "device-selector",
         className: "devtools-button devtools-dropdown-button",
         disabled: devices.listState !== Types.loadableState.LOADED,
-        title: selectedDevice,
+        title,
         onClick: this.onShowDeviceMenu,
       },
       dom.span(
         { className: "title" },
-        selectedDevice || getStr("responsive.responsiveMode")
+        device ? DeviceInfo({ device }) : getStr("responsive.responsiveMode")
       )
     );
   }

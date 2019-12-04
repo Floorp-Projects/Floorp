@@ -275,6 +275,16 @@ input:-moz-focusring {
   margin-inline-start: 4px;
 }
 
+#device-selector .title {
+  display: grid;
+  grid-template-columns: var(--device-list-grid-template-columns);
+}
+
+#device-selector .title .device-name,
+#device-selector .title .device-os {
+  margin-inline-start: 6px;
+}
+
 #viewports-container {
   display: flex;
   overflow: auto;

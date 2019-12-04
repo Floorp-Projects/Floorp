@@ -6,13 +6,17 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getFormatStr } = require("../utils/l10n");
-const { parseUserAgent } = require("../utils/ua");
 const Types = require("../types");
+
+const DeviceInfo = createFactory(require("./DeviceInfo"));
 
 class Device extends PureComponent {
   static get propTypes() {
@@ -46,17 +50,6 @@ class Device extends PureComponent {
     this.props.onDeviceCheckboxChange(e);
   }
 
-  renderBrowser({ name }) {
-    return dom.span({
-      className: `device-browser ${name.toLowerCase()}`,
-    });
-  }
-
-  renderOS({ name, version }) {
-    const text = version ? `${name} ${version}` : name;
-    return dom.span({}, text);
-  }
-
   render() {
     const { children, device } = this.props;
     const details = getFormatStr(
@@ -67,8 +60,6 @@ class Device extends PureComponent {
       device.userAgent,
       device.touch
     );
-
-    const { browser, os } = parseUserAgent(device.userAgent);
 
     return dom.label(
       {
@@ -84,9 +75,7 @@ class Device extends PureComponent {
         checked: device.isChecked,
         onChange: this.onCheckboxChanged,
       }),
-      browser ? this.renderBrowser(browser) : dom.span(),
-      dom.span({ className: "device-name" }, device.name),
-      os ? this.renderOS(os) : dom.span(),
+      DeviceInfo({ device }),
       children
     );
   }
