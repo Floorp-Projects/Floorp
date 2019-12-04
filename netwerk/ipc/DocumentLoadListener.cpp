@@ -276,7 +276,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
       !SameCOMIdentity(redirectChannel, static_cast<nsIParentChannel*>(this)));
 
   Delete();
-  if (!mStopRequestValue) {
+  if (!mIsFinished) {
     mParentChannelListener->SetListenerAfterRedirect(redirectChannel);
   }
   redirectChannel->SetParentListener(mParentChannelListener);
@@ -344,45 +344,58 @@ void DocumentLoadListener::ResumeSuspendedChannel(
     return;
   }
 
-  nsTArray<OnDataAvailableRequest> pendingRequests =
-      std::move(mPendingRequests);
-  MOZ_ASSERT(mPendingRequests.IsEmpty());
-
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (httpChannel) {
     httpChannel->SetApplyConversion(mOldApplyConversion);
-  }
-  nsresult rv = aListener->OnStartRequest(mChannel);
-  if (NS_FAILED(rv)) {
-    mChannel->Cancel(rv);
   }
 
   // If we failed to suspend the channel, then we might have received
   // some messages while the redirected was being handled.
   // Manually send them on now.
-  if (NS_SUCCEEDED(rv) &&
-      (!mStopRequestValue || NS_SUCCEEDED(*mStopRequestValue))) {
-    for (auto& request : pendingRequests) {
-      nsCOMPtr<nsIInputStream> stringStream;
-      rv = NS_NewByteInputStream(
-          getter_AddRefs(stringStream),
-          Span<const char>(request.data.get(), request.count),
-          NS_ASSIGNMENT_DEPEND);
-      if (NS_SUCCEEDED(rv)) {
-        rv = aListener->OnDataAvailable(mChannel, stringStream, request.offset,
-                                        request.count);
-      }
-      if (NS_FAILED(rv)) {
-        mChannel->Cancel(rv);
-        mStopRequestValue = Some(rv);
-        break;
-      }
-    }
+  nsTArray<StreamListenerFunction> streamListenerFunctions =
+      std::move(mStreamListenerFunctions);
+  nsresult rv = NS_OK;
+  for (auto& variant : streamListenerFunctions) {
+    variant.match(
+        [&](const OnStartRequestParams& aParams) {
+          rv = aListener->OnStartRequest(aParams.request);
+          if (NS_FAILED(rv)) {
+            aParams.request->Cancel(rv);
+          }
+        },
+        [&](const OnDataAvailableParams& aParams) {
+          // Don't deliver OnDataAvailable if we've
+          // already failed.
+          if (NS_FAILED(rv)) {
+            return;
+          }
+          nsCOMPtr<nsIInputStream> stringStream;
+          rv = NS_NewByteInputStream(
+              getter_AddRefs(stringStream),
+              Span<const char>(aParams.data.get(), aParams.count),
+              NS_ASSIGNMENT_DEPEND);
+          if (NS_SUCCEEDED(rv)) {
+            rv = aListener->OnDataAvailable(aParams.request, stringStream,
+                                            aParams.offset, aParams.count);
+          }
+          if (NS_FAILED(rv)) {
+            aParams.request->Cancel(rv);
+          }
+        },
+        [&](const OnStopRequestParams& aParams) {
+          if (NS_SUCCEEDED(rv)) {
+            aListener->OnStopRequest(aParams.request, aParams.status);
+          } else {
+            aListener->OnStopRequest(aParams.request, rv);
+          }
+          rv = NS_OK;
+        });
   }
-
-  if (mStopRequestValue) {
-    aListener->OnStopRequest(mChannel, *mStopRequestValue);
-  }
+  // We don't expect to get new stream listener functions added
+  // via re-entrancy. If this ever happens, we should understand
+  // exactly why before allowing it.
+  NS_ASSERTION(mStreamListenerFunctions.IsEmpty(),
+               "Should not have added new stream listener function!");
 
   mChannel->Resume();
 }
@@ -399,8 +412,8 @@ void DocumentLoadListener::SerializeRedirectData(
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
   // clears the principal to inherit, which fails tests (probably because this
-  // 'redirect' is usually just an implementation detail). It's also http only,
-  // and mChannel can be anything that we redirected to.
+  // 'redirect' is usually just an implementation detail). It's also http
+  // only, and mChannel can be anything that we redirected to.
   nsCOMPtr<nsILoadInfo> channelLoadInfo;
   mChannel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
 
@@ -643,10 +656,11 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Once we initiate a process switch, we ask the child to notify the listeners
-  // that we have completed. If the switch promise then gets rejected we also
-  // cancel the parent, which results in this being called. We don't need
-  // to forward it on though, since the child side is already completed.
+  // Once we initiate a process switch, we ask the child to notify the
+  // listeners that we have completed. If the switch promise then gets
+  // rejected we also cancel the parent, which results in this being called.
+  // We don't need to forward it on though, since the child side is already
+  // completed.
   if (mDoingProcessSwitch) {
     return NS_OK;
   }
@@ -663,6 +677,9 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     mDocumentChannelBridge->DisconnectChildListeners(NS_ERROR_NO_CONTENT);
     return NS_OK;
   }
+
+  mStreamListenerFunctions.AppendElement(StreamListenerFunction{
+      VariantIndex<0>{}, OnStartRequestParams{aRequest}});
 
   mChannel->Suspend();
   mSuspendedChannel = true;
@@ -702,8 +719,9 @@ NS_IMETHODIMP
 DocumentLoadListener::OnStopRequest(nsIRequest* aRequest,
                                     nsresult aStatusCode) {
   LOG(("DocumentLoadListener OnStopRequest [this=%p]", this));
-  mStopRequestValue = Some(aStatusCode);
-
+  mStreamListenerFunctions.AppendElement(StreamListenerFunction{
+      VariantIndex<2>{}, OnStopRequestParams{aRequest, aStatusCode}});
+  mIsFinished = true;
   return NS_OK;
 }
 
@@ -721,8 +739,9 @@ DocumentLoadListener::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPendingRequests.AppendElement(
-      OnDataAvailableRequest({data, aOffset, aCount}));
+  mStreamListenerFunctions.AppendElement(StreamListenerFunction{
+      VariantIndex<1>{},
+      OnDataAvailableParams{aRequest, data, aOffset, aCount}});
 
   return NS_OK;
 }
@@ -746,9 +765,9 @@ DocumentLoadListener::GetInterface(const nsIID& aIID, void** result) {
   return QueryInterface(aIID, result);
 }
 
-// Rather than forwarding all these nsIParentChannel functions to the child, we
-// cache a list of them, and then ask the 'real' channel to forward them for us
-// after it's created.
+// Rather than forwarding all these nsIParentChannel functions to the child,
+// we cache a list of them, and then ask the 'real' channel to forward them
+// for us after it's created.
 NS_IMETHODIMP
 DocumentLoadListener::NotifyFlashPluginStateChanged(
     nsIHttpChannel::FlashPluginState aState) {
