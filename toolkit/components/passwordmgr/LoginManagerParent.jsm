@@ -451,6 +451,7 @@ class LoginManagerParent extends JSWindowActorParent {
     });
 
     let generatedPassword = null;
+    let willAutoSaveGeneratedPassword = false;
     if (
       forcePasswordGeneration ||
       (isPasswordField &&
@@ -458,12 +459,24 @@ class LoginManagerParent extends JSWindowActorParent {
         Services.logins.getLoginSavingEnabled(formOrigin))
     ) {
       generatedPassword = this.getGeneratedPassword();
+      let potentialConflictingLogins = LoginHelper.searchLoginsWithObject({
+        origin: formOrigin,
+        formActionOrigin: actionOrigin,
+        httpRealm: null,
+      });
+      willAutoSaveGeneratedPassword = !potentialConflictingLogins.find(
+        login => login.username == ""
+      );
     }
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
     let jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
-    return { generatedPassword, logins: jsLogins };
+    return {
+      generatedPassword,
+      logins: jsLogins,
+      willAutoSaveGeneratedPassword,
+    };
   }
 
   /**
