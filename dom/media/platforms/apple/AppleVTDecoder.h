@@ -15,7 +15,6 @@
 #include "TimeUnits.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/gfx/Types.h"
-#include "nsIThread.h"
 
 namespace mozilla {
 

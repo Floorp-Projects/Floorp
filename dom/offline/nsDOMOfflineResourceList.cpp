@@ -5,11 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMOfflineResourceList.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsIPrefetchService.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -769,8 +767,7 @@ nsDOMOfflineResourceList::GetDocumentAppCache() {
   return nullptr;
 }
 
-void nsDOMOfflineResourceList::UpdateCompleted(
-    nsIOfflineCacheUpdate* aUpdate) {
+void nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate* aUpdate) {
   if (aUpdate != mCacheUpdate) {
     // This isn't the update we're watching.
     return;

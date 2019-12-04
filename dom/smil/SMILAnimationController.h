@@ -14,7 +14,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsITimer.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefreshDriver.h"

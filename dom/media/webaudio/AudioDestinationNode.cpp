@@ -19,8 +19,6 @@
 #include "MediaTrackGraph.h"
 #include "nsContentUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDocShell.h"
-#include "nsIPermissionManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Promise.h"

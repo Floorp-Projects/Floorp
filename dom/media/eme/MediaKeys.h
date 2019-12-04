@@ -20,7 +20,6 @@
 #include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"  // For MediaKeyStatus
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/DetailedPromise.h"
 #include "mozilla/WeakPtr.h"
 

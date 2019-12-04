@@ -13,8 +13,6 @@
 #include "nsNoDataProtocolContentPolicy.h"
 #include "nsString.h"
 #include "nsIProtocolHandler.h"
-#include "nsIIOService.h"
-#include "nsIExternalProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"

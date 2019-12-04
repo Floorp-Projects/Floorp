@@ -9,8 +9,6 @@
 
 #include "prcvar.h"
 #include "prthread.h"
-#include "nsIThread.h"
-#include "nsIRunnable.h"
 
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"

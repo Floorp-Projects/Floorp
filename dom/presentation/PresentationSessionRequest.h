@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_PresentationSessionRequest_h__
 #define mozilla_dom_PresentationSessionRequest_h__
 
-#include "nsIPresentationSessionRequest.h"
 #include "nsCOMPtr.h"
+#include "nsIPresentationSessionRequest.h"
 #include "nsString.h"
 
 namespace mozilla {

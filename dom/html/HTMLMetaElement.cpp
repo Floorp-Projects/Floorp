@@ -15,7 +15,6 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
-#include "nsIContentSecurityPolicy.h"
 
 static mozilla::LazyLogModule gMetaElementLog("nsMetaElement");
 #define LOG(msg) MOZ_LOG(gMetaElementLog, mozilla::LogLevel::Debug, msg)

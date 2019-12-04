@@ -8,7 +8,6 @@
 #define mozilla_dom_UDPSocketChild_h__
 
 #include "mozilla/net/PUDPSocketChild.h"
-#include "nsIUDPSocketChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
@@ -18,6 +17,8 @@
       0x88, 0x85, 0x42, 0x59, 0x79, 0x3d, 0x9c, 0xf0 \
     }                                                \
   }
+
+class nsIUDPSocketInternal;
 
 namespace mozilla {
 namespace dom {

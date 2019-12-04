@@ -12,7 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
-#include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 
 #define DATASET                                          \

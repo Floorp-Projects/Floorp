@@ -21,9 +21,7 @@
 #include "nsContentUtils.h"
 
 #include "nsIBFCacheEntry.h"
-#include "nsICookieService.h"
 #include "mozilla/dom/Document.h"
-#include "nsISupportsPrimitives.h"
 
 #ifdef XP_WIN
 #  undef PostMessage

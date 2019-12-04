@@ -23,7 +23,6 @@
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"
 
 class nsIContent;
-class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {

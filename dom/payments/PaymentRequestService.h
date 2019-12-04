@@ -9,7 +9,6 @@
 
 #include "nsInterfaceHashtable.h"
 #include "nsIPaymentRequestService.h"
-#include "nsISimpleEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "PaymentRequestData.h"

@@ -10,7 +10,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsXULContentUtils.h"

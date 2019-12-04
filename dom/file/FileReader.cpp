@@ -6,7 +6,6 @@
 
 #include "FileReader.h"
 
-#include "nsIEventTarget.h"
 #include "nsIGlobalObject.h"
 #include "nsITimer.h"
 

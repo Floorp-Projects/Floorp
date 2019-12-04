@@ -9,8 +9,7 @@
 #include "ScriptTrace.h"
 
 #include "nsContentUtils.h"
-#include "nsIEncodedChannel.h"
-#include "nsIStringEnumerator.h"
+#include "nsICacheInfoChannel.h"
 #include "nsMimeTypes.h"
 
 #include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding

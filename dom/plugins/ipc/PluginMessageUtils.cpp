@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PluginMessageUtils.h"
-#include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 
 #include "PluginInstanceParent.h"

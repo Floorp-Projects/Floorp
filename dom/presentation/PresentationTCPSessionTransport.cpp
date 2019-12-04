@@ -6,11 +6,7 @@
 
 #include "nsArrayUtils.h"
 #include "nsIAsyncStreamCopier.h"
-#include "nsIInputStreamPump.h"
 #include "nsIMultiplexInputStream.h"
-#include "nsIMutableArray.h"
-#include "nsIOutputStream.h"
-#include "nsIPresentationControlChannel.h"
 #include "nsIScriptableInputStream.h"
 #include "nsISocketTransport.h"
 #include "nsISocketTransportService.h"

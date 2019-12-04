@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 
 #include "PLDHashTable.h"
-#include "nsIHttpChannel.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/BindingDeclarations.h"

@@ -14,9 +14,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsFrameLoader.h"
-#include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
-#include "nsIPrincipal.h"
 
 #include "js/Wrapper.h"
 

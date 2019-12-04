@@ -19,7 +19,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "mozilla/dom/Document.h"
-#include "nsITimer.h"
 #include "SMILCompositor.h"
 #include "SMILCSSProperty.h"
 

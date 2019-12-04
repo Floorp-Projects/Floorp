@@ -6,7 +6,6 @@
 
 #include "nsGlobalWindowCommands.h"
 
-#include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCommandParams.h"

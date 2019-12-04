@@ -11,7 +11,6 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationLog.h"
