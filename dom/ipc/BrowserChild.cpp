@@ -668,7 +668,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
@@ -684,15 +683,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserChild)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserChild)
-
-NS_IMETHODIMP
-BrowserChild::SetStatus(uint32_t aStatusType, const char16_t* aStatus) {
-  return SetStatusWithContext(
-      aStatusType,
-      aStatus ? static_cast<const nsString&>(nsDependentString(aStatus))
-              : EmptyString(),
-      nullptr);
-}
 
 NS_IMETHODIMP
 BrowserChild::GetChromeFlags(uint32_t* aChromeFlags) {
@@ -777,12 +767,10 @@ BrowserChild::IsWindowModal(bool* aRetVal) {
 }
 
 NS_IMETHODIMP
-BrowserChild::SetStatusWithContext(uint32_t aStatusType,
-                                   const nsAString& aStatusText,
-                                   nsISupports* aStatusContext) {
+BrowserChild::SetStatusLink(const nsAString& aStatusText) {
   // We can only send the status after the ipc machinery is set up
   if (IPCOpen()) {
-    SendSetStatus(aStatusType, nsString(aStatusText));
+    SendSetStatusLink(nsString(aStatusText));
   }
   return NS_OK;
 }
