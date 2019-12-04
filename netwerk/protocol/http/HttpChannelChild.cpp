@@ -288,6 +288,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIChildChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIDivertableChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMultiPartChannel, mMultiPartID.isSome())
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelChild)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
@@ -378,7 +379,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const int64_t& aAltDataLen, const bool& aDeliveringAltData,
     const bool& aApplyConversion, const bool& aIsResolvedByTRR,
     const ResourceTimingStructArgs& aTiming,
-    const bool& aAllRedirectsSameOrigin) {
+    const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
+    const bool& aIsLastPartOfMultiPart) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -400,7 +402,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
        aCacheExpirationTime, aCachedCharset, aSecurityInfoSerialization,
        aSelfAddr, aPeerAddr, aCacheKey, aAltDataType, aAltDataLen,
        aDeliveringAltData, aApplyConversion, aIsResolvedByTRR, aTiming,
-       aAllRedirectsSameOrigin]() {
+       aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart]() {
         self->OnStartRequest(
             aChannelStatus, aResponseHead, aUseResponseHead, aRequestHeaders,
             aLoadInfoForwarder, aIsFromCache, aIsRacing, aCacheEntryAvailable,
@@ -408,7 +410,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
             aCachedCharset, aSecurityInfoSerialization, aSelfAddr, aPeerAddr,
             aCacheKey, aAltDataType, aAltDataLen, aDeliveringAltData,
             aApplyConversion, aIsResolvedByTRR, aTiming,
-            aAllRedirectsSameOrigin);
+            aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart);
       }));
 
   {
@@ -458,7 +460,8 @@ void HttpChannelChild::OnStartRequest(
     const nsCString& aAltDataType, const int64_t& aAltDataLen,
     const bool& aDeliveringAltData, const bool& aApplyConversion,
     const bool& aIsResolvedByTRR, const ResourceTimingStructArgs& aTiming,
-    const bool& aAllRedirectsSameOrigin) {
+    const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
+    const bool& aIsLastPartOfMultiPart) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -535,6 +538,9 @@ void HttpChannelChild::OnStartRequest(
   ResourceTimingStructArgsToTimingsStruct(aTiming, mTransactionTimings);
 
   mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
+
+  mMultiPartID = aMultiPartID;
+  mIsLastPartOfMultiPart = aIsLastPartOfMultiPart;
 
   DoOnStartRequest(this, nullptr);
 }
@@ -1000,6 +1006,16 @@ void HttpChannelChild::OnStopRequest(
     return;
   }
 
+  // If we're a multi-part stream, and this wasn't the last part, then don't
+  // cleanup yet, as we're expecting more parts.
+  if (mMultiPartID && !mIsLastPartOfMultiPart) {
+    LOG(
+        ("HttpChannelChild::OnStopRequest  - Expecting future parts on a "
+         "multipart channel"
+         "postpone cleaning up."));
+    return;
+  }
+
   CleanupBackgroundChannel();
 
   // If there is a possibility we might want to write alt data to the cache
@@ -1113,6 +1129,18 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
     listener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
+
+  // If we're a multi-part stream, and this wasn't the last part, then don't
+  // cleanup yet, as we're expecting more parts.
+  if (mMultiPartID && !mIsLastPartOfMultiPart) {
+    LOG(
+        ("HttpChannelChild::DoOnStopRequest  - Expecting future parts on a "
+         "multipart channel"
+         "not releasing listeners."));
+    mOnStopRequestCalled = false;
+    mOnStartRequestCalled = false;
+    return;
+  }
 
   // notify "http-on-stop-connect" observers
   gHttpHandler->OnStopRequest(this);
@@ -3403,6 +3431,40 @@ NS_IMETHODIMP
 HttpChannelChild::GetDivertingToParent(bool* aDiverting) {
   NS_ENSURE_ARG_POINTER(aDiverting);
   *aDiverting = mDivertingToParent;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIMuliPartChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpChannelChild::GetBaseChannel(nsIChannel** aBaseChannel) {
+  if (!mMultiPartID) {
+    MOZ_ASSERT(false, "Not a multipart channel");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsCOMPtr<nsIChannel> channel = this;
+  channel.forget(aBaseChannel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetPartID(uint32_t* aPartID) {
+  if (!mMultiPartID) {
+    MOZ_ASSERT(false, "Not a multipart channel");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aPartID = *mMultiPartID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetIsLastPart(bool* aIsLastPart) {
+  if (!mMultiPartID) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsLastPart = mIsLastPartOfMultiPart;
   return NS_OK;
 }
 
