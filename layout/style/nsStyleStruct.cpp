@@ -3667,7 +3667,10 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
     // of pointer-events. See SVGGeometryFrame::ReflowSVG's use of
     // GetHitTestFlags. (Only a reflow, no visual change.)
     hint |= nsChangeHint_NeedReflow |
-            nsChangeHint_NeedDirtyReflow;  // XXX remove me: bug 876085
+            nsChangeHint_NeedDirtyReflow |  // XXX remove me: bug 876085
+            nsChangeHint_SchedulePaint;     // pointer-events changes can change
+                                            // event regions overrides on layers
+                                            // and so needs a repaint.
   }
 
   if (mUserModify != aNewData.mUserModify) {
