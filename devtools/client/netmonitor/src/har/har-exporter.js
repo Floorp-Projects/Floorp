@@ -8,6 +8,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const JSZip = require("devtools/client/shared/vendor/jszip");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
+const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
 const { HarBuilder } = require("./har-builder");
 
 var uid = 1;
@@ -73,11 +74,15 @@ const HarExporter = {
     trace.log("HarExporter.save; " + defaultFileName, options);
 
     let data = await this.fetchHarData(options);
-    let fileName = this.getHarFileName(
+
+    const tabTarget = options.connector.getTabTarget();
+    const host = new URL(tabTarget.url);
+
+    const fileName = HarUtils.getHarFileName(
       defaultFileName,
       options.jsonp,
       compress,
-      options
+      host.hostname
     );
 
     if (compress) {
@@ -92,30 +97,7 @@ const HarExporter = {
       data = new TextEncoder().encode(data);
     }
 
-    fileName = `${fileName}${compress ? ".zip" : ""}`;
     DevToolsUtils.saveAs(window, data, fileName);
-  },
-
-  formatDate(date) {
-    const year = String(date.getFullYear() % 100).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-
-    return `${year}-${month}-${day} ${hour}-${minutes}-${seconds}`;
-  },
-
-  getHarFileName(defaultFileName, jsonp, compress, options) {
-    const tabTarget = options.connector.getTabTarget();
-    const host = new URL(tabTarget.url);
-
-    let name = defaultFileName.replace(/%date/g, this.formatDate(new Date()));
-    name = name.replace(/%hostname/g, host.hostname);
-    name = name.replace(/\:/gm, "-", "");
-    name = name.replace(/\//gm, "_", "");
-    return `${name}.${jsonp ? "harp" : "har"}`;
   },
 
   /**
