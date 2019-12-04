@@ -79,6 +79,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // other top level windows in other processes.
   void NotifyMediaMutedChanged(bool aMuted);
 
+  // Return the number of unique site origins by iterating all given BCs,
+  // including their subtrees.
+  static uint32_t CountSiteOrigins(
+      GlobalObject& aGlobal,
+      const Sequence<mozilla::OwningNonNull<BrowsingContext>>& aRoots);
+
   // This function would update the media action for the current outer window
   // and propogate the action to other browsing contexts in content processes.
   void UpdateMediaAction(MediaControlActions aAction);
