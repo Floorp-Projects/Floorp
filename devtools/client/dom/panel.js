@@ -4,7 +4,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { ObjectFront } = require("devtools/shared/fronts/object");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(
@@ -145,10 +144,10 @@ DomPanel.prototype = {
     return this._toolbox.currentToolId === "dom";
   },
 
-  getPrototypeAndProperties: async function(grip) {
-    if (!grip.actor) {
-      console.error("No actor!", grip);
-      throw new Error("Failed to get actor from grip.");
+  getPrototypeAndProperties: async function(objectFront) {
+    if (!objectFront.actorID) {
+      console.error("No actor!", objectFront);
+      throw new Error("Failed to get object front.");
     }
 
     // Bail out if target doesn't exist (toolbox maybe closed already).
@@ -157,17 +156,16 @@ DomPanel.prototype = {
     }
 
     // Check for a previously stored request for grip.
-    let request = this.pendingRequests.get(grip.actor);
+    let request = this.pendingRequests.get(objectFront.actorID);
 
     // If no request is in progress create a new one.
     if (!request) {
-      const objectFront = new ObjectFront(this.target.client, grip);
       request = objectFront.getPrototypeAndProperties();
-      this.pendingRequests.set(grip.actor, request);
+      this.pendingRequests.set(objectFront.actorID, request);
     }
 
     const response = await request;
-    this.pendingRequests.delete(grip.actor);
+    this.pendingRequests.delete(objectFront.actorID);
 
     // Fire an event about not having any pending requests.
     if (!this.pendingRequests.size) {
