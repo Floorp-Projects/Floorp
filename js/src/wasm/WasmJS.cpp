@@ -103,6 +103,19 @@ bool wasm::HasMultiValueSupport(JSContext* cx) {
 #endif
 }
 
+bool wasm::HasI64BigIntSupport(JSContext* cx) {
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    return false;
+  }
+#endif
+#ifdef ENABLE_WASM_BIGINT
+  return cx->options().isWasmBigIntEnabled();
+#else
+  return false;
+#endif
+}
+
 bool wasm::HasCompilerSupport(JSContext* cx) {
 #if !MOZ_LITTLE_ENDIAN || defined(JS_CODEGEN_NONE)
   return false;

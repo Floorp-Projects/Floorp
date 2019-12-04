@@ -838,7 +838,7 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
 
 static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
                              const FuncExport& fe, const Maybe<ImmPtr>& funcPtr,
-                             Offsets* offsets) {
+                             bool bigIntEnabled, Offsets* offsets) {
   AssertExpectedSP(masm);
 
   RegisterOrSP sp = masm.getStackPointer();
@@ -870,7 +870,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   GenerateJitEntryLoadTls(masm, frameSize);
 
-  if (fe.funcType().hasI64ArgOrRet()) {
+  if (fe.funcType().hasI64ArgOrRet() && !bigIntEnabled) {
     CallSymbolicAddress(masm, !fe.hasEagerStubs(),
                         SymbolicAddress::ReportInt64JSCall);
     GenerateJitEntryThrow(masm, frameSize);
@@ -2461,7 +2461,8 @@ static bool GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel,
 
 bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
                               const FuncExport& fe, const Maybe<ImmPtr>& callee,
-                              bool isAsmJS, CodeRangeVector* codeRanges) {
+                              bool isAsmJS, bool bigIntEnabled,
+                              CodeRangeVector* codeRanges) {
   MOZ_ASSERT(!callee == fe.hasEagerStubs());
   MOZ_ASSERT_IF(isAsmJS, fe.hasEagerStubs());
 
@@ -2478,7 +2479,8 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
     return true;
   }
 
-  if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, &offsets)) {
+  if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, bigIntEnabled,
+                        &offsets)) {
     return false;
   }
   if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets)) {
@@ -2539,7 +2541,7 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
       continue;
     }
     if (!GenerateEntryStubs(masm, i, fe, noAbsolute, env.isAsmJS(),
-                            &code->codeRanges)) {
+                            env.bigIntEnabled(), &code->codeRanges)) {
       return false;
     }
   }

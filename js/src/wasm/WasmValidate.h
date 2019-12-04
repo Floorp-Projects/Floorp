@@ -73,6 +73,7 @@ struct CompilerEnvironment {
       bool gcTypes_;
       bool multiValues_;
       bool hugeMemory_;
+      bool bigInt_;
     };
   };
 
@@ -87,7 +88,8 @@ struct CompilerEnvironment {
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
                       DebugEnabled debugEnabled, bool refTypesConfigured,
-                      bool gcTypesConfigured, bool hugeMemory);
+                      bool gcTypesConfigured, bool hugeMemory,
+                      bool bigIntConfigured);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d, bool gcFeatureOptIn);
@@ -129,6 +131,10 @@ struct CompilerEnvironment {
   bool hugeMemory() const {
     MOZ_ASSERT(isComputed());
     return hugeMemory_;
+  }
+  bool bigInt() const {
+    MOZ_ASSERT(isComputed());
+    return bigInt_;
   }
 };
 
@@ -215,6 +221,7 @@ struct ModuleEnvironment {
   bool gcTypesEnabled() const { return compilerEnv->gcTypes(); }
   bool refTypesEnabled() const { return compilerEnv->refTypes(); }
   bool multiValuesEnabled() const { return compilerEnv->multiValues(); }
+  bool bigIntEnabled() const { return compilerEnv->bigInt(); }
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
