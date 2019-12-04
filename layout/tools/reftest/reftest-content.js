@@ -110,9 +110,6 @@ function OnInitialLoad()
     removeEventListener("load", OnInitialLoad, true);
 
     gDebug = Cc[DEBUG_CONTRACTID].getService(Ci.nsIDebug2);
-    if (gDebug.isDebugBuild) {
-        gAssertionCount = gDebug.assertionCount;
-    }
     var env = Cc[ENVIRONMENT_CONTRACTID].getService(Ci.nsIEnvironment);
     gVerbose = !!env.get("MOZ_REFTEST_VERBOSE");
 
