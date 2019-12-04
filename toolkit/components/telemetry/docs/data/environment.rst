@@ -171,6 +171,7 @@ Structure:
         gfx: {
             D2DEnabled: <bool>, // null on failure
             DWriteEnabled: <bool>, // null on failure
+            ContentBackend: <string> // One of "Cairo", "Skia", or "Direct2D 1.1"
             Headless: <bool>, // null on failure
             //DWriteVersion: <string>, // temporarily removed, pending bug 1154500
             adapters: [
