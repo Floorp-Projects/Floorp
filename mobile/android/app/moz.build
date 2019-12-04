@@ -5,13 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
-with Files('mobile*'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('omnijar/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+    BUG_COMPONENT = ('Firefox for Android', 'General')
 
 for var in ('APP_NAME', 'APP_VERSION'):
     DEFINES[var] = CONFIG['MOZ_%s' % var]

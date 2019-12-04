@@ -36,4 +36,4 @@ with Files("tests/xpcshell/**"):
     BUG_COMPONENT = ("Testing", "XPCShell Harness")
 
 with Files("tests/browser/**"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")
+    BUG_COMPONENT = ("Testing", "General")

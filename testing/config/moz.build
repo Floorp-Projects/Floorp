@@ -18,4 +18,4 @@ with Files("telemetry*"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
 with Files("tooltool-manifests/**"):
-    BUG_COMPONENT = ("Release Engineering", "Mozharness")
+    BUG_COMPONENT = ("Release Engineering", "Applications: MozharnessCore")

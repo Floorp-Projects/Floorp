@@ -78,4 +78,4 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
 ]
 
 with Files('**'):
-  BUG_COMPONENT = ('Web Compatibility Tools', 'Go Faster')
+  BUG_COMPONENT = ('Web Compatibility', 'Tooling & Investigations')
