@@ -27,7 +27,7 @@ add_task(async function test_first_time_save() {
       form.querySelector("#tel").value = "1-345-345-3456";
 
       // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       form.querySelector("input[type=submit]").click();
     });
 
@@ -64,7 +64,7 @@ add_task(async function test_non_first_time_save() {
       form.querySelector("#tel").value = "1-650-903-0800";
 
       // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       form.querySelector("input[type=submit]").click();
     });
 
@@ -104,7 +104,7 @@ add_task(async function test_first_time_save_with_sync_account() {
       form.querySelector("#tel").value = "1-234-567-8900";
 
       // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       form.querySelector("input[type=submit]").click();
     });
 

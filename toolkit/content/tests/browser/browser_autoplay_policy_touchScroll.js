@@ -29,7 +29,7 @@ async function callMediaPlay(shouldStartPlaying) {
       audio.isPlayStarted = true;
       resolve();
     });
-    content.setTimeout(() => {
+    setTimeout(() => {
       if (audio.isPlayStarted) {
         return;
       }
