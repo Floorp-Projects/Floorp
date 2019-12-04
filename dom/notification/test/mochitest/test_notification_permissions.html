@@ -21,7 +21,7 @@ add_task(async function test_notifications_permission() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set pref to exercise relevant code path for regression test.
-      ["permissions.delegation.enable", true],
+      ["permissions.delegation.enabled", true],
       // Automatically dismiss the permission request when it appears.
       ["dom.webnotifications.requireuserinteraction", true],
     ],

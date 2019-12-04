@@ -529,7 +529,7 @@ function checkRequestAllowed(aRequest, aPrincipal, aBrowser) {
   if (videoDevices.length && sharingScreen) {
     camAllowed = false;
   }
-  if (aRequest.isThirdPartyOrigin) {
+  if (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) {
     camAllowed = false;
     micAllowed = false;
   }
@@ -643,7 +643,10 @@ function prompt(aBrowser, aRequest) {
     // If the request comes from a popup, we don't want to show the prompt,
     // but we do want to allow the request if the user previously gave permission.
     if (isPopup) {
-      if (!checkRequestAllowed(aRequest, principal, aBrowser)) {
+      if (
+        aRequest.secondOrigin ||
+        !checkRequestAllowed(aRequest, principal, aBrowser)
+      ) {
         denyRequest(aBrowser, aRequest);
       }
       return;
@@ -680,20 +683,39 @@ function prompt(aBrowser, aRequest) {
   // "includes()". This allows the rotation of string identifiers. We list the
   // full identifiers here so they can be cross-referenced more easily.
   let joinedRequestTypes = requestTypes.join("And");
-  let stringId = [
-    // Individual request types first.
-    "getUserMedia.shareCamera2.message",
-    "getUserMedia.shareMicrophone2.message",
-    "getUserMedia.shareScreen3.message",
-    "getUserMedia.shareAudioCapture2.message",
-    // Combinations of the above request types last.
-    "getUserMedia.shareCameraAndMicrophone2.message",
-    "getUserMedia.shareCameraAndAudioCapture2.message",
-    "getUserMedia.shareScreenAndMicrophone3.message",
-    "getUserMedia.shareScreenAndAudioCapture3.message",
-  ].find(id => id.includes(joinedRequestTypes));
+  let requestMessages;
+  if (aRequest.secondOrigin) {
+    requestMessages = [
+      // Individual request types first.
+      "getUserMedia.shareCameraUnsafeDelegation.message",
+      "getUserMedia.shareMicrophoneUnsafeDelegation.message",
+      "getUserMedia.shareScreenUnsafeDelegation.message",
+      "getUserMedia.shareAudioCaptureUnsafeDelegation.message",
+      // Combinations of the above request types last.
+      "getUserMedia.shareCameraAndMicrophoneUnsafeDelegation.message",
+      "getUserMedia.shareCameraAndAudioCaptureUnsafeDelegation.message",
+      "getUserMedia.shareScreenAndMicrophoneUnsafeDelegation.message",
+      "getUserMedia.shareScreenAndAudioCaptureUnsafeDelegation.message",
+    ];
+  } else {
+    requestMessages = [
+      // Individual request types first.
+      "getUserMedia.shareCamera2.message",
+      "getUserMedia.shareMicrophone2.message",
+      "getUserMedia.shareScreen3.message",
+      "getUserMedia.shareAudioCapture2.message",
+      // Combinations of the above request types last.
+      "getUserMedia.shareCameraAndMicrophone2.message",
+      "getUserMedia.shareCameraAndAudioCapture2.me ssage",
+      "getUserMedia.shareScreenAndMicrophone3.message",
+      "getUserMedia.shareScreenAndAudioCapture3.message",
+    ];
+  }
 
-  let message = stringBundle.getFormattedString(stringId, ["<>"], 1);
+  let stringId = requestMessages.find(id => id.includes(joinedRequestTypes));
+  let message = aRequest.secondOrigin
+    ? stringBundle.getFormattedString(stringId, ["<>", "{}"])
+    : stringBundle.getFormattedString(stringId, ["<>"]);
 
   let notification; // Used by action callbacks.
   let mainAction = {
@@ -787,7 +809,12 @@ function prompt(aBrowser, aRequest) {
       // it is handled synchronously before we add the notification.
       // Handling of ALLOW is delayed until the popupshowing event,
       // to avoid granting permissions automatically to background tabs.
-      if (checkRequestAllowed(aRequest, principal, aBrowser)) {
+      // If we have a secondOrigin, it means this request is lacking explicit
+      // trust, and we should always prompt even in with persistent permission.
+      if (
+        !aRequest.secondOrigin &&
+        checkRequestAllowed(aRequest, principal, aBrowser)
+      ) {
         this.remove();
         return true;
       }
@@ -1181,11 +1208,28 @@ function prompt(aBrowser, aRequest) {
     },
   };
 
-  // Don't offer "always remember" action in PB mode or from third party
-  if (
-    !PrivateBrowsingUtils.isBrowserPrivate(aBrowser) &&
-    !aRequest.isThirdPartyOrigin
-  ) {
+  function shouldShowAlwaysRemember() {
+    // Don't offer "always remember" action in PB mode
+    if (PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
+      return false;
+    }
+
+    // Don't offer "always remember" action in third party with no permission
+    // delegation
+    if (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) {
+      return false;
+    }
+
+    // Don't offer "always remember" action in maybe unsafe permission
+    // delegation
+    if (aRequest.shouldDelegatePermission && aRequest.secondOrigin) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (shouldShowAlwaysRemember()) {
     // Disable the permanent 'Allow' action if the connection isn't secure, or for
     // screen/audio sharing (because we can't guess which window the user wants to
     // share without prompting).
@@ -1233,6 +1277,10 @@ function prompt(aBrowser, aRequest) {
     iconClass = "camera";
   }
   options.popupIconClass = iconClass + "-icon";
+
+  if (aRequest.secondOrigin) {
+    options.secondName = getHostOrExtensionName(null, aRequest.secondOrigin);
+  }
 
   notification = chromeDoc.defaultView.PopupNotifications.show(
     aBrowser,
