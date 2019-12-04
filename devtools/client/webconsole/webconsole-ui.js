@@ -17,6 +17,9 @@ var ChromeUtils = require("ChromeUtils");
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
+const {
+  getAdHocFrontOrPrimitiveGrip,
+} = require("devtools/shared/fronts/object");
 
 loader.lazyRequireGetter(
   this,
@@ -245,11 +248,15 @@ class WebConsoleUI {
   }
 
   inspectObjectActor(objectActor) {
+    const webConsoleFront = this.webConsoleFront;
     this.wrapper.dispatchMessageAdd(
       {
         helperResult: {
           type: "inspectObject",
-          object: objectActor,
+          object:
+            objectActor && objectActor.getGrip
+              ? objectActor
+              : getAdHocFrontOrPrimitiveGrip(objectActor, webConsoleFront),
         },
       },
       true
@@ -476,22 +483,6 @@ class WebConsoleUI {
         }
       });
     }
-  }
-
-  /**
-   * Release an actor.
-   *
-   * @private
-   * @param string actor
-   *        The actor ID you want to release.
-   */
-  releaseActor(actor) {
-    const proxy = this.getProxy();
-    if (!proxy) {
-      return null;
-    }
-
-    return proxy.releaseActor(actor);
   }
 
   /**

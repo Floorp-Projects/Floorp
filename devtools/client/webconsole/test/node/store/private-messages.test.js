@@ -18,7 +18,6 @@ const {
   getFirstMessage,
   getLastMessage,
   getPrivatePacket,
-  getWebConsoleUiMock,
   setupActions,
   setupStore,
 } = require("devtools/client/webconsole/test/node/helpers");
@@ -190,27 +189,27 @@ describe("private messages", () => {
 
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {
     const releasedActors = [];
-    const { dispatch, getState } = setupStore([], {
-      webConsoleUI: getWebConsoleUiMock(null, {
-        releaseActor: actor => {
-          releasedActors.push(actor);
-        },
-      }),
-    });
+    const { dispatch, getState } = setupStore([]);
+    const mockFrontRelease = function() {
+      releasedActors.push(this.actorID);
+    };
+
+    const publicPacket = stubPackets.get(
+      "console.log('myarray', ['red', 'green', 'blue'])"
+    );
+    const privatePacket = getPrivatePacket("console.log('mymap')");
+
+    publicPacket.message.arguments[1].release = mockFrontRelease;
+    privatePacket.message.arguments[1].release = mockFrontRelease;
 
     // Add a log message.
-    dispatch(
-      actions.messagesAdd([
-        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])"),
-        getPrivatePacket("console.log('mymap')"),
-      ])
-    );
+    dispatch(actions.messagesAdd([publicPacket, privatePacket]));
 
     const firstMessage = getFirstMessage(getState());
-    const firstMessageActor = firstMessage.parameters[1].actor;
+    const firstMessageActor = firstMessage.parameters[1].actorID;
 
     const lastMessage = getLastMessage(getState());
-    const lastMessageActor = lastMessage.parameters[1].actor;
+    const lastMessageActor = lastMessage.parameters[1].actorID;
 
     // Kick-off the actor release.
     dispatch(actions.privateMessagesClear());

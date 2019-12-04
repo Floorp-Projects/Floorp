@@ -29,9 +29,9 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messagesAdd([packet]));
 
-      const actorId = message.parameters[0].actor;
+      const { actorID } = message.parameters[0];
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.sidebarClose());
@@ -45,9 +45,9 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messagesAdd([packet]));
 
-      const actorId = message.parameters[0].actor;
+      const { actorID } = message.parameters[0];
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.messagesClear());
@@ -63,12 +63,12 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messagesAdd([packet]));
 
-      const actorId = message.parameters[0].actor;
+      const { actorID } = message.parameters[0];
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
-      expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
+      expect(store.getState().ui.frontInSidebar).toEqual(message.parameters[0]);
     });
 
     it("sidebar is not updated for the same object", () => {
@@ -76,15 +76,15 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messagesAdd([packet]));
 
-      const actorId = message.parameters[0].actor;
+      const { actorID } = message.parameters[0];
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
-      expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
+      expect(store.getState().ui.frontInSidebar).toEqual(message.parameters[0]);
       const state = store.getState().ui;
 
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
       expect(store.getState().ui).toEqual(state);
     });
 
@@ -93,25 +93,25 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messagesAdd([packet]));
 
-      const actorId = message.parameters[0].actor;
+      const { actorID } = message.parameters[0];
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorID, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
-      expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
+      expect(store.getState().ui.frontInSidebar).toEqual(message.parameters[0]);
 
       const newPacket = stubPackets.get("new Date(0)");
       const newMessage = stubPreparedMessages.get("new Date(0)");
       store.dispatch(actions.messagesAdd([newPacket]));
 
-      const newActorId = newMessage.parameters[0].actor;
+      const newActorID = newMessage.parameters[0].actorID;
       const newMessageId = getLastMessage(store.getState()).id;
       store.dispatch(
-        actions.showMessageObjectInSidebar(newActorId, newMessageId)
+        actions.showMessageObjectInSidebar(newActorID, newMessageId)
       );
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
-      expect(store.getState().ui.gripInSidebar).toEqual(
+      expect(store.getState().ui.frontInSidebar).toEqual(
         newMessage.parameters[0]
       );
     });
