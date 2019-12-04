@@ -381,7 +381,9 @@ async function selectMenuItem({ toolWindow }, selector, value) {
   info(`Selecting ${value} in ${selector}.`);
 
   await testMenuItems(toolWindow, button, items => {
-    const menuItem = items.find(item => item.getAttribute("label") === value);
+    const menuItem = items.find(item =>
+      item.getAttribute("label").includes(value)
+    );
     isnot(
       menuItem,
       undefined,
@@ -556,11 +558,24 @@ async function testTouchEventsOverride(ui, expected) {
   );
 }
 
-function testViewportDeviceMenuLabel(ui, expected) {
+function testViewportDeviceMenuLabel(ui, expectedDeviceName) {
   info("Test viewport's device select label");
 
   const label = ui.toolWindow.document.querySelector("#device-selector .title");
-  is(label.textContent, expected, `Device Select value should be: ${expected}`);
+  const deviceEl = label.querySelector(".device-name");
+  if (deviceEl) {
+    is(
+      deviceEl.textContent,
+      expectedDeviceName,
+      `Device Select value should be: ${expectedDeviceName}`
+    );
+  } else {
+    is(
+      label.textContent,
+      expectedDeviceName,
+      `Device Select value should be: ${expectedDeviceName}`
+    );
+  }
 }
 
 async function toggleTouchSimulation(ui) {
