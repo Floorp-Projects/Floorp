@@ -20,13 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // by setting UrlbarView.removeStaleRowsTimeout.
 const DEFAULT_REMOVE_STALE_ROWS_TIMEOUT = 400;
 
-// The classNames of view elements that can be selected.
-const SELECTABLE_ELEMENTS = [
-  "urlbarView-row",
-  "urlbarView-tip-button",
-  "urlbarView-tip-help",
-];
-
 const getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
 
@@ -291,11 +284,13 @@ class UrlbarView {
   }
 
   /**
+   * Returns the result of the row containing the given element, or the result
+   * of the element if it itself is a row.
+   *
    * @param {Element} element
    *   An element in the view.
    * @returns {UrlbarResult}
-   *   The result attached to parameter `element`, if `element` is a row or a
-   *   decendant of a row.
+   *   The result of the element's row.
    */
   getResultFromElement(element) {
     if (!this.isOpen) {
@@ -309,6 +304,31 @@ class UrlbarView {
     }
 
     return row.result;
+  }
+
+  /**
+   * Returns the element closest to the given element that can be
+   * selected/picked.  If the element itself can be selected, it's returned.  If
+   * there is no such element, null is returned.
+   *
+   * @param {Element} element
+   *   An element in the view.
+   * @returns {Element}
+   *   The closest element that can be picked including the element itself, or
+   *   null if there is no such element.
+   */
+  getClosestSelectableElement(element) {
+    let result = this.getResultFromElement(element);
+    if (result && result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+      if (
+        element.classList.contains("urlbarView-tip-button") ||
+        element.classList.contains("urlbarView-tip-help")
+      ) {
+        return element;
+      }
+      return null;
+    }
+    return element.closest(".urlbarView-row");
   }
 
   /**
@@ -1417,11 +1437,12 @@ class UrlbarView {
       // Ignore right clicks.
       return;
     }
-    let target = event.target;
-    while (!SELECTABLE_ELEMENTS.includes(target.className)) {
-      target = target.parentNode;
+    let element = this.getClosestSelectableElement(event.target);
+    if (!element) {
+      // Ignore clicks on elements that can't be selected/picked.
+      return;
     }
-    this._selectElement(target, { updateInput: false });
+    this._selectElement(element, { updateInput: false });
     this.controller.speculativeConnect(
       this.selectedResult,
       this._queryContext,
@@ -1434,7 +1455,12 @@ class UrlbarView {
       // Ignore right clicks.
       return;
     }
-    this.input.pickElement(event.target, event);
+    let element = this.getClosestSelectableElement(event.target);
+    if (!element) {
+      // Ignore clicks on elements that can't be selected/picked.
+      return;
+    }
+    this.input.pickElement(element, event);
   }
 
   _on_overflow(event) {
