@@ -155,6 +155,19 @@ var PlacesTestUtils = Object.freeze({
   },
 
   /**
+   * Clears any favicons stored in the database.
+   */
+  async clearFavicons() {
+    return new Promise(resolve => {
+      Services.obs.addObserver(function observer() {
+        Services.obs.removeObserver(observer, "places-favicons-expired");
+        resolve();
+      }, "places-favicons-expired");
+      PlacesUtils.favicons.expireAllFavicons();
+    });
+  },
+
+  /**
    * Waits for all pending async statements on the default connection.
    *
    * @return {Promise}
