@@ -42,11 +42,20 @@ async function renderPluginMetadata(id) {
   document
     .getElementById("pluginEnableProtectedMode")
     .setAttribute("collapsed", showProtectedModePref ? "" : "true");
+
+  // Disable flash blocking when Fission is enabled (See Bug 1584931).
+  document.getElementById(
+    "pluginFlashBlocking"
+  ).hidden = canDisableFlashBlocking();
 }
 
 // Protected mode is win32-only, not win64
 function canDisableFlashProtectedMode(aPlugin) {
   return aPlugin.isFlashPlugin && Services.appinfo.XPCOMABI == "x86-msvc";
+}
+
+function canDisableFlashBlocking() {
+  return Services.prefs.getBoolPref("fission.autostart");
 }
 
 function init() {
