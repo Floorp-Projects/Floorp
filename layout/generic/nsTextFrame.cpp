@@ -4954,11 +4954,21 @@ static nscoord LazyGetLineBaselineOffset(nsIFrame* aChildFrame,
 }
 
 static bool IsUnderlineRight(nsIFrame* aFrame) {
+  // Check for 'left' or 'right' explicitly specified in the property;
+  // if neither is there, we use auto positioning based on lang.
+  const auto position = aFrame->StyleText()->mTextUnderlinePosition;
+  if (position.IsLeft()) {
+    return false;
+  }
+  if (position.IsRight()) {
+    return true;
+  }
+  // If neither 'left' nor 'right' was specified, check the language.
   nsAtom* langAtom = aFrame->StyleFont()->mLanguage;
   if (!langAtom) {
     return false;
   }
-  nsAtomString langStr(langAtom);
+  nsDependentAtomString langStr(langAtom);
   return (StringBeginsWith(langStr, NS_LITERAL_STRING("ja")) ||
           StringBeginsWith(langStr, NS_LITERAL_STRING("ko"))) &&
          (langStr.Length() == 2 || langStr[2] == '-');
@@ -5083,17 +5093,20 @@ void nsTextFrame::GetTextDecorations(
 
       if (textDecorations & kUnderline) {
         aDecorations.mUnderlines.AppendElement(nsTextFrame::LineDecoration(
-            f, baselineOffset, styleText->mTextUnderlineOffset,
+            f, baselineOffset, styleText->mTextUnderlinePosition,
+            styleText->mTextUnderlineOffset,
             styleTextReset->mTextDecorationThickness, color, style));
       }
       if (textDecorations & kOverline) {
         aDecorations.mOverlines.AppendElement(nsTextFrame::LineDecoration(
-            f, baselineOffset, styleText->mTextUnderlineOffset,
+            f, baselineOffset, styleText->mTextUnderlinePosition,
+            styleText->mTextUnderlineOffset,
             styleTextReset->mTextDecorationThickness, color, style));
       }
       if (textDecorations & StyleTextDecorationLine_LINE_THROUGH) {
         aDecorations.mStrikes.AppendElement(nsTextFrame::LineDecoration(
-            f, baselineOffset, styleText->mTextUnderlineOffset,
+            f, baselineOffset, styleText->mTextUnderlinePosition,
+            styleText->mTextUnderlineOffset,
             styleTextReset->mTextDecorationThickness, color, style));
       }
     }
@@ -5356,8 +5369,15 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nscoord underlineOffset, underlineSize;
     fontMetrics->GetUnderline(underlineOffset, underlineSize);
 
+    // If text-underline-position:under is in effect, override the default
+    // underline position from the font.
+    const auto* styleText = aBlock->StyleText();
+    if (styleText->mTextUnderlinePosition.IsUnder()) {
+      underlineOffset = -fontMetrics->EmDescent();
+    }
+
     const StyleTextDecorationLength& textUnderlineOffset =
-        aBlock->Style()->StyleText()->mTextUnderlineOffset;
+        styleText->mTextUnderlineOffset;
 
     const StyleTextDecorationLength& textDecorationThickness =
         aBlock->Style()->StyleTextReset()->mTextDecorationThickness;
@@ -5467,6 +5487,9 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
             bool swapUnderline = verticalDec && IsUnderlineRight(this);
             if (swapUnderline ? lineType == StyleTextDecorationLine_OVERLINE
                               : lineType == StyleTextDecorationLine_UNDERLINE) {
+              if (dec.mTextUnderlinePosition.IsUnder()) {
+                params.offset = -metrics.emDescent;
+              }
               SetOffsetIfLength(dec.mTextUnderlineOffset, params, metrics,
                                 appUnitsPerDevUnit, parentWM.IsSideways(),
                                 swapUnderline);
@@ -5684,10 +5707,14 @@ void nsTextFrame::DrawSelectionDecorations(
       if (swapUnderline ? aDecoration == StyleTextDecorationLine_OVERLINE
                         : aDecoration == StyleTextDecorationLine_UNDERLINE) {
         WritingMode wm = GetWritingMode();
-        params.offset = aFontMetrics.underlineOffset;
-        SetOffsetIfLength(StyleText()->mTextUnderlineOffset, params,
-                          aFontMetrics, appUnitsPerDevPixel, wm.IsSideways(),
-                          swapUnderline);
+        const auto* styleText = StyleText();
+        if (styleText->mTextUnderlinePosition.IsUnder()) {
+          params.offset = -aFontMetrics.emDescent;
+        } else {
+          params.offset = aFontMetrics.underlineOffset;
+        }
+        SetOffsetIfLength(styleText->mTextUnderlineOffset, params, aFontMetrics,
+                          appUnitsPerDevPixel, wm.IsSideways(), swapUnderline);
       } else {
         params.offset = aFontMetrics.maxAscent;
       }
@@ -6295,8 +6322,6 @@ void nsTextFrame::PaintTextSelectionDecorations(
       firstFont->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
                                                : nsFontMetrics::eHorizontal));
   if (!useVerticalMetrics) {
-    // The potential adjustment from using gfxFontGroup::GetUnderlineOffset
-    // is only valid for horizontal font metrics.
     decorationMetrics.underlineOffset =
         aParams.provider->GetFontGroup()->GetUnderlineOffset();
   }
@@ -6968,8 +6993,14 @@ void nsTextFrame::DrawTextRunAndDecorations(
 
     params.color = dec.mColor;
     params.defaultLineThickness = params.lineSize.height;
-    params.offset = metrics.*lineOffset;
     params.baselineOffset = dec.mBaselineOffset / app;
+
+    if (lineType == StyleTextDecorationLine_UNDERLINE &&
+        dec.mTextUnderlinePosition.IsUnder()) {
+      params.offset = -metrics.emDescent;
+    } else {
+      params.offset = metrics.*lineOffset;
+    }
 
     bool swapUnderline = verticalDec && IsUnderlineRight(this);
     if (swapUnderline ? lineType == StyleTextDecorationLine_OVERLINE
@@ -7268,7 +7299,12 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 
   nsCSSRendering::DecorationRectParams params;
   params.ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
-  params.offset = fontGroup->GetUnderlineOffset();
+
+  if (StyleText()->mTextUnderlinePosition.IsUnder()) {
+    params.offset = -metrics.emDescent;
+  } else {
+    params.offset = fontGroup->GetUnderlineOffset();
+  }
 
   TextDecorations textDecs;
   GetTextDecorations(aPresContext, eResolvedColors, textDecs);
