@@ -153,6 +153,12 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
   ThreadLocal* mThreadLocal;
 
  public:
+  AutoSetCurrentTransaction(const AutoSetCurrentTransaction&) = delete;
+  AutoSetCurrentTransaction(AutoSetCurrentTransaction&&) = delete;
+  AutoSetCurrentTransaction& operator=(const AutoSetCurrentTransaction&) =
+      delete;
+  AutoSetCurrentTransaction& operator=(AutoSetCurrentTransaction&&) = delete;
+
   explicit AutoSetCurrentTransaction(IDBTransaction* aTransaction)
       : mTransaction(aTransaction),
         mPreviousTransaction(nullptr),
@@ -629,6 +635,8 @@ StructuredCloneReadInfo DeserializeStructuredCloneReadInfo(
       aDatabase, aSerialized.hasPreprocessInfo()};
 }
 
+// TODO: Remove duplication between DispatchErrorEvent and DispatchSucessEvent.
+
 void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
                         IDBTransaction* aTransaction = nullptr,
                         Event* aEvent = nullptr) {
@@ -659,6 +667,10 @@ void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
     asct.emplace(aTransaction);
   }
 
+  if (transaction && transaction->IsInactive()) {
+    transaction->TransitionToActive();
+  }
+
   if (transaction) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "Firing %s event with error 0x%x", "%s (0x%x)",
@@ -678,22 +690,25 @@ void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
     return;
   }
 
-  MOZ_ASSERT(!transaction || transaction->CanAcceptRequests() ||
+  MOZ_ASSERT(!transaction || transaction->IsActive() ||
              transaction->IsAborted());
 
-  // Do not abort the transaction here if this request is failed due to the
-  // abortion of its transaction to ensure that the correct error cause of
-  // the abort event be set in IDBTransaction::FireCompleteOrAbortEvents()
-  // later.
-  if (transaction && transaction->CanAcceptRequests() &&
-      aErrorCode != NS_ERROR_DOM_INDEXEDDB_ABORT_ERR) {
-    WidgetEvent* const internalEvent = aEvent->WidgetEventPtr();
-    MOZ_ASSERT(internalEvent);
+  if (transaction && transaction->IsActive()) {
+    transaction->TransitionToInactive();
 
-    if (internalEvent->mFlags.mExceptionWasRaised) {
-      transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
-    } else if (doDefault) {
-      transaction->Abort(request);
+    // Do not abort the transaction here if this request is failed due to the
+    // abortion of its transaction to ensure that the correct error cause of
+    // the abort event be set in IDBTransaction::FireCompleteOrAbortEvents()
+    // later.
+    if (aErrorCode != NS_ERROR_DOM_INDEXEDDB_ABORT_ERR) {
+      WidgetEvent* const internalEvent = aEvent->WidgetEventPtr();
+      MOZ_ASSERT(internalEvent);
+
+      if (internalEvent->mFlags.mExceptionWasRaised) {
+        transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+      } else if (doDefault) {
+        transaction->Abort(request);
+      }
     }
   }
 }
@@ -728,7 +743,10 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
   request->SetResultCallback(aResultHelper);
 
   MOZ_ASSERT(aEvent);
-  MOZ_ASSERT_IF(transaction, transaction->CanAcceptRequests());
+
+  if (transaction && transaction->IsInactive()) {
+    transaction->TransitionToActive();
+  }
 
   if (transaction) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -742,7 +760,7 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
   }
 
   MOZ_ASSERT_IF(transaction,
-                transaction->CanAcceptRequests() && !transaction->IsAborted());
+                transaction->IsActive() && !transaction->IsAborted());
 
   IgnoredErrorResult rv;
   request->DispatchEvent(*aEvent, rv);
@@ -753,7 +771,9 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
   WidgetEvent* const internalEvent = aEvent->WidgetEventPtr();
   MOZ_ASSERT(internalEvent);
 
-  if (transaction && transaction->CanAcceptRequests()) {
+  if (transaction && transaction->IsActive()) {
+    transaction->TransitionToInactive();
+
     if (internalEvent->mFlags.mExceptionWasRaised) {
       transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     } else {
