@@ -725,7 +725,6 @@
 
       this.line3 = document.createElement("div");
       this.line3.className = "label-row generated-password-autosave";
-      this.line3.textContent = this._autoSaveString;
     }
 
     get _autoSaveString() {
@@ -743,6 +742,14 @@
     }
 
     _adjustAcItem() {
+      let { generatedPassword, willAutoSaveGeneratedPassword } = JSON.parse(
+        this.getAttribute("ac-label")
+      );
+      this.querySelector(".line2-label").textContent = generatedPassword;
+
+      this.line3.textContent = willAutoSaveGeneratedPassword
+        ? this._autoSaveString
+        : "";
       this.querySelector(".labels-wrapper").append(this.line3);
 
       super._adjustAcItem();

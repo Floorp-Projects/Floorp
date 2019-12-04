@@ -632,6 +632,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return {
         generatedPassword: result.generatedPassword,
         logins: LoginHelper.vanillaObjectsToLogins(result.logins),
+        willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
       };
     });
   }
