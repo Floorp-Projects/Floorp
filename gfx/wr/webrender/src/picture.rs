@@ -4880,37 +4880,6 @@ impl TileNode {
         }
     }
 
-    /// Return whether this tile wants to merge, split or do nothing.
-    fn get_preference(
-        &self,
-        level: i32,
-        can_merge: bool,
-        max_split_levels: i32,
-    ) -> Option<TileModification> {
-        match self.kind {
-            TileNodeKind::Leaf { dirty_tracker, frames_since_modified, .. } => {
-                // Only consider changing 64 frames since we last changed
-                if frames_since_modified > 64 {
-                    let dirty_frames = dirty_tracker.count_ones();
-                    // If the tree isn't too deep, and has been regularly invalidating, split
-                    if level < max_split_levels && dirty_frames > 32 {
-                        Some(TileModification::Split)
-                    } else if can_merge && (dirty_tracker == 0 || dirty_frames == 64) && level > 0 {
-                        // If allowed to merge, and nothing has changed for 64 frames, merge
-                        Some(TileModification::Merge)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-            TileNodeKind::Node { .. } => {
-                None
-            }
-        }
-    }
-
     /// Apply a merge or split operation to this tile, if desired
     fn maybe_merge_or_split(
         &mut self,
@@ -4919,19 +4888,66 @@ impl TileNode {
         max_split_levels: i32,
     ) {
         // Determine if this tile wants to split or merge
-        let tile_mod = match self.kind {
-            TileNodeKind::Leaf { .. } => {
-                self.get_preference(level, false, max_split_levels)
+        let mut tile_mod = None;
+
+        fn get_dirty_frames(
+            dirty_tracker: u64,
+            frames_since_modified: usize,
+        ) -> Option<u32> {
+            // Only consider splitting or merging at least 64 frames since we last changed
+            if frames_since_modified > 64 {
+                // Each bit in the tracker is a frame that was recently invalidated
+                Some(dirty_tracker.count_ones())
+            } else {
+                None
             }
-            TileNodeKind::Node { ref children, .. } => {
-                // Only merge if all children want to merge
-                if children.iter().all(|c| c.get_preference(level+1, true, max_split_levels) == Some(TileModification::Merge)) {
-                    Some(TileModification::Merge)
-                } else {
-                    None
+        }
+
+        match self.kind {
+            TileNodeKind::Leaf { dirty_tracker, frames_since_modified, .. } => {
+                // Only consider splitting if the tree isn't too deep.
+                if level < max_split_levels {
+                    if let Some(dirty_frames) = get_dirty_frames(dirty_tracker, frames_since_modified) {
+                        // If the tile has invalidated > 50% of the recent number of frames, split.
+                        if dirty_frames > 32 {
+                            tile_mod = Some(TileModification::Split);
+                        }
+                    }
                 }
             }
-        };
+            TileNodeKind::Node { ref children, .. } => {
+                // There's two conditions that cause a node to merge its children:
+                // (1) If _all_ the child nodes are constantly invalidating, then we are wasting
+                //     CPU time tracking dependencies for each child, so merge them.
+                // (2) If _none_ of the child nodes are recently invalid, then the page content
+                //     has probably changed, and we no longer need to track fine grained dependencies here.
+
+                let mut static_count = 0;
+                let mut changing_count = 0;
+
+                for child in children {
+                    // Only consider merging nodes at the edge of the tree.
+                    if let TileNodeKind::Leaf { dirty_tracker, frames_since_modified, .. } = child.kind {
+                        if let Some(dirty_frames) = get_dirty_frames(dirty_tracker, frames_since_modified) {
+                            if dirty_frames == 0 {
+                                // Hasn't been invalidated for some time
+                                static_count += 1;
+                            } else if dirty_frames == 64 {
+                                // Is constantly being invalidated
+                                changing_count += 1;
+                            }
+                        }
+                    }
+
+                    // Only merge if all the child tiles are in agreement. Otherwise, we have some
+                    // that are invalidating / static, and it's worthwhile tracking dependencies for
+                    // them individually.
+                    if static_count == 4 || changing_count == 4 {
+                        tile_mod = Some(TileModification::Merge);
+                    }
+                }
+            }
+        }
 
         match tile_mod {
             Some(TileModification::Split) => {
