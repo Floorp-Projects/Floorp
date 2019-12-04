@@ -46,6 +46,7 @@ body,
 #root {
   height: 100%;
   overflow: hidden;
+  color: var(--theme-body-color);
 }
 
 input:-moz-focusring {
