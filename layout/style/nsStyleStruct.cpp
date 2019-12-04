@@ -3426,6 +3426,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextIndent(LengthPercentage::Zero()),
       mTextUnderlineOffset(StyleTextDecorationLength::Auto()),
       mTextDecorationSkipInk(StyleTextDecorationSkipInk::Auto),
+      mTextUnderlinePosition(StyleTextUnderlinePosition::Auto()),
       mWebkitTextStrokeWidth(0),
       mTextEmphasisStyle(StyleTextEmphasisStyle::None()) {
   MOZ_COUNT_CTOR(nsStyleText);
@@ -3464,6 +3465,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextIndent(aSource.mTextIndent),
       mTextUnderlineOffset(aSource.mTextUnderlineOffset),
       mTextDecorationSkipInk(aSource.mTextDecorationSkipInk),
+      mTextUnderlinePosition(aSource.mTextUnderlinePosition),
       mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
       mTextShadow(aSource.mTextShadow),
       mTextEmphasisStyle(aSource.mTextEmphasisStyle) {
@@ -3524,7 +3526,8 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
 
   if (mTextShadow != aNewData.mTextShadow ||
       mTextEmphasisStyle != aNewData.mTextEmphasisStyle ||
-      mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth) {
+      mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth ||
+      mTextUnderlinePosition != aNewData.mTextUnderlinePosition) {
     hint |= nsChangeHint_UpdateSubtreeOverflow | nsChangeHint_SchedulePaint |
             nsChangeHint_RepaintFrame;
 
