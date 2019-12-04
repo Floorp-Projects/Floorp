@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const ObjectFront = require("devtools/shared/fronts/object");
+const { ObjectFront } = require("devtools/shared/fronts/object");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(

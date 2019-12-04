@@ -198,5 +198,5 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   }
 }
 
-module.exports = ObjectFront;
 registerFront(ObjectFront);
+exports.ObjectFront = ObjectFront;

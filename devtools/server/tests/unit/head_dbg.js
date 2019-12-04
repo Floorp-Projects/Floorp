@@ -43,7 +43,7 @@ const { DebuggerServer: WorkerDebuggerServer } = worker.require(
   "devtools/server/debugger-server"
 );
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const ObjectFront = require("devtools/shared/fronts/object");
+const { ObjectFront } = require("devtools/shared/fronts/object");
 const { LongStringFront } = require("devtools/shared/fronts/string");
 const { TargetFactory } = require("devtools/client/framework/target");
 
