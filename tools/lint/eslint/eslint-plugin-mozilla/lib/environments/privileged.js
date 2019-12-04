@@ -57,7 +57,6 @@ module.exports = {
     BoxObject: false,
     BroadcastChannel: false,
     BrowsingContext: false,
-    CanonicalBrowsingContext: false,
     CDATASection: false,
     CSS: false,
     CSS2Properties: false,
