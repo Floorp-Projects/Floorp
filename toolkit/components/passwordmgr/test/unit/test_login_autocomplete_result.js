@@ -1012,7 +1012,37 @@ add_task(async function test_all_patterns() {
           value: "9ljgfd4shyktb45",
           label: "Use a Securely Generated Password",
           style: "generatedPassword",
-          comment: "9ljgfd4shyktb45",
+          comment: {
+            generatedPassword: "9ljgfd4shyktb45",
+            willAutoSaveGeneratedPassword: false,
+          },
+        },
+        {
+          value: "",
+          label: "View Saved Logins",
+          style: "loginsFooter",
+          comment: "mochi.test",
+        },
+      ],
+    },
+    {
+      description:
+        "willAutoSaveGeneratedPassword should propagate to the comment",
+      generatedPassword: "9ljgfd4shyktb45",
+      willAutoSaveGeneratedPassword: true,
+      insecureFieldWarningEnabled: true,
+      isSecure: true,
+      isPasswordField: true,
+      matchingLogins: [],
+      items: [
+        {
+          value: "9ljgfd4shyktb45",
+          label: "Use a Securely Generated Password",
+          style: "generatedPassword",
+          comment: {
+            generatedPassword: "9ljgfd4shyktb45",
+            willAutoSaveGeneratedPassword: true,
+          },
         },
         {
           value: "",
@@ -1036,7 +1066,10 @@ add_task(async function test_all_patterns() {
           value: "9ljgfd4shyktb45",
           label: "Use a Securely Generated Password",
           style: "generatedPassword",
-          comment: "9ljgfd4shyktb45",
+          comment: {
+            generatedPassword: "9ljgfd4shyktb45",
+            willAutoSaveGeneratedPassword: false,
+          },
         },
         {
           value: "",
@@ -1226,6 +1259,7 @@ add_task(async function test_all_patterns() {
       {
         hostname: "mochi.test",
         generatedPassword: pattern.generatedPassword,
+        willAutoSaveGeneratedPassword: !!pattern.willAutoSaveGeneratedPassword,
         isSecure: pattern.isSecure,
         isPasswordField: pattern.isPasswordField,
       }
@@ -1254,11 +1288,13 @@ add_task(async function test_all_patterns() {
       let actualComment = actual.getCommentAt(index);
       if (typeof item.comment == "object") {
         let parsedComment = JSON.parse(actualComment);
-        equal(
-          parsedComment.comment,
-          item.comment.comment,
-          `${testIndex}: Comment.comment ${index}`
-        );
+        for (let [key, val] of Object.entries(item.comment)) {
+          equal(
+            parsedComment[key],
+            val,
+            `${testIndex}: Comment.${key} ${index}`
+          );
+        }
       } else {
         equal(actualComment, item.comment, `${testIndex}: Comment ${index}`);
       }

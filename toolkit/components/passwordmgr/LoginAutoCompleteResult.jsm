@@ -196,9 +196,14 @@ class LoginAutocompleteItem extends AutocompleteItem {
 }
 
 class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
-  constructor(generatedPassword) {
+  constructor(generatedPassword, willAutoSaveGeneratedPassword) {
     super("generatedPassword");
-    this.comment = generatedPassword;
+    XPCOMUtils.defineLazyGetter(this, "comment", () => {
+      return JSON.stringify({
+        generatedPassword,
+        willAutoSaveGeneratedPassword,
+      });
+    });
     this.value = generatedPassword;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
@@ -223,7 +228,14 @@ function LoginAutoCompleteResult(
   aSearchString,
   matchingLogins,
   formOrigin,
-  { generatedPassword, isSecure, actor, isPasswordField, hostname }
+  {
+    generatedPassword,
+    willAutoSaveGeneratedPassword,
+    isSecure,
+    actor,
+    isPasswordField,
+    hostname,
+  }
 ) {
   let hidingFooterOnPWFieldAutoOpened = false;
   function isFooterEnabled() {
@@ -291,7 +303,12 @@ function LoginAutoCompleteResult(
   // The footer comes last if it's enabled
   if (isFooterEnabled()) {
     if (generatedPassword) {
-      this._rows.push(new GeneratedPasswordAutocompleteItem(generatedPassword));
+      this._rows.push(
+        new GeneratedPasswordAutocompleteItem(
+          generatedPassword,
+          willAutoSaveGeneratedPassword
+        )
+      );
     }
     this._rows.push(new LoginsFooterAutocompleteItem(hostname));
   }
@@ -443,7 +460,7 @@ LoginAutoComplete.prototype = {
 
     let completeSearch = (
       autoCompleteLookupPromise,
-      { generatedPassword, logins }
+      { generatedPassword, logins, willAutoSaveGeneratedPassword }
     ) => {
       // If the search was canceled before we got our
       // results, don't bother reporting them.
@@ -460,6 +477,7 @@ LoginAutoComplete.prototype = {
         formOrigin,
         {
           generatedPassword,
+          willAutoSaveGeneratedPassword,
           actor: loginManagerActor,
           isSecure,
           isPasswordField,
