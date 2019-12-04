@@ -63,6 +63,7 @@
 #include "nsProxyRelease.h"
 #include "nss.h"
 #include "nsVariant.h"
+#include "PermissionDelegateHandler.h"
 #include "pk11pub.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "VideoStreamTrack.h"
@@ -2543,55 +2544,41 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 
   if (!privileged) {
     // Check if this site has had persistent permissions denied.
-    nsCOMPtr<nsIPermissionManager> permManager =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    RefPtr<PermissionDelegateHandler> permDelegate =
+        doc->GetPermissionDelegateHandler();
+    MOZ_RELEASE_ASSERT(permDelegate);
 
     uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mAudio)) {
       if (audioType == MediaSourceEnum::Microphone) {
-        if (Preferences::GetBool("media.getusermedia.microphone.deny", false) ||
-            !FeaturePolicyUtils::IsFeatureAllowed(
-                doc, NS_LITERAL_STRING("microphone"))) {
+        if (Preferences::GetBool("media.getusermedia.microphone.deny", false)) {
           audioPerm = nsIPermissionManager::DENY_ACTION;
         } else {
-          rv = permManager->TestExactPermissionFromPrincipal(
-              principal, NS_LITERAL_CSTRING("microphone"), &audioPerm);
+          rv = permDelegate->GetPermission(NS_LITERAL_CSTRING("microphone"),
+                                           &audioPerm, true);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
-        if (!FeaturePolicyUtils::IsFeatureAllowed(
-                doc, NS_LITERAL_STRING("display-capture"))) {
-          audioPerm = nsIPermissionManager::DENY_ACTION;
-        } else {
-          rv = permManager->TestExactPermissionFromPrincipal(
-              principal, NS_LITERAL_CSTRING("screen"), &audioPerm);
-          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-        }
+        rv = permDelegate->GetPermission(NS_LITERAL_CSTRING("screen"),
+                                         &audioPerm, true);
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
       }
     }
 
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
       if (videoType == MediaSourceEnum::Camera) {
-        if (Preferences::GetBool("media.getusermedia.camera.deny", false) ||
-            !FeaturePolicyUtils::IsFeatureAllowed(
-                doc, NS_LITERAL_STRING("camera"))) {
+        if (Preferences::GetBool("media.getusermedia.camera.deny", false)) {
           videoPerm = nsIPermissionManager::DENY_ACTION;
         } else {
-          rv = permManager->TestExactPermissionFromPrincipal(
-              principal, NS_LITERAL_CSTRING("camera"), &videoPerm);
+          rv = permDelegate->GetPermission(NS_LITERAL_CSTRING("camera"),
+                                           &videoPerm, true);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
-        if (!FeaturePolicyUtils::IsFeatureAllowed(
-                doc, NS_LITERAL_STRING("display-capture"))) {
-          videoPerm = nsIPermissionManager::DENY_ACTION;
-        } else {
-          rv = permManager->TestExactPermissionFromPrincipal(
-              principal, NS_LITERAL_CSTRING("screen"), &videoPerm);
-          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-        }
+        rv = permDelegate->GetPermission(NS_LITERAL_CSTRING("screen"),
+                                         &videoPerm, true);
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
       }
     }
 
@@ -4001,35 +3988,24 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
 
   // Check if this site has persistent permissions.
   nsresult rv;
-  nsCOMPtr<nsIPermissionManager> mgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;  // no permission manager no permissions!
+  RefPtr<PermissionDelegateHandler> permDelegate =
+      doc->GetPermissionDelegateHandler();
+  if (NS_WARN_IF(!permDelegate)) {
+    return false;
   }
 
   uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
   uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
   {
-    if (!FeaturePolicyUtils::IsFeatureAllowed(
-            doc, NS_LITERAL_STRING("microphone"))) {
-      audio = nsIPermissionManager::DENY_ACTION;
-    } else {
-      rv = mgr->TestExactPermissionFromPrincipal(
-          principal, NS_LITERAL_CSTRING("microphone"), &audio);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
+    rv = permDelegate->GetPermission(NS_LITERAL_CSTRING("microphone"), &audio,
+                                     true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
     }
-
-    if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
-                                              NS_LITERAL_STRING("camera"))) {
-      video = nsIPermissionManager::DENY_ACTION;
-    } else {
-      rv = mgr->TestExactPermissionFromPrincipal(
-          principal, NS_LITERAL_CSTRING("camera"), &video);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
+    rv =
+        permDelegate->GetPermission(NS_LITERAL_CSTRING("camera"), &video, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
     }
   }
   return audio == nsIPermissionManager::ALLOW_ACTION ||

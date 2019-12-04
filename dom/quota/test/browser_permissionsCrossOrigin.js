@@ -24,7 +24,7 @@ add_task(async function testNoPermissionPrompt() {
         {
           set: [
             ["dom.security.featurePolicy.enabled", true],
-            ["permissions.delegation.enable", true],
+            ["permissions.delegation.enabled", true],
             ["dom.security.featurePolicy.header.enabled", true],
             ["dom.security.featurePolicy.webidl.enabled", true],
           ],

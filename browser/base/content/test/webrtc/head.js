@@ -665,6 +665,29 @@ function promiseReloadFrame(aFrameId) {
   );
 }
 
+function promiseChangeLocationFrame(aFrameId, aNewLocation) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser.browsingContext,
+    [{ aFrameId, aNewLocation }],
+    async function(args) {
+      let frame = content.wrappedJSObject.document.getElementById(
+        args.aFrameId
+      );
+      return new Promise(resolve => {
+        function listener() {
+          frame.removeEventListener("load", listener, true);
+          resolve();
+        }
+        frame.addEventListener("load", listener, true);
+
+        content.wrappedJSObject.document.getElementById(
+          args.aFrameId
+        ).contentWindow.location = args.aNewLocation;
+      });
+    }
+  );
+}
+
 async function openNewTestTab(leaf = "get_user_media.html") {
   let rootDir = getRootDirectory(gTestPath);
   rootDir = rootDir.replace(
