@@ -346,20 +346,14 @@ const uint32_t kDEBUGTransactionThreadSleepMS = 0;
  * Metadata classes
  ******************************************************************************/
 
+// Can be instantiated either on the QuotaManager IO thread or on a
+// versionchange transaction thread. These threads can never race so this is
+// totally safe.
 struct FullIndexMetadata {
-  IndexMetadata mCommonMetadata;
+  IndexMetadata mCommonMetadata = {0,     nsString(), KeyPath(0), nsCString(),
+                                   false, false,      false};
 
-  bool mDeleted;
-
- public:
-  FullIndexMetadata()
-      : mCommonMetadata(0, nsString(), KeyPath(0), nsCString(), false, false,
-                        false),
-        mDeleted(false) {
-    // This can happen either on the QuotaManager IO thread or on a
-    // versionchange transaction thread. These threads can never race so this is
-    // totally safe.
-  }
+  FlippedOnce<false> mDeleted;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullIndexMetadata)
 
@@ -15113,13 +15107,13 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  foundIndexMetadata->mDeleted = true;
+  foundIndexMetadata->mDeleted.Flip();
 
   DebugOnly<bool> foundTargetId = false;
   const bool isLastIndex =
       std::all_of(foundObjectStoreMetadata->mIndexes.cbegin(),
                   foundObjectStoreMetadata->mIndexes.cend(),
-                  [&foundTargetId, aIndexId](const auto& indexEntry) {
+                  [&foundTargetId, aIndexId](const auto& indexEntry) -> bool {
                     if (uint64_t(aIndexId) == indexEntry.GetKey()) {
                       foundTargetId = true;
                       return true;
