@@ -1096,6 +1096,11 @@ var Impl = {
       "TelemetryController: removing pending pings after data upload was disabled",
       p
     );
+
+    Services.obs.notifyObservers(
+      null,
+      TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
+    );
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
