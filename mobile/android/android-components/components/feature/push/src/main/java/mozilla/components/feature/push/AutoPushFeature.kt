@@ -155,8 +155,15 @@ class AutoPushFeature(
      * New encrypted messages received from a supported push messaging service.
      */
     override fun onMessageReceived(message: EncryptedPushMessage) {
+        val type = DeliveryManager.serviceForChannelId(message.channelId)
+        // We may have received a message which specifies `channelId` that we don't know about.
+        // Most likely it was directed at an older version of Firefox running on this device, which still has a valid
+        // FxA device record. Shouldn't be any harm in dropping the message on the floor.
+        if (type == null) {
+            logger.error("Unknown channelID: ${message.channelId}")
+            return
+        }
         job = scope.launchAndTry {
-            val type = DeliveryManager.serviceForChannelId(message.channelId)
             DeliveryManager.with(connection) {
                 logger.info("New push message decrypted.")
                 val decrypted = decrypt(
@@ -378,8 +385,11 @@ interface PushSubscriptionObserver {
  * Application Service implementation.
  */
 internal object DeliveryManager {
-    fun serviceForChannelId(channelId: String): PushType {
-        return PushType.values().first { it.toChannelId() == channelId }
+    /**
+     * @return A [PushType] for the provided [channelId], if one exists.
+     */
+    fun serviceForChannelId(channelId: String): PushType? {
+        return PushType.values().firstOrNull { it.toChannelId() == channelId }
     }
 
     /**
@@ -437,7 +447,7 @@ data class PushConfig(
  * A helper to convert the internal data class.
  */
 internal fun SubscriptionResponse.toPushSubscription(): AutoPushSubscription {
-    val type = DeliveryManager.serviceForChannelId(channelID)
+    val type = DeliveryManager.serviceForChannelId(channelID)!!
     return AutoPushSubscription(
         type = type,
         endpoint = subscriptionInfo.endpoint,

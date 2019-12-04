@@ -39,6 +39,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.verifyZeroInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -151,6 +152,33 @@ class AutoPushFeatureTest {
         }, owner, true)
 
         feature.onMessageReceived(encryptedMessage)
+    }
+
+    @Test
+    fun `onMessageReceived handles unknown channelId`() = runBlockingTest {
+        val connection: PushConnection = mock()
+        val encryptedMessage: EncryptedPushMessage = mock()
+        val owner: LifecycleOwner = mock()
+        val lifecycle: Lifecycle = mock()
+        whenever(owner.lifecycle).thenReturn(lifecycle)
+        whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
+        whenever(connection.isInitialized()).thenReturn(true)
+        whenever(encryptedMessage.channelId).thenReturn("whatisachannelidanyway")
+        whenever(connection.decrypt(any(), any(), any(), any(), any())).thenReturn("test".toByteArray())
+
+        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+
+        val pushServiceObserver: Bus.Observer<PushType, String> = mock()
+        val webpushServiceObserver: Bus.Observer<PushType, String> = mock()
+        feature.registerForPushMessages(PushType.Services, pushServiceObserver)
+        feature.registerForPushMessages(PushType.WebPush, webpushServiceObserver)
+
+        // Shouldn't crash!
+        feature.onMessageReceived(encryptedMessage)
+
+        // Observers don't need to know about garbage we received.
+        verifyZeroInteractions(pushServiceObserver)
+        verifyZeroInteractions(webpushServiceObserver)
     }
 
     @Test
