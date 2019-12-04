@@ -27,11 +27,11 @@ GripProvider.prototype = {
       grip = this.getValue(object);
     }
 
-    if (!grip || !grip.actor) {
+    if (!grip || !grip.actorID) {
       return [];
     }
 
-    const props = this.grips.get(grip.actor);
+    const props = this.grips.get(grip.actorID);
     if (!props) {
       // Fetch missing data from the backend. Returning a promise
       // from data provider causes the tree to show a spinner.
@@ -47,22 +47,23 @@ GripProvider.prototype = {
       if (!value) {
         return false;
       }
+      const grip = value && value.getGrip ? value.getGrip() : value;
 
-      let hasChildren = value.ownPropertyLength > 0;
+      let hasChildren = grip.ownPropertyLength > 0;
 
-      if (value.preview) {
-        hasChildren = hasChildren || value.preview.ownPropertiesLength > 0;
+      if (grip.preview) {
+        hasChildren = hasChildren || grip.preview.ownPropertiesLength > 0;
       }
 
-      if (value.preview) {
-        const preview = value.preview;
+      if (grip.preview) {
+        const preview = grip.preview;
         const k = preview.kind;
         const objectsWithProps = ["DOMNode", "ObjectWithURL"];
         hasChildren = hasChildren || objectsWithProps.includes(k);
         hasChildren = hasChildren || (k == "ArrayLike" && preview.length > 0);
       }
 
-      return value.type == "object" && hasChildren;
+      return grip.type == "object" && hasChildren;
     }
 
     return null;
@@ -88,7 +89,8 @@ GripProvider.prototype = {
   },
 
   getType: function(object) {
-    return object.class ? object.class : "";
+    const grip = object && object.getGrip ? object.getGrip() : object;
+    return grip.class ? grip.class : "";
   },
 };
 
