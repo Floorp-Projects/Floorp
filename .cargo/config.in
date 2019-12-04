@@ -32,6 +32,11 @@ branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 
+[source."https://github.com/emilio/rust-pkcs11"]
+branch = "master"
+git = "https://github.com/emilio/rust-pkcs11"
+replace-with = "vendored-sources"
+
 [source."https://github.com/alexcrichton/mio-named-pipes"]
 branch = "master"
 git = "https://github.com/alexcrichton/mio-named-pipes"

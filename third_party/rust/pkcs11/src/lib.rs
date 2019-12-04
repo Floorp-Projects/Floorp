@@ -17,6 +17,9 @@ extern crate libloading;
 extern crate num_bigint;
 
 #[cfg(test)]
+#[macro_use] extern crate serial_test_derive;
+
+#[cfg(test)]
 mod tests;
 
 /// This module is basically a full conversion of the `pkcs11t.h` C header file.

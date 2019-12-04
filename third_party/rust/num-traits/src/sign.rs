@@ -206,11 +206,7 @@ empty_trait_impl!(Unsigned for usize u8 u16 u32 u64);
 #[cfg(has_i128)]
 empty_trait_impl!(Unsigned for u128);
 
-impl<T: Unsigned> Unsigned for Wrapping<T>
-where
-    Wrapping<T>: Num,
-{
-}
+impl<T: Unsigned> Unsigned for Wrapping<T> where Wrapping<T>: Num {}
 
 #[test]
 fn unsigned_wrapping_is_unsigned() {

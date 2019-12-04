@@ -42,12 +42,12 @@ extern crate num_bigint;
 extern crate num_integer;
 extern crate num_traits;
 
-use std::str::FromStr;
 use std::io;
+use std::str::FromStr;
 
 use num_bigint::BigInt;
 use num_integer::Integer;
-use num_traits::{FromPrimitive, ToPrimitive, One, Zero};
+use num_traits::{FromPrimitive, One, ToPrimitive, Zero};
 
 struct Context {
     numer: BigInt,
@@ -69,11 +69,13 @@ impl Context {
     }
 
     fn extract_digit(&self) -> i32 {
-        if self.numer > self.accum {return -1;}
-        let (q, r) =
-            (&self.numer * Context::from_i32(3) + &self.accum)
-            .div_rem(&self.denom);
-        if r + &self.numer >= self.denom {return -1;}
+        if self.numer > self.accum {
+            return -1;
+        }
+        let (q, r) = (&self.numer * Context::from_i32(3) + &self.accum).div_rem(&self.denom);
+        if r + &self.numer >= self.denom {
+            return -1;
+        }
         q.to_i32().unwrap()
     }
 
@@ -92,29 +94,35 @@ impl Context {
     }
 }
 
-fn pidigits(n: isize, out: &mut io::Write) -> io::Result<()> {
+fn pidigits(n: isize, out: &mut dyn io::Write) -> io::Result<()> {
     let mut k = 0;
     let mut context = Context::new();
 
-    for i in 1..(n+1) {
+    for i in 1..(n + 1) {
         let mut d;
         loop {
             k += 1;
             context.next_term(k);
             d = context.extract_digit();
-            if d != -1 {break;}
+            if d != -1 {
+                break;
+            }
         }
 
-        try!(write!(out, "{}", d));
-        if i % 10 == 0 { try!(write!(out, "\t:{}\n", i)); }
+        write!(out, "{}", d)?;
+        if i % 10 == 0 {
+            write!(out, "\t:{}\n", i)?;
+        }
 
         context.eliminate_digit(d);
     }
 
     let m = n % 10;
     if m != 0 {
-        for _ in m..10 { try!(write!(out, " ")); }
-        try!(write!(out, "\t:{}\n", n));
+        for _ in m..10 {
+            write!(out, " ")?;
+        }
+        write!(out, "\t:{}\n", n)?;
     }
     Ok(())
 }
@@ -126,7 +134,7 @@ fn main() {
     let n = if args.len() < 2 {
         DEFAULT_DIGITS
     } else if args[1] == "--bench" {
-        return pidigits(DEFAULT_DIGITS, &mut std::io::sink()).unwrap()
+        return pidigits(DEFAULT_DIGITS, &mut std::io::sink()).unwrap();
     } else {
         FromStr::from_str(&args[1]).unwrap()
     };
