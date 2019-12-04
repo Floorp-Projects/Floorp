@@ -79,6 +79,31 @@ this.experiments_urlbar = class extends ExtensionAPI {
             return appUpdaterStatusToStringMap.get(appUpdater.status);
           },
 
+          installBrowserUpdateAndRestart() {
+            if (appUpdater.status != AppUpdater.STATUS.DOWNLOAD_AND_INSTALL) {
+              return Promise.resolve();
+            }
+            return new Promise(resolve => {
+              let listener = () => {
+                // Once we call startDownload, there are two possible end
+                // states: DOWNLOAD_FAILED and READY_FOR_RESTART.
+                if (
+                  appUpdater.status != AppUpdater.STATUS.READY_FOR_RESTART &&
+                  appUpdater.status != AppUpdater.STATUS.DOWNLOAD_FAILED
+                ) {
+                  return;
+                }
+                appUpdater.removeListener(listener);
+                if (appUpdater.status == AppUpdater.STATUS.READY_FOR_RESTART) {
+                  restartBrowser();
+                }
+                resolve();
+              };
+              appUpdater.addListener(listener);
+              appUpdater.startDownload();
+            });
+          },
+
           isBrowserShowingNotification() {
             let window = BrowserWindowTracker.getTopWindow();
 
@@ -163,27 +188,7 @@ this.experiments_urlbar = class extends ExtensionAPI {
           },
 
           restartBrowser() {
-            // Notify all windows that an application quit has been requested.
-            let cancelQuit = Cc[
-              "@mozilla.org/supports-PRBool;1"
-            ].createInstance(Ci.nsISupportsPRBool);
-            Services.obs.notifyObservers(
-              cancelQuit,
-              "quit-application-requested",
-              "restart"
-            );
-            // Something aborted the quit process.
-            if (cancelQuit.data) {
-              return;
-            }
-            // If already in safe mode restart in safe mode.
-            if (Services.appinfo.inSafeMode) {
-              Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
-            } else {
-              Services.startup.quit(
-                Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
-              );
-            }
+            restartBrowser();
           },
 
           resetBrowser() {
@@ -241,3 +246,27 @@ this.experiments_urlbar = class extends ExtensionAPI {
     };
   }
 };
+
+function restartBrowser() {
+  // Notify all windows that an application quit has been requested.
+  let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+    Ci.nsISupportsPRBool
+  );
+  Services.obs.notifyObservers(
+    cancelQuit,
+    "quit-application-requested",
+    "restart"
+  );
+  // Something aborted the quit process.
+  if (cancelQuit.data) {
+    return;
+  }
+  // If already in safe mode restart in safe mode.
+  if (Services.appinfo.inSafeMode) {
+    Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
+  } else {
+    Services.startup.quit(
+      Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+    );
+  }
+}

@@ -36,6 +36,14 @@
         "parameters": []
       },
       {
+        "name": "installBrowserUpdateAndRestart",
+        "type": "function",
+        "async": true,
+        "description": "If an update is available and the updater is ready to download it, this function downloads and installs it, and if the user's preferences allow, the browser is then restarted. If an update isn't available or the updater isn't ready to download it, this function does nothing.",
+        "parameters": [],
+        "requireUserInput": true
+      },
+      {
         "name": "isBrowserShowingNotification",
         "type": "function",
         "async": true,
