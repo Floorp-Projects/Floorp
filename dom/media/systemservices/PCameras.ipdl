@@ -75,7 +75,7 @@ parent:
   async GetCaptureDevice(CaptureEngine engine, int num);
 
   async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8,
-                              PrincipalInfo principal);
+                              uint64_t windowID);
   async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
   async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
   async FocusOnSelectedSource(CaptureEngine engine, int numdev);
