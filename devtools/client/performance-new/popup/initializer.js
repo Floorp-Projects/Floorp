@@ -106,7 +106,7 @@ async function gInit() {
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.
       getSymbolTableGetter: () => getSymbolsFromThisBrowser,
-      isPopup: true,
+      pageContext: "popup",
     })
   );
 

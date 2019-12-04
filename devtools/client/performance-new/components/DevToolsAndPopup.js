@@ -11,7 +11,7 @@
 /**
  * @typedef {Object} StateProps
  * @property {boolean?} isSupportedPlatform
- * @property {boolean?} isPopup
+ * @property {PageContext} pageContext
  * @property {string | null} promptEnvRestart
  */
 
@@ -19,6 +19,7 @@
  * @typedef {StateProps} Props
  * @typedef {import("../@types/perf").State} StoreState
  * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("../@types/perf").PageContext} PageContext
  */
 
 "use strict";
@@ -72,17 +73,15 @@ class DevToolsAndPopup extends PureComponent {
   }
 
   render() {
-    const { isSupportedPlatform, isPopup, promptEnvRestart } = this.props;
+    const { isSupportedPlatform, pageContext, promptEnvRestart } = this.props;
 
     if (isSupportedPlatform === null) {
       // We don't know yet if this is a supported platform, wait for a response.
       return null;
     }
 
-    const additionalClassName = isPopup ? "perf-popup" : "perf-devtools";
-
     return div(
-      { className: `perf ${additionalClassName}` },
+      { className: `perf perf-${pageContext}` },
       promptEnvRestart
         ? div(
             { className: "perf-env-restart" },
@@ -106,7 +105,7 @@ class DevToolsAndPopup extends PureComponent {
         : null,
       RecordingButton(),
       Settings(),
-      isPopup ? null : Description()
+      pageContext === "devtools" ? Description() : null
     );
   }
 }
@@ -118,7 +117,7 @@ class DevToolsAndPopup extends PureComponent {
 function mapStateToProps(state) {
   return {
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
-    isPopup: selectors.getIsPopup(state),
+    pageContext: selectors.getPageContext(state),
     promptEnvRestart: selectors.getPromptEnvRestart(state),
   };
 }
