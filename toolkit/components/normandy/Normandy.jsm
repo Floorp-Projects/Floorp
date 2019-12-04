@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.jsm",
   RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
@@ -44,6 +45,11 @@ var Normandy = {
 
   async init({ runAsync = true } = {}) {
     // Initialization that needs to happen before the first paint on startup.
+    Services.obs.addObserver(
+      this,
+      TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
+    );
+
     await NormandyMigrations.applyAll();
     this.rolloutPrefsChanged = this.applyStartupPrefs(
       STARTUP_ROLLOUT_PREFS_BRANCH
@@ -64,10 +70,19 @@ var Normandy = {
     }
   },
 
-  observe(subject, topic, data) {
+  async observe(subject, topic, data) {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
       this.finishInit();
+    } else if (topic === TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC) {
+      await Promise.all(
+        [
+          PreferenceExperiments,
+          PreferenceRollouts,
+          AddonStudies,
+          AddonRollouts,
+        ].map(service => service.onTelemetryDisabled())
+      );
     }
   },
 
@@ -126,15 +141,20 @@ var Normandy = {
 
   async uninit() {
     await CleanupManager.cleanup();
+    // Note that Service.pref.removeObserver and Service.obs.removeObserver have
+    // oppositely ordered parameters.
     Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure);
-    await PreferenceRollouts.uninit();
-
-    // In case the observer didn't run, clean it up.
-    try {
-      Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-    } catch (err) {
-      // It must already be removed!
+    for (const topic of [
+      TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC,
+      UI_AVAILABLE_NOTIFICATION,
+    ]) {
+      try {
+        Services.obs.removeObserver(this, topic);
+      } catch (e) {
+        // topic must have already been removed or never added
+      }
     }
+    await PreferenceRollouts.uninit();
   },
 
   /**

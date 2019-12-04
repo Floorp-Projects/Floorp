@@ -65,7 +65,7 @@ const log = LogManager.getLogger("recipe-runner");
  * @property {string} enrollmentId
  *   A random ID generated at time of enrollment. It should be included on all
  *   telemetry related to this rollout. It should not be re-used by other
- *   studies, or any other purpose. May be null on old rollouts.
+ *   rollouts, or any other purpose. May be null on old rollouts.
  */
 
 var EXPORTED_SYMBOLS = ["PreferenceRollouts"];
@@ -183,6 +183,15 @@ var PreferenceRollouts = {
     await this.saveStartupPrefs();
   },
 
+  /** When Telemetry is disabled, clear all identifiers from the stored rollouts.  */
+  async onTelemetryDisabled() {
+    const rollouts = await this.getAll();
+    for (const rollout of rollouts) {
+      rollout.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+    }
+    await this.updateMany(rollouts);
+  },
+
   /**
    * Test wrapper that temporarily replaces the stored rollout data with fake
    * data for testing.
@@ -228,6 +237,40 @@ var PreferenceRollouts = {
     }
     const db = await getDatabase();
     return getStore(db, "readwrite").put(rollout);
+  },
+
+  /**
+   * Update many existing rollouts. More efficient than calling `update` many
+   * times in a row.
+   * @param {Array<PreferenceRollout>} rollouts
+   * @throws If any of the passed rollouts have a slug that doesn't exist in the database already.
+   */
+  async updateMany(rollouts) {
+    // Don't touch the database if there is nothing to do
+    if (!rollouts.length) {
+      return;
+    }
+
+    // Both of the below operations use .map() instead of a normal loop becaues
+    // once we get the object store, we can't let it expire by spinning the
+    // event loop. This approach queues up all the interactions with the store
+    // immediately, preventing it from expiring too soon.
+
+    const db = await getDatabase();
+    let store = await getStore(db, "readonly");
+    await Promise.all(
+      rollouts.map(async ({ slug }) => {
+        let existingRollout = await store.get(slug);
+        if (!existingRollout) {
+          throw new Error(`Tried to update ${slug}, but it doesn't exist.`);
+        }
+      })
+    );
+
+    // awaiting spun the event loop, so the store is now invalid. Get a new
+    // store. This is also a chance to get it in readwrite mode.
+    store = await getStore(db, "readwrite");
+    await Promise.all(rollouts.map(rollout => store.put(rollout)));
   },
 
   /**
