@@ -17,15 +17,12 @@ interface nsIDocShellTreeItem;
 [scriptable, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
 interface nsIWebBrowserChrome : nsISupports
 {
-    const unsigned long STATUS_LINK           = 0x00000003;
-
     /**
-     * Called when the status text in the chrome needs to be updated.
-     * @param statusType indicates what is setting the text
+     * Called when the link hover status is being changed.
      * @param status status string. null is an acceptable value meaning
-     *               no status.
+     *               no link is hovered.
      */
-    void setStatus(in unsigned long statusType, in wstring status);
+    void setStatusLink(in AString status);
 
     /**
      * Definitions for the chrome flags

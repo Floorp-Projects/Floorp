@@ -97,7 +97,6 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome3)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
@@ -395,44 +394,20 @@ NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(
 }
 
 //*****************************************************************************
-// nsContentTreeOwner::nsIWebBrowserChrome2
+// nsContentTreeOwner::nsIWebBrowserChrome
 //*****************************************************************************
 
-NS_IMETHODIMP nsContentTreeOwner::SetStatusWithContext(
-    uint32_t aStatusType, const nsAString& aStatusText,
-    nsISupports* aStatusContext) {
-  // We only allow the status to be set from the primary content shell
-  if (!mPrimary && aStatusType != STATUS_LINK) return NS_OK;
-
+NS_IMETHODIMP nsContentTreeOwner::SetStatusLink(const nsAString& aStatusText) {
   NS_ENSURE_STATE(mAppWindow);
 
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
   mAppWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
 
   if (xulBrowserWindow) {
-    switch (aStatusType) {
-      case STATUS_LINK: {
-        nsCOMPtr<dom::Element> element = do_QueryInterface(aStatusContext);
-        xulBrowserWindow->SetOverLink(aStatusText, element);
-        break;
-      }
-    }
+    xulBrowserWindow->SetOverLink(aStatusText, nullptr);
   }
 
   return NS_OK;
-}
-
-//*****************************************************************************
-// nsContentTreeOwner::nsIWebBrowserChrome
-//*****************************************************************************
-
-NS_IMETHODIMP nsContentTreeOwner::SetStatus(uint32_t aStatusType,
-                                            const char16_t* aStatus) {
-  return SetStatusWithContext(
-      aStatusType,
-      aStatus ? static_cast<const nsString&>(nsDependentString(aStatus))
-              : EmptyString(),
-      nullptr);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(uint32_t aChromeFlags) {
