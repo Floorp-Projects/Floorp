@@ -104,11 +104,11 @@ const allowedStylesRegex = new RegExp(
 
 // Regular expression that matches the forbidden CSS property values.
 const forbiddenValuesRegexs = [
-  // url(), -moz-element()
-  /\b(?:url|(?:-moz-)?element)[\s('"]+/gi,
+  // -moz-element()
+  /\b((?:-moz-)?element)[\s('"]+/gi,
 
   // various URL protocols
-  /['"(]*(?:chrome|resource|about|app|data|https?|ftp|file):+\/*/gi,
+  /['"(]*(?:chrome|resource|about|app|https?|ftp|file):+\/*/gi,
 ];
 
 function cleanupStyle(userProvidedStyle, createElement) {
