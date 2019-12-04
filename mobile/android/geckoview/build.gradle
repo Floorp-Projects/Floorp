@@ -157,6 +157,14 @@ android {
                 }
             }
 
+            resources {
+                if (mozconfig.substs.MOZ_ASAN) {
+                    // If this is an ASAN build, include a `wrap.sh` for Android 8.1+ devices.  See
+                    // https://developer.android.com/ndk/guides/wrap-script.
+                    srcDir "${topsrcdir}/mobile/android/geckoview/src/asan/resources"
+                }
+            }
+
             assets {
             }
         }

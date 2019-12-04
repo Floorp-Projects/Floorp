@@ -1,0 +1,32 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/nightly"
+
+# Remove unwanted environment variables from the 'nightly' mozconfig.
+unset MOZ_ANDROID_POCKET
+
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+ac_add_options --enable-fuzzing
+unset MOZ_STDCXX_COMPAT
+unset ENABLE_CLANG_PLUGIN
+
+# Add the path to the clang_rt used, so it can be packaged with the build.
+if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
+    CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib64/clang/*/lib/linux && pwd)"
+    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/libclang_rt.asan-x86_64-android.so"
+fi
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# This adds '-fuzzing-asan' to the APK filename for local builds.
+export MOZ_PKG_SPECIAL=fuzzing-asan
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

@@ -32,6 +32,10 @@
 [lib destdir="../fennec/lib/@ANDROID_CPU_ARCH@"]
 #endif
 
+#ifdef MOZ_CLANG_RT_ASAN_LIB
+@BINPATH@/@MOZ_CLANG_RT_ASAN_LIB@
+#endif
+
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif

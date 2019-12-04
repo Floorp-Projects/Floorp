@@ -36,7 +36,6 @@ job-defaults:
             - android-gradle-dependencies
             - android-ndk-linux
             - android-sdk-linux
-            - linux64-clang
             - linux64-rust-android
             - linux64-rust-size
             - linux64-cbindgen
@@ -62,6 +61,7 @@ android-api-16/debug:
         custom-build-variant-cfg: api-16-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86/opt:
@@ -83,6 +83,7 @@ android-x86/opt:
         custom-build-variant-cfg: x86
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86-fuzzing/debug:
@@ -102,6 +103,7 @@ android-x86-fuzzing/debug:
         custom-build-variant-cfg: x86-fuzzing-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86-nightly/opt:
@@ -127,6 +129,9 @@ android-x86-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-api-16/opt:
     description: "Android 4.0 api-16+ Opt"
@@ -147,6 +152,7 @@ android-api-16/opt:
         custom-build-variant-cfg: api-16
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-api-16/pgo:
@@ -167,6 +173,9 @@ android-api-16/pgo:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
@@ -192,6 +201,9 @@ android-api-16-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: api-16
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -212,6 +224,7 @@ android-aarch64/opt:
         custom-build-variant-cfg: aarch64
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-aarch64/pgo:
@@ -232,6 +245,9 @@ android-aarch64/pgo:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-aarch64/debug:
     description: "Android 5.0 AArch64 Debug"
@@ -252,6 +268,7 @@ android-aarch64/debug:
         custom-build-variant-cfg: aarch64-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-aarch64-nightly/opt:
@@ -278,6 +295,9 @@ android-aarch64-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: aarch64
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-x86_64/opt:
     description: "Android 5.0 x86-64 Opt"
@@ -298,6 +318,7 @@ android-x86_64/opt:
         custom-build-variant-cfg: x86_64
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86_64-nightly/opt:
@@ -323,6 +344,9 @@ android-x86_64-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86_64
+    fetches:
+        toolchain:
+            - linux64-clang
 
 android-x86_64/debug:
     description: "Android 5.0 x86-64 Debug"
@@ -343,6 +367,7 @@ android-x86_64/debug:
         custom-build-variant-cfg: x86_64-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 
@@ -367,6 +392,7 @@ android-api-16-gcp/debug:
         custom-build-variant-cfg: api-16-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 
@@ -391,6 +417,7 @@ android-x86-gcp/opt:
         custom-build-variant-cfg: x86
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-api-16-gcp/opt:
@@ -414,6 +441,7 @@ android-api-16-gcp/opt:
         custom-build-variant-cfg: api-16
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-aarch64-gcp/opt:
@@ -437,6 +465,7 @@ android-aarch64-gcp/opt:
         custom-build-variant-cfg: aarch64
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-aarch64-gcp/debug:
@@ -460,6 +489,7 @@ android-aarch64-gcp/debug:
         custom-build-variant-cfg: aarch64-debug
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86_64-gcp/opt:
@@ -483,6 +513,7 @@ android-x86_64-gcp/opt:
         custom-build-variant-cfg: x86_64
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-sccache
 
 android-x86_64-gcp/debug:
@@ -506,4 +537,24 @@ android-x86_64-gcp/debug:
         custom-build-variant-cfg: x86_64-debug
     fetches:
         toolchain:
+            - linux64-clang
+
+android-x86_64-asan-fuzzing/opt:
+    description: "Android 5.0 x86-64 Fuzzing Opt ASAN"
+    index:
+        job-name: android-x86_64-fuzzing-asan
+    treeherder:
+        platform: android-5-0-x86_64/asan
+        symbol: Bof
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: x86_64-fuzzing-asan
+    fetches:
+        toolchain:
+            - linux64-clang-android-cross
             - linux64-sccache
