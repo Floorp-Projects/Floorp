@@ -1514,7 +1514,8 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
   nsTArray<IndexUpdateInfo> updateInfo;
 
   {
-    const auto autoStateRestore = mTransaction->TemporarilyProceedToInactive();
+    const auto autoStateRestore =
+        mTransaction->TemporarilyTransitionToInactive();
     GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfo, aRv);
   }
 

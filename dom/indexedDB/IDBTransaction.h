@@ -174,6 +174,18 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
            mReadyState == ReadyState::Finished;
   }
 
+  bool IsActive() const {
+    AssertIsOnOwningThread();
+
+    return mReadyState == ReadyState::Active;
+  }
+
+  bool IsInactive() const {
+    AssertIsOnOwningThread();
+
+    return mReadyState == ReadyState::Inactive;
+  }
+
   bool IsFinished() const {
     AssertIsOnOwningThread();
 
@@ -191,32 +203,47 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     return NS_FAILED(mAbortCode);
   }
 
-  auto TemporarilyProceedToInactive() {
-    AssertIsOnOwningThread();
+  template <ReadyState OriginalState, ReadyState TemporaryState>
+  class AutoRestoreState {
+   public:
+    explicit AutoRestoreState(IDBTransaction& aOwner) : mOwner { aOwner }
+#ifdef DEBUG
+    , mSavedPendingRequestCount { mOwner.mPendingRequestCount }
+#endif
+    {
+      mOwner.AssertIsOnOwningThread();
+      MOZ_ASSERT(mOwner.mReadyState == OriginalState);
+      mOwner.mReadyState = TemporaryState;
+    }
+
+    ~AutoRestoreState() {
+      mOwner.AssertIsOnOwningThread();
+      MOZ_ASSERT(mOwner.mReadyState == TemporaryState);
+      MOZ_ASSERT(mOwner.mPendingRequestCount == mSavedPendingRequestCount);
+
+      mOwner.mReadyState = OriginalState;
+    }
+
+   private:
+    IDBTransaction& mOwner;
+#ifdef DEBUG
+    const uint32_t mSavedPendingRequestCount;
+#endif
+  };
+
+  AutoRestoreState<ReadyState::Inactive, ReadyState::Active>
+  TemporarilyTransitionToActive();
+  AutoRestoreState<ReadyState::Active, ReadyState::Inactive>
+  TemporarilyTransitionToInactive();
+
+  void TransitionToActive() {
+    MOZ_ASSERT(mReadyState == ReadyState::Inactive);
+    mReadyState = ReadyState::Active;
+  }
+
+  void TransitionToInactive() {
     MOZ_ASSERT(mReadyState == ReadyState::Active);
     mReadyState = ReadyState::Inactive;
-
-    struct AutoRestoreState {
-      IDBTransaction& mOwner;
-#ifdef DEBUG
-      uint32_t mSavedPendingRequestCount;
-#endif
-
-      ~AutoRestoreState() {
-        mOwner.AssertIsOnOwningThread();
-        MOZ_ASSERT(mOwner.mReadyState == ReadyState::Inactive);
-        MOZ_ASSERT(mOwner.mPendingRequestCount == mSavedPendingRequestCount);
-
-        mOwner.mReadyState = ReadyState::Active;
-      }
-    };
-
-    return AutoRestoreState{*this
-#ifdef DEBUG
-                            ,
-                            mPendingRequestCount
-#endif
-    };
   }
 
   nsresult AbortCode() const {
