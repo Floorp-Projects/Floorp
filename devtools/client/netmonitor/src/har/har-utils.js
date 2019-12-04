@@ -38,11 +38,12 @@ function formatDate(date) {
  * Helper API for HAR export features.
  */
 var HarUtils = {
-  getHarFileName: function(defaultFileName, jsonp, compress) {
+  getHarFileName: function(defaultFileName, jsonp, compress, hostname) {
     const extension = jsonp ? ".harp" : ".har";
 
     const now = new Date();
     let name = defaultFileName.replace(/%date/g, formatDate(now));
+    name = name.replace(/%hostname/g, hostname);
     name = name.replace(/\:/gm, "-", "");
     name = name.replace(/\//gm, "_", "");
 
