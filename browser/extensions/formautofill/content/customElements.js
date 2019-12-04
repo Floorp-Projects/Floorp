@@ -24,13 +24,7 @@
       return;
     }
 
-    if (browser.messageManager) {
-      browser.messageManager.sendAsyncMessage(msgName, data);
-    } else {
-      Cu.reportError(
-        `customElements.js: No messageManager for message "${msgName}"`
-      );
-    }
+    browser.sendMessageToActor(msgName, data, "FormAutofill");
   }
 
   class MozAutocompleteProfileListitemBase extends MozElements.MozRichlistitem {

@@ -28,13 +28,12 @@ function runCodeMirrorTest(browser) {
   /* eslint-disable max-len */
   mm.loadFrameScript(
     "data:," +
-      "ChromeUtils.import('resource://gre/modules/Timer.jsm');" +
       "content.wrappedJSObject.mozilla_setStatus = function(statusMsg, type, customMsg) {" +
       "  sendSyncMessage('setStatus', {statusMsg: statusMsg, type: type, customMsg: customMsg});" +
       "};" +
       "function check() { " +
       "  var doc = content.document; var out = doc.getElementById('status'); " +
-      "  if (!out || !out.classList.contains('done')) { return setTimeout(check, 100); }" +
+      "  if (!out || !out.classList.contains('done')) { return content.setTimeout(check, 100); }" +
       "  sendAsyncMessage('done', { failed: content.wrappedJSObject.failed });" +
       "}" +
       "check();",
