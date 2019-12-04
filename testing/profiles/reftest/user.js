@@ -39,7 +39,6 @@ user_pref("extensions.autoDisableScopes", 0);
 user_pref("extensions.blocklist.enabled", false);
 user_pref("extensions.getAddons.cache.enabled", false);
 user_pref("extensions.getAddons.get.url", "http://localhost/extensions-dummy/repositoryGetURL");
-user_pref("extensions.getAddons.compatOverides.url", "http://localhost/extensions-dummy/repositoryCompatOverridesURL");
 user_pref("extensions.systemAddon.update.url", "http://localhost/dummy-system-addons.xml");
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.color_management.mode", 2);

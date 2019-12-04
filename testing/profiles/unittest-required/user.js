@@ -107,7 +107,6 @@ user_pref("extensions.defaultProviders.enabled", true);
 user_pref("extensions.getAddons.cache.enabled", false);
 // Make sure AddonRepository won't hit the network
 user_pref("extensions.getAddons.get.url", "http://{server}/extensions-dummy/repositoryGetURL");
-user_pref("extensions.getAddons.compatOverides.url", "http://{server}/extensions-dummy/repositoryCompatOverridesURL");
 user_pref("extensions.getAddons.search.browseURL", "http://{server}/extensions-dummy/repositoryBrowseURL");
 user_pref("extensions.hotfix.url", "http://{server}/extensions-dummy/hotfixURL");
 // Disable intalling any distribution add-ons

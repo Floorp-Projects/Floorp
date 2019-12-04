@@ -31,7 +31,6 @@ const IGNORE = [
 
 const IGNORE_PRIVATE = [
   "AddonAuthor",
-  "AddonCompatibilityOverride",
   "AddonScreenshot",
   "AddonType",
   "startup",

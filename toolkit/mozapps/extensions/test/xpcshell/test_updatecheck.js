@@ -193,42 +193,6 @@ add_task(async function() {
 
 add_task(async function() {
   let updates = await checkUpdates(
-    "compat-override@tests.mozilla.org",
-    UPDATE_FILE
-  );
-  equal(updates.length, 3);
-  let overrides = [
-    {
-      type: "incompatible",
-      minVersion: 1,
-      maxVersion: 2,
-      appID: "xpcshell@tests.mozilla.org",
-      appMinVersion: 0.1,
-      appMaxVersion: 0.2,
-    },
-    {
-      type: "incompatible",
-      minVersion: 2,
-      maxVersion: 2,
-      appID: "xpcshell@tests.mozilla.org",
-      appMinVersion: 1,
-      appMaxVersion: 2,
-    },
-  ];
-  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
-    updates,
-    null,
-    null,
-    true,
-    false,
-    overrides
-  );
-  notEqual(update, null);
-  equal(update.version, 1);
-});
-
-add_task(async function() {
-  let updates = await checkUpdates(
     "compat-strict-optin@tests.mozilla.org",
     UPDATE_FILE
   );
