@@ -576,6 +576,7 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == currentColor-override-stop.svg pass.svg
 
 == mask-invalidation.html mask-invalidation-ref.html
+== filter-in-mask.html filter-in-mask-ref.html
 == overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
