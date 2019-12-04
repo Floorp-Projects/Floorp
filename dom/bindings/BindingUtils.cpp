@@ -3880,6 +3880,14 @@ void SetUseCounter(JSObject* aObject, UseCounter aUseCounter) {
   }
 }
 
+void SetUseCounter(UseCounterWorker aUseCounter) {
+  // If this is called from Worklet thread, workerPrivate will be null.
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (workerPrivate) {
+    workerPrivate->SetUseCounter(aUseCounter);
+  }
+}
+
 namespace {
 
 #define DEPRECATED_OPERATION(_op) #_op,
