@@ -88,9 +88,11 @@ async function wrapCommand(webConsoleFront) {
 
   await evaluateJSAndCheckResult(webConsoleFront, "keys({foo: 'bar'})", {
     result: {
-      class: "Array",
-      preview: {
-        items: ["foo"],
+      _grip: {
+        class: "Array",
+        preview: {
+          items: ["foo"],
+        },
       },
     },
   });
@@ -188,8 +190,10 @@ async function unregisterAfterOverridingTwice(webConsoleFront) {
   );
   await evaluateJSAndCheckResult(webConsoleFront, "keys({});", {
     result: {
-      class: "Array",
-      preview: { items: [] },
+      _grip: {
+        class: "Array",
+        preview: { items: [] },
+      },
     },
   });
 }
