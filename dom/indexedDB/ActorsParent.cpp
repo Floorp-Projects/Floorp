@@ -5134,7 +5134,7 @@ struct ConnectionPool::DatabaseInfo final {
   uint32_t mWriteTransactionCount;
   bool mNeedsCheckpoint;
   bool mIdle;
-  bool mCloseOnIdle;
+  FlippedOnce<false> mCloseOnIdle;
   bool mClosing;
 
 #ifdef DEBUG
@@ -12010,7 +12010,7 @@ bool ConnectionPool::CloseDatabaseWhenIdleInternal(
       CloseDatabase(dbInfo);
       AdjustIdleTimer();
     } else {
-      dbInfo->mCloseOnIdle = true;
+      dbInfo->mCloseOnIdle.EnsureFlipped();
     }
 
     return true;
@@ -12120,7 +12120,6 @@ ConnectionPool::DatabaseInfo::DatabaseInfo(ConnectionPool* aConnectionPool,
       mWriteTransactionCount(0),
       mNeedsCheckpoint(false),
       mIdle(false),
-      mCloseOnIdle(false),
       mClosing(false)
 #ifdef DEBUG
       ,
