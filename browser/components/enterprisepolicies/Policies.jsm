@@ -782,7 +782,7 @@ var Policies = {
           blockAboutPage(manager, "about:debugging");
         }
       }
-      let { addons } = await AddonManager.getActiveAddons();
+      let addons = await AddonManager.getAllAddons();
       let allowedExtensions = [];
       for (let extensionID in extensionSettings) {
         if (extensionID == "*") {
