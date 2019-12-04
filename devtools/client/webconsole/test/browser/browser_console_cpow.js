@@ -5,7 +5,7 @@
 
 "use strict";
 
-const ObjectFront = require("devtools/shared/fronts/object");
+const { ObjectFront } = require("devtools/shared/fronts/object");
 
 const {
   gDevToolsBrowser,
