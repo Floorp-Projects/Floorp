@@ -668,6 +668,8 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
   const FuncExportVector& funcExports = metadata.funcExports;
   uint8_t* moduleSegmentBase = codeTier.segment().base();
 
+  bool bigIntEnabled = codeTier.code().metadata().bigIntEnabled;
+
   CodeRangeVector codeRanges;
   DebugOnly<uint32_t> numExpectedRanges = 0;
   for (uint32_t funcExportIndex : funcExportIndices) {
@@ -679,7 +681,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
     Maybe<ImmPtr> callee;
     callee.emplace(calleePtr, ImmPtr::NoCheckToken());
     if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee,
-                            /* asmjs */ false, &codeRanges)) {
+                            /* asmjs */ false, bigIntEnabled, &codeRanges)) {
       return false;
     }
   }
