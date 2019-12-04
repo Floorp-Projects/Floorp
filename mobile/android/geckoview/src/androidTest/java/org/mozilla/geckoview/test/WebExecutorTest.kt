@@ -34,6 +34,7 @@ import org.junit.*
 
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
+import org.junit.Ignore
 
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
@@ -330,6 +331,7 @@ class WebExecutorTest {
         stream.readBytes()
     }
 
+    @Ignore //bug 1596314 - disable test for frequent failures
     @Test(expected = IOException::class)
     fun readTimeout() {
         val expectedCount = 1 * 1024 * 1024 // 1MB
