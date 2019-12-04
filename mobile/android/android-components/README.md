@@ -156,6 +156,8 @@ _Combined components to implement feature-specific use cases._
 
 * ⚪ [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
 
+* 🔴 [**Remote Tabs**](components/feature/remotetabs/README.md) - Feature that provides access to other device's tabs in the same account.
+
 * 🔴 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
 
 * 🔴 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
