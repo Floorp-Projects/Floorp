@@ -355,6 +355,9 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   FuncReturnTypesVector debugFuncReturnTypes;
   ModuleHash debugHash;
 
+  // Feature flag that gets copied from ModuleEnvironment for BigInt support.
+  bool bigIntEnabled;
+
   explicit Metadata(ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind), debugEnabled(false), debugHash() {}
   virtual ~Metadata() {}

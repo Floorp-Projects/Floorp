@@ -486,6 +486,9 @@ bool shell::enableWasmGc = false;
 #endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
+#ifdef ENABLE_WASM_BIGINT
+bool shell::enableWasmBigInt = false;
+#endif
 bool shell::enableAsyncStacks = false;
 bool shell::enableStreams = false;
 bool shell::enableReadableByteStreams = false;
@@ -10228,6 +10231,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
   enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableWritableStreams = op.getBoolOption("enable-writable-streams");
+#ifdef ENABLE_WASM_BIGINT
+  enableWasmBigInt = op.getBoolOption("wasm-bigint");
+#endif
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
   enableWeakRefs = op.getBoolOption("enable-weak-refs");
@@ -10246,6 +10252,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
+#ifdef ENABLE_WASM_BIGINT
+      .setWasmBigIntEnabled(enableWasmBigInt)
+#endif
       .setAsyncStack(enableAsyncStacks);
 
   if (const char* str = op.getStringOption("cache-ir-stubs")) {
@@ -10570,6 +10579,9 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
+#endif
+#ifdef ENABLE_WASM_BIGINT
+      .setWasmBigIntEnabled(enableWasmBigInt)
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2);
@@ -10978,6 +10990,12 @@ int main(int argc, char** argv, char** envp) {
                         "Enable WebAssembly verbose logging") ||
       !op.addBoolOption('\0', "disable-wasm-huge-memory",
                         "Disable WebAssembly huge memory") ||
+#ifdef ENABLE_WASM_BIGINT
+      !op.addBoolOption('\0', "wasm-bigint",
+                        "Enable WebAssembly BigInt conversions") ||
+#else
+      !op.addBoolOption('\0', "wasm-bigint", "No-op") ||
+#endif
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||
