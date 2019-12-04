@@ -15054,9 +15054,14 @@ void Document::TraceProtos(JSTracer* aTrc) {
  * toolkit/components/url-classifier/flash-block-lists.rst
  */
 FlashClassification Document::DocumentFlashClassification() {
+  // Disable flash blocking when fission is enabled(See Bug 1584931).
+  const auto fnIsFlashBlockingEnabled = [] {
+    return StaticPrefs::plugins_flashBlock_enabled() &&
+           !StaticPrefs::fission_autostart();
+  };
+
   // If neither pref is on, skip the null-principal and principal URI checks.
-  if (!StaticPrefs::plugins_http_https_only() &&
-      !StaticPrefs::plugins_flashBlock_enabled()) {
+  if (!StaticPrefs::plugins_http_https_only() && !fnIsFlashBlockingEnabled()) {
     return FlashClassification::Unknown;
   }
 
@@ -15079,7 +15084,7 @@ FlashClassification Document::DocumentFlashClassification() {
 
   // If flash blocking is disabled, it is equivalent to all sites being
   // on neither list.
-  if (!StaticPrefs::plugins_flashBlock_enabled()) {
+  if (!fnIsFlashBlockingEnabled()) {
     return FlashClassification::Unknown;
   }
 
