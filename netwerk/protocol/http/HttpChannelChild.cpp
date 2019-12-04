@@ -582,6 +582,51 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStopRequest(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnAfterLastPart(
+    const nsresult& aStatus) {
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self = UnsafePtr<HttpChannelChild>(this), aStatus]() {
+        self->OnAfterLastPart(aStatus);
+      }));
+  return IPC_OK();
+}
+
+void HttpChannelChild::OnAfterLastPart(const nsresult& aStatus) {
+  if (mOnStopRequestCalled) {
+    return;
+  }
+  mOnStopRequestCalled = true;
+
+  // notify "http-on-stop-connect" observers
+  gHttpHandler->OnStopRequest(this);
+
+  ReleaseListeners();
+
+  // If a preferred alt-data type was set, the parent would hold a reference to
+  // the cache entry in case the child calls openAlternativeOutputStream().
+  // (see nsHttpChannel::OnStopRequest)
+  if (!mPreferredCachedAltDataTypes.IsEmpty()) {
+    mAltDataCacheEntryAvailable = mCacheEntryAvailable;
+  }
+  mCacheEntryAvailable = false;
+
+  if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
+  CleanupBackgroundChannel();
+
+  if (mLoadFlags & LOAD_DOCUMENT_URI) {
+    // Keep IPDL channel open, but only for updating security info.
+    // If IPDL is already closed, then do nothing.
+    if (CanSend()) {
+      mKeptAlive = true;
+      SendDocumentChannelCleanup(true);
+    }
+  } else {
+    // The parent process will respond by sending a DeleteSelf message and
+    // making sure not to send any more messages after that.
+    TrySendDeletingChannel();
+  }
+}
+
 class SyntheticDiversionListener final : public nsIStreamListener {
   RefPtr<HttpChannelChild> mChannel;
 

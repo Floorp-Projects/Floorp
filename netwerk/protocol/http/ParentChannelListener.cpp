@@ -78,6 +78,14 @@ ParentChannelListener::OnStartRequest(nsIRequest* aRequest) {
 
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
+  // If we're not a multi-part channel, then we can drop mListener and break the
+  // reference cycle. If we are, then this might be called again, so wait for
+  // OnAfterLastPart instead.
+  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
+  if (multiPartChannel) {
+    mIsMultiPart = true;
+  }
+
   LOG(("ParentChannelListener::OnStartRequest [this=%p]\n", this));
   return mNextListener->OnStartRequest(aRequest);
 }
@@ -94,11 +102,7 @@ ParentChannelListener::OnStopRequest(nsIRequest* aRequest,
        this, static_cast<uint32_t>(aStatusCode)));
   nsresult rv = mNextListener->OnStopRequest(aRequest, aStatusCode);
 
-  // If we're not a multi-part channel, then we can drop mListener and break the
-  // reference cycle. If we are, then this might be called again, so wait for
-  // OnAfterLastPart instead.
-  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
-  if (!multiPartChannel) {
+  if (!mIsMultiPart) {
     mNextListener = nullptr;
   }
   return rv;
