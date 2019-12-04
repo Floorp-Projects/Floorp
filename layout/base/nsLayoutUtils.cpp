@@ -3982,6 +3982,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
       if (doFullRebuild) {
         list->DeleteAll(builder);
+        list->RestoreState();
 
         builder->ClearRetainedWindowRegions();
         builder->ClearWillChangeBudgets();
