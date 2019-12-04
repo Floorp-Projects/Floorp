@@ -216,6 +216,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
       const ClassifierInfo& info) override;
 
+  mozilla::ipc::IPCResult RecvOnAfterLastPart(const nsresult& aStatus) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -534,6 +536,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void DeleteSelf();
   void DoNotifyListener();
   void ContinueDoNotifyListener();
+  void OnAfterLastPart(const nsresult& aStatus);
 
   // Create a a new channel to be used in a redirection, based on the provided
   // response headers.
