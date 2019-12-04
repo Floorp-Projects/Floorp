@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIDNService"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+});
+
 var IdentityHandler = {
   // The definitions below should be kept in sync with those in GeckoView.ProgressListener.SecurityInformation
   // No trusted identity information. No site identity icon is shown.
@@ -270,6 +274,11 @@ class GeckoViewProgress extends GeckoViewModule {
       };
 
       this.eventDispatcher.sendRequest(message);
+
+      BrowserUtils.recordSiteOriginTelemetry(
+        Services.wm.getEnumerator("navigator:geckoview"),
+        true
+      );
     }
   }
 

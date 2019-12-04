@@ -78,6 +78,31 @@ geckoview:
       - esawin@mozilla.com
     expires: never
 
+  document_site_origins:
+    type: custom_distribution
+    description: >
+      When a document is loaded, report the
+      number of [site origins](https://searchfox.org/
+      mozilla-central/rev/
+      3300072e993ae05d50d5c63d815260367eaf9179/
+      caps/nsIPrincipal.idl#264) of the entire browser
+      if it has been at least 5 minutes since last
+      time we collect this data.
+    range_min: 0
+    range_max: 100
+    bucket_count: 50
+    histogram_type: exponential
+    unit: number of site_origin
+    gecko_datapoint: FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1589700
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1589700#c5
+    notification_emails:
+      - sefeng@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
 gfx:
   composite_time:
     type: timing_distribution
