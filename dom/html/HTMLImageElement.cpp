@@ -15,6 +15,9 @@
 #include "mozilla/dom/Document.h"
 #include "nsImageFrame.h"
 #include "nsIScriptContext.h"
+#include "nsIURL.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 #include "nsContentUtils.h"
 #include "nsContainerFrame.h"
 #include "nsNodeInfoManager.h"
@@ -32,9 +35,12 @@
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
 
+#include "imgIContainer.h"
+#include "imgILoader.h"
 #include "imgINotificationObserver.h"
 #include "imgRequestProxy.h"
 
+#include "nsILoadGroup.h"
 #include "mozilla/CycleCollectedJSContext.h"
 
 #include "mozilla/EventDispatcher.h"

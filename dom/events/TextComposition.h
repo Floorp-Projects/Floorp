@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsINode.h"
+#include "nsIWeakReference.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"

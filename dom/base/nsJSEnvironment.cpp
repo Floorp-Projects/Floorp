@@ -8,8 +8,11 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsDOMCID.h"
+#include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
@@ -20,8 +23,10 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsPresContext.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsAtom.h"
@@ -30,6 +35,7 @@
 #include "nsIContent.h"
 #include "nsCycleCollector.h"
 #include "nsXPCOMCIDInternal.h"
+#include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #ifdef XP_WIN
 #  include <process.h>
@@ -44,6 +50,8 @@
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
 #include "nsIArray.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/AutoRestore.h"
@@ -82,6 +90,7 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "GeckoProfiler.h"
 #include "mozilla/IdleTaskRunner.h"
+#include "nsIDocShell.h"
 #include "nsViewManager.h"
 #include "mozilla/EventStateManager.h"
 
@@ -2133,6 +2142,7 @@ void nsJSContext::MaybePokeCC() {
   }
 
   if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 

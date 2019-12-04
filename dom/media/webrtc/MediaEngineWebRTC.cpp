@@ -16,6 +16,9 @@
 #include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/Logging.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsITabSource.h"
 #include "prenv.h"
 
 #define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 500

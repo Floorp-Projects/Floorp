@@ -16,6 +16,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsIFile.h"
+#include "nsISimpleEnumerator.h"
 #include "nsThreadUtils.h"
 
 namespace {

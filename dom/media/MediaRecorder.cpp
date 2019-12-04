@@ -34,6 +34,7 @@
 #include "nsDocShell.h"
 #include "nsError.h"
 #include "mozilla/dom/Document.h"
+#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"

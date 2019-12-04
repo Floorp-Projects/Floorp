@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsString.h"
+#include "nsIComponentManager.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsBaseCommandController.h"
 #include "nsControllerCommandTable.h"

@@ -46,7 +46,6 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/SystemGroup.h"
 #include "nsCOMPtr.h"
-#include "nsIXPConnect.h"
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"

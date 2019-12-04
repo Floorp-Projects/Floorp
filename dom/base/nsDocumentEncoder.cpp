@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "nscore.h"
+#include "nsIFactory.h"
 #include "nsISupports.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
@@ -26,7 +27,9 @@
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/Selection.h"
+#include "nsITransferable.h"  // for kUnicodeMime
 #include "nsContentUtils.h"
 #include "nsElementTable.h"
 #include "nsUnicharUtils.h"

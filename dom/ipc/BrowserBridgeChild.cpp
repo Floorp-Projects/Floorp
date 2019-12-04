@@ -20,6 +20,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsQueryObject.h"
 #include "nsSubDocumentFrame.h"
 #include "nsView.h"

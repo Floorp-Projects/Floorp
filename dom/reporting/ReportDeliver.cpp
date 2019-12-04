@@ -17,7 +17,6 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIGlobalObject.h"
-#include "nsIXPConnect.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
 

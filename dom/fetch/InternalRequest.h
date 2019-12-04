@@ -13,6 +13,7 @@
 #include "mozilla/LoadTainting.h"
 #include "mozilla/UniquePtr.h"
 
+#include "nsIContentPolicy.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 #ifdef DEBUG

@@ -13,6 +13,7 @@
 #include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozIStorageConnection.h"
+#include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"

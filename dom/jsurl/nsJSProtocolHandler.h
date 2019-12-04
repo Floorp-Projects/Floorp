@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIProtocolHandler.h"
 #include "nsIURI.h"
+#include "nsIMutable.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
 #include "nsSimpleURI.h"

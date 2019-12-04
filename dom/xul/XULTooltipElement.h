@@ -8,6 +8,7 @@
 #define XULTooltipElement_h__
 
 #include "XULPopupElement.h"
+#include "nsIDOMEventListener.h"
 
 namespace mozilla {
 namespace dom {

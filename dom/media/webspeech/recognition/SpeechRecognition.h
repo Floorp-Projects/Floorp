@@ -16,6 +16,7 @@
 #include "js/TypeDecls.h"
 
 #include "DOMMediaStream.h"
+#include "nsIDOMNavigatorUserMedia.h"
 #include "nsITimer.h"
 #include "MediaTrackGraph.h"
 #include "AudioSegment.h"

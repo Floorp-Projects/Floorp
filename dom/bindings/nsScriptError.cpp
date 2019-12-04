@@ -16,8 +16,11 @@
 #include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsILoadContext.h"
+#include "nsIDocShell.h"
 #include "nsIMutableArray.h"
 #include "nsIScriptError.h"
+#include "nsISensitiveInfoHiddenURI.h"
 
 static_assert(nsIScriptError::errorFlag == JSREPORT_ERROR &&
                   nsIScriptError::warningFlag == JSREPORT_WARNING &&

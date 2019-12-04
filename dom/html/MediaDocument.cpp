@@ -8,9 +8,11 @@
 #include "nsGkAtoms.h"
 #include "nsRect.h"
 #include "nsPresContext.h"
+#include "nsIScrollable.h"
 #include "nsViewManager.h"
 #include "nsITextToSubURI.h"
 #include "nsIURL.h"
+#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsCharsetSource.h"  // kCharsetFrom* macro definition
 #include "nsNodeInfoManager.h"

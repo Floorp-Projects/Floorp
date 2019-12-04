@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
+#include "nsISelectionController.h"
 
 class nsPresContext;
 class nsRange;

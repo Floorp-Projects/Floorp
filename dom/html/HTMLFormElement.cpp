@@ -32,6 +32,7 @@
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsIMutableArray.h"
 #include "mozilla/BinarySearch.h"
 #include "nsQueryObject.h"
 
@@ -42,6 +43,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
+#include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsRange.h"
@@ -54,6 +56,7 @@
 #include "nsIPrompt.h"
 #include "nsISecurityUITelemetry.h"
 #include "nsIStringBundle.h"
+#include "nsIProtocolHandler.h"
 
 // radio buttons
 #include "mozilla/dom/HTMLInputElement.h"
@@ -68,6 +71,8 @@
 #include "nsIConstraintValidation.h"
 
 #include "nsSandboxFlags.h"
+
+#include "nsIContentSecurityPolicy.h"
 
 // images
 #include "mozilla/dom/HTMLImageElement.h"

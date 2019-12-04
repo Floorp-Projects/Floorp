@@ -13,6 +13,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
+#include "nsIThread.h"
 
 using namespace mozilla::ipc;
 

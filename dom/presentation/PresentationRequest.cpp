@@ -14,6 +14,7 @@
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Move.h"
+#include "mozIThirdPartyUtil.h"
 #include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindow.h"

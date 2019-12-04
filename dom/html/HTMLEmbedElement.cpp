@@ -13,6 +13,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIPluginDocument.h"
 #include "nsThreadUtils.h"
+#include "nsIScriptError.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX

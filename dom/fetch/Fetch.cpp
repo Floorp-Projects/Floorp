@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
+#include "nsIStreamLoader.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDOMString.h"

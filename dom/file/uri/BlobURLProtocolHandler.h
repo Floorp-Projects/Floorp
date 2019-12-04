@@ -11,6 +11,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
+#include "nsIInputStream.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 

@@ -74,6 +74,7 @@
 
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
+#include "nsIMozBrowserFrame.h"
 
 #include "nsSubDocumentFrame.h"
 #include "nsLayoutUtils.h"
@@ -96,6 +97,7 @@
 #  include "nsTreeBodyFrame.h"
 #endif
 #include "nsIController.h"
+#include "nsICommandParams.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLLabelElement.h"
@@ -105,6 +107,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "GeckoProfiler.h"
 #include "Units.h"
+#include "nsIObjectLoadingContent.h"
 
 #ifdef XP_MACOSX
 #  import <ApplicationServices/ApplicationServices.h>

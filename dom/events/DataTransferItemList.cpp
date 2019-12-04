@@ -8,9 +8,11 @@
 
 #include "nsContentUtils.h"
 #include "nsIGlobalObject.h"
+#include "nsIClipboard.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsISupportsPrimitives.h"
 #include "nsQueryObject.h"
 #include "nsVariant.h"
 #include "mozilla/ContentEvents.h"

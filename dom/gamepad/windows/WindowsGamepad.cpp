@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <xinput.h>
 
+#include "nsIComponentManager.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"

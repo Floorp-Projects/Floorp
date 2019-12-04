@@ -138,6 +138,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/TreeWalker.h"
 
+#include "nsIServiceManager.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "imgLoader.h"
 
@@ -175,6 +176,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
+#include "nsICookiePermission.h"
 #include "nsICookieService.h"
 
 #include "nsBidiUtils.h"
@@ -196,6 +198,7 @@
 #include "nsDOMCID.h"
 
 #include "jsapi.h"
+#include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsIContentPolicy.h"
@@ -253,6 +256,7 @@
 
 #include "mozilla/Preferences.h"
 
+#include "imgILoader.h"
 #include "imgRequestProxy.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
@@ -291,10 +295,12 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentActivity.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsIMutableArray.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsWindowSizes.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/FontFaceSet.h"
+#include "nsISupportsPrimitives.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"

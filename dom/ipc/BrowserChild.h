@@ -42,6 +42,7 @@
 #include "PuppetWidget.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "nsDeque.h"
+#include "nsISHistoryListener.h"
 
 class nsBrowserStatusFilter;
 class nsIDOMWindow;

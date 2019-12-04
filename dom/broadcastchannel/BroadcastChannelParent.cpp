@@ -11,6 +11,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/Unused.h"
+#include "nsIScriptSecurityManager.h"
 
 namespace mozilla {
 

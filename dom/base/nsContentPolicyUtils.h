@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsIContent.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringFwd.h"
