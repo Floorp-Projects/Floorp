@@ -55,6 +55,7 @@
 #include "nsThreadUtils.h"
 #include "nsQueryObject.h"
 #include "nsIURIClassifier.h"
+#include "nsIMultiPartChannel.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -1322,7 +1323,24 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStartRequest if diverting is set!");
 
+  Maybe<uint32_t> multiPartID;
+  bool isLastPartOfMultiPart = false;
+
   RefPtr<HttpBaseChannel> chan = do_QueryObject(aRequest);
+  if (!chan) {
+    nsCOMPtr<nsIMultiPartChannel> multiPartChannel =
+        do_QueryInterface(aRequest);
+    if (multiPartChannel) {
+      nsCOMPtr<nsIChannel> baseChannel;
+      multiPartChannel->GetBaseChannel(getter_AddRefs(baseChannel));
+      chan = do_QueryObject(baseChannel);
+
+      uint32_t partID = 0;
+      multiPartChannel->GetPartID(&partID);
+      multiPartID = Some(partID);
+      multiPartChannel->GetIsLastPart(&isLastPartOfMultiPart);
+    }
+  }
   if (!chan) {
     LOG(("  aRequest is not HttpBaseChannel"));
     NS_ERROR(
@@ -1427,9 +1445,17 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   nsHttpResponseHead* responseHead = chan->GetResponseHead();
   bool useResponseHead = !!responseHead;
   nsHttpResponseHead cleanedUpResponseHead;
-  if (responseHead && responseHead->HasHeader(nsHttp::Set_Cookie)) {
+  if (responseHead &&
+      (responseHead->HasHeader(nsHttp::Set_Cookie) || multiPartID)) {
     cleanedUpResponseHead = *responseHead;
     cleanedUpResponseHead.ClearHeader(nsHttp::Set_Cookie);
+    if (multiPartID) {
+      nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
+      MOZ_ASSERT(chan);
+      nsAutoCString contentType;
+      chan->GetContentType(contentType);
+      cleanedUpResponseHead.SetContentType(contentType);
+    }
     responseHead = &cleanedUpResponseHead;
   }
 
@@ -1465,7 +1491,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           cachedCharset, secInfoSerialization, chan->GetSelfAddr(),
           chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
           deliveringAltData, applyConversion, isResolvedByTRR,
-          GetTimingAttributes(mChannel), allRedirectsSameOrigin)) {
+          GetTimingAttributes(mChannel), allRedirectsSameOrigin, multiPartID,
+          isLastPartOfMultiPart)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();

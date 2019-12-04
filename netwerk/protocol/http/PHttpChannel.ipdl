@@ -128,7 +128,9 @@ child:
                        bool                applyConversion,
                        bool                isResolvedByTRR,
                        ResourceTimingStructArgs timing,
-                       bool                allRedirectsSameOrigin);
+                       bool                allRedirectsSameOrigin,
+                       uint32_t?           multiPartId,
+                       bool                isLastPartOfMultiPart);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
