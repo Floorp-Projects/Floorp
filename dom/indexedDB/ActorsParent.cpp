@@ -5269,8 +5269,8 @@ class ConnectionPool::ThreadRunnable final : public Runnable {
   const uint32_t mSerialNumber;
 
   // These two values are only modified on the connection thread.
-  bool mFirstRun;
-  bool mContinueRunning;
+  FlippedOnce<true> mFirstRun;
+  FlippedOnce<true> mContinueRunning;
 
  public:
   ThreadRunnable();
@@ -12220,9 +12220,7 @@ uint32_t ConnectionPool::ThreadRunnable::sNextSerialNumber = 0;
 
 ConnectionPool::ThreadRunnable::ThreadRunnable()
     : Runnable("dom::indexedDB::ConnectionPool::ThreadRunnable"),
-      mSerialNumber(++sNextSerialNumber),
-      mFirstRun(true),
-      mContinueRunning(true) {
+      mSerialNumber(++sNextSerialNumber) {
   AssertIsOnBackgroundThread();
 }
 
@@ -12236,11 +12234,11 @@ nsresult ConnectionPool::ThreadRunnable::Run() {
   MOZ_ASSERT(mContinueRunning);
 
   if (!mFirstRun) {
-    mContinueRunning = false;
+    mContinueRunning.Flip();
     return NS_OK;
   }
 
-  mFirstRun = false;
+  mFirstRun.Flip();
 
   {
     // Scope for the profiler label.
