@@ -133,13 +133,14 @@ def fill_template(config, tasks):
                 'docker-image': {'in-tree': 'diffoscope'},
                 'artifacts': [{
                     'type': 'file',
-                    'path': '/builds/worker/diff.html',
-                    'name': 'public/diff.html',
-                }, {
-                    'type': 'file',
-                    'path': '/builds/worker/diff.txt',
-                    'name': 'public/diff.txt',
-                }],
+                    'path': '/builds/worker/{}'.format(f),
+                    'name': 'public/{}'.format(f),
+                } for f in (
+                    'diff.html',
+                    'diff.txt',
+                    'generated-files.diff.html',
+                    'generated-files.diff.txt',
+                )],
                 'env': {
                     'ORIG_URL': urls['original'],
                     'NEW_URL': urls['new'],
