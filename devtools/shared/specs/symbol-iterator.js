@@ -35,6 +35,7 @@ const symbolIteratorSpec = generateActorSpec({
       request: {},
       response: RetVal("symboliterator.data"),
     },
+    release: { release: true },
   },
 });
 

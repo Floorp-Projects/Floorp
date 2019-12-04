@@ -21,10 +21,19 @@ class LongStringFront extends FrontClassWithSpec(longStringSpec) {
     super.destroy();
   }
 
-  form(form) {
-    this.actorID = form.actor;
-    this.initial = form.initial;
-    this.length = form.length;
+  form(data) {
+    this.actorID = data.actor;
+    this.initial = data.initial;
+    this.length = data.length;
+
+    this._grip = data;
+  }
+
+  // We expose the grip so consumers (e.g. ObjectInspector) that handle webconsole
+  // evaluations (which can return primitive, object fronts or longString front),
+  // can directly call this without further check.
+  getGrip() {
+    return this._grip;
   }
 
   string() {

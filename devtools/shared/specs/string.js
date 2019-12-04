@@ -5,7 +5,6 @@
 
 const protocol = require("devtools/shared/protocol");
 const { Arg, RetVal, generateActorSpec } = protocol;
-const promise = require("promise");
 
 const longStringSpec = generateActorSpec({
   typeName: "longstractor",
@@ -43,16 +42,16 @@ class SimpleStringFront {
   }
 
   string() {
-    return promise.resolve(this.str);
+    return Promise.resolve(this.str);
   }
 
   substring(start, end) {
-    return promise.resolve(this.str.substring(start, end));
+    return Promise.resolve(this.str.substring(start, end));
   }
 
   release() {
     this.str = null;
-    return promise.resolve(undefined);
+    return Promise.resolve(undefined);
   }
 }
 

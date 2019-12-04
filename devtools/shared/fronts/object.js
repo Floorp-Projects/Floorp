@@ -9,32 +9,29 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
+const { LongStringFront } = require("devtools/shared/fronts/string");
 
 /**
- * Grip clients are used to retrieve information about the relevant object.
- *
- * @param client DebuggerClient
- *        The debugger client parent.
- * @param grip object
- *        A pause-lifetime object grip returned by the protocol.
+ * A ObjectFront is used as a front end for the ObjectActor that is
+ * created on the server, hiding implementation details.
  */
 class ObjectFront extends FrontClassWithSpec(objectSpec) {
-  constructor(client, grip) {
-    super(client);
-    this._grip = grip;
-    this._client = client;
-    this.valid = true;
+  constructor(conn = null, targetFront = null, parentFront = null, data) {
+    if (!parentFront) {
+      throw new Error("ObjectFront require a parent front");
+    }
+
+    super(conn, targetFront, parentFront);
+
+    this._grip = data;
     this.actorID = this._grip.actor;
+    this.valid = true;
 
-    this.manage(this);
+    parentFront.manage(this);
   }
 
-  get actor() {
-    return this.actorID;
-  }
-
-  get _transport() {
-    return this._client._transport;
+  getGrip() {
+    return this._grip;
   }
 
   get isFrozen() {
@@ -79,8 +76,62 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   /**
    * Request the prototype and own properties of the object.
    */
-  getPrototypeAndProperties() {
-    return super.prototypeAndProperties();
+  async getPrototypeAndProperties() {
+    const result = await super.prototypeAndProperties();
+
+    if (result.prototype) {
+      result.prototype = getAdHocFrontOrPrimitiveGrip(result.prototype, this);
+    }
+
+    // The result packet can have multiple properties that hold grips which we may need
+    // to turn into fronts.
+    const gripKeys = ["value", "getterValue", "get", "set"];
+
+    if (result.ownProperties) {
+      Object.entries(result.ownProperties).forEach(([key, descriptor]) => {
+        if (descriptor) {
+          for (const gripKey of gripKeys) {
+            if (descriptor.hasOwnProperty(gripKey)) {
+              result.ownProperties[key][gripKey] = getAdHocFrontOrPrimitiveGrip(
+                descriptor[gripKey],
+                this
+              );
+            }
+          }
+        }
+      });
+    }
+
+    if (result.safeGetterValues) {
+      Object.entries(result.safeGetterValues).forEach(([key, descriptor]) => {
+        if (descriptor) {
+          for (const gripKey of gripKeys) {
+            if (descriptor.hasOwnProperty(gripKey)) {
+              result.safeGetterValues[key][
+                gripKey
+              ] = getAdHocFrontOrPrimitiveGrip(descriptor[gripKey], this);
+            }
+          }
+        }
+      });
+    }
+
+    if (result.ownSymbols) {
+      result.ownSymbols.forEach((descriptor, i, arr) => {
+        if (descriptor) {
+          for (const gripKey of gripKeys) {
+            if (descriptor.hasOwnProperty(gripKey)) {
+              arr[i][gripKey] = getAdHocFrontOrPrimitiveGrip(
+                descriptor[gripKey],
+                this
+              );
+            }
+          }
+        }
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -148,15 +199,38 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
    * @param name string The name of the requested property.
    * @param receiverId string|null The actorId of the receiver to be used for getters.
    */
-  getPropertyValue(name, receiverId) {
-    return super.propertyValue(name, receiverId);
+  async getPropertyValue(name, receiverId) {
+    const response = await super.propertyValue(name, receiverId);
+
+    if (response.value) {
+      const { value } = response;
+      if (value.return) {
+        response.value.return = getAdHocFrontOrPrimitiveGrip(
+          value.return,
+          this
+        );
+      }
+
+      if (value.throw) {
+        response.value.throw = getAdHocFrontOrPrimitiveGrip(value.throw, this);
+      }
+    }
+    return response;
   }
 
   /**
    * Request the prototype of the object.
    */
-  getPrototype() {
-    return super.prototype();
+  async getPrototype() {
+    const result = await super.prototype();
+
+    if (!result.prototype) {
+      return result;
+    }
+
+    result.prototype = getAdHocFrontOrPrimitiveGrip(result.prototype, this);
+
+    return result;
   }
 
   /**
@@ -180,23 +254,149 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   /**
    * Request the target and handler internal slots of a proxy.
    */
-  getProxySlots() {
+  async getProxySlots() {
     if (this._grip.class !== "Proxy") {
       console.error("getProxySlots is only valid for proxy grips.");
       return null;
     }
 
-    const response = super.proxySlots();
-    // Before Firefox 68 (bug 1392760), the proxySlots request didn't exist.
-    // The proxy target and handler were directly included in the grip.
-    if (response.error === "unrecognizedPacketType") {
-      const { proxyTarget, proxyHandler } = this._grip;
-      return { proxyTarget, proxyHandler };
+    const response = await super.proxySlots();
+    const { proxyHandler, proxyTarget } = response;
+
+    if (proxyHandler) {
+      response.proxyHandler = getAdHocFrontOrPrimitiveGrip(proxyHandler, this);
+    }
+
+    if (proxyTarget) {
+      response.proxyTarget = getAdHocFrontOrPrimitiveGrip(proxyTarget, this);
     }
 
     return response;
   }
 }
 
+/**
+ * When we are asking the server for the value of a given variable, we might get different
+ * type of objects:
+ * - a primitive (string, number, null, false, boolean)
+ * - a long string
+ * - an "object" (i.e. not primitive nor long string)
+ *
+ * Each of those type need a different front, or none:
+ * - a primitive does not allow further interaction with the server, so we don't need
+ *   to have a dedicated front.
+ * - a long string needs a longStringFront to be able to retrieve the full string.
+ * - an object need an objectFront to retrieve properties, symbols and prototype.
+ *
+ * In the case an ObjectFront is created, we also check if the object has properties
+ * that should be turned into fronts as well.
+ *
+ * @param {String|Number|Object} options: The packet returned by the server.
+ * @param {Front} parentFront
+ *
+ * @returns {Number|String|Object|LongStringFront|ObjectFront}
+ */
+function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
+  // We only want to try to create a front when it makes sense, i.e when it has an
+  // actorID, unless:
+  // - it's a Symbol (See Bug 1600299)
+  // - it's a mapEntry (the preview.key and preview.value properties can hold actors)
+  const isPacketAnObject = packet && typeof packet === "object";
+  if (
+    !isPacketAnObject ||
+    packet.type == "symbol" ||
+    (packet.type !== "mapEntry" && !packet.actor)
+  ) {
+    return packet;
+  }
+
+  const { conn, targetFront } = parentFront;
+  const { type } = packet;
+
+  if (type === "longString") {
+    const longStringFront = new LongStringFront(conn, targetFront, parentFront);
+    longStringFront.form(packet);
+    parentFront.manage(longStringFront);
+    return longStringFront;
+  }
+
+  if (type === "mapEntry" && packet.preview) {
+    const { key, value } = packet.preview;
+    packet.preview.key = getAdHocFrontOrPrimitiveGrip(key, parentFront);
+    packet.preview.value = getAdHocFrontOrPrimitiveGrip(value, parentFront);
+    return packet;
+  }
+
+  const objectFront = new ObjectFront(conn, targetFront, parentFront, packet);
+  createChildFronts(objectFront, packet);
+  return objectFront;
+}
+
+/**
+ * Create child fronts of the passed object front given a packet. Those child fronts are
+ * usually mapping actors of the packet sub-properties (preview items, promise fullfilled
+ * values, …).
+ *
+ * @param {ObjectFront} objectFront
+ * @param {String|Number|Object} packet: The packet returned by the server
+ */
+function createChildFronts(objectFront, packet) {
+  // Handle Promise fullfilled value
+  if (
+    packet.class == "Promise" &&
+    packet.promiseState &&
+    packet.promiseState.state == "fulfilled" &&
+    packet.promiseState.value
+  ) {
+    packet.promiseState.value = getAdHocFrontOrPrimitiveGrip(
+      packet.promiseState.value,
+      objectFront
+    );
+  }
+
+  if (packet.preview) {
+    const { message, entries } = packet.preview;
+
+    // The message could be a longString.
+    if (packet.preview.message) {
+      packet.preview.message = getAdHocFrontOrPrimitiveGrip(
+        message,
+        objectFront
+      );
+    }
+
+    // Handle Map/WeakMap preview entries (the preview might be directly used if has all the
+    // items needed, i.e. if the Map has less than 10 items).
+    if (entries && Array.isArray(entries)) {
+      packet.preview.entries = entries.map(([key, value]) => [
+        getAdHocFrontOrPrimitiveGrip(key, objectFront),
+        getAdHocFrontOrPrimitiveGrip(value, objectFront),
+      ]);
+    }
+  }
+
+  if (packet && typeof packet.ownProperties === "object") {
+    for (const [name, descriptor] of Object.entries(packet.ownProperties)) {
+      // The descriptor can have multiple properties that hold grips which we may need
+      // to turn into fronts.
+      const gripKeys = ["value", "getterValue", "get", "set"];
+      for (const key of gripKeys) {
+        if (
+          descriptor &&
+          typeof descriptor === "object" &&
+          descriptor.hasOwnProperty(key)
+        ) {
+          packet.ownProperties[name][key] = getAdHocFrontOrPrimitiveGrip(
+            descriptor[key],
+            objectFront
+          );
+        }
+      }
+    }
+  }
+}
+
 registerFront(ObjectFront);
+
 exports.ObjectFront = ObjectFront;
+exports.getAdHocFrontOrPrimitiveGrip = getAdHocFrontOrPrimitiveGrip;
