@@ -1013,20 +1013,6 @@
       this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(aIndex));
     }
 
-    /**
-     * Used by session restore to ensure that currentURI is set so
-     * that switch-to-tab works before the tab is fully
-     * restored. This function also invokes onLocationChanged
-     * listeners in tabbrowser.xml.
-     */
-    _setCurrentURI(aURI) {
-      if (this.isRemoteBrowser) {
-        this._remoteWebProgressManager.setCurrentURI(aURI);
-      } else {
-        this.docShell.setCurrentURI(aURI);
-      }
-    }
-
     preserveLayers(preserve) {
       if (!this.isRemoteBrowser) {
         return;
