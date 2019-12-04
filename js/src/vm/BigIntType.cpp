@@ -2016,11 +2016,22 @@ BigInt* BigInt::pow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   static_assert(MaxBitLength <= std::numeric_limits<int>::max(),
                 "unexpectedly large MaxBitLength");
   int n = static_cast<int>(exponent);
-  if (x->digitLength() == 1 && x->digit(0) == 2) {
-    // Fast path for 2^n.
+  bool isOddPower = n & 1;
+
+  if (x->digitLength() == 1 && mozilla::IsPowerOfTwo(x->digit(0))) {
+    // Fast path for (2^m)^n.
+
+    // Result is negative for odd powers.
+    bool resultNegative = x->isNegative() && isOddPower;
+
+    unsigned m = mozilla::FloorLog2(x->digit(0));
+    MOZ_ASSERT(m < DigitBits);
+
+    static_assert(MaxBitLength * DigitBits > MaxBitLength,
+                  "n * m can't overflow");
+    n *= int(m);
+
     int length = 1 + (n / DigitBits);
-    // Result is negative for odd powers of -2n.
-    bool resultNegative = x->isNegative() && (n & 1);
     BigInt* result = createUninitialized(cx, length, resultNegative);
     if (!result) {
       return nullptr;
@@ -2030,14 +2041,57 @@ BigInt* BigInt::pow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
     return result;
   }
 
-  // This implicitly sets the result's sign correctly.
-  RootedBigInt result(cx, (n & 1) ? x : nullptr);
   RootedBigInt runningSquare(cx, x);
-  for (n /= 2; n; n /= 2) {
+  RootedBigInt result(cx, isOddPower ? x : nullptr);
+  n /= 2;
+
+  // Fast path for the likely-common case of up to a uint64_t of magnitude.
+  if (x->absFitsInUint64()) {
+    bool resultNegative = x->isNegative() && isOddPower;
+
+    uint64_t runningSquareInt = x->uint64FromAbsNonZero();
+    uint64_t resultInt = isOddPower ? runningSquareInt : 1;
+    while (true) {
+      uint64_t runningSquareStart = runningSquareInt;
+      uint64_t r;
+      if (!js::SafeMul(runningSquareInt, runningSquareInt, &r)) {
+        break;
+      }
+      runningSquareInt = r;
+
+      if (n & 1) {
+        if (!js::SafeMul(resultInt, runningSquareInt, &r)) {
+          // Recover |runningSquare| before we restart the loop.
+          runningSquareInt = runningSquareStart;
+          break;
+        }
+        resultInt = r;
+      }
+
+      n /= 2;
+      if (n == 0) {
+        return createFromNonZeroRawUint64(cx, resultInt, resultNegative);
+      }
+    }
+
+    runningSquare = createFromNonZeroRawUint64(cx, runningSquareInt, false);
+    if (!runningSquare) {
+      return nullptr;
+    }
+
+    result = createFromNonZeroRawUint64(cx, resultInt, resultNegative);
+    if (!result) {
+      return nullptr;
+    }
+  }
+
+  // This implicitly sets the result's sign correctly.
+  while (true) {
     runningSquare = mul(cx, runningSquare, runningSquare);
     if (!runningSquare) {
       return nullptr;
     }
+
     if (n & 1) {
       if (!result) {
         result = runningSquare;
@@ -2048,8 +2102,12 @@ BigInt* BigInt::pow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
         }
       }
     }
+
+    n /= 2;
+    if (n == 0) {
+      return result;
+    }
   }
-  return result;
 }
 
 BigInt* BigInt::lshByAbsolute(JSContext* cx, HandleBigInt x, HandleBigInt y) {
