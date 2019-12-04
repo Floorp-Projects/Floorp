@@ -425,7 +425,10 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     // mEventQ.
     MutexAutoLock lock(mBgChildMutex);
 
-    if (mBgChild) {
+    // We don't need to notify the background channel if this is a multipart
+    // stream, since all messages will be sent over the main-thread IPDL in
+    // that case.
+    if (mBgChild && !aMultiPartID) {
       MOZ_RELEASE_ASSERT(gSocketTransportService);
       DebugOnly<nsresult> rv = gSocketTransportService->Dispatch(
           NewRunnableMethod(
@@ -549,6 +552,36 @@ void HttpChannelChild::OnStartRequest(
   DoOnStartRequest(this, nullptr);
 }
 
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnTransportAndData(
+    const nsresult& aChannelStatus, const nsresult& aTransportStatus,
+    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
+  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnTransportAndData", NETWORK);
+  LOG(("HttpChannelChild::RecvOnTransportAndData [this=%p]\n", this));
+
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus,
+             aTransportStatus, aOffset, aCount, aData]() {
+        self->OnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
+                                 aCount, aData);
+      }));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnStopRequest(
+    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
+    const TimeStamp& aLastActiveTabOptHit,
+    const nsHttpHeaderArray& aResponseTrailers) {
+  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStopRequest", NETWORK);
+  LOG(("HttpChannelChild::RecvOnStopRequest [this=%p]\n", this));
+
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
+             aResponseTrailers]() {
+        self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
+      }));
+  return IPC_OK();
+}
+
 class SyntheticDiversionListener final : public nsIStreamListener {
   RefPtr<HttpChannelChild> mChannel;
 
@@ -665,6 +698,9 @@ void HttpChannelChild::ProcessOnTransportAndData(
     const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
   LOG(("HttpChannelChild::ProcessOnTransportAndData [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(
+      !mMultiPartID,
+      "Should only send ODA on the main-thread channel when using multi-part!");
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
   mEventQ->RunOrEnqueue(
@@ -890,6 +926,9 @@ void HttpChannelChild::ProcessOnStopRequest(
     const nsHttpHeaderArray& aResponseTrailers) {
   LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(
+      !mMultiPartID,
+      "Should only send ODA on the main-thread channel when using multi-part!");
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
 
