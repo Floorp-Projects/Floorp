@@ -865,11 +865,6 @@ impl Tile {
             return false;
         }
 
-        // Check if this tile can be considered opaque.
-        let tile_is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
-        let opacity_changed = tile_is_opaque != self.is_opaque;
-        self.is_opaque = tile_is_opaque;
-
         // Invalidate the tile based on the content changing.
         self.update_content_validity(ctx, state);
 
@@ -877,6 +872,13 @@ impl Tile {
         if self.current_descriptor.prims.is_empty() {
             return false;
         }
+
+        // Check if this tile can be considered opaque. Opacity state must be updated only
+        // after all early out checks have been performed. Otherwise, we might miss updating
+        // the native surface next time this tile becomes visible.
+        let tile_is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
+        let opacity_changed = tile_is_opaque != self.is_opaque;
+        self.is_opaque = tile_is_opaque;
 
         // Check if the selected composite mode supports dirty rect updates. For Draw composite
         // mode, we can always update the content with smaller dirty rects. For native composite
