@@ -7,7 +7,7 @@
 import { has } from "lodash";
 import type { SourceScope, BindingLocation } from "../../../workers/parser";
 import type { Scope, BindingContents } from "../../../types";
-import { createObjectFront } from "../../../client/firefox";
+import { clientCommands } from "../../../client/firefox";
 
 import { locColumn } from "./locColumn";
 
@@ -102,7 +102,9 @@ export function buildGeneratedBindingList(
               name,
               loc,
               desc: async () => {
-                const objectFront = createObjectFront(globalGrip);
+                const objectFront = clientCommands.createObjectFront(
+                  globalGrip
+                );
                 return (await objectFront.getProperty(name)).descriptor;
               },
             });

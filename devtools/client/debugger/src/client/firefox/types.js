@@ -183,7 +183,7 @@ type ConsoleClient = {
     script: Script,
     func: Function,
     params?: { frameActor: ?FrameId }
-  ) => Promise<{ result: Grip | null }>,
+  ) => Promise<{ result: ExpressionResult }>,
   autocomplete: (
     input: string,
     cursor: number,
@@ -247,7 +247,7 @@ export type DebuggerClient = {
   connect: () => Promise<*>,
   request: (packet: Object) => Promise<*>,
   attachConsole: (actor: String, listeners: Array<*>) => Promise<*>,
-  createObjectFront: (grip: Grip) => ObjectFront,
+  createObjectFront: (grip: Grip, thread: ThreadFront) => ObjectFront,
   release: (actor: String) => {},
   getFrontByID: (actor: String) => { release: () => Promise<*> },
 };
@@ -269,8 +269,8 @@ type ProcessDescriptor = Object;
  * @memberof firefox
  * @static
  */
-export type Grip = {
-  actor: string,
+export type Grip = {|
+  actor?: string,
   class: string,
   displayClass: string,
   displayName?: string,
@@ -289,8 +289,7 @@ export type Grip = {
   sealed: boolean,
   optimizedOut: boolean,
   type: string,
-  release: () => Promise<*>,
-};
+|};
 
 export type FunctionGrip = {|
   class: "Function",
@@ -326,7 +325,10 @@ export type SourceClient = {
  * @static
  */
 export type ObjectFront = {
+  actorID: string,
+  getGrip: () => Grip,
   getPrototypeAndProperties: () => any,
+  getProperty: string => { descriptor: any },
   addWatchpoint: (
     property: string,
     label: string,
@@ -335,6 +337,20 @@ export type ObjectFront = {
   removeWatchpoint: (property: string) => {},
   release: () => Promise<*>,
 };
+
+export type LongStringFront = {
+  actorID: string,
+  getGrip: () => Grip,
+  release: () => Promise<*>,
+};
+
+export type ExpressionResult =
+  | ObjectFront
+  | LongStringFront
+  | Grip
+  | string
+  | number
+  | null;
 
 /**
  * ThreadFront

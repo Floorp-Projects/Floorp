@@ -11,7 +11,7 @@ import type { Node, Grip } from "devtools-reps";
 
 export type Preview = {|
   expression: string,
-  result: Grip,
+  resultGrip: Grip | null,
   root: Node,
   properties: Array<Grip>,
   location: AstLocation,

@@ -50,11 +50,12 @@ export default class PreviewFunction extends Component<Props> {
   }
 
   render() {
+    const { func } = this.props;
     return (
       <span className="function-signature">
-        {this.renderFunctionName(this.props.func)}
+        {this.renderFunctionName(func)}
         <span className="paren">(</span>
-        {this.renderParams(this.props.func)}
+        {this.renderParams(func)}
         <span className="paren">)</span>
       </span>
     );

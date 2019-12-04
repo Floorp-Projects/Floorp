@@ -24,6 +24,7 @@ CompiledModules(
     'defer.js',
     'DevToolsUtils.js',
     'expressions.js',
+    'evaluation-result.js',
     'function.js',
     'indentation.js',
     'isMinified.js',
