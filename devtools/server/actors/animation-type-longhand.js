@@ -153,6 +153,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "-moz-text-size-adjust",
       "-webkit-text-stroke-width",
       "text-transform",
+      "text-underline-position",
       "touch-action",
       "transform-box",
       "transform-style",

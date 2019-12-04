@@ -1166,6 +1166,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
 
   mozilla::StyleTextDecorationLength mTextUnderlineOffset;
   mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
+  mozilla::StyleTextUnderlinePosition mTextUnderlinePosition;
 
   nscoord mWebkitTextStrokeWidth;  // coord
 
@@ -1289,6 +1290,22 @@ inline StyleTextTransform StyleTextTransform::None() {
 }
 
 inline bool StyleTextTransform::IsNone() const { return *this == None(); }
+
+inline StyleTextUnderlinePosition StyleTextUnderlinePosition::Auto() {
+  return StyleTextUnderlinePosition_AUTO;
+}
+inline bool StyleTextUnderlinePosition::IsAuto() const {
+  return *this == Auto();
+}
+inline bool StyleTextUnderlinePosition::IsUnder() const {
+  return bool(*this & StyleTextUnderlinePosition_UNDER);
+}
+inline bool StyleTextUnderlinePosition::IsLeft() const {
+  return bool(*this & StyleTextUnderlinePosition_LEFT);
+}
+inline bool StyleTextUnderlinePosition::IsRight() const {
+  return bool(*this & StyleTextUnderlinePosition_RIGHT);
+}
 
 struct StyleTransition {
   StyleTransition() { /* leaves uninitialized; see also SetInitialValues */

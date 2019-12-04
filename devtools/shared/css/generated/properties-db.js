@@ -3206,6 +3206,7 @@ exports.CSS_PROPERTIES = {
       "text-rendering",
       "-moz-control-character-visibility",
       "text-underline-offset",
+      "text-underline-position",
       "text-decoration-skip-ink",
       "cursor",
       "pointer-events",
@@ -10864,6 +10865,10 @@ exports.PREFERENCES = [
   [
     "text-justify",
     "layout.css.text-justify.enabled"
+  ],
+  [
+    "text-underline-position",
+    "layout.css.text-underline-position.enabled"
   ],
   [
     "touch-action",
