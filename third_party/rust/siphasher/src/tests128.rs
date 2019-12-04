@@ -8,9 +8,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
+use super::sip128::{Hasher128, SipHasher13, SipHasher24};
 use std::hash::{Hash, Hasher};
-use sip128::{Hasher128, SipHasher13, SipHasher24};
 
 // Hash just the bytes of the slice, without length prefix
 struct Bytes<'a>(&'a [u8]);
@@ -23,38 +22,17 @@ impl<'a> Hash for Bytes<'a> {
     }
 }
 
-macro_rules! u8to64_le {
-    ($buf:expr, $i:expr) =>
-    ($buf[0+$i] as u64 |
-     ($buf[1+$i] as u64) << 8 |
-     ($buf[2+$i] as u64) << 16 |
-     ($buf[3+$i] as u64) << 24 |
-     ($buf[4+$i] as u64) << 32 |
-     ($buf[5+$i] as u64) << 40 |
-     ($buf[6+$i] as u64) << 48 |
-     ($buf[7+$i] as u64) << 56);
-    ($buf:expr, $i:expr, $len:expr) =>
-    ({
-        let mut t = 0;
-        let mut out = 0;
-        while t < $len {
-            out |= ($buf[t+$i] as u64) << t*8;
-            t += 1;
-        }
-        out
-    });
-}
-
 fn hash_with<H: Hasher + Hasher128, T: Hash>(mut st: H, x: &T) -> [u8; 16] {
     x.hash(&mut st);
-    st.finish128().into_bytes()
+    st.finish128().as_bytes()
 }
 
 #[test]
 #[allow(unused_must_use)]
 fn test_siphash128_1_3() {
-    let vecs: [[u8; 16]; 1] = [[231, 126, 188, 178, 39, 136, 165, 190, 253, 98, 219, 106, 221,
-                                48, 48, 1]];
+    let vecs: [[u8; 16]; 1] = [[
+        231, 126, 188, 178, 39, 136, 165, 190, 253, 98, 219, 106, 221, 48, 48, 1,
+    ]];
 
     let k0 = 0x_07_06_05_04_03_02_01_00;
     let k1 = 0x_0f_0e_0d_0c_0b_0a_09_08;
@@ -68,7 +46,7 @@ fn test_siphash128_1_3() {
         assert_eq!(vec, out[..]);
 
         let full = hash_with(SipHasher13::new_with_keys(k0, k1), &Bytes(&buf));
-        let i = state_inc.finish128().into_bytes();
+        let i = state_inc.finish128().as_bytes();
 
         assert_eq!(full, i);
         assert_eq!(full, vec);
@@ -83,8 +61,9 @@ fn test_siphash128_1_3() {
 #[test]
 #[allow(unused_must_use)]
 fn test_siphash128_2_4() {
-    let vecs: [[u8; 16]; 1] = [[163, 129, 127, 4, 186, 37, 168, 230, 109, 246, 114, 20, 199, 85,
-                                2, 147]];
+    let vecs: [[u8; 16]; 1] = [[
+        163, 129, 127, 4, 186, 37, 168, 230, 109, 246, 114, 20, 199, 85, 2, 147,
+    ]];
 
     let k0 = 0x_07_06_05_04_03_02_01_00;
     let k1 = 0x_0f_0e_0d_0c_0b_0a_09_08;
@@ -98,7 +77,7 @@ fn test_siphash128_2_4() {
         assert_eq!(vec, out[..]);
 
         let full = hash_with(SipHasher24::new_with_keys(k0, k1), &Bytes(&buf));
-        let i = state_inc.finish128().into_bytes();
+        let i = state_inc.finish128().as_bytes();
 
         assert_eq!(full, i);
         assert_eq!(full, vec);

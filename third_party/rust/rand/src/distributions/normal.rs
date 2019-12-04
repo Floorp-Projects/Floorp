@@ -8,10 +8,11 @@
 // except according to those terms.
 
 //! The normal and derived distributions.
+#![allow(deprecated)]
 
-use Rng;
-use distributions::{ziggurat_tables, Distribution, Open01};
-use distributions::utils::ziggurat;
+use crate::Rng;
+use crate::distributions::{ziggurat_tables, Distribution, Open01};
+use crate::distributions::utils::ziggurat;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -25,15 +26,7 @@ use distributions::utils::ziggurat;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-///
-/// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::StandardNormal;
-///
-/// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);
-/// println!("{}", val);
-/// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
 
@@ -80,18 +73,8 @@ impl Distribution<f64> for StandardNormal {
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Normal, Distribution};
-///
-/// // mean 2, standard deviation 3
-/// let normal = Normal::new(2.0, 3.0);
-/// let v = normal.sample(&mut rand::thread_rng());
-/// println!("{} is from a N(2, 9) distribution", v)
-/// ```
-///
 /// [`StandardNormal`]: crate::distributions::StandardNormal
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
@@ -126,17 +109,7 @@ impl Distribution<f64> for Normal {
 ///
 /// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
 /// distributed.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{LogNormal, Distribution};
-///
-/// // mean 2, standard deviation 3
-/// let log_normal = LogNormal::new(2.0, 3.0);
-/// let v = log_normal.sample(&mut rand::thread_rng());
-/// println!("{} is from an ln N(2, 9) distribution", v)
-/// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal {
     norm: Normal
@@ -163,13 +136,13 @@ impl Distribution<f64> for LogNormal {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::{Normal, LogNormal};
 
     #[test]
     fn test_normal() {
         let norm = Normal::new(10.0, 10.0);
-        let mut rng = ::test::rng(210);
+        let mut rng = crate::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
         }
@@ -184,7 +157,7 @@ mod tests {
     #[test]
     fn test_log_normal() {
         let lnorm = LogNormal::new(10.0, 10.0);
-        let mut rng = ::test::rng(211);
+        let mut rng = crate::test::rng(211);
         for _ in 0..1000 {
             lnorm.sample(&mut rng);
         }

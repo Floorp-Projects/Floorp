@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cssparser"
-version = "0.25.9"
+version = "0.27.1"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -23,14 +24,10 @@ keywords = ["css", "syntax", "parser"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
 [dependencies.cssparser-macros]
-version = "0.3.3"
+version = "0.6"
 
 [dependencies.dtoa-short]
 version = "0.3"
-
-[dependencies.heapsize]
-version = ">= 0.3, < 0.5"
-optional = true
 
 [dependencies.itoa]
 version = "0.4"
@@ -39,10 +36,8 @@ version = "0.4"
 version = "0.1"
 
 [dependencies.phf]
-version = "0.7"
-
-[dependencies.procedural-masquerade]
-version = "0.1"
+version = "0.8"
+features = ["macros"]
 
 [dependencies.serde]
 version = "1.0"
@@ -58,9 +53,6 @@ version = "0.8"
 
 [dev-dependencies.serde_json]
 version = "1.0"
-[build-dependencies.autocfg]
-version = "0.1.4"
-
 [build-dependencies.proc-macro2]
 version = "1"
 

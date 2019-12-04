@@ -4,6 +4,7 @@
 
 use dtoa_short::{self, Notation};
 use itoa;
+use matches::matches;
 use std::fmt::{self, Write};
 use std::io;
 use std::str;
@@ -293,7 +294,7 @@ where
 ///     Ok(())
 /// }
 /// ```
-pub struct CssStringWriter<'a, W: 'a> {
+pub struct CssStringWriter<'a, W> {
     inner: &'a mut W,
 }
 
@@ -401,9 +402,6 @@ impl_tocss_for_float!(f64);
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct TokenSerializationType(TokenSerializationTypeVariants);
 
-#[cfg(feature = "heapsize")]
-known_heap_size!(0, TokenSerializationType);
-
 impl TokenSerializationType {
     /// Return a value that represents the absence of a token, e.g. before the start of the input.
     pub fn nothing() -> TokenSerializationType {
@@ -451,7 +449,14 @@ impl TokenSerializationType {
             ),
             Number => matches!(
                 other.0,
-                Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | DelimPercent | Dimension
+                Ident
+                    | Function
+                    | UrlOrBadUrl
+                    | DelimMinus
+                    | Number
+                    | Percentage
+                    | DelimPercent
+                    | Dimension
             ),
             DelimAt => matches!(other.0, Ident | Function | UrlOrBadUrl | DelimMinus),
             DelimDotOrPlus => matches!(other.0, Number | Percentage | Dimension),
@@ -459,7 +464,9 @@ impl TokenSerializationType {
             DelimBar => matches!(other.0, DelimEquals | DelimBar | DashMatch),
             DelimSlash => matches!(other.0, DelimAsterisk | SubstringMatch),
             Nothing | WhiteSpace | Percentage | UrlOrBadUrl | Function | CDC | OpenParen
-            | DashMatch | SubstringMatch | DelimQuestion | DelimEquals | DelimPercent | Other => false,
+            | DashMatch | SubstringMatch | DelimQuestion | DelimEquals | DelimPercent | Other => {
+                false
+            }
         }
     }
 }

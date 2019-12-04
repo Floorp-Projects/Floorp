@@ -35,28 +35,27 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
-#![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
+#![allow(clippy::unreadable_literal)]
 
-#[cfg(feature="std")] extern crate core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
-#[cfg(feature="serde1")] extern crate serde;
-#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
+#![cfg_attr(not(feature="std"), no_std)]
 
 
 use core::default::Default;
 use core::convert::AsMut;
 use core::ptr::copy_nonoverlapping;
 
+#[cfg(all(feature="alloc", not(feature="std")))] extern crate alloc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
-pub use error::{ErrorKind, Error};
+pub use error::Error;
+#[cfg(feature="getrandom")] pub use os::OsRng;
 
 
 mod error;
 pub mod block;
 pub mod impls;
 pub mod le;
+#[cfg(feature="getrandom")] mod os;
 
 
 /// The core of a random number generator.
@@ -141,23 +140,23 @@ pub trait RngCore {
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
     /// using `self.next_u64() as u32` or via
-    /// [`fill_bytes`][impls::next_u32_via_fill].
+    /// [`fill_bytes`](impls::next_u32_via_fill).
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u32`][impls::next_u64_via_u32] or via
-    /// [`fill_bytes`][impls::next_u64_via_fill].
+    /// via [`next_u32`](impls::next_u64_via_u32) or via
+    /// [`fill_bytes`](impls::next_u64_via_fill).
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u*`][impls::fill_bytes_via_next] or
-    /// via [`try_fill_bytes`][RngCore::try_fill_bytes]; if this generator can
+    /// via [`next_u*`](impls::fill_bytes_via_next) or
+    /// via [`try_fill_bytes`](RngCore::try_fill_bytes); if this generator can
     /// fail the implementation must choose how best to handle errors here
     /// (e.g. panic with a descriptive message or log a warning and retry a few
     /// times).
@@ -213,10 +212,6 @@ pub trait CryptoRng {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 ///
-/// The `FromEntropy` trait from the [`rand`] crate is automatically
-/// implemented for every type implementing `SeedableRng`, providing
-/// a convenient `from_entropy()` constructor.
-///
 /// [`rand`]: https://docs.rs/rand
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
@@ -270,14 +265,18 @@ pub trait SeedableRng: Sized {
     ///
     /// PRNG implementations are allowed to assume that bits in the seed are
     /// well distributed. That means usually that the number of one and zero
-    /// bits are about equal, and values like 0, 1 and (size - 1) are unlikely.
+    /// bits are roughly equal, and values like 0, 1 and (size - 1) are unlikely.
+    /// Note that many non-cryptographic PRNGs will show poor quality output
+    /// if this is not adhered to. If you wish to seed from simple numbers, use
+    /// `seed_from_u64` instead.
     ///
-    /// PRNG implementations are recommended to be reproducible. A PRNG seeded
-    /// using this function with a fixed seed should produce the same sequence
-    /// of output in the future and on different architectures (with for example
-    /// different endianness).
+    /// All PRNG implementations should be reproducible unless otherwise noted:
+    /// given a fixed `seed`, the same sequence of output should be produced
+    /// on all runs, library versions and architectures (e.g. check endianness).
+    /// Any "value-breaking" changes to the generator should require bumping at
+    /// least the minor version and documentation of the change.
     ///
-    /// It is however not required that this function yield the same state as a
+    /// It is not required that this function yield the same state as a
     /// reference implementation of the PRNG given equivalent seed; if necessary
     /// another constructor replicating behaviour from a reference
     /// implementation can be added.
@@ -330,33 +329,26 @@ pub trait SeedableRng: Sized {
 
     /// Create a new PRNG seeded from another `Rng`.
     ///
-    /// This is the recommended way to initialize PRNGs with fresh entropy. The
-    /// `FromEntropy` trait from the [`rand`] crate provides a convenient
-    /// `from_entropy` method based on `from_rng`.
+    /// This may be useful when needing to rapidly seed many PRNGs from a master
+    /// PRNG, and to allow forking of PRNGs. It may be considered deterministic.
     ///
-    /// Usage of this method is not recommended when reproducibility is required
-    /// since implementing PRNGs are not required to fix Endianness and are
-    /// allowed to modify implementations in new releases.
+    /// The master PRNG should be at least as high quality as the child PRNGs.
+    /// When seeding non-cryptographic child PRNGs, we recommend using a
+    /// different algorithm for the master PRNG (ideally a CSPRNG) to avoid
+    /// correlations between the child PRNGs. If this is not possible (e.g.
+    /// forking using small non-crypto PRNGs) ensure that your PRNG has a good
+    /// mixing function on the output or consider use of a hash function with
+    /// `from_seed`.
     ///
-    /// It is important to use a good source of randomness to initialize the
-    /// PRNG. Cryptographic PRNG may be rendered insecure when seeded from a
-    /// non-cryptographic PRNG or with insufficient entropy.
-    /// Many non-cryptographic PRNGs will show statistical bias in their first
-    /// results if their seed numbers are small or if there is a simple pattern
-    /// between them.
-    ///
-    /// Prefer to seed from a strong external entropy source like `OsRng` from
-    /// the [`rand_os`] crate or from a cryptographic PRNG; if creating a new
-    /// generator for cryptographic uses you *must* seed from a strong source.
-    ///
-    /// Seeding a small PRNG from another small PRNG is possible, but
-    /// something to be careful with. An extreme example of how this can go
-    /// wrong is seeding an Xorshift RNG from another Xorshift RNG, which
-    /// will effectively clone the generator. In general seeding from a
-    /// generator which is hard to predict is probably okay.
+    /// Note that seeding `XorShiftRng` from another `XorShiftRng` provides an
+    /// extreme example of what can go wrong: the new PRNG will be a clone
+    /// of the parent.
     ///
     /// PRNG implementations are allowed to assume that a good RNG is provided
     /// for seeding, and that it is cryptographically secure when appropriate.
+    /// As of `rand` 0.7 / `rand_core` 0.5, implementations overriding this
+    /// method should ensure the implementation satisfies reproducibility
+    /// (in prior versions this was not required).
     ///
     /// [`rand`]: https://docs.rs/rand
     /// [`rand_os`]: https://docs.rs/rand_os
@@ -364,6 +356,29 @@ pub trait SeedableRng: Sized {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
+    }
+
+    /// Creates a new instance of the RNG seeded via [`getrandom`].
+    ///
+    /// This method is the recommended way to construct non-deterministic PRNGs
+    /// since it is convenient and secure.
+    ///
+    /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
+    /// issue, one may prefer to seed from a local PRNG, e.g.
+    /// `from_rng(thread_rng()).unwrap()`.
+    ///
+    /// # Panics
+    ///
+    /// If [`getrandom`] is unable to provide secure entropy this method will panic.
+    ///
+    /// [`getrandom`]: https://docs.rs/getrandom
+    #[cfg(feature="getrandom")]
+    fn from_entropy() -> Self {
+        let mut seed = Self::Seed::default();
+        if let Err(err) = getrandom::getrandom(seed.as_mut()) {
+            panic!("from_entropy failed: {}", err);
+        }
+        Self::from_seed(seed)
     }
 }
 
@@ -419,7 +434,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 }
 
 #[cfg(feature="std")]
-impl std::io::Read for RngCore {
+impl std::io::Read for dyn RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.try_fill_bytes(buf)?;
         Ok(buf.len())

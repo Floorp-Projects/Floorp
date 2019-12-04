@@ -8,28 +8,19 @@
 // except according to those terms.
 
 //! The dirichlet distribution.
+#![allow(deprecated)]
+#![allow(clippy::all)]
 
-use Rng;
-use distributions::Distribution;
-use distributions::gamma::Gamma;
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::gamma::Gamma;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
 /// It is a multivariate generalization of the beta distribution.
-///
-/// # Example
-///
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::Dirichlet;
-///
-/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]);
-/// let samples = dirichlet.sample(&mut rand::thread_rng());
-/// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
-/// ```
-
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Debug)]
 pub struct Dirichlet {
     /// Concentration parameters (alpha)
@@ -91,12 +82,12 @@ impl Distribution<Vec<f64>> for Dirichlet {
 #[cfg(test)]
 mod test {
     use super::Dirichlet;
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
 
     #[test]
     fn test_dirichlet() {
         let d = Dirichlet::new(vec![1.0, 2.0, 3.0]);
-        let mut rng = ::test::rng(221);
+        let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
             .into_iter()
@@ -112,7 +103,7 @@ mod test {
         let alpha = 0.5f64;
         let size = 2;
         let d = Dirichlet::new_with_param(alpha, size);
-        let mut rng = ::test::rng(221);
+        let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
             .into_iter()

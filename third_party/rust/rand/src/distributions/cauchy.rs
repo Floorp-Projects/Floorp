@@ -8,25 +8,18 @@
 // except according to those terms.
 
 //! The Cauchy distribution.
+#![allow(deprecated)]
+#![allow(clippy::all)]
 
-use Rng;
-use distributions::Distribution;
+use crate::Rng;
+use crate::distributions::Distribution;
 use std::f64::consts::PI;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Cauchy, Distribution};
-///
-/// let cau = Cauchy::new(2.0, 5.0);
-/// let v = cau.sample(&mut rand::thread_rng());
-/// println!("{} is from a Cauchy(2, 5) distribution", v);
-/// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {
     median: f64,
@@ -61,7 +54,7 @@ impl Distribution<f64> for Cauchy {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::Cauchy;
 
     fn median(mut numbers: &mut [f64]) -> f64 {
@@ -75,30 +68,25 @@ mod test {
     }
 
     #[test]
-    fn test_cauchy_median() {
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
+    fn test_cauchy_averages() {
+        // NOTE: given that the variance and mean are undefined,
+        // this test does not have any rigorous statistical meaning.
         let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut numbers: [f64; 1000] = [0.0; 1000];
+        let mut sum = 0.0;
         for i in 0..1000 {
             numbers[i] = cauchy.sample(&mut rng);
+            sum += numbers[i];
         }
         let median = median(&mut numbers);
         println!("Cauchy median: {}", median);
-        assert!((median - 10.0).abs() < 0.5); // not 100% certain, but probable enough
-    }
-
-    #[test]
-    fn test_cauchy_mean() {
-        let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
-        let mut sum = 0.0;
-        for _ in 0..1000 {
-            sum += cauchy.sample(&mut rng);
-        }
+        assert!((median - 10.0).abs() < 0.4); // not 100% certain, but probable enough
         let mean = sum / 1000.0;
         println!("Cauchy mean: {}", mean);
         // for a Cauchy distribution the mean should not converge
-        assert!((mean - 10.0).abs() > 0.5); // not 100% certain, but probable enough
+        assert!((mean - 10.0).abs() > 0.4); // not 100% certain, but probable enough
     }
 
     #[test]

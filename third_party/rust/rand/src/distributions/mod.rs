@@ -7,12 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Generating random samples from probability distributions.
+//! Generating random samples from probability distributions
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, including [`gen`], [`gen_range`] and
-//! of course [`sample`].
+//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`], [`Rng::gen_range`] and
+//! of course [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurance of each value in its sample space.
@@ -40,8 +40,14 @@
 //! possible to generate type `T` with [`Rng::gen()`], and by extension also
 //! with the [`random()`] function.
 //!
+//! ## Random characters
+//! 
+//! [`Alphanumeric`] is a simple distribution to sample random letters and
+//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
+//! `char`.
 //!
-//! # Distribution to sample from a `Uniform` range
+//!
+//! # Uniform numeric ranges
 //!
 //! The [`Uniform`] distribution is more flexible than [`Standard`], but also
 //! more specialised: it supports fewer target types, but allows the sample
@@ -59,8 +65,7 @@
 //! documentation in the [`uniform`] module. Doing so enables generation of
 //! values of type `T` with  [`Rng::gen_range`].
 //!
-//!
-//! # Other distributions
+//! ## Open and half-open ranges
 //!
 //! There are surprisingly many ways to uniformly generate random floats. A
 //! range between 0 and 1 is standard, but the exact bounds (open vs closed)
@@ -68,137 +73,73 @@
 //! [`Open01`] and [`OpenClosed01`]. See "Floating point implementation" section of
 //! [`Standard`] documentation for more details.
 //!
-//! [`Alphanumeric`] is a simple distribution to sample random letters and
-//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
-//! `char`.
+//! # Non-uniform sampling
 //!
-//! [`WeightedIndex`] can be used to do weighted sampling from a set of items,
-//! such as from an array.
+//! Sampling a simple true/false outcome with a given probability has a name:
+//! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
 //!
-//! # Non-uniform probability distributions
+//! For weighted sampling from a sequence of discrete values, use the
+//! [`weighted`] module.
 //!
-//! Rand currently provides the following probability distributions:
-//!
-//! - Related to real-valued quantities that grow linearly
-//!   (e.g. errors, offsets):
-//!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
-//!   - [`Cauchy`] distribution
-//! - Related to Bernoulli trials (yes/no events, with a given probability):
-//!   - [`Binomial`] distribution
-//!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
-//! - Related to positive real-valued quantities that grow exponentially
-//!   (e.g. prices, incomes, populations):
-//!   - [`LogNormal`] distribution
-//! - Related to the occurrence of independent events at a given rate:
-//!   - [`Pareto`] distribution
-//!   - [`Poisson`] distribution
-//!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
-//!   - [`Weibull`] distribution
-//! - Gamma and derived distributions:
-//!   - [`Gamma`] distribution
-//!   - [`ChiSquared`] distribution
-//!   - [`StudentT`] distribution
-//!   - [`FisherF`] distribution
-//! - Triangular distribution:
-//!   - [`Beta`] distribution
-//!   - [`Triangular`] distribution
-//! - Multivariate probability distributions
-//!   - [`Dirichlet`] distribution
-//!   - [`UnitSphereSurface`] distribution
-//!   - [`UnitCircle`] distribution
-//!
-//! # Examples
-//!
-//! Sampling from a distribution:
-//!
-//! ```
-//! use rand::{thread_rng, Rng};
-//! use rand::distributions::Exp;
-//!
-//! let exp = Exp::new(2.0);
-//! let v = thread_rng().sample(exp);
-//! println!("{} is from an Exp(2) distribution", v);
-//! ```
-//!
-//! Implementing the [`Standard`] distribution for a user type:
-//!
-//! ```
-//! # #![allow(dead_code)]
-//! use rand::Rng;
-//! use rand::distributions::{Distribution, Standard};
-//!
-//! struct MyF32 {
-//!     x: f32,
-//! }
-//!
-//! impl Distribution<MyF32> for Standard {
-//!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
-//!         MyF32 { x: rng.gen() }
-//!     }
-//! }
-//! ```
+//! This crate no longer includes other non-uniform distributions; instead
+//! it is recommended that you use either [`rand_distr`] or [`statrs`].
 //!
 //!
 //! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
-//! [`gen_range`]: Rng::gen_range
-//! [`gen`]: Rng::gen
-//! [`sample`]: Rng::sample
-//! [`new_inclusive`]: Uniform::new_inclusive
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
+
 //! [`Alphanumeric`]: distributions::Alphanumeric
 //! [`Bernoulli`]: distributions::Bernoulli
-//! [`Beta`]: distributions::Beta
-//! [`Binomial`]: distributions::Binomial
-//! [`Cauchy`]: distributions::Cauchy
-//! [`ChiSquared`]: distributions::ChiSquared
-//! [`Dirichlet`]: distributions::Dirichlet
-//! [`Exp`]: distributions::Exp
-//! [`Exp1`]: distributions::Exp1
-//! [`FisherF`]: distributions::FisherF
-//! [`Gamma`]: distributions::Gamma
-//! [`LogNormal`]: distributions::LogNormal
-//! [`Normal`]: distributions::Normal
 //! [`Open01`]: distributions::Open01
 //! [`OpenClosed01`]: distributions::OpenClosed01
-//! [`Pareto`]: distributions::Pareto
-//! [`Poisson`]: distributions::Poisson
 //! [`Standard`]: distributions::Standard
-//! [`StandardNormal`]: distributions::StandardNormal
-//! [`StudentT`]: distributions::StudentT
-//! [`Triangular`]: distributions::Triangular
 //! [`Uniform`]: distributions::Uniform
 //! [`Uniform::new`]: distributions::Uniform::new
 //! [`Uniform::new_inclusive`]: distributions::Uniform::new_inclusive
-//! [`UnitSphereSurface`]: distributions::UnitSphereSurface
-//! [`UnitCircle`]: distributions::UnitCircle
-//! [`Weibull`]: distributions::Weibull
-//! [`WeightedIndex`]: distributions::WeightedIndex
+//! [`weighted`]: distributions::weighted
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
 
-#[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
-use Rng;
+use crate::Rng;
 
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
 pub use self::float::{OpenClosed01, Open01};
-pub use self::bernoulli::Bernoulli;
+pub use self::bernoulli::{Bernoulli, BernoulliError};
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
+
+// The following are all deprecated after being moved to rand_distr
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF,
     StudentT, Beta};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::pareto::Pareto;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::poisson::Poisson;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::binomial::Binomial;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::cauchy::Cauchy;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::triangular::Triangular;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::weibull::Weibull;
 
 pub mod uniform;
 mod bernoulli;
-#[cfg(feature="alloc")] mod weighted;
+#[cfg(feature="alloc")] pub mod weighted;
 #[cfg(feature="std")] mod unit_sphere;
 #[cfg(feature="std")] mod unit_circle;
 #[cfg(feature="std")] mod gamma;
@@ -213,6 +154,9 @@ mod bernoulli;
 #[cfg(feature="std")] mod weibull;
 
 mod float;
+#[doc(hidden)] pub mod hidden_export {
+    pub use super::float::IntoFloat;   // used by rand_distr
+}
 mod integer;
 mod other;
 mod utils;
@@ -229,6 +173,12 @@ mod utils;
 /// advantage of not needing to consider thread safety, and for most
 /// distributions efficient state-less sampling algorithms are available.
 ///
+/// Implementations are typically expected to be portable with reproducible
+/// results when used with a PRNG with fixed seed; see the
+/// [portability chapter](https://rust-random.github.io/book/portability.html)
+/// of The Rust Rand Book. In some cases this does not apply, e.g. the `usize`
+/// type requires different sampling on 32-bit and 64-bit machines.
+///
 /// [`sample_iter`]: Distribution::method.sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
@@ -237,33 +187,39 @@ pub trait Distribution<T> {
     /// Create an iterator that generates random values of `T`, using `rng` as
     /// the source of randomness.
     ///
+    /// Note that this function takes `self` by value. This works since
+    /// `Distribution<T>` is impl'd for `&D` where `D: Distribution<T>`,
+    /// however borrowing is not automatic hence `distr.sample_iter(...)` may
+    /// need to be replaced with `(&distr).sample_iter(...)` to borrow or
+    /// `(&*distr).sample_iter(...)` to reborrow an existing reference.
+    ///
     /// # Example
     ///
     /// ```
     /// use rand::thread_rng;
     /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
     ///
-    /// let mut rng = thread_rng();
+    /// let rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = Standard.sample_iter(&mut rng).take(16).collect();
+    /// let v: Vec<f32> = Standard.sample_iter(rng).take(16).collect();
     ///
     /// // String:
-    /// let s: String = Alphanumeric.sample_iter(&mut rng).take(7).collect();
+    /// let s: String = Alphanumeric.sample_iter(rng).take(7).collect();
     ///
     /// // Dice-rolling:
     /// let die_range = Uniform::new_inclusive(1, 6);
-    /// let mut roll_die = die_range.sample_iter(&mut rng);
+    /// let mut roll_die = die_range.sample_iter(rng);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, R>(&'a self, rng: &'a mut R) -> DistIter<'a, Self, R, T>
-        where Self: Sized, R: Rng
+    fn sample_iter<R>(self, rng: R) -> DistIter<Self, R, T>
+    where R: Rng, Self: Sized
     {
         DistIter {
             distr: self,
-            rng: rng,
+            rng,
             phantom: ::core::marker::PhantomData,
         }
     }
@@ -284,20 +240,23 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// [`sample_iter`]: Distribution::sample_iter
 #[derive(Debug)]
-pub struct DistIter<'a, D: 'a, R: 'a, T> {
-    distr: &'a D,
-    rng: &'a mut R,
+pub struct DistIter<D, R, T> {
+    distr: D,
+    rng: R,
     phantom: ::core::marker::PhantomData<T>,
 }
 
-impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
-    where D: Distribution<T>, R: Rng + 'a
+impl<D, R, T> Iterator for DistIter<D, R, T>
+    where D: Distribution<T>, R: Rng
 {
     type Item = T;
 
     #[inline(always)]
     fn next(&mut self) -> Option<T> {
-        Some(self.distr.sample(self.rng))
+        // Here, self.rng may be a reference, but we must take &mut anyway.
+        // Even if sample could take an R: Rng by value, we would need to do this
+        // since Rng is not copyable and we cannot enforce that this is "reborrowable".
+        Some(self.distr.sample(&mut self.rng))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -305,20 +264,19 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
     }
 }
 
-#[cfg(rustc_1_26)]
-impl<'a, D, R, T> iter::FusedIterator for DistIter<'a, D, R, T>
-    where D: Distribution<T>, R: Rng + 'a {}
+impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
+    where D: Distribution<T>, R: Rng {}
 
 #[cfg(features = "nightly")]
-impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
-    where D: Distribution<T>, R: Rng + 'a {}
+impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
+    where D: Distribution<T>, R: Rng {}
 
 
 /// A generic random value distribution, implemented for many primitive types.
 /// Usually generates values with a numerically uniform distribution, and with a
 /// range appropriate to the type.
 ///
-/// ## Built-in Implementations
+/// ## Provided implementations
 ///
 /// Assuming the provided `Rng` is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
@@ -335,20 +293,42 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 /// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
 ///   normal integer variants.
 ///
-/// The following aggregate types also implement the distribution `Standard` as
-/// long as their component types implement it:
+/// The `Standard` distribution also supports generation of the following
+/// compound types where all component types are supported:
 ///
-/// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using the `Standard` distribution recursively.
-/// * `Option<T>` where `Standard` is implemented for `T`: Returns `None` with
-///   probability 0.5; otherwise generates a random `x: T` and returns `Some(x)`.
+/// *   Tuples (up to 12 elements): each element is generated sequentially.
+/// *   Arrays (up to 32 elements): each element is generated sequentially;
+///     see also [`Rng::fill`] which supports arbitrary array length for integer
+///     types and tends to be faster for `u32` and smaller types.
+/// *   `Option<T>` first generates a `bool`, and if true generates and returns
+///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
-/// # Example
+/// ## Custom implementations
+///
+/// The [`Standard`] distribution may be implemented for user types as follows:
+///
+/// ```
+/// # #![allow(dead_code)]
+/// use rand::Rng;
+/// use rand::distributions::{Distribution, Standard};
+///
+/// struct MyF32 {
+///     x: f32,
+/// }
+///
+/// impl Distribution<MyF32> for Standard {
+///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
+///         MyF32 { x: rng.gen() }
+///     }
+/// }
+/// ```
+///
+/// ## Example usage
 /// ```
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = SmallRng::from_entropy().sample(Standard);
+/// let val: f32 = StdRng::from_entropy().sample(Standard);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///
@@ -373,236 +353,35 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 pub struct Standard;
 
 
-/// A value with a particular weight for use with `WeightedChoice`.
-#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
-#[allow(deprecated)]
-#[derive(Copy, Clone, Debug)]
-pub struct Weighted<T> {
-    /// The numerical weight of this item
-    pub weight: u32,
-    /// The actual item which is being weighted
-    pub item: T,
-}
-
-/// A distribution that selects from a finite collection of weighted items.
-///
-/// Deprecated: use [`WeightedIndex`] instead.
-///
-/// [`WeightedIndex`]: WeightedIndex
-#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
-#[allow(deprecated)]
-#[derive(Debug)]
-pub struct WeightedChoice<'a, T:'a> {
-    items: &'a mut [Weighted<T>],
-    weight_range: Uniform<u32>,
-}
-
-#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
-#[allow(deprecated)]
-impl<'a, T: Clone> WeightedChoice<'a, T> {
-    /// Create a new `WeightedChoice`.
-    ///
-    /// Panics if:
-    ///
-    /// - `items` is empty
-    /// - the total weight is 0
-    /// - the total weight is larger than a `u32` can contain.
-    pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
-        // strictly speaking, this is subsumed by the total weight == 0 case
-        assert!(!items.is_empty(), "WeightedChoice::new called with no items");
-
-        let mut running_total: u32 = 0;
-
-        // we convert the list from individual weights to cumulative
-        // weights so we can binary search. This *could* drop elements
-        // with weight == 0 as an optimisation.
-        for item in items.iter_mut() {
-            running_total = match running_total.checked_add(item.weight) {
-                Some(n) => n,
-                None => panic!("WeightedChoice::new called with a total weight \
-                               larger than a u32 can contain")
-            };
-
-            item.weight = running_total;
-        }
-        assert!(running_total != 0, "WeightedChoice::new called with a total weight of 0");
-
-        WeightedChoice {
-            items,
-            // we're likely to be generating numbers in this range
-            // relatively often, so might as well cache it
-            weight_range: Uniform::new(0, running_total)
-        }
-    }
-}
-
-#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
-#[allow(deprecated)]
-impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
-        // we want to find the first element that has cumulative
-        // weight > sample_weight, which we do by binary since the
-        // cumulative weights of self.items are sorted.
-
-        // choose a weight in [0, total_weight)
-        let sample_weight = self.weight_range.sample(rng);
-
-        // short circuit when it's the first item
-        if sample_weight < self.items[0].weight {
-            return self.items[0].item.clone();
-        }
-
-        let mut idx = 0;
-        let mut modifier = self.items.len();
-
-        // now we know that every possibility has an element to the
-        // left, so we can just search for the last element that has
-        // cumulative weight <= sample_weight, then the next one will
-        // be "it". (Note that this greatest element will never be the
-        // last element of the vector, since sample_weight is chosen
-        // in [0, total_weight) and the cumulative weight of the last
-        // one is exactly the total weight.)
-        while modifier > 1 {
-            let i = idx + modifier / 2;
-            if self.items[i].weight <= sample_weight {
-                // we're small, so look to the right, but allow this
-                // exact element still.
-                idx = i;
-                // we need the `/ 2` to round up otherwise we'll drop
-                // the trailing elements when `modifier` is odd.
-                modifier += 1;
-            } else {
-                // otherwise we're too big, so go left. (i.e. do
-                // nothing)
-            }
-            modifier /= 2;
-        }
-        self.items[idx + 1].item.clone()
-    }
-}
-
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
-    use rngs::mock::StepRng;
-    #[allow(deprecated)]
-    use super::{WeightedChoice, Weighted, Distribution};
+    use crate::Rng;
+    use super::{Distribution, Uniform};
 
-    #[test]
-    #[allow(deprecated)]
-    fn test_weighted_choice() {
-        // this makes assumptions about the internal implementation of
-        // WeightedChoice. It may fail when the implementation in
-        // `distributions::uniform::UniformInt` changes.
-
-        macro_rules! t {
-            ($items:expr, $expected:expr) => {{
-                let mut items = $items;
-                let mut total_weight = 0;
-                for item in &items { total_weight += item.weight; }
-
-                let wc = WeightedChoice::new(&mut items);
-                let expected = $expected;
-
-                // Use extremely large steps between the random numbers, because
-                // we test with small ranges and `UniformInt` is designed to prefer
-                // the most significant bits.
-                let mut rng = StepRng::new(0, !0 / (total_weight as u64));
-
-                for &val in expected.iter() {
-                    assert_eq!(wc.sample(&mut rng), val)
-                }
-            }}
-        }
-
-        t!([Weighted { weight: 1, item: 10}], [10]);
-
-        // skip some
-        t!([Weighted { weight: 0, item: 20},
-            Weighted { weight: 2, item: 21},
-            Weighted { weight: 0, item: 22},
-            Weighted { weight: 1, item: 23}],
-           [21, 21, 23]);
-
-        // different weights
-        t!([Weighted { weight: 4, item: 30},
-            Weighted { weight: 3, item: 31}],
-           [30, 31, 30, 31, 30, 31, 30]);
-
-        // check that we're binary searching
-        // correctly with some vectors of odd
-        // length.
-        t!([Weighted { weight: 1, item: 40},
-            Weighted { weight: 1, item: 41},
-            Weighted { weight: 1, item: 42},
-            Weighted { weight: 1, item: 43},
-            Weighted { weight: 1, item: 44}],
-           [40, 41, 42, 43, 44]);
-        t!([Weighted { weight: 1, item: 50},
-            Weighted { weight: 1, item: 51},
-            Weighted { weight: 1, item: 52},
-            Weighted { weight: 1, item: 53},
-            Weighted { weight: 1, item: 54},
-            Weighted { weight: 1, item: 55},
-            Weighted { weight: 1, item: 56}],
-           [50, 54, 51, 55, 52, 56, 53]);
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_weighted_clone_initialization() {
-        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
-        let clone = initial.clone();
-        assert_eq!(initial.weight, clone.weight);
-        assert_eq!(initial.item, clone.item);
-    }
-
-    #[test] #[should_panic]
-    #[allow(deprecated)]
-    fn test_weighted_clone_change_weight() {
-        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
-        let mut clone = initial.clone();
-        clone.weight = 5;
-        assert_eq!(initial.weight, clone.weight);
-    }
-
-    #[test] #[should_panic]
-    #[allow(deprecated)]
-    fn test_weighted_clone_change_item() {
-        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
-        let mut clone = initial.clone();
-        clone.item = 5;
-        assert_eq!(initial.item, clone.item);
-
-    }
-
-    #[test] #[should_panic]
-    #[allow(deprecated)]
-    fn test_weighted_choice_no_items() {
-        WeightedChoice::<isize>::new(&mut []);
-    }
-    #[test] #[should_panic]
-    #[allow(deprecated)]
-    fn test_weighted_choice_zero_weight() {
-        WeightedChoice::new(&mut [Weighted { weight: 0, item: 0},
-                                  Weighted { weight: 0, item: 1}]);
-    }
-    #[test] #[should_panic]
-    #[allow(deprecated)]
-    fn test_weighted_choice_weight_overflows() {
-        let x = ::core::u32::MAX / 2; // x + x + 2 is the overflow
-        WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
-                                  Weighted { weight: 1, item: 1 },
-                                  Weighted { weight: x, item: 2 },
-                                  Weighted { weight: 1, item: 3 }]);
-    }
-
-    #[cfg(feature="std")]
     #[test]
     fn test_distributions_iter() {
-        use distributions::Normal;
-        let mut rng = ::test::rng(210);
-        let distr = Normal::new(10.0, 10.0);
-        let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
+        use crate::distributions::Open01;
+        let mut rng = crate::test::rng(210);
+        let distr = Open01;
+        let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
+    }
+    
+    #[test]
+    fn test_make_an_iter() {
+        fn ten_dice_rolls_other_than_five<'a, R: Rng>(rng: &'a mut R) -> impl Iterator<Item = i32> + 'a {
+            Uniform::new_inclusive(1, 6)
+                .sample_iter(rng)
+                .filter(|x| *x != 5)
+                .take(10)
+        }
+        
+        let mut rng = crate::test::rng(211);
+        let mut count = 0;
+        for val in ten_dice_rolls_other_than_five(&mut rng) {
+            assert!(val >= 1 && val <= 6 && val != 5);
+            count += 1;
+        }
+        assert_eq!(count, 10);
     }
 }

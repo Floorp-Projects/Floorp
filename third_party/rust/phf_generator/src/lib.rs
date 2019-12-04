@@ -1,9 +1,7 @@
 #![doc(html_root_url="https://docs.rs/phf_generator/0.7")]
-extern crate phf_shared;
-extern crate rand;
-
-use phf_shared::PhfHash;
+use phf_shared::{PhfHash, HashKey};
 use rand::{SeedableRng, Rng};
+use rand::distributions::Standard;
 use rand::rngs::SmallRng;
 
 const DEFAULT_LAMBDA: usize = 5;
@@ -11,47 +9,27 @@ const DEFAULT_LAMBDA: usize = 5;
 const FIXED_SEED: u64 = 1234567890;
 
 pub struct HashState {
-    pub key: u64,
+    pub key: HashKey,
     pub disps: Vec<(u32, u32)>,
     pub map: Vec<usize>,
 }
 
 pub fn generate_hash<H: PhfHash>(entries: &[H]) -> HashState {
-    let mut rng = SmallRng::seed_from_u64(FIXED_SEED);
-    loop {
-        if let Some(s) = try_generate_hash(entries, &mut rng) {
-            return s;
-        }
-    }
+    SmallRng::seed_from_u64(FIXED_SEED)
+        .sample_iter(Standard)
+        .find_map(|key| try_generate_hash(entries, key))
+        .expect("failed to solve PHF")
 }
 
-fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<HashState> {
+fn try_generate_hash<H: PhfHash>(entries: &[H], key: HashKey) -> Option<HashState> {
     struct Bucket {
         idx: usize,
         keys: Vec<usize>,
     }
 
-    struct Hashes {
-        g: u32,
-        f1: u32,
-        f2: u32,
-    }
+    let hashes: Vec<_> = entries.iter().map(|entry| phf_shared::hash(entry, &key)).collect();
 
-    let key = rng.gen();
-
-    let hashes: Vec<_> = entries.iter()
-                                .map(|entry| {
-                                    let hash = phf_shared::hash(entry, key);
-                                    let (g, f1, f2) = phf_shared::split(hash);
-                                    Hashes {
-                                        g: g,
-                                        f1: f1,
-                                        f2: f2,
-                                    }
-                                })
-                                .collect();
-
-    let buckets_len = (entries.len() + DEFAULT_LAMBDA - 1) / DEFAULT_LAMBDA;
+    let buckets_len = (hashes.len() + DEFAULT_LAMBDA - 1) / DEFAULT_LAMBDA;
     let mut buckets = (0..buckets_len)
                           .map(|i| {
                               Bucket {
@@ -68,7 +46,7 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
     // Sort descending
     buckets.sort_by(|a, b| a.keys.len().cmp(&b.keys.len()).reverse());
 
-    let table_len = entries.len();
+    let table_len = hashes.len();
     let mut map = vec![None; table_len];
     let mut disps = vec![(0u32, 0u32); buckets_len];
 
@@ -117,8 +95,8 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
     }
 
     Some(HashState {
-        key: key,
-        disps: disps,
+        key,
+        disps,
         map: map.into_iter().map(|i| i.unwrap()).collect(),
     })
 }

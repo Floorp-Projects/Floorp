@@ -32,7 +32,7 @@ arrayvec = "0.5"
 atomic_refcell = "0.1"
 bitflags = "1.0"
 byteorder = "1.0"
-cssparser = "0.25"
+cssparser = "0.27"
 crossbeam-channel = { version = "0.3", optional = true }
 derive_more = "0.13"
 new_debug_unreachable = "1.0"
@@ -68,7 +68,7 @@ servo_config = {path = "../config", optional = true}
 smallbitvec = "2.3.0"
 smallvec = "0.6.6"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
-string_cache = { version = "0.7", optional = true }
+string_cache = { version = "0.8", optional = true }
 style_derive = {path = "../style_derive"}
 style_traits = {path = "../style_traits"}
 servo_url = {path = "../url", optional = true}

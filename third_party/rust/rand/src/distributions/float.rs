@@ -9,9 +9,9 @@
 //! Basic floating-point number distributions
 
 use core::mem;
-use Rng;
-use distributions::{Distribution, Standard};
-use distributions::utils::FloatSIMDUtils;
+use crate::Rng;
+use crate::distributions::{Distribution, Standard};
+use crate::distributions::utils::FloatSIMDUtils;
 #[cfg(feature="simd_support")]
 use packed_simd::*;
 
@@ -69,7 +69,9 @@ pub struct OpenClosed01;
 pub struct Open01;
 
 
-pub(crate) trait IntoFloat {
+// This trait is needed by both this lib and rand_distr hence is a hidden export
+#[doc(hidden)]
+pub trait IntoFloat {
     type F;
 
     /// Helper method to combine the fraction and a contant exponent into a
@@ -93,9 +95,7 @@ macro_rules! float_impls {
                 // The exponent is encoded using an offset-binary representation
                 let exponent_bits: $u_scalar =
                     (($exponent_bias + exponent) as $u_scalar) << $fraction_bits;
-                // TODO: use from_bits when min compiler > 1.25 (see #545)
-                // $ty::from_bits(self | exponent_bits)
-                unsafe{ mem::transmute(self | exponent_bits) }
+                $ty::from_bits(self | exponent_bits)
             }
         }
 
@@ -168,11 +168,8 @@ float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use distributions::{Open01, OpenClosed01};
-    use rngs::mock::StepRng;
-    #[cfg(feature="simd_support")]
-    use packed_simd::*;
+    use super::*;
+    use crate::rngs::mock::StepRng;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
@@ -256,4 +253,46 @@ mod tests {
     test_f64! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64) }
     #[cfg(feature="simd_support")]
     test_f64! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64) }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
+            distr: &D, zero: T, expected: &[T]
+        ) {
+            let mut rng = crate::test::rng(0x6f44f5646c2a7334);
+            let mut buf = [zero; 3];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected);
+        }
+        
+        test_samples(&Standard, 0f32, &[0.0035963655, 0.7346052, 0.09778172]);
+        test_samples(&Standard, 0f64, &[0.7346051961657583,
+                0.20298547462974248, 0.8166436635290655]);
+        
+        test_samples(&OpenClosed01, 0f32, &[0.003596425, 0.73460525, 0.09778178]);
+        test_samples(&OpenClosed01, 0f64, &[0.7346051961657584,
+                0.2029854746297426, 0.8166436635290656]);
+        
+        test_samples(&Open01, 0f32, &[0.0035963655, 0.73460525, 0.09778172]);
+        test_samples(&Open01, 0f64, &[0.7346051961657584,
+                0.20298547462974248, 0.8166436635290656]);
+        
+        #[cfg(feature="simd_support")] {
+            // We only test a sub-set of types here. Values are identical to
+            // non-SIMD types; we assume this pattern continues across all
+            // SIMD types.
+            
+            test_samples(&Standard, f32x2::new(0.0, 0.0), &[
+                    f32x2::new(0.0035963655, 0.7346052),
+                    f32x2::new(0.09778172, 0.20298547),
+                    f32x2::new(0.34296435, 0.81664366)]);
+            
+            test_samples(&Standard, f64x2::new(0.0, 0.0), &[
+                    f64x2::new(0.7346051961657583, 0.20298547462974248),
+                    f64x2::new(0.8166436635290655, 0.7423708925400552),
+                    f64x2::new(0.16387782224016323, 0.9087068770169618)]);
+        }
+    }
 }

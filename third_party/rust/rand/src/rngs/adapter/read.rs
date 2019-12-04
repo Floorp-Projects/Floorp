@@ -10,8 +10,9 @@
 //! A wrapper around any Read to treat it as an RNG.
 
 use std::io::Read;
+use std::fmt;
 
-use rand_core::{RngCore, Error, ErrorKind, impls};
+use rand_core::{RngCore, Error, impls};
 
 
 /// An RNG that reads random bytes straight from any type supporting
@@ -40,7 +41,7 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
 ///
-/// [`OsRng`]: rand_os::OsRng
+/// [`OsRng`]: crate::rngs::OsRng
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {
@@ -71,24 +72,33 @@ impl<R: Read> RngCore for ReadRng<R> {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        if dest.len() == 0 { return Ok(()); }
+        if dest.is_empty() { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(|err| {
-            match err.kind() {
-                ::std::io::ErrorKind::UnexpectedEof => Error::with_cause(
-                    ErrorKind::Unavailable,
-                    "not enough bytes available, reached end of source", err),
-                _ => Error::with_cause(ErrorKind::Unavailable,
-                    "error reading from Read source", err)
-            }
-        })
+        self.reader.read_exact(dest).map_err(|e| Error::new(ReadError(e)))
     }
 }
+
+/// `ReadRng` error type
+#[derive(Debug)]
+pub struct ReadError(std::io::Error);
+
+impl fmt::Display for ReadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ReadError: {}", self.0)
+    }
+}
+
+impl std::error::Error for ReadError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+
 
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use {RngCore, ErrorKind};
+    use crate::RngCore;
 
     #[test]
     fn test_reader_rng_u64() {
@@ -131,6 +141,8 @@ mod test {
 
         let mut rng = ReadRng::new(&v[..]);
 
-        assert!(rng.try_fill_bytes(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
+        let result = rng.try_fill_bytes(&mut w);
+        assert!(result.is_err());
+        println!("Error: {}", result.unwrap_err());
     }
 }

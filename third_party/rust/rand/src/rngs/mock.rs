@@ -39,21 +39,26 @@ impl StepRng {
 }
 
 impl RngCore for StepRng {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         let result = self.v;
         self.v = self.v.wrapping_add(self.a);
         result
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         impls::fill_bytes_via_next(self, dest);
     }
 
+    #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }

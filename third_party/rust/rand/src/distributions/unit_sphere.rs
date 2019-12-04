@@ -6,27 +6,20 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Rng;
-use distributions::{Distribution, Uniform};
+#![allow(deprecated)]
+#![allow(clippy::all)]
+
+use crate::Rng;
+use crate::distributions::{Distribution, Uniform};
 
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
 ///
 /// Implemented via a method by Marsaglia[^1].
 ///
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{UnitSphereSurface, Distribution};
-///
-/// let sphere = UnitSphereSurface::new();
-/// let v = sphere.sample(&mut rand::thread_rng());
-/// println!("{:?} is from the unit sphere surface.", v)
-/// ```
-///
 /// [^1]: Marsaglia, George (1972). [*Choosing a Point from the Surface of a
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface;
 
@@ -56,7 +49,7 @@ impl Distribution<[f64; 3]> for UnitSphereSurface {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::UnitSphereSurface;
 
     /// Assert that two numbers are almost equal to each other.
@@ -77,7 +70,7 @@ mod tests {
 
     #[test]
     fn norm() {
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         let dist = UnitSphereSurface::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);
@@ -87,13 +80,17 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        let mut rng = ::test::rng(2);
-        let dist = UnitSphereSurface::new();
-        assert_eq!(dist.sample(&mut rng),
-                   [-0.24950027180862533, -0.7552572587896719, 0.6060825747478084]);
-        assert_eq!(dist.sample(&mut rng),
-                   [0.47604534507233487, -0.797200864987207, -0.3712837328763685]);
-        assert_eq!(dist.sample(&mut rng),
-                   [0.9795722330927367, 0.18692349236651176, 0.07414747571708524]);
+        let mut rng = crate::test::rng(2);
+        let expected = [
+                [0.03247542860231647, -0.7830477442152738, 0.6211131755296027],
+                [-0.09978440840914075, 0.9706650829833128, -0.21875184231323952],
+                [0.2735582468624679, 0.9435374242279655, -0.1868234852870203],
+            ];
+        let samples = [
+                UnitSphereSurface.sample(&mut rng),
+                UnitSphereSurface.sample(&mut rng),
+                UnitSphereSurface.sample(&mut rng),
+            ];
+        assert_eq!(samples, expected);
     }
 }
