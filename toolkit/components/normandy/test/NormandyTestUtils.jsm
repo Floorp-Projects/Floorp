@@ -96,11 +96,13 @@ const NormandyTestUtils = {
       return Object.assign(
         {
           userFacingName,
+          userFacingDescription: `${userFacingName} description`,
           slug,
           branch: "control",
           expired: false,
           lastSeen: new Date().toJSON(),
           experimentType: "exp",
+          enrollmentId: NormandyUtils.generateUuid(),
         },
         attrs,
         {
