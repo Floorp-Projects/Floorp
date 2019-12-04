@@ -1934,6 +1934,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     if (listener) {
       mListener = listener;
       mCompressListener = listener;
+      mHasAppliedConversion = true;
     }
   }
 

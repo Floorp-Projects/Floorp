@@ -1413,6 +1413,12 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   Unused << chan->GetApplyConversion(&applyConversion);
   chan->SetApplyConversion(false);
 
+  // If we've already applied the conversion (as can happen if we installed
+  // a multipart converted), then don't apply it again on the child.
+  if (chan->HasAppliedConversion()) {
+    applyConversion = false;
+  }
+
   nsresult channelStatus = NS_OK;
   chan->GetStatus(&channelStatus);
 

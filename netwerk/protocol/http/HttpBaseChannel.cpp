@@ -182,6 +182,7 @@ HttpBaseChannel::HttpBaseChannel()
       mClassOfService(0),
       mUpgradeToSecure(false),
       mApplyConversion(true),
+      mHasAppliedConversion(false),
       mIsPending(false),
       mWasOpened(false),
       mRequestObserversCalled(false),
