@@ -26,7 +26,7 @@ job-defaults:
                 - project:releng:ship-it:action:create-new-release
     run-on-projects: []
     treeherder:
-        symbol: Rel(maybe-trigger)
+        symbol: Rel(maybe-release)
         tier: 1
         kind: build
 
