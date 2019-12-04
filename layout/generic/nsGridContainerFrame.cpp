@@ -4863,9 +4863,31 @@ static nscoord ContentContribution(
       iMinSizeClamp = aMinSizeClamp;
     }
     LogicalSize availableSize(childWM, availISize, availBSize);
-    size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
-                             cbSize, iMinSizeClamp, bMinSizeClamp);
-    size += child->GetLogicalUsedMargin(childWM).BStartEnd(childWM);
+    if (MOZ_UNLIKELY(child->IsXULBoxFrame())) {
+      auto* pc = child->PresContext();
+      // For XUL-in-CSS-Grid (e.g. in our frontend code), we defer to XUL's
+      // GetPrefSize() function (which reports an answer in both axes), instead
+      // of actually reflowing.  It's important to avoid the "measuring + final"
+      // two-pass reflow for XUL, because some XUL layout code may incorrectly
+      // optimize away the second reflow in cases where it's really needed.
+      // XXXdholbert We'll remove this special case in bug 1600542.
+      ReflowInput childRI(pc, *aState.mReflowInput, child, availableSize,
+                          Some(cbSize));
+
+      nsBoxLayoutState state(pc, &aState.mRenderingContext, &childRI,
+                             childRI.mReflowDepth);
+      nsSize physicalPrefSize = child->GetXULPrefSize(state);
+      auto prefSize = LogicalSize(childWM, physicalPrefSize);
+      size = prefSize.BSize(childWM);
+
+      // XXXdholbert This won't have percentage margins resolved.
+      // Hopefully we can just avoid those for XUL-content-in-css-grid?
+      size += childRI.ComputedLogicalMargin().BStartEnd(childWM);
+    } else {
+      size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
+                               cbSize, iMinSizeClamp, bMinSizeClamp);
+      size += child->GetLogicalUsedMargin(childWM).BStartEnd(childWM);
+    }
     nscoord overflow = size - aMinSizeClamp;
     if (MOZ_UNLIKELY(overflow > 0)) {
       nscoord contentSize = child->ContentBSize(childWM);
@@ -6435,10 +6457,34 @@ void nsGridContainerFrame::ReflowInFlowChild(
   // aContainerSize, and then pass the correct position to FinishReflowChild.
   ReflowOutput childSize(childRI);
   const nsSize dummyContainerSize;
-  ReflowChild(aChild, pc, childSize, childRI, childWM, LogicalPoint(childWM),
+
+  // XXXdholbert The childPos that we use for ReflowChild shouldn't matter,
+  // since we finalize it in FinishReflowChild. However, it does matter if the
+  // child happens to be XUL (which sizes menu popup frames based on the
+  // position within the viewport, during this ReflowChild call). So we make an
+  // educated guess that the child will be at the origin of its containing
+  // block, and then use align/justify to correct that as-needed further
+  // down. (If the child has a different writing mode than its parent, though,
+  // then we can't express the CB origin until we've reflowed the child and
+  // determined its size. In that case, we throw up our hands and don't bother
+  // trying to guess the position up-front after all.)
+  // XXXdholbert We'll remove this special case in bug 1600542, and then we can
+  // go back to just setting childPos in a single call after ReflowChild.
+  LogicalPoint childPos(childWM);
+  if (MOZ_LIKELY(childWM == wm)) {
+    // Initially, assume the child will be at the containing block origin.
+    // (This may get corrected during alignment/justification below.)
+    childPos = cb.Origin(wm);
+  }
+  ReflowChild(aChild, pc, childSize, childRI, childWM, childPos,
               dummyContainerSize, ReflowChildFlags::Default, aStatus);
-  LogicalPoint childPos = cb.Origin(wm).ConvertTo(
-      childWM, wm, aContainerSize - childSize.PhysicalSize());
+  if (MOZ_UNLIKELY(childWM != wm)) {
+    // As above: assume the child will be at the containing block origin.
+    // (which we can now compute in terms of the childWM, now that we know the
+    // child's size).
+    childPos = cb.Origin(wm).ConvertTo(
+        childWM, wm, aContainerSize - childSize.PhysicalSize());
+  }
   // Apply align/justify-self and reflow again if that affects the size.
   if (MOZ_LIKELY(isGridItem)) {
     LogicalSize size = childSize.Size(childWM);  // from the ReflowChild()
