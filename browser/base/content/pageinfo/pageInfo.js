@@ -941,6 +941,7 @@ function makePreview(row) {
     var mimeType = item.mimeType || this.getContentTypeFromHeaders(cacheEntry);
     var numFrames = item.numFrames;
 
+    let element = document.getElementById("imagetypetext");
     var imageType;
     if (mimeType) {
       // We found the type, try to display it nicely
@@ -948,25 +949,24 @@ function makePreview(row) {
       if (imageMimeType) {
         imageType = imageMimeType[1].toUpperCase();
         if (numFrames > 1) {
-          document.l10n.setAttributes(
-            document.getElementById("imagetypetext"),
-            "media-animated-image-type",
-            { type: imageType, frames: numFrames }
-          );
+          document.l10n.setAttributes(element, "media-animated-image-type", {
+            type: imageType,
+            frames: numFrames,
+          });
         } else {
-          document.l10n.setAttributes(
-            document.getElementById("imagetypetext"),
-            "media-image-type",
-            { type: imageType }
-          );
+          document.l10n.setAttributes(element, "media-image-type", {
+            type: imageType,
+          });
         }
       } else {
         // the MIME type doesn't begin with image/, display the raw type
-        setItemValue("imagetypetext", mimeType);
+        element.setAttribute("value", mimeType);
+        element.removeAttribute("data-l10n-id");
       }
     } else {
       // We couldn't find the type, fall back to the value in the treeview
-      setItemValue("imagetypetext", gImageView.data[row][COL_IMAGE_TYPE]);
+      element.setAttribute("value", gImageView.data[row][COL_IMAGE_TYPE]);
+      element.removeAttribute("data-l10n-id");
     }
 
     var imageContainer = document.getElementById("theimagecontainer");
