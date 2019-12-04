@@ -723,8 +723,15 @@
     constructor() {
       super();
 
+      // Line 2 and line 3 both display text with a different line-height than
+      // line 1 but we want the line-height to be the same so we wrap the text
+      // in <span> and only adjust the line-height via font CSS properties on them.
+      this.generatedPasswordText = document.createElement("span");
+
+      this.line3Text = document.createElement("span");
       this.line3 = document.createElement("div");
       this.line3.className = "label-row generated-password-autosave";
+      this.line3.append(this.line3Text);
     }
 
     get _autoSaveString() {
@@ -745,12 +752,17 @@
       let { generatedPassword, willAutoSaveGeneratedPassword } = JSON.parse(
         this.getAttribute("ac-label")
       );
-      this.querySelector(".line2-label").textContent = generatedPassword;
+      let line2Label = this.querySelector(".line2-label");
+      line2Label.textContent = "";
+      this.generatedPasswordText.textContent = generatedPassword;
+      line2Label.append(this.generatedPasswordText);
 
-      this.line3.textContent = willAutoSaveGeneratedPassword
-        ? this._autoSaveString
-        : "";
-      this.querySelector(".labels-wrapper").append(this.line3);
+      if (willAutoSaveGeneratedPassword) {
+        this.line3Text.textContent = this._autoSaveString;
+        this.querySelector(".labels-wrapper").append(this.line3);
+      } else {
+        this.line3.remove();
+      }
 
       super._adjustAcItem();
     }
