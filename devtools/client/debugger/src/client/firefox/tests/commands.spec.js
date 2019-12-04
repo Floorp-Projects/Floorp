@@ -42,7 +42,6 @@ function makeGrip(actor = "") {
     sealed: false,
     optimizedOut: false,
     type: "",
-    release: () => Promise.resolve(),
   };
 }
 

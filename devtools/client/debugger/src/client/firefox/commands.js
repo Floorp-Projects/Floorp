@@ -32,6 +32,7 @@ import type {
   Grip,
   ThreadFront,
   ObjectFront,
+  ExpressionResult,
   SourcesPacket,
 } from "./types";
 
@@ -65,12 +66,12 @@ function setupCommands(dependencies: Dependencies) {
   breakpoints = {};
 }
 
-function createObjectFront(grip: Grip) {
+function createObjectFront(grip: Grip): ObjectFront {
   if (!grip.actor) {
     throw new Error("Actor is missing");
   }
 
-  return debuggerClient.createObjectFront(grip);
+  return debuggerClient.createObjectFront(grip, currentThreadFront);
 }
 
 async function loadObjectProperties(root: Node) {
@@ -261,7 +262,10 @@ function removeBreakpoint(location: PendingLocation) {
   return forEachThread(thread => thread.removeBreakpoint(location));
 }
 
-async function evaluateInFrame(script: Script, options: EvaluateParam) {
+function evaluateInFrame(
+  script: Script,
+  options: EvaluateParam
+): Promise<{ result: ExpressionResult }> {
   return evaluate(script, options);
 }
 
@@ -274,19 +278,19 @@ type EvaluateParam = { thread: string, frameId: ?FrameId };
 function evaluate(
   script: ?Script,
   { thread, frameId }: EvaluateParam = {}
-): Promise<{ result: Grip | null }> {
+): Promise<{ result: ExpressionResult }> {
   const params = { thread, frameActor: frameId };
   if (!currentTarget || !script) {
     return Promise.resolve({ result: null });
   }
 
   const target = thread ? lookupTarget(thread) : currentTarget;
-  const console = target.activeConsole;
-  if (!console) {
+  const consoleFront = target.activeConsole;
+  if (!consoleFront) {
     return Promise.resolve({ result: null });
   }
 
-  return console.evaluateJSAsync(script, params);
+  return consoleFront.evaluateJSAsync(script, params);
 }
 
 function autocomplete(

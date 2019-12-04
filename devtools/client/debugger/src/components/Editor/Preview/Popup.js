@@ -25,8 +25,6 @@ import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
-import { createObjectFront } from "../../../client/firefox";
-
 import "./Popup.css";
 
 import type { ThreadContext } from "../../../types";
@@ -103,19 +101,25 @@ export class Popup extends Component<Props> {
     const {
       cx,
       selectSourceURL,
-      preview: { result },
+      preview: { resultGrip },
     } = this.props;
+
+    if (!resultGrip) {
+      return null;
+    }
+
+    const { location } = resultGrip;
 
     return (
       <div
         className="preview-popup"
         onClick={() =>
-          selectSourceURL(cx, result.location.url, {
-            line: result.location.line,
+          selectSourceURL(cx, location.url, {
+            line: location.line,
           })
         }
       >
-        <PreviewFunction func={result} />
+        <PreviewFunction func={resultGrip} />
       </div>
     );
   }
@@ -148,7 +152,6 @@ export class Popup extends Component<Props> {
           disableWrap={true}
           focusable={false}
           openLink={openLink}
-          createObjectFront={grip => createObjectFront(grip)}
           onDOMNodeClick={grip => openElementInInspector(grip)}
           onInspectIconClick={grip => openElementInInspector(grip)}
           onDOMNodeMouseOver={grip => highlightDomElement(grip)}
@@ -161,12 +164,12 @@ export class Popup extends Component<Props> {
   renderSimplePreview() {
     const {
       openLink,
-      preview: { result },
+      preview: { resultGrip },
     } = this.props;
     return (
       <div className="preview-popup">
         {Rep({
-          object: result,
+          object: resultGrip,
           mode: MODE.LONG,
           openLink,
         })}
@@ -217,15 +220,18 @@ export class Popup extends Component<Props> {
 
   render() {
     const {
-      preview: { cursorPos, result },
+      preview: { cursorPos, resultGrip },
       editorRef,
     } = this.props;
-    const type = this.getPreviewType();
 
-    if (typeof result == "undefined" || result.optimizedOut) {
+    if (
+      typeof resultGrip == "undefined" ||
+      (resultGrip && resultGrip.optimizedOut)
+    ) {
       return null;
     }
 
+    const type = this.getPreviewType();
     return (
       <Popover
         targetPosition={cursorPos}

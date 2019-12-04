@@ -7,19 +7,11 @@
 import { setupCommands, clientCommands } from "./firefox/commands";
 import { setupEvents, clientEvents } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
-import type { Grip } from "../types";
-let DebuggerClient;
-
-function createObjectFront(grip: Grip) {
-  return DebuggerClient.createObjectFront(grip);
-}
 
 export async function onConnect(connection: any, actions: Object) {
   const {
     tabConnection: { tabTarget, threadFront, debuggerClient },
   } = connection;
-
-  DebuggerClient = debuggerClient;
 
   if (!tabTarget || !threadFront || !debuggerClient) {
     return;
@@ -76,4 +68,4 @@ export async function onConnect(connection: any, actions: Object) {
   await clientCommands.checkIfAlreadyPaused();
 }
 
-export { createObjectFront, clientCommands, clientEvents };
+export { clientCommands, clientEvents };
