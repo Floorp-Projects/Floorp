@@ -276,20 +276,24 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
-  NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICacheInfoChannel,
+                                     !mMultiPartID.isSome())
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY(nsIClassOfService)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIApplicationCacheContainer,
+                                     !mMultiPartID.isSome())
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChildChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelChild)
-  NS_INTERFACE_MAP_ENTRY(nsIDivertableChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDivertableChannel,
+                                     !mMultiPartID.isSome())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMultiPartChannel, mMultiPartID.isSome())
-  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIThreadRetargetableRequest,
+                                     !mMultiPartID.isSome())
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelChild)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
@@ -3359,6 +3363,10 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild** aChild) {
   MOZ_RELEASE_ASSERT(!mDivertingToParent);
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mMultiPartID) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv = NS_OK;
 
   // If the channel was intercepted, then we likely do not have an IPC actor
@@ -3486,6 +3494,14 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
     NS_WARNING("Retargeting delivery to same thread");
     mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::successMainThread;
     return NS_OK;
+  }
+
+  if (mMultiPartID) {
+    // TODO: Maybe add a new label for this? Maybe it doesn't
+    // matter though, since we also blocked QI, so we shouldn't
+    // ever get here.
+    mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::failListener;
+    return NS_ERROR_NO_INTERFACE;
   }
 
   // Ensure that |mListener| and any subsequent listeners can be retargeted
