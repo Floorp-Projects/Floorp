@@ -5,18 +5,18 @@
 package mozilla.components.feature.addons.amo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AddOnTest {
+class AddonTest {
 
     @Test
     fun `translatePermissions - must return the expected string ids per permission category`() {
-        val addOn = AddOn(
+        val addon = Addon(
             id = "id",
             authors = emptyList(),
             categories = emptyList(),
@@ -51,7 +51,7 @@ class AddOnTest {
             updatedAt = ""
         )
 
-        val translatedPermissions = addOn.translatePermissions()
+        val translatedPermissions = addon.translatePermissions()
         val expectedPermissions = listOf(
             R.string.mozac_feature_addons_permissions_bookmarks_description,
             R.string.mozac_feature_addons_permissions_browser_setting_description,

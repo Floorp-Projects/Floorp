@@ -13,7 +13,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -22,33 +22,33 @@ import java.util.Locale
 /**
  * An activity to show the details of an add-on.
  */
-class AddOnDetailsActivity : AppCompatActivity() {
+class AddonDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_on_details)
-        val addOn = requireNotNull(intent.getParcelableExtra<AddOn>("add_on"))
-        bind(addOn)
+        val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
+        bind(addon)
     }
 
-    private fun bind(addOn: AddOn) {
+    private fun bind(addon: Addon) {
 
-        title = addOn.translatableName.translate()
+        title = addon.translatableName.translate()
 
-        bindDetails(addOn)
+        bindDetails(addon)
 
-        bindAuthors(addOn)
+        bindAuthors(addon)
 
-        bindVersion(addOn)
+        bindVersion(addon)
 
-        bindLastUpdated(addOn)
+        bindLastUpdated(addon)
 
-        bindWebsite(addOn)
+        bindWebsite(addon)
 
-        bindRating(addOn)
+        bindRating(addon)
     }
 
-    private fun bindRating(addOn: AddOn) {
-        addOn.rating?.let {
+    private fun bindRating(addon: Addon) {
+        addon.rating?.let {
             val ratingView = findViewById<RatingBar>(R.id.rating_view)
             val userCountView = findViewById<TextView>(R.id.users_count)
 
@@ -60,37 +60,37 @@ class AddOnDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindWebsite(addOn: AddOn) {
+    private fun bindWebsite(addon: Addon) {
         findViewById<View>(R.id.home_page_text).setOnClickListener {
             val intent =
-                Intent(Intent.ACTION_VIEW).setData(Uri.parse(addOn.siteUrl))
+                Intent(Intent.ACTION_VIEW).setData(Uri.parse(addon.siteUrl))
             startActivity(intent)
         }
     }
 
-    private fun bindLastUpdated(addOn: AddOn) {
+    private fun bindLastUpdated(addon: Addon) {
         val lastUpdatedView = findViewById<TextView>(R.id.last_updated_text)
-        lastUpdatedView.text = formatDate(addOn.updatedAt)
+        lastUpdatedView.text = formatDate(addon.updatedAt)
     }
 
-    private fun bindVersion(addOn: AddOn) {
+    private fun bindVersion(addon: Addon) {
         val versionView = findViewById<TextView>(R.id.version_text)
-        versionView.text = addOn.version
+        versionView.text = addon.version
     }
 
-    private fun bindAuthors(addOn: AddOn) {
+    private fun bindAuthors(addon: Addon) {
         val authorsView = findViewById<TextView>(R.id.author_text)
 
-        val authorText = addOn.authors.joinToString { author ->
+        val authorText = addon.authors.joinToString { author ->
             author.name + " \n"
         }
 
         authorsView.text = authorText
     }
 
-    private fun bindDetails(addOn: AddOn) {
+    private fun bindDetails(addon: Addon) {
         val detailsView = findViewById<TextView>(R.id.details)
-        val detailsText = addOn.translatableDescription.translate()
+        val detailsText = addon.translatableDescription.translate()
 
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)

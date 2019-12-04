@@ -11,37 +11,37 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
 
 /**
  * An activity to show the details of a installed add-on.
  */
-class InstalledAddOnDetailsActivity : AppCompatActivity() {
+class InstalledAddonDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_installed_add_on_details)
-        val addOn = requireNotNull(intent.getParcelableExtra<AddOn>("add_on"))
-        bind(addOn)
+        val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
+        bind(addon)
     }
 
-    private fun bind(addOn: AddOn) {
-        title = addOn.translatableName.translate()
+    private fun bind(addon: Addon) {
+        title = addon.translatableName.translate()
 
-        bindEnableSwitch(addOn.enabled)
+        bindEnableSwitch(addon.enabled)
 
-        bindSettings(addOn)
+        bindSettings(addon)
 
-        bindSettings(addOn)
+        bindSettings(addon)
 
-        bindDetails(addOn)
+        bindDetails(addon)
 
-        bindPermissions(addOn)
+        bindPermissions(addon)
     }
 
-    private fun bindVersion(addOn: AddOn) {
+    private fun bindVersion(addon: Addon) {
         val versionView = findViewById<TextView>(R.id.version_text)
-        versionView.text = addOn.version
+        versionView.text = addon.version
     }
 
     private fun bindEnableSwitch(enabled: Boolean) {
@@ -52,26 +52,26 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindSettings(addOn: AddOn) {
+    private fun bindSettings(addon: Addon) {
         findViewById<View>(R.id.settings).setOnClickListener {
-            val intent = Intent(this, AddOnSettingsActivity::class.java)
-            intent.putExtra("add_on", addOn)
+            val intent = Intent(this, AddonSettingsActivity::class.java)
+            intent.putExtra("add_on", addon)
             this.startActivity(intent)
         }
     }
 
-    private fun bindDetails(addOn: AddOn) {
+    private fun bindDetails(addon: Addon) {
         findViewById<View>(R.id.details).setOnClickListener {
-            val intent = Intent(this, AddOnDetailsActivity::class.java)
-            intent.putExtra("add_on", addOn)
+            val intent = Intent(this, AddonDetailsActivity::class.java)
+            intent.putExtra("add_on", addon)
             this.startActivity(intent)
         }
     }
 
-    private fun bindPermissions(addOn: AddOn) {
+    private fun bindPermissions(addon: Addon) {
         findViewById<View>(R.id.permissions).setOnClickListener {
             val intent = Intent(this, PermissionsDetailsActivity::class.java)
-            intent.putExtra("add_on", addOn)
+            intent.putExtra("add_on", addon)
             this.startActivity(intent)
         }
     }

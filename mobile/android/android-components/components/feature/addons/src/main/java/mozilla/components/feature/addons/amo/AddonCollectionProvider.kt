@@ -14,8 +14,8 @@ import android.graphics.BitmapFactory
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.feature.addons.AddOn
-import mozilla.components.feature.addons.AddOnsProvider
+import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -43,15 +43,15 @@ internal const val MINUTE_IN_MS = 60 * 1000
  * should remain valid. Defaults to -1, meaning no cache is being used by default.
  * @property client A reference of [Client] for interacting with the AMO HTTP api.
  */
-class AddOnCollectionProvider(
+class AddonCollectionProvider(
     private val context: Context,
     private val client: Client,
     private val serverURL: String = DEFAULT_SERVER_URL,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
     private val maxCacheAgeInMinutes: Long = -1
-) : AddOnsProvider {
+) : AddonsProvider {
 
-    private val logger = Logger("AddOnCollectionProvider")
+    private val logger = Logger("AddonCollectionProvider")
 
     private val diskCacheLock = Any()
 
@@ -66,20 +66,20 @@ class AddOnCollectionProvider(
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
-    override suspend fun getAvailableAddOns(allowCache: Boolean): List<AddOn> {
-        val cachedAddOns = if (allowCache && !cacheExpired(context)) {
+    override suspend fun getAvailableAddons(allowCache: Boolean): List<Addon> {
+        val cachedAddons = if (allowCache && !cacheExpired(context)) {
             readFromDiskCache()
         } else {
             null
         }
 
-        return cachedAddOns ?: client.fetch(
+        return cachedAddons ?: client.fetch(
                 Request(url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons")
             )
             .use { response ->
                 if (response.isSuccess) {
                     val responseBody = response.body.string(Charsets.UTF_8)
-                    JSONObject(responseBody).getAddOns().also {
+                    JSONObject(responseBody).getAddons().also {
                         if (maxCacheAgeInMinutes > 0) {
                             writeToDiskCache(responseBody)
                         }
@@ -92,16 +92,16 @@ class AddOnCollectionProvider(
     }
 
     /**
-     * Fetches given AddOn icon from the url and returns a decoded Bitmap
+     * Fetches given Addon icon from the url and returns a decoded Bitmap
      * @throws IOException if the request could not be executed due to cancellation,
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
-    suspend fun getAddOnIconBitmap(addOn: AddOn): Bitmap? {
+    suspend fun getAddonIconBitmap(addon: Addon): Bitmap? {
         var bitmap: Bitmap? = null
-        if (addOn.iconUrl != "") {
+        if (addon.iconUrl != "") {
             client.fetch(
-                    Request(url = addOn.iconUrl)
+                    Request(url = addon.iconUrl)
             ).use { response ->
                 if (response.isSuccess) {
                     response.body.useStream {
@@ -122,10 +122,10 @@ class AddOnCollectionProvider(
     }
 
     @VisibleForTesting
-    internal fun readFromDiskCache(): List<AddOn>? {
+    internal fun readFromDiskCache(): List<Addon>? {
         synchronized(diskCacheLock) {
             return getCacheFile(context).readAndDeserialize {
-                JSONObject(it).getAddOns()
+                JSONObject(it).getAddons()
             }
         }
     }
@@ -150,16 +150,16 @@ class AddOnCollectionProvider(
     }
 }
 
-internal fun JSONObject.getAddOns(): List<AddOn> {
-    val addOnsJson = getJSONArray("results")
-    return (0 until addOnsJson.length()).map { index ->
-        addOnsJson.getJSONObject(index).toAddOns()
+internal fun JSONObject.getAddons(): List<Addon> {
+    val addonsJson = getJSONArray("results")
+    return (0 until addonsJson.length()).map { index ->
+        addonsJson.getJSONObject(index).toAddons()
     }
 }
 
-internal fun JSONObject.toAddOns(): AddOn {
+internal fun JSONObject.toAddons(): Addon {
     return with(getJSONObject("addon")) {
-        AddOn(
+        Addon(
             id = getSafeString("id"),
             authors = getAuthors(),
             categories = getCategories(),
@@ -178,10 +178,10 @@ internal fun JSONObject.toAddOns(): AddOn {
     }
 }
 
-internal fun JSONObject.getRating(): AddOn.Rating? {
+internal fun JSONObject.getRating(): Addon.Rating? {
     val jsonRating = optJSONObject("ratings")
     return if (jsonRating != null) {
-        AddOn.Rating(
+        Addon.Rating(
             reviews = jsonRating.optInt("count"),
             average = jsonRating.optDouble("average").toFloat()
         )
@@ -224,12 +224,12 @@ internal fun JSONObject.getDownloadUrl(): String {
         ?.getSafeString("url") ?: ""
 }
 
-internal fun JSONObject.getAuthors(): List<AddOn.Author> {
+internal fun JSONObject.getAuthors(): List<Addon.Author> {
     val authorsJson = getSafeJSONArray("authors")
     return (0 until authorsJson.length()).map { index ->
         val authorJson = authorsJson.getJSONObject(index)
 
-        AddOn.Author(
+        Addon.Author(
             id = authorJson.getSafeString("id"),
             name = authorJson.getSafeString("name"),
             username = authorJson.getSafeString("username"),

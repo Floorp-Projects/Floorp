@@ -44,18 +44,18 @@
 
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
-                android:name=".addons.AddOnsActivity"
+                android:name=".addons.AddonsActivity"
                 android:label="@string/add_ons"
                 android:parentActivityName=".BrowserActivity" />
 
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
-                android:name=".addons.AddOnDetailsActivity"
+                android:name=".addons.AddonDetailsActivity"
                 android:label="@string/add_ons" />
 
-        <activity android:name=".addons.InstalledAddOnDetailsActivity"
+        <activity android:name=".addons.InstalledAddonDetailsActivity"
                 android:label="@string/add_ons"
-                android:parentActivityName=".addons.AddOnsActivity"
+                android:parentActivityName=".addons.AddonsActivity"
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
@@ -64,7 +64,7 @@
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
-            android:name=".addons.AddOnSettingsActivity"
+            android:name=".addons.AddonSettingsActivity"
             android:label="@string/add_ons"
             android:theme="@style/Theme.AppCompat.Light" />
 

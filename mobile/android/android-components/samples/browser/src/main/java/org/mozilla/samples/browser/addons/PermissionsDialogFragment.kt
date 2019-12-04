@@ -40,7 +40,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
 
     private val safeArguments get() = requireNotNull(arguments)
 
-    internal val addOnId get() = safeArguments.getString(KEY_ADD_ON_ID, "")
+    internal val addonId get() = safeArguments.getString(KEY_ADD_ON_ID, "")
 
     internal val positiveButtonRadius
         get() =
@@ -128,7 +128,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
         val negativeButton = rootView.findViewById<Button>(R.id.deny_button)
 
         positiveButton.setOnClickListener {
-            onPositiveButtonClicked?.invoke(addOnId)
+            onPositiveButtonClicked?.invoke(addonId)
             dismiss()
         }
 
@@ -178,7 +178,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
     @Suppress("LongParameterList")
     companion object {
         fun newInstance(
-            addOnId: String,
+            addonId: String,
             title: String,
             permissions: List<Int>,
             promptsStyling: PromptsStyling? = null,
@@ -190,7 +190,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
             val arguments = fragment.arguments ?: Bundle()
 
             arguments.apply {
-                putString(KEY_ADD_ON_ID, addOnId)
+                putString(KEY_ADD_ON_ID, addonId)
                 putString(KEY_TITLE, title)
                 putIntArray(KEY_PERMISSIONS, permissions.toIntArray())
 
