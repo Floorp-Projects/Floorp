@@ -7,6 +7,7 @@
 use std::str::FromStr;
 
 use log::*;
+use nserror::NS_ERROR_ILLEGAL_VALUE;
 use nsstring::{nsAString, nsString};
 use xpcom::interfaces::nsIRemoteAgent;
 use xpcom::RefPtr;
@@ -39,7 +40,15 @@ impl RemoteAgent {
         let port = addr.port_u16().unwrap_or(DEFAULT_PORT);
 
         let url = nsString::from(&format!("http://{}:{}/", host, port));
-        unsafe { self.inner.Listen(&*url as &nsAString) }.to_result()?;
+        unsafe { self.inner.Listen(&*url as &nsAString) }
+            .to_result()
+            .map_err(|err| {
+                // TODO(ato): https://bugzil.la/1600139
+                match err {
+                    NS_ERROR_ILLEGAL_VALUE => RemoteAgentError::LoopbackRestricted,
+                    nsresult => RemoteAgentError::from(nsresult),
+                }
+            })?;
 
         Ok(())
     }
