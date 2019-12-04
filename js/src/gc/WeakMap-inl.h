@@ -108,6 +108,24 @@ WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
 template <class K, class V>
 void WeakMap<K, V>::markKey(GCMarker* marker, gc::Cell* markedCell,
                             gc::Cell* origKey) {
+#if DEBUG
+  if (!mapColor) {
+    fprintf(stderr, "markKey called on an unmarked map %p", this);
+    Zone* zone = markedCell->asTenured().zoneFromAnyThread();
+    fprintf(stderr, "  markedCell=%p from zone %p state %d mark %d\n",
+            markedCell, zone, zone->gcState(),
+            int(debug::GetMarkInfo(markedCell)));
+    zone = origKey->asTenured().zoneFromAnyThread();
+    fprintf(stderr, "  origKey=%p from zone %p state %d mark %d\n", origKey,
+            zone, zone->gcState(), int(debug::GetMarkInfo(markedCell)));
+    if (memberOf) {
+      zone = memberOf->asTenured().zoneFromAnyThread();
+      fprintf(stderr, "  memberOf=%p from zone %p state %d mark %d\n",
+              memberOf.get(), zone, zone->gcState(),
+              int(debug::GetMarkInfo(memberOf.get())));
+    }
+  }
+#endif
   MOZ_ASSERT(mapColor);
 
   Ptr p = Base::lookup(static_cast<Lookup>(origKey));
