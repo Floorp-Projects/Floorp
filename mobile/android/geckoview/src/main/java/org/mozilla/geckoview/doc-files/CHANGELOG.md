@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change
 
+## v73
+- Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
+  manage installed extensions
+
+[73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
+[73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
+
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
   if a load was requested while a user gesture was active (e.g., a tap).
@@ -476,4 +483,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4c9f04038d8478206efac05b518920819faeacea
+[api-version]: 5856cdf682140fafdd09d74dbc004bf0b6bb7398
