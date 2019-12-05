@@ -64,13 +64,14 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     CertVerifier::PinningMode pinningMode, unsigned int minRSABits,
     ValidityCheckingMode validityCheckingMode, CertVerifier::SHA1Mode sha1Mode,
     NetscapeStepUpPolicy netscapeStepUpPolicy,
-    DistrustedCAPolicy distrustedCAPolicy,
+    DistrustedCAPolicy distrustedCAPolicy, CRLiteMode crliteMode,
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
+    /*optional*/ CRLiteTelemetryInfo* crliteTelemetryInfo,
     /*optional*/ const char* hostname)
     : mCertDBTrustType(certDBTrustType),
       mOCSPFetching(ocspFetching),
@@ -85,6 +86,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mSHA1Mode(sha1Mode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mDistrustedCAPolicy(distrustedCAPolicy),
+      mCRLiteMode(crliteMode),
       mSawDistrustedCAByPolicyError(false),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
@@ -92,6 +94,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mExtraCertificates(extraCertificates),
       mBuiltChain(builtChain),
       mPinningTelemetryInfo(pinningTelemetryInfo),
+      mCRLiteTelemetryInfo(crliteTelemetryInfo),
       mHostname(hostname),
 #ifdef MOZ_NEW_CERT_STORAGE
       mCertStorage(do_GetService(NS_CERT_STORAGE_CID)),
@@ -597,7 +600,7 @@ static Result GetOCSPAuthorityInfoAccessLocation(const UniquePLArenaPool& arena,
 
 Result NSSCertDBTrustDomain::CheckRevocation(
     EndEntityOrCA endEntityOrCA, const CertID& certID, Time time,
-    Time validityPeriodBeginning, Duration validityDuration,
+    Time certValidityPeriodBeginning, Duration validityDuration,
     /*optional*/ const Input* stapledOCSPResponse,
     /*optional*/ const Input* aiaExtension) {
   // Actively distrusted certificates will have already been blocked by
@@ -608,6 +611,94 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: Top of CheckRevocation\n"));
+
+#ifdef MOZ_NEW_CERT_STORAGE
+  if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
+      mCRLiteMode != CRLiteMode::Disabled) {
+    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+            ("NSSCertDBTrustDomain::CheckRevocation: checking CRLite"));
+    nsTArray<uint8_t> issuerBytes;
+    issuerBytes.AppendElements(certID.issuer.UnsafeGetData(),
+                               certID.issuer.GetLength());
+    nsTArray<uint8_t> issuerSubjectPublicKeyInfoBytes;
+    issuerSubjectPublicKeyInfoBytes.AppendElements(
+        certID.issuerSubjectPublicKeyInfo.UnsafeGetData(),
+        certID.issuerSubjectPublicKeyInfo.GetLength());
+    nsTArray<uint8_t> serialNumberBytes;
+    serialNumberBytes.AppendElements(certID.serialNumber.UnsafeGetData(),
+                                     certID.serialNumber.GetLength());
+    uint64_t filterTimestamp;
+    int16_t crliteRevocationState;
+    nsresult rv = mCertStorage->GetCRLiteRevocationState(
+        issuerBytes, issuerSubjectPublicKeyInfoBytes, serialNumberBytes,
+        &filterTimestamp, &crliteRevocationState);
+    if (NS_FAILED(rv)) {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: CRLite call failed"));
+      if (mCRLiteTelemetryInfo) {
+        *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::LibraryFailure;
+      }
+      if (mCRLiteMode == CRLiteMode::Enforce) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+    } else {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: CRLite check returned "
+               "state=%hd filter timestamp=%llu",
+               crliteRevocationState,
+               // The cast is to silence warnings on compilers where uint64_t is
+               // an unsigned long as opposed to an unsigned long long.
+               static_cast<unsigned long long>(filterTimestamp)));
+      Time filterTimestampTime(TimeFromEpochInSeconds(filterTimestamp));
+      // We can only use this result if this certificate's `notBefore` time
+      // (i.e. the beginning of its validity period) is older than what cert
+      // storage returned for its CRLite timestamp. Otherwise, the CRLite filter
+      // cascade may have been created before this certificate existed, and if
+      // it would create a false positive, it hasn't been accounted for.
+      if (certValidityPeriodBeginning <= filterTimestampTime &&
+          crliteRevocationState == nsICertStorage::STATE_ENFORCE) {
+        if (mCRLiteTelemetryInfo) {
+          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateRevoked;
+        }
+        if (mCRLiteMode == CRLiteMode::Enforce) {
+          MOZ_LOG(
+              gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: certificate revoked via "
+               "CRLite"));
+          return Result::ERROR_REVOKED_CERTIFICATE;
+        }
+        MOZ_LOG(
+            gCertVerifierLog, LogLevel::Debug,
+            ("NSSCertDBTrustDomain::CheckRevocation: certificate revoked via "
+             "CRLite (not enforced - telemetry only)"));
+      }
+
+      if (crliteRevocationState == nsICertStorage::STATE_NOT_ENROLLED) {
+        if (mCRLiteTelemetryInfo) {
+          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::IssuerNotEnrolled;
+        }
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                ("NSSCertDBTrustDomain::CheckRevocation: issuer not enrolled"));
+      }
+      if (filterTimestamp == 0) {
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                ("NSSCertDBTrustDomain::CheckRevocation: no timestamp"));
+        if (mCRLiteTelemetryInfo) {
+          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::FilterNotAvailable;
+        }
+      } else if (certValidityPeriodBeginning > filterTimestampTime) {
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+                ("NSSCertDBTrustDomain::CheckRevocation: cert too new"));
+        if (mCRLiteTelemetryInfo) {
+          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateTooNew;
+        }
+      } else if (crliteRevocationState == nsICertStorage::STATE_UNSET &&
+                 mCRLiteTelemetryInfo) {
+        *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateValid;
+      }
+    }
+  }
+#endif
 
   // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
   // Since this affects EV there is no reason why DV should be more strict

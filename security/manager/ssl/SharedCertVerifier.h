@@ -29,11 +29,12 @@ class SharedCertVerifier : public mozilla::psm::CertVerifier {
                      NetscapeStepUpPolicy netscapeStepUpPolicy,
                      CertificateTransparencyMode ctMode,
                      DistrustedCAPolicy distrustedCAPolicy,
+                     CRLiteMode crliteMode,
                      const Vector<EnterpriseCert>& thirdPartyCerts)
       : mozilla::psm::CertVerifier(
             odc, osc, ocspSoftTimeout, ocspHardTimeout, certShortLifetimeInDays,
             pinningMode, sha1Mode, nameMatchingMode, netscapeStepUpPolicy,
-            ctMode, distrustedCAPolicy, thirdPartyCerts) {}
+            ctMode, distrustedCAPolicy, crliteMode, thirdPartyCerts) {}
 };
 
 }  // namespace psm

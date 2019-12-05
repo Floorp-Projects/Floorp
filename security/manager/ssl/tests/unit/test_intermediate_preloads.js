@@ -18,8 +18,6 @@ const { TestUtils } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
-
 const { IntermediatePreloadsClient } = RemoteSecuritySettings.init();
 
 let server;
