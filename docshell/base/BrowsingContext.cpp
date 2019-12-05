@@ -679,7 +679,7 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
 RefPtr<SessionStorageManager> BrowsingContext::SessionStorageManager() {
   RefPtr<dom::SessionStorageManager>& manager = Top()->mSessionStorageManager;
   if (!manager) {
-    manager = new dom::SessionStorageManager();
+    manager = new dom::SessionStorageManager(this);
   }
   return manager;
 }
