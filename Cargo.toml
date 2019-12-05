@@ -67,9 +67,9 @@ nix = { git = "https://github.com/shravanrn/nix/", branch = "r0.13.1", rev="4af6
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu" }
 
 [patch.crates-io.cranelift-codegen]
-git = "https://github.com/CraneStation/Cranelift"
-rev = "152e31796970262068b4fe93e10395385bf9218c"
+git = "https://github.com/bytecodealliance/cranelift"
+rev = "497b4e1ca1d33dfd54314366d8e3a27a9fea225f"
 
 [patch.crates-io.cranelift-wasm]
-git = "https://github.com/CraneStation/Cranelift"
-rev = "152e31796970262068b4fe93e10395385bf9218c"
+git = "https://github.com/bytecodealliance/cranelift"
+rev = "497b4e1ca1d33dfd54314366d8e3a27a9fea225f"
