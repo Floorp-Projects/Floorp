@@ -558,5 +558,29 @@ bool SHEntryParent::RecvCreateLoadInfo(
   return true;
 }
 
+bool SHEntryParent::RecvUpdateLayoutHistoryState(
+    const bool& aScrollPositionOnly, nsTArray<nsCString>&& aKeys,
+    nsTArray<PresState>&& aStates) {
+  nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
+  // InitLayoutHistoryState creates a new object only if there isn't one
+  // already.
+  mEntry->InitLayoutHistoryState(getter_AddRefs(layoutHistoryState));
+  layoutHistoryState->Reset();
+
+  if (aKeys.Length() != aStates.Length()) {
+    NS_WARNING("Bogus data sent from the child process?");
+    return true;
+  }
+
+  layoutHistoryState->SetScrollPositionOnly(aScrollPositionOnly);
+
+  for (uint32_t i = 0; i < aKeys.Length(); ++i) {
+    PresState& state = aStates[i];
+    UniquePtr<PresState> newState = MakeUnique<PresState>(state);
+    layoutHistoryState->AddState(aKeys[i], std::move(newState));
+  }
+  return true;
+}
+
 }  // namespace dom
 }  // namespace mozilla
