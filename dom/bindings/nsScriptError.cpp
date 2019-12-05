@@ -21,6 +21,7 @@
 #include "nsIMutableArray.h"
 #include "nsIScriptError.h"
 #include "nsISensitiveInfoHiddenURI.h"
+#include "mozilla/BasePrincipal.h"
 
 static_assert(nsIScriptError::errorFlag == JSREPORT_ERROR &&
                   nsIScriptError::warningFlag == JSREPORT_WARNING &&
@@ -430,16 +431,18 @@ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
     nsGlobalWindowInner* aWindow) {
   // Never mark exceptions from chrome windows as having come from private
   // windows, since we always want them to be reported.
+  // winPrincipal needs to be null-checked - Bug 1601175
   nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
   return aWindow->IsPrivateBrowsing() &&
-         !nsContentUtils::IsSystemPrincipal(winPrincipal);
+         (!winPrincipal || !winPrincipal->IsSystemPrincipal());
 }
 
 /* static */
 bool nsScriptErrorBase::ComputeIsFromChromeContext(
     nsGlobalWindowInner* aWindow) {
   nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
-  return nsContentUtils::IsSystemPrincipal(winPrincipal);
+  // winPrincipal needs to be null-checked - Bug 1601175
+  return (winPrincipal && winPrincipal->IsSystemPrincipal());
 }
 
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)

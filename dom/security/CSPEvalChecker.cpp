@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CSPEvalChecker.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "nsGlobalWindowInner.h"
-#include "mozilla/dom/Document.h"
 #include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"

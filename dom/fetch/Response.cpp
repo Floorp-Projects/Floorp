@@ -10,7 +10,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
-
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/FetchBinding.h"
@@ -218,7 +218,7 @@ already_AddRefed<Response> Response::Constructor(
       }
 
       internalResponse->InitChannelInfo(info);
-    } else if (nsContentUtils::IsSystemPrincipal(global->PrincipalOrNull())) {
+    } else if (global->PrincipalOrNull()->IsSystemPrincipal()) {
       info.InitFromChromeGlobal(global);
 
       internalResponse->InitChannelInfo(info);

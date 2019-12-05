@@ -8,8 +8,8 @@
 #include "StorageNotifierService.h"
 
 #include "mozilla/dom/StorageBinding.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StorageAccess.h"
-#include "nsIPrincipal.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
@@ -36,7 +36,7 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
       mIsSessionOnly(false) {
   MOZ_ASSERT(aPrincipal);
 
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+  if (mPrincipal->IsSystemPrincipal()) {
     mIsSessionOnly = false;
   } else if (mWindow) {
     uint32_t rejectedReason = 0;

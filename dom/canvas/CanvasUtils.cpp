@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsIPrincipal.h"
 
@@ -60,7 +61,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   }
 
   // The system principal can always extract canvas data.
-  if (nsContentUtils::IsSystemPrincipal(&aPrincipal)) {
+  if (aPrincipal.IsSystemPrincipal()) {
     return true;
   }
 

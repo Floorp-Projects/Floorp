@@ -98,7 +98,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   // Redirecting to a toplevel data: URI is not allowed, hence we make
   // sure the RedirectChain is empty.
   if (!loadInfo->GetLoadTriggeredFromExternal() &&
-      nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
+      loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
       loadInfo->RedirectChain().IsEmpty()) {
     return true;
   }
@@ -189,7 +189,7 @@ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
   // Allow the system principal to load everything. This is meant to
   // temporarily fix downloads and pdf.js.
   nsIPrincipal* triggeringPrincipal = loadInfo->TriggeringPrincipal();
-  if (nsContentUtils::IsSystemPrincipal(triggeringPrincipal)) {
+  if (triggeringPrincipal->IsSystemPrincipal()) {
     return NS_OK;
   }
 
@@ -344,7 +344,7 @@ static nsresult DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
   // No need to set up CORS if TriggeringPrincipal is the SystemPrincipal.
   // For example, allow user stylesheets to load XBL from external files
   // without requiring CORS.
-  if (nsContentUtils::IsSystemPrincipal(aLoadInfo->TriggeringPrincipal())) {
+  if (aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
     return NS_OK;
   }
 
@@ -594,7 +594,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
 
 static void LogPrincipal(nsIPrincipal* aPrincipal,
                          const nsAString& aPrincipalName) {
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal && aPrincipal->IsSystemPrincipal()) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("  %s: SystemPrincipal\n",
              NS_ConvertUTF16toUTF8(aPrincipalName).get()));
@@ -765,7 +765,8 @@ nsresult nsContentSecurityManager::CheckSystemPrincipalLoads(
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   // bail out, if we're not loading with a SystemPrincipal
-  if (!nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal())) {
+  if (!loadInfo->LoadingPrincipal() ||
+      !loadInfo->LoadingPrincipal()->IsSystemPrincipal()) {
     return NS_OK;
   }
   nsContentPolicyType contentPolicyType =
@@ -1010,7 +1011,7 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
 
   // Allow subresource loads if TriggeringPrincipal is the SystemPrincipal.
   // For example, allow user stylesheets to load XBL from external files.
-  if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
+  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
       loadInfo->GetExternalContentPolicyType() !=
           nsIContentPolicy::TYPE_DOCUMENT &&
       loadInfo->GetExternalContentPolicyType() !=

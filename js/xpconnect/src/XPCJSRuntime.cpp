@@ -36,6 +36,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsThreadPool.h"
 #include "nsWindowSizes.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
@@ -3277,8 +3278,7 @@ void XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb) {
 
 JSObject* XPCJSRuntime::GetUAWidgetScope(JSContext* cx,
                                          nsIPrincipal* principal) {
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(principal),
-             "Running UA Widget in chrome");
+  MOZ_ASSERT(!principal->IsSystemPrincipal(), "Running UA Widget in chrome");
 
   RootedObject scope(cx);
   do {

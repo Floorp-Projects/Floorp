@@ -7534,7 +7534,7 @@ class CGCallGenerator(CGThing):
             if needsNonSystemPrincipal:
                 checkPrincipal = dedent(
                     """
-                    if (nsContentUtils::IsSystemPrincipal(principal)) {
+                    if (principal->IsSystemPrincipal()) {
                       principal = nullptr;
                     }
                     """)

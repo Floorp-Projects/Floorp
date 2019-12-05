@@ -9,6 +9,7 @@
 #include "ActorsChild.h"
 #include "IPCBlobInputStreamThread.h"
 #include "LocalStorageCommon.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -261,7 +262,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_FAILURE;
   }
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
+  if (principal->IsSystemPrincipal()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

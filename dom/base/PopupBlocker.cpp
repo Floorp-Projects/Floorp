@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -147,7 +148,7 @@ bool PopupBlocker::TryUsePopupOpeningToken(nsIPrincipal* aPrincipal) {
     return true;
   }
 
-  if (aPrincipal && nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal && aPrincipal->IsSystemPrincipal()) {
     return true;
   }
 

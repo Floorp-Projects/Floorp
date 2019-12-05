@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoCopyListener.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SelectionBinding.h"
@@ -849,7 +850,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
     Document* doc = GetDocument();
     bool selectEventsEnabled =
         StaticPrefs::dom_select_events_enabled() ||
-        (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
+        (doc && doc->NodePrincipal()->IsSystemPrincipal());
 
     if (!aNoStartSelect && mSelectionType == SelectionType::eNormal &&
         selectEventsEnabled && IsCollapsed() &&

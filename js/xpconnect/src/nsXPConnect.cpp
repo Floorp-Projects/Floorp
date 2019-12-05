@@ -22,6 +22,7 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
@@ -492,7 +493,7 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
   bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
   bool extraWarningsForSystemJS = ExtraWarningsForSystemJS();
 
-  bool isSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
+  bool isSystem = aPrincipal->IsSystemPrincipal();
 
   if (isSystem) {
     // Make sure [SecureContext] APIs are visible:

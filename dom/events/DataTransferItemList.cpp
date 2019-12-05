@@ -15,6 +15,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsQueryObject.h"
 #include "nsVariant.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/storage/Variant.h"
@@ -220,7 +221,7 @@ already_AddRefed<FileList> DataTransferItemList::Files(
   // release builds. If this functionality is required in the future, a more
   // advanced caching mechanism for the FileList objects will be required.
   RefPtr<FileList> files;
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal->IsSystemPrincipal()) {
     files = new FileList(mDataTransfer);
     GenerateFiles(files, aPrincipal);
     return files.forget();
@@ -528,8 +529,7 @@ void DataTransferItemList::GenerateFiles(FileList* aFiles,
 
   // For non-system principals, the Files list should be empty if the
   // DataTransfer is protected.
-  if (!nsContentUtils::IsSystemPrincipal(aFilesPrincipal) &&
-      mDataTransfer->IsProtected()) {
+  if (!aFilesPrincipal->IsSystemPrincipal() && mDataTransfer->IsProtected()) {
     return;
   }
 

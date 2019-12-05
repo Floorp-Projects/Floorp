@@ -13,7 +13,7 @@
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsStringBuffer.h"
-
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 // for mozilla::dom::workerinternals::kJSPrincipalsDebugToken
 #include "mozilla/dom/workerinternals/JSSettings.h"

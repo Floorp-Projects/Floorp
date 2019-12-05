@@ -21,6 +21,7 @@
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UnionConversions.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsDocShell.h"
@@ -145,10 +146,10 @@ PostMessageEvent::Run() {
         rv = NS_GetSanitizedURIStringFromURI(callerDocumentURI, uriSpec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = errorObject->Init(
-            errorText, uriSpec, EmptyString(), 0, 0, nsIScriptError::errorFlag,
-            "DOM Window", mIsFromPrivateWindow,
-            nsContentUtils::IsSystemPrincipal(mProvidedPrincipal));
+        rv = errorObject->Init(errorText, uriSpec, EmptyString(), 0, 0,
+                               nsIScriptError::errorFlag, "DOM Window",
+                               mIsFromPrivateWindow,
+                               mProvidedPrincipal->IsSystemPrincipal());
       }
       NS_ENSURE_SUCCESS(rv, rv);
 

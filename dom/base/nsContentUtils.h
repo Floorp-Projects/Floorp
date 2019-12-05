@@ -1857,14 +1857,6 @@ class nsContentUtils {
   static bool SchemeIs(nsIURI* aURI, const char* aScheme);
 
   /**
-   * Returns true if aPrincipal is the system principal.
-   *
-   * @deprecated Use nsIPrincipal::IsSystemPrincipal instead!
-   * https://bugzilla.mozilla.org/show_bug.cgi?id=1517588 tracks removing this.
-   */
-  static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
-
-  /**
    * Returns true if aPrincipal is an ExpandedPrincipal.
    */
   static bool IsExpandedPrincipal(nsIPrincipal* aPrincipal);
@@ -1873,7 +1865,8 @@ class nsContentUtils {
    * Returns true if aPrincipal is the system or an ExpandedPrincipal.
    */
   static bool IsSystemOrExpandedPrincipal(nsIPrincipal* aPrincipal) {
-    return IsSystemPrincipal(aPrincipal) || IsExpandedPrincipal(aPrincipal);
+    return (aPrincipal && aPrincipal->IsSystemPrincipal()) ||
+           IsExpandedPrincipal(aPrincipal);
   }
 
   /**

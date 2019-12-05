@@ -22,6 +22,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
 #include "nsThread.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/HangTypes.h"
 
 #ifdef __GNUC__

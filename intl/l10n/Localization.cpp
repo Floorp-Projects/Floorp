@@ -7,6 +7,7 @@
 #include "Localization.h"
 #include "nsImportModule.h"
 #include "nsContentUtils.h"
+#include "mozilla/BasePrincipal.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"
@@ -299,7 +300,7 @@ already_AddRefed<Promise> Localization::MaybeWrapPromise(
   // For system principal we don't need to wrap the
   // result promise at all.
   nsIPrincipal* principal = mGlobal->PrincipalOrNull();
-  if (principal && nsContentUtils::IsSystemPrincipal(principal)) {
+  if (principal && principal->IsSystemPrincipal()) {
     return RefPtr<Promise>(aInnerPromise).forget();
   }
 
