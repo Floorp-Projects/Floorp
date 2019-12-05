@@ -563,6 +563,8 @@ uint32_t CachePerfStats::GetStdDev(EDataType aType, bool aFiltered) {
 
 // static
 bool CachePerfStats::IsCacheSlow() {
+  StaticMutexAutoLock lock(sLock);
+
   // Compare mShortAvg with mFilteredAvg to find out whether cache is getting
   // slower. Use only data about single IO operations because ENTRY_OPEN can be
   // affected by more factors than a slow disk.
