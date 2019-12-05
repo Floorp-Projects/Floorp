@@ -271,6 +271,12 @@ sealed class WebExtensionAction : BrowserAction() {
     data class InstallWebExtensionAction(val extension: WebExtensionState) : WebExtensionAction()
 
     /**
+     * Updates the [WebExtensionState.enabled] flag.
+     */
+    data class UpdateWebExtensionEnabledAction(val extensionId: String, val enabled: Boolean) :
+        WebExtensionAction()
+
+    /**
      * Updates a browser action of a given [extensionId].
      */
     data class UpdateBrowserAction(

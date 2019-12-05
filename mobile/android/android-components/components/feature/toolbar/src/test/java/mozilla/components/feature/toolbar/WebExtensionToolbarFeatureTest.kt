@@ -46,10 +46,10 @@ class WebExtensionToolbarFeatureTest {
             WebExtensionBrowserAction("overridden_title", false, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", defaultBrowserAction)
+            "id" to WebExtensionState("id", "url", true, defaultBrowserAction)
         )
         val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", overriddenBrowserAction)
+            "id" to WebExtensionState("id", "url", true, overriddenBrowserAction)
         )
         val store = spy(
             BrowserStore(
