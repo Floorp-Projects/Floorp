@@ -41,8 +41,7 @@ SHEntrySharedParentState::SHEntrySharedParentState(nsIWeakReference* aSHistory,
       mIsFrameNavigation(false),
       mSticky(true),
       mDynamicallyCreated(false),
-      mExpired(false),
-      mSaveLayoutState(true) {}
+      mExpired(false) {}
 
 SHEntrySharedParentState::~SHEntrySharedParentState() {}
 
@@ -52,7 +51,6 @@ void SHEntrySharedParentState::CopyFrom(SHEntrySharedParentState* aEntry) {
   mPrincipalToInherit = aEntry->mPrincipalToInherit;
   mStoragePrincipalToInherit = aEntry->mStoragePrincipalToInherit;
   mCsp = aEntry->mCsp;
-  mSaveLayoutState = aEntry->mSaveLayoutState;
   mContentType.Assign(aEntry->mContentType);
   mIsFrameNavigation = aEntry->mIsFrameNavigation;
   mSticky = aEntry->mSticky;

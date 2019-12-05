@@ -1153,9 +1153,4 @@ interface nsIDocShell : nsIDocShellTreeItem
    *   nsIWebNavigation.loadURI
    */
   [infallible] readonly attribute boolean isNavigating;
-
-  /**
-   * @see nsISHEntry synchronizeLayoutHistoryState().
-   */
-  void synchronizeLayoutHistoryState();
 };
