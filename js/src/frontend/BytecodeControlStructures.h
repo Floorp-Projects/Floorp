@@ -140,11 +140,6 @@ class LoopControl : public BreakableControl {
   BytecodeOffset breakTargetOffset() const { return breakTarget_.offset; }
   BytecodeOffset continueTargetOffset() const { return continueTarget_.offset; }
 
-  // The offset of the backward jump at the loop end from the JSOP_LOOPHEAD.
-  BytecodeOffsetDiff loopEndOffsetFromLoopHead() const {
-    return loopEndOffset_ - head_.offset;
-  }
-
   MOZ_MUST_USE bool emitContinueTarget(BytecodeEmitter* bce);
 
   // Emit a jump to break target from the top level of the loop.

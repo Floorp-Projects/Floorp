@@ -79,9 +79,6 @@ class MOZ_STACK_CLASS CForEmitter {
  private:
   BytecodeEmitter* bce_;
 
-  // The source note index for SRC_FOR.
-  unsigned noteIndex_ = 0;
-
   // Whether the c-style for loop has `cond` and `update`.
   Cond cond_ = Cond::Missing;
   Update update_ = Update::Missing;

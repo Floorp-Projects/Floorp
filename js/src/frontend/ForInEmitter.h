@@ -39,9 +39,6 @@ class EmitterScope;
 class MOZ_STACK_CLASS ForInEmitter {
   BytecodeEmitter* bce_;
 
-  // The source note index for SRC_FOR_IN.
-  unsigned noteIndex_ = 0;
-
 #ifdef DEBUG
   // The stack depth before emitting initialize code inside loop.
   int32_t loopDepth_ = 0;
