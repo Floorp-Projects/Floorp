@@ -91,7 +91,7 @@ async function gInit(perfFront, preferenceFront) {
       receiveProfile,
       recordingPreferences,
       supportedFeatures,
-      isPopup: false,
+      pageContext: "devtools",
 
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
