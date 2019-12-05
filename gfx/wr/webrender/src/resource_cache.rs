@@ -17,6 +17,7 @@ use crate::capture::ExternalCaptureImage;
 use crate::capture::PlainExternalImage;
 #[cfg(any(feature = "replay", feature = "png"))]
 use crate::capture::CaptureConfig;
+use crate::composite::{NativeSurfaceId, NativeSurfaceOperation, NativeSurfaceOperationDetails};
 use crate::device::TextureFilter;
 use euclid::{point2, size2};
 use crate::glyph_cache::GlyphCache;
@@ -26,7 +27,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::image::{compute_tile_size, compute_tile_rect, compute_tile_range, for_each_tile_in_range};
 use crate::image::compute_valid_tiles_if_bounds_change;
-use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
+use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
 use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
@@ -43,12 +44,16 @@ use std::os::raw::c_void;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 use std::u32;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::util::drain_filter;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
+
+// Counter for generating unique native surface ids
+static NEXT_NATIVE_SURFACE_ID: AtomicU64 = AtomicU64::new(0);
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -511,6 +516,9 @@ pub struct ResourceCache {
     /// A log of the last three frames worth of deleted image keys kept
     /// for debugging purposes.
     deleted_blob_keys: VecDeque<Vec<BlobImageKey>>,
+
+    /// A list of queued compositor surface updates to apply next frame.
+    pending_native_surface_updates: Vec<NativeSurfaceOperation>,
 }
 
 impl ResourceCache {
@@ -540,6 +548,7 @@ impl ResourceCache {
             blob_image_rasterizer_consumed_epoch: BlobImageRasterizerEpoch(0),
             // We want to keep three frames worth of delete blob keys
             deleted_blob_keys: vec![Vec::new(), Vec::new(), Vec::new()].into(),
+            pending_native_surface_updates: Vec::new(),
         }
     }
 
@@ -1425,8 +1434,11 @@ impl ResourceCache {
         );
     }
 
-    pub fn pending_updates(&mut self) -> TextureUpdateList {
-        self.texture_cache.pending_updates()
+    pub fn pending_updates(&mut self) -> ResourceUpdateList {
+        ResourceUpdateList {
+            texture_updates: self.texture_cache.pending_updates(),
+            native_surface_updates: mem::replace(&mut self.pending_native_surface_updates, Vec::new()),
+        }
     }
 
     pub fn fetch_glyphs<F>(
@@ -1760,6 +1772,42 @@ impl ResourceCache {
                 );
             }
         }
+    }
+
+    /// Queue up allocation of a new OS native compositor surface with the
+    /// specified id and dimensions.
+    pub fn create_compositor_surface(
+        &mut self,
+        size: DeviceIntSize,
+        is_opaque: bool,
+    ) -> NativeSurfaceId {
+        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed));
+
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                id,
+                details: NativeSurfaceOperationDetails::CreateSurface {
+                    size,
+                    is_opaque,
+                }
+            }
+        );
+
+        id
+    }
+
+    /// Queue up destruction of an existing native OS surface. This is used when
+    /// a picture cache tile is dropped or resized.
+    pub fn destroy_compositor_surface(
+        &mut self,
+        id: NativeSurfaceId,
+    ) {
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                id,
+                details: NativeSurfaceOperationDetails::DestroySurface,
+            }
+        );
     }
 
     pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {

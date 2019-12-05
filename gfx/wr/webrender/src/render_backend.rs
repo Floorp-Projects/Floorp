@@ -1094,9 +1094,9 @@ impl RenderBackend {
 
                 self.gpu_cache.clear();
 
-                let pending_update = self.resource_cache.pending_updates();
+                let resource_updates = self.resource_cache.pending_updates();
                 let msg = ResultMsg::UpdateResources {
-                    updates: pending_update,
+                    resource_updates,
                     memory_pressure: true,
                 };
                 self.result_tx.send(msg).unwrap();
@@ -1805,7 +1805,7 @@ impl RenderBackend {
 
         if config.bits.contains(CaptureBits::FRAME) {
             let msg_update_resources = ResultMsg::UpdateResources {
-                updates: self.resource_cache.pending_updates(),
+                resource_updates: self.resource_cache.pending_updates(),
                 memory_pressure: false,
             };
             self.result_tx.send(msg_update_resources).unwrap();
