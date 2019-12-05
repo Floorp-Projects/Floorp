@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.152';
-const pdfjsBuild = '827eb64b';
+const pdfjsVersion = '2.4.163';
+const pdfjsBuild = '514b500a';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.152';
+    const workerVersion = '2.4.163';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -5157,9 +5157,9 @@ var XRef = function XRefClosure() {
 
       const num = ref.num;
 
-      if (this._cacheMap.has(num)) {
-        const cacheEntry = this._cacheMap.get(num);
+      const cacheEntry = this._cacheMap.get(num);
 
+      if (cacheEntry !== undefined) {
         if (cacheEntry instanceof _primitives.Dict && !cacheEntry.objId) {
           cacheEntry.objId = ref.toString();
         }
@@ -5208,14 +5208,6 @@ var XRef = function XRefClosure() {
       var obj2 = parser.getObj();
       var obj3 = parser.getObj();
 
-      if (!Number.isInteger(obj1)) {
-        obj1 = parseInt(obj1, 10);
-      }
-
-      if (!Number.isInteger(obj2)) {
-        obj2 = parseInt(obj2, 10);
-      }
-
       if (obj1 !== num || obj2 !== gen || !(obj3 instanceof _primitives.Cmd)) {
         throw new _core_utils.XRefEntryException(`Bad (uncompressed) XRef entry: ${ref}`);
       }
@@ -5246,15 +5238,15 @@ var XRef = function XRefClosure() {
     },
 
     fetchCompressed(ref, xrefEntry, suppressEncryption = false) {
-      var tableOffset = xrefEntry.offset;
-      var stream = this.fetch(_primitives.Ref.get(tableOffset, 0));
+      const tableOffset = xrefEntry.offset;
+      const stream = this.fetch(_primitives.Ref.get(tableOffset, 0));
 
       if (!(0, _primitives.isStream)(stream)) {
         throw new _util.FormatError('bad ObjStm stream');
       }
 
-      var first = stream.dict.get('First');
-      var n = stream.dict.get('N');
+      const first = stream.dict.get('First');
+      const n = stream.dict.get('N');
 
       if (!Number.isInteger(first) || !Number.isInteger(n)) {
         throw new _util.FormatError('invalid first and n parameters for ObjStm stream');
@@ -5265,38 +5257,43 @@ var XRef = function XRefClosure() {
         xref: this,
         allowStreams: true
       });
-      var i,
-          entries = [],
-          num,
-          nums = [];
+      const nums = new Array(n);
 
-      for (i = 0; i < n; ++i) {
-        num = parser.getObj();
+      for (let i = 0; i < n; ++i) {
+        const num = parser.getObj();
 
         if (!Number.isInteger(num)) {
           throw new _util.FormatError(`invalid object number in the ObjStm stream: ${num}`);
         }
 
-        nums.push(num);
-        var offset = parser.getObj();
+        const offset = parser.getObj();
 
         if (!Number.isInteger(offset)) {
           throw new _util.FormatError(`invalid object offset in the ObjStm stream: ${offset}`);
         }
+
+        nums[i] = num;
       }
 
-      for (i = 0; i < n; ++i) {
-        entries.push(parser.getObj());
+      const entries = new Array(n);
 
-        if ((0, _primitives.isCmd)(parser.buf1, 'endobj')) {
+      for (let i = 0; i < n; ++i) {
+        const obj = parser.getObj();
+        entries[i] = obj;
+
+        if (parser.buf1 instanceof _primitives.Cmd && parser.buf1.cmd === 'endobj') {
           parser.shift();
         }
 
-        num = nums[i];
-        var entry = this.entries[num];
+        if ((0, _primitives.isStream)(obj)) {
+          continue;
+        }
+
+        const num = nums[i],
+              entry = this.entries[num];
 
         if (entry && entry.offset === tableOffset && entry.gen === i) {
-          this._cacheMap.set(num, entries[i]);
+          this._cacheMap.set(num, obj);
         }
       }
 

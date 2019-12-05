@@ -7709,9 +7709,9 @@ class PDFThumbnailViewer {
       return;
     }
 
-    pdfDocument.getPage(1).then(firstPage => {
+    pdfDocument.getPage(1).then(firstPdfPage => {
       let pagesCount = pdfDocument.numPages;
-      let viewport = firstPage.getViewport({
+      const viewport = firstPdfPage.getViewport({
         scale: 1
       });
 
@@ -7727,6 +7727,12 @@ class PDFThumbnailViewer {
         });
 
         this._thumbnails.push(thumbnail);
+      }
+
+      const firstThumbnailView = this._thumbnails[0];
+
+      if (firstThumbnailView) {
+        firstThumbnailView.setPdfPage(firstPdfPage);
       }
 
       const thumbnailView = this._thumbnails[this._currentPageNumber - 1];
@@ -7775,7 +7781,9 @@ class PDFThumbnailViewer {
     }
 
     const promise = this.pdfDocument.getPage(thumbView.id).then(pdfPage => {
-      thumbView.setPdfPage(pdfPage);
+      if (!thumbView.pdfPage) {
+        thumbView.setPdfPage(pdfPage);
+      }
 
       this._pagesRequests.delete(thumbView);
 
@@ -8639,9 +8647,9 @@ class BaseViewer {
     };
 
     this.eventBus.on('pagerendered', this._onAfterDraw);
-    firstPagePromise.then(pdfPage => {
+    firstPagePromise.then(firstPdfPage => {
       let scale = this.currentScale;
-      let viewport = pdfPage.getViewport({
+      const viewport = firstPdfPage.getViewport({
         scale: scale * _ui_utils.CSS_UNITS
       });
 
@@ -8674,6 +8682,13 @@ class BaseViewer {
         this._pages.push(pageView);
       }
 
+      const firstPageView = this._pages[0];
+
+      if (firstPageView) {
+        firstPageView.setPdfPage(firstPdfPage);
+        this.linkService.cachePageRef(1, firstPdfPage.ref);
+      }
+
       if (this._spreadMode !== _ui_utils.SpreadMode.NONE) {
         this._updateSpreadMode();
       }
@@ -8688,9 +8703,14 @@ class BaseViewer {
           return;
         }
 
-        let getPagesLeft = pagesCount;
+        let getPagesLeft = pagesCount - 1;
 
-        for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
+        if (getPagesLeft <= 0) {
+          pagesCapability.resolve();
+          return;
+        }
+
+        for (let pageNum = 2; pageNum <= pagesCount; ++pageNum) {
           pdfDocument.getPage(pageNum).then(pdfPage => {
             let pageView = this._pages[pageNum - 1];
 
