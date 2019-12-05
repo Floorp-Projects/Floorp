@@ -915,13 +915,6 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("user32.dll", GetKeyState, Ignore, 0) &&  // see Bug 1316415
 #endif
       TEST_HOOK("user32.dll", GetWindowInfo, Equals, FALSE) &&
-#if defined(_M_X64)
-      TEST_HOOK("user32.dll", SetWindowLongPtrA, Equals, 0) &&
-      TEST_HOOK("user32.dll", SetWindowLongPtrW, Equals, 0) &&
-#elif defined(_M_IX86)
-      TEST_HOOK("user32.dll", SetWindowLongA, Equals, 0) &&
-      TEST_HOOK("user32.dll", SetWindowLongW, Equals, 0) &&
-#endif
       TEST_HOOK("user32.dll", TrackPopupMenu, Equals, FALSE) &&
       TEST_DETOUR("user32.dll", CreateWindowExW, Equals, nullptr) &&
       TEST_HOOK("user32.dll", InSendMessageEx, Equals, ISMEX_NOSEND) &&
