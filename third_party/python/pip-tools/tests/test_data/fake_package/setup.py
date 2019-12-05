@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='fake_with_deps',
+    name="fake_with_deps",
     version=0.1,
     install_requires=[
         "python-dateutil>=2.4.2,<2.5",
@@ -18,5 +18,5 @@ setup(
         "SQLAlchemy!=0.9.5,<2.0.0,>=0.7.8,>=1.0.0",
         "python-memcached>=1.57,<2.0",
         "xmltodict<=0.11,>=0.4.6",
-        ],
+    ],
 )

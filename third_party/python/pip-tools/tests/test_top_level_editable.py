@@ -1,8 +1,9 @@
 import os
+
 import pytest
 
+from piptools.pip import get_pip_command
 from piptools.repositories import PyPIRepository
-from piptools.scripts.compile import get_pip_command
 
 
 class MockedPyPIRepository(PyPIRepository):
@@ -25,14 +26,24 @@ def _get_repository():
 
 
 @pytest.mark.parametrize(
-    ('input', 'expected'),
-
-    ((tup) for tup in [
-        ([os.path.join(os.path.dirname(__file__), 'test_data', 'small_fake_package')],
-         ['six']),
-    ])
+    ("input", "expected"),
+    (
+        (tup)
+        for tup in [
+            (
+                [
+                    os.path.join(
+                        os.path.dirname(__file__), "test_data", "small_fake_package"
+                    )
+                ],
+                ["six"],
+            )
+        ]
+    ),
 )
-def test_editable_top_level_deps_preserved(base_resolver, repository, from_editable, input, expected):
+def test_editable_top_level_deps_preserved(
+    base_resolver, repository, from_editable, input, expected
+):
     input = [from_editable(line) for line in input]
     repository = _get_repository()
     output = base_resolver(input, prereleases=False, repository=repository).resolve()
