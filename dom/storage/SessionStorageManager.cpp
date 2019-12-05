@@ -17,10 +17,19 @@ namespace dom {
 
 using namespace StorageUtils;
 
-NS_IMPL_ISUPPORTS(SessionStorageManager, nsIDOMStorageManager,
-                  nsIDOMSessionStorageManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SessionStorageManager)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSessionStorageManager)
+NS_INTERFACE_MAP_END
 
-SessionStorageManager::SessionStorageManager() {
+NS_IMPL_CYCLE_COLLECTION(SessionStorageManager, mBrowsingContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SessionStorageManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SessionStorageManager)
+
+SessionStorageManager::SessionStorageManager(
+    RefPtr<BrowsingContext> aBrowsingContext)
+    : mBrowsingContext(aBrowsingContext.forget()) {
   StorageObserver* observer = StorageObserver::Self();
   NS_ASSERTION(
       observer,
