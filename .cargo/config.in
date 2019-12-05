@@ -37,6 +37,11 @@ branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 
+[source."https://github.com/bytecodealliance/cranelift"]
+git = "https://github.com/bytecodealliance/cranelift"
+replace-with = "vendored-sources"
+rev = "497b4e1ca1d33dfd54314366d8e3a27a9fea225f"
+
 [source."https://github.com/alexcrichton/mio-named-pipes"]
 branch = "master"
 git = "https://github.com/alexcrichton/mio-named-pipes"
@@ -56,11 +61,6 @@ replace-with = "vendored-sources"
 branch = "stable"
 git = "https://github.com/NikVolf/tokio-named-pipes"
 replace-with = "vendored-sources"
-
-[source."https://github.com/CraneStation/Cranelift"]
-git = "https://github.com/CraneStation/Cranelift"
-replace-with = "vendored-sources"
-rev = "152e31796970262068b4fe93e10395385bf9218c"
 
 [source.crates-io]
 replace-with = "vendored-sources"
