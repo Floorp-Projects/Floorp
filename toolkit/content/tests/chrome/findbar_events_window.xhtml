@@ -60,7 +60,6 @@
       await testFind();
       await testFindAgain();
       await testCaseSensitivity();
-      await testDiacriticMatching();
       await testHighlight();
     }
 
@@ -140,24 +139,6 @@
       matchCaseCheckbox.click();
 
       // Changing case sensitivity does the search so clear the selected text
-      // before the next test.
-      await ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
-    }
-
-    async function testDiacriticMatching() {
-      info("Testing normal diacritic matching.");
-      let promise = once(gFindBar, "finddiacriticmatchingchange", false);
-
-      let matchDiacriticsCheckbox = gFindBar.getElement("find-match-diacritics");
-      matchDiacriticsCheckbox.click();
-
-      let e = await promise;
-      ok(e.detail.matchDiacritics, "find should match diacritics");
-
-      // Toggle it back to the original setting.
-      matchDiacriticsCheckbox.click();
-
-      // Changing diacritic matching does the search so clear the selected text
       // before the next test.
       await ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
     }
