@@ -1,4 +1,4 @@
-// frame.live is false for generator frames popped due to exception or termination.
+// frame.onStack is false for generator frames popped due to exception or termination.
 
 load(libdir + "/asserts.js");
 
@@ -42,10 +42,10 @@ function test(when, what) {
     g.eval("debugger;");
 
     assertEq(t, when);
-    assertEq(poppedFrame.live, false);
+    assertEq(poppedFrame.onStack, false);
     assertErrorMessage(() => poppedFrame.older,
                        Error,
-                       "Debugger.Frame is not live");
+                       "Debugger.Frame is not on stack");
 }
 
 for (let when = 0; when < 6; when++) {

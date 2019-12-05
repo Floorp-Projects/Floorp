@@ -1147,7 +1147,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.dbg.replayClearSteppingHooks();
     } else {
       let frame = this.youngestFrame;
-      if (frame && frame.live) {
+      if (frame && frame.onStack) {
         while (frame) {
           frame.onStep = undefined;
           frame.onPop = undefined;
@@ -1595,7 +1595,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const frameList = [];
 
     for (const frameActor of this._frameActors) {
-      if (frameActor.frame.live) {
+      if (frameActor.frame.onStack) {
         framesPool.addActor(frameActor);
         frameList.push(frameActor);
       } else {

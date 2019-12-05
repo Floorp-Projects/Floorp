@@ -22,5 +22,5 @@ dbg.onDebuggerStatement = frame => {
 g.eval("debugger;");
 
 assertEq(genFrame instanceof Debugger.Frame, true);
-assertEq(genFrame.live, false);
+assertEq(genFrame.onStack, false);
 assertThrowsInstanceOf(() => genFrame.callee, Error);

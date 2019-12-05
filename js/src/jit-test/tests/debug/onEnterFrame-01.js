@@ -6,7 +6,7 @@ var type;
 dbg.onEnterFrame = function (frame) {
     try {
         assertEq(frame instanceof Debugger.Frame, true);
-        assertEq(frame.live, true);
+        assertEq(frame.onStack, true);
         type = frame.type;
     } catch (exc) {
         type = "Exception thrown: " + exc;

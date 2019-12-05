@@ -1,4 +1,4 @@
-// Debugger.Frame.prototype.live is false for frames that have thrown or been thrown through
+// Debugger.Frame.prototype.onStack is false for frames that have thrown or been thrown through
 
 load(libdir + "asserts.js");
 
@@ -11,12 +11,12 @@ g.eval("(" + function () {
         dbg.onDebuggerStatement = function (frame) {
             a.push(frame);
             for (var i = 0; i < a.length; i++)
-                assertEq(a[i].live, true);
+                assertEq(a[i].onStack, true);
         };
         finalCheck = function (n) {
             assertEq(a.length, n);
             for (var i = 0; i < n; i++)
-                assertEq(a[i].live, false);
+                assertEq(a[i].onStack, false);
         };
     } + ")()");
 

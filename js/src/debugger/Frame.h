@@ -182,14 +182,14 @@ class DebuggerFrame : public NativeObject {
       mozilla::Range<const char16_t> chars, HandleObject bindings,
       const EvalOptions& options);
 
-  MOZ_MUST_USE bool requireLive(JSContext* cx);
+  MOZ_MUST_USE bool requireOnStack(JSContext* cx);
   static MOZ_MUST_USE DebuggerFrame* check(JSContext* cx, HandleValue thisv,
-                                           bool checkLive);
+                                           bool checkOnStack);
 
-  bool isLive() const;
+  bool isOnStack() const;
 
-  // Like isLive, but works even in the midst of a relocating GC.
-  bool isLiveMaybeForwarded() const;
+  // Like isOnStack, but works even in the midst of a relocating GC.
+  bool isOnStackMaybeForwarded() const;
 
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
