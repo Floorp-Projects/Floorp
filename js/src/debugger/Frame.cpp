@@ -436,18 +436,21 @@ void DebuggerFrame::clearGenerator(
 /* static */
 bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
                               MutableHandleDebuggerObject result) {
-  MOZ_ASSERT(frame->isOnStack());
+  RootedObject callee(cx);
+  if (frame->isOnStack()) {
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+    if (!referent.isFunctionFrame()) {
+      result.set(nullptr);
+      return true;
+    }
+    callee = referent.callee();
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
 
-  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-  if (!referent.isFunctionFrame()) {
-    result.set(nullptr);
-    return true;
+    callee = &frame->generatorInfo()->unwrappedGenerator().callee();
   }
 
-  Debugger* dbg = frame->owner();
-
-  RootedObject callee(cx, referent.callee());
-  return dbg->wrapDebuggeeObject(cx, callee, result);
+  return frame->owner()->wrapDebuggeeObject(cx, callee, result);
 }
 
 /* static */
@@ -1249,7 +1252,7 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   MinState minState = MinState::OnStack;
-  if (MyMethod == &CallData::getScript) {
+  if (MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript) {
     minState = MinState::OnStackOrSuspended;
   } else if (
       // These methods do not require any frame metadata.
