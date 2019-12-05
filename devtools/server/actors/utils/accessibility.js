@@ -103,7 +103,29 @@ function isWebRenderEnabled(win) {
   return false;
 }
 
+/**
+ * Get role attribute for an accessible object if specified for its
+ * corresponding DOMNode.
+ *
+ * @param   {nsIAccessible} accessible
+ *          Accessible for which to determine its role attribute value.
+ *
+ * @returns {null|String}
+ *          Role attribute value if specified.
+ */
+function getAriaRoles(accessible) {
+  try {
+    return accessible.attributes.getStringProperty("xml-roles");
+  } catch (e) {
+    // No xml-roles. nsPersistentProperties throws if the attribute for a key
+    // is not found.
+  }
+
+  return null;
+}
+
+exports.getAriaRoles = getAriaRoles;
 exports.isDefunct = isDefunct;
+exports.isWebRenderEnabled = isWebRenderEnabled;
 exports.loadSheetForBackgroundCalculation = loadSheetForBackgroundCalculation;
 exports.removeSheetForBackgroundCalculation = removeSheetForBackgroundCalculation;
-exports.isWebRenderEnabled = isWebRenderEnabled;
