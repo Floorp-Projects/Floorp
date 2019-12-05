@@ -256,7 +256,7 @@ Accessing this property will throw if `.onStack == false`.
 The function whose application created this frame, as a debuggee value,
 or `null` if this is not a `"call"` frame.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `generator`
 True if this frame is a generator frame, false otherwise.
