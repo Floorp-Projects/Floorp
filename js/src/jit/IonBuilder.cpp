@@ -1784,42 +1784,6 @@ AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
   return Ok();
 }
 
-AbortReasonOr<Ok> IonBuilder::startLoop(jsbytecode* loopEntry,
-                                        jsbytecode* loopHead,
-                                        jsbytecode* backjump,
-                                        uint32_t stackPhiCount) {
-  MOZ_ASSERT(JSOp(*loopEntry) == JSOP_LOOPENTRY);
-  MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
-  MOZ_ASSERT(JSOp(*backjump) == JSOP_GOTO || JSOp(*backjump) == JSOP_IFNE ||
-             JSOp(*backjump) == JSOP_IFEQ);
-  MOZ_ASSERT(GET_JUMP_OFFSET(backjump) < 0);
-
-  bool canOsr = LoopEntryCanIonOsr(loopEntry);
-  bool osr = loopEntry == info().osrPc();
-  if (osr) {
-    MOZ_ASSERT(canOsr);
-
-    MBasicBlock* preheader;
-    MOZ_TRY_VAR(preheader, newOsrPreheader(current, loopEntry));
-    current->end(MGoto::New(alloc(), preheader));
-    MOZ_TRY(setCurrentAndSpecializePhis(preheader));
-  }
-
-  loopDepth_++;
-  MBasicBlock* header;
-  MOZ_TRY_VAR(header, newPendingLoopHeader(current, loopEntry, osr, canOsr,
-                                           stackPhiCount));
-  current->end(MGoto::New(alloc(), header));
-
-  if (!loopStack_.emplaceBack(header, GetNextPc(backjump))) {
-    return abort(AbortReason::Alloc);
-  }
-
-  MOZ_TRY(analyzeNewLoopTypes(header, loopHead, loopHead, backjump));
-
-  return startTraversingBlock(header);
-}
-
 AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
   // All loops have the following bytecode structure:
   //
@@ -1866,7 +1830,30 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
       MOZ_CRASH("Unexpected source note");
   }
 
-  return startLoop(loopEntry, pc, backjump, stackPhiCount);
+  bool canOsr = LoopEntryCanIonOsr(loopEntry);
+  bool osr = loopEntry == info().osrPc();
+  if (osr) {
+    MOZ_ASSERT(canOsr);
+
+    MBasicBlock* preheader;
+    MOZ_TRY_VAR(preheader, newOsrPreheader(current, loopEntry));
+    current->end(MGoto::New(alloc(), preheader));
+    MOZ_TRY(setCurrentAndSpecializePhis(preheader));
+  }
+
+  loopDepth_++;
+  MBasicBlock* header;
+  MOZ_TRY_VAR(header, newPendingLoopHeader(current, loopEntry, osr, canOsr,
+                                           stackPhiCount));
+  current->end(MGoto::New(alloc(), header));
+
+  if (!loopStack_.emplaceBack(header, GetNextPc(backjump))) {
+    return abort(AbortReason::Alloc);
+  }
+
+  MOZ_TRY(analyzeNewLoopTypes(header, pc, pc, backjump));
+
+  return startTraversingBlock(header);
 }
 
 AbortReasonOr<Ok> IonBuilder::visitBackEdge(bool* restarted) {
