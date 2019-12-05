@@ -1,53 +1,58 @@
+use crate::utils::{add_extra_generic_param, AttrParams, MultiFieldData, State};
 use proc_macro2::TokenStream;
-use quote::ToTokens;
-use syn::{Data, DeriveInput, Field, Fields};
-use utils::{field_idents, get_field_types, named_to_vec, number_idents, unnamed_to_vec};
+use quote::{quote, ToTokens};
+use syn::{parse::Result, DeriveInput};
 
 /// Provides the hook to expand `#[derive(Into)]` into an implementation of `Into`
-pub fn expand(input: &DeriveInput, _: &str) -> TokenStream {
-    let input_type = &input.ident;
-    let field_vec: Vec<_>;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (field_names, fields) = match input.data {
-        Data::Struct(ref data_struct) => match data_struct.fields {
-            Fields::Unnamed(ref fields) => {
-                field_vec = unnamed_to_vec(fields);
-                (tuple_field_names(&field_vec), field_vec)
-            }
-            Fields::Named(ref fields) => {
-                field_vec = named_to_vec(fields);
-                (struct_field_names(&field_vec), field_vec)
-            }
-            Fields::Unit => (vec![], vec![]),
+pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStream> {
+    let state = State::with_attr_params(
+        input,
+        trait_name,
+        quote!(::core::convert),
+        trait_name.to_lowercase(),
+        AttrParams {
+            enum_: vec!["ignore", "owned", "ref", "ref_mut"],
+            variant: vec!["ignore", "owned", "ref", "ref_mut"],
+            struct_: vec!["ignore", "owned", "ref", "ref_mut"],
+            field: vec!["ignore"],
         },
-        _ => panic!("Only structs can derive Into"),
-    };
+    )?;
+    let MultiFieldData {
+        variant_info,
+        field_types,
+        field_idents,
+        input_type,
+        ..
+    } = state.enabled_fields_data();
 
-    let original_types = &get_field_types(&fields);
+    let mut tokens = TokenStream::new();
 
-    quote!{
-        impl#impl_generics ::std::convert::From<#input_type#ty_generics> for
-            (#(#original_types),*) #where_clause {
+    for ref_type in variant_info.ref_types() {
+        let reference = ref_type.reference();
+        let lifetime = ref_type.lifetime();
+        let reference_with_lifetime = ref_type.reference_with_lifetime();
 
-            #[allow(unused_variables)]
-            #[inline]
-            fn from(original: #input_type#ty_generics) -> (#(#original_types),*) {
-                (#(original.#field_names),*)
+        let generics_impl;
+        let (_, ty_generics, where_clause) = input.generics.split_for_impl();
+        let (impl_generics, _, _) = if ref_type.is_ref() {
+            generics_impl = add_extra_generic_param(&input.generics, lifetime);
+            generics_impl.split_for_impl()
+        } else {
+            input.generics.split_for_impl()
+        };
+
+        let into = quote! {
+            impl#impl_generics ::core::convert::From<#reference_with_lifetime #input_type#ty_generics> for
+                (#(#reference_with_lifetime #field_types),*) #where_clause {
+
+                #[allow(unused_variables)]
+                #[inline]
+                fn from(original: #reference_with_lifetime #input_type#ty_generics) -> (#(#reference_with_lifetime #field_types),*) {
+                    (#(#reference original.#field_idents),*)
+                }
             }
-        }
+        };
+        into.to_tokens(&mut tokens);
     }
-}
-
-fn tuple_field_names(fields: &[&Field]) -> Vec<TokenStream> {
-    number_idents(fields.len())
-        .iter()
-        .map(|f| f.into_token_stream())
-        .collect()
-}
-
-fn struct_field_names(fields: &[&Field]) -> Vec<TokenStream> {
-    field_idents(fields)
-        .iter()
-        .map(|f| (*f).into_token_stream())
-        .collect()
+    Ok(tokens)
 }
