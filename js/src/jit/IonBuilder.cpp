@@ -1750,7 +1750,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
 
   if (target < pc) {
     // This must be a backedge for a loop.
-    MOZ_ASSERT(loopStack_.back().state() == LoopState::State::DoWhileLike);
     return visitBackEdge(restarted);
   }
 
@@ -1785,13 +1784,10 @@ AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
   return Ok();
 }
 
-AbortReasonOr<Ok> IonBuilder::startLoop(LoopState::State initState,
-                                        jsbytecode* loopEntry,
+AbortReasonOr<Ok> IonBuilder::startLoop(jsbytecode* loopEntry,
                                         jsbytecode* loopHead,
                                         jsbytecode* backjump,
                                         uint32_t stackPhiCount) {
-  MOZ_ASSERT(initState == LoopState::State::DoWhileLike ||
-             initState == LoopState::State::WhileLikeCond);
   MOZ_ASSERT(JSOp(*loopEntry) == JSOP_LOOPENTRY);
   MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
   MOZ_ASSERT(JSOp(*backjump) == JSOP_GOTO || JSOp(*backjump) == JSOP_IFNE ||
@@ -1815,14 +1811,12 @@ AbortReasonOr<Ok> IonBuilder::startLoop(LoopState::State initState,
                                            stackPhiCount));
   current->end(MGoto::New(alloc(), header));
 
-  if (!loopStack_.emplaceBack(initState, header, loopEntry, loopHead,
+  if (!loopStack_.emplaceBack(header, loopEntry, loopHead,
                               GetNextPc(backjump))) {
     return abort(AbortReason::Alloc);
   }
 
   MOZ_TRY(analyzeNewLoopTypes(header, loopHead, loopHead, backjump));
-
-  nextpc = loopEntry;
 
   return startTraversingBlock(header);
 }
@@ -1873,8 +1867,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
       MOZ_CRASH("Unexpected source note");
   }
 
-  return startLoop(LoopState::State::DoWhileLike, loopEntry, pc, backjump,
-                   stackPhiCount);
+  return startLoop(loopEntry, pc, backjump, stackPhiCount);
 }
 
 AbortReasonOr<Ok> IonBuilder::visitBackEdge(bool* restarted) {
@@ -1909,16 +1902,6 @@ AbortReasonOr<Ok> IonBuilder::visitBackEdge(bool* restarted) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_loopentry(bool* restarted) {
-  if (loopStack_.back().state() == LoopState::State::WhileLikeBody) {
-    // We reached the end of the loop body. Try to finish the loop.
-    jsbytecode* successorpc = loopStack_.back().successorStart();
-    MOZ_TRY(visitBackEdge(restarted));
-    if (!*restarted) {
-      nextpc = successorpc;
-    }
-    return Ok();
-  }
-
   MInterruptCheck* check = MInterruptCheck::New(alloc());
   current->add(check);
   insertRecompileCheck();
@@ -2696,11 +2679,6 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(MBasicBlock* header) {
   nextpc = header->pc();
   graph().addBlock(current);
 
-  if (loopStack_.back().state() == LoopState::State::WhileLikeBody) {
-    // Back to square one.
-    loopStack_.back().setState(LoopState::State::WhileLikeCond);
-  }
-
   // Remove loop header and dead blocks from pendingBlocks.
   for (PendingEdgesMap::Range r = pendingEdges_->all(); !r.empty();
        r.popFront()) {
@@ -3165,48 +3143,22 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
   jsbytecode* successorPC = GetNextPc(pc);
   MOZ_ASSERT(loopStack_.back().successorStart() == successorPC);
 
-  // If we're compiling a do-while-like loop, we can finish the loop now.
-  if (loopStack_.back().state() == LoopState::State::DoWhileLike) {
-    MBasicBlock* backedge;
-    MOZ_TRY_VAR(backedge, newBlock(current, loopStack_.back().loopEntry()));
-
-    if (op == JSOP_IFNE) {
-      current->end(newTest(ins, backedge, nullptr));
-      MOZ_TRY(
-          addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
-    } else {
-      MOZ_ASSERT(op == JSOP_IFEQ);
-      current->end(newTest(ins, nullptr, backedge));
-      MOZ_TRY(
-          addPendingEdge(PendingEdge::NewTestTrue(current, op), successorPC));
-    }
-
-    MOZ_TRY(startTraversingBlock(backedge));
-    return visitBackEdge(restarted);
-  }
-
-  // We finished compiling the condition of a while-like loop. Continue with the
-  // loop body.
-
-  MOZ_ASSERT(loopStack_.back().state() == LoopState::State::WhileLikeCond);
-
-  MBasicBlock* loopBody;
-  MOZ_TRY_VAR(loopBody, newBlock(current, loopStack_.back().loopHead()));
+  // We can finish the loop now.
+  MBasicBlock* backedge;
+  MOZ_TRY_VAR(backedge, newBlock(current, loopStack_.back().loopEntry()));
 
   if (op == JSOP_IFNE) {
-    current->end(newTest(ins, loopBody, nullptr));
+    current->end(newTest(ins, backedge, nullptr));
     MOZ_TRY(
         addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
   } else {
-    current->end(newTest(ins, nullptr, loopBody));
+    MOZ_ASSERT(op == JSOP_IFEQ);
+    current->end(newTest(ins, nullptr, backedge));
     MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), successorPC));
   }
 
-  MOZ_TRY(startTraversingBlock(loopBody));
-  loopStack_.back().setState(LoopState::State::WhileLikeBody);
-
-  nextpc = loopStack_.back().loopHead();
-  return Ok();
+  MOZ_TRY(startTraversingBlock(backedge));
+  return visitBackEdge(restarted);
 }
 
 // Returns true iff the MTest added for |op| has a true-target corresponding
