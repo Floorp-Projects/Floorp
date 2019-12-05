@@ -117,6 +117,32 @@ describe("<DSCard>", () => {
           event: "CLICK",
           source: "FOO",
           action_position: 1,
+          value: { card_type: "organic" },
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.ImpressionStats({
+          click: 0,
+          source: "FOO",
+          tiles: [{ id: "fooidx", pos: 1 }],
+        })
+      );
+    });
+
+    it("should set the right card_type on spocs", () => {
+      wrapper.setProps({ id: "fooidx", pos: 1, type: "foo", flightId: 12345 });
+
+      wrapper.instance().onLinkClick();
+
+      assert.calledTwice(dispatch);
+      assert.calledWith(
+        dispatch,
+        ac.UserEvent({
+          event: "CLICK",
+          source: "FOO",
+          action_position: 1,
+          value: { card_type: "spoc" },
         })
       );
       assert.calledWith(
@@ -148,6 +174,7 @@ describe("<DSCard>", () => {
           event: "CLICK",
           source: "FOO",
           action_position: 1,
+          value: { card_type: "organic" },
         })
       );
       assert.calledWith(
