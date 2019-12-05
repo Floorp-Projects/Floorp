@@ -189,11 +189,23 @@
       }
     },
     "searchUrlCodes": {
-      "type": "object",
+      "type": "array",
       "title": "Codes",
-      "description": "A map of parameter name to the parameter value.",
-      "additionalProperties": {
-        "type": "string"
+      "description": "A array of objects - map of parameter name to the parameter value.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the parameter that will be used in the query"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The value of parameter (pref or purpose)"
+          }
+        }
       }
     },
     "params": {

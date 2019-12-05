@@ -13,22 +13,26 @@ add_task(async function test() {
   let engine = Services.search.getEngineByName("Bing");
   ok(engine, "Bing");
 
-  let base = "https://www.bing.com/search?q=foo&pc=MOZI";
+  let base = "https://www.bing.com/search?form={code}&pc=MOZI&q=foo";
   let url;
+
+  function getUrl(code) {
+    return base.replace("{code}", code);
+  }
 
   // Test search URLs (including purposes).
   url = engine.getSubmission("foo").uri.spec;
-  is(url, base + "&form=MOZSBR", "Check search URL for 'foo'");
+  is(url, getUrl("MOZSBR"), "Check search URL for 'foo'");
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
-  is(url, base + "&form=MOZCON", "Check context menu search URL for 'foo'");
+  is(url, getUrl("MOZCON"), "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
-  is(url, base + "&form=MOZLBR", "Check keyword search URL for 'foo'");
+  is(url, getUrl("MOZLBR"), "Check keyword search URL for 'foo'");
   url = engine.getSubmission("foo", null, "searchbar").uri.spec;
-  is(url, base + "&form=MOZSBR", "Check search bar search URL for 'foo'");
+  is(url, getUrl("MOZSBR"), "Check search bar search URL for 'foo'");
   url = engine.getSubmission("foo", null, "homepage").uri.spec;
-  is(url, base + "&form=MOZSPG", "Check homepage search URL for 'foo'");
+  is(url, getUrl("MOZSPG"), "Check homepage search URL for 'foo'");
   url = engine.getSubmission("foo", null, "newtab").uri.spec;
-  is(url, base + "&form=MOZTSB", "Check newtab search URL for 'foo'");
+  is(url, getUrl("MOZTSB"), "Check newtab search URL for 'foo'");
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
@@ -44,7 +48,7 @@ add_task(async function test() {
     name: "Bing",
     alias: null,
     description: "Bing. Search by Microsoft.",
-    searchForm: "https://www.bing.com/search?q=&pc=MOZI",
+    searchForm: "https://www.bing.com/search?pc=MOZI&q=",
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",
@@ -54,16 +58,6 @@ add_task(async function test() {
           method: "GET",
           template: "https://www.bing.com/search",
           params: [
-            {
-              name: "q",
-              value: "{searchTerms}",
-              purpose: undefined,
-            },
-            {
-              name: "pc",
-              value: "MOZI",
-              purpose: undefined,
-            },
             {
               name: "form",
               value: "MOZCON",
@@ -88,6 +82,16 @@ add_task(async function test() {
               name: "form",
               value: "MOZTSB",
               purpose: "newtab",
+            },
+            {
+              name: "pc",
+              value: "MOZI",
+              purpose: undefined,
+            },
+            {
+              name: "q",
+              value: "{searchTerms}",
+              purpose: undefined,
             },
           ],
         },
