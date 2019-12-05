@@ -220,8 +220,6 @@ class IonBuilder : public MIRGenerator,
                                        uint32_t maxTargets);
 
   AbortReasonOr<Ok> analyzeNewLoopTypes(MBasicBlock* entry,
-                                        jsbytecode* loopHeadPc,
-                                        jsbytecode* loopStartPc,
                                         jsbytecode* loopStopPc);
   AbortReasonOr<Ok> analyzeNewLoopTypesForLocation(
       MBasicBlock* entry, const BytecodeLocation loc,
