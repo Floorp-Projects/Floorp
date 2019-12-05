@@ -234,25 +234,32 @@ nsSHEntry::SetPostData(nsIInputStream* aPostData) {
 
 NS_IMETHODIMP
 nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
-  MOZ_CRASH(
-      "Classes inheriting from nsSHEntry should implement this. "
-      "Bug 1546344 will clean this up.");
+  *aResult = mShared->mLayoutHistoryState;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
-  MOZ_CRASH(
-      "Classes inheriting from nsSHEntry should implement this. "
-      "Bug 1546344 will clean this up.");
+  mShared->mLayoutHistoryState = aState;
+  if (mShared->mLayoutHistoryState) {
+    mShared->mLayoutHistoryState->SetScrollPositionOnly(
+        !mShared->mSaveLayoutState);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
-  MOZ_CRASH(
-      "Classes inheriting from nsSHEntry should implement this. "
-      "Bug 1546344 will clean this up.");
+  if (!mShared->mLayoutHistoryState) {
+    nsCOMPtr<nsILayoutHistoryState> historyState;
+    historyState = NS_NewLayoutHistoryState();
+    SetLayoutHistoryState(historyState);
+  }
+
+  nsCOMPtr<nsILayoutHistoryState> state = GetLayoutHistoryState();
+  state.forget(aState);
   return NS_OK;
 }
 
@@ -1025,6 +1032,12 @@ void nsSHEntry::EvictContentViewer() {
   }
 }
 
+NS_IMETHODIMP
+nsSHEntry::SynchronizeLayoutHistoryState() {
+  // No-op on purpose. See nsISHEntry.idl
+  return NS_OK;
+}
+
 nsLegacySHEntry::nsLegacySHEntry(nsISHistory* aHistory, uint64_t aID)
     : nsSHEntry(new nsSHEntryShared(aHistory, aID)) {}
 
@@ -1041,37 +1054,6 @@ nsLegacySHEntry::GetContentViewer(nsIContentViewer** aResult) {
 }
 
 NS_IMETHODIMP
-nsLegacySHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
-  *aResult = GetState()->mLayoutHistoryState;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLegacySHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
-  GetState()->mLayoutHistoryState = aState;
-  if (GetState()->mLayoutHistoryState) {
-    GetState()->mLayoutHistoryState->SetScrollPositionOnly(
-        !GetState()->mSaveLayoutState);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLegacySHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
-  if (!GetState()->mLayoutHistoryState) {
-    nsCOMPtr<nsILayoutHistoryState> historyState;
-    historyState = NS_NewLayoutHistoryState();
-    SetLayoutHistoryState(historyState);
-  }
-
-  nsCOMPtr<nsILayoutHistoryState> state = GetLayoutHistoryState();
-  state.forget(aState);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLegacySHEntry::Create(
     nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
     uint32_t aCacheKey, const nsACString& aContentType,
@@ -1081,9 +1063,9 @@ nsLegacySHEntry::Create(
     nsIURI* aResultPrincipalURI, bool aLoadReplace,
     nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdocData,
     bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
-  GetState()->mLayoutHistoryState = nullptr;
+  mShared->mLayoutHistoryState = nullptr;
 
-  GetState()->mSaveLayoutState = aSaveLayoutState;
+  mShared->mSaveLayoutState = aSaveLayoutState;
 
   return nsSHEntry::Create(aURI, aTitle, aInputStream, aCacheKey, aContentType,
                            aTriggeringPrincipal, aPrincipalToInherit,
@@ -1102,15 +1084,15 @@ nsLegacySHEntry::Clone(nsISHEntry** aResult) {
 
 NS_IMETHODIMP
 nsLegacySHEntry::GetSaveLayoutStateFlag(bool* aFlag) {
-  *aFlag = GetState()->mSaveLayoutState;
+  *aFlag = mShared->mSaveLayoutState;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLegacySHEntry::SetSaveLayoutStateFlag(bool aFlag) {
-  GetState()->mSaveLayoutState = aFlag;
-  if (GetState()->mLayoutHistoryState) {
-    GetState()->mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
+  mShared->mSaveLayoutState = aFlag;
+  if (mShared->mLayoutHistoryState) {
+    mShared->mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
   }
 
   return NS_OK;
