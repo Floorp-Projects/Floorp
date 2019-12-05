@@ -2027,7 +2027,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetLinkStatus(
     return IPC_OK();
   }
 
-  xulBrowserWindow->SetOverLink(aStatus, nullptr);
+  xulBrowserWindow->SetOverLink(aStatus);
 
   return IPC_OK();
 }

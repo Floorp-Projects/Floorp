@@ -1659,12 +1659,12 @@ PlacesToolbar.prototype = {
       button._placesNode &&
       PlacesUtils.nodeIsURI(button._placesNode)
     ) {
-      window.XULBrowserWindow.setOverLink(aEvent.target._placesNode.uri, null);
+      window.XULBrowserWindow.setOverLink(aEvent.target._placesNode.uri);
     }
   },
 
   _onMouseOut: function PT__onMouseOut(aEvent) {
-    window.XULBrowserWindow.setOverLink("", null);
+    window.XULBrowserWindow.setOverLink("");
   },
 
   _onMouseDown: function PT__onMouseDown(aEvent) {

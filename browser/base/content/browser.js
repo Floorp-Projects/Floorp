@@ -5136,7 +5136,7 @@ var XULBrowserWindow = {
     StatusPanel.update();
   },
 
-  setOverLink(url, anchorElt) {
+  setOverLink(url) {
     if (url) {
       url = Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
 
@@ -5370,7 +5370,7 @@ var XULBrowserWindow = {
     var location = aLocationURI ? aLocationURI.spec : "";
 
     this.hideOverLinkImmediately = true;
-    this.setOverLink("", null);
+    this.setOverLink("");
     this.hideOverLinkImmediately = false;
 
     // We should probably not do this if the value has changed since the user

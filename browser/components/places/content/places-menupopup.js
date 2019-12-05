@@ -389,7 +389,7 @@
         }
 
         if (linkURI) {
-          window.XULBrowserWindow.setOverLink(linkURI, null);
+          window.XULBrowserWindow.setOverLink(linkURI);
         }
       }
     }
@@ -401,7 +401,7 @@
       }
 
       if (window.XULBrowserWindow) {
-        window.XULBrowserWindow.setOverLink("", null);
+        window.XULBrowserWindow.setOverLink("");
       }
     }
 
