@@ -1582,8 +1582,12 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-2.html 600974-1-r
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-3.html 600974-1-ref.html # Bug 1392106
 == 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
-# Canvas with a fractional margin does not snap properly; see bug 1580534
+# Canvas with a fractional margin and translate snaps differently; non-WebRender
+# accepts a kludge for performance reasons, while WebRender is able to create
+# the idealized rendering. As such we assume we fail the old test, and pass the
+# new test. See bug 1580534 for more details.
 fuzzy-if(Android,0-8,0-20) fails-if(webrender) == 602200-3.html 602200-3-ref.html
+fails-if(!webrender) == 1580534.html 1580534-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
