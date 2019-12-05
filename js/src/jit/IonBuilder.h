@@ -161,21 +161,13 @@ using PendingEdgesMap =
 // LoopState stores information about a loop that's being compiled to MIR.
 class LoopState {
   MBasicBlock* header_ = nullptr;
-  jsbytecode* loopEntry_ = nullptr;
-  jsbytecode* loopHead_ = nullptr;
   jsbytecode* successorStart_ = nullptr;
 
  public:
-  LoopState(MBasicBlock* header, jsbytecode* loopEntry, jsbytecode* loopHead,
-            jsbytecode* successorStart)
-      : header_(header),
-        loopEntry_(loopEntry),
-        loopHead_(loopHead),
-        successorStart_(successorStart) {}
+  LoopState(MBasicBlock* header, jsbytecode* successorStart)
+      : header_(header), successorStart_(successorStart) {}
 
   MBasicBlock* header() const { return header_; }
-  jsbytecode* loopEntry() const { return loopEntry_; }
-  jsbytecode* loopHead() const { return loopHead_; }
   jsbytecode* successorStart() const { return successorStart_; }
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
