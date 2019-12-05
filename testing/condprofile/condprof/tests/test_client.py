@@ -5,9 +5,9 @@ import shutil
 import responses
 import re
 
-from condprof.client import get_profile
+from condprof.client import get_profile, ROOT_URL
 
-PROFILE = re.compile("https://index.taskcluster.net/.*/.*tgz")
+PROFILE = re.compile(ROOT_URL + "/.*/.*tgz")
 with open(os.path.join(os.path.dirname(__file__), "profile.tgz"), "rb") as f:
     PROFILE_DATA = f.read()
 
@@ -66,7 +66,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(len(responses.calls), response_calls + 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         import mozunit
     except ImportError:

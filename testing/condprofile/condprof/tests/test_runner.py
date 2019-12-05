@@ -5,13 +5,15 @@ import shutil
 import re
 
 import responses
+
 from condprof.runner import main
+from condprof.client import ROOT_URL
 
 GECKODRIVER = os.path.join(os.path.dirname(__file__), "fakegeckodriver.py")
 FIREFOX = os.path.join(os.path.dirname(__file__), "fakefirefox.py")
-CHANGELOG = re.compile("https://index.taskcluster.net/.*/changelog.json")
+CHANGELOG = re.compile(ROOT_URL + "/.*/changelog.json")
 FTP = "https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/"
-PROFILE = re.compile("https://index.taskcluster.net/.*/.*tgz")
+PROFILE = re.compile(ROOT_URL + "/.*/.*tgz")
 
 with open(os.path.join(os.path.dirname(__file__), "profile.tgz"), "rb") as f:
     PROFILE_DATA = f.read()
