@@ -23,6 +23,17 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace mozilla {
 
+#if defined(MOZ_ASAN)
+
+// This DLL blocking code is incompatible with ASAN because
+// it is able to execute before ASAN itself has even initialized.
+LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
+    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
+  return mozilla::Ok();
+}
+
+#else
+
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess) {
   CrossProcessDllInterceptor intcpt(aChildProcess);
@@ -114,5 +125,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
 
   return Ok();
 }
+
+#endif  // defined(MOZ_ASAN)
 
 }  // namespace mozilla
