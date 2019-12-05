@@ -550,23 +550,30 @@ bool DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame) {
 /* static */
 bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
                               size_t& result) {
-  MOZ_ASSERT(frame->isOnStack());
+  if (frame->isOnStack()) {
+    Maybe<FrameIter> maybeIter;
+    if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
+      return false;
+    }
+    FrameIter& iter = *maybeIter;
 
-  Maybe<FrameIter> maybeIter;
-  if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
-  }
-  FrameIter& iter = *maybeIter;
-
-  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-  if (referent.isWasmDebugFrame()) {
-    iter.wasmUpdateBytecodeOffset();
-    result = iter.wasmBytecodeOffset();
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+    if (referent.isWasmDebugFrame()) {
+      iter.wasmUpdateBytecodeOffset();
+      result = iter.wasmBytecodeOffset();
+    } else {
+      JSScript* script = iter.script();
+      UpdateFrameIterPc(iter);
+      jsbytecode* pc = iter.pc();
+      result = script->pcToOffset(pc);
+    }
   } else {
-    JSScript* script = iter.script();
-    UpdateFrameIterPc(iter);
-    jsbytecode* pc = iter.pc();
-    result = script->pcToOffset(pc);
+    MOZ_ASSERT(frame->hasGenerator());
+
+    AbstractGeneratorObject& genObj =
+        frame->generatorInfo()->unwrappedGenerator();
+    JSScript* script = frame->generatorInfo()->generatorScript();
+    result = script->resumeOffsets()[genObj.resumeIndex()];
   }
   return true;
 }
@@ -1252,7 +1259,8 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   MinState minState = MinState::OnStack;
-  if (MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript) {
+  if (MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript ||
+      MyMethod == &CallData::offsetGetter) {
     minState = MinState::OnStackOrSuspended;
   } else if (
       // These methods do not require any frame metadata.
