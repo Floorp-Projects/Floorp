@@ -429,10 +429,6 @@ update-application-use-service =
     .label = Use a background service to install updates
     .accesskey = b
 
-update-enable-search-update =
-    .label = Automatically update search engines
-    .accesskey = e
-
 update-setting-write-failure-title = Error saving Update preferences
 
 # Variables:
