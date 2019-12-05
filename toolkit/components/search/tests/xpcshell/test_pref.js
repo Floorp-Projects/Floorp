@@ -14,11 +14,7 @@ const baseURL = "https://www.google.com/search?q=foo";
 add_task(async function setup() {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams will be ignored.
-  let url = "resource://test/data/";
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+  await useTestEngines();
 });
 
 add_task(async function test_pref_initial_value() {
