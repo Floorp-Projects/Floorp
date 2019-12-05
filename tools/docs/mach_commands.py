@@ -227,7 +227,9 @@ class Documentation(MachCommandBase):
 
     def check_jsdoc(self):
         try:
-            out = subprocess.check_output(['jsdoc', '--version'])
+            from mozfile import which
+            exe_name = which('jsdoc')
+            out = subprocess.check_output([exe_name, '--version'])
             version = out.split()[1]
         except subprocess.CalledProcessError:
             version = None

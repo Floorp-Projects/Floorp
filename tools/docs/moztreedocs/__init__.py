@@ -22,7 +22,7 @@ import sphinx.apidoc
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-MAIN_DOC_PATH = os.path.join(build.topsrcdir, 'tools', 'docs')
+MAIN_DOC_PATH = os.path.normpath(os.path.join(build.topsrcdir, 'tools', 'docs'))
 
 logger = sphinx.util.logging.getLogger(__name__)
 
@@ -157,9 +157,9 @@ class _SphinxManager(object):
             source_dir = os.path.join(self.topsrcdir, source)
             for root, dirs, files in os.walk(source_dir):
                 for f in files:
-                    source_path = os.path.join(root, f)
+                    source_path = os.path.normpath(os.path.join(root, f))
                     rel_source = source_path[len(source_dir) + 1:]
-                    target = os.path.join(dest, rel_source)
+                    target = os.path.normpath(os.path.join(dest, rel_source))
                     if source_path.endswith(".md"):
                         self._process_markdown(m, source_path, os.path.join(".", target))
                     else:
@@ -167,7 +167,7 @@ class _SphinxManager(object):
 
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(self.staging_dir)
+        copier.copy(self.staging_dir, remove_empty_directories=False)
 
         with open(self.index_path, 'rb') as fh:
             data = fh.read()
@@ -194,11 +194,11 @@ class _SphinxManager(object):
         for t in tree_config:
             CATEGORIES[t] = format_paths(tree_config[t])
 
-        indexes = set(['%s/index' % p for p in toplevel_trees.keys()])
+        indexes = set([os.path.normpath(os.path.join(p, 'index')) for p in toplevel_trees.keys()])
         # Format categories like indexes
         cats = '\n'.join(CATEGORIES.values()).split("\n")
         # Remove heading spaces
-        cats = [x.strip() for x in cats]
+        cats = [os.path.normpath(x.strip()) for x in cats]
         indexes = tuple(set(indexes) - set(cats))
         if indexes:
             # In case a new doc isn't categorized
