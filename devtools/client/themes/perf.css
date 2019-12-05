@@ -254,6 +254,10 @@
   display: flex;
 }
 
+.perf-settings-checkbox-and-name {
+  display: flex;
+}
+
 .perf-settings-checkbox {
   align-self: flex-start;
 }
