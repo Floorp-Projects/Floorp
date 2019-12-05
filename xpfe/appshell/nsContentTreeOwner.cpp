@@ -397,7 +397,7 @@ NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(
 // nsContentTreeOwner::nsIWebBrowserChrome
 //*****************************************************************************
 
-NS_IMETHODIMP nsContentTreeOwner::SetStatusLink(const nsAString& aStatusText) {
+NS_IMETHODIMP nsContentTreeOwner::SetLinkStatus(const nsAString& aStatusText) {
   NS_ENSURE_STATE(mAppWindow);
 
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;

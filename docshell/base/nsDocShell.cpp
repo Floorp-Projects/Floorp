@@ -12655,7 +12655,7 @@ nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
   PredictorPredict(aURI, mCurrentURI, nsINetworkPredictor::PREDICT_LINK,
                    aContent->NodePrincipal()->OriginAttributesRef(), nullptr);
 
-  rv = browserChrome->SetStatusLink(uStr);
+  rv = browserChrome->SetLinkStatus(uStr);
   return rv;
 }
 
@@ -12664,7 +12664,7 @@ nsresult nsDocShell::OnLeaveLink() {
   nsresult rv = NS_ERROR_FAILURE;
 
   if (browserChrome) {
-    rv = browserChrome->SetStatusLink(EmptyString());
+    rv = browserChrome->SetLinkStatus(EmptyString());
   }
   return rv;
 }
