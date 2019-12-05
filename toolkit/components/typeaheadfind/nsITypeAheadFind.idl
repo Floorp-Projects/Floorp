@@ -70,6 +70,7 @@ interface nsITypeAheadFind : nsISupports
   readonly attribute AString searchString;
                                         // Most recent search string
   attribute boolean caseSensitive;      // Searches are case sensitive
+  attribute boolean matchDiacritics;    // Searches preserve diacritics
   attribute boolean entireWord;         // Search for whole words only
   readonly attribute Element foundLink;
                                         // Most recent elem found, if a link

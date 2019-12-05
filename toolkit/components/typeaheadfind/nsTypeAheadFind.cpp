@@ -86,7 +86,8 @@ nsTypeAheadFind::nsTypeAheadFind()
       mLastFindLength(0),
       mIsSoundInitialized(false),
       mCaseSensitive(false),
-      mEntireWord(false) {}
+      mEntireWord(false),
+      mMatchDiacritics(false) {}
 
 nsTypeAheadFind::~nsTypeAheadFind() {
   nsCOMPtr<nsIPrefBranch> prefInternal(
@@ -207,6 +208,24 @@ nsTypeAheadFind::SetEntireWord(bool isEntireWord) {
 NS_IMETHODIMP
 nsTypeAheadFind::GetEntireWord(bool* isEntireWord) {
   *isEntireWord = mEntireWord;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypeAheadFind::SetMatchDiacritics(bool matchDiacritics) {
+  mMatchDiacritics = matchDiacritics;
+
+  if (mFind) {
+    mFind->SetMatchDiacritics(mMatchDiacritics);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypeAheadFind::GetMatchDiacritics(bool* matchDiacritics) {
+  *matchDiacritics = mMatchDiacritics;
 
   return NS_OK;
 }
