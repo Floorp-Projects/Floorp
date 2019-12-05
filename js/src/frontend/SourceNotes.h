@@ -38,26 +38,22 @@ namespace js {
 
 class SrcNote {
  public:
-  // SRC_FOR: Source note for JSOP_NOP at the top of C-style for loop,
+  // SRC_FOR: Source note for JSOP_LOOPHEAD at the top of C-style for loop,
   //          which is placed after init expression/declaration ops.
   class For {
    public:
     enum Fields {
-      // The offset of the condition expression ops from JSOP_NOP.
-      CondOffset,
-
       // The offset of JSOP_GOTO/JSOP_IFNE at the end of the loop from
-      // JSOP_NOP.
+      // JSOP_LOOPHEAD.
       BackJumpOffset,
       Count,
     };
   };
-  // SRC_WHILE: Source note for JSOP_GOTO at the top of while loop,
-  //            which jumps to JSOP_LOOPENTRY.
+  // SRC_WHILE: Source note for JSOP_LOOPHEAD at the top of while loop.
   class While {
    public:
     enum Fields {
-      // The offset of JSOP_IFNE at the end of the loop from JSOP_GOTO.
+      // The offset of JSOP_IFNE at the end of the loop from JSOP_LOOPHEAD.
       BackJumpOffset,
       Count,
     };
@@ -72,22 +68,20 @@ class SrcNote {
       Count,
     };
   };
-  // SRC_FOR_IN: Source note for JSOP_GOTO at the top of for-in loop,
-  //             which jumps to JSOP_LOOPENTRY.
+  // SRC_FOR_IN: Source note for JSOP_LOOPHEAD at the top of for-in loop.
   class ForIn {
    public:
     enum Fields {
-      // The offset of JSOP_IFEQ at the end of the loop from JSOP_GOTO.
+      // The offset of JSOP_IFEQ at the end of the loop from JSOP_LOOPHEAD.
       BackJumpOffset,
       Count,
     };
   };
-  // SRC_FOR_OF: Source note for JSOP_GOTO at the top of for-of loop,
-  //             which jumps to JSOP_LOOPENTRY.
+  // SRC_FOR_OF: Source note for JSOP_LOOPHEAD at the top of for-of loop.
   class ForOf {
    public:
     enum Fields {
-      // The offset of JSOP_IFEQ at the end of the loop from JSOP_GOTO.
+      // The offset of JSOP_IFEQ at the end of the loop from JSOP_LOOPHEAD.
       BackJumpOffset,
       Count,
     };

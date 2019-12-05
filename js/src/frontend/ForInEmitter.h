@@ -44,7 +44,7 @@ class MOZ_STACK_CLASS ForInEmitter {
 
 #ifdef DEBUG
   // The stack depth before emitting initialize code inside loop.
-  int32_t loopDepth_;
+  int32_t loopDepth_ = 0;
 #endif
 
   mozilla::Maybe<LoopControl> loopInfo_;

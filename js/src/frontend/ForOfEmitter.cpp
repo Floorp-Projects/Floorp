@@ -75,11 +75,6 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!loopInfo_->emitEntryJump(bce_)) {
-    //              [stack] NEXT ITER UNDEF
-    return false;
-  }
-
   if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
     //              [stack] NEXT ITER UNDEF
     return false;
@@ -229,19 +224,17 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     return false;
   }
 
-  // We use the iterated value's position to attribute JSOP_LOOPENTRY,
+  // We use the iterated value's position to attribute the backedge,
   // which corresponds to the iteration protocol.
   // This is a bit misleading for 2nd and later iterations and might need
   // some fix (bug 1482003).
-  if (!loopInfo_->emitLoopEntry(bce_, iteratedPos)) {
-    return false;
+  if (iteratedPos) {
+    if (!bce_->updateSourceCoordNotes(*iteratedPos)) {
+      return false;
+    }
   }
 
-  if (!bce_->emit1(JSOP_FALSE)) {
-    //              [stack] NEXT ITER UNDEF FALSE
-    return false;
-  }
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO)) {
     //              [stack] NEXT ITER UNDEF
     return false;
   }
@@ -250,7 +243,7 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
 
   // Let Ion know where the closing jump of this loop is.
   if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::ForOf::BackJumpOffset,
-                              loopInfo_->loopEndOffsetFromEntryJump())) {
+                              loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;
   }
 

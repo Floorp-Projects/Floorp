@@ -52,9 +52,6 @@ class MOZ_STACK_CLASS ForOfEmitter {
   bool allowSelfHostedIter_;
   IteratorKind iterKind_;
 
-  // Jump from into JSOP_LOOPENTRY.
-  JumpList initialJump_;
-
   mozilla::Maybe<ForOfLoopControl> loopInfo_;
 
   // The lexical scope to be freshened for each iteration.
