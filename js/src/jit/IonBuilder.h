@@ -251,8 +251,6 @@ class IonBuilder : public MIRGenerator,
 
   AbortReasonOr<Ok> addPendingEdge(const PendingEdge& edge, jsbytecode* target);
 
-  AbortReasonOr<Ok> startLoop(jsbytecode* loopEntry, jsbytecode* loopHead,
-                              jsbytecode* backjump, uint32_t stackPhiCount);
   AbortReasonOr<Ok> jsop_loophead();
 
   AbortReasonOr<Ok> visitJumpTarget(JSOp op);
