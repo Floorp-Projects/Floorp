@@ -21,7 +21,7 @@ struct PreferredAddress {
     // TODO(ekr@rtfm.com): Implement.
 }
 
-pub mod consts {
+pub mod tp_constants {
     pub type TransportParameterId = u16;
     macro_rules! tpids {
         { $($n:ident = $v:expr),+ $(,)? } => {
@@ -46,7 +46,7 @@ pub mod consts {
     }
 }
 
-use self::consts::*;
+use self::tp_constants::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TransportParameter {

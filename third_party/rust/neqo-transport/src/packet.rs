@@ -9,7 +9,6 @@
 // A lot of methods and types contain the word Packet
 #![allow(clippy::module_name_repetitions)]
 
-use derive_more::Deref;
 use rand::Rng;
 
 use neqo_common::{hex, matches, qtrace, Decoder, Encoder};
@@ -63,8 +62,16 @@ impl PacketType {
 pub type Version = u32;
 pub type PacketNumber = u64;
 
-#[derive(Clone, Default, Deref, Eq, Hash, PartialEq)]
+#[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct ConnectionId(pub Vec<u8>);
+
+impl std::ops::Deref for ConnectionId {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl ConnectionId {
     pub fn generate(len: usize) -> Self {
