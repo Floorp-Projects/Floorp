@@ -13,9 +13,6 @@ import kotlinx.android.parcel.Parcelize
  *
  * @property id The unique ID of this add-on.
  * @property authors List holding information about the add-on authors.
- * @property installed Indicates if this [Addon] is installed or not, defaults to false.
- * @property enabled Indicates if this [Addon] is enabled to interact with web content or not,
- * defaults to false.
  * @property categories List of categories the add-on belongs to.
  * @property downloadUrl The (absolute) URL to download the add-on file (eg xpi).
  * @property version The add-on version e.g "1.23.0".
@@ -31,14 +28,14 @@ import kotlinx.android.parcel.Parcelize
  * @property rating The rating information of this add-on.
  * @property createdAt The date the add-on was created.
  * @property updatedAt The date of the last time the add-on was updated by its developer(s).
+ * @property installedState Holds the state of the installed web extension for this add-on. Null, if
+ * the [Addon] is not installed.
  */
 @Parcelize
 data class Addon(
     val id: String,
     val authors: List<Author>,
     val categories: List<String>,
-    val installed: Boolean = false,
-    val enabled: Boolean = false,
     val downloadUrl: String,
     val version: String,
     val permissions: List<String> = emptyList(),
@@ -49,7 +46,8 @@ data class Addon(
     val siteUrl: String = "",
     val rating: Rating? = null,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val installedState: InstalledState? = null
 ) : Parcelable {
     /**
      * Represents an add-on author.
@@ -69,6 +67,7 @@ data class Addon(
 
     /**
      * Holds all the rating information of this add-on.
+     *
      * @property average An average score from 1 to 5 of how users scored this add-on.
      * @property reviews The number of users that has scored this add-on.
      */
@@ -80,10 +79,39 @@ data class Addon(
 
     /**
      * Returns a list of id resources per each item on the [Addon.permissions] list.
+     * Holds the state of the installed web extension of this add-on.
+     *
+     * @property id The ID of the installed web extension.
+     * @property version The installed version.
+     * @property enabled Indicates if this [Addon] is enabled to interact with web content or not,
+     * defaults to false.
+     * @property optionsPageUrl the URL of the page displaying the
+     * options page (options_ui in the extension's manifest).
+     */
+    @Parcelize
+    data class InstalledState(
+        val id: String,
+        val version: String,
+        val optionsPageUrl: String,
+        val enabled: Boolean = false
+    ) : Parcelable
+
+    /**
+     * Returns a list of id resources per each item on the [AddOn.permissions] list.
      */
     fun translatePermissions(): List<Int> {
-        return permissions.mapNotNull { it -> permissionToTranslation[it] }
+        return permissions.mapNotNull { permissionToTranslation[it] }
     }
+
+    /**
+     * Returns whether or not this [Addon] is currently installed.
+     */
+    fun isInstalled() = installedState != null
+
+    /**
+     * Returns whether or not this [Addon] is currently enabled.
+     */
+    fun isEnabled() = installedState?.enabled == true
 
     companion object {
         /**

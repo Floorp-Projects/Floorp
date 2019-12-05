@@ -28,9 +28,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
     private fun bind(addon: Addon) {
         title = addon.translatableName.translate()
 
-        bindEnableSwitch(addon.enabled)
-
-        bindSettings(addon)
+        bindEnableSwitch(addon)
 
         bindSettings(addon)
 
@@ -44,18 +42,20 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         versionView.text = addon.version
     }
 
-    private fun bindEnableSwitch(enabled: Boolean) {
+    private fun bindEnableSwitch(addon: Addon) {
         val switch = findViewById<Switch>(R.id.enable_switch)
-        switch.setState(enabled)
+        switch.setState(addon.isEnabled())
         switch.setOnCheckedChangeListener { _, isChecked ->
             switch.setState(isChecked)
         }
     }
 
-    private fun bindSettings(addon: Addon) {
-        findViewById<View>(R.id.settings).setOnClickListener {
+    private fun bindSettings(addOn: Addon) {
+        val view = findViewById<View>(R.id.settings)
+        view.isEnabled = addOn.installedState?.optionsPageUrl != null
+        view.setOnClickListener {
             val intent = Intent(this, AddonSettingsActivity::class.java)
-            intent.putExtra("add_on", addon)
+            intent.putExtra("add_on", addOn)
             this.startActivity(intent)
         }
     }

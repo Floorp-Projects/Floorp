@@ -34,6 +34,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
@@ -127,11 +128,16 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val addonProvider by lazy {
-        AddonCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
+
+    // Addons
+    val addonManager by lazy {
+        AddonManager(store, addonCollectionProvider)
     }
 
-    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
+    val addonCollectionProvider by lazy {
+        AddonCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    }
 
     // Search
     val searchEngineManager by lazy {

@@ -28,14 +28,14 @@ class WebExtensionActionTest {
         assertTrue(store.state.extensions.isEmpty())
 
         val extension = WebExtensionState("id", "url")
-        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
 
         assertFalse(store.state.extensions.isEmpty())
         assertEquals(extension, store.state.extensions.values.first())
 
         // Installing the same extension twice should have no effect
         val state = store.state
-        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
         assertSame(state, store.state)
     }
 
@@ -47,7 +47,7 @@ class WebExtensionActionTest {
         assertTrue(store.state.extensions.isEmpty())
 
         val extension = WebExtensionState("id", "url")
-        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
 
         assertFalse(store.state.extensions.isEmpty())
 
@@ -125,7 +125,7 @@ class WebExtensionActionTest {
         val store = BrowserStore()
 
         val extension = WebExtensionState("id", "url")
-        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
 
         assertEquals(extension, store.state.extensions[extension.id])
         assertNull(store.state.extensions[extension.id]?.browserActionPopupSession)

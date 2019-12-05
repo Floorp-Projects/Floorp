@@ -62,7 +62,7 @@ class AddonCollectionProvider(
      *
      * @param allowCache whether or not the result may be provided
      * from a previously cached response, defaults to true.
-     * @throws IOException if the request could not be executed due to cancellation,
+     * @throws IOException if the request failed, or could not be executed due to cancellation,
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
@@ -85,8 +85,9 @@ class AddonCollectionProvider(
                         }
                     }
                 } else {
-                    logger.error("Failed to fetch addon collection. Status code: ${response.status}")
-                    emptyList()
+                    val errorMessage = "Failed to fetch addon collection. Status code: ${response.status}"
+                    logger.error(errorMessage)
+                    throw IOException(errorMessage)
                 }
             }
     }

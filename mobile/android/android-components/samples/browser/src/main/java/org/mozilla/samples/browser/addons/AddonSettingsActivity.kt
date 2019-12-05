@@ -73,9 +73,7 @@ class AddonSettingsActivity : AppCompatActivity() {
             super.onViewCreated(view, savedInstanceState)
 
             addonSettingsEngineView.render(engineSession)
-
-            // update the url after add_on and web_extension link
-            engineSession.loadUrl(addon.siteUrl)
+            engineSession.loadUrl(addon.installedState!!.optionsPageUrl)
         }
 
         override fun onDestroyView() {

@@ -266,10 +266,9 @@ sealed class TrackingProtectionAction : BrowserAction() {
  */
 sealed class WebExtensionAction : BrowserAction() {
     /**
-     * Installs the given [extension] and adds it to the [BrowserState.extensions].
+     * Updates [BrowserState.extensions] to register the given [extension] as installed.
      */
-    data class InstallWebExtension(val extension: WebExtensionState) :
-        WebExtensionAction()
+    data class InstallWebExtensionAction(val extension: WebExtensionState) : WebExtensionAction()
 
     /**
      * Updates a browser action of a given [extensionId].

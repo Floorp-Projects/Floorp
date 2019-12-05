@@ -63,6 +63,11 @@ class EngineTest {
         testEngine.installWebExtension("my-ext", "resource://path", onError = { _, e -> exception = e })
         assertNotNull(exception)
         assertTrue(exception is UnsupportedOperationException)
+
+        exception = null
+        testEngine.listInstalledWebExtensions(onSuccess = { }, onError = { e -> exception = e })
+        assertNotNull(exception)
+        assertTrue(exception is UnsupportedOperationException)
     }
 
     @Test

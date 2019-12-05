@@ -66,6 +66,31 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `queries engine for installed extensions and adds state to the store`() {
+        val store = spy(BrowserStore())
+
+        val ext1: WebExtension = mock()
+        val ext2: WebExtension = mock()
+        whenever(ext1.id).thenReturn("1")
+        whenever(ext2.id).thenReturn("2")
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(listOf(ext1, ext2))
+        }
+
+        WebExtensionSupport.initialize(engine, store)
+        assertEquals(ext1, WebExtensionSupport.installedExtensions[ext1.id])
+        assertEquals(ext2, WebExtensionSupport.installedExtensions[ext2.id])
+
+        val actionCaptor = argumentCaptor<WebExtensionAction.InstallWebExtensionAction>()
+        verify(store, times(2)).dispatch(actionCaptor.capture())
+        assertEquals(WebExtensionState(ext1.id, ext1.url), actionCaptor.allValues[0].extension)
+        assertEquals(WebExtensionState(ext2.id, ext2.url), actionCaptor.allValues[1].extension)
+    }
+
+    @Test
     fun `reacts to new tab being opened by adding tab to store`() {
         val store = spy(BrowserStore())
         val engine: Engine = mock()
@@ -171,8 +196,8 @@ class WebExtensionSupportTest {
 
         // Verify that we dispatch to the store and mark the extension as installed
         delegateCaptor.value.onInstalled(ext)
-        verify(store).dispatch(WebExtensionAction.InstallWebExtension(WebExtensionState(ext.id, ext.url)))
-        assertTrue(WebExtensionSupport.installedExtensions.contains(ext))
+        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(WebExtensionState(ext.id, ext.url)))
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
 
         // Verify that we register an action handler for all existing sessions on the extension
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()

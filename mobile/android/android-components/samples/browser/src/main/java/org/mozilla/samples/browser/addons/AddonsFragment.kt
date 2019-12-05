@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonManagerException
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.AddonViewHolder
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.SectionViewHolder
@@ -62,14 +63,20 @@ class AddonsFragment : Fragment(), View.OnClickListener {
         recyclerView = rootView.findViewById(R.id.add_ons_list)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         scope.launch {
-            val addons = requireContext().components.addonProvider.getAvailableAddons()
+            try {
+                val addons = requireContext().components.addonManager.getAddons()
 
-            scope.launch(Dispatchers.Main) {
-                val adapter = AddonsAdapter(
-                    this@AddonsFragment,
-                    addons
-                )
-                recyclerView.adapter = adapter
+                scope.launch(Dispatchers.Main) {
+                    val adapter = AddonsAdapter(
+                        this@AddonsFragment,
+                        addons
+                    )
+                    recyclerView.adapter = adapter
+                }
+            } catch (e: AddonManagerException) {
+                scope.launch(Dispatchers.Main) {
+                    Toast.makeText(activity, "Failed to query Add-ons!", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -161,8 +168,8 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             holder.summaryView.text = addon.translatableSummary.translate()
             holder.itemView.tag = addon
             holder.itemView.setOnClickListener(clickListener)
-            holder.addButton.isVisible = !addon.installed
-            val listener = if (!addon.installed) {
+            holder.addButton.isVisible = !addon.isInstalled()
+            val listener = if (!addon.isInstalled()) {
                 clickListener
             } else {
                 null
@@ -170,7 +177,7 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             holder.addButton.setOnClickListener(listener)
 
             scope.launch {
-                val iconBitmap = context.components.addonProvider.getAddonIconBitmap(addon)
+                val iconBitmap = context.components.addonCollectionProvider.getAddonIconBitmap(addon)
 
                 iconBitmap?.let {
                     MainScope().launch {
@@ -182,10 +189,10 @@ class AddonsFragment : Fragment(), View.OnClickListener {
 
         private fun createListWithSections(addons: List<Addon>): List<Any> {
             // We want to have the installed add-ons first in the list.
-            val sortedAddons = addons.sortedBy { !it.installed }
+            val sortedAddons = addons.sortedBy { !it.isInstalled() }
 
             val itemsWithSections = ArrayList<Any>()
-            val shouldAddInstalledSection = sortedAddons.first().installed
+            val shouldAddInstalledSection = sortedAddons.first().isInstalled()
             var isRecommendedSectionAdded = false
 
             if (shouldAddInstalledSection) {
@@ -193,7 +200,7 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             }
 
             sortedAddons.forEach { addon ->
-                if (!isRecommendedSectionAdded && !addon.installed) {
+                if (!isRecommendedSectionAdded && !addon.isInstalled()) {
                     itemsWithSections.add(Section(R.string.addon_settings_recommended_section))
                     isRecommendedSectionAdded = true
                 }
