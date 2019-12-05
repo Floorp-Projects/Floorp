@@ -416,9 +416,18 @@ class WindowsDllInterceptor final
     if (!mDetourPatcher.Initialized()) {
       DetourFlags flags = DetourFlags::eDefault;
 #if defined(_M_X64)
-      if (mModule == ::GetModuleHandleW(L"ntdll.dll")) {
-        // NTDLL hooks should attempt to use a 10-byte patch because some
-        // injected DLLs do the same and interfere with our stuff.
+      // NTDLL hooks should attempt to use a 10-byte patch because some
+      // injected DLLs do the same and interfere with our stuff.
+      bool needs10BytePatch = (mModule == ::GetModuleHandleW(L"ntdll.dll"));
+
+      // CloseHandle on Windows 8 only accomodates 10-byte patches.
+      bool isWin8Or81 = IsWin8OrLater() && (!IsWin10OrLater());
+      needs10BytePatch |= isWin8Or81 &&
+                          (mModule == ::GetModuleHandleW(L"kernel32.dll")) &&
+                          (reinterpret_cast<void*>(aProc) ==
+                           reinterpret_cast<void*>(&CloseHandle));
+
+      if (needs10BytePatch) {
         flags |= DetourFlags::eEnable10BytePatch;
       }
 #endif  // defined(_M_X64)
