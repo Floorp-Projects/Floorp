@@ -105,6 +105,9 @@ impl<T> nsTArray<T> {
     where
         T: Copy,
     {
+        if self.len() == len as usize {
+            return;
+        }
         self.ensure_capacity(len as usize);
         let header = self.header_mut();
         header.mLength = len;
