@@ -717,8 +717,8 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       transforms.AppendElement(wr::ToWrTransformProperty(
           *zoomAnimationId, Matrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f)));
 
-      aTxn.UpdateIsTransformPinchZooming(*zoomAnimationId,
-                                         apzc->IsPinchZooming());
+      aTxn.UpdateIsTransformAsyncZooming(*zoomAnimationId,
+                                         apzc->IsAsyncZooming());
     }
 
     // The positive translation means the painted content is supposed to
