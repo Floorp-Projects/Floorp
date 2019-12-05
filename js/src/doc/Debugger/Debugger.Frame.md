@@ -284,6 +284,24 @@ throw an error.
 
 Accessing this property will throw if `.onStack == false`.
 
+### `asyncPromise`
+
+If the frame is not an async (generator) function, this will be `undefined`.
+
+For async functions, this will be a [`Debugger.Object`][object] whose referent
+is the promise for async function call's return value. Note that this
+property will be `null` if the value is accessed during `onEnterFrame`,
+since the promise doesn't exist yet at that point.
+
+For async generator functions, this will be a [`Debugger.Object`][object]
+whose referent is the promise for the current iteration's "value"+"done" object,
+which will be resolved when the generator next throws/yields/returns.
+Note that this will be `null` if the value is accessed during the initial
+generator `onEnterFrame`/`onPop` (before the first `.next` call),
+since there is no promise yet at that point.
+
+Accessing this property will throw if `.terminated == true`.
+
 
 ## Handler Methods of Debugger.Frame Instances
 
@@ -456,6 +474,7 @@ Accessing this property will throw if `.onStack == false`.
 
 [vf]: #visible-frames
 [debugger-object]: Debugger.md
+[object]: Debugger.Object.md
 [dbg code]: Conventions.html#debuggee-code
 [inv fr]: #invocation-functions-and-debugger-frames
 [cv]: Conventions.html#completion-values

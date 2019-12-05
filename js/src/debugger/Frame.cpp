@@ -26,6 +26,7 @@
 #include "jsnum.h"        // for Int32ToString
 
 #include "builtin/Array.h"      // for NewDenseCopiedArray
+#include "builtin/Promise.h"    // for PromiseObject
 #include "debugger/Debugger.h"  // for Completion, Debugger
 #include "debugger/DebugScript.h"
 #include "debugger/Environment.h"          // for DebuggerEnvironment
@@ -47,6 +48,8 @@
 #include "js/StableStringChars.h"          // for AutoStableStringChars
 #include "vm/ArgumentsObject.h"            // for ArgumentsObject
 #include "vm/ArrayObject.h"                // for ArrayObject
+#include "vm/AsyncFunction.h"              // for AsyncFunctionGeneratorObject
+#include "vm/AsyncIteration.h"             // for AsyncGeneratorObject
 #include "vm/BytecodeUtil.h"               // for JSDVG_SEARCH_STACK
 #include "vm/Compartment.h"                // for Compartment
 #include "vm/EnvironmentObject.h"          // for IsGlobalLexicalEnvironment
@@ -602,6 +605,37 @@ bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
 
   result.set(nullptr);
   return true;
+}
+
+/* static */
+bool DebuggerFrame::getAsyncPromise(JSContext* cx, HandleDebuggerFrame frame,
+                                    MutableHandleDebuggerObject result) {
+  if (!frame->hasGenerator()) {
+    result.set(nullptr);
+    return true;
+  }
+
+  RootedObject resultObject(cx);
+  AbstractGeneratorObject& generator = frame->unwrappedGenerator();
+  if (generator.is<AsyncFunctionGeneratorObject>()) {
+    resultObject = generator.as<AsyncFunctionGeneratorObject>().promise();
+  } else if (generator.is<AsyncGeneratorObject>()) {
+    Rooted<AsyncGeneratorObject*> asyncGen(
+        cx, &generator.as<AsyncGeneratorObject>());
+    // In initial function execution, there is no promise.
+    if (!asyncGen->isQueueEmpty()) {
+      resultObject = AsyncGeneratorObject::peekRequest(asyncGen)->promise();
+    }
+  } else {
+    MOZ_CRASH("Unknown async generator type");
+  }
+
+  if (!resultObject) {
+    result.set(nullptr);
+    return true;
+  }
+
+  return frame->owner()->wrapDebuggeeObject(cx, resultObject, result);
 }
 
 /* static */
@@ -1230,6 +1264,7 @@ struct MOZ_STACK_CLASS DebuggerFrame::CallData {
   bool constructingGetter();
   bool environmentGetter();
   bool generatorGetter();
+  bool asyncPromiseGetter();
   bool liveGetter();
   bool onStackGetter();
   bool terminatedGetter();
@@ -1259,7 +1294,8 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   MinState minState = MinState::OnStack;
-  if (MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript ||
+  if (MyMethod == &CallData::asyncPromiseGetter ||
+      MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript ||
       MyMethod == &CallData::offsetGetter) {
     minState = MinState::OnStackOrSuspended;
   } else if (
@@ -1375,6 +1411,35 @@ bool DebuggerFrame::CallData::constructingGetter() {
   }
 
   args.rval().setBoolean(result);
+  return true;
+}
+
+bool DebuggerFrame::CallData::asyncPromiseGetter() {
+  RootedScript script(cx);
+  if (frame->isOnStack()) {
+    FrameIter iter(*frame->frameIterData());
+    AbstractFramePtr framePtr = iter.abstractFramePtr();
+
+    if (!framePtr.isWasmDebugFrame()) {
+      script = framePtr.script();
+    }
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+    script = frame->generatorInfo()->generatorScript();
+  }
+  // The async promise value is only provided for async functions and
+  // async generator functions.
+  if (!script || !script->isAsync()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  RootedDebuggerObject result(cx);
+  if (!DebuggerFrame::getAsyncPromise(cx, frame, &result)) {
+    return false;
+  }
+
+  args.rval().setObjectOrNull(result);
   return true;
 }
 
@@ -1717,6 +1782,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_DEBUG_PSG("older", olderGetter),
     JS_DEBUG_PSG("script", getScript),
     JS_DEBUG_PSG("this", thisGetter),
+    JS_DEBUG_PSG("asyncPromise", asyncPromiseGetter),
     JS_DEBUG_PSG("type", typeGetter),
     JS_DEBUG_PSG("implementation", implementationGetter),
     JS_DEBUG_PSGS("onStep", onStepGetter, onStepSetter),
