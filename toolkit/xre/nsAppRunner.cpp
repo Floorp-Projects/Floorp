@@ -2700,10 +2700,8 @@ static void MOZ_gdk_display_close(GdkDisplay* display) {
     g_free(theme_name);
   }
 
-#    ifdef MOZ_WIDGET_GTK
   // A workaround for https://bugzilla.gnome.org/show_bug.cgi?id=703257
   if (gtk_check_version(3, 9, 8) != NULL) skip_display_close = true;
-#    endif
 
   bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
 
