@@ -197,3 +197,9 @@ def GeneratedFile(name, *names, **kwargs):
 
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
+
+
+@template
+def DefineAndWasmDefine(k, v):
+    DEFINES[k] = v
+    WASM_DEFINES[k] = v
