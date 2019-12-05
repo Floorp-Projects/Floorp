@@ -21,6 +21,7 @@ add_task(async function test() {
   ok(engine, "Found Google search engine");
 
   // Check search suggestion URL.
+  // This also checks that the query is on the end of the URL. See bug 1484232.
   let url = engine.getSubmission("foo", "application/x-suggestions+json").uri
     .spec;
   is(

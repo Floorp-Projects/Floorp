@@ -13,22 +13,26 @@ add_task(async function test() {
   let engine = Services.search.getEngineByName("DuckDuckGo");
   ok(engine, "DuckDuckGo");
 
-  let base = "https://duckduckgo.com/?q=foo";
+  let base = "https://duckduckgo.com/?t={code}&q=foo";
   let url;
+
+  function getUrl(code) {
+    return base.replace("{code}", code);
+  }
 
   // Test search URLs (including purposes).
   url = engine.getSubmission("foo").uri.spec;
-  is(url, base + "&t=ffsb", "Check search URL for 'foo'");
+  is(url, getUrl("ffsb"), "Check search URL for 'foo'");
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
-  is(url, base + "&t=ffcm", "Check context menu search URL for 'foo'");
+  is(url, getUrl("ffcm"), "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
-  is(url, base + "&t=ffab", "Check keyword search URL for 'foo'");
+  is(url, getUrl("ffab"), "Check keyword search URL for 'foo'");
   url = engine.getSubmission("foo", null, "searchbar").uri.spec;
-  is(url, base + "&t=ffsb", "Check search bar search URL for 'foo'");
+  is(url, getUrl("ffsb"), "Check search bar search URL for 'foo'");
   url = engine.getSubmission("foo", null, "homepage").uri.spec;
-  is(url, base + "&t=ffhp", "Check homepage search URL for 'foo'");
+  is(url, getUrl("ffhp"), "Check homepage search URL for 'foo'");
   url = engine.getSubmission("foo", null, "newtab").uri.spec;
-  is(url, base + "&t=ffnt", "Check newtab search URL for 'foo'");
+  is(url, getUrl("ffnt"), "Check newtab search URL for 'foo'");
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
@@ -54,11 +58,6 @@ add_task(async function test() {
           template: "https://duckduckgo.com/",
           params: [
             {
-              name: "q",
-              value: "{searchTerms}",
-              purpose: undefined,
-            },
-            {
               name: "t",
               value: "ffcm",
               purpose: "contextmenu",
@@ -82,6 +81,11 @@ add_task(async function test() {
               name: "t",
               value: "ffnt",
               purpose: "newtab",
+            },
+            {
+              name: "q",
+              value: "{searchTerms}",
+              purpose: undefined,
             },
           ],
         },
