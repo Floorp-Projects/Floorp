@@ -1,6 +1,40 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+
+/**
+ * @template P
+ * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
+ */
+
+/**
+ * @typedef {Object} StateProps
+ * @property {PerfFront} perfFront
+ * @property {RecordingState} recordingState
+ * @property {boolean?} isSupportedPlatform
+ * @property {boolean?} isPopup
+ * @property {string | null} promptEnvRestart
+ */
+
+/**
+ * @typedef {Object} ThunkDispatchProps
+ * @property {typeof actions.changeRecordingState} changeRecordingState
+ * @property {typeof actions.reportProfilerReady} reportProfilerReady
+ */
+
+/**
+ * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
+ * @typedef {StateProps & DispatchProps} Props
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").State} StoreState
+ */
+
+/**
+ * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ */
+
 "use strict";
 
 const {
@@ -12,7 +46,6 @@ const {
   div,
   button,
 } = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const RecordingButton = createFactory(
   require("devtools/client/performance-new/components/RecordingButton.js")
 );
@@ -38,23 +71,11 @@ const {
  *
  * 2) It mounts all of the sub components, but is itself very light on actual
  * markup for presentation.
+ *
+ * @extends {React.PureComponent<Props>}
  */
 class Perf extends PureComponent {
-  static get propTypes() {
-    return {
-      // StateProps:
-      perfFront: PropTypes.object.isRequired,
-      recordingState: PropTypes.string.isRequired,
-      isSupportedPlatform: PropTypes.bool,
-      isPopup: PropTypes.bool,
-      promptEnvRestart: PropTypes.string,
-
-      // DispatchProps:
-      changeRecordingState: PropTypes.func.isRequired,
-      reportProfilerReady: PropTypes.func.isRequired,
-    };
-  }
-
+  /** @param {Props} props */
   constructor(props) {
     super(props);
     this.handleProfilerStarting = this.handleProfilerStarting.bind(this);
@@ -103,8 +124,12 @@ class Perf extends PureComponent {
       // it will show. This defers the initial visibility of the popup until the
       // React components have fully rendered, and thus there is no annoying "blip"
       // to the screen when the page goes from fully blank, to showing the content.
-      if (window.gReportReady) {
-        window.gReportReady();
+      /** @type {any} */
+      const anyWindow = window;
+      /** @type {PanelWindow} - Coerce the window into the PanelWindow. */
+      const { gReportReady } = anyWindow;
+      if (gReportReady) {
+        gReportReady();
       }
     });
 
@@ -302,6 +327,10 @@ class Perf extends PureComponent {
   }
 }
 
+/**
+ * @param {StoreState} state
+ * @returns {StateProps}
+ */
 function mapStateToProps(state) {
   return {
     perfFront: selectors.getPerfFront(state),
@@ -312,6 +341,7 @@ function mapStateToProps(state) {
   };
 }
 
+/** @type {ThunkDispatchProps} */
 const mapDispatchToProps = {
   changeRecordingState: actions.changeRecordingState,
   reportProfilerReady: actions.reportProfilerReady,
