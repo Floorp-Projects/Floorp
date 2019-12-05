@@ -26,12 +26,12 @@ struct BytecodeEmitter;
 //
 //   `while (cond) body`
 //     WhileEmitter wh(this);
-//     wh.emitBody(Some(offset_of_while),
+//     wh.emitCond(Some(offset_of_while),
 //                 Some(offset_of_body),
 //                 Some(offset_of_end));
-//     emit(body);
-//     wh.emitCond(Some(offset_of_cond));
 //     emit(cond);
+//     wh.emitBody();
+//     emit(body);
 //     wh.emitEnd();
 //
 class MOZ_STACK_CLASS WhileEmitter {
@@ -49,18 +49,18 @@ class MOZ_STACK_CLASS WhileEmitter {
 #ifdef DEBUG
   // The state of this emitter.
   //
-  // +-------+ emitBody +------+ emitCond +------+ emitEnd  +-----+
-  // | Start |--------->| Body |--------->| Cond |--------->| End |
+  // +-------+ emitCond +------+ emitBody +------+ emitEnd  +-----+
+  // | Start |--------->| Cond |--------->| Body |--------->| End |
   // +-------+          +------+          +------+          +-----+
   enum class State {
     // The initial state.
     Start,
 
-    // After calling emitBody.
-    Body,
-
     // After calling emitCond.
     Cond,
+
+    // After calling emitBody.
+    Body,
 
     // After calling emitEnd.
     End
@@ -74,21 +74,19 @@ class MOZ_STACK_CLASS WhileEmitter {
   // Parameters are the offset in the source code for each character below:
   //
   //   while ( x < 20 ) { ... }
-  //   ^       ^        ^     ^
-  //   |       |        |     |
-  //   |       |        |     endPos_
-  //   |       |        |
-  //   |       |        bodyPos_
+  //   ^       ^              ^
+  //   |       |              |
+  //   |       |              endPos_
   //   |       |
   //   |       condPos_
   //   |
   //   whilePos_
   //
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& whilePos,
-                             const mozilla::Maybe<uint32_t>& bodyPos,
+  MOZ_MUST_USE bool emitCond(const mozilla::Maybe<uint32_t>& whilePos,
+                             const mozilla::Maybe<uint32_t>& condPos,
                              const mozilla::Maybe<uint32_t>& endPos);
-  MOZ_MUST_USE bool emitCond(const mozilla::Maybe<uint32_t>& condPos);
+  MOZ_MUST_USE bool emitBody();
   MOZ_MUST_USE bool emitEnd();
 };
 

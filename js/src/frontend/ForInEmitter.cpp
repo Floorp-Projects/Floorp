@@ -41,13 +41,6 @@ bool ForInEmitter::emitInitialize() {
     return false;
   }
 
-  // For-in loops have both the iterator and the value on the stack. Push
-  // undefined to balance the stack.
-  if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //              [stack] ITER ITERVAL
-    return false;
-  }
-
   loopInfo_.emplace(bce_, StatementKind::ForInLoop);
 
   // Annotate so IonMonkey can find the loop-closing jump.
@@ -55,15 +48,21 @@ bool ForInEmitter::emitInitialize() {
     return false;
   }
 
-  // Jump down to the loop condition to minimize overhead (assuming at
-  // least one iteration, just like the other loop forms).
-  if (!loopInfo_->emitEntryJump(bce_)) {
-    //              [stack] ITER ITERVAL
+  if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
+    //              [stack] ITER
     return false;
   }
 
-  if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
-    //              [stack] ITER ITERVAL
+  if (!bce_->emit1(JSOP_MOREITER)) {
+    //              [stack] ITER NEXTITERVAL?
+    return false;
+  }
+  if (!bce_->emit1(JSOP_ISNOITER)) {
+    //              [stack] ITER NEXTITERVAL? ISNOITER
+    return false;
+  }
+  if (!bce_->emitJump(JSOP_IFNE, &loopInfo_->breaks)) {
+    //              [stack] ITER NEXTITERVAL?
     return false;
   }
 
@@ -132,38 +131,33 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   if (!loopInfo_->emitContinueTarget(bce_)) {
-    return false;
-  }
-
-  if (!loopInfo_->emitLoopEntry(bce_, Nothing())) {
     //              [stack] ITER ITERVAL
     return false;
   }
+
   if (!bce_->emit1(JSOP_POP)) {
     //              [stack] ITER
     return false;
   }
-  if (!bce_->emit1(JSOP_MOREITER)) {
-    //              [stack] ITER NEXTITERVAL?
-    return false;
-  }
-  if (!bce_->emit1(JSOP_ISNOITER)) {
-    //              [stack] ITER NEXTITERVAL? ISNOITER
-    return false;
-  }
-
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {
-    //              [stack] ITER NEXTITERVAL
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO)) {
+    //              [stack] ITER
     return false;
   }
 
   // Set the srcnote offset so we can find the closing jump.
   if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::ForIn::BackJumpOffset,
-                              loopInfo_->loopEndOffsetFromEntryJump())) {
+                              loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;
   }
 
+  // When we leave the loop body and jump to this point, the iteration value is
+  // still on the stack. Account for that by updating the stack depth manually.
+  int32_t stackDepth = bce_->bytecodeSection().stackDepth() + 1;
+  MOZ_ASSERT(stackDepth == loopDepth_);
+  bce_->bytecodeSection().setStackDepth(stackDepth);
+
   if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+    //              [stack] ITER ITERVAL
     return false;
   }
 

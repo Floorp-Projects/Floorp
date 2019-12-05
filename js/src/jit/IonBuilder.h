@@ -68,15 +68,6 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 // -----
 // Loops complicate this a bit:
 //
-// * In the bytecode, most loops currently start with a jump to the loop
-//   condition because the condition is emitted after the loop body. This is the
-//   only case where IonBuilder follows a forward branch immediately and later
-//   'jumps back' to compile the loop body. The LoopState class is used to track
-//   this.
-//
-//   Bug 1598548 aims to change the bytecode for these loops so that all loops
-//   can be compiled in order.
-//
 // * Because of IonBuilder's single pass design, we sometimes have to 'restart'
 //   a loop when we find new types for locals, arguments, or stack slots while
 //   compiling the loop body. When this happens the loop has to be recompiled
@@ -260,7 +251,7 @@ class IonBuilder : public MIRGenerator,
                                        uint32_t maxTargets);
 
   AbortReasonOr<Ok> analyzeNewLoopTypes(MBasicBlock* entry,
-                                        jsbytecode* loopHeadPc, bool isForIn,
+                                        jsbytecode* loopHeadPc,
                                         jsbytecode* loopStartPc,
                                         jsbytecode* loopStopPc);
   AbortReasonOr<Ok> analyzeNewLoopTypesForLocation(
@@ -293,10 +284,8 @@ class IonBuilder : public MIRGenerator,
 
   AbortReasonOr<Ok> startLoop(LoopState::State initState, jsbytecode* loopEntry,
                               jsbytecode* loopHead, jsbytecode* backjump,
-                              bool isForIn, uint32_t stackPhiCount);
-  AbortReasonOr<Ok> visitDoWhileLoop(jssrcnote* sn);
-  AbortReasonOr<Ok> visitForLoop(jssrcnote* sn);
-  AbortReasonOr<Ok> visitWhileOrForInOrForOfLoop(jssrcnote* sn);
+                              uint32_t stackPhiCount);
+  AbortReasonOr<Ok> jsop_loophead();
 
   AbortReasonOr<Ok> visitJumpTarget(JSOp op);
   AbortReasonOr<Ok> visitTest(JSOp op, bool* restarted);

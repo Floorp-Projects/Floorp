@@ -45,10 +45,6 @@ bool DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos,
     return false;
   }
 
-  if (!loopInfo_->emitLoopEntry(bce_, Nothing())) {
-    return false;
-  }
-
 #ifdef DEBUG
   state_ = State::Body;
 #endif

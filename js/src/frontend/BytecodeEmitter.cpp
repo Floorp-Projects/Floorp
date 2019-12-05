@@ -5186,29 +5186,39 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
     return false;
   }
 
-  // Jump down to the loop condition to minimize overhead, assuming at least
-  // one iteration.  (This is also what we do for loops; whether this
-  // assumption holds for spreads is an unanswered question.)
-  if (!loopInfo.emitEntryJump(this)) {
-    //              [stack] NEXT ITER ARR I (during the goto)
-    return false;
-  }
-
   if (!loopInfo.emitLoopHead(this, Nothing())) {
     //              [stack] NEXT ITER ARR I
     return false;
   }
 
-  // When we enter the goto above, we have NEXT ITER ARR I on the stack. But
-  // when we reach this point on the loop backedge (if spreading produces at
-  // least one value), we've additionally pushed a RESULT iteration value.
-  // Increment manually to reflect this.
-  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() + 1);
-
   {
 #ifdef DEBUG
     auto loopDepth = bytecodeSection().stackDepth();
 #endif
+
+    // Spread operations can't contain |continue|, so don't bother setting loop
+    // and enclosing "update" offsets, as we do with for-loops.
+
+    if (!emitDupAt(3, 2)) {
+      //            [stack] NEXT ITER ARR I NEXT
+      return false;
+    }
+    if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
+      //            [stack] NEXT ITER ARR I RESULT
+      return false;
+    }
+    if (!emit1(JSOP_DUP)) {
+      //            [stack] NEXT ITER ARR I RESULT RESULT
+      return false;
+    }
+    if (!emitAtomOp(cx->names().done, JSOP_GETPROP)) {
+      //            [stack] NEXT ITER ARR I RESULT DONE
+      return false;
+    }
+    if (!emitJump(JSOP_IFNE, &loopInfo.breaks)) {
+      //            [stack] NEXT ITER ARR I RESULT
+      return false;
+    }
 
     // Emit code to assign result.value to the iteration variable.
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) {
@@ -5220,51 +5230,31 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth - 1);
-
-    // Spread operations can't contain |continue|, so don't bother setting loop
-    // and enclosing "update" offsets, as we do with for-loops.
-
-    // COME FROM the beginning of the loop to here.
-    if (!loopInfo.emitLoopEntry(this, Nothing())) {
-      //            [stack] NEXT ITER ARR I
-      return false;
-    }
-
-    if (!emitDupAt(3, 2)) {
-      //            [stack] NEXT ITER ARR I NEXT
-      return false;
-    }
-    if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
-      //            [stack] ITER ARR I RESULT
-      return false;
-    }
-    if (!emit1(JSOP_DUP)) {
-      //            [stack] NEXT ITER ARR I RESULT RESULT
-      return false;
-    }
-    if (!emitAtomOp(cx->names().done, JSOP_GETPROP)) {
-      //            [stack] NEXT ITER ARR I RESULT DONE
-      return false;
-    }
-
-    if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ)) {
-      //            [stack] NEXT ITER ARR I RESULT
+    if (!loopInfo.emitLoopEnd(this, JSOP_GOTO)) {
+      //            [stack] NEXT ITER ARR (I+1)
       return false;
     }
 
     MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth);
   }
 
+  // When we leave the loop body and jump to this point, the result value is
+  // still on the stack. Account for that by updating the stack depth
+  // manually.
+  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() + 1);
+
   // Let Ion know where the closing jump of this loop is.
   if (!setSrcNoteOffset(noteIndex, SrcNote::ForOf::BackJumpOffset,
-                        loopInfo.loopEndOffsetFromEntryJump())) {
+                        loopInfo.loopEndOffsetFromLoopHead())) {
     return false;
   }
 
-  // No breaks or continues should occur in spreads.
-  MOZ_ASSERT(!loopInfo.breaks.offset.valid());
+  // No continues should occur in spreads.
   MOZ_ASSERT(!loopInfo.continues.offset.valid());
+
+  if (!loopInfo.patchBreaks(this)) {
+    return false;
+  }
 
   if (!addTryNote(JSTRY_FOR_OF, bytecodeSection().stackDepth(),
                   loopInfo.headOffset(), loopInfo.breakTargetOffset())) {
@@ -5600,9 +5590,26 @@ bool BytecodeEmitter::emitCStyleFor(
     }
   }
 
-  if (!cfor.emitBody(
-          cond ? CForEmitter::Cond::Present : CForEmitter::Cond::Missing,
-          getOffsetForLoop(forBody))) {
+  if (!cfor.emitCond(cond ? Some(cond->pn_pos.begin) : Nothing())) {
+    //              [stack]
+    return false;
+  }
+
+  if (cond) {
+    if (!updateSourceCoordNotes(cond->pn_pos.begin)) {
+      return false;
+    }
+    if (!markStepBreakpoint()) {
+      return false;
+    }
+    if (!emitTree(cond)) {
+      //            [stack] VAL
+      return false;
+    }
+  }
+
+  if (!cfor.emitBody(cond ? CForEmitter::Cond::Present
+                          : CForEmitter::Cond::Missing)) {
     //              [stack]
     return false;
   }
@@ -5633,27 +5640,7 @@ bool BytecodeEmitter::emitCStyleFor(
     }
   }
 
-  if (!cfor.emitCond(Some(forNode->pn_pos.begin),
-                     cond ? Some(cond->pn_pos.begin) : Nothing(),
-                     Some(forNode->pn_pos.end))) {
-    //              [stack]
-    return false;
-  }
-
-  if (cond) {
-    if (!updateSourceCoordNotes(cond->pn_pos.begin)) {
-      return false;
-    }
-    if (!markStepBreakpoint()) {
-      return false;
-    }
-    if (!emitTree(cond)) {
-      //            [stack] VAL
-      return false;
-    }
-  }
-
-  if (!cfor.emitEnd()) {
+  if (!cfor.emitEnd(Some(forNode->pn_pos.begin))) {
     //              [stack]
     return false;
   }
@@ -5828,17 +5815,10 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
   ParseNode* bodyNode = whileNode->right();
 
   WhileEmitter wh(this);
-  if (!wh.emitBody(Some(whileNode->pn_pos.begin), getOffsetForLoop(bodyNode),
-                   Some(whileNode->pn_pos.end))) {
-    return false;
-  }
-
-  if (!emitTree(bodyNode)) {
-    return false;
-  }
 
   ParseNode* condNode = whileNode->left();
-  if (!wh.emitCond(getOffsetForLoop(condNode))) {
+  if (!wh.emitCond(Some(whileNode->pn_pos.begin), getOffsetForLoop(condNode),
+                   Some(whileNode->pn_pos.end))) {
     return false;
   }
 
@@ -5849,6 +5829,13 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
     return false;
   }
   if (!emitTree(condNode)) {
+    return false;
+  }
+
+  if (!wh.emitBody()) {
+    return false;
+  }
+  if (!emitTree(bodyNode)) {
     return false;
   }
 

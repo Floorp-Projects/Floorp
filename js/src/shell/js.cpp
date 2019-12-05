@@ -3053,8 +3053,7 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
 
       case SRC_FOR:
         if (!sp->jsprintf(
-                " cond %u backjump %u",
-                unsigned(GetSrcNoteOffset(sn, SrcNote::For::CondOffset)),
+                " backjump %u",
                 unsigned(GetSrcNoteOffset(sn, SrcNote::For::BackJumpOffset)))) {
           return false;
         }
