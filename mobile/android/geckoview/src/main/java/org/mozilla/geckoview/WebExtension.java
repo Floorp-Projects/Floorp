@@ -1064,7 +1064,7 @@ public class WebExtension {
 
     // TODO: make public
     // Keep in sync with nsIBlocklistService.idl
-    static class BlockedReasonFlags {
+    static class BlocklistStateFlags {
         final static int NOT_BLOCKED = 0;
         final static int SOFTBLOCKED = 1;
         final static int BLOCKED = 2;
@@ -1074,11 +1074,11 @@ public class WebExtension {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ BlockedReasonFlags.NOT_BLOCKED, BlockedReasonFlags.SOFTBLOCKED,
-            BlockedReasonFlags.BLOCKED, BlockedReasonFlags.OUTDATED,
-            BlockedReasonFlags.VULNERABLE_UPDATE_AVAILABLE,
-            BlockedReasonFlags.VULNERABLE_NO_UPDATE})
-    @interface BlockedReason {}
+    @IntDef({ BlocklistStateFlags.NOT_BLOCKED, BlocklistStateFlags.SOFTBLOCKED,
+            BlocklistStateFlags.BLOCKED, BlocklistStateFlags.OUTDATED,
+            BlocklistStateFlags.VULNERABLE_UPDATE_AVAILABLE,
+            BlocklistStateFlags.VULNERABLE_NO_UPDATE})
+    @interface BlocklistState {}
 
     // TODO: make public
     class MetaData {
@@ -1094,7 +1094,7 @@ public class WebExtension {
         final String optionsPageUrl;
         final boolean openOptionsPageInTab;
         final boolean isRecommended;
-        final @BlockedReason int blockedReason;
+        final @BlocklistState int blocklistState;
         final @SignedState int signedState;
 
         /** Override for testing. */
@@ -1111,7 +1111,7 @@ public class WebExtension {
             optionsPageUrl = null;
             openOptionsPageInTab = false;
             isRecommended = false;
-            blockedReason = BlockedReasonFlags.NOT_BLOCKED;
+            blocklistState = BlocklistStateFlags.NOT_BLOCKED;
             signedState = SignedStateFlags.UNKNOWN;
         }
 
@@ -1127,7 +1127,7 @@ public class WebExtension {
             optionsPageUrl = bundle.getString("optionsPageUrl");
             openOptionsPageInTab = bundle.getBoolean("openOptionsPageInTab");
             isRecommended = bundle.getBoolean("isRecommended");
-            blockedReason = bundle.getInt("blockedReason", BlockedReasonFlags.NOT_BLOCKED);
+            blocklistState = bundle.getInt("blocklistState", BlocklistStateFlags.NOT_BLOCKED);
 
             int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
             if (signedState <= SignedStateFlags.LAST) {
