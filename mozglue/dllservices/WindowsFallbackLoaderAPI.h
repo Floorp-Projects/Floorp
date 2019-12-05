@@ -24,6 +24,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FallbackLoaderAPI final
   void NotifyEndDllLoad(void* aContext, NTSTATUS aLoadNtStatus,
                         ModuleLoadInfo&& aModuleLoadInfo) final;
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
+  nt::LoaderAPI::InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() final;
 
   void SetObserver(nt::LoaderObserver* aLoaderObserver);
 
