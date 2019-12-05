@@ -24,23 +24,26 @@ import java.util.Locale
 class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
-    private val defaultEngines = async {
+    private val baseSearchEngines = async {
         AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()).loadSearchEngines(context)
     }
 
-    private val bundledEngines = async {
+    private val bundledSearchEngines = async {
+        val defaultEngineIdentifiers = baseSearchEngines.await().list.map { it.identifier }.toSet()
+
         AssetsSearchEngineProvider(
             LocaleSearchLocalizationProvider(),
             filters = listOf(object : SearchEngineFilter {
                 override fun filter(context: Context, searchEngine: SearchEngine): Boolean {
-                    return BUNDLED_SEARCH_ENGINES.contains(searchEngine.identifier)
+                    return BUNDLED_SEARCH_ENGINES.contains(searchEngine.identifier) &&
+                            !defaultEngineIdentifiers.contains(searchEngine.identifier)
                 }
             }),
             additionalIdentifiers = BUNDLED_SEARCH_ENGINES
         ).loadSearchEngines(context)
     }
 
-    private var customEngines = async {
+    private var customSearchEngines = async {
         CustomSearchEngineProvider().loadSearchEngines(context)
     }
 
@@ -108,15 +111,15 @@ class FenixSearchEngineProvider(
 
     fun reload() {
         launch {
-            customEngines = async { CustomSearchEngineProvider().loadSearchEngines(context) }
+            customSearchEngines = async { CustomSearchEngineProvider().loadSearchEngines(context) }
             loadedSearchEngines = refreshAsync()
         }
     }
 
     private fun refreshAsync() = async {
-        val engineList = defaultEngines.await()
-        val bundledList = bundledEngines.await().list
-        val customList = customEngines.await().list
+        val engineList = baseSearchEngines.await()
+        val bundledList = bundledSearchEngines.await().list
+        val customList = customSearchEngines.await().list
 
         engineList.copy(list = engineList.list + bundledList + customList)
     }
@@ -130,7 +133,7 @@ class FenixSearchEngineProvider(
         val prefs = prefs(context)
 
         val identifiers = if (!prefs.contains(INSTALLED_ENGINES_KEY)) {
-            val defaultSet = defaultEngines.await()
+            val defaultSet = baseSearchEngines.await()
                 .list
                 .map { it.identifier }
                 .toSet()
@@ -141,7 +144,7 @@ class FenixSearchEngineProvider(
             prefs(context).getStringSet(INSTALLED_ENGINES_KEY, setOf()) ?: setOf()
         }
 
-        val customEngineIdentifiers = customEngines.await().list.map { it.identifier }.toSet()
+        val customEngineIdentifiers = customSearchEngines.await().list.map { it.identifier }.toSet()
         return identifiers + customEngineIdentifiers
     }
 
