@@ -221,6 +221,11 @@ const objectSpec = generateActorSpec({
       response: {},
     },
 
+    removeWatchpoints: {
+      request: {},
+      response: {},
+    },
+
     release: { release: true },
     scope: {
       request: {},
