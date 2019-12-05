@@ -1,4 +1,4 @@
-|buildstatus-travis| |buildstatus-appveyor| |jazzband| |pypi|
+|jazzband| |pypi| |pyversions| |buildstatus-travis| |buildstatus-appveyor| |codecov|
 
 ==================================
 pip-tools = pip-compile + pip-sync
@@ -10,17 +10,23 @@ even when you've pinned them.  `You do pin them, right?`_
 .. image:: https://github.com/jazzband/pip-tools/raw/master/img/pip-tools-overview.png
    :alt: pip-tools overview for phase II
 
-.. |buildstatus-travis| image:: https://img.shields.io/travis/jazzband/pip-tools/master.svg
-   :alt: Travis-CI build status
+.. |buildstatus-travis| image:: https://img.shields.io/travis/jazzband/pip-tools/master.svg?logo=travis
+   :alt: Travis CI build status
    :target: https://travis-ci.org/jazzband/pip-tools
-.. |buildstatus-appveyor| image:: https://img.shields.io/appveyor/ci/jazzband/pip-tools/master.svg
-   :alt: Appveyor build status
+.. |buildstatus-appveyor| image:: https://img.shields.io/appveyor/ci/jazzband/pip-tools/master.svg?logo=appveyor
+   :alt: AppVeyor build status
    :target: https://ci.appveyor.com/project/jazzband/pip-tools
+.. |codecov| image:: https://codecov.io/gh/jazzband/pip-tools/branch/master/graph/badge.svg
+   :alt: Coverage
+   :target: https://codecov.io/gh/jazzband/pip-tools
 .. |jazzband| image:: https://jazzband.co/static/img/badge.svg
    :alt: Jazzband
    :target: https://jazzband.co/
 .. |pypi| image:: https://img.shields.io/pypi/v/pip-tools.svg
-   :alt: PyPI
+   :alt: PyPI version
+   :target: https://pypi.org/project/pip-tools/
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/pip-tools.svg
+   :alt: Supported Python versions
    :target: https://pypi.org/project/pip-tools/
 .. _You do pin them, right?: http://nvie.com/posts/pin-your-packages/
 
@@ -43,6 +49,13 @@ project's virtual environment.
 
 Example usage for ``pip-compile``
 =================================
+
+The ``pip-compile`` command lets you compile a ``requirements.txt`` file from
+your dependencies, specified in either ``setup.py`` or ``requirements.in``.
+
+Run it with ``pip-compile`` or  ``python -m piptools compile``. If you use
+multiple Python versions, you can run ``pip-compile`` as ``py -X.Y -m piptools
+compile`` on Windows and ``pythonX.Y -m piptools compile`` on other systems.
 
 Requirements from ``setup.py``
 ------------------------------
@@ -104,7 +117,7 @@ And it will produce your ``requirements.txt``, with all the Flask dependencies
 (and all underlying dependencies) pinned.  You should put both
 ``requirements.in`` and ``requirements.txt`` under version control.
 
-.. _it's easy to write one: https://packaging.python.org/distributing/#configuring-your-project
+.. _it's easy to write one: https://packaging.python.org/guides/distributing-packages-using-setuptools/#configuring-your-project
 
 Using hashes
 ------------
@@ -155,11 +168,35 @@ To update a specific package to the latest or a specific version use the
 
     $ pip-compile --upgrade-package flask  # only update the flask package
     $ pip-compile --upgrade-package flask --upgrade-package requests  # update both the flask and requests packages
-    $ pip-compile -P flask -P requests  # same as above, but shorter
+    $ pip-compile -P flask -P requests==2.0.0  # update the flask package to the latest, and requests to v2.0.0
 
-If you use multiple Python versions, you can run ``pip-compile`` as
-``py -X.Y -m piptools compile ...`` on Windows and
-``pythonX.Y -m piptools compile ...`` on other systems.
+You can combine ``--upgrade`` and ``--upgrade-package`` in one command, to
+provide constraints on the allowed upgrades. For example to upgrade all
+packages whilst constraining requests to the latest version less than 3.0:
+
+.. code-block:: bash
+
+    $ pip-compile --upgrade --upgrade-package 'requests<3.0'
+
+Output File
+-----------
+
+To output the pinned requirements in a filename other than
+``requirements.txt``, use ``--output-file``. This might be useful for compiling
+multiple files, for example with different constraints on flask to test a
+library with both versions using `tox <https://tox.readthedocs.io/en/latest/>`__:
+
+.. code-block:: bash
+
+    $ pip-compile --upgrade-package 'flask<1.0' --output-file requirements-flask0x.txt
+    $ pip-compile --upgrade-package 'flask<2.0' --output-file requirements-flask1x.txt
+
+Or to output to standard output, use ``--output-file=-``:
+
+.. code-block:: bash
+
+    $ pip-compile --output-file=- > requirements.txt
+    $ pip-compile - --output-file=- < requirements.in > requirements.txt
 
 Configuration
 -------------
@@ -192,6 +229,10 @@ your virtual environment to reflect exactly what's in there. This will
 install/upgrade/uninstall everything necessary to match the
 ``requirements.txt`` contents.
 
+Run it with ``pip-sync`` or ``python -m piptools sync``. If you use multiple
+Python versions, you can also run ``py -X.Y -m piptools sync`` on Windows and
+``pythonX.Y -m piptools sync`` on other systems.
+
 **Be careful**: ``pip-sync`` is meant to be used only with a
 ``requirements.txt`` generated by ``pip-compile``.
 
@@ -202,7 +243,7 @@ install/upgrade/uninstall everything necessary to match the
       Successfully uninstalled flake8-2.4.1
     Collecting click==4.1
       Downloading click-4.1-py2.py3-none-any.whl (62kB)
-        100% |████████████████████████████████| 65kB 1.8MB/s
+        100% |................................| 65kB 1.8MB/s
       Found existing installation: click 4.0
         Uninstalling click-4.0:
           Successfully uninstalled click-4.0
@@ -229,5 +270,11 @@ Other useful tools
 ==================
 
 - `pipdeptree`_ to print the dependency tree of the installed packages.
+- ``requirements.in``/``requirements.txt`` syntax highlighting:
+
+  * `requirements.txt.vim`_ for Vim.
+  * `Python extension for VS Code`_ for VS Code.
 
 .. _pipdeptree: https://github.com/naiquevin/pipdeptree
+.. _requirements.txt.vim: https://github.com/raimon49/requirements.txt.vim
+.. _Python extension for VS Code: https://marketplace.visualstudio.com/items?itemName=ms-python.python

@@ -1,7 +1,9 @@
 environment:
+    global:
+      PYTHON: "C:\\Python36"
 
     matrix:
-        - TOXENV: py27-pip8.1.1
+        - TOXENV: py27-pip8.1.1-coverage
           PIP: 8.1.1
         - TOXENV: py27-pip9.0.1
           PIP: 9.0.1
@@ -9,22 +11,32 @@ environment:
           PIP: 9.0.3
         - TOXENV: py27-pip10.0.1
           PIP: 10.0.1
+        - TOXENV: py27-pip18.0
+          PIP: 18.0
+        - TOXENV: py27-pip19.0
+          PIP: 19.0
         - TOXENV: py27-pipmaster
           PIP: master
-        - TOXENV: py27-piplatest
+        - TOXENV: py27-piplatest-coverage
           PIP: latest
+
         - TOXENV: py34-pip8.1.1
           PIP: 8.1.1
         - TOXENV: py34-pip9.0.1
           PIP: 9.0.1
-        - TOXENV: py34-pip9.0.3
+        - TOXENV: py34-pip9.0.3-coverage
           PIP: 9.0.3
         - TOXENV: py34-pip10.0.1
           PIP: 10.0.1
+        - TOXENV: py34-pip18.0
+          PIP: 18.0
+        - TOXENV: py34-pip19.0
+          PIP: 19.0
         - TOXENV: py34-pipmaster
           PIP: master
         - TOXENV: py34-piplatest
           PIP: latest
+
         - TOXENV: py35-pip8.1.1
           PIP: 8.1.1
         - TOXENV: py35-pip9.0.1
@@ -33,10 +45,15 @@ environment:
           PIP: 9.0.3
         - TOXENV: py35-pip10.0.1
           PIP: 10.0.1
+        - TOXENV: py35-pip18.0-coverage
+          PIP: 18.0
+        - TOXENV: py35-pip19.0
+          PIP: 19.0
         - TOXENV: py35-pipmaster
           PIP: master
         - TOXENV: py35-piplatest
           PIP: latest
+
         - TOXENV: py36-pip8.1.1
           PIP: 8.1.1
         - TOXENV: py36-pip9.0.1
@@ -45,10 +62,15 @@ environment:
           PIP: 9.0.3
         - TOXENV: py36-pip10.0.1
           PIP: 10.0.1
+        - TOXENV: py36-pip18.0
+          PIP: 18.0
+        - TOXENV: py36-pip19.0-coverage
+          PIP: 19.0
         - TOXENV: py36-pipmaster
           PIP: master
         - TOXENV: py36-piplatest
           PIP: latest
+
         - TOXENV: py37-pip8.1.1
           PIP: 8.1.1
         - TOXENV: py37-pip9.0.1
@@ -57,19 +79,34 @@ environment:
           PIP: 9.0.3
         - TOXENV: py37-pip10.0.1
           PIP: 10.0.1
-        - TOXENV: py37-pipmaster
+        - TOXENV: py37-pip18.0
+          PIP: 18.0
+        - TOXENV: py37-pip19.0
+          PIP: 19.0
+        - TOXENV: py37-pipmaster-coverage
           PIP: master
-        - TOXENV: py37-piplatest
+        - TOXENV: py37-piplatest-coverage
           PIP: latest
 
 matrix:
+  fast_finish: true
   allow_failures:
     - PIP: master
 
 install:
-    - C:\Python36\python -m pip install tox
+    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - pip install tox
 
 build: false
 
 test_script:
-    - C:\Python36\Scripts\tox
+    - tox
+
+after_test:
+  # Add tox environment to PATH.
+  - "SET PATH=%CD%\\.tox\\%TOXENV%\\scripts;%PATH%"
+  - IF NOT "x%TOXENV:-coverage=%"=="x%TOXENV%" (
+      pip install codecov &&
+      coverage xml &&
+      codecov --required -X gcov pycov search -f coverage.xml -n %TOXENV%-windows
+    )
