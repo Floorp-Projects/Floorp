@@ -144,7 +144,7 @@ public class WebExtensionController {
                     "GeckoView:WebExtension:OptionalPrompt"
             );
         } else if (delegate != null && mPromptDelegate == null) {
-            EventDispatcher.getInstance().unregisterUiThreadListener(
+            EventDispatcher.getInstance().registerUiThreadListener(
                     mInternals,
                     "GeckoView:WebExtension:InstallPrompt",
                     "GeckoView:WebExtension:UpdatePrompt",
