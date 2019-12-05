@@ -882,7 +882,7 @@ class RecordedSourceSurfaceCreation
   int32_t mStride;
   IntSize mSize;
   SurfaceFormat mFormat;
-  bool mDataOwned;
+  mutable bool mDataOwned;
 
   template <class S>
   MOZ_IMPLICIT RecordedSourceSurfaceCreation(S& aStream);
@@ -2798,9 +2798,13 @@ inline bool RecordedSourceSurfaceCreation::PlayEvent(
     return false;
   }
 
-  RefPtr<SourceSurface> src =
-      aTranslator->GetReferenceDrawTarget()->CreateSourceSurfaceFromData(
-          mData, mSize, mSize.width * BytesPerPixel(mFormat), mFormat);
+  RefPtr<SourceSurface> src = Factory::CreateWrappingDataSourceSurface(
+      mData, mSize.width * BytesPerPixel(mFormat), mSize, mFormat,
+      [](void* aClosure) { delete[] static_cast<uint8_t*>(aClosure); }, mData);
+  if (src) {
+    mDataOwned = false;
+  }
+
   aTranslator->AddSourceSurface(mRefPtr, src);
   return true;
 }
