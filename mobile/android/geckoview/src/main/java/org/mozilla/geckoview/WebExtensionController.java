@@ -27,7 +27,35 @@ public class WebExtensionController {
     private TabDelegate mTabDelegate;
     private PromptDelegate mPromptDelegate;
 
-    private Map<String, WebExtension> mExtensions = new HashMap<>();
+    private static class ExtensionStore {
+        final private Map<String, WebExtension> mData = new HashMap<>();
+
+        public GeckoResult<WebExtension> get(final String id) {
+            final WebExtension extension = mData.get(id);
+            if (extension == null) {
+                if (BuildConfig.DEBUG) {
+                    // TODO: Bug 1582185 Some gecko tests install WebExtensions that we
+                    // don't know about and cause this to trigger.
+                    // throw new RuntimeException("Could not find extension: " + extensionId);
+                }
+                Log.e(LOGTAG, "Could not find extension: " + id);
+            }
+
+            return GeckoResult.fromValue(extension);
+        }
+
+        public void remove(final String id) {
+            mData.remove(id);
+        }
+
+        // TODO: remove once registerWebExtension is removed
+        public void put(final String id, final WebExtension extension) {
+            mData.put(id, extension);
+        }
+    }
+
+    private ExtensionStore mExtensions = new ExtensionStore();
+
     private Map<Long, WebExtension.Port> mPorts = new HashMap<>();
 
     private Internals mInternals = new Internals();
@@ -333,19 +361,24 @@ public class WebExtensionController {
             return;
         }
 
-        final WebExtension.MessageSender sender = fromBundle(message.getBundle("sender"), session);
-        if (sender == null) {
-            if (callback != null) {
-                callback.sendError("Could not find recipient for " + message.getBundle("sender"));
-            }
-            return;
-        }
+        final GeckoBundle senderBundle = message.getBundle("sender");
+        final String extensionId = senderBundle.getString("extensionId");
 
-        if ("GeckoView:WebExtension:Connect".equals(event)) {
-            connect(nativeApp, message.getLong("portId", -1), callback, sender);
-        } else if ("GeckoView:WebExtension:Message".equals(event)) {
-            message(nativeApp, message, callback, sender);
-        }
+        mExtensions.get(extensionId).accept(extension -> {
+            final WebExtension.MessageSender sender = fromBundle(extension, senderBundle, session);
+            if (sender == null) {
+                if (callback != null) {
+                    callback.sendError("Could not find recipient for " + message.getBundle("sender"));
+                }
+                return;
+            }
+
+            if ("GeckoView:WebExtension:Connect".equals(event)) {
+                connect(nativeApp, message.getLong("portId", -1), callback, sender);
+            } else if ("GeckoView:WebExtension:Message".equals(event)) {
+                message(nativeApp, message, callback, sender);
+            }
+        });
     }
 
     private void newTab(final GeckoBundle message, final EventCallback callback) {
@@ -354,16 +387,9 @@ public class WebExtensionController {
             return;
         }
 
-        WebExtension extension = mExtensions.get(message.getString("extensionId"));
-
-        final GeckoResult<GeckoSession> result = mTabDelegate.onNewTab(extension, message.getString("uri"));
-
-        if (result == null) {
-            callback.sendSuccess(null);
-            return;
-        }
-
-        result.accept(session -> {
+        mExtensions.get(message.getString("extensionId")).then(extension ->
+            mTabDelegate.onNewTab(extension, message.getString("uri"))
+        ).accept(session -> {
             if (session == null) {
                 callback.sendSuccess(null);
                 return;
@@ -385,11 +411,9 @@ public class WebExtensionController {
             return;
         }
 
-        WebExtension extension = mExtensions.get(message.getString("extensionId"));
-
-        GeckoResult<AllowOrDeny> result = mTabDelegate.onCloseTab(extension, session);
-
-        result.accept(value -> {
+        mExtensions.get(message.getString("extensionId")).then(extension ->
+                mTabDelegate.onCloseTab(extension, session)
+        ).accept(value -> {
             if (value == AllowOrDeny.ALLOW) {
                 callback.sendSuccess(null);
             } else {
@@ -414,15 +438,9 @@ public class WebExtensionController {
         }
     }
 
-    /* package */ @Nullable WebExtension getWebExtension(final String id) {
-        return mExtensions.get(id);
-    }
-
-    private WebExtension.MessageSender fromBundle(final GeckoBundle sender,
+    private WebExtension.MessageSender fromBundle(final WebExtension extension,
+                                                  final GeckoBundle sender,
                                                   final GeckoSession session) {
-        final String extensionId = sender.getString("extensionId");
-        WebExtension extension = mExtensions.get(extensionId);
-
         if (extension == null) {
             // All senders should have an extension
             return null;
@@ -580,39 +598,29 @@ public class WebExtensionController {
             exception -> callback.sendError(exception));
     }
 
-    private WebExtension extensionFromBundle(final GeckoBundle message) {
+    private GeckoResult<WebExtension> extensionFromBundle(final GeckoBundle message) {
         final String extensionId = message.getString("extensionId");
-
-        final WebExtension extension = mExtensions.get(extensionId);
-        if (extension == null) {
-            if (BuildConfig.DEBUG) {
-                // TODO: Bug 1582185 Some gecko tests install WebExtensions that we
-                // don't know about and cause this to trigger.
-                // throw new RuntimeException("Could not find extension: " + extensionId);
-            }
-            Log.e(LOGTAG, "Could not find extension: " + extensionId);
-        }
-
-        return extension;
+        return mExtensions.get(extensionId);
     }
 
     private void openPopup(final GeckoBundle message, final GeckoSession session,
                            final @WebExtension.Action.ActionType int actionType) {
-        final WebExtension extension = extensionFromBundle(message);
-        if (extension == null) {
-            return;
-        }
+        extensionFromBundle(message).accept(extension -> {
+            if (extension == null) {
+                return;
+            }
 
-        final WebExtension.Action action = new WebExtension.Action(
-                actionType, message.getBundle("action"), extension);
+            final WebExtension.Action action = new WebExtension.Action(
+                    actionType, message.getBundle("action"), extension);
 
-        final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
-        if (delegate == null) {
-            return;
-        }
+            final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
+            if (delegate == null) {
+                return;
+            }
 
-        final GeckoResult<GeckoSession> popup = delegate.onOpenPopup(extension, action);
-        action.openPopup(popup);
+            final GeckoResult<GeckoSession> popup = delegate.onOpenPopup(extension, action);
+            action.openPopup(popup);
+        });
     }
 
     private WebExtension.ActionDelegate actionDelegateFor(final WebExtension extension,
@@ -626,22 +634,23 @@ public class WebExtensionController {
 
     private void actionUpdate(final GeckoBundle message, final GeckoSession session,
                               final @WebExtension.Action.ActionType int actionType) {
-        final WebExtension extension = extensionFromBundle(message);
-        if (extension == null) {
-            return;
-        }
+        extensionFromBundle(message).accept(extension -> {
+            if (extension == null) {
+                return;
+            }
 
-        final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
-        if (delegate == null) {
-            return;
-        }
+            final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
+            if (delegate == null) {
+                return;
+            }
 
-        final WebExtension.Action action = new WebExtension.Action(
-                actionType, message.getBundle("action"), extension);
-        if (actionType == WebExtension.Action.TYPE_BROWSER_ACTION) {
-            delegate.onBrowserAction(extension, session, action);
-        } else if (actionType == WebExtension.Action.TYPE_PAGE_ACTION) {
-            delegate.onPageAction(extension, session, action);
-        }
+            final WebExtension.Action action = new WebExtension.Action(
+                    actionType, message.getBundle("action"), extension);
+            if (actionType == WebExtension.Action.TYPE_BROWSER_ACTION) {
+                delegate.onBrowserAction(extension, session, action);
+            } else if (actionType == WebExtension.Action.TYPE_PAGE_ACTION) {
+                delegate.onPageAction(extension, session, action);
+            }
+        });
     }
 }
