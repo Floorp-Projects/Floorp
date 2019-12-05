@@ -358,7 +358,8 @@ GENERATED_BLOCKLIST_FILES = [
     # Child is not used by anything at the moment, so we'll just leave this
     # descriptor commented out for now.
     # BlocklistDescriptor('Child', ['ALL_PROCESSES', 'CHILD_PROCESSES']),
-    BlocklistDescriptor('Launcher', ['ALL_PROCESSES', 'BROWSER_PROCESS']),
+    BlocklistDescriptor('Launcher', ALL_DEFINITION_LISTS, flagspec={
+                        'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
     BlocklistDescriptor('Legacy', ALL_DEFINITION_LISTS, flagspec={
                         'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
     # Roughed-in for the moment; we'll enable this in bug 1238735
