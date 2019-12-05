@@ -4,21 +4,26 @@
 Localized Builds
 ================
 
-Single-locale language repacks
-==============================
+Localization repacks
+====================
 
 To save on build time, the build system and automation collaborate to allow
 downloading a packaged en-US Firefox, performing some locale-specific
-post-processing, and re-packaging a locale-specific Firefox.  Such artifacts
-are termed "single-locale language repacks".  There is another concept of a
+post-processing, and re-packaging a locale-specific Firefox. Such artifacts
+are termed "single-locale language repacks". There is another concept of a
 "multi-locale language build", which is more like a regular build and less
 like a re-packaging post-processing step.
+
+.. note::
+
+  These builds rely on make targets that don't work for
+  `artifact builds <https://bugzilla.mozilla.org/show_bug.cgi?id=1387485>`_.
 
 Instructions for single-locale repacks for developers
 -----------------------------------------------------
 
-This assumes that ``$AB_CD`` is the locale you want to repack with; I tested
-with "ar" and "en-GB".
+This assumes that ``$AB_CD`` is the locale you want to repack with; you
+find the available localizations on `l10n-central <https://hg.mozilla.org/l10n-central/>`_.
 
 #. You must have a built and packaged object directory, or a pre-built
    ``en-US`` package.
@@ -48,6 +53,31 @@ can point to the directory via
 
       ac_add_options --with-l10n-base=/make/this/a/absolute/path
 
+This build also packages a language pack.
+
+Instructions for language packs
+-------------------------------
+
+Language packs are extensions that contain just the localized resources. Building
+them doesn't require an actual build, but they're only compatible with the
+``mozilla-central`` source they're built with.
+
+
+.. code-block:: shell
+
+  ./mach build langpack-$AB_CD
+
+This target shares much of the logic of the ``installers-$AB_CD`` target above,
+and does the check-out of the localization repository etc. It doesn't require
+a package or a build, though. The generated language pack is in
+``OBJDIR/dist/$(MOZ_PKG_PLATFORM)/xpi/``.
+
+.. note::
+
+  Despite the platform-dependent location in the build directory, language packs
+  are platform independent, and the content that goes into them needs to be
+  built in a platform-independent way.
+
 Instructions for multi-locale builds
 ------------------------------------
 
@@ -75,16 +105,42 @@ If you want to create a single build with multiple locales, you will do
 
       AB_CD=multi ./mach package
 
-This `currently <https://bugzilla.mozilla.org/show_bug.cgi?id=1362496>`_ only
-works for Firefox for Android.
+General flow of repacks
+-----------------------
+
+The general flow of the locale repacks is controlled by
+``$MOZ_BUILD_APP/locales/Makefile.in`` and ``toolkit/locales/l10n.mk``, plus
+the packaging build system. The three main entry points above all trigger
+related build flows:
+
+#. Get the localization repository, if needed
+#. Run l10n-merge with a prior clobber of the merge dir
+#. Copy l10n files to ``dist``, with minor differences here between ``libs-%`` and ``chrome-%``
+#. Repackage and package
+
+Details on l10n-merge are described in its own section below.
+The copying of files is mainly controlled by ``jar.mn``, in the few source
+directories that include localizable files. ``libs-%`` is used for repacks,
+``chrome-%`` for multi-locale packages. The repackaging is dedicated
+Python code in ``toolkit/mozapps/installer/l10n-repack.py``, using an existing
+package. It strips existing ``chrome`` l10n resources, and adds localizations
+and metadata.
+
+Language packs don't require repackaging. The windows installers are generated
+by merely packaging an existing repackaged zip into to an installer.
 
 Exposing strings
 ================
 
-Localizers only handle a few file formats in well-known locations in the
+The localization flow handles a few file formats in well-known locations in the
 source tree.
 
-The locations are specified by TOML files. They're part of the bigger
+Alongside being built by including the directory in ``$MOZ_BUILD_APP/locales/Makefile.in``
+and respective entries in a ``jar.mn``, we also have configuration files tailored
+to localization tools and infrastructure. They're also controlling which
+files l10n-merge handles, and how.
+
+These configurations are TOML files. They're part of the bigger
 localization ecosystem at Mozilla, and `the documentation about the
 file format <http://moz-l10n-config.readthedocs.io/en/latest/fileformat.html>`_
 explains how to set them up, and what the entries mean. In short, you find
@@ -126,10 +182,12 @@ An example looks like this
     [includes]
     toolkit = toolkit/locales/l10n.ini
 
-This tells the l10n infrastructure three things: Resolve the paths against the
-directory two levels up, include files in :file:`browser/locales/en-US` and
-:file:`browser/branding/official/locales/en-US`, and load more data from
-:file:`toolkit/locales/l10n.ini`.
+This tells the l10n infrastructure three things:
+
+* resolve the paths against the directory two levels up
+* include files in :file:`browser/locales/en-US` and
+  :file:`browser/branding/official/locales/en-US`
+* load more data from :file:`toolkit/locales/l10n.ini`
 
 For projects like Thunderbird and SeaMonkey in ``comm-central``, additional
 data needs to be provided when including an ``l10n.ini`` from a different
@@ -143,7 +201,7 @@ repository:
     repo = https://hg.mozilla.org/
     l10n.ini = toolkit/locales/l10n.ini
 
-This tells the l10n pieces where to find the repository, and where inside
+This tells the l10n infrastructure where to find the repository, and where inside
 that repository the ``l10n.ini`` file is. This is needed because for local
 builds, :file:`mail/locales/l10n.ini` references
 :file:`mozilla/toolkit/locales/l10n.ini`, which is where the comm-central
@@ -166,9 +224,9 @@ Properties
     `plural support <https://developer.mozilla.org/docs/Mozilla/Localization/Localization_and_Plurals>`_.
 ini
     Used by the crashreporter and updater, avoid if possible.
-foo.defines
-    Used during builds, for example to create :file:`install.rdf` for
-    language packs.
+inc
+    Used during builds, for example to create metadata for
+    language packs or bookmarks.
 
 Adding new formats involves changing various different tools, and is strongly
 discouraged.
@@ -177,10 +235,28 @@ Exceptions
 ----------
 Generally, anything that exists in ``en-US`` needs a one-to-one mapping in
 all localizations. There are a few cases where that's not wanted, notably
-around search settings and spell-checking dictionaries.
+around locale configuration and locale-dependent metadata.
 
-To enable tools to adjust to those exceptions, there's a python-coded
-:py:mod:`filter.py`, implementing :py:func:`test`, with the following
+For optional strings and files, l10n-merge won't add ``en-US`` content if
+the localization doesn't have that content.
+
+For the TOML files, the
+`[[filters]] documentation <https://moz-l10n-config.readthedocs.io/en/latest/fileformat.html#filters>`_
+is a good reference. In short, filters match the localized source code, optionally
+a ``key``, and an action. An example like
+
+.. code-block:: toml
+
+  [[filters]]
+      path = "{l}browser/defines.inc"
+      key = "MOZ_LANGPACK_CONTRIBUTORS"
+      action = "ignore"
+
+indicates that the ``MOZ_LANGPACK_CONTRIBUTORS`` in ``browser/defines.inc``
+is optional.
+
+For the legacy ini configuration files, there's a Python module
+``filter.py`` next to the main ``l10n.ini``, implementing :py:func:`test`, with the following
 signature
 
 .. code-block:: python
@@ -204,19 +280,25 @@ in the en-US file.
 l10n-merge
 ==========
 
-Gecko doesn't support fallback from a localization to ``en-US`` at runtime.
+The chrome registry in Gecko doesn't support fallback from a localization to ``en-US`` at runtime.
 Thus, the build needs to ensure that the localization as it's built into
 the package has all required strings, and that the strings don't contain
 errors. To ensure that, we're *merging* the localization and ``en-US``
-at build time, nick-named :term:`l10n-merge`.
+at build time, nick-named l10n-merge.
+
+For Fluent, we're also removing erroneous messages. For many errors in Fluent,
+that's cosmetic, but when a localization has different values or attributes
+on a message, that's actually important so that the DOM bindings of Fluent
+can apply the translation without having to load the ``en-US`` source to
+compare against.
 
 The process can be manually triggered via
 
 .. code-block:: bash
 
-    $> ./mach build merge-de
+    $> ./mach build merge-$AB_CD
 
-It creates another directory in the object dir, :file:`merge-dir/ab-CD`, in
+It creates another directory in the object dir, :file:`browser/locales/merge-dir/$AB_CD`, in
 which the modified files are stored. The actual repackaging process looks for
 the localized files in the merge dir first, then the localized file, and then
 in ``en-US``. Thus, for the ``de`` localization of
@@ -230,7 +312,9 @@ and will include the first of those files it finds.
 
 l10n-merge modifies a file if it supports the particular file type, and there
 are missing strings which are not filtered out, or if an existing string
-shows an error. See the Checks section below for details.
+shows an error. See the Checks section below for details. If the files are
+not modified, l10n-merge copies them over to the respective location in the
+merge dir.
 
 Checks
 ------
@@ -239,8 +323,7 @@ As part of the build and other localization tool chains, we run a variety
 of source-based checks. Think of them as linters.
 
 The suite of checks is usually determined by file type, i.e., there's a
-suite of checks for DTD files and one for properties files, etc. An exception
-are Android-specific checks.
+suite of checks for DTD files and one for properties files, etc.
 
 Localizations
 -------------
@@ -248,7 +331,7 @@ Localizations
 Now that we talked in-depth about how to expose content to localizers,
 where are the localizations?
 
-We host a mercurial repository per locale and per branch. All of our
+We host a mercurial repository per locale. All of our
 localizations can be found on https://hg.mozilla.org/l10n-central/.
 
 You can search inside our localized files on
