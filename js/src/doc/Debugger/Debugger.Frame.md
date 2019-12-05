@@ -242,7 +242,10 @@ The offset of the bytecode instruction currently being executed in
 `script`, or `undefined` if the frame's `script` property is `null`.
 For a `wasmcall` frame, this property throws a `TypeError`.
 
-Accessing this property will throw if `.onStack == false`.
+If this is used on a suspended function frame, the offset will reference
+the offset where the frame will be resumed.
+
+Accessing this property will throw if `.terminated == true`.
 
 ### `environment`
 The lexical environment within which evaluation is taking place (a
