@@ -12,6 +12,7 @@ typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webexten
  * @property id The unique identifier for this web extension.
  * @property url The url pointing to a resources path for locating the extension
  * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
+ * @property enabled Whether or not this web extension is enabled, defaults to true.
  * @property browserAction A list browser action that this web extension has.
  * @property browserActionPopupSession The ID of the session displaying
  * the browser action popup.
@@ -19,6 +20,7 @@ typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webexten
 data class WebExtensionState(
     val id: String,
     val url: String? = null,
+    val enabled: Boolean = true,
     val browserAction: WebExtensionBrowserAction? = null,
     val browserActionPopupSession: String? = null
 )

@@ -43,20 +43,19 @@ class WebExtensionActionTest {
     fun `UpdateGlobalBrowserAction - Updates a browser action of an existing WebExtensionState on the BrowserState`() {
         val store = BrowserStore()
         val mockedBrowserAction = mock<WebExtensionBrowserAction>()
+        val mockedBrowserAction2 = mock<WebExtensionBrowserAction>()
 
         assertTrue(store.state.extensions.isEmpty())
+        store.dispatch(WebExtensionAction.UpdateBrowserAction("id", mockedBrowserAction)).joinBlocking()
+        assertEquals(mockedBrowserAction, store.state.extensions.values.first().browserAction)
 
         val extension = WebExtensionState("id", "url")
         store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
-
         assertFalse(store.state.extensions.isEmpty())
-
-        assertEquals(extension, store.state.extensions.values.first())
-
-        store.dispatch(WebExtensionAction.UpdateBrowserAction("id", mockedBrowserAction))
-            .joinBlocking()
-
         assertEquals(mockedBrowserAction, store.state.extensions.values.first().browserAction)
+
+        store.dispatch(WebExtensionAction.UpdateBrowserAction("id", mockedBrowserAction2)).joinBlocking()
+        assertEquals(mockedBrowserAction2, store.state.extensions.values.first().browserAction)
     }
 
     @Test
@@ -97,6 +96,7 @@ class WebExtensionActionTest {
                 "extensionId" to WebExtensionState(
                     "extensionId",
                     "url",
+                    true,
                     mockedBrowserAction1
                 )
             )
@@ -132,5 +132,20 @@ class WebExtensionActionTest {
 
         store.dispatch(WebExtensionAction.UpdateBrowserActionPopupSession(extension.id, "popupId")).joinBlocking()
         assertEquals("popupId", store.state.extensions[extension.id]?.browserActionPopupSession)
+    }
+
+    @Test
+    fun `UpdateWebExtensionEnabledAction - Updates enabled state of an existing web extension`() {
+        val store = BrowserStore()
+        val extension = WebExtensionState("id", "url")
+
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
+        assertTrue(store.state.extensions[extension.id]?.enabled!!)
+
+        store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false)).joinBlocking()
+        assertFalse(store.state.extensions[extension.id]?.enabled!!)
+
+        store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true)).joinBlocking()
+        assertTrue(store.state.extensions[extension.id]?.enabled!!)
     }
 }

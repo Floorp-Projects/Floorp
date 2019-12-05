@@ -7,7 +7,6 @@ package mozilla.components.browser.state.reducer
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.WebExtensionState
 
 internal object WebExtensionReducer {
@@ -27,71 +26,60 @@ internal object WebExtensionReducer {
                     state
                 }
             }
-            is WebExtensionAction.UpdateBrowserAction -> {
-                val newExtension = action.extensionId to WebExtensionState(
-                    id = action.extensionId,
-                    browserAction = action.browserAction
-                )
-
-                val updatedExtensions = state.extensions - action.extensionId
-
-                state.copy(
-                    extensions = updatedExtensions + newExtension
-                )
-            }
-            is WebExtensionAction.UpdateBrowserActionPopupSession -> {
-                val existingExtension = state.extensions[action.extensionId]
-
-                if (existingExtension == null) {
-                    state
-                } else {
-                    val newExtension = action.extensionId to existingExtension.copy(
-                        browserActionPopupSession = action.popupSessionId
-                    )
-
-                    val updatedExtensions = state.extensions - action.extensionId
-
-                    state.copy(
-                        extensions = updatedExtensions + newExtension
-                    )
+            is WebExtensionAction.UpdateWebExtensionEnabledAction -> {
+                state.updateWebExtensionState(action.extensionId) {
+                    it.copy(enabled = action.enabled)
                 }
             }
-
+            is WebExtensionAction.UpdateBrowserAction -> {
+                state.updateWebExtensionState(action.extensionId) {
+                    it.copy(browserAction = action.browserAction)
+                }
+            }
+            is WebExtensionAction.UpdateBrowserActionPopupSession -> {
+                state.updateWebExtensionState(action.extensionId) {
+                    it.copy(browserActionPopupSession = action.popupSessionId)
+                }
+            }
             is WebExtensionAction.UpdateTabBrowserAction -> {
-                state.updateTabState(action.sessionId) { tab ->
-                    val existingExtension = tab.extensionState[action.extensionId]
-
-                    val newExtension = action.extensionId to WebExtensionState(
-                        id = action.extensionId, browserAction = action.browserAction
-                    )
-
-                    val updatedExtensions = if (existingExtension == null) {
-                        tab.extensionState + newExtension
-                    } else {
-                        val newExtensions = tab.extensionState - action.extensionId
-                        newExtensions + newExtension
-                    }
-
-                    tab.copy(
-                        extensionState = updatedExtensions
-                    )
+                state.updateWebExtensionTabState(action.sessionId, action.extensionId) {
+                    it.copy(browserAction = action.browserAction)
                 }
             }
         }
     }
 
-    private fun BrowserState.updateTabState(
+    private fun BrowserState.updateWebExtensionTabState(
         tabId: String,
-        update: (TabSessionState) -> TabSessionState
+        extensionId: String,
+        update: (WebExtensionState) -> WebExtensionState
     ): BrowserState {
         return copy(
             tabs = tabs.map { current ->
                 if (current.id == tabId) {
-                    update(current)
+                    val existingExtension = current.extensionState[extensionId]
+                    val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
+                    val updatedExtensions = if (existingExtension == null) {
+                        current.extensionState + newExtension
+                    } else {
+                        val newExtensions = current.extensionState - extensionId
+                        newExtensions + newExtension
+                    }
+                    current.copy(extensionState = updatedExtensions)
                 } else {
                     current
                 }
             }
         )
+    }
+
+    private fun BrowserState.updateWebExtensionState(
+        extensionId: String,
+        update: (WebExtensionState) -> WebExtensionState
+    ): BrowserState {
+        val existingExtension = extensions[extensionId]
+        val newExtension = extensionId to update(existingExtension ?: WebExtensionState(extensionId))
+        val updatedExtensions = extensions - extensionId
+        return copy(extensions = updatedExtensions + newExtension)
     }
 }
