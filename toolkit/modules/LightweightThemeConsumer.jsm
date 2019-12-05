@@ -145,7 +145,7 @@ const toolkitVariableMap = [
           propertyOverrides.set("toolbar_field_text_focus", "black");
           return "white";
         }
-        const min_opacity = 0.7;
+        const min_opacity = 0.9;
         let { r, g, b, a } = rgbaChannels;
         if (a < min_opacity) {
           propertyOverrides.set(
