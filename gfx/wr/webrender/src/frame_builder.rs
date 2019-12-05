@@ -366,6 +366,7 @@ impl FrameBuilder {
             for (_, cache_state) in visibility_state.retained_tiles.caches.drain() {
                 visibility_state.composite_state.destroy_native_surfaces(
                     cache_state.tiles.values(),
+                    visibility_state.resource_cache,
                 );
             }
         }

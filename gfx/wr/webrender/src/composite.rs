@@ -7,15 +7,11 @@ use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, World
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::picture::{ResolvedSurfaceTexture};
 use std::{ops, u64};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 /*
  Types and definitions related to compositing picture cache tiles
  and/or OS compositor integration.
  */
-
-// Counter for generating unique native surface ids
-static NEXT_NATIVE_SURFACE_ID: AtomicU64 = AtomicU64::new(0);
 
 /// Describes details of an operation to apply to a native surface
 #[derive(Debug, Clone)]
@@ -158,9 +154,6 @@ pub struct CompositeState {
     // it gives us the ability to partial present for any non-scroll
     // case as a simple win (e.g. video, animation etc).
     pub dirty_rects_are_valid: bool,
-    /// List of OS native surface create / destroy operations to
-    /// apply when render occurs.
-    pub native_surface_updates: Vec<NativeSurfaceOperation>,
     /// The kind of compositor for picture cache tiles (e.g. drawn by WR, or OS compositor)
     pub compositor_kind: CompositorKind,
     /// Picture caching may be disabled dynamically, based on debug flags, pinch zoom etc.
@@ -195,48 +188,11 @@ impl CompositeState {
             clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0),
             dirty_rects_are_valid: true,
-            native_surface_updates: Vec::new(),
             compositor_kind,
             picture_caching_is_enabled,
             global_device_pixel_scale,
             occluders: Vec::new(),
         }
-    }
-
-    /// Queue up allocation of a new OS native compositor surface with the
-    /// specified id and dimensions.
-    pub fn create_surface(
-        &mut self,
-        size: DeviceIntSize,
-        is_opaque: bool,
-    ) -> NativeSurfaceId {
-        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed));
-
-        self.native_surface_updates.push(
-            NativeSurfaceOperation {
-                id,
-                details: NativeSurfaceOperationDetails::CreateSurface {
-                    size,
-                    is_opaque,
-                }
-            }
-        );
-
-        id
-    }
-
-    /// Queue up destruction of an existing native OS surface. This is used when
-    /// a picture cache tile is dropped or resized.
-    pub fn destroy_surface(
-        &mut self,
-        id: NativeSurfaceId,
-    ) {
-        self.native_surface_updates.push(
-            NativeSurfaceOperation {
-                id,
-                details: NativeSurfaceOperationDetails::DestroySurface,
-            }
-        );
     }
 
     /// Register an occluder during picture cache updates that can be

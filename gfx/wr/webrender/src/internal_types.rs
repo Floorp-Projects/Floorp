@@ -6,6 +6,7 @@ use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId, 
 use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp, MAX_BLUR_RADIUS};
 use api::units::*;
 use api;
+use crate::composite::NativeSurfaceOperation;
 use crate::device::TextureFilter;
 use crate::renderer::PipelineInfo;
 use crate::gpu_cache::GpuCacheUpdateList;
@@ -507,6 +508,23 @@ impl TextureUpdateList {
     }
 }
 
+/// A list of updates built by the render backend that should be applied
+/// by the renderer thread.
+pub struct ResourceUpdateList {
+    /// List of OS native surface create / destroy operations to apply.
+    pub native_surface_updates: Vec<NativeSurfaceOperation>,
+
+    /// Atomic set of texture cache updates to apply.
+    pub texture_updates: TextureUpdateList,
+}
+
+impl ResourceUpdateList {
+    /// Returns true if this update list has no effect.
+    pub fn is_nop(&self) -> bool {
+        self.texture_updates.is_nop() && self.native_surface_updates.is_empty()
+    }
+}
+
 /// Wraps a frame_builder::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
     pub frame: Frame,
@@ -529,14 +547,14 @@ pub enum ResultMsg {
     RefreshShader(PathBuf),
     UpdateGpuCache(GpuCacheUpdateList),
     UpdateResources {
-        updates: TextureUpdateList,
+        resource_updates: ResourceUpdateList,
         memory_pressure: bool,
     },
     PublishPipelineInfo(PipelineInfo),
     PublishDocument(
         DocumentId,
         RenderedDocument,
-        TextureUpdateList,
+        ResourceUpdateList,
         BackendProfileCounters,
     ),
     AppendNotificationRequests(Vec<NotificationRequest>),
