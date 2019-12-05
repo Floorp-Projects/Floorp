@@ -2615,7 +2615,7 @@ dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkcs11 0.4.1 (git+https://github.com/emilio/rust-pkcs11)",
+ "pkcs11 0.4.1 (git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438)",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2765,7 +2765,7 @@ dependencies = [
 [[package]]
 name = "pkcs11"
 version = "0.4.1"
-source = "git+https://github.com/emilio/rust-pkcs11#c8d620f89f1611c3ad76b6d6a0c042c6e882ec42"
+source = "git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438#0810cd5adf4ac8031cc204df3e877d84595c7438"
 dependencies = [
  "libloading 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-bigint 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4921,7 +4921,7 @@ dependencies = [
 "checksum phf_generator 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "17367f0cc86f2d25802b2c26ee58a7b23faeccf78a396094c13dced0d0182526"
 "checksum phf_macros 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7f6fde18ff429ffc8fe78e2bf7f8b7a5a5a6e2a8b58bc5a9ac69198bbda9189c"
 "checksum phf_shared 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c00cf8b9eafe68dde5e9eaa2cef8ee84a9336a47d566ec55ca16589633b65af7"
-"checksum pkcs11 0.4.1 (git+https://github.com/emilio/rust-pkcs11)" = "<none>"
+"checksum pkcs11 0.4.1 (git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438)" = "<none>"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
 "checksum plain 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 "checksum plane-split 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ffe16a646a08f4b4dd74035b9ff8e378eb1a4012a74f14f5889e7001cdbece33"
