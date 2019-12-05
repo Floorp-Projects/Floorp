@@ -20,6 +20,7 @@ const MarkupElementContainer = require("devtools/client/inspector/markup/views/e
 const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/read-only-container");
 const MarkupTextContainer = require("devtools/client/inspector/markup/views/text-container");
 const RootContainer = require("devtools/client/inspector/markup/views/root-container");
+const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");
 
 loader.lazyRequireGetter(
   this,
@@ -290,7 +291,7 @@ function MarkupView(inspector, frame, controllerWindow) {
     this
   );
   this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
-  this._mutationObserver = this._mutationObserver.bind(this);
+  this._onWalkerMutations = this._onWalkerMutations.bind(this);
   this._onBlur = this._onBlur.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onCopy = this._onCopy.bind(this);
@@ -355,6 +356,12 @@ function MarkupView(inspector, frame, controllerWindow) {
   );
 
   this._initShortcuts();
+
+  this._walkerEventListener = new WalkerEventListener(this.inspector, {
+    "display-change": this._onWalkerNodeStatesChanged,
+    "scrollable-change": this._onWalkerNodeStatesChanged,
+    mutations: this._onWalkerMutations,
+  });
 }
 
 MarkupView.prototype = {
@@ -396,22 +403,6 @@ MarkupView.prototype = {
     }
 
     return this._undo;
-  },
-
-  init: async function() {
-    try {
-      this.inspectorFronts = await this.inspector.getAllInspectorFronts();
-    } catch (e) {
-      // This call might fail if called asynchrously after the toolbox is finished
-      // closing.
-      return;
-    }
-
-    for (const { walker } of this.inspectorFronts) {
-      walker.on("display-change", this._onWalkerNodeStatesChanged);
-      walker.on("scrollable-change", this._onWalkerNodeStatesChanged);
-      walker.on("mutations", this._mutationObserver);
-    }
   },
 
   /**
@@ -939,7 +930,7 @@ MarkupView.prototype = {
         "scrollable-change",
         this._onWalkerNodeStatesChanged
       );
-      nodeFront.walkerFront.on("mutations", this._mutationObserver);
+      nodeFront.walkerFront.on("mutations", this._onWalkerMutations);
     }
 
     if (this.htmlEditor) {
@@ -1416,7 +1407,7 @@ MarkupView.prototype = {
   /**
    * Mutation observer used for included nodes.
    */
-  _mutationObserver: function(mutations) {
+  _onWalkerMutations: function(mutations) {
     for (const mutation of mutations) {
       let type = mutation.type;
       let target = mutation.target;
@@ -2327,11 +2318,8 @@ MarkupView.prototype = {
     this.win.removeEventListener("copy", this._onCopy);
     this.win.removeEventListener("mouseup", this._onMouseUp);
 
-    for (const { walker } of this.inspectorFronts) {
-      walker.off("display-change", this._onWalkerNodeStatesChanged);
-      walker.off("scrollable-change", this._onWalkerNodeStatesChanged);
-      walker.off("mutations", this._mutationObserver);
-    }
+    this._walkerEventListener.destroy();
+    this._walkerEventListener = null;
 
     this._prefObserver.off(
       ATTR_COLLAPSE_ENABLED_PREF,
@@ -2354,7 +2342,6 @@ MarkupView.prototype = {
     this.controllerWindow = null;
     this.doc = null;
     this.highlighters = null;
-    this.inspectorFronts = null;
     this.win = null;
 
     this._lastDropTarget = null;
