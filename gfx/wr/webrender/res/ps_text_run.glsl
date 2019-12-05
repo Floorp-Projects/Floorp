@@ -94,8 +94,8 @@ void main(void) {
     Instance instance = decode_instance_attributes();
 
     int glyph_index = instance.segment_index;
-    int subpx_dir = (instance.flags >> 24) & 0xff;
-    int color_mode = (instance.flags >> 16) & 0xff;
+    int subpx_dir = (instance.flags >> 8) & 0xff;
+    int color_mode = instance.flags & 0xff;
 
     PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);

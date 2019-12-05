@@ -68,7 +68,7 @@ Instance decode_instance_attributes() {
     instance.picture_task_address = aData.y >> 16;
     instance.clip_address = aData.y & 0xffff;
     instance.segment_index = aData.z & 0xffff;
-    instance.flags = aData.z & 0xffff0000;
+    instance.flags = aData.z >> 16;
     instance.resource_address = aData.w & 0xffffff;
     instance.brush_kind = aData.w >> 24;
 
