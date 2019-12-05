@@ -23,6 +23,16 @@
         app:layout_constraintBottom_toTopOf="@id/awesomeBar_barrier"
         app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"/>
 
+    <View
+        android:id="@+id/search_suggestions_onboarding_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?neutralFaded"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/search_suggestions_onboarding"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
         android:layout_width="0dp"
@@ -58,7 +68,8 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
-        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper">
+        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
+        app:layout_constraintBottom_toBottomOf="@id/awesomeBar_barrier">
 
         <ImageView
             android:id="@+id/link_icon"
@@ -116,8 +127,7 @@
         android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:text="@string/search_shortcuts_search_with"
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
-        app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard"
-        app:layout_constraintBottom_toTopOf="@id/awesomeBar_barrier"
+        app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
         tools:text="Search with" />
 
     <androidx.constraintlayout.widget.Barrier
@@ -125,7 +135,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="search_with_shortcuts,search_suggestions_onboarding"/>
+        app:constraint_referenced_ids="fill_link_from_clipboard,search_suggestions_onboarding"/>
 
     <View
         android:id="@+id/search_divider"
