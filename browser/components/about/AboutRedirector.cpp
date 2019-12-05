@@ -69,6 +69,12 @@ static const RedirEntry kRedirMap[] = {
     {"privatebrowsing", "chrome://browser/content/aboutPrivateBrowsing.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT},
+#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
+    // about:profiling is Nightly-only while it is in active development. Once
+    // the feature matures, it will be released across all desktop channels.
+    {"profiling", "chrome://devtools/content/performance-new/popup/popup.xhtml",
+     nsIAboutModule::ALLOW_SCRIPT},
+#endif
     {"rights", "chrome://global/content/aboutRights.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
