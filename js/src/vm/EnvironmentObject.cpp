@@ -2013,7 +2013,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     if (!argsObj) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_NOT_LIVE, "Debugger scope");
+                                JSMSG_DEBUG_NOT_ON_STACK, "Debugger scope");
       return false;
     }
 
@@ -2035,7 +2035,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     if (!success) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_NOT_LIVE, "Debugger scope");
+                                JSMSG_DEBUG_NOT_ON_STACK, "Debugger scope");
       return false;
     }
 
@@ -2100,7 +2100,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     if (!argsObj) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_NOT_LIVE, "Debugger env");
+                                JSMSG_DEBUG_NOT_ON_STACK, "Debugger env");
       return false;
     }
 
@@ -2118,7 +2118,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     if (!success) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_NOT_LIVE, "Debugger env");
+                                JSMSG_DEBUG_NOT_ON_STACK, "Debugger env");
       return false;
     }
 

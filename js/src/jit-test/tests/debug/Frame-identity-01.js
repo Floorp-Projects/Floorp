@@ -8,7 +8,7 @@ g.eval("(" + function () {
         dbg.onDebuggerStatement = function (frame) {
             assertEq(frame === prev, false);
             if (prev)
-                assertEq(prev.live, false);
+                assertEq(prev.onStack, false);
             prev = frame;
             return {return: frame.arguments[0]};
         };

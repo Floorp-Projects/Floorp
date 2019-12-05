@@ -18,11 +18,11 @@ dbg.onEnterFrame = function (frame) {
 
 savedFrame = undefined;
 assertThrowsValue(g.f, "pass");
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(g.set, false);
 
 savedFrame = undefined;
 assertThrowsValue(function () { new g.f; }, "pass");
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(g.set, false);
 

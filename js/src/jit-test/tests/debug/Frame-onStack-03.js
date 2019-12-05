@@ -1,11 +1,11 @@
-// frame properties throw if !frame.live
+// frame properties throw if !frame.onStack
 
 load(libdir + "asserts.js");
 
 var g = newGlobal({newCompartment: true});
 var f;
 Debugger(g).onDebuggerStatement = function (frame) {
-    assertEq(frame.live, true);
+    assertEq(frame.onStack, true);
     assertEq(frame.type, "call");
     assertEq(frame.this instanceof Object, true);
     assertEq(frame.older instanceof Debugger.Frame, true);
@@ -17,7 +17,7 @@ Debugger(g).onDebuggerStatement = function (frame) {
 };
 
 g.eval("(function () { debugger; }).call({});");
-assertEq(f.live, false);
+assertEq(f.onStack, false);
 assertThrowsInstanceOf(function () { f.type; }, Error);
 assertThrowsInstanceOf(function () { f.this; }, Error);
 assertThrowsInstanceOf(function () { f.older; }, Error);

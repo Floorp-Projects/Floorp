@@ -19,7 +19,7 @@ dbg.onDebuggerStatement = function (frame) {
         assertThrowsInstanceOf(function () { fgetter.call(Math); }, TypeError);
     } else {
         // Since fframe is still on the stack, fgetter can be applied to it.
-        assertEq(fframe.live, true);
+        assertEq(fframe.onStack, true);
         assertEq(fgetter.call(farguments), 100);
 
         // Since h was called without arguments, there is no argument 0.
@@ -34,5 +34,5 @@ g.f(100);
 assertEq(hits, 2);
 
 // Now that fframe is no longer live, trying to get its arguments should throw.
-assertEq(fframe.live, false);
+assertEq(fframe.onStack, false);
 assertThrowsInstanceOf(function () { fgetter.call(farguments); }, Error);
