@@ -581,17 +581,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
 
   // Hit count
   enum class HitState {
-    // Not hit information is attached to this basic block.
+    // No hit information is attached to this basic block.
     NotDefined,
 
     // The hit information is a raw counter. Note that due to inlining this
     // counter is not guaranteed to be consistent over the graph.
     Count,
-
-    // The hit information is a frequency, which is a form of normalized
-    // counter, where a hit-count can be compared against any previous block
-    // in the graph.
-    Frequency
   };
   HitState getHitState() const { return hitState_; }
   void setHitCount(uint64_t count) {

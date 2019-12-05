@@ -278,8 +278,7 @@ class IonBuilder : public MIRGenerator,
       MBasicBlock* at, size_t stackDepth, jsbytecode* pc,
       MBasicBlock* maybePredecessor = nullptr);
   AbortReasonOr<MBasicBlock*> newOsrPreheader(MBasicBlock* header,
-                                              jsbytecode* loopEntry,
-                                              jsbytecode* beforeLoopEntry);
+                                              jsbytecode* loopEntry);
   AbortReasonOr<MBasicBlock*> newPendingLoopHeader(MBasicBlock* predecessor,
                                                    jsbytecode* pc, bool osr,
                                                    bool canOsr,
@@ -292,11 +291,9 @@ class IonBuilder : public MIRGenerator,
 
   AbortReasonOr<Ok> addPendingEdge(const PendingEdge& edge, jsbytecode* target);
 
-  AbortReasonOr<Ok> startLoop(LoopState::State initState,
-                              jsbytecode* beforeLoopEntry,
-                              jsbytecode* loopEntry, jsbytecode* loopHead,
-                              jsbytecode* backjump, bool isForIn,
-                              uint32_t stackPhiCount);
+  AbortReasonOr<Ok> startLoop(LoopState::State initState, jsbytecode* loopEntry,
+                              jsbytecode* loopHead, jsbytecode* backjump,
+                              bool isForIn, uint32_t stackPhiCount);
   AbortReasonOr<Ok> visitDoWhileLoop(jssrcnote* sn);
   AbortReasonOr<Ok> visitForLoop(jssrcnote* sn);
   AbortReasonOr<Ok> visitWhileOrForInOrForOfLoop(jssrcnote* sn);
