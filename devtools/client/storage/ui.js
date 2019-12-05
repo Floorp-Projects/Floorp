@@ -1067,9 +1067,13 @@ class StorageUI {
       }
 
       if (!columnName) {
-        console.error(
-          "Unable to localize table header type:" + type + " key:" + f.name
-        );
+        // Private fields are only displayed when running tests so there is no
+        // need to log an error if they are not localized.
+        if (!f.private) {
+          console.error(
+            "Unable to localize table header type:" + type + " key:" + f.name
+          );
+        }
       } else {
         columns[f.name] = columnName;
       }
