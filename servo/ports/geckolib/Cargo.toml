@@ -26,7 +26,7 @@ num-traits = "0.2"
 parking_lot = "0.9"
 selectors = {path = "../../components/selectors"}
 servo_arc = {path = "../../components/servo_arc"}
-smallvec = "0.6"
+smallvec = "1.0"
 style = {path = "../../components/style", features = ["gecko"]}
 style_traits = {path = "../../components/style_traits"}
 to_shmem = {path = "../../components/to_shmem"}
