@@ -43,6 +43,10 @@ struct FeaturesD3D : FeatureSetBase
                                             FeatureCategory::D3DWorkarounds,
                                             "Set data faster than image upload", &members};
 
+    Feature setDataFasterThanImageUploadOn128bitFormats = {
+        "set_data_faster_than_image_upload_on_128bit_formats", FeatureCategory::D3DWorkarounds,
+        "Set data faster than image upload on 128bit formats", &members};
+
     // Some renderers can't disable mipmaps on a mipmapped texture (i.e. solely sample from level
     // zero, and ignore the other levels). D3D11 Feature Level 10+ does this by setting MaxLOD to
     // 0.0f in the Sampler state. D3D9 sets D3DSAMP_MIPFILTER to D3DTEXF_NONE. There is no

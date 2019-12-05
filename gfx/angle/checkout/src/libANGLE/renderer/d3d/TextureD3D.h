@@ -186,6 +186,7 @@ class TextureD3D : public TextureImpl
 
     virtual angle::Result updateStorage(const gl::Context *context) = 0;
 
+    bool couldUseSetData() const;
     bool shouldUseSetData(const ImageD3D *image) const;
 
     angle::Result generateMipmapUsingImages(const gl::Context *context, const GLuint maxLevel);

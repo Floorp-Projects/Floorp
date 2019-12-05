@@ -1,3 +1,13 @@
+commit f75ca830a4276c1b757f866aba3ab2429a27f69c
+Author: Dzmitry Malyshau <dmalyshau@mozilla.com>
+Date:   Thu Dec 5 13:02:14 2019 -0500
+
+    Restrict the slow texture upload workaround to 128bit formats. (#21)
+    
+    The workaround is slow for having a CPU-visible mirror of the texture, but that mirror is not properly recycled with regards to GPU usage, thus causing a CPU stall on update.
+    
+    Original reports were related to WebRender vertex texture updates that are RGBA32F and RGBA32U formats. Limiting the workaround to these formats would allow the affected platforms to upload regular texture data faster without stalls.
+
 commit 6bbe8f55d3e4b3b44394af323c5842296938ceab
 Author: Lee Salzman <lsalzman@mozilla.com>
 Date:   Fri Aug 2 07:11:16 2019 +1000
