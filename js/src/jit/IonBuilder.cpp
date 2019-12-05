@@ -3112,7 +3112,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_dup2() {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
-  MOZ_ASSERT(op == JSOP_IFNE || op == JSOP_IFEQ);
+  MOZ_ASSERT(op == JSOP_IFNE);
   MOZ_ASSERT(loopDepth_ > 0);
 
   MDefinition* ins = current->pop();
@@ -3128,15 +3128,8 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
   MBasicBlock* backedge;
   MOZ_TRY_VAR(backedge, newBlock(current, loopHead));
 
-  if (op == JSOP_IFNE) {
-    current->end(newTest(ins, backedge, nullptr));
-    MOZ_TRY(
-        addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
-  } else {
-    MOZ_ASSERT(op == JSOP_IFEQ);
-    current->end(newTest(ins, nullptr, backedge));
-    MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), successorPC));
-  }
+  current->end(newTest(ins, backedge, nullptr));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
 
   MOZ_TRY(startTraversingBlock(backedge));
   return visitBackEdge(restarted);
