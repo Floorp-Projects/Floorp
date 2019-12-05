@@ -160,46 +160,23 @@ using PendingEdgesMap =
 
 // LoopState stores information about a loop that's being compiled to MIR.
 class LoopState {
- public:
-  enum class State {
-    // Compiling a do-while loop or for-loop without condition. These loops
-    // can be simply compiled from first bytecode op to last so they do not
-    // require state changes.
-    DoWhileLike,
-
-    // Compiling the condition of a while/for-in/for-of/for loop. When the
-    // backedge is reached, the state is changed to WhileLikeBody and the loop
-    // body is compiled.
-    WhileLikeCond,
-
-    // Compiling the body of a while/for-in/for-of/for loop. This includes the
-    // update clause of a for-loop.
-    WhileLikeBody,
-  };
-
- private:
-  State state_;
   MBasicBlock* header_ = nullptr;
   jsbytecode* loopEntry_ = nullptr;
   jsbytecode* loopHead_ = nullptr;
   jsbytecode* successorStart_ = nullptr;
 
  public:
-  LoopState(State state, MBasicBlock* header, jsbytecode* loopEntry,
-            jsbytecode* loopHead, jsbytecode* successorStart)
-      : state_(state),
-        header_(header),
+  LoopState(MBasicBlock* header, jsbytecode* loopEntry, jsbytecode* loopHead,
+            jsbytecode* successorStart)
+      : header_(header),
         loopEntry_(loopEntry),
         loopHead_(loopHead),
         successorStart_(successorStart) {}
 
-  State state() const { return state_; }
   MBasicBlock* header() const { return header_; }
   jsbytecode* loopEntry() const { return loopEntry_; }
   jsbytecode* loopHead() const { return loopHead_; }
   jsbytecode* successorStart() const { return successorStart_; }
-
-  void setState(State state) { state_ = state; }
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
@@ -282,9 +259,8 @@ class IonBuilder : public MIRGenerator,
 
   AbortReasonOr<Ok> addPendingEdge(const PendingEdge& edge, jsbytecode* target);
 
-  AbortReasonOr<Ok> startLoop(LoopState::State initState, jsbytecode* loopEntry,
-                              jsbytecode* loopHead, jsbytecode* backjump,
-                              uint32_t stackPhiCount);
+  AbortReasonOr<Ok> startLoop(jsbytecode* loopEntry, jsbytecode* loopHead,
+                              jsbytecode* backjump, uint32_t stackPhiCount);
   AbortReasonOr<Ok> jsop_loophead();
 
   AbortReasonOr<Ok> visitJumpTarget(JSOp op);
