@@ -29,34 +29,25 @@
 
   <description data-l10n-id="browser-languages-description"/>
 
-  <grid flex="1">
-    <columns>
-      <column flex="1"/>
-      <column/>
-    </columns>
-    <rows>
-      <row>
-        <richlistbox id="selectedLocales"/>
-        <vbox>
-          <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
-          <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
-          <button id="remove" class="action-button" disabled="true" data-l10n-id="languages-customize-remove"/>
-        </vbox>
-      </row>
-      <row>
-        <menulist id="availableLocales"
-                  class="available-locales-list"
-                  data-l10n-id="browser-languages-select-language"
-                  data-l10n-attrs="placeholder,label">
-          <menupopup/>
-        </menulist>
-        <button id="add"
-                class="add-browser-language action-button"
-                data-l10n-id="languages-customize-add"
-                disabled="true"/>
-      </row>
-    </rows>
-  </grid>
+  <box flex="1" style="display: grid; grid-template-rows: 1fr auto; grid-template-columns: 1fr auto;">
+    <richlistbox id="selectedLocales"/>
+    <vbox>
+      <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
+      <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
+      <button id="remove" class="action-button" disabled="true" data-l10n-id="languages-customize-remove"/>
+    </vbox>
+
+    <menulist id="availableLocales"
+              class="available-locales-list"
+              data-l10n-id="browser-languages-select-language"
+              data-l10n-attrs="placeholder,label">
+      <menupopup/>
+    </menulist>
+    <button id="add"
+            class="add-browser-language action-button"
+            data-l10n-id="languages-customize-add"
+            disabled="true"/>
+  </box>
   <hbox id="warning-message" class="message-bar message-bar-warning" hidden="true">
     <image class="message-bar-icon"/>
     <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
