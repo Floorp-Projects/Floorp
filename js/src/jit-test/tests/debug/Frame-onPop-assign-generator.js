@@ -9,7 +9,7 @@ let steps = new Set();
 dbg.onDebuggerStatement = function(frame) {
   // Setting 'onStep' while alive is allowed.
   steps.add("debugger 1");
-  assertEq(frame.live, true);
+  assertEq(frame.onStack, true);
   frame.onPop = function() {
     steps.add("onpop 1");
   };
@@ -17,7 +17,7 @@ dbg.onDebuggerStatement = function(frame) {
   dbg.onDebuggerStatement = function() {
     // Clear the 'onPop' while suspended.
     steps.add("debugger 2");
-    assertEq(frame.live, false);
+    assertEq(frame.onStack, false);
 
     // Clearing 'onPop' while suspended is allowed.
     frame.onPop = undefined;
@@ -29,7 +29,7 @@ dbg.onDebuggerStatement = function(frame) {
 
     dbg.onDebuggerStatement = function() {
       steps.add("debugger 3");
-      assertEq(frame.live, false);
+      assertEq(frame.onStack, false);
 
       // Clearing 'onPop' while dead is allowed.
       frame.onPop = undefined;

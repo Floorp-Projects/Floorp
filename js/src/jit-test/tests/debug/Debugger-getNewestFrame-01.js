@@ -16,5 +16,5 @@ function f() {
 }
 g.h = this;
 g.eval("h.f()");
-assertEq(frame.live, false);
+assertEq(frame.onStack, false);
 assertThrowsInstanceOf(function () { frame.older; }, Error);

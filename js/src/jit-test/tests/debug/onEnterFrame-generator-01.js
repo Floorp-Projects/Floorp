@@ -49,7 +49,7 @@ function check(frame) {
     assertEq(savedEnv.getVariable("a"), a_expected);
 
     assertEq(frame.generator, true);
-    assertEq(frame.live, true);
+    assertEq(frame.onStack, true);
 
     let pc = frame.offset;
     assertEq(savedOffsets.has(pc), false);

@@ -12,5 +12,5 @@ dbg.onEnterFrame = function (frame) {
 
 savedFrame = undefined;
 assertEq(g.eval("'pass';"), "pass");
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(hits, 1);

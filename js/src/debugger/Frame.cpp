@@ -436,7 +436,7 @@ void DebuggerFrame::clearGenerator(
 /* static */
 bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
                               MutableHandleDebuggerObject result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
   if (!referent.isFunctionFrame()) {
@@ -453,7 +453,7 @@ bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getIsConstructing(JSContext* cx, HandleDebuggerFrame frame,
                                       bool& result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   Maybe<FrameIter> maybeIter;
   if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
@@ -515,7 +515,7 @@ static void UpdateFrameIterPc(FrameIter& iter) {
 /* static */
 bool DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
                                    MutableHandleDebuggerEnvironment result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   Debugger* dbg = frame->owner();
 
@@ -547,7 +547,7 @@ bool DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame) {
 /* static */
 bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
                               size_t& result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   Maybe<FrameIter> maybeIter;
   if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
@@ -571,7 +571,7 @@ bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
                              MutableHandleDebuggerFrame result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   Debugger* dbg = frame->owner();
 
@@ -597,7 +597,7 @@ bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame,
                             MutableHandleValue result) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   if (!requireScriptReferent(cx, frame)) {
     return false;
@@ -689,7 +689,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
   }
 
   JSFreeOp* fop = cx->defaultFreeOp();
-  if (frame->isLive()) {
+  if (frame->isOnStack()) {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
 
     // Adjust execution observability and step counts on whatever code (JS or
@@ -1023,7 +1023,7 @@ Result<Completion> DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
                                        mozilla::Range<const char16_t> chars,
                                        HandleObject bindings,
                                        const EvalOptions& options) {
-  MOZ_ASSERT(frame->isLive());
+  MOZ_ASSERT(frame->isOnStack());
 
   Debugger* dbg = frame->owner();
 
@@ -1039,9 +1039,9 @@ Result<Completion> DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
 }
 
 /* static */
-bool DebuggerFrame::isLive() const { return !!getPrivate(); }
+bool DebuggerFrame::isOnStack() const { return !!getPrivate(); }
 
-bool DebuggerFrame::isLiveMaybeForwarded() const {
+bool DebuggerFrame::isOnStackMaybeForwarded() const {
   return !!getPrivate(numFixedSlotsMaybeForwarded());
 }
 
@@ -1077,10 +1077,10 @@ void DebuggerFrame::setOnPopHandler(JSContext* cx, OnPopHandler* handler) {
   }
 }
 
-bool DebuggerFrame::requireLive(JSContext* cx) {
-  if (!isLive()) {
+bool DebuggerFrame::requireOnStack(JSContext* cx) {
+  if (!isOnStack()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_DEBUG_NOT_LIVE, "Debugger.Frame");
+                              JSMSG_DEBUG_NOT_ON_STACK, "Debugger.Frame");
     return false;
   }
 
@@ -1168,7 +1168,7 @@ void DebuggerFrame::trace(JSTracer* trc) {
 
 /* static */
 DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv,
-                                    bool checkLive) {
+                                    bool checkOnStack) {
   JSObject* thisobj = RequireObject(cx, thisv);
   if (!thisobj) {
     return nullptr;
@@ -1194,8 +1194,8 @@ DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv,
     return nullptr;
   }
 
-  if (checkLive) {
-    if (!frame->requireLive(cx)) {
+  if (checkOnStack) {
+    if (!frame->requireOnStack(cx)) {
       return nullptr;
     }
   }
@@ -1218,6 +1218,7 @@ struct MOZ_STACK_CLASS DebuggerFrame::CallData {
   bool environmentGetter();
   bool generatorGetter();
   bool liveGetter();
+  bool onStackGetter();
   bool offsetGetter();
   bool olderGetter();
   bool getScript();
@@ -1244,14 +1245,15 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // These methods do not require liveness.
-  bool checkLive = MyMethod != &CallData::liveGetter &&
-                   MyMethod != &CallData::onStepGetter &&
-                   MyMethod != &CallData::onStepSetter &&
-                   MyMethod != &CallData::onPopGetter &&
-                   MyMethod != &CallData::onPopSetter;
+  bool checkOnStack = MyMethod != &CallData::liveGetter &&
+                      MyMethod != &CallData::onStackGetter &&
+                      MyMethod != &CallData::onStepGetter &&
+                      MyMethod != &CallData::onStepSetter &&
+                      MyMethod != &CallData::onPopGetter &&
+                      MyMethod != &CallData::onPopSetter;
 
-  RootedDebuggerFrame frame(cx,
-                            DebuggerFrame::check(cx, args.thisv(), checkLive));
+  RootedDebuggerFrame frame(
+      cx, DebuggerFrame::check(cx, args.thisv(), checkOnStack));
   if (!frame) {
     return false;
   }
@@ -1527,7 +1529,13 @@ bool DebuggerFrame::CallData::offsetGetter() {
 }
 
 bool DebuggerFrame::CallData::liveGetter() {
-  args.rval().setBoolean(frame->isLive());
+  JS_ReportErrorASCII(
+      cx, "Debugger.Frame.prototype.live has been renamed to .onStack");
+  return false;
+}
+
+bool DebuggerFrame::CallData::onStackGetter() {
+  args.rval().setBoolean(frame->isOnStack());
   return true;
 }
 
@@ -1672,6 +1680,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_DEBUG_PSG("environment", environmentGetter),
     JS_DEBUG_PSG("generator", generatorGetter),
     JS_DEBUG_PSG("live", liveGetter),
+    JS_DEBUG_PSG("onStack", onStackGetter),
     JS_DEBUG_PSG("offset", offsetGetter),
     JS_DEBUG_PSG("older", olderGetter),
     JS_DEBUG_PSG("script", getScript),

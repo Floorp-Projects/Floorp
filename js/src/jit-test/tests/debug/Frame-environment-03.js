@@ -1,4 +1,4 @@
-// If !frame.live, frame.environment throws.
+// If !frame.onStack, frame.environment throws.
 
 load(libdir + "asserts.js");
 
@@ -7,5 +7,5 @@ var dbg = Debugger(g);
 var frame;
 g.h = function () { frame = dbg.getNewestFrame(); };
 g.eval("h();");
-assertEq(frame.live, false);
+assertEq(frame.onStack, false);
 assertThrowsInstanceOf(function () { frame.environment; }, Error);

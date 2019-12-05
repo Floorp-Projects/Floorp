@@ -51,7 +51,7 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
     dbg0.log += '(';
     dbg0.onEnterFrame = undefined;
 
-    assertEq(frame.live, true);
+    assertEq(frame.onStack, true);
     frames.push(frame);
 
     var dbgs = [];
@@ -68,7 +68,7 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
 
         dbg.onDebuggerStatement = function handleDebuggerStatement(f) {
             log += 'd';  
-            assertEq(f.live, true);
+            assertEq(f.onStack, true);
             frames.push(f);
         };
 
@@ -76,14 +76,14 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
         dbg.onEnterFrame = function handleEnterEval(f) {
             log += 'e';
             assertEq(f.type, 'eval');
-            assertEq(f.live, true);
+            assertEq(f.onStack, true);
             frames.push(f);
 
             // Then expect the call.
             dbg.onEnterFrame = function handleEnterCall(f) {
                 log += '(';
                 assertEq(f.type, 'call');
-                assertEq(f.live, true);
+                assertEq(f.onStack, true);
                 frames.push(f);
 
                 // Don't expect any further frames.
@@ -93,7 +93,7 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
 
                 f.onPop = function handlePop(c) {
                     log += ')' + completionString(c);
-                    assertEq(this.live, true);
+                    assertEq(this.onStack, true);
                     frames.push(this);
 
                     // Check that this debugger is in the list, and then remove it.
@@ -124,4 +124,4 @@ assertEq(dbg0.log, '(.');
 
 // Check that all Debugger.Frame instances we ran into are now marked as dead.
 for (var i = 0; i < frames.length; i++)
-    assertEq(frames[i].live, false);
+    assertEq(frames[i].onStack, false);

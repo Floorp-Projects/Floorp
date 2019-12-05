@@ -22,8 +22,8 @@ with other debuggers.)
 
 When the debuggee pops a stack frame (say, because a function call has
 returned or an exception has been thrown from it), the `Debugger.Frame`
-instance referring to that frame becomes inactive: its `live` property
-becomes `false`, and accessing its other properties or calling its methods
+instance referring to that frame becomes inactive: its `onStack` property
+becomes `false`, and accessing its many properties or calling its methods
 throws an exception. Note that frames only become inactive at times that
 are predictable for the debugger: when the debuggee runs, or when the
 debugger removes frames from the stack itself.
@@ -105,7 +105,7 @@ will be put back onto the stack, and execution will continue where it
 left off. Only generator and async function call frames can be suspended
 and resumed.
 
-Currently, a frame's `live` property is `false` while it's suspended
+Currently, a frame's `onStack` property is `false` while it's suspended
 ([bug 1448880](https://bugzilla.mozilla.org/show_bug.cgi?id=1448880)).
 
 SpiderMonkey uses the same `Debugger.Frame` object each time a generator
@@ -181,6 +181,8 @@ A string describing what sort of frame this is:
 * `"debugger"`: a frame for a call to user code invoked by the debugger
   (see the `eval` method below).
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `implementation`
 A string describing which tier of the JavaScript engine this frame is
 executing in:
@@ -193,22 +195,32 @@ executing in:
 
 * `"wasm"`: a frame running in WebAssembly baseline JIT.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `this`
 The value of `this` for this frame (a debuggee value). For a `wasmcall`
 frame, this property throws a `TypeError`.
+
+Accessing this property will throw if `.onStack == false`.
 
 ### `older`
 The next-older visible frame, in which control will resume when this
 frame completes. If there is no older frame, this is `null`.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `depth`
 The depth of this frame, counting from oldest to youngest; the oldest
 frame has a depth of zero.
 
-### `live`
+Accessing this property will throw if `.onStack == false`.
+
+### `onStack`
 True if the frame this `Debugger.Frame` instance refers to is still on
-the stack; false if it has completed execution or been
-popped in some other way.
+the stack; false if it has completed execution or been popped in some other way.
+Note that this property may be accessed at any time, so it can be used to
+verify whether it is safe to access other properties that require an on-stack
+frame.
 
 ### `script`
 The script being executed in this frame (a [`Debugger.Script`][script]
@@ -216,10 +228,14 @@ instance), or `null` on frames that do not represent calls to debuggee
 code. On frames whose `callee` property is not null, this is equal to
 `callee.script`.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `offset`
 The offset of the bytecode instruction currently being executed in
 `script`, or `undefined` if the frame's `script` property is `null`.
 For a `wasmcall` frame, this property throws a `TypeError`.
+
+Accessing this property will throw if `.onStack == false`.
 
 ### `environment`
 The lexical environment within which evaluation is taking place (a
@@ -227,16 +243,24 @@ The lexical environment within which evaluation is taking place (a
 that do not represent the evaluation of debuggee code, like calls
 non-debuggee functions, host functions or `"debugger"` frames.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `callee`
 The function whose application created this frame, as a debuggee value,
 or `null` if this is not a `"call"` frame.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `generator`
 True if this frame is a generator frame, false otherwise.
+
+Accessing this property will throw if `.onStack == false`.
 
 ### `constructing`
 True if this frame is for a function called as a constructor, false
 otherwise.
+
+Accessing this property will throw if `.onStack == false`.
 
 ### `arguments`
 The arguments passed to the current frame, or `null` if this is not a
@@ -247,6 +271,8 @@ array indices. Each property is a read-only accessor property whose
 getter returns the current value of the corresponding parameter. When
 the referent frame is popped, the argument value's properties' getters
 throw an error.
+
+Accessing this property will throw if `.onStack == false`.
 
 
 ## Handler Methods of Debugger.Frame Instances
@@ -282,6 +308,9 @@ resumption value other than `undefined`), any remaining debuggers'
 This property is ignored on frames that are not executing debuggee
 code, like `"call"` frames for calls to host functions and `"debugger"`
 frames.
+
+Accessing and reassigning this property is allowed independent of whether
+or not the frame is currently on-stack/suspended/terminated.
 
 ### `onPop`
 This property must be either `undefined` or a function. If it is a function,
@@ -334,6 +363,9 @@ This handler is not called on `"debugger"` frames. It is also not called
 when unwinding a frame due to an over-recursion or out-of-memory
 exception.
 
+Accessing and reassigning this property is allowed independent of whether
+or not the frame is currently on-stack/suspended/terminated.
+
 
 ## Function Properties of the Debugger.Frame Prototype Object
 
@@ -375,6 +407,8 @@ recognizes the following properties:
   The line number at which the evaluated code should be claimed to begin
   within <i>url</i>.
 
+Accessing this property will throw if `.onStack == false`.
+
 ### `evalWithBindings(code, bindings, [options])`
 Like `eval`, but evaluate <i>code</i> in the environment of this frame,
 extended with bindings from the object <i>bindings</i>. For each own
@@ -406,6 +440,8 @@ The <i>options</i> argument is as for
 [`Debugger.Frame.prototype.eval`][fr eval], described above.
 Also like `eval`, if this frame's `environment` property is `null` or
 `type` property is `wasmcall`, throw a `TypeError`.
+
+Accessing this property will throw if `.onStack == false`.
 
 
 [vf]: #visible-frames

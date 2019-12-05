@@ -25,7 +25,7 @@ dbg.onEnterFrame = function (frame) {
     hits++;
     if (frame.constructing) {
         savedFrame = frame;
-        assertEq(savedFrame.live, true);
+        assertEq(savedFrame.onStack, true);
         return undefined;
     }
     return undefined;
@@ -35,7 +35,7 @@ debuggee.hits = 0;
 savedFrame = undefined;
 assertEq(typeof debuggee.eval("function f(){ hits++; } f.prototype = {}; new f;"), "object");
 assertEq(hits, 2);
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(debuggee.hits, 1);
 
 // Force an early return from the constructor.
@@ -43,7 +43,7 @@ dbg.onEnterFrame = function (frame) {
     hits++;
     if (frame.constructing) {
         savedFrame = frame;
-        assertEq(savedFrame.live, true);
+        assertEq(savedFrame.onStack, true);
         return { return: "pass" };
     }
     return undefined;
@@ -53,7 +53,7 @@ debuggee.hits = 0;
 savedFrame = undefined;
 assertEq(typeof debuggee.eval("function f(){ hits++; } f.prototype = {}; new f;"), "object");
 assertEq(hits, 2);
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(debuggee.hits, 0);
 
 // Force the constructor to throw an exception.
@@ -61,7 +61,7 @@ dbg.onEnterFrame = function (frame) {
     hits++;
     if (frame.constructing) {
         savedFrame = frame;
-        assertEq(savedFrame.live, true);
+        assertEq(savedFrame.onStack, true);
         return { throw: "pass" };
     }
     return undefined;
@@ -73,7 +73,7 @@ assertThrowsValue(function () {
                       debuggee.eval("function f(){ hits++ } f.prototype = {}; new f;");
                   }, "pass");
 assertEq(hits, 2);
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(debuggee.hits, 0);
 
 // Ensure that forcing an early return only returns from one JS call.
@@ -82,7 +82,7 @@ dbg.onEnterFrame = function (frame) {
     hits++;
     if (frame.constructing) {
         savedFrame = frame;
-        assertEq(savedFrame.live, true);
+        assertEq(savedFrame.onStack, true);
         return { return: "pass" };
     }
     return undefined;
@@ -93,6 +93,6 @@ debuggee.g_hits = 0;
 savedFrame = undefined;
 assertEq(typeof debuggee.eval("g();"), "object");
 assertEq(hits, 3);
-assertEq(savedFrame.live, false);
+assertEq(savedFrame.onStack, false);
 assertEq(debuggee.hits, 0);
 assertEq(debuggee.g_hits, 1);

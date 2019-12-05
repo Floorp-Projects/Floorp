@@ -6,7 +6,7 @@ var hits = 0;
 var savedFrame, savedCallee;
 dbg.onDebuggerStatement = function (frame) {
     assertEq(frame, savedFrame);
-    assertEq(frame.live, true);
+    assertEq(frame.onStack, true);
     assertEq(frame.callee, savedCallee);
     hits++;
 };

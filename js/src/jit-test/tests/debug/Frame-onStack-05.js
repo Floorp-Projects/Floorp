@@ -1,4 +1,4 @@
-// frame.live is false for frames removed after their compartments stopped being debuggees.
+// frame.onStack is false for frames removed after their compartments stopped being debuggees.
 
 load(libdir + 'asserts.js');
 
@@ -28,6 +28,6 @@ assertEq(g2.eval("debugger; 'ok';"), "ok");
 assertEq(hits, 2);
 assertEq(snapshot.length, 3);
 for (var i = 0; i < snapshot.length; i++) {
-    assertEq(snapshot[i].live, false);
+    assertEq(snapshot[i].onStack, false);
     assertThrowsInstanceOf(() => frame.script, Error);
 }

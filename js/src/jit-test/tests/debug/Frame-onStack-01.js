@@ -1,4 +1,4 @@
-// Debugger.Frame.prototype.live is true for frames on the stack and false for
+// Debugger.Frame.prototype.onStack is true for frames on the stack and false for
 // frames that have returned
 
 var desc = Object.getOwnPropertyDescriptor(Debugger.Frame.prototype, "live");
@@ -20,7 +20,7 @@ g.eval("(" + function () {
             a[loc] = frame;
             for (var i = 0; i < a.length; i++) {
                 assertEq(a[i] === frame, i === loc);
-                assertEq(!!(a[i] && a[i].live), i >= loc);
+                assertEq(!!(a[i] && a[i].onStack), i >= loc);
             }
             hits++;
         };
