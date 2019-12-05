@@ -72,6 +72,9 @@ class SHEntrySharedParentState {
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal> mStoragePrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
+  // Child side updates layout history state when page is being unloaded or
+  // moved to bfcache.
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   nsCString mContentType;
 
   nsIntRect mViewerBounds;
@@ -90,6 +93,8 @@ class SHEntrySharedParentState {
 
   // This flag is about necko cache, not bfcache.
   bool mExpired;
+
+  bool mSaveLayoutState;
 };
 
 /**
@@ -129,6 +134,9 @@ class SHEntrySharedChildState {
 /**
  * nsSHEntryShared holds the shared state if the session history is not stored
  * in the parent process, or if the load itself happens in the parent process.
+ * Note, since nsSHEntryShared inherits both SHEntrySharedParentState and
+ * SHEntrySharedChildState and those have some same member variables,
+ * the ones from SHEntrySharedParentState should be used.
  */
 class nsSHEntryShared final : public nsIBFCacheEntry,
                               public nsStubMutationObserver,

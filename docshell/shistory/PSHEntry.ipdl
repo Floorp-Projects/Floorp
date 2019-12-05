@@ -6,6 +6,7 @@ include protocol PContent;
 include protocol PSHistory;
 
 include DOMTypes;
+include PresState;
 
 using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
@@ -107,6 +108,9 @@ parent:
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
   async ClearEntry(uint64_t aNewSharedID);
   sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
+
+  async UpdateLayoutHistoryState(bool scrollPositionOnly,
+                                 nsCString[] keys, PresState[] states);
 
   sync __delete__();
 };

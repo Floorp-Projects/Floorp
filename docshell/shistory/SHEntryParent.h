@@ -204,6 +204,10 @@ class SHEntryParent final : public PSHEntryParent {
 
   bool RecvCreateLoadInfo(RefPtr<nsDocShellLoadState>* aLoadState);
 
+  bool RecvUpdateLayoutHistoryState(const bool& aScrollPositionOnly,
+                                    nsTArray<nsCString>&& aKeys,
+                                    nsTArray<PresState>&& aStates);
+
   RefPtr<LegacySHEntry> mEntry;
 };
 
