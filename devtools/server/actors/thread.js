@@ -286,6 +286,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.doResume();
     }
 
+    this.removeAllWatchpoints();
     this._xhrBreakpoints = [];
     this._updateNetworkObserver();
 
