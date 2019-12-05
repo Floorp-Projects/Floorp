@@ -13,7 +13,8 @@ from taskgraph.transforms.base import TransformSequence
 transforms = TransformSequence()
 
 SYMBOL = "%(groupSymbol)s(%(symbol)s-vismet)"
-LABEL = "vismet-%(platform)s-%(raptor_try_name)s"
+# the test- prefix makes the task SETA-optimized.
+LABEL = "test-vismet-%(platform)s-%(raptor_try_name)s"
 
 
 @transforms.add
