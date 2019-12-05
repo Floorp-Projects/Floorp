@@ -35,6 +35,16 @@ tasks:
             $if: 'tasks_for == "github-pull-request"'
             then: "refs/pull/${event.number}/merge"
             else: "${event.after}"
+          owner:
+            $if: 'tasks_for == "github-push"'
+            then:
+              $if: 'event.pusher.email'
+              then:
+                $if: '"@" in event.pusher.email'
+                then: ${event.pusher.email}
+                else: web-platform-tests@users.noreply.github.com
+              else: web-platform-tests@users.noreply.github.com
+            else: web-platform-tests@users.noreply.github.com
         in:
           created: {$fromNow: ''}
           deadline: {$fromNow: '24 hours'}
@@ -43,7 +53,7 @@ tasks:
           metadata:
             name: "wpt-decision-task"
             description: "The task that creates all of the other tasks in the task graph"
-            owner: "${event.sender.login}@users.noreply.github.com"
+            owner: ${owner}
             source: ${event.repository.clone_url}
           payload:
             image: harjgam/web-platform-tests:0.33
