@@ -40,28 +40,28 @@ enum JSOp : uint8_t {
  * [SMDOC] Bytecode Format flags (JOF_*)
  */
 enum {
-  JOF_BYTE = 0,         /* single bytecode, no immediates */
-  JOF_UINT8 = 1,        /* unspecified uint8_t argument */
-  JOF_UINT16 = 2,       /* unspecified uint16_t argument */
-  JOF_UINT24 = 3,       /* unspecified uint24_t argument */
-  JOF_UINT32 = 4,       /* unspecified uint32_t argument */
-  JOF_INT8 = 5,         /* int8_t literal */
-  JOF_INT32 = 6,        /* int32_t literal */
-  JOF_JUMP = 7,         /* int32_t jump offset */
-  JOF_TABLESWITCH = 8,  /* table switch */
-  JOF_ENVCOORD = 9,     /* embedded ScopeCoordinate immediate */
-  JOF_ARGC = 10,        /* uint16_t argument count */
-  JOF_QARG = 11,        /* function argument index */
-  JOF_LOCAL = 12,       /* var or block-local variable */
-  JOF_RESUMEINDEX = 13, /* yield, await, or gosub resume index */
-  JOF_ATOM = 14,        /* uint32_t constant index */
-  JOF_OBJECT = 15,      /* uint32_t object index */
-  JOF_REGEXP = 16,      /* uint32_t regexp index */
-  JOF_DOUBLE = 17,      /* inline DoubleValue */
-  JOF_SCOPE = 18,       /* uint32_t scope index */
-  JOF_ICINDEX = 19,     /* uint32_t IC index */
-  JOF_LOOPENTRY = 20,   /* JSOP_LOOPENTRY, combines JOF_ICINDEX and JOF_UINT8 */
-  JOF_BIGINT = 21,      /* uint32_t index for BigInt value */
+  JOF_BYTE = 0,          /* single bytecode, no immediates */
+  JOF_UINT8 = 1,         /* unspecified uint8_t argument */
+  JOF_UINT16 = 2,        /* unspecified uint16_t argument */
+  JOF_UINT24 = 3,        /* unspecified uint24_t argument */
+  JOF_UINT32 = 4,        /* unspecified uint32_t argument */
+  JOF_INT8 = 5,          /* int8_t literal */
+  JOF_INT32 = 6,         /* int32_t literal */
+  JOF_JUMP = 7,          /* int32_t jump offset */
+  JOF_TABLESWITCH = 8,   /* table switch */
+  JOF_ENVCOORD = 9,      /* embedded ScopeCoordinate immediate */
+  JOF_ARGC = 10,         /* uint16_t argument count */
+  JOF_QARG = 11,         /* function argument index */
+  JOF_LOCAL = 12,        /* var or block-local variable */
+  JOF_RESUMEINDEX = 13,  /* yield, await, or gosub resume index */
+  JOF_ATOM = 14,         /* uint32_t constant index */
+  JOF_OBJECT = 15,       /* uint32_t object index */
+  JOF_REGEXP = 16,       /* uint32_t regexp index */
+  JOF_DOUBLE = 17,       /* inline DoubleValue */
+  JOF_SCOPE = 18,        /* uint32_t scope index */
+  JOF_ICINDEX = 19,      /* uint32_t IC index */
+  JOF_LOOPHEAD = 20,     /* JSOP_LOOPHEAD, combines JOF_ICINDEX and JOF_UINT8 */
+  JOF_BIGINT = 21,       /* uint32_t index for BigInt value */
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */
@@ -252,20 +252,20 @@ static inline void SET_ICINDEX(jsbytecode* pc, uint32_t icIndex) {
   SET_UINT32(pc, icIndex);
 }
 
-static inline unsigned LoopEntryDepthHint(jsbytecode* pc) {
-  MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
+static inline unsigned LoopHeadDepthHint(jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
   return GET_UINT8(pc + 4) & 0x7f;
 }
 
-static inline bool LoopEntryCanIonOsr(jsbytecode* pc) {
-  MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
+static inline bool LoopHeadCanIonOsr(jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
   return GET_UINT8(pc + 4) & 0x80;
 }
 
-static inline void SetLoopEntryDepthHintAndFlags(jsbytecode* pc,
-                                                 unsigned loopDepth,
-                                                 bool canIonOsr) {
-  MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
+static inline void SetLoopHeadDepthHintAndFlags(jsbytecode* pc,
+                                                unsigned loopDepth,
+                                                bool canIonOsr) {
+  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
   uint8_t data = std::min(loopDepth, unsigned(0x7f)) | (canIonOsr ? 0x80 : 0);
   SET_UINT8(pc + 4, data);
 }
@@ -350,7 +350,6 @@ static inline bool BytecodeIsJumpTarget(JSOp op) {
   switch (op) {
     case JSOP_JUMPTARGET:
     case JSOP_LOOPHEAD:
-    case JSOP_LOOPENTRY:
     case JSOP_AFTERYIELD:
       return true;
     default:

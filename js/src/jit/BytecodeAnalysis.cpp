@@ -155,10 +155,10 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
         break;
       }
 
-      case JSOP_LOOPENTRY:
+      case JSOP_LOOPHEAD:
         for (size_t i = 0; i < catchFinallyRanges.length(); i++) {
           if (catchFinallyRanges[i].contains(offset)) {
-            infos_[offset].loopEntryInCatchOrFinally = true;
+            infos_[offset].loopHeadInCatchOrFinally = true;
           }
         }
         break;
