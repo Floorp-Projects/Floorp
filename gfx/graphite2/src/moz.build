@@ -13,17 +13,8 @@ EXPORTS.graphite2 += [
     '../include/graphite2/Types.h',
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    UNIFIED_SOURCES += [
-        'direct_machine.cpp'
-    ]
-else:
-    UNIFIED_SOURCES += [
-        'call_machine.cpp'
-    ]
-
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
-UNIFIED_SOURCES += [
+all_sources = [
     '../geckoextra/src/GraphiteExtra.cpp',
     'CmapCache.cpp',
     'Code.cpp',
@@ -56,22 +47,39 @@ UNIFIED_SOURCES += [
     'UtfCodec.cpp',
 ]
 
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    UNIFIED_SOURCES += [
+        'direct_machine.cpp'
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'call_machine.cpp'
+    ]
+UNIFIED_SOURCES += all_sources
+
+if CONFIG['MOZ_WASM_SANDBOXING_GRAPHITE']:
+    SANDBOXED_WASM_LIBRARY_NAME = 'graphitewasm'
+    WASM_SOURCES += [
+        'call_machine.cpp',
+    ]
+    WASM_SOURCES += all_sources
+
 # tell graphite2 not to export symbols, we'll be linking it directly with
 # thebes
-DEFINES['GRAPHITE2_STATIC'] = True
+DefineAndWasmDefine('GRAPHITE2_STATIC', True)
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'gkmedias'
 
-DEFINES['PACKAGE_VERSION'] = '"moz"'
-DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+DefineAndWasmDefine('PACKAGE_VERSION', '"moz"')
+DefineAndWasmDefine('PACKAGE_BUGREPORT', '"http://bugzilla.mozilla.org/"')
 
 # disable features we don't need in the graphite2 code, to reduce code size
 for var in ('GRAPHITE2_NFILEFACE', 'GRAPHITE2_NTRACING', 'GRAPHITE2_NSEGCACHE'):
-    DEFINES[var] = True
+    DefineAndWasmDefine(var, True)
 
 # provide a custom header that overrides malloc() and friends,
-# to ensure safe OOM handling
+# to ensure safe OOM handling. Don't do this in the wasm sandbox.
 DEFINES['GRAPHITE2_CUSTOM_HEADER'] = '"MozGrMalloc.h"'
