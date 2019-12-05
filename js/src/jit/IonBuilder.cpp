@@ -1807,7 +1807,6 @@ AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
 }
 
 AbortReasonOr<Ok> IonBuilder::startLoop(LoopState::State initState,
-                                        jsbytecode* beforeLoopEntry,
                                         jsbytecode* loopEntry,
                                         jsbytecode* loopHead,
                                         jsbytecode* backjump, bool isForIn,
@@ -1826,8 +1825,7 @@ AbortReasonOr<Ok> IonBuilder::startLoop(LoopState::State initState,
     MOZ_ASSERT(canOsr);
 
     MBasicBlock* preheader;
-    MOZ_TRY_VAR(preheader,
-                newOsrPreheader(current, loopEntry, beforeLoopEntry));
+    MOZ_TRY_VAR(preheader, newOsrPreheader(current, loopEntry));
     current->end(MGoto::New(alloc(), preheader));
     MOZ_TRY(setCurrentAndSpecializePhis(preheader));
   }
@@ -1877,7 +1875,7 @@ AbortReasonOr<Ok> IonBuilder::visitDoWhileLoop(jssrcnote* sn) {
     return Ok();
   }
 
-  return startLoop(LoopState::State::DoWhileLike, pc, loopEntry, pc, backjump,
+  return startLoop(LoopState::State::DoWhileLike, loopEntry, pc, backjump,
                    /* isForIn = */ false, /* stackPhiCount = */ 0);
 }
 
@@ -1934,7 +1932,7 @@ AbortReasonOr<Ok> IonBuilder::visitWhileOrForInOrForOfLoop(jssrcnote* sn) {
   }
 
   bool isForIn = SN_TYPE(sn) == SRC_FOR_IN;
-  return startLoop(LoopState::State::WhileLikeCond, pc, loopEntry, loopHead,
+  return startLoop(LoopState::State::WhileLikeCond, loopEntry, loopHead,
                    backjump, isForIn, stackPhiCount);
 }
 
@@ -1989,7 +1987,7 @@ AbortReasonOr<Ok> IonBuilder::visitForLoop(jssrcnote* sn) {
   MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
   MOZ_ASSERT(backjumppc + GET_JUMP_OFFSET(backjumppc) == loopHead);
 
-  return startLoop(state, pc, loopEntry, loopHead, backjumppc,
+  return startLoop(state, loopEntry, loopHead, backjumppc,
                    /* isForIn = */ false,
                    /* stackPhiCount = */ 0);
 }
@@ -7778,8 +7776,7 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newBlockAfter(
 }
 
 AbortReasonOr<MBasicBlock*> IonBuilder::newOsrPreheader(
-    MBasicBlock* predecessor, jsbytecode* loopEntry,
-    jsbytecode* beforeLoopEntry) {
+    MBasicBlock* predecessor, jsbytecode* loopEntry) {
   MOZ_ASSERT(JSOp(*loopEntry) == JSOP_LOOPENTRY);
   MOZ_ASSERT(loopEntry == info().osrPc());
 
@@ -7795,8 +7792,8 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newOsrPreheader(
   graph().addBlock(preheader);
 
   // Give the pre-header the same hit count as the code before the loop.
-  if (script()->hasScriptCounts()) {
-    preheader->setHitCount(script()->getHitCount(beforeLoopEntry));
+  if (predecessor->getHitState() == MBasicBlock::HitState::Count) {
+    preheader->setHitCount(predecessor->getHitCount());
   }
 
   MOsrEntry* entry = MOsrEntry::New(alloc());
