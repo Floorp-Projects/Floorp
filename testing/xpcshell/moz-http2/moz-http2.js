@@ -673,7 +673,7 @@ function handleRequest(req, res) {
         });
       }
 
-      if (req.headers["accept-language"]) {
+      if (req.headers["accept-language"] || req.headers["user-agent"]) {
         // If we get this header, don't send back any response. This should
         // cause the tests to fail. This is easier then actually sending back
         // the header value into test_trr.js
