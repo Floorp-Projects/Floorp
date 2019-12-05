@@ -31,6 +31,7 @@ interface nsICrashService : nsISupports
   const long PROCESS_TYPE_RDD = 7;
   const long PROCESS_TYPE_SOCKET = 8;
   const long PROCESS_TYPE_SANDBOX_BROKER = 9;
+  const long PROCESS_TYPE_FORKSERVER = 10;
   // New process types should be added at the end of the above list.
 
   const long CRASH_TYPE_CRASH = 0;
