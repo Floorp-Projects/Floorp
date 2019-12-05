@@ -16,7 +16,13 @@ add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webNavigation", "tabs"],
+      applications: {
+        gecko: {
+          id: "test_ext_webNavigation_onCommitted@tests.mozilla.org",
+        },
+      },
     },
+    useAddonManager: "permanent",
     async background() {
       const url = "http://mochi.test:8888/";
       const [tab, tabDetails] = await Promise.all([
