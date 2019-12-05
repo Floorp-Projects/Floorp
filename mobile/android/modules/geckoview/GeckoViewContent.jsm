@@ -332,6 +332,7 @@ class GeckoViewContent extends GeckoViewModule {
 
     finder.caseSensitive = !!aData.matchCase;
     finder.entireWord = !!aData.wholeWord;
+    finder.matchDiacritics = !!aData.matchDiacritics;
     finder.addResultListener(this._finderListener);
 
     const drawOutline =

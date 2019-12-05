@@ -8,7 +8,10 @@
 #include "nsUnicodePropertyData.cpp"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/HashTable.h"
 #include "nsCharTraits.h"
+
+#include "unicode/normalizer2.h"
 
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT 0x110000
@@ -303,6 +306,50 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
     iter.Next();
   }
   return result;
+}
+
+uint32_t GetNaked(uint32_t aCh) {
+  using namespace mozilla;
+
+  static const UNormalizer2* normalizer;
+  static HashMap<uint32_t, uint32_t> decompositions;
+
+  HashMap<uint32_t, uint32_t>::Ptr entry = decompositions.lookup(aCh);
+  if (entry.found()) {
+    return entry->value();
+  }
+
+  UErrorCode error = U_ZERO_ERROR;
+  if (!normalizer) {
+    normalizer = unorm2_getNFDInstance(&error);
+    if (U_FAILURE(error)) {
+      return aCh;
+    }
+  }
+
+  UChar ds[16];
+  uint32_t dc;
+  if (unorm2_getDecomposition(normalizer, aCh, ds, sizeof(ds) / sizeof(UChar),
+                              &error) > 0) {
+    if (NS_IS_HIGH_SURROGATE(ds[0])) {
+      dc = SURROGATE_TO_UCS4(ds[0], ds[1]);
+    } else {
+      dc = ds[0];
+    }
+    if (IS_IN_BMP(dc) != IS_IN_BMP(aCh)) {
+      // Mappings that would change the length of a UTF-16 string are not
+      // currently supported.
+      dc = aCh;
+    }
+    if (!decompositions.putNew(aCh, dc)) {
+      // We're out of memory, so delete the cache to free some up.
+      decompositions.clearAndCompact();
+    }
+  } else {
+    dc = aCh;
+  }
+
+  return dc;
 }
 
 }  // end namespace unicode

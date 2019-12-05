@@ -768,6 +768,11 @@ pref("accessibility.typeaheadfind.matchesCountLimit", 1000);
 pref("findbar.highlightAll", false);
 pref("findbar.entireword", false);
 pref("findbar.iteratorTimeout", 100);
+// matchdiacritics: controls the find bar's diacritic matching
+//     0 - "never"  (ignore diacritics)
+//     1 - "always" (match diacritics)
+// other - "auto"   (match diacritics if input has diacritics, ignore otherwise)
+pref("findbar.matchdiacritics", 0);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);

@@ -51,6 +51,7 @@ class FindContent {
    * @param {string} queryphrase - the text to search for.
    * @param {boolean} caseSensitive - whether to use case sensitive matches.
    * @param {boolean} includeRangeData - whether to collect and return range data.
+   * @param {boolean} matchDiacritics - whether diacritics must match.
    * @param {boolean} searchString - whether to collect and return rect data.
    *
    * @returns {object} that includes:
@@ -66,6 +67,7 @@ class FindContent {
         entireWord,
         includeRangeData,
         includeRectData,
+        matchDiacritics,
       } = params;
 
       this.iterator.reset();
@@ -77,6 +79,7 @@ class FindContent {
         entireWord: !!entireWord,
         finder: this.finder,
         listener: this.finder,
+        matchDiacritics: !!matchDiacritics,
         useSubFrames: false,
       });
 

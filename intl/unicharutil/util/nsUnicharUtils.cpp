@@ -162,6 +162,32 @@ void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   }
 }
 
+uint32_t ToNaked(uint32_t aChar) {
+  if (IS_ASCII(aChar)) {
+    return aChar;
+  }
+  return mozilla::unicode::GetNaked(aChar);
+}
+
+void ToNaked(nsAString& aString) {
+  char16_t* buf = aString.BeginWriting();
+  ToNaked(buf, buf, aString.Length());
+}
+
+void ToNaked(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
+  for (uint32_t i = 0; i < aLen; i++) {
+    uint32_t ch = aIn[i];
+    if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
+      ch = mozilla::unicode::GetNaked(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
+      NS_ASSERTION(!IS_IN_BMP(ch), "stripping crossed BMP/SMP boundary!");
+      aOut[i++] = H_SURROGATE(ch);
+      aOut[i] = L_SURROGATE(ch);
+      continue;
+    }
+    aOut[i] = ToNaked(ch);
+  }
+}
+
 int32_t nsCaseInsensitiveStringComparator::operator()(const char16_t* lhs,
                                                       const char16_t* rhs,
                                                       uint32_t lLength,
