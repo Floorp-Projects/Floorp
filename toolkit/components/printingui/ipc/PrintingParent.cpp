@@ -105,7 +105,8 @@ nsresult PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // The initSettings we got can be wrapped using
   // PrintDataUtils' MockWebBrowserPrint, which implements enough of
   // nsIWebBrowserPrint to keep the dialogs happy.
-  nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
+  nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(
+      aData.printJobName(), aData.isIFrameSelected(), aData.isRangeSelection());
 
   // Use the existing RemotePrintJob and its settings, if we have one, to make
   // sure they stay current.

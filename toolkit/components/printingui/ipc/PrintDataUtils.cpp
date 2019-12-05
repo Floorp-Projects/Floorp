@@ -21,8 +21,12 @@ namespace embedding {
 
 NS_IMPL_ISUPPORTS(MockWebBrowserPrint, nsIWebBrowserPrint);
 
-MockWebBrowserPrint::MockWebBrowserPrint(const PrintData& aData)
-    : mData(aData) {}
+MockWebBrowserPrint::MockWebBrowserPrint(const nsAString& aDocName,
+                                         bool aIsIFrameSelected,
+                                         bool aIsRangeSelection)
+    : mDocName(aDocName),
+      mIsIFrameSelected(aIsIFrameSelected),
+      mIsRangeSelection(aIsRangeSelection) {}
 
 MockWebBrowserPrint::~MockWebBrowserPrint() {}
 
@@ -41,7 +45,7 @@ MockWebBrowserPrint::GetCurrentPrintSettings(
 NS_IMETHODIMP
 MockWebBrowserPrint::GetDocumentName(nsAString& aDocName) {
   // The only consumer that cares about this is the OS X printing dialog.
-  aDocName = mData.printJobName();
+  aDocName = mDocName;
   return NS_OK;
 }
 
@@ -57,13 +61,13 @@ MockWebBrowserPrint::GetDoingPrintPreview(bool* aDoingPrintPreview) {
 
 NS_IMETHODIMP
 MockWebBrowserPrint::GetIsIFrameSelected(bool* aIsIFrameSelected) {
-  *aIsIFrameSelected = mData.isIFrameSelected();
+  *aIsIFrameSelected = mIsIFrameSelected;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 MockWebBrowserPrint::GetIsRangeSelection(bool* aIsRangeSelection) {
-  *aIsRangeSelection = mData.isRangeSelection();
+  *aIsRangeSelection = mIsRangeSelection;
   return NS_OK;
 }
 
