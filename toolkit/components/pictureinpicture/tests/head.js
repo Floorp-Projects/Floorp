@@ -46,6 +46,7 @@ async function triggerPictureInPicture(browser, videoID) {
   });
   let win = await domWindowOpened;
   await BrowserTestUtils.waitForEvent(win, "load");
+  await win.promiseDocumentFlushed(() => {});
   await videoReady;
   return win;
 }
