@@ -251,7 +251,7 @@ WebBrowserChrome2Stub::IsWindowModal(bool* aResult) {
 }
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::SetStatusLink(const nsAString& aStatusText) {
+WebBrowserChrome2Stub::SetLinkStatus(const nsAString& aStatusText) {
   return NS_OK;
 }
 

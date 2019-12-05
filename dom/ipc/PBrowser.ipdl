@@ -473,7 +473,7 @@ parent:
      * Used to set the current text of the status tooltip.
      * Nowadays this is only used for link locations on hover.
      */
-    async SetStatusLink(nsString status);
+    async SetLinkStatus(nsString status);
 
     /**
      * Show/hide a tooltip when the mouse hovers over an element in the content

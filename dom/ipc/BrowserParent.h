@@ -438,7 +438,7 @@ class BrowserParent final : public PBrowserParent,
       const uint32_t& aStride, const gfx::SurfaceFormat& aFormat,
       const uint32_t& aHotspotX, const uint32_t& aHotspotY, const bool& aForce);
 
-  mozilla::ipc::IPCResult RecvSetStatusLink(const nsString& aStatus);
+  mozilla::ipc::IPCResult RecvSetLinkStatus(const nsString& aStatus);
 
   mozilla::ipc::IPCResult RecvShowTooltip(const uint32_t& aX,
                                           const uint32_t& aY,
