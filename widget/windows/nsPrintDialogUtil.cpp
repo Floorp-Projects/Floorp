@@ -359,30 +359,11 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
   return NS_OK;
 }
 
-//------------------------------------------------------------------
-static void PrepareForPrintDialog(nsIWebBrowserPrint* aWebBrowserPrint,
-                                  nsIPrintSettings* aPS) {
-  NS_ASSERTION(aWebBrowserPrint, "Can't be null");
-  NS_ASSERTION(aPS, "Can't be null");
-
-  bool isIFrameSelected;
-  bool isRangeSelection;
-
-  aWebBrowserPrint->GetIsIFrameSelected(&isIFrameSelected);
-  aWebBrowserPrint->GetIsRangeSelection(&isRangeSelection);
-
-  // Now determine how to set up the Frame print UI
-  aPS->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
-                       isRangeSelection || isIFrameSelected);
-}
-
 //----------------------------------------------------------------------------------
 //-- Show Print Dialog
 //----------------------------------------------------------------------------------
 nsresult NativeShowPrintDialog(HWND aHWnd, nsIWebBrowserPrint* aWebBrowserPrint,
                                nsIPrintSettings* aPrintSettings) {
-  PrepareForPrintDialog(aWebBrowserPrint, aPrintSettings);
-
   nsresult rv = ShowNativePrintDialog(aHWnd, aPrintSettings);
   if (aHWnd) {
     ::DestroyWindow(aHWnd);
