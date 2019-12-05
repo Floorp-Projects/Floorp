@@ -219,6 +219,10 @@ static int do_main(int argc, char* argv[], char* envp[]) {
 }
 
 static nsresult InitXPCOMGlue(LibLoadingStrategy aLibLoadingStrategy) {
+  if (gBootstrap) {
+    return NS_OK;
+  }
+
   UniqueFreePtr<char> exePath = BinaryPath::Get();
   if (!exePath) {
     Output("Couldn't find the application directory.\n");
@@ -243,6 +247,33 @@ uint32_t gBlocklistInitFlags = eDllBlocklistInitFlagDefault;
 #endif
 
 int main(int argc, char* argv[], char* envp[]) {
+#if defined(MOZ_ENABLE_FORKSERVER)
+  if (strcmp(argv[argc - 1], "forkserver") == 0) {
+    nsresult rv = InitXPCOMGlue(LibLoadingStrategy::NoReadAhead);
+    if (NS_FAILED(rv)) {
+      return 255;
+    }
+
+    // Run a fork server in this process, single thread.  When it
+    // returns, it means the fork server have been stopped or a new
+    // content process is created.
+    //
+    // For the later case, XRE_ForkServer() will return false, running
+    // in a content process just forked from the fork server process.
+    // argc & argv will be updated with the values passing from the
+    // chrome process.  With the new values, this function
+    // continues the reset of the code acting as a content process.
+    if(gBootstrap->XRE_ForkServer(&argc, &argv)) {
+      // Return from the fork server in the fork server process.
+      // Stop the fork server.
+      gBootstrap->NS_LogTerm();
+      return 0;
+    }
+    // In a content process forked from the fork server.
+    // Start acting as a content process.
+  }
+#endif
+
   mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
   AUTO_BASE_PROFILER_INIT;

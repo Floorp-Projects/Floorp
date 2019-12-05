@@ -102,6 +102,12 @@ class BootstrapImpl final : public Bootstrap {
     return ::XRE_RunIPDLTest(argc, argv);
   }
 #endif
+
+#ifdef MOZ_ENABLE_FORKSERVER
+  virtual int XRE_ForkServer(int* argc, char*** argv) override {
+    return ::XRE_ForkServer(argc, argv);
+  }
+#endif
 };
 
 extern "C" NS_EXPORT void NS_FROZENCALL

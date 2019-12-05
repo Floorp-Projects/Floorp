@@ -300,6 +300,9 @@ ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
     forkserver.mAppProcBuilder->InitAppProcess(aArgc, aArgv);
     forkserver.mAppProcBuilder.reset();
 
+    // Open log files again with the right names with the new PID.
+    nsTraceRefcnt::ResetLogFiles();
+
     return false;
 }
 

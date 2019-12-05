@@ -523,6 +523,9 @@ static bool InitLog(const EnvCharType* aEnvVar, const char* aMsg,
 #endif
       if (stream) {
         MozillaRegisterDebugFD(fileno(stream));
+#ifdef MOZ_ENABLE_FORKSERVER
+        base::RegisterForkServerNoCloseFD(fileno(stream));
+#endif
         *aResult = stream;
         fprintf(stderr,
                 "### " ENVVAR_PRINTF " defined -- logging %s to " ENVVAR_PRINTF
@@ -1157,3 +1160,32 @@ void nsTraceRefcnt::SetActivityIsLegal(bool aLegal) {
 
   PR_SetThreadPrivate(gActivityTLS, reinterpret_cast<void*>(!aLegal));
 }
+
+#ifdef MOZ_ENABLE_FORKSERVER
+void nsTraceRefcnt::ResetLogFiles() {
+#ifdef XP_WIN
+#  define ENVVAR(x) u"" x
+#else
+#  define ENVVAR(x) x
+#endif
+  if (gBloatLog) {
+    maybeUnregisterAndCloseFile(gBloatLog);
+    bool defined = InitLog(ENVVAR("XPCOM_MEM_BLOAT_LOG"), "bloat/leaks", &gBloatLog);
+    if (!defined) {
+      InitLog(ENVVAR("XPCOM_MEM_LEAK_LOG"), "leaks", &gBloatLog);
+    }
+  }
+  if (gRefcntsLog) {
+    maybeUnregisterAndCloseFile(gRefcntsLog);
+    InitLog(ENVVAR("XPCOM_MEM_REFCNT_LOG"), "refcounts", &gRefcntsLog);
+  }
+  if (gAllocLog) {
+    maybeUnregisterAndCloseFile(gAllocLog);
+    InitLog(ENVVAR("XPCOM_MEM_ALLOC_LOG"), "new/delete", &gAllocLog);
+  }
+  if(gCOMPtrLog) {
+    maybeUnregisterAndCloseFile(gCOMPtrLog);
+    InitLog(ENVVAR("XPCOM_MEM_COMPTR_LOG"), "nsCOMPtr", &gCOMPtrLog);
+  }
+}
+#endif
