@@ -12,8 +12,11 @@ import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
 import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
@@ -35,6 +38,16 @@ class WebExtensionTest : BaseSessionTest() {
         val TABS_REMOVE_BACKGROUND: String = "resource://android/assets/web_extensions/tabs-remove/"
         val MESSAGING_BACKGROUND: String = "resource://android/assets/web_extensions/messaging/"
         val MESSAGING_CONTENT: String = "resource://android/assets/web_extensions/messaging-content/"
+    }
+
+    @Before
+    fun setup() {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.PromptDelegate::class,
+                sessionRule.runtime.webExtensionController::setPromptDelegate,
+                { sessionRule.runtime.webExtensionController.promptDelegate = null },
+                object : WebExtensionController.PromptDelegate {}
+        )
     }
 
     @Test
@@ -71,6 +84,130 @@ class WebExtensionTest : BaseSessionTest() {
         val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat("Content script should have been applied",
                 colorAfter as String, equalTo(""))
+    }
+
+    @Test
+    fun installWebExtension() {
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        val colorBefore = mainSession.evaluateJS("document.body.style.borderColor")
+        assertThat("The border color should be empty when loading without extensions.",
+                colorBefore as String, equalTo(""))
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.description,
+                        "Adds a red border to all webpages matching example.com.")
+                assertEquals(extension.metaData!!.name, "Borderify")
+                assertEquals(extension.metaData!!.version, "1.0")
+                // TODO: Bug 1601067
+                // assertEquals(extension.isBuiltIn, false)
+                // TODO: Bug 1599585
+                // assertEquals(extension.isEnabled, false)
+                assertEquals(extension.metaData!!.signedState,
+                        WebExtension.SignedStateFlags.SIGNED)
+                assertEquals(extension.metaData!!.blocklistState,
+                        WebExtension.BlocklistStateFlags.NOT_BLOCKED)
+
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val borderify = sessionRule.waitForResult(
+                sessionRule.runtime.webExtensionController.install(
+                    "resource://android/assets/web_extensions/borderify.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        val color = mainSession.evaluateJS("document.body.style.borderColor")
+        assertThat("Content script should have been applied",
+                color as String, equalTo("red"))
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(sessionRule.runtime.webExtensionController.uninstall(borderify))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
+        assertThat("Content script should have been applied",
+                colorAfter as String, equalTo(""))
+    }
+
+    private fun testInstallError(name: String, expectedError: Int) {
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count = 0)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        sessionRule.waitForResult(
+                sessionRule.runtime.webExtensionController.install(
+                        "resource://android/assets/web_extensions/$name")
+                        .accept({
+                            // We should not be able to install unsigned extensions
+                            assertTrue(false)
+                        }, { exception ->
+                            val installException = exception as WebExtension.InstallException
+                            assertEquals(installException.code, expectedError)
+                        }))
+    }
+
+    @Test
+    fun installUnsignedExtensionSignatureNotRequired() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false
+        ))
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val borderify = sessionRule.waitForResult(
+                sessionRule.runtime.webExtensionController.install(
+                        "resource://android/assets/web_extensions/borderify-unsigned.xpi")
+                        .then { extension ->
+                            assertEquals(extension!!.metaData!!.signedState,
+                                    WebExtension.SignedStateFlags.MISSING)
+                            assertEquals(extension.metaData!!.blocklistState,
+                                    WebExtension.BlocklistStateFlags.NOT_BLOCKED)
+                            assertEquals(extension.metaData!!.name, "Borderify")
+                            GeckoResult.fromValue(extension)
+                        })
+
+        sessionRule.waitForResult(
+                sessionRule.runtime.webExtensionController.uninstall(borderify))
+    }
+
+    @Test
+    fun installUnsignedExtensionSignatureRequired() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to true
+        ))
+        testInstallError("borderify-unsigned.xpi",
+                WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED)
+    }
+
+    @Test
+    fun installExtensionFileNotFound() {
+        testInstallError("file-not-found.xpi",
+                WebExtension.InstallException.ErrorCodes.ERROR_NETWORK_FAILURE)
+    }
+
+    @Test
+    fun installExtensionMissingId() {
+        testInstallError("borderify-missing-id.xpi",
+                WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE)
     }
 
     // This test
