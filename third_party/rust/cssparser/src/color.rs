@@ -280,22 +280,22 @@ impl Color {
     where
         ComponentParser: ColorComponentParser<'i>,
     {
-        // FIXME: remove clone() when lifetimes are non-lexical
         let location = input.current_source_location();
-        let token = input.next()?.clone();
-        match token {
+        let token = input.next()?;
+        match *token {
             Token::Hash(ref value) | Token::IDHash(ref value) => {
                 Color::parse_hash(value.as_bytes())
             }
             Token::Ident(ref value) => parse_color_keyword(&*value),
             Token::Function(ref name) => {
+                let name = name.clone();
                 return input.parse_nested_block(|arguments| {
                     parse_color_function(component_parser, &*name, arguments)
                 })
             }
             _ => Err(()),
         }
-        .map_err(|()| location.new_unexpected_token_error(token))
+        .map_err(|()| location.new_unexpected_token_error(token.clone()))
     }
 
     /// Parse a <color> value, per CSS Color Module Level 3.

@@ -266,17 +266,10 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let start = self.input.state();
-            // FIXME: remove intermediate variable when lifetimes are non-lexical
-            let ident = match self.input.next_including_whitespace_and_comments() {
+            match self.input.next_including_whitespace_and_comments() {
                 Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) | Ok(&Token::Semicolon) => continue,
-                Ok(&Token::Ident(ref name)) => Ok(Ok(name.clone())),
-                Ok(&Token::AtKeyword(ref name)) => Ok(Err(name.clone())),
-                Ok(token) => Err(token.clone()),
-                Err(_) => return None,
-            };
-            match ident {
-                Ok(Ok(name)) => {
-                    // Ident
+                Ok(&Token::Ident(ref name)) => {
+                    let name = name.clone();
                     let result = {
                         let parser = &mut self.parser;
                         // FIXME: https://github.com/servo/rust-cssparser/issues/254
@@ -288,18 +281,20 @@ where
                     };
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
-                Ok(Err(name)) => {
-                    // At-keyword
+                Ok(&Token::AtKeyword(ref name)) => {
+                    let name = name.clone();
                     return Some(parse_at_rule(&start, name, self.input, &mut self.parser));
                 }
-                Err(token) => {
+                Ok(token) => {
+                    let token = token.clone();
                     let result = self.input.parse_until_after(Delimiter::Semicolon, |_| {
                         Err(start
                             .source_location()
-                            .new_unexpected_token_error(token.clone()))
+                            .new_unexpected_token_error(token))
                     });
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
+                Err(..) => return None,
             }
         }
     }
@@ -374,21 +369,18 @@ where
             }
             let start = self.input.state();
 
-            let at_keyword;
-            match self.input.next_byte() {
-                Some(b'@') => {
+            let at_keyword = match self.input.next_byte()? {
+                b'@' => {
                     match self.input.next_including_whitespace_and_comments() {
-                        Ok(&Token::AtKeyword(ref name)) => at_keyword = Some(name.clone()),
-                        _ => at_keyword = None,
-                    }
-                    // FIXME: move this back inside `match` when lifetimes are non-lexical
-                    if at_keyword.is_none() {
-                        self.input.reset(&start)
+                        Ok(&Token::AtKeyword(ref name)) => Some(name.clone()),
+                        _ => {
+                            self.input.reset(&start);
+                            None
+                        },
                     }
                 }
-                Some(_) => at_keyword = None,
-                None => return None,
-            }
+                _ => None,
+            };
 
             if let Some(name) = at_keyword {
                 let first_stylesheet_rule = self.is_stylesheet && !self.any_rule_so_far;
@@ -444,20 +436,17 @@ where
     input.parse_entirely(|input| {
         input.skip_whitespace();
         let start = input.state();
-
-        let at_keyword;
-        if input.next_byte() == Some(b'@') {
+        let at_keyword = if input.next_byte() == Some(b'@') {
             match *input.next_including_whitespace_and_comments()? {
-                Token::AtKeyword(ref name) => at_keyword = Some(name.clone()),
-                _ => at_keyword = None,
-            }
-            // FIXME: move this back inside `match` when lifetimes are non-lexical
-            if at_keyword.is_none() {
-                input.reset(&start)
+                Token::AtKeyword(ref name) => Some(name.clone()),
+                _ => {
+                    input.reset(&start);
+                    None
+                }
             }
         } else {
-            at_keyword = None
-        }
+            None
+        };
 
         if let Some(name) = at_keyword {
             parse_at_rule(&start, name, input, parser).map_err(|e| e.0)

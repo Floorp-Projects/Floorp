@@ -60,11 +60,13 @@ impl UnicodeRange {
 fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseError<'i>> {
     match input.next_including_whitespace()?.clone() {
         Token::Delim('+') => {
-            // FIXME: remove .clone() when lifetimes are non-lexical.
-            match input.next_including_whitespace()?.clone() {
+            match *input.next_including_whitespace()? {
                 Token::Ident(_) => {}
                 Token::Delim('?') => {}
-                t => return Err(input.new_basic_unexpected_token_error(t)),
+                ref t => {
+                    let t = t.clone();
+                    return Err(input.new_basic_unexpected_token_error(t));
+                }
             }
             parse_question_marks(input)
         }
