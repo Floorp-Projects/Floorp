@@ -84,7 +84,7 @@ add_task(async function test_listJSONlocaleSwitch() {
 add_task(async function test_listJSONRegionOverride() {
   Services.prefs.setCharPref("browser.search.region", "RU");
 
-  await asyncReInit({ skipReset: true });
+  await asyncReInit();
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 

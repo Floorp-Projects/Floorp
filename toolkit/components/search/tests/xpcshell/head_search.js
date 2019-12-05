@@ -509,10 +509,7 @@ function installTestEngine() {
   return addTestEngines([{ name: kTestEngineName, xmlFileName: "engine.xml" }]);
 }
 
-async function asyncReInit({
-  waitForRegionFetch = false,
-  skipReset = false,
-} = {}) {
+async function asyncReInit({ waitForRegionFetch = false } = {}) {
   let promises = [SearchTestUtils.promiseSearchNotification("reinit-complete")];
   if (waitForRegionFetch) {
     promises.push(
@@ -520,9 +517,6 @@ async function asyncReInit({
     );
   }
 
-  if (!skipReset) {
-    Services.search.reset();
-  }
   Services.search.reInit(!waitForRegionFetch);
 
   return Promise.all(promises);
