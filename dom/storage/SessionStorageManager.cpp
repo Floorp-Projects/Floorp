@@ -83,14 +83,12 @@ NS_IMETHODIMP
 SessionStorageManager::GetSessionStorageCache(
     nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
     RefPtr<SessionStorageCache>* aRetVal) {
-  return GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal, true,
-                                      nullptr, aRetVal);
+  return GetSessionStorageCacheHelper(aPrincipal, true, nullptr, aRetVal);
 }
 
 nsresult SessionStorageManager::GetSessionStorageCacheHelper(
-    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
-    bool aMakeIfNeeded, SessionStorageCache* aCloneFrom,
-    RefPtr<SessionStorageCache>* aRetVal) {
+    nsIPrincipal* aPrincipal, bool aMakeIfNeeded,
+    SessionStorageCache* aCloneFrom, RefPtr<SessionStorageCache>* aRetVal) {
   *aRetVal = nullptr;
 
   nsAutoCString originKey;
@@ -159,8 +157,8 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
   *aRetval = nullptr;
 
   RefPtr<SessionStorageCache> cache;
-  nsresult rv = GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal,
-                                             false, nullptr, &cache);
+  nsresult rv =
+      GetSessionStorageCacheHelper(aPrincipal, false, nullptr, &cache);
   if (NS_FAILED(rv) || !cache) {
     return rv;
   }
@@ -186,7 +184,7 @@ SessionStorageManager::CloneStorage(Storage* aStorage) {
 
   RefPtr<SessionStorageCache> cache;
   return GetSessionStorageCacheHelper(
-      aStorage->Principal(), aStorage->StoragePrincipal(), true,
+      aStorage->Principal(), true,
       static_cast<SessionStorage*>(aStorage)->Cache(), &cache);
 }
 
@@ -204,8 +202,8 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
   *aRetval = false;
 
   RefPtr<SessionStorageCache> cache;
-  nsresult rv = GetSessionStorageCacheHelper(
-      aPrincipal, aStorage->StoragePrincipal(), false, nullptr, &cache);
+  nsresult rv =
+      GetSessionStorageCacheHelper(aPrincipal, false, nullptr, &cache);
   if (NS_FAILED(rv) || !cache) {
     return rv;
   }
