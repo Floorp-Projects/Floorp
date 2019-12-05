@@ -8658,17 +8658,19 @@ bool GetBaseFilename(const nsAString& aFilename, const nsAString& aSuffix,
   return true;
 }
 
-nsresult SerializeStructuredCloneFiles(
-    PBackgroundParent* aBackgroundActor, Database* aDatabase,
-    const nsTArray<StructuredCloneFile>& aFiles, bool aForPreprocess,
-    FallibleTArray<SerializedStructuredCloneFile>& aResult) {
+mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
+SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
+                              Database* aDatabase,
+                              const nsTArray<StructuredCloneFile>& aFiles,
+                              bool aForPreprocess) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(aResult.IsEmpty());
+
+  nsTArray<SerializedStructuredCloneFile> result;
 
   if (aFiles.IsEmpty()) {
-    return NS_OK;
+    return result;
   }
 
   FileManager* fileManager = aDatabase->GetFileManager();
@@ -8676,13 +8678,13 @@ nsresult SerializeStructuredCloneFiles(
   nsCOMPtr<nsIFile> directory = fileManager->GetCheckedDirectory();
   if (NS_WARN_IF(!directory)) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   const uint32_t count = aFiles.Length();
 
-  if (NS_WARN_IF(!aResult.SetCapacity(count, fallible))) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_WARN_IF(!result.SetCapacity(count, fallible))) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   for (const StructuredCloneFile& file : aFiles) {
@@ -8698,7 +8700,7 @@ nsresult SerializeStructuredCloneFiles(
                                                                   fileId);
     if (NS_WARN_IF(!nativeFile)) {
       IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
 
     switch (file.mType) {
@@ -8711,15 +8713,10 @@ nsresult SerializeStructuredCloneFiles(
         if (NS_WARN_IF(NS_FAILED(rv))) {
           // This can only fail if the child has crashed.
           IDB_REPORT_INTERNAL_ERR();
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         }
 
-        SerializedStructuredCloneFile* serializedFile =
-            aResult.AppendElement(fallible);
-        MOZ_ASSERT(serializedFile);
-
-        serializedFile->file() = ipcBlob;
-        serializedFile->type() = StructuredCloneFile::eBlob;
+        result.EmplaceBack(ipcBlob, StructuredCloneFile::eBlob);
 
         aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         break;
@@ -8727,17 +8724,13 @@ nsresult SerializeStructuredCloneFiles(
 
       case StructuredCloneFile::eMutableFile: {
         if (aDatabase->IsFileHandleDisabled()) {
-          SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
-          MOZ_ASSERT(file);
-
-          file->file() = null_t();
-          file->type() = StructuredCloneFile::eMutableFile;
+          result.EmplaceBack(null_t(), StructuredCloneFile::eMutableFile);
         } else {
           RefPtr<MutableFile> actor =
               MutableFile::Create(nativeFile, aDatabase, file.mFileInfo);
           if (!actor) {
             IDB_REPORT_INTERNAL_ERR();
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
           // Transfer ownership to IPDL.
@@ -8747,14 +8740,10 @@ nsresult SerializeStructuredCloneFiles(
                   actor, EmptyString(), EmptyString())) {
             // This can only fail if the child has crashed.
             IDB_REPORT_INTERNAL_ERR();
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
-          MOZ_ASSERT(file);
-
-          file->file() = actor;
-          file->type() = StructuredCloneFile::eMutableFile;
+          result.EmplaceBack(actor.get(), StructuredCloneFile::eMutableFile);
         }
 
         break;
@@ -8762,11 +8751,7 @@ nsresult SerializeStructuredCloneFiles(
 
       case StructuredCloneFile::eStructuredClone: {
         if (!aForPreprocess) {
-          SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
-          MOZ_ASSERT(file);
-
-          file->file() = null_t();
-          file->type() = StructuredCloneFile::eStructuredClone;
+          result.EmplaceBack(null_t(), StructuredCloneFile::eStructuredClone);
         } else {
           RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
           impl->SetFileId(file.mFileInfo->Id());
@@ -8777,15 +8762,10 @@ nsresult SerializeStructuredCloneFiles(
           if (NS_WARN_IF(NS_FAILED(rv))) {
             // This can only fail if the child has crashed.
             IDB_REPORT_INTERNAL_ERR();
-            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          SerializedStructuredCloneFile* serializedFile =
-              aResult.AppendElement(fallible);
-          MOZ_ASSERT(serializedFile);
-
-          serializedFile->file() = ipcBlob;
-          serializedFile->type() = StructuredCloneFile::eStructuredClone;
+          result.EmplaceBack(ipcBlob, StructuredCloneFile::eStructuredClone);
 
           aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         }
@@ -8795,17 +8775,12 @@ nsresult SerializeStructuredCloneFiles(
 
       case StructuredCloneFile::eWasmBytecode:
       case StructuredCloneFile::eWasmCompiled: {
-        SerializedStructuredCloneFile* serializedFile =
-            aResult.AppendElement(fallible);
-        MOZ_ASSERT(serializedFile);
-
         // Set file() to null, support for storing WebAssembly.Modules has been
         // removed in bug 1469395. Support for de-serialization of
         // WebAssembly.Modules modules has been removed in bug 1561876. Full
         // removal is tracked in bug 1487479.
 
-        serializedFile->file() = null_t();
-        serializedFile->type() = file.mType;
+        result.EmplaceBack(null_t(), file.mType);
 
         break;
       }
@@ -8815,7 +8790,7 @@ nsresult SerializeStructuredCloneFiles(
     }
   }
 
-  return NS_OK;
+  return std::move(result);
 }
 
 // Idempotently delete a file, decreasing the quota usage as appropriate. If the
@@ -15494,12 +15469,11 @@ void Cursor::SendResponseInternal(
       MOZ_ASSERT(mDatabase);
       MOZ_ASSERT(mBackgroundParent);
 
-      FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
-      nsresult rv = SerializeStructuredCloneFiles(
-          mBackgroundParent, mDatabase, files,
-          /* aForPreprocess */ false, serializedFiles);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        aResponse = ClampResultCode(rv);
+      auto res =
+          SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, files,
+                                        /* aForPreprocess */ false);
+      if (NS_WARN_IF(res.isErr())) {
+        aResponse = ClampResultCode(res.inspectErr());
         break;
       }
 
@@ -15526,7 +15500,7 @@ void Cursor::SendResponseInternal(
       MOZ_ASSERT(serializedInfo);
       MOZ_ASSERT(serializedInfo->files().IsEmpty());
 
-      serializedInfo->files().SwapElements(serializedFiles);
+      serializedInfo->files() = res.unwrap();
     }
   }
 
@@ -24984,17 +24958,15 @@ nsresult ObjectStoreGetRequestOp::ConvertResponse(
     StructuredCloneReadInfo& aInfo, T& aResult) {
   MoveData(aInfo, aResult);
 
-  FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
-  nsresult rv =
-      SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, aInfo.mFiles,
-                                    aForPreprocess, serializedFiles);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
+                                           aInfo.mFiles, aForPreprocess);
+  if (NS_WARN_IF(res.isErr())) {
+    return res.unwrapErr();
   }
 
   MOZ_ASSERT(aResult.files().IsEmpty());
 
-  aResult.files().SwapElements(serializedFiles);
+  aResult.files() = res.unwrap();
 
   return NS_OK;
 }
@@ -25683,18 +25655,17 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 
         serializedInfo.data().data = std::move(info.mData);
 
-        FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
-        nsresult rv = SerializeStructuredCloneFiles(
-            mBackgroundParent, mDatabase, info.mFiles,
-            /* aForPreprocess */ false, serializedFiles);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          aResponse = rv;
+        auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
+                                                 info.mFiles,
+                                                 /* aForPreprocess */ false);
+        if (NS_WARN_IF(res.isErr())) {
+          aResponse = res.unwrapErr();
           return;
         }
 
         MOZ_ASSERT(serializedInfo.files().IsEmpty());
 
-        serializedInfo.files().SwapElements(serializedFiles);
+        serializedInfo.files() = res.unwrap();
       }
 
       nsTArray<SerializedStructuredCloneReadInfo>& cloneInfos =
@@ -25718,18 +25689,17 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 
     serializedInfo.data().data = std::move(info.mData);
 
-    FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
-    nsresult rv = SerializeStructuredCloneFiles(
-        mBackgroundParent, mDatabase, info.mFiles,
-        /* aForPreprocess */ false, serializedFiles);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResponse = rv;
+    auto res =
+        SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, info.mFiles,
+                                      /* aForPreprocess */ false);
+    if (NS_WARN_IF(res.isErr())) {
+      aResponse = res.unwrapErr();
       return;
     }
 
     MOZ_ASSERT(serializedInfo.files().IsEmpty());
 
-    serializedInfo.files().SwapElements(serializedFiles);
+    serializedInfo.files() = res.unwrap();
   }
 }
 
