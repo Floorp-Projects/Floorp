@@ -30,6 +30,7 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Result.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
@@ -7726,20 +7727,23 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
 
   void Cleanup() override;
 
-  nsresult PopulateResponseFromStatement(mozIStorageStatement* aStmt,
-                                         bool aInitializeResponse,
-                                         Key* const aOptOutSortKey);
+  using ResponseSizeOrError = mozilla::Result<size_t, nsresult>;
+
+  ResponseSizeOrError PopulateResponseFromStatement(mozIStorageStatement* aStmt,
+                                                    bool aInitializeResponse,
+                                                    Key* const aOptOutSortKey);
 
   nsresult PopulateExtraResponses(mozIStorageStatement* aStmt,
                                   uint32_t aMaxExtraCount,
+                                  const size_t aInitialResponseSize,
                                   const nsCString& aOperation,
                                   Key* const aOptPreviousSortKey);
 
  private:
   template <enum OpenCursorParams::Type CursorType>
-  nsresult PopulateResponseFromTypedStatement(mozIStorageStatement* const aStmt,
-                                              const bool aInitializeResponse,
-                                              Key* const aOptOutSortKey);
+  ResponseSizeOrError PopulateResponseFromTypedStatement(
+      mozIStorageStatement* const aStmt, const bool aInitializeResponse,
+      Key* const aOptOutSortKey);
 };
 
 class Cursor::OpenOp final : public Cursor::CursorOpBase {
@@ -25938,7 +25942,8 @@ void Cursor::CursorOpBase::Cleanup() {
 }
 
 template <enum OpenCursorParams::Type CursorType>
-nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
+Cursor::CursorOpBase::ResponseSizeOrError
+Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
     mozIStorageStatement* const aStmt, const bool aInitializeResponse,
     Key* const aOptOutSortKey) {
   auto cursorTypeTraits = CursorTypeTraits<CursorType>{*this};
@@ -25947,7 +25952,7 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
   {
     const auto rv = cursorTypeTraits.GetKeys(aStmt, aOptOutSortKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -25956,14 +25961,14 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
   // currently do not filter these out.
   if (aOptOutSortKey && !previousKey.IsUnset() &&
       previousKey == *aOptOutSortKey) {
-    return NS_OK;
+    return 0;
   }
 
   {
     const auto rv =
         cursorTypeTraits.MaybeGetCloneInfo(aStmt, mCursor->mFileManager);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -25983,10 +25988,12 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
   cursorTypeTraits.FillKeys(response);
   cursorTypeTraits.MaybeFillCloneInfo(response, &mFiles);
 
-  return NS_OK;
+  // TODO: Calculate real size and return it.
+  return 0;
 }
 
-nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
+Cursor::CursorOpBase::ResponseSizeOrError
+Cursor::CursorOpBase::PopulateResponseFromStatement(
     mozIStorageStatement* const aStmt, const bool aInitializeResponse,
     Key* const aOptOutSortKey) {
   Transaction()->AssertIsOnConnectionThread();
@@ -26001,7 +26008,8 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
            mResponse.type() == CursorResponse::TArrayOfIndexCursorResponse),
       aInitializeResponse);
 
-  nsresult (CursorOpBase::*populateFunc)(mozIStorageStatement*, bool, Key*);
+  ResponseSizeOrError (CursorOpBase::*populateFunc)(mozIStorageStatement*, bool,
+                                                    Key*);
 
   switch (mCursor->mType) {
     case OpenCursorParams::TObjectStoreOpenCursorParams:
@@ -26033,7 +26041,8 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
 
 nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     mozIStorageStatement* const aStmt, const uint32_t aMaxExtraCount,
-    const nsCString& aOperation, Key* const aOptPreviousSortKey) {
+    const size_t aInitialResponseSize, const nsCString& aOperation,
+    Key* const aOptPreviousSortKey) {
   AssertIsOnConnectionThread();
 
   uint32_t extraCount = 0;
@@ -26056,8 +26065,9 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     // any remaining entries, and signal overall success. Probably, future
     // attempts to access the same entry will fail as well, but it might never
     // be accessed by the application.
-    rv = PopulateResponseFromStatement(aStmt, false, aOptPreviousSortKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    const auto res =
+        PopulateResponseFromStatement(aStmt, false, aOptPreviousSortKey);
+    if (NS_WARN_IF(res.isErr())) {
       // TODO: Maybe disable preloading for this cursor? The problem will
       // probably reoccur on the next attempt, and disabling preloading will
       // reduce latency. However, if some problematic entry will be skipped
@@ -26067,6 +26077,9 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
 
       break;
     }
+
+    // TODO: Check accumulated size of individual responses and maybe break
+    // early.
 
     // TODO: Do not count entries skipped for unique cursors.
     ++extraCount;
@@ -26245,9 +26258,9 @@ nsresult Cursor::OpenOp::ProcessStatementSteps(
   Key previousKey;
   auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
 
-  rv = PopulateResponseFromStatement(aStmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  const auto res = PopulateResponseFromStatement(aStmt, true, optPreviousKey);
+  if (NS_WARN_IF(res.isErr())) {
+    return res.inspectErr();
   }
 
   // The degree to which extra responses on OpenOp can actually be used depends
@@ -26256,7 +26269,7 @@ nsresult Cursor::OpenOp::ProcessStatementSteps(
   //
   // TODO: We should somehow evaluate the effects of this. Maybe use a smaller
   // extra count than for ContinueOp?
-  return PopulateExtraResponses(aStmt, mCursor->mMaxExtraCount,
+  return PopulateExtraResponses(aStmt, mCursor->mMaxExtraCount, res.inspect(),
                                 NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
 }
 
@@ -26790,13 +26803,14 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   Key previousKey;
   auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
 
-  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  const auto res = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
+  if (NS_WARN_IF(res.isErr())) {
+    return res.inspectErr();
   }
 
-  return PopulateExtraResponses(
-      &*stmt, maxExtraCount, NS_LITERAL_CSTRING("ContinueOp"), optPreviousKey);
+  return PopulateExtraResponses(&*stmt, maxExtraCount, res.inspect(),
+                                NS_LITERAL_CSTRING("ContinueOp"),
+                                optPreviousKey);
 }
 
 Utils::Utils()
