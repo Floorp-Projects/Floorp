@@ -17,6 +17,7 @@
 #include "PerformanceResourceTiming.h"
 #include "PerformanceService.h"
 #include "PerformanceWorker.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryEvent.h"
@@ -53,9 +54,8 @@ already_AddRefed<Performance> Performance::CreateForMainThread(
     nsDOMNavigationTiming* aDOMTiming, nsITimedChannel* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<Performance> performance =
-      new PerformanceMainThread(aWindow, aDOMTiming, aChannel,
-                                nsContentUtils::IsSystemPrincipal(aPrincipal));
+  RefPtr<Performance> performance = new PerformanceMainThread(
+      aWindow, aDOMTiming, aChannel, aPrincipal->IsSystemPrincipal());
   return performance.forget();
 }
 

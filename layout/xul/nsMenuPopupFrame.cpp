@@ -44,6 +44,7 @@
 #include "nsDisplayList.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"

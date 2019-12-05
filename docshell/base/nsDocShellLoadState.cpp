@@ -14,6 +14,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIChildChannel.h"
 #include "ReferrerInfo.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
@@ -522,7 +523,7 @@ nsresult nsDocShellLoadState::SetupInheritingPrincipal(
   //     created later from the channel's internal data.
   mPrincipalToInherit = mTriggeringPrincipal;
   if (mPrincipalToInherit && aItemType != nsIDocShellTreeItem::typeChrome) {
-    if (nsContentUtils::IsSystemPrincipal(mPrincipalToInherit)) {
+    if (mPrincipalToInherit->IsSystemPrincipal()) {
       if (mPrincipalIsExplicit) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
@@ -591,8 +592,9 @@ void nsDocShellLoadState::CalculateLoadURIFlags() {
   mLoadFlags = 0;
 
   if (mInheritPrincipal) {
-    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mPrincipalToInherit),
-               "Should not inherit SystemPrincipal");
+    MOZ_ASSERT(
+        !mPrincipalToInherit || !mPrincipalToInherit->IsSystemPrincipal(),
+        "Should not inherit SystemPrincipal");
     mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
   }
 

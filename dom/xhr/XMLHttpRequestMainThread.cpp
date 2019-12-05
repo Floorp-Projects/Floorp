@@ -11,6 +11,7 @@
 #  include <unistd.h>
 #endif
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -1350,7 +1351,7 @@ XMLHttpRequestMainThread::GetCurrentJARChannel() {
 }
 
 bool XMLHttpRequestMainThread::IsSystemXHR() const {
-  return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
+  return mIsSystem || mPrincipal->IsSystemPrincipal();
 }
 
 bool XMLHttpRequestMainThread::InUploadPhase() const {
@@ -2030,7 +2031,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
       mResponseXML->SetSuppressParserErrorConsoleMessages(true);
     }
 
-    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    if (mPrincipal->IsSystemPrincipal()) {
       mResponseXML->ForceEnableXULXBL();
     }
 
@@ -2382,7 +2383,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
 
   nsSecurityFlags secFlags;
   nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND;
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+  if (mPrincipal->IsSystemPrincipal()) {
     // When chrome is loading we want to make sure to sandbox any potential
     // result document. We also want to allow cross-origin loads.
     secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |

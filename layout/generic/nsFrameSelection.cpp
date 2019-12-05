@@ -12,6 +12,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
@@ -603,8 +604,7 @@ void nsFrameSelection::Init(mozilla::PresShell* aPresShell,
                               : StaticPrefs::dom_select_events_enabled();
 
   Document* doc = aPresShell->GetDocument();
-  if (initSelectEvents ||
-      (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
+  if (initSelectEvents || (doc && doc->NodePrincipal()->IsSystemPrincipal())) {
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (mDomSelections[index]) {
       mDomSelections[index]->EnableSelectionChangeEvent();

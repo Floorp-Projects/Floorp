@@ -206,7 +206,7 @@ JSObject* GetUAWidgetScope(JSContext* cx, JSObject* contentScopeArg) {
   JSAutoRealm ar(cx, contentScope);
   nsIPrincipal* principal = GetObjectPrincipal(contentScope);
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
+  if (principal->IsSystemPrincipal()) {
     return JS::GetNonCCWObjectGlobal(contentScope);
   }
 

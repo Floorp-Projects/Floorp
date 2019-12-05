@@ -25,6 +25,7 @@
 #include "GeckoProfiler.h"
 #include "KeyboardEvent.h"
 #include "Layers.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/CloseEvent.h"
 #include "mozilla/dom/CustomEvent.h"
@@ -121,7 +122,7 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
     }
   } else if (nsCOMPtr<nsIScriptObjectPrincipal> sop =
                  do_QueryInterface(aEventTarget->GetOwnerGlobal())) {
-    isChrome = nsContentUtils::IsSystemPrincipal(sop->GetPrincipal());
+    isChrome = sop->GetPrincipal()->IsSystemPrincipal();
   }
   return isChrome;
 }

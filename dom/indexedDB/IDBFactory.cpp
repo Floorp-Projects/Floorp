@@ -9,6 +9,7 @@
 #include "BackgroundChildImpl.h"
 #include "IDBRequest.h"
 #include "IndexedDatabaseManager.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SystemGroup.h"
@@ -29,7 +30,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIAboutModule.h"
 #include "nsILoadContext.h"
-#include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIWebNavigation.h"
@@ -344,7 +344,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
+  if (principal->IsSystemPrincipal()) {
     principal.forget(aPrincipal);
     return NS_OK;
   }
@@ -379,7 +379,7 @@ bool IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
     return false;
   }
 
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal->IsSystemPrincipal()) {
     if (aIsSystemPrincipal) {
       *aIsSystemPrincipal = true;
     }

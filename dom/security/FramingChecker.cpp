@@ -15,6 +15,7 @@
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/NullPrincipal.h"

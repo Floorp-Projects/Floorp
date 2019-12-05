@@ -12,7 +12,7 @@
 #  include "nsIXULStore.h"
 #  include "nsIStringEnumerator.h"
 #endif
-
+#include "mozilla/BasePrincipal.h"
 #include "nsIAppWindow.h"
 
 namespace mozilla {
@@ -86,7 +86,7 @@ void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
     return;
   }
   // For non-chrome documents, persistance is simply broken
-  if (!nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal())) {
+  if (!mDocument->NodePrincipal()->IsSystemPrincipal()) {
     return;
   }
 
@@ -156,7 +156,7 @@ nsresult XULPersist::ApplyPersistentAttributes() {
     return NS_ERROR_NOT_AVAILABLE;
   }
   // For non-chrome documents, persistance is simply broken
-  if (!nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal())) {
+  if (!mDocument->NodePrincipal()->IsSystemPrincipal()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

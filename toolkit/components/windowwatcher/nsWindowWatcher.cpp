@@ -59,6 +59,7 @@
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
 #include "nsSimpleEnumerator.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
@@ -401,7 +402,7 @@ static bool CheckUserContextCompatibility(nsIDocShell* aDocShell) {
 
   // DocShell can have UsercontextID set but loading a document with system
   // principal. In this case, we consider everything ok.
-  if (nsContentUtils::IsSystemPrincipal(subjectPrincipal)) {
+  if (subjectPrincipal->IsSystemPrincipal()) {
     return true;
   }
 

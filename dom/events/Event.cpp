@@ -8,6 +8,7 @@
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventStateManager.h"
@@ -716,8 +717,7 @@ double Event::TimeStamp() {
     double ret =
         perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
     MOZ_ASSERT(mOwner->PrincipalOrNull());
-    if (nsContentUtils::IsSystemPrincipal(mOwner->PrincipalOrNull()))
-      return ret;
+    if (mOwner->PrincipalOrNull()->IsSystemPrincipal()) return ret;
 
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         ret, perf->GetRandomTimelineSeed());

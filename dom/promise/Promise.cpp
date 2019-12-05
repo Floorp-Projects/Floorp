@@ -10,6 +10,7 @@
 #include "js/Debug.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
@@ -512,9 +513,10 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
-  bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(
-                                     nsContentUtils::ObjectPrincipal(aPromise))
-                               : IsCurrentThreadRunningChromeWorker();
+  bool isChrome =
+      isMainThread
+          ? nsContentUtils::ObjectPrincipal(aPromise)->IsSystemPrincipal()
+          : IsCurrentThreadRunningChromeWorker();
   nsGlobalWindowInner* win =
       isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
 
