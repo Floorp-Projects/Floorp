@@ -1742,12 +1742,12 @@ pub extern "C" fn wr_transaction_pinch_zoom(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_set_is_transform_pinch_zooming(
+pub extern "C" fn wr_transaction_set_is_transform_async_zooming(
     txn: &mut Transaction,
     animation_id: u64,
     is_zooming: bool
 ) {
-    txn.set_is_transform_pinch_zooming(is_zooming, PropertyBindingId::new(animation_id));
+    txn.set_is_transform_async_zooming(is_zooming, PropertyBindingId::new(animation_id));
 }
 
 #[no_mangle]
