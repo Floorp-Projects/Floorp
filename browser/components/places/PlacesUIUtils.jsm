@@ -1129,7 +1129,7 @@ var PlacesUIUtils = {
     // unload event happens after the browser's one.  In this case
     // top.XULBrowserWindow has been nullified already.
     if (win.top.XULBrowserWindow) {
-      win.top.XULBrowserWindow.setOverLink(url, null);
+      win.top.XULBrowserWindow.setOverLink(url);
     }
   },
 };

@@ -755,7 +755,7 @@
 
       // Call this has the same effect like hovering over link,
       // the browser shows the URL as a tooltip.
-      this._xulBrowserWindow.setOverLink(foundURL || "", null);
+      this._xulBrowserWindow.setOverLink(foundURL || "");
       return true;
     }
 
