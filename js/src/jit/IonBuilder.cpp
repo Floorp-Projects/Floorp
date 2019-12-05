@@ -1844,7 +1844,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
              SN_TYPE(sn) == SRC_FOR_OF);
 
   jsbytecode* backjump =
-      pc + GetSrcNoteOffset(sn, SrcNote::DoWhile::BackJumpOffset);
+      pc + GetSrcNoteOffset(sn, SrcNote::Loop::BackJumpOffset);
   MOZ_ASSERT(backjump > pc);
   MOZ_ASSERT(JSOp(*backjump) == JSOP_IFNE || JSOp(*backjump) == JSOP_IFEQ ||
              JSOp(*backjump) == JSOP_GOTO);

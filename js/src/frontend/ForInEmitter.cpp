@@ -145,7 +145,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   // Set the srcnote offset so we can find the closing jump.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::ForIn::BackJumpOffset,
+  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Loop::BackJumpOffset,
                               loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;
   }
