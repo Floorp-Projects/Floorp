@@ -74,6 +74,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   void notifyStartDelayedAutoplayMedia();
   void notifyMediaMutedChanged(boolean muted);
 
+  static unsigned long countSiteOrigins(sequence<BrowsingContext> roots);
+
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing this interface.  If it can't be loaded here
