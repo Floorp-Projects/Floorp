@@ -103,6 +103,9 @@ using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
+using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
@@ -474,6 +477,12 @@ child:
                               bool minimizeMemoryUsage,
                               FileDescriptor? DMDFile);
     async RequestPerformanceMetrics(nsID aID);
+
+    /**
+     * Used by third-party modules telemetry (aka "untrusted modules" telemetry)
+     * to pull data from content processes.
+     */
+    async GetUntrustedModulesData() returns (UntrustedModulesData? data);
 
     /**
      * Communication between the PuppetBidiKeyboard and the actual
@@ -1477,6 +1486,15 @@ parent:
     * notify chrome process in order to which tab is audible.
     */
     async NotifyMediaAudibleChanged(BrowsingContext aContext, bool aAudible);
+
+    /**
+     * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
+     * obtain enough information about a DLL file to determine its
+     * trustworthiness. This API asks the chrome process to perform that
+     * evaluation.
+     */
+    async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+        returns (ModulesMapResult? modMapResult);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
