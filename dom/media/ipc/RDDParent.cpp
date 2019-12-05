@@ -8,6 +8,7 @@
 #if defined(XP_WIN)
 #  include <process.h>
 #  include <dwrite.h>
+#  include "mozilla/WinDllServices.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -88,6 +89,11 @@ bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   gfxVars::Initialize();
 
   mozilla::ipc::SetThisProcessName("RDD Process");
+
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->StartUntrustedModulesProcessor();
+#endif  // defined(XP_WIN)
   return true;
 }
 
@@ -197,6 +203,22 @@ mozilla::ipc::IPCResult RDDParent::RecvRequestMemoryReport(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RDDParent::RecvGetUntrustedModulesData(
+    GetUntrustedModulesDataResolver&& aResolver) {
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->GetUntrustedModulesData()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aResolver](Maybe<UntrustedModulesData>&& aData) {
+        aResolver(std::move(aData));
+      },
+      [aResolver](nsresult aReason) { aResolver(Nothing()); });
+  return IPC_OK();
+#else
+  return IPC_FAIL(this, "Unsupported on this platform");
+#endif  // defined(XP_WIN)
+}
+
 mozilla::ipc::IPCResult RDDParent::RecvPreferenceUpdate(const Pref& aPref) {
   Preferences::SetPreference(aPref);
   return IPC_OK();
@@ -213,6 +235,11 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   // state.
   ProcessChild::QuickExit();
 #endif
+
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->DisableFull();
+#endif  // defined(XP_WIN)
 
 #ifdef MOZ_GECKO_PROFILER
   if (mProfilerController) {
