@@ -320,8 +320,6 @@ class HomeFragment : Fragment() {
             tabs = getListOfSessions().toTabs()
         ))
 
-        hideToolbar()
-
         requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
         requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
             override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
@@ -434,6 +432,11 @@ class HomeFragment : Fragment() {
         homeViewModel.layoutManagerState =
             sessionControlView.view.layoutManager?.onSaveInstanceState()
         homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideToolbar()
     }
 
     private fun recommendPrivateBrowsingShortcut() {
