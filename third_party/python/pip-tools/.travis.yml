@@ -1,19 +1,22 @@
+dist: xenial
 sudo: false
 language: python
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
-  - "pypy"
+  - "3.7"
 
 env:
+  # NOTE: keep this in sync with envlist in tox.ini for tox-travis.
   - PIP=8.1.1
   - PIP=9.0.1
   - PIP=9.0.3
   - PIP=10.0.1
-  - PIP=master
+  - PIP=18.0
+  - PIP=19.0
   - PIP=latest
+  - PIP=master
 
 cache: pip
 install:
@@ -21,45 +24,59 @@ install:
 script:
   - tox
 
-jobs:
-  include:
-    # Python 3.7 in Travis: https://github.com/travis-ci/travis-ci/issues/9815
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=8.1.1
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=9.0.1
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=9.0.3
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=10.0.1
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=latest
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: PIP=master
+stages:
+- baseline
+- test
+- name: deploy
+  if: repo = jazzband/pip-tools AND tag IS present
 
-    - stage: flake8
+jobs:
+  exclude:
+    - python: "pypy3.5-6.0"
+      env: PIP=8.1.1
+
+    # Baseline jobs (included there/below).
+    - env: PIP=latest
+      python: "3.7"
+    - env: PIP=latest
+      python: "2.7"
+
+  include:
+    # Baseline stage to abort early.
+    - stage: baseline
+      env: PIP=latest
+      python: "3.7"
+    - env: PIP=latest
+      python: "2.7"
+
+    # QA checks.
+    - env: TOXENV=checkqa
+      python: 3.7
+      after_success: skip  # No need coverage
+      cache:
+        directories:
+          - $HOME/.cache/pre-commit
+    - env: TOXENV=readme
       python: 2.7
-      env: TOXENV=flake8
-    - stage: readme
-      python: 2.7
-      env: TOXENV=readme
+      after_success: skip  # No need coverage
+
+    # Default stage (used with matrix).
+    - stage: test
+      python: 3.8-dev
+      env: PIP=latest
+
+    # Only test pypy/pypy3 with latest pip.
+    - env: PIP=latest
+      python: "pypy2.7-6.0"
+    - env: PIP=latest
+      python: "pypy3.5-6.0"
+
     - stage: deploy
       install: skip  # No need to install tox-travis on deploy.
       script: skip  # No test on the deploy stage.
       python: 2.7
       env: skip  # No special env required.
+      after_success: true  # No need coverage
       deploy:
         provider: pypi
         user: jazzband
@@ -70,6 +87,14 @@ jobs:
         on:
           tags: true
           repo: jazzband/pip-tools
-
   allow_failures:
     - env: PIP=master
+    - python: 3.8-dev
+
+after_success:
+  - travis_retry pip install codecov coveralls
+  - codecov -n "py${TRAVIS_PYTHON_VERSION}-pip${PIP}-${TRAVIS_OS_NAME}"
+  - "COVERALLS_PARALLEL=true coveralls"
+
+notifications:
+  webhooks: https://coveralls.io/webhook

@@ -1,40 +1,59 @@
 # coding: utf-8
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+import collections
 import hashlib
 import os
 from contextlib import contextmanager
 from shutil import rmtree
 
-from .._compat import (
-    is_file_url,
-    url_to_path,
-    PackageFinder,
-    RequirementSet,
-    Wheel,
-    FAVORITE_HASH,
-    TemporaryDirectory,
-    PyPI
-)
+import pip
+import pkg_resources
 
+from .._compat import (
+    FAVORITE_HASH,
+    Link,
+    PackageFinder,
+    PyPI,
+    RequirementSet,
+    TemporaryDirectory,
+    Wheel,
+    contextlib,
+    is_dir_url,
+    is_file_url,
+    is_vcs_url,
+    path_to_url,
+    url_to_path,
+)
 from ..cache import CACHE_DIR
+from ..click import progressbar
 from ..exceptions import NoCandidateFound
-from ..utils import (fs_str, is_pinned_requirement, lookup_table,
-                     make_install_requirement)
+from ..logging import log
+from ..utils import (
+    fs_str,
+    is_pinned_requirement,
+    is_url_requirement,
+    lookup_table,
+    make_install_requirement,
+)
 from .base import BaseRepository
 
 try:
     from pip._internal.req.req_tracker import RequirementTracker
 except ImportError:
+
     @contextmanager
     def RequirementTracker():
         yield
+
 
 try:
     from pip._internal.cache import WheelCache
 except ImportError:
     from pip.wheel import WheelCache
+
+FILE_CHUNK_SIZE = 4096
+FileStream = collections.namedtuple("FileStream", "stream size")
 
 
 class PyPIRepository(BaseRepository):
@@ -46,22 +65,34 @@ class PyPIRepository(BaseRepository):
     config), but any other PyPI mirror can be used if index_urls is
     changed/configured on the Finder.
     """
-    def __init__(self, pip_options, session):
+
+    def __init__(self, pip_options, session, build_isolation=False):
         self.session = session
         self.pip_options = pip_options
+        self.build_isolation = build_isolation
 
         index_urls = [pip_options.index_url] + pip_options.extra_index_urls
         if pip_options.no_index:
             index_urls = []
 
-        self.finder = PackageFinder(
-            find_links=pip_options.find_links,
-            index_urls=index_urls,
-            trusted_hosts=pip_options.trusted_hosts,
-            allow_all_prereleases=pip_options.pre,
-            process_dependency_links=pip_options.process_dependency_links,
-            session=self.session,
-        )
+        finder_kwargs = {
+            "find_links": pip_options.find_links,
+            "index_urls": index_urls,
+            "trusted_hosts": pip_options.trusted_hosts,
+            "allow_all_prereleases": pip_options.pre,
+            "session": self.session,
+        }
+
+        # pip 19.0 has removed process_dependency_links
+        # from the PackageFinder constructor
+        if pkg_resources.parse_version(pip.__version__) < pkg_resources.parse_version(
+            "19.0"
+        ):
+            finder_kwargs[
+                "process_dependency_links"
+            ] = pip_options.process_dependency_links
+
+        self.finder = PackageFinder(**finder_kwargs)
 
         # Caches
         # stores project_name => InstallationCandidate mappings for all
@@ -76,16 +107,16 @@ class PyPIRepository(BaseRepository):
 
         # Setup file paths
         self.freshen_build_caches()
-        self._download_dir = fs_str(os.path.join(CACHE_DIR, 'pkgs'))
-        self._wheel_download_dir = fs_str(os.path.join(CACHE_DIR, 'wheels'))
+        self._download_dir = fs_str(os.path.join(CACHE_DIR, "pkgs"))
+        self._wheel_download_dir = fs_str(os.path.join(CACHE_DIR, "wheels"))
 
     def freshen_build_caches(self):
         """
         Start with fresh build/source caches.  Will remove any old build
         caches from disk automatically.
         """
-        self._build_dir = TemporaryDirectory(fs_str('build'))
-        self._source_dir = TemporaryDirectory(fs_str('source'))
+        self._build_dir = TemporaryDirectory(fs_str("build"))
+        self._source_dir = TemporaryDirectory(fs_str("source"))
 
     @property
     def build_dir(self):
@@ -110,23 +141,38 @@ class PyPIRepository(BaseRepository):
         Returns a Version object that indicates the best match for the given
         InstallRequirement according to the external repository.
         """
-        if ireq.editable:
+        if ireq.editable or is_url_requirement(ireq):
             return ireq  # return itself as the best match
 
         all_candidates = self.find_all_candidates(ireq.name)
-        candidates_by_version = lookup_table(all_candidates, key=lambda c: c.version, unique=True)
-        matching_versions = ireq.specifier.filter((candidate.version for candidate in all_candidates),
-                                                  prereleases=prereleases)
+        candidates_by_version = lookup_table(
+            all_candidates, key=lambda c: c.version, unique=True
+        )
+        matching_versions = ireq.specifier.filter(
+            (candidate.version for candidate in all_candidates), prereleases=prereleases
+        )
 
         # Reuses pip's internal candidate sort key to sort
         matching_candidates = [candidates_by_version[ver] for ver in matching_versions]
         if not matching_candidates:
             raise NoCandidateFound(ireq, all_candidates, self.finder)
-        best_candidate = max(matching_candidates, key=self.finder._candidate_sort_key)
+
+        # pip <= 19.0.3
+        if hasattr(self.finder, "_candidate_sort_key"):
+            best_candidate = max(
+                matching_candidates, key=self.finder._candidate_sort_key
+            )
+        # pip >= 19.1
+        else:
+            evaluator = self.finder.candidate_evaluator
+            best_candidate = evaluator.get_best_candidate(matching_candidates)
 
         # Turn the candidate into a pinned InstallRequirement
         return make_install_requirement(
-            best_candidate.project, best_candidate.version, ireq.extras, constraint=ireq.constraint
+            best_candidate.project,
+            best_candidate.version,
+            ireq.extras,
+            constraint=ireq.constraint,
         )
 
     def resolve_reqs(self, download_dir, ireq, wheel_cache):
@@ -142,39 +188,39 @@ class PyPIRepository(BaseRepository):
                 download_dir=download_dir,
                 wheel_download_dir=self._wheel_download_dir,
                 session=self.session,
-                wheel_cache=wheel_cache
+                wheel_cache=wheel_cache,
             )
             results = reqset._prepare_file(self.finder, ireq)
         else:
             # pip >= 10
             preparer_kwargs = {
-                'build_dir': self.build_dir,
-                'src_dir': self.source_dir,
-                'download_dir': download_dir,
-                'wheel_download_dir': self._wheel_download_dir,
-                'progress_bar': 'off',
-                'build_isolation': False
+                "build_dir": self.build_dir,
+                "src_dir": self.source_dir,
+                "download_dir": download_dir,
+                "wheel_download_dir": self._wheel_download_dir,
+                "progress_bar": "off",
+                "build_isolation": self.build_isolation,
             }
             resolver_kwargs = {
-                'finder': self.finder,
-                'session': self.session,
-                'upgrade_strategy': "to-satisfy-only",
-                'force_reinstall': False,
-                'ignore_dependencies': False,
-                'ignore_requires_python': False,
-                'ignore_installed': True,
-                'isolated': False,
-                'wheel_cache': wheel_cache,
-                'use_user_site': False
+                "finder": self.finder,
+                "session": self.session,
+                "upgrade_strategy": "to-satisfy-only",
+                "force_reinstall": False,
+                "ignore_dependencies": False,
+                "ignore_requires_python": False,
+                "ignore_installed": True,
+                "isolated": False,
+                "wheel_cache": wheel_cache,
+                "use_user_site": False,
             }
             resolver = None
             preparer = None
             with RequirementTracker() as req_tracker:
                 # Pip 18 uses a requirement tracker to prevent fork bombs
                 if req_tracker:
-                    preparer_kwargs['req_tracker'] = req_tracker
+                    preparer_kwargs["req_tracker"] = req_tracker
                 preparer = RequirementPreparer(**preparer_kwargs)
-                resolver_kwargs['preparer'] = preparer
+                resolver_kwargs["preparer"] = preparer
                 reqset = RequirementSet()
                 ireq.is_direct = True
                 reqset.add_requirement(ireq)
@@ -187,12 +233,18 @@ class PyPIRepository(BaseRepository):
 
     def get_dependencies(self, ireq):
         """
-        Given a pinned or an editable InstallRequirement, returns a set of
+        Given a pinned, URL, or editable InstallRequirement, returns a set of
         dependencies (also InstallRequirements, but not necessarily pinned).
         They indicate the secondary dependencies for the given requirement.
         """
-        if not (ireq.editable or is_pinned_requirement(ireq)):
-            raise TypeError('Expected pinned or editable InstallRequirement, got {}'.format(ireq))
+        if not (
+            ireq.editable or is_url_requirement(ireq) or is_pinned_requirement(ireq)
+        ):
+            raise TypeError(
+                "Expected url, pinned or editable InstallRequirement, got {}".format(
+                    ireq
+                )
+            )
 
         if ireq not in self._dependencies_cache:
             if ireq.editable and (ireq.source_dir and os.path.exists(ireq.source_dir)):
@@ -212,15 +264,17 @@ class PyPIRepository(BaseRepository):
                 os.makedirs(self._wheel_download_dir)
 
             wheel_cache = WheelCache(CACHE_DIR, self.pip_options.format_control)
-            prev_tracker = os.environ.get('PIP_REQ_TRACKER')
+            prev_tracker = os.environ.get("PIP_REQ_TRACKER")
             try:
-                self._dependencies_cache[ireq] = self.resolve_reqs(download_dir, ireq, wheel_cache)
+                self._dependencies_cache[ireq] = self.resolve_reqs(
+                    download_dir, ireq, wheel_cache
+                )
             finally:
-                if 'PIP_REQ_TRACKER' in os.environ:
+                if "PIP_REQ_TRACKER" in os.environ:
                     if prev_tracker:
-                        os.environ['PIP_REQ_TRACKER'] = prev_tracker
+                        os.environ["PIP_REQ_TRACKER"] = prev_tracker
                     else:
-                        del os.environ['PIP_REQ_TRACKER']
+                        del os.environ["PIP_REQ_TRACKER"]
                 try:
                     self.wheel_cache.cleanup()
                 except AttributeError:
@@ -230,15 +284,32 @@ class PyPIRepository(BaseRepository):
     def get_hashes(self, ireq):
         """
         Given an InstallRequirement, return a set of hashes that represent all
-        of the files for a given requirement. Editable requirements return an
+        of the files for a given requirement. Unhashable requirements return an
         empty set. Unpinned requirements raise a TypeError.
         """
-        if ireq.editable:
-            return set()
+
+        if ireq.link:
+            link = ireq.link
+
+            if is_vcs_url(link) or (is_file_url(link) and is_dir_url(link)):
+                # Return empty set for unhashable requirements.
+                # Unhashable logic modeled on pip's
+                # RequirementPreparer.prepare_linked_requirement
+                return set()
+
+            if is_url_requirement(ireq):
+                # Directly hash URL requirements.
+                # URL requirements may have been previously downloaded and cached
+                # locally by self.resolve_reqs()
+                cached_path = os.path.join(self._download_dir, link.filename)
+                if os.path.exists(cached_path):
+                    cached_link = Link(path_to_url(cached_path))
+                else:
+                    cached_link = link
+                return {self._get_file_hash(cached_link)}
 
         if not is_pinned_requirement(ireq):
-            raise TypeError(
-                "Expected pinned requirement, got {}".format(ireq))
+            raise TypeError("Expected pinned requirement, got {}".format(ireq))
 
         # We need to get all of the candidates that match our current version
         # pin, these will represent all of the files that could possibly
@@ -246,19 +317,34 @@ class PyPIRepository(BaseRepository):
         all_candidates = self.find_all_candidates(ireq.name)
         candidates_by_version = lookup_table(all_candidates, key=lambda c: c.version)
         matching_versions = list(
-            ireq.specifier.filter((candidate.version for candidate in all_candidates)))
+            ireq.specifier.filter((candidate.version for candidate in all_candidates))
+        )
         matching_candidates = candidates_by_version[matching_versions[0]]
 
+        log.debug("  {}".format(ireq.name))
+
         return {
-            self._get_file_hash(candidate.location)
-            for candidate in matching_candidates
+            self._get_file_hash(candidate.location) for candidate in matching_candidates
         }
 
     def _get_file_hash(self, location):
+        log.debug("    Hashing {}".format(location.url_without_fragment))
         h = hashlib.new(FAVORITE_HASH)
-        with open_local_or_remote_file(location, self.session) as fp:
-            for chunk in iter(lambda: fp.read(8096), b""):
-                h.update(chunk)
+        with open_local_or_remote_file(location, self.session) as f:
+            # Chunks to iterate
+            chunks = iter(lambda: f.stream.read(FILE_CHUNK_SIZE), b"")
+
+            # Choose a context manager depending on verbosity
+            if log.verbosity >= 1:
+                iter_length = f.size / FILE_CHUNK_SIZE if f.size else None
+                context_manager = progressbar(chunks, length=iter_length, label="  ")
+            else:
+                context_manager = contextlib.nullcontext(chunks)
+
+            # Iterate over the chosen context manager
+            with context_manager as bar:
+                for chunk in bar:
+                    h.update(chunk)
         return ":".join([FAVORITE_HASH, h.hexdigest()])
 
     @contextmanager
@@ -266,9 +352,10 @@ class PyPIRepository(BaseRepository):
         """
         Monkey patches pip.Wheel to allow wheels from all platforms and Python versions.
 
-        This also saves the candidate cache and set a new one, or else the results from the
-        previous non-patched calls will interfere.
+        This also saves the candidate cache and set a new one, or else the results from
+        the previous non-patched calls will interfere.
         """
+
         def _wheel_supported(self, tags=None):
             # Ignore current platform. Support everything.
             return True
@@ -301,7 +388,7 @@ def open_local_or_remote_file(link, session):
     :type link: pip.index.Link
     :type session: requests.Session
     :raises ValueError: If link points to a local directory.
-    :return: a context manager to the opened file-like object
+    :return: a context manager to a FileStream with the opened file-like object
     """
     url = link.url_without_fragment
 
@@ -311,13 +398,21 @@ def open_local_or_remote_file(link, session):
         if os.path.isdir(local_path):
             raise ValueError("Cannot open directory for read: {}".format(url))
         else:
-            with open(local_path, 'rb') as local_file:
-                yield local_file
+            st = os.stat(local_path)
+            with open(local_path, "rb") as local_file:
+                yield FileStream(stream=local_file, size=st.st_size)
     else:
         # Remote URL
         headers = {"Accept-Encoding": "identity"}
         response = session.get(url, headers=headers, stream=True)
+
+        # Content length must be int or None
         try:
-            yield response.raw
+            content_length = int(response.headers["content-length"])
+        except (ValueError, KeyError, TypeError):
+            content_length = None
+
+        try:
+            yield FileStream(stream=response.raw, size=content_length)
         finally:
             response.close()

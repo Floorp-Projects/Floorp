@@ -1,3 +1,128 @@
+# 3.9.0 (2019-07-17)
+
+Features:
+- Print provenance information when `pip-compile` fails
+([#837](https://github.com/jazzband/pip-tools/pull/837)). Thanks @jakevdp
+
+Bug Fixes:
+- Output all logging to stderr instead of stdout
+([#834](https://github.com/jazzband/pip-tools/pull/834)). Thanks @georgek
+- Fix output file update with `--dry-run` option in `pip-compile`
+([#842](https://github.com/jazzband/pip-tools/pull/842)). Thanks @shipmints and @atugushev
+
+# 3.8.0 (2019-06-06)
+
+Features:
+- Options `--upgrade` and `--upgrade-package` are no longer mutually exclusive
+([#831](https://github.com/jazzband/pip-tools/pull/831)). Thanks @adamchainz
+
+Bug Fixes:
+- Fix `--generate-hashes` with bare VCS URLs
+([#812](https://github.com/jazzband/pip-tools/pull/812)). Thanks @jcushman
+- Fix issues with `UnicodeError` when installing `pip-tools` from source in some systems
+([#816](https://github.com/jazzband/pip-tools/pull/816)). Thanks @AbdealiJK
+- Respect `--pre` option in the input file
+([#822](https://github.com/jazzband/pip-tools/pull/822)). Thanks @atugushev
+- Option `--upgrade-package` now works even if the output file does not exist
+([#831](https://github.com/jazzband/pip-tools/pull/831)). Thanks @adamchainz
+
+
+# 3.7.0 (2019-05-09)
+
+Features:
+- Show progressbar on generation hashes in `pip-compile` verbose mode
+([#743](https://github.com/jazzband/pip-tools/pull/743)). Thanks @atugushev
+- Add options `--cert` and `--client-cert` to `pip-sync`
+([#798](https://github.com/jazzband/pip-tools/pull/798)). Thanks @atugushev
+- Add support for `--find-links` in `pip-compile` output
+([#793](https://github.com/jazzband/pip-tools/pull/793)). Thanks @estan and @atugushev
+- Normalize «command to run» in `pip-compile` headers
+([#800](https://github.com/jazzband/pip-tools/pull/800)). Thanks @atugushev
+- Support URLs as packages
+([#807](https://github.com/jazzband/pip-tools/pull/807)). Thanks @jcushman, @nim65s and @toejough
+
+Bug Fixes:
+- Fix replacing password to asterisks in `pip-compile`
+([#808](https://github.com/jazzband/pip-tools/pull/808)). Thanks @atugushev
+
+# 3.6.1 (2019-04-24)
+
+Bug Fixes:
+- Fix `pip>=19.1` compatibility
+([#795](https://github.com/jazzband/pip-tools/pull/795)). Thanks @atugushev
+
+# 3.6.0 (2019-04-03)
+
+Features:
+- Show less output on `pip-sync` with `--quiet` option
+([#765](https://github.com/jazzband/pip-tools/pull/765)). Thanks @atugushev
+- Support the flag `--trusted-host` in `pip-sync`
+([#777](https://github.com/jazzband/pip-tools/pull/777)). Thanks @firebirdberlin
+
+# 3.5.0 (2019-03-13)
+
+Features:
+- Show default index url provided by `pip`
+([#735](https://github.com/jazzband/pip-tools/pull/735)). Thanks @atugushev
+- Add an option to allow enabling/disabling build isolation
+([#758](https://github.com/jazzband/pip-tools/pull/758)). Thanks @atugushev
+
+Bug Fixes:
+- Fix the output file for `pip-compile` with an explicit `setup.py` as source file
+([#731](https://github.com/jazzband/pip-tools/pull/731)). Thanks @atugushev
+- Fix order issue with generated lock file when `hashes` and `markers` are used together
+([#763](https://github.com/jazzband/pip-tools/pull/763)). Thanks @milind-shakya-sp
+
+# 3.4.0 (2019-02-19)
+
+Features:
+- Add option `--quiet` to `pip-compile`
+([#720](https://github.com/jazzband/pip-tools/pull/720)). Thanks @bendikro
+- Emit the original command to the `pip-compile`'s header
+([#733](https://github.com/jazzband/pip-tools/pull/733)). Thanks @atugushev
+
+Bug Fixes:
+- Fix `pip-sync` to use pip script depending on a python version
+([#737](https://github.com/jazzband/pip-tools/pull/737)). Thanks @atugushev
+
+# 3.3.2 (2019-01-26)
+
+Bug Fixes:
+- Fix `pip-sync` with a temporary requirement file on Windows
+([#723](https://github.com/jazzband/pip-tools/pull/723)). Thanks @atugushev
+- Fix `pip-sync` to prevent uninstall of stdlib and dev packages
+([#718](https://github.com/jazzband/pip-tools/pull/718)). Thanks @atugushev
+
+# 3.3.1 (2019-01-24)
+
+- Re-release of 3.3.0 after fixing the deployment pipeline
+([#716](https://github.com/jazzband/pip-tools/issues/716)). Thanks @atugushev
+
+# 3.3.0 (2019-01-23)
+(Unreleased - Deployment pipeline issue, see 3.3.1)
+
+Features:
+- Added support of `pip` 19.0
+([#715](https://github.com/jazzband/pip-tools/pull/715)). Thanks @atugushev
+- Add `--allow-unsafe` to update instructions in the generated `requirements.txt`
+([#708](https://github.com/jazzband/pip-tools/pull/708)). Thanks @richafrank
+
+Bug Fixes:
+- Fix `pip-sync` to check hashes
+([#706](https://github.com/jazzband/pip-tools/pull/706)). Thanks @atugushev
+
+# 3.2.0 (2018-12-18)
+
+Features:
+- Apply version constraints specified with package upgrade option (`-P, --upgrade-package`)
+([#694](https://github.com/jazzband/pip-tools/pull/694)). Thanks @richafrank
+
+# 3.1.0 (2018-10-05)
+
+Features:
+- Added support of `pip` 18.1
+([#689](https://github.com/jazzband/pip-tools/pull/689)). Thanks @vphilippon
+
 # 3.0.0 (2018-09-24)
 
 Major changes:
