@@ -239,9 +239,14 @@ const tests = [
   async function() {
     info("Type something, click on bookmark entry.");
     gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    let url = "http://example.com/?q=%s";
+    let promise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      url
+    );
     await promiseAutocompleteResultPopup("exa", window, true);
-    while (gURLBar.untrimmedValue != "http://example.com/?q=%s") {
+    while (gURLBar.untrimmedValue != url) {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     let element = UrlbarTestUtils.getSelectedRow(window);
