@@ -30,6 +30,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "getAriaRoles",
+  "devtools/server/actors/utils/accessibility",
+  true
+);
+
 const {
   accessibility: {
     AUDIT_TYPE: { KEYBOARD },
@@ -125,27 +132,6 @@ function isInvalidNode(node) {
     node.nodeType !== nodeConstants.ELEMENT_NODE ||
     !node.ownerGlobal
   );
-}
-
-/**
- * Get role attribute for an accessible object if specified for its
- * corresponding DOMNode.
- *
- * @param   {nsIAccessible} accessible
- *          Accessible for which to determine its role attribute value.
- *
- * @returns {null|String}
- *          Role attribute value if specified.
- */
-function getAriaRoles(accessible) {
-  try {
-    return accessible.attributes.getStringProperty("xml-roles");
-  } catch (e) {
-    // No xml-roles. nsPersistentProperties throws if the attribute for a key
-    // is not found.
-  }
-
-  return null;
 }
 
 /**
