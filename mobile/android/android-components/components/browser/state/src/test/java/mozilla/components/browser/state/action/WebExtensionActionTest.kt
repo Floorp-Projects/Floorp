@@ -188,4 +188,20 @@ class WebExtensionActionTest {
         store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true)).joinBlocking()
         assertTrue(store.state.extensions[extension.id]?.enabled!!)
     }
+
+    @Test
+    fun `UpdateWebExtension -  Update an existing extension`() {
+        val existingExtension = WebExtensionState("id", "url")
+        val updatedExtension = WebExtensionState("id", "url2")
+
+        val store = BrowserStore(
+            initialState = BrowserState(
+                extensions = mapOf("id" to existingExtension)
+            )
+        )
+
+        store.dispatch(WebExtensionAction.UpdateWebExtension(updatedExtension)).joinBlocking()
+        assertEquals(updatedExtension, store.state.extensions.values.first())
+        assertSame(updatedExtension, store.state.extensions.values.first())
+    }
 }

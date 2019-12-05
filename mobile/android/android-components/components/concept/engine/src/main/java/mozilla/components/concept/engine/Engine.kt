@@ -141,6 +141,26 @@ interface Engine {
     ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
+     * Updates the provided [extension] if a new version is available.
+     *
+     * @param extension the extension to be updated.
+     * @param onSuccess (optional) callback invoked if the extension was updated successfully,
+     * providing access to the [WebExtension] object for bi-directional messaging, if null is provided
+     * that means that the [WebExtension] hasn't been change since the last update.
+     * @param onError (optional) callback invoked if there was an error updating the extension.
+     * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
+     * have web extension support.
+     */
+    fun updateWebExtension(
+        extension: WebExtension,
+        onSuccess: ((WebExtension?) -> Unit) = { },
+        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+    ): Unit = onError(
+        extension.id,
+        UnsupportedOperationException("Web extension support is not available in this engine")
+    )
+
+    /**
      * Uninstalls the provided extension from this engine.
      *
      * @param ext the [WebExtension] to uninstall.

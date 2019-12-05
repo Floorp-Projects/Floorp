@@ -35,6 +35,8 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
@@ -81,6 +83,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             supportMultipleWindows = true
         }
     }
+
+    val addonUpdater =
+        DefaultAddonUpdater(applicationContext, AddonUpdater.Frequency(1, TimeUnit.DAYS))
 
     // Engine
     open val engine: Engine by lazy {
@@ -132,7 +137,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     // Addons
     val addonManager by lazy {
-        AddonManager(store, addonCollectionProvider)
+        AddonManager(store, engine, addonCollectionProvider, addonUpdater)
     }
 
     val addonCollectionProvider by lazy {

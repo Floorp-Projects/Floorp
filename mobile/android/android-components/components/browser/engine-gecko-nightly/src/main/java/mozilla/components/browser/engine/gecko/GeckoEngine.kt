@@ -225,6 +225,19 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.updateWebExtension].
+     */
+    override fun updateWebExtension(
+        extension: WebExtension,
+        onSuccess: (WebExtension?) -> Unit,
+        onError: (String, Throwable) -> Unit
+    ) {
+        // GeckoView support for updating extensions hasn't been implemented yet
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
+        onSuccess(null)
+    }
+
+    /**
      * See [Engine.registerWebExtensionDelegate].
      */
     override fun registerWebExtensionDelegate(

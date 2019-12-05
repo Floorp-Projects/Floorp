@@ -52,6 +52,9 @@ internal object WebExtensionReducer {
                     it.copy(browserAction = action.browserAction)
                 }
             }
+            is WebExtensionAction.UpdateWebExtension -> {
+                state.updateWebExtensionState(action.updatedExtension.id) { action.updatedExtension }
+            }
         }
     }
 

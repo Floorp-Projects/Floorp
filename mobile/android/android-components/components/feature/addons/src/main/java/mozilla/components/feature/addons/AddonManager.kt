@@ -7,6 +7,11 @@ package mozilla.components.feature.addons
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.addons.update.AddonUpdater.Status
+import mozilla.components.feature.addons.update.GlobalAddonManagerProvider
 import mozilla.components.support.webextensions.WebExtensionSupport
 
 /**
@@ -17,8 +22,14 @@ import mozilla.components.support.webextensions.WebExtensionSupport
  */
 class AddonManager(
     private val store: BrowserStore,
-    private val addonsProvider: AddonsProvider
+    private val engine: Engine,
+    private val addonsProvider: AddonsProvider,
+    private val addonUpdater: AddonUpdater
 ) {
+
+    init {
+        GlobalAddonManagerProvider.initialize(this)
+    }
 
     /**
      * Returns the list of all installed and recommended add-ons.
@@ -48,6 +59,35 @@ class AddonManager(
         } catch (throwable: Throwable) {
             throw AddonManagerException(throwable)
         }
+    }
+
+    /**
+     * Try updates the addon with the provided [id] by updating it in the the [store] and re-attaching
+     * all the handlers. If there is no update available nothing will happen.
+     */
+    fun updateAddon(id: String, onFinish: ((Status) -> Unit)) {
+        val extension = WebExtensionSupport.installedExtensions[id]
+
+        if (extension == null) {
+            onFinish(Status.NotInstalled)
+            return
+        }
+
+        val onSuccess: ((WebExtension?) -> Unit) = { updatedExtension ->
+            val status = if (updatedExtension == null) {
+                Status.NoUpdateAvailable
+            } else {
+                WebExtensionSupport.markExtensionAsUpdated(store, updatedExtension)
+                Status.SuccessfullyUpdated
+            }
+            onFinish(status)
+        }
+
+        val onError: ((String, Throwable) -> Unit) = { message, exception ->
+            onFinish(Status.Error(message, exception))
+        }
+
+        engine.updateWebExtension(extension, onSuccess, onError)
     }
 }
 

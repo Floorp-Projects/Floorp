@@ -4,7 +4,6 @@
 
 package mozilla.components.support.webextensions
 
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.collect
@@ -34,8 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")
 
-    @VisibleForTesting
-    internal val installedExtensions = ConcurrentHashMap<String, WebExtension>()
+    val installedExtensions = ConcurrentHashMap<String, WebExtension>()
 
     /**
      * A [Deferred] completed during [initialize] once the state of all
@@ -180,13 +178,34 @@ object WebExtensionSupport {
         installedExtensions[webExtension.id] = webExtension
         store.dispatch(WebExtensionAction.InstallWebExtensionAction(webExtension.toState()))
 
-        // Register action handler for all existing engine sessions on the new extension
+        // Register action handler for all existing engine sessions on the new extension,
+        // an issue was filed to get us an API, so we don't have to do this per extension:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1603559
         store.state.tabs
             .forEach { tab ->
                 tab.engineState.engineSession?.let { session ->
                     registerSessionActionHandler(webExtension, session, SessionActionHandler(store, tab.id))
                 }
             }
+    }
+
+    /**
+     * Marks the provided [updatedExtension] as updated in the [store].
+     */
+    fun markExtensionAsUpdated(store: BrowserStore, updatedExtension: WebExtension) {
+        installedExtensions[updatedExtension.id] = updatedExtension
+        store.dispatch(WebExtensionAction.UpdateWebExtension(updatedExtension.toState()))
+
+        // Register action handler for all existing engine sessions on the new extension
+        store.state.tabs.forEach { tab ->
+            tab.engineState.engineSession?.let { session ->
+                registerSessionActionHandler(
+                    updatedExtension,
+                    session,
+                    SessionActionHandler(store, tab.id)
+                )
+            }
+        }
     }
 
     /**
