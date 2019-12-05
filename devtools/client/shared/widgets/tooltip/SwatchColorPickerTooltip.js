@@ -119,11 +119,12 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     this.spectrum.contrastEnabled =
       name === "color" && this.isContrastCompatible;
     if (this.spectrum.contrastEnabled) {
-      this.spectrum.textProps = await this.inspector.pageStyle.getComputed(
-        this.inspector.selection.nodeFront,
-        { filterProperties: ["font-size", "font-weight", "opacity"] }
-      );
-      this.spectrum.backgroundColorData = await this.inspector.selection.nodeFront.getBackgroundColor();
+      const { nodeFront } = this.inspector.selection;
+      const { pageStyle } = nodeFront.inspectorFront;
+      this.spectrum.textProps = await pageStyle.getComputed(nodeFront, {
+        filterProperties: ["font-size", "font-weight", "opacity"],
+      });
+      this.spectrum.backgroundColorData = await nodeFront.getBackgroundColor();
     }
 
     // Then set spectrum's color and listen to color changes to preview them
