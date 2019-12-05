@@ -5,7 +5,7 @@
 
 "use strict";
 
-function run_test() {
+add_task(async function setup() {
   let defaultBranch = Services.prefs.getDefaultBranch(
     SearchUtils.BROWSER_SEARCH_PREF
   );
@@ -16,16 +16,10 @@ function run_test() {
 
   // The test engines used in this test need to be recognized as 'default'
   // engines or the resource URL won't be used
-  let url = "resource://test/data/";
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+  await useTestEngines();
 
   Assert.ok(!Services.search.isInitialized);
-
-  run_next_test();
-}
+});
 
 add_task(async function test_disthidden() {
   await AddonTestUtils.promiseStartupManager();
