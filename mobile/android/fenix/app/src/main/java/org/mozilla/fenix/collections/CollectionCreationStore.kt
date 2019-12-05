@@ -9,7 +9,7 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.collections.CollectionCreationAction.StepChanged
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.Tab
 
 class CollectionCreationStore(
     initialState: CollectionCreationState

@@ -4,17 +4,13 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Outline
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.jetbrains.anko.imageBitmap
@@ -23,41 +19,31 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
-import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.home.sessioncontrol.TabAction
-import org.mozilla.fenix.home.sessioncontrol.onNext
+import org.mozilla.fenix.home.Tab
+import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
 class TabViewHolder(
     view: View,
-    actionEmitter: Observer<SessionControlAction>,
+    interactor: TabSessionInteractor,
     override val containerView: View? = view
 ) :
     RecyclerView.ViewHolder(view), LayoutContainer {
 
     internal var tab: Tab? = null
-    private var tabMenu: TabItemMenu
 
     init {
-        tabMenu = TabItemMenu(view.context) {
-            when (it) {
-                is TabItemMenu.Item.Share ->
-                    actionEmitter.onNext(TabAction.Share(tab?.sessionId!!))
-            }
-        }
-
         item_tab.setOnClickListener {
-            actionEmitter.onNext(TabAction.Select(it, tab?.sessionId!!))
+            interactor.onSelectTab(it, tab?.sessionId!!)
         }
 
         item_tab.setOnLongClickListener {
             view.context.components.analytics.metrics.track(Event.CollectionTabLongPressed)
-            actionEmitter.onNext(TabAction.SaveTabGroup(tab?.sessionId!!))
-            true
+            interactor.onSaveToCollection(tab?.sessionId!!)
+            return@setOnLongClickListener true
         }
 
         close_tab_button.setOnClickListener {
-            actionEmitter.onNext(TabAction.Close(tab?.sessionId!!))
+            interactor.onCloseTab(tab?.sessionId!!)
         }
 
         play_pause_button.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
@@ -66,12 +52,12 @@ class TabViewHolder(
             when (tab?.mediaState) {
                 is MediaState.Playing -> {
                     it.context.components.analytics.metrics.track(Event.TabMediaPlay)
-                    actionEmitter.onNext(TabAction.PauseMedia(tab?.sessionId!!))
+                    interactor.onPauseMediaClicked()
                 }
 
                 is MediaState.Paused -> {
                     it.context.components.analytics.metrics.track(Event.TabMediaPause)
-                    actionEmitter.onNext(TabAction.PlayMedia(tab?.sessionId!!))
+                    interactor.onPlayMediaClicked()
                 }
             }
         }
@@ -153,26 +139,5 @@ class TabViewHolder(
         private const val PLAY_PAUSE_BUTTON_EXTRA_DPS = 24
         const val LAYOUT_ID = R.layout.tab_list_row
         const val favIconBorderRadiusInPx = 4
-    }
-}
-
-class TabItemMenu(
-    private val context: Context,
-    private val onItemTapped: (Item) -> Unit = {}
-) {
-    sealed class Item {
-        object Share : Item()
-    }
-
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
-
-    private val menuItems by lazy {
-        listOf(
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_share)
-            ) {
-                onItemTapped.invoke(Item.Share)
-            }
-        )
     }
 }

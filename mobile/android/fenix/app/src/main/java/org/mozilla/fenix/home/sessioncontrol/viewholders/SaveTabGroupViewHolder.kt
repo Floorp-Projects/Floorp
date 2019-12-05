@@ -6,26 +6,22 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.save_tab_group_button.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
-import org.mozilla.fenix.home.sessioncontrol.TabAction
-import org.mozilla.fenix.home.sessioncontrol.onNext
+import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
 class SaveTabGroupViewHolder(
     view: View,
-    private val actionEmitter: Observer<SessionControlAction>
+    private val interactor: TabSessionInteractor
 ) : RecyclerView.ViewHolder(view) {
 
     init {
         view.save_tab_group_button.setOnClickListener {
             view.context.components.analytics.metrics
                 .track(Event.CollectionSaveButtonPressed(TELEMETRY_HOME_IDENTIFIER))
-
-            actionEmitter.onNext(TabAction.SaveTabGroup(selectedTabSessionId = null))
+            interactor.onSaveToCollection(sessionId = null)
         }
     }
 

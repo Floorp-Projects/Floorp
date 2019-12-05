@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
-import io.reactivex.Observer
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -14,7 +13,6 @@ import mozilla.components.service.fxa.sharing.ShareableAccount
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 /**
@@ -49,7 +47,7 @@ class CurrentMode(
     private val context: Context,
     private val onboarding: FenixOnboarding,
     private val browsingModeManager: BrowsingModeManager,
-    private val emitter: Observer<SessionControlChange>
+    private val dispatchModeChanges: (mode: Mode) -> Unit
 ) : AccountObserver {
 
     private val accountManager = context.components.backgroundServices.accountManager
@@ -71,7 +69,7 @@ class CurrentMode(
     }
 
     fun emitModeChanges() {
-        emitter.onNext(SessionControlChange.ModeChange(getCurrentMode()))
+        dispatchModeChanges(getCurrentMode())
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) = emitModeChanges()

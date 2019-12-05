@@ -7,8 +7,8 @@ package org.mozilla.fenix.ext
 import android.content.Context
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import kotlin.math.abs
 
 /**

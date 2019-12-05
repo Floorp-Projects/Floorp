@@ -22,7 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toTab
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.Tab
 
 @ExperimentalCoroutinesApi
 class CollectionCreationFragment : DialogFragment() {

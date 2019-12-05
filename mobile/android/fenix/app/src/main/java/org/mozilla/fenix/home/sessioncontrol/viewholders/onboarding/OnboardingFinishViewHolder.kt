@@ -6,21 +6,18 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.onboarding_finish.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.OnboardingAction
-import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
-import org.mozilla.fenix.home.sessioncontrol.onNext
+import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingFinishViewHolder(
     view: View,
-    private val actionEmitter: Observer<SessionControlAction>
+    private val interactor: OnboardingInteractor
 ) : RecyclerView.ViewHolder(view) {
 
     init {
         view.finish_button.setOnClickListener {
-            actionEmitter.onNext(OnboardingAction.Finish)
+            interactor.onStartBrowsingClicked()
         }
     }
 

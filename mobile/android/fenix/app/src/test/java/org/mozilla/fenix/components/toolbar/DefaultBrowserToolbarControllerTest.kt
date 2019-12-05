@@ -29,6 +29,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Before
@@ -48,8 +49,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toTab
-import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 @ExperimentalCoroutinesApi

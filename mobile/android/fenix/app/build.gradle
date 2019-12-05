@@ -363,8 +363,6 @@ androidExtensions {
 }
 
 dependencies {
-    implementation project(':architecture')
-
     geckoNightlyImplementation Deps.mozilla_browser_engine_gecko_nightly
     geckoBetaImplementation Deps.mozilla_browser_engine_gecko_beta
 
@@ -437,6 +435,7 @@ dependencies {
     implementation Deps.mozilla_service_glean
     implementation Deps.mozilla_service_experiments
 
+    implementation Deps.mozilla_support_base
     implementation Deps.mozilla_support_ktx
     implementation Deps.mozilla_support_rustlog
     implementation Deps.mozilla_support_utils

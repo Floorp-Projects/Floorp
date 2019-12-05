@@ -21,6 +21,7 @@ import androidx.transition.TransitionManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_collection_creation.*
 import kotlinx.android.synthetic.main.component_collection_creation.view.*
+import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
@@ -28,8 +29,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.Tab
 
 @SuppressWarnings("LargeClass")
 class CollectionCreationView(

@@ -14,10 +14,11 @@ import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.feature.media.state.MediaState
+import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.home.OnboardingState
+import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageViewHolder
@@ -139,7 +140,7 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 }
 
 class SessionControlAdapter(
-    private val actionEmitter: Observer<SessionControlAction>
+    private val interactor: SessionControlInteractor
 ) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffCallback()) {
 
     // This method triggers the ComplexMethod lint error when in fact it's quite simple.
@@ -147,14 +148,14 @@ class SessionControlAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
-            TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, actionEmitter)
-            TabViewHolder.LAYOUT_ID -> TabViewHolder(view, actionEmitter)
-            SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, actionEmitter)
-            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, actionEmitter)
+            TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, interactor)
+            TabViewHolder.LAYOUT_ID -> TabViewHolder(view, interactor)
+            SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, interactor)
+            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
             NoContentMessageViewHolder.LAYOUT_ID -> NoContentMessageViewHolder(view)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
-            CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter)
-            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter)
+            CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
+            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
             OnboardingAutomaticSignInViewHolder.LAYOUT_ID -> OnboardingAutomaticSignInViewHolder(view)
@@ -163,7 +164,7 @@ class SessionControlAdapter(
             OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(view)
             OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(view)
             OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(view)
-            OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, actionEmitter)
+            OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, interactor)
             else -> throw IllegalStateException()
         }
     }

@@ -17,8 +17,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.home.sessioncontrol.toSessionBundle
+import org.mozilla.fenix.home.Tab
+import org.mozilla.fenix.home.toSessionBundle
 
 interface CollectionCreationController {
 

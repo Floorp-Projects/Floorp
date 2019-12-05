@@ -10,14 +10,13 @@ import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 
 class SwipeToDeleteCallback(
-    val actionEmitter: Observer<SessionControlAction>
+    val interactor: SessionControlInteractor
 ) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
     override fun onMove(
         recyclerView: RecyclerView,
@@ -30,9 +29,9 @@ class SwipeToDeleteCallback(
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         when (viewHolder) {
-            is TabViewHolder -> actionEmitter.onNext(TabAction.Close(viewHolder.tab?.sessionId!!))
+            is TabViewHolder -> interactor.onCloseTab(viewHolder.tab?.sessionId!!)
             is TabInCollectionViewHolder -> {
-                actionEmitter.onNext(CollectionAction.RemoveTab(viewHolder.collection, viewHolder.tab))
+                interactor.onCollectionRemoveTab(viewHolder.collection, viewHolder.tab)
             }
         }
     }

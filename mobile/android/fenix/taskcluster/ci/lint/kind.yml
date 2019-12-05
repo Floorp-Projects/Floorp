@@ -52,6 +52,6 @@ jobs:
         description: 'Running lint over all modules'
         run:
             using: gradlew
-            gradlew: ['lintDebug', 'app:lintGeckoNightlyDebug']
+            gradlew: ['lintGeckoNightlyDebug']
         treeherder:
             symbol: lint

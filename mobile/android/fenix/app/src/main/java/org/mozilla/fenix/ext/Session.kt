@@ -8,7 +8,7 @@ import android.content.Context
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.Tab
 
 fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: MediaState? = null): Tab =
     this.toTab(context.components.publicSuffixList, selected, mediaState)

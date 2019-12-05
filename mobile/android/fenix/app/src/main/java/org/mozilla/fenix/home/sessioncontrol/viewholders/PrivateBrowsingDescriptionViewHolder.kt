@@ -9,16 +9,13 @@ import android.text.method.LinkMovementMethod
 import android.text.style.UnderlineSpan
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.private_browsing_description.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
-import org.mozilla.fenix.home.sessioncontrol.TabAction
-import org.mozilla.fenix.home.sessioncontrol.onNext
+import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
 class PrivateBrowsingDescriptionViewHolder(
     view: View,
-    private val actionEmitter: Observer<SessionControlAction>
+    private val interactor: TabSessionInteractor
 ) : RecyclerView.ViewHolder(view) {
 
     init {
@@ -35,7 +32,7 @@ class PrivateBrowsingDescriptionViewHolder(
             movementMethod = LinkMovementMethod.getInstance()
             text = textWithLink
             setOnClickListener {
-                actionEmitter.onNext(TabAction.PrivateBrowsingLearnMore)
+                interactor.onPrivateBrowsingLearnMoreClicked()
             }
         }
     }

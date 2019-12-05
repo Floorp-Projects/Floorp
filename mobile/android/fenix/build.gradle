@@ -53,7 +53,7 @@ task clean(type: Delete) {
 detekt {
     // The version number is duplicated, please refer to plugins block for more details
     version = "1.0.0-RC16"
-    input = files("$projectDir/app/src", "$projectDir/architecture/src")
+    input = files("$projectDir/app/src")
     config = files("$projectDir/config/detekt.yml")
     filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
 
@@ -80,5 +80,5 @@ task ktlint(type: JavaExec, group: "verification") {
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "app/src/**/*.kt", "architecture/src/**/*.kt"
+    args "app/src/**/*.kt"
 }

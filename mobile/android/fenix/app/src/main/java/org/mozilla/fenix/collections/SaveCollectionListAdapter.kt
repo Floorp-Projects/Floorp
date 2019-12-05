@@ -10,11 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.collections_list_item.view.*
+import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.description
 import org.mozilla.fenix.ext.getIconColor
-import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.Tab
 
 class SaveCollectionListAdapter(
     private val interactor: CollectionCreationInteractor

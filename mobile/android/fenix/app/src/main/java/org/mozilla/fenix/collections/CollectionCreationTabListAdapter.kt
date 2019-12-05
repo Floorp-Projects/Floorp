@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.collection_tab_list_row.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.Tab
 
 class CollectionCreationTabListAdapter(
     private val interactor: CollectionCreationInteractor

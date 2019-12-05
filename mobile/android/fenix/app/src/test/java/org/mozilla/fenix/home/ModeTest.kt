@@ -9,7 +9,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.reactivex.Observer
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import org.junit.Assert.assertEquals
@@ -18,7 +17,6 @@ import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 class ModeTest {
@@ -27,8 +25,8 @@ class ModeTest {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var onboarding: FenixOnboarding
     private lateinit var browsingModeManager: BrowsingModeManager
-    private lateinit var emitter: Observer<SessionControlChange>
     private lateinit var currentMode: CurrentMode
+    private lateinit var dispatchModeChanges: (mode: Mode) -> Unit
 
     @Before
     fun setup() {
@@ -36,7 +34,7 @@ class ModeTest {
         accountManager = mockk(relaxed = true)
         onboarding = mockk(relaxed = true)
         browsingModeManager = mockk(relaxed = true)
-        emitter = mockk(relaxed = true)
+        dispatchModeChanges = mockk(relaxed = true)
 
         every { context.components.backgroundServices.accountManager } returns accountManager
 
@@ -44,7 +42,7 @@ class ModeTest {
             context,
             onboarding,
             browsingModeManager,
-            emitter
+            dispatchModeChanges
         )
     }
 
@@ -101,7 +99,7 @@ class ModeTest {
 
         currentMode.emitModeChanges()
 
-        verify { emitter.onNext(SessionControlChange.ModeChange(Mode.Normal)) }
+        verify { dispatchModeChanges(Mode.Normal) }
     }
 
     @Test
