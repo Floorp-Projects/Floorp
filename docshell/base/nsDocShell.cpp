@@ -9211,40 +9211,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
           !StaticPrefs::extensions_webextensions_remote()) {
         break;
       }
-      // This next bit is... awful. Basically, about:addons used to load the
-      // discovery pane remotely. Allow for that, if that's actually the state
-      // we're in (which is no longer the default at time of writing, but still
-      // tested). https://bugzilla.mozilla.org/show_bug.cgi?id=1565606 covers
-      // removing this atrocity.
-      nsCOMPtr<nsIWebNavigation> parent(do_QueryInterface(mParent));
-      if (parent) {
-        nsCOMPtr<nsIURI> parentURL;
-        parent->GetCurrentURI(getter_AddRefs(parentURL));
-        if (parentURL &&
-            parentURL->GetSpecOrDefault().EqualsLiteral("about:addons") &&
-            (!Preferences::GetBool("extensions.htmlaboutaddons.enabled",
-                                   true) ||
-             !Preferences::GetBool(
-                 "extensions.htmlaboutaddons.discover.enabled", true))) {
-          nsCString discoveryURLString;
-          Preferences::GetCString("extensions.webservice.discoverURL",
-                                  discoveryURLString);
-          nsCOMPtr<nsIURI> discoveryURL;
-          NS_NewURI(getter_AddRefs(discoveryURL), discoveryURLString);
-
-          nsAutoCString discoveryPrePath;
-          if (discoveryURL) {
-            discoveryURL->GetPrePath(discoveryPrePath);
-          }
-
-          nsAutoCString requestedPrePath;
-          uri->GetPrePath(requestedPrePath);
-          // So allow the discovery path to load inside about:addons.
-          if (discoveryPrePath.Equals(requestedPrePath)) {
-            break;
-          }
-        }
-      }
       // Final exception for some legacy automated tests:
       if (xpc::IsInAutomation() &&
           Preferences::GetBool("security.allow_unsafe_parent_loads", false)) {
