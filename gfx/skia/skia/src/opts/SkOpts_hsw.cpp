@@ -5,8 +5,6 @@
  * found in the LICENSE file.
  */
 
-// As described in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85525, MinGW will produce
-// unaligned instructions for this code, resulting in a crash.
 #if defined(__AVX2__)
 
 #include <immintrin.h>
