@@ -1893,10 +1893,12 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       MOZ_FALLTHROUGH;
 
     case CCRunnerState::LateTimer:
-      if (!ShouldTriggerCC(suspected) && ShouldFireForgetSkippable(suspected)) {
-        FireForgetSkippable(suspected, /* aRemoveChildless = */ false,
-                            aDeadline);
-        didDoWork = true;
+      if (!ShouldTriggerCC(suspected)) {
+        if (ShouldFireForgetSkippable(suspected)) {
+          FireForgetSkippable(suspected, /* aRemoveChildless = */ false,
+                              aDeadline);
+          didDoWork = true;
+        }
         finished = true;
         break;
       }
@@ -1925,10 +1927,12 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       break;
 
     case CCRunnerState::FinalTimer:
-      if (!ShouldTriggerCC(suspected) && ShouldFireForgetSkippable(suspected)) {
-        FireForgetSkippable(suspected, /* aRemoveChildless = */ false,
-                            aDeadline);
-        didDoWork = true;
+      if (!ShouldTriggerCC(suspected)) {
+        if (ShouldFireForgetSkippable(suspected)) {
+          FireForgetSkippable(suspected, /* aRemoveChildless = */ false,
+                              aDeadline);
+          didDoWork = true;
+        }
         finished = true;
         break;
       }
