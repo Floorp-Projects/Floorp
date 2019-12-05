@@ -118,8 +118,8 @@ void multi_brush_vs(
 void main(void) {
     // Load the brush instance from vertex attributes.
     Instance instance = decode_instance_attributes();
-    int edge_flags = (instance.flags >> 16) & 0xff;
-    int brush_flags = (instance.flags >> 24) & 0xff;
+    int edge_flags = instance.flags & 0xff;
+    int brush_flags = (instance.flags >> 8) & 0xff;
     PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
 
     // Fetch the segment of this brush primitive we are drawing.
