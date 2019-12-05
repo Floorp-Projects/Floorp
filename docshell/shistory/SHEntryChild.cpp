@@ -454,12 +454,14 @@ SHEntryChild::SetPostData(nsIInputStream* aPostData) {
 
 NS_IMETHODIMP
 SHEntryChild::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
+  // FIXME Bug 1547734 Move to parent.
   NS_IF_ADDREF(*aResult = mShared->mLayoutHistoryState);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SHEntryChild::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
+  // FIXME Bug 1547734 Move to parent.
   mShared->mLayoutHistoryState = aState;
   if (mShared->mLayoutHistoryState) {
     mShared->mLayoutHistoryState->SetScrollPositionOnly(
@@ -470,6 +472,7 @@ SHEntryChild::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
 
 NS_IMETHODIMP
 SHEntryChild::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
+  // FIXME Bug 1547734  Move to parent.
   nsCOMPtr<nsILayoutHistoryState> historyState;
   if (mShared->mLayoutHistoryState) {
     historyState = mShared->mLayoutHistoryState;
@@ -480,20 +483,6 @@ SHEntryChild::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
 
   historyState.forget(aState);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SHEntryChild::SynchronizeLayoutHistoryState() {
-  if (!mShared->mLayoutHistoryState) {
-    return NS_OK;
-  }
-
-  bool scrollPositionOnly = false;
-  nsTArray<nsCString> keys;
-  nsTArray<mozilla::PresState> states;
-  mShared->mLayoutHistoryState->GetContents(&scrollPositionOnly, keys, states);
-  Unused << SendUpdateLayoutHistoryState(scrollPositionOnly, keys, states);
   return NS_OK;
 }
 
