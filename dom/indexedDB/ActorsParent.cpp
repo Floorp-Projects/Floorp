@@ -13607,7 +13607,7 @@ void Database::StartTransactionOp::RunOnConnectionThread() {
 
   IDB_LOG_MARK_PARENT_TRANSACTION("Beginning database work", "DB Start",
                                   IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-                                  mLoggingSerialNumber);
+                                  mTransactionLoggingSerialNumber);
 
   TransactionDatabaseOperationBase::RunOnConnectionThread();
 }
@@ -21587,7 +21587,7 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
 
   IDB_LOG_MARK_PARENT_TRANSACTION("Beginning database work", "DB Start",
                                   IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-                                  mLoggingSerialNumber);
+                                  mTransactionLoggingSerialNumber);
 
   Transaction()->SetActiveOnConnectionThread();
 
@@ -22608,7 +22608,7 @@ TransactionBase::CommitOp::Run() {
 
   IDB_LOG_MARK_PARENT_TRANSACTION("Finished database work", "DB End",
                                   IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-                                  mLoggingSerialNumber);
+                                  mTransaction->LoggingSerialNumber());
 
   return NS_OK;
 }
