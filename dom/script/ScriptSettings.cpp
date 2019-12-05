@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
@@ -499,8 +500,8 @@ void AutoJSAPI::ReportException() {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
       RefPtr<nsGlobalWindowInner> inner = xpc::WindowOrNull(errorGlobal);
-      bool isChrome = nsContentUtils::IsSystemPrincipal(
-          nsContentUtils::ObjectPrincipal(errorGlobal));
+      bool isChrome =
+          nsContentUtils::ObjectPrincipal(errorGlobal)->IsSystemPrincipal();
       xpcReport->Init(jsReport.report(), jsReport.toStringResult().c_str(),
                       isChrome, inner ? inner->WindowID() : 0);
       if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {

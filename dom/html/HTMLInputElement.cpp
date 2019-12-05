@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
@@ -2187,8 +2188,7 @@ HTMLInputElement* HTMLInputElement::GetOwnerNumberControl() {
 
 void HTMLInputElement::SetUserInput(const nsAString& aValue,
                                     nsIPrincipal& aSubjectPrincipal) {
-  if (mType == NS_FORM_INPUT_FILE &&
-      !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
+  if (mType == NS_FORM_INPUT_FILE && !aSubjectPrincipal.IsSystemPrincipal()) {
     return;
   }
 

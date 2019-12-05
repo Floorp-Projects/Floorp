@@ -16,6 +16,7 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIExternalProtocolHandler.h"
@@ -3031,7 +3032,7 @@ bool nsObjectLoadingContent::ShouldPlay(FallbackType& aReason) {
   // we really should do is disable plugins entirely in pages that use the
   // system principal, i.e. in chrome pages. That way the click-to-play code
   // here wouldn't matter at all. Bug 775301 is tracking this.
-  if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
+  if (!topDoc->NodePrincipal()->IsSystemPrincipal()) {
     nsAutoCString permissionString;
     rv = pluginHost->GetPermissionStringForType(
         mContentType, nsPluginHost::eExcludeNone, permissionString);

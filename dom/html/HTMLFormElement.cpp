@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 
 #include "jsapi.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"

@@ -8,6 +8,7 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchListBinding.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TouchEvents.h"
@@ -278,7 +279,7 @@ bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
 // static
 bool TouchEvent::LegacyAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
   nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  bool isSystem = principal && nsContentUtils::IsSystemPrincipal(principal);
+  bool isSystem = principal && principal->IsSystemPrincipal();
 
   nsIDocShell* docShell = nullptr;
   if (aGlobal) {

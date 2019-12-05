@@ -24,6 +24,7 @@
 #include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
 #include "nsJSEnvironment.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
@@ -2142,7 +2143,7 @@ nsXPCComponents_Utils::BlockScriptForGlobal(HandleValue globalArg,
   RootedObject global(cx, UncheckedUnwrap(&globalArg.toObject(),
                                           /* stopAtWindowProxy = */ false));
   NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
-  if (nsContentUtils::IsSystemPrincipal(xpc::GetObjectPrincipal(global))) {
+  if (xpc::GetObjectPrincipal(global)->IsSystemPrincipal()) {
     JS_ReportErrorASCII(cx, "Script may not be disabled for system globals");
     return NS_ERROR_FAILURE;
   }
@@ -2157,7 +2158,7 @@ nsXPCComponents_Utils::UnblockScriptForGlobal(HandleValue globalArg,
   RootedObject global(cx, UncheckedUnwrap(&globalArg.toObject(),
                                           /* stopAtWindowProxy = */ false));
   NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
-  if (nsContentUtils::IsSystemPrincipal(xpc::GetObjectPrincipal(global))) {
+  if (xpc::GetObjectPrincipal(global)->IsSystemPrincipal()) {
     JS_ReportErrorASCII(cx, "Script may not be disabled for system globals");
     return NS_ERROR_FAILURE;
   }

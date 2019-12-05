@@ -25,6 +25,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/NullPrincipal.h"
 
 #include "mozilla/Logging.h"

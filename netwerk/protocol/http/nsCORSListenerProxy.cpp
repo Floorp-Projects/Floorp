@@ -40,6 +40,7 @@
 #include "nsICorsPreflightCallback.h"
 #include "nsISupportsImpl.h"
 #include "nsHttpChannel.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -110,8 +111,7 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
   bool fromChromeContext = false;
   if (channel) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    fromChromeContext =
-        nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal());
+    fromChromeContext = loadInfo->TriggeringPrincipal()->IsSystemPrincipal();
   }
 
   // we are passing aProperty as the category so we can link to the

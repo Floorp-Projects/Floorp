@@ -115,7 +115,7 @@
 
 // paint forcing
 #include <stdio.h>
-
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/Telemetry.h"
@@ -1095,7 +1095,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       if (os) {
         nsIPrincipal* principal = d->NodePrincipal();
         os->NotifyObservers(ToSupports(d),
-                            nsContentUtils::IsSystemPrincipal(principal)
+                            principal->IsSystemPrincipal()
                                 ? "chrome-document-loaded"
                                 : "content-document-loaded",
                             nullptr);

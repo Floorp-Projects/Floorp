@@ -19,6 +19,7 @@
 #include "ReferrerInfo.h"
 
 #include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Element.h"

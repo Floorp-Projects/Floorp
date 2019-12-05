@@ -13,7 +13,7 @@
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 
@@ -256,7 +256,7 @@ bool PushDispatcher::ShouldNotifyWorkers() {
   // System subscriptions use observer notifications instead of service worker
   // events. The `testing.notifyWorkers` pref disables worker events for
   // non-system subscriptions.
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal) ||
+  if (mPrincipal->IsSystemPrincipal() ||
       !Preferences::GetBool("dom.push.testing.notifyWorkers", true)) {
     return false;
   }
@@ -429,7 +429,7 @@ nsresult PushErrorDispatcher::NotifyObservers() { return NS_OK; }
 
 nsresult PushErrorDispatcher::NotifyWorkers() {
   if (!ShouldNotifyWorkers() &&
-      (!mPrincipal || nsContentUtils::IsSystemPrincipal(mPrincipal))) {
+      (!mPrincipal || mPrincipal->IsSystemPrincipal())) {
     // For system subscriptions, log the error directly to the browser console.
     return nsContentUtils::ReportToConsoleNonLocalized(
         mMessage, mFlags, NS_LITERAL_CSTRING("Push"), nullptr, /* aDocument */

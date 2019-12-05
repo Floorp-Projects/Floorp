@@ -35,6 +35,7 @@
 #include "nsISiteSecurityService.h"
 #include "prnetdb.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
@@ -312,7 +313,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(
   if (requestingPrincipal) {
     // We check to see if the loadingPrincipal is systemPrincipal and return
     // early if it is
-    if (nsContentUtils::IsSystemPrincipal(requestingPrincipal)) {
+    if (requestingPrincipal->IsSystemPrincipal()) {
       return NS_OK;
     }
   }
@@ -709,7 +710,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   // 2) if aRequestingContext yields a principal but no location, we check if
   // its a system principal.
   if (principal && !requestingLocation) {
-    if (nsContentUtils::IsSystemPrincipal(principal)) {
+    if (principal->IsSystemPrincipal()) {
       *aDecision = ACCEPT;
       return NS_OK;
     }

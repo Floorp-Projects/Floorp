@@ -47,6 +47,7 @@
 #include "nsCRT.h"
 #include "nsINetworkPredictor.h"
 #include "nsReadableUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/image/ImageMemoryReporter.h"
@@ -685,7 +686,7 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
       }
     }
 
-    if (!nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
+    if (!aTriggeringPrincipal || !aTriggeringPrincipal->IsSystemPrincipal()) {
       // Set the requestingLocation from the aTriggeringPrincipal.
       nsCOMPtr<nsIURI> requestingLocation;
       if (aTriggeringPrincipal) {
@@ -1381,8 +1382,7 @@ imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
 
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
 
-  imgCacheTable& cache =
-      GetCache(nsContentUtils::IsSystemPrincipal(aPrincipal));
+  imgCacheTable& cache = GetCache(aPrincipal->IsSystemPrincipal());
   for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
     auto& key = iter.Key();
 

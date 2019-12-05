@@ -45,6 +45,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -270,7 +271,7 @@ nsresult nsJSThunk::EvaluateScript(
   }
 
   // Fail if someone tries to execute in a global with system principal.
-  if (nsContentUtils::IsSystemPrincipal(objectPrincipal)) {
+  if (objectPrincipal->IsSystemPrincipal()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

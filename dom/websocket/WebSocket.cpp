@@ -11,6 +11,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/net/WebSocketChannel.h"
 #include "mozilla/dom/File.h"
@@ -1530,7 +1531,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   }
 
   mPrivateBrowsing = !!aPrincipal->OriginAttributesRef().mPrivateBrowsingId;
-  mIsChromeContext = nsContentUtils::IsSystemPrincipal(aPrincipal);
+  mIsChromeContext = aPrincipal->IsSystemPrincipal();
 
   // parses the url
   rv = ParseURL(aURL);

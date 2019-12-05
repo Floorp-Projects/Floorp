@@ -11,6 +11,7 @@
 #include "nsHttp.h"
 #include "nsICacheEntry.h"
 #include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DocGroup.h"
@@ -2442,7 +2443,8 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-           nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
+           mLoadInfo->LoadingPrincipal() &&
+           mLoadInfo->LoadingPrincipal()->IsSystemPrincipal()),
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LogCallingScriptLocation(this);
@@ -3970,7 +3972,7 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
     bool privateBrowsing =
         !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
     bool fromChromeContext =
-        nsContentUtils::IsSystemPrincipal(mLoadInfo->TriggeringPrincipal());
+        mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal();
     nsCORSListenerProxy::LogBlockedCORSRequest(
         innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
   }

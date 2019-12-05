@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/StyleSheet.h"
-
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "mozilla/css/GroupRule.h"
@@ -1166,7 +1166,7 @@ const ServoCssRules* StyleSheet::ToShared(
   MOZ_ASSERT(!nsCOMPtr<nsIURI>(GetReferrerInfo()->GetComputedReferrer()));
   MOZ_ASSERT(GetCORSMode() == CORS_NONE);
   MOZ_ASSERT(Inner().mIntegrity.IsEmpty());
-  MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(Principal()));
+  MOZ_ASSERT(Principal()->IsSystemPrincipal());
 
   return Servo_SharedMemoryBuilder_AddStylesheet(aBuilder, Inner().mContents);
 }

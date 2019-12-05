@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_dom.h"
-
 #include "DataTransfer.h"
 
 #include "nsISupportsPrimitives.h"
@@ -561,8 +561,7 @@ nsresult DataTransfer::GetDataAtInternal(const nsAString& aFormat,
   }
 
   // If we have chrome only content, and we aren't chrome, don't allow access
-  if (!nsContentUtils::IsSystemPrincipal(aSubjectPrincipal) &&
-      item->ChromeOnly()) {
+  if (!aSubjectPrincipal->IsSystemPrincipal() && item->ChromeOnly()) {
     return NS_OK;
   }
 
@@ -605,7 +604,7 @@ void DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
 bool DataTransfer::PrincipalMaySetData(const nsAString& aType,
                                        nsIVariant* aData,
                                        nsIPrincipal* aPrincipal) {
-  if (!nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (!aPrincipal->IsSystemPrincipal()) {
     DataTransferItem::eKind kind = DataTransferItem::KindFromData(aData);
     if (kind == DataTransferItem::KIND_OTHER) {
       NS_WARNING("Disallowing adding non string/file types to DataTransfer");
