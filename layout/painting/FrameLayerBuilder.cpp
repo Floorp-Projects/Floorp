@@ -6133,6 +6133,14 @@ Size FrameLayerBuilder::ChooseScale(nsIFrame* aContainerFrame,
     scale = Size(1.0, 1.0);
   }
 
+  // Prevent the scale from getting too large, to avoid excessive memory
+  // allocation. Usually memory allocation is limited by the visible region,
+  // which should be restricted to the display port. But at very large scales
+  // the visible region itself can become excessive due to rounding errors.
+  // Clamping the scale here prevents that.
+  scale =
+      Size(std::min(scale.width, 32768.0f), std::min(scale.height, 32768.0f));
+
   return scale;
 }
 
