@@ -826,4 +826,72 @@ var BrowserUtils = {
     }
     return url;
   },
+
+  recordSiteOriginTelemetry(aWindows, aIsGeckoView) {
+    Services.tm.idleDispatchToMainThread(() => {
+      this._recordSiteOriginTelemetry(aWindows, aIsGeckoView);
+    });
+  },
+
+  _recordSiteOriginTelemetry(aWindows, aIsGeckoView) {
+    let currentTime = Date.now();
+
+    // default is 5 minutes
+    if (!this.min_interval) {
+      this.min_interval = Services.prefs.getIntPref(
+        "telemetry.number_of_site_origin.min_interval",
+        300000
+      );
+    }
+
+    // Discard the first load because most of the time the first load only has 1
+    // tab and 1 window open, so it is useless to report it.
+    if (
+      !this._lastRecordSiteOrigin ||
+      currentTime < this._lastRecordSiteOrigin + this.min_interval
+    ) {
+      if (!this._lastRecordSiteOrigin) {
+        this._lastRecordSiteOrigin = currentTime;
+      }
+      return;
+    }
+
+    this._lastRecordSiteOrigin = currentTime;
+
+    // Geckoview and Desktop work differently. On desktop, aBrowser objects
+    // holds an array of tabs which we can use to get the <browser> objects.
+    // In Geckoview, it is apps' responsibility to keep track of the tabs, so
+    // there isn't an easy way for us to get the tabs.
+    let tabs = [];
+    if (aIsGeckoView) {
+      // To get all active windows; Each tab has its own window
+      tabs = aWindows;
+    } else {
+      for (const win of aWindows) {
+        tabs = tabs.concat(win.gBrowser.tabs);
+      }
+    }
+
+    let topLevelBC = [];
+
+    for (const tab of tabs) {
+      let browser;
+      if (aIsGeckoView) {
+        browser = tab.browser;
+      } else {
+        browser = tab.linkedBrowser;
+      }
+
+      if (browser.browsingContext) {
+        // This is the top level browsingContext
+        topLevelBC.push(browser.browsingContext);
+      }
+    }
+
+    const count = CanonicalBrowsingContext.countSiteOrigins(topLevelBC);
+
+    Services.telemetry
+      .getHistogramById("FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS")
+      .add(count);
+  },
 };
