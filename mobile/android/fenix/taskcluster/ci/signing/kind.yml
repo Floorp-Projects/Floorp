@@ -2,16 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: fenix_taskgraph.loader.single_dep:loader
+loader: fenix_taskgraph.loader.multi_dep:loader
 
 transforms:
-    - fenix_taskgraph.transforms.single_dep:transforms
+    - fenix_taskgraph.transforms.multi_dep:transforms
     - fenix_taskgraph.transforms.signing:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - build
 
+primary-dependency: build
+
+group-by: build-type
 
 job-template:
     description: Sign Fenix
