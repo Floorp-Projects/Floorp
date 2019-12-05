@@ -19,10 +19,10 @@ interface nsIWebBrowserChrome : nsISupports
 {
     /**
      * Called when the link hover status is being changed.
-     * @param status status string. null is an acceptable value meaning
-     *               no link is hovered.
+     * @param status status string. empty string is an acceptable value
+     *               meaning no link is hovered.
      */
-    void setStatusLink(in AString status);
+    void setLinkStatus(in AString status);
 
     /**
      * Definitions for the chrome flags

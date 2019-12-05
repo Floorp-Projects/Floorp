@@ -235,7 +235,7 @@ static void ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg) {
     if (treeOwner) {
       nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
       if (browserChrome) {
-        browserChrome->SetStatusLink(aStatusMsg);
+        browserChrome->SetLinkStatus(aStatusMsg);
       }
     }
   }
