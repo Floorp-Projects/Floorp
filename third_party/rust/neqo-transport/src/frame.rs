@@ -458,7 +458,7 @@ impl Frame {
             acked_ranges.push((cur, cur - r.range));
 
             if cur > r.range + 1 {
-                cur -= r.range - 1;
+                cur -= r.range + 1;
             } else {
                 cur -= r.range;
             }

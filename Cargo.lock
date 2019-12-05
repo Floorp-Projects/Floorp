@@ -2338,8 +2338,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "neqo-common"
-version = "0.1.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.6#c110c2e09a36707934271d95a4bf5f44d6753dd5"
+version = "0.1.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.7#2852cb49cea5ec7f5820774627497ed0eebadc7b"
 dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2349,12 +2349,12 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.1.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.6#c110c2e09a36707934271d95a4bf5f44d6753dd5"
+version = "0.1.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.7#2852cb49cea5ec7f5820774627497ed0eebadc7b"
 dependencies = [
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
+ "neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
  "serde 1.0.102 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.102 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2362,52 +2362,50 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.1.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.6#c110c2e09a36707934271d95a4bf5f44d6753dd5"
+version = "0.1.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.7#2852cb49cea5ec7f5820774627497ed0eebadc7b"
 dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-crypto 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-qpack 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-transport 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
+ "neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-crypto 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-qpack 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-transport 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
  "num-traits 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "smallvec 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neqo-qpack"
-version = "0.1.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.6#c110c2e09a36707934271d95a4bf5f44d6753dd5"
+version = "0.1.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.7#2852cb49cea5ec7f5820774627497ed0eebadc7b"
 dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-crypto 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-transport 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
+ "neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-crypto 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-transport 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
 ]
 
 [[package]]
 name = "neqo-transport"
-version = "0.1.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.6#c110c2e09a36707934271d95a4bf5f44d6753dd5"
+version = "0.1.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.7#2852cb49cea5ec7f5820774627497ed0eebadc7b"
 dependencies = [
- "derive_more 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-crypto 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
+ "neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-crypto 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "slice-deque 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "smallvec 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "neqo_glue"
 version = "0.1.0"
 dependencies = [
- "neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-crypto 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-http3 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
- "neqo-transport 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)",
+ "neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-crypto 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-http3 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
+ "neqo-transport 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)",
  "nserror 0.1.0",
  "nsstring 0.1.0",
  "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3565,16 +3563,6 @@ version = "0.0.1"
 name = "slab"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "slice-deque"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "libc 0.2.59 (registry+https://github.com/rust-lang/crates.io-index)",
- "mach 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "smallbitvec"
@@ -4876,11 +4864,11 @@ dependencies = [
 "checksum mp4parse_fallible 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6626c2aef76eb8f984eef02e475883d3fe9112e114720446c5810fc5f045cd30"
 "checksum msdos_time 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "aad9dfe950c057b1bfe9c1f2aa51583a8468ef2a5baba2ebbe06d775efeb7729"
 "checksum murmurhash3 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
-"checksum neqo-common 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)" = "<none>"
-"checksum neqo-crypto 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)" = "<none>"
-"checksum neqo-http3 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)" = "<none>"
-"checksum neqo-qpack 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)" = "<none>"
-"checksum neqo-transport 0.1.6 (git+https://github.com/mozilla/neqo?tag=v0.1.6)" = "<none>"
+"checksum neqo-common 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)" = "<none>"
+"checksum neqo-crypto 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)" = "<none>"
+"checksum neqo-http3 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)" = "<none>"
+"checksum neqo-qpack 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)" = "<none>"
+"checksum neqo-transport 0.1.7 (git+https://github.com/mozilla/neqo?tag=v0.1.7)" = "<none>"
 "checksum net2 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "42550d9fb7b6684a6d404d9fa7250c2eb2646df731d1c06afc06dcee9e1bcf88"
 "checksum new_debug_unreachable 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0cdc457076c78ab54d5e0d6fa7c47981757f1e34dc39ff92787f217dede586c4"
 "checksum nix 0.13.1 (git+https://github.com/shravanrn/nix/?branch=r0.13.1)" = "<none>"
@@ -4997,7 +4985,6 @@ dependencies = [
 "checksum shlex 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
 "checksum siphasher 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "83da420ee8d1a89e640d0948c646c1c088758d3a3c538f943bfa97bdac17929d"
 "checksum slab 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5f9776d6b986f77b35c6cf846c11ad986ff128fe0b2b63a3628e3755e8d3102d"
-"checksum slice-deque 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "31ef6ee280cdefba6d2d0b4b78a84a1c1a3f3a4cec98c2d4231c8bc225de0f25"
 "checksum smallbitvec 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1764fe2b30ee783bfe3b9b37b2649d8d590b3148bb12e0079715d4d5c673562e"
 "checksum smallvec 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)" = "ab606a9c5e214920bb66c458cd7be8ef094f813f20fe77a54cc7dbfff220d4b7"
 "checksum smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4ecf3b85f68e8abaa7555aa5abdb1153079387e60b718283d732f03897fcfc86"

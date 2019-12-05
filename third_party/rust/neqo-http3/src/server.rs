@@ -524,6 +524,26 @@ mod tests {
         let out = peer_conn.process(None, now());
         hconn.process(out.dgram(), now());
 
+        sent = peer_conn.stream_send(control_stream, &[0x61]);
+        assert_eq!(sent, Ok(1));
+        let out = peer_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = peer_conn.stream_send(control_stream, &[0x62]);
+        assert_eq!(sent, Ok(1));
+        let out = peer_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = peer_conn.stream_send(control_stream, &[0x63]);
+        assert_eq!(sent, Ok(1));
+        let out = peer_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = peer_conn.stream_send(control_stream, &[0x64]);
+        assert_eq!(sent, Ok(1));
+        let out = peer_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
         // PUSH_PROMISE on a control stream will cause an error
         assert_closed(&mut hconn, Error::HttpFrameUnexpected);
     }

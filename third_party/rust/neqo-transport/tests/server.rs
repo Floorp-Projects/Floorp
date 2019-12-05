@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![deny(warnings)]
+#![cfg_attr(feature = "deny-warnings", deny(warnings))]
 
 use neqo_common::{hex, qdebug, qtrace, Datagram, Decoder, Encoder};
 use neqo_crypto::{

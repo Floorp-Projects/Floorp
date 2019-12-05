@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![deny(warnings)]
+#![cfg_attr(feature = "deny-warnings", deny(warnings))]
 // Bindgen auto generated code
 // won't adhere to the clippy rules below
 #![allow(clippy::module_name_repetitions)]
