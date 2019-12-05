@@ -117,6 +117,7 @@
 | [mozilla.components.feature.qr](mozilla.components.feature.qr/index.md) |  |
 | [mozilla.components.feature.readerview](mozilla.components.feature.readerview/index.md) |  |
 | [mozilla.components.feature.readerview.view](mozilla.components.feature.readerview.view/index.md) |  |
+| [mozilla.components.feature.remotetabs](mozilla.components.feature.remotetabs/index.md) |  |
 | [mozilla.components.feature.search](mozilla.components.feature.search/index.md) |  |
 | [mozilla.components.feature.sendtab](mozilla.components.feature.sendtab/index.md) |  |
 | [mozilla.components.feature.session](mozilla.components.feature.session/index.md) |  |

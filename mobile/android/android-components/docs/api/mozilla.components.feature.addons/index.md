@@ -6,5 +6,5 @@
 
 | Name | Summary |
 |---|---|
-| [AddOn](-add-on/index.md) | `data class AddOn`<br>Represents an add-on based on the AMO store: https://addons.mozilla.org/en-US/firefox/ |
-| [AddOnsProvider](-add-ons-provider/index.md) | `interface AddOnsProvider`<br>A contract that indicate how an add-on provider must behave. |
+| [Addon](-addon/index.md) | `data class Addon`<br>Represents an add-on based on the AMO store: https://addons.mozilla.org/en-US/firefox/ |
+| [AddonsProvider](-addons-provider/index.md) | `interface AddonsProvider`<br>A contract that indicate how an add-on provider must behave. |

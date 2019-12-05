@@ -177,6 +177,7 @@ mozilla.components.feature.pwa.intent
 mozilla.components.feature.qr
 mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
+mozilla.components.feature.remotetabs
 mozilla.components.feature.search
 mozilla.components.feature.sendtab
 mozilla.components.feature.session
