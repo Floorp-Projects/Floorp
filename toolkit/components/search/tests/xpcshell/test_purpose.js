@@ -11,11 +11,7 @@
 add_task(async function setup() {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams used to set the purpose will be ignored.
-  let url = "resource://test/data/";
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+  await useTestEngines();
 
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
