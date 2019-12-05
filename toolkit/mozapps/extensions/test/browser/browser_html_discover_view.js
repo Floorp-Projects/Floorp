@@ -294,7 +294,6 @@ add_task(async function setup() {
         "extensions.getAddons.discovery.api_url",
         `http://${AMO_TEST_HOST}/discoapi`,
       ],
-      ["extensions.htmlaboutaddons.discover.enabled", true],
       // Disable non-discopane recommendations to avoid unexpected discovery
       // API requests.
       ["extensions.htmlaboutaddons.recommendations.enabled", false],

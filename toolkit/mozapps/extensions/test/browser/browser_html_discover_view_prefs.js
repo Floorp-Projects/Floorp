@@ -56,7 +56,6 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.getAddons.discovery.api_url", TEST_API_URL],
-      ["extensions.htmlaboutaddons.discover.enabled", true],
       // Disable recommendations at the HTML about:addons view to avoid sending
       // a discovery API request from the fallback view (extension list) in the
       // showPane_false test.
