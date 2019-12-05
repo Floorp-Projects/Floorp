@@ -90,7 +90,7 @@ bool WhileEmitter::emitEnd() {
     return false;
   }
 
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::While::BackJumpOffset,
+  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Loop::BackJumpOffset,
                               loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;
   }

@@ -3052,38 +3052,17 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
         break;
 
       case SRC_FOR:
-        if (!sp->jsprintf(
-                " backjump %u",
-                unsigned(GetSrcNoteOffset(sn, SrcNote::For::BackJumpOffset)))) {
-          return false;
-        }
-        break;
-
+      case SRC_DO_WHILE:
       case SRC_WHILE:
       case SRC_FOR_IN:
-      case SRC_FOR_OF:
-        static_assert(
-            unsigned(SrcNote::While::BackJumpOffset) ==
-                unsigned(SrcNote::ForIn::BackJumpOffset),
-            "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
-        static_assert(
-            unsigned(SrcNote::While::BackJumpOffset) ==
-                unsigned(SrcNote::ForOf::BackJumpOffset),
-            "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
-        if (!sp->jsprintf(" backjump %u",
-                          unsigned(GetSrcNoteOffset(
-                              sn, SrcNote::While::BackJumpOffset)))) {
+      case SRC_FOR_OF: {
+        unsigned backJumpOffset =
+            GetSrcNoteOffset(sn, SrcNote::Loop::BackJumpOffset);
+        if (!sp->jsprintf(" backjump %u", backJumpOffset)) {
           return false;
         }
         break;
-
-      case SRC_DO_WHILE:
-        if (!sp->jsprintf(" backjump %u",
-                          unsigned(GetSrcNoteOffset(
-                              sn, SrcNote::DoWhile::BackJumpOffset)))) {
-          return false;
-        }
-        break;
+      }
 
       case SRC_TRY:
         MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);

@@ -38,50 +38,13 @@ namespace js {
 
 class SrcNote {
  public:
-  // SRC_FOR: Source note for JSOP_LOOPHEAD at the top of C-style for loop,
-  //          which is placed after init expression/declaration ops.
-  class For {
+  // SRC_FOR, SRC_DO_WHILE, SRC_WHILE, SRC_FOR_IN, SRC_FOR_OF: Source note for
+  // JSOP_LOOPHEAD at the top of a loop.
+  class Loop {
    public:
     enum Fields {
-      // The offset of JSOP_GOTO/JSOP_IFNE at the end of the loop from
+      // The offset of JSOP_GOTO/JSOP_IFEQ/JSOP_IFNE at the end of the loop from
       // JSOP_LOOPHEAD.
-      BackJumpOffset,
-      Count,
-    };
-  };
-  // SRC_WHILE: Source note for JSOP_LOOPHEAD at the top of while loop.
-  class While {
-   public:
-    enum Fields {
-      // The offset of JSOP_IFNE at the end of the loop from JSOP_LOOPHEAD.
-      BackJumpOffset,
-      Count,
-    };
-  };
-  // SRC_DO_WHILE: Source note for JSOP_LOOPHEAD at the top of do-while loop
-  class DoWhile {
-   public:
-    enum Fields {
-      // The offset of JSOP_IFNE at the end of the loop from
-      // JSOP_LOOPHEAD.
-      BackJumpOffset,
-      Count,
-    };
-  };
-  // SRC_FOR_IN: Source note for JSOP_LOOPHEAD at the top of for-in loop.
-  class ForIn {
-   public:
-    enum Fields {
-      // The offset of JSOP_IFEQ at the end of the loop from JSOP_LOOPHEAD.
-      BackJumpOffset,
-      Count,
-    };
-  };
-  // SRC_FOR_OF: Source note for JSOP_LOOPHEAD at the top of for-of loop.
-  class ForOf {
-   public:
-    enum Fields {
-      // The offset of JSOP_IFEQ at the end of the loop from JSOP_LOOPHEAD.
       BackJumpOffset,
       Count,
     };
@@ -120,11 +83,11 @@ class SrcNote {
 // clang-format off
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
-    M(SRC_FOR,          "for",         SrcNote::For::Count) \
-    M(SRC_WHILE,        "while",       SrcNote::While::Count) \
-    M(SRC_DO_WHILE,     "do-while",    SrcNote::DoWhile::Count) \
-    M(SRC_FOR_IN,       "for-in",      SrcNote::ForIn::Count) \
-    M(SRC_FOR_OF,       "for-of",      SrcNote::ForOf::Count) \
+    M(SRC_FOR,          "for",         SrcNote::Loop::Count) \
+    M(SRC_WHILE,        "while",       SrcNote::Loop::Count) \
+    M(SRC_DO_WHILE,     "do-while",    SrcNote::Loop::Count) \
+    M(SRC_FOR_IN,       "for-in",      SrcNote::Loop::Count) \
+    M(SRC_FOR_OF,       "for-of",      SrcNote::Loop::Count) \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \

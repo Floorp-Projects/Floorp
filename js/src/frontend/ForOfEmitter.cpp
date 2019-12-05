@@ -242,7 +242,7 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_);
 
   // Let Ion know where the closing jump of this loop is.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::ForOf::BackJumpOffset,
+  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Loop::BackJumpOffset,
                               loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;
   }
