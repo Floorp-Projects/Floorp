@@ -1,131 +1,128 @@
+use crate::utils::{
+    add_where_clauses_for_new_ident, AttrParams, DeriveType, MultiFieldData, State,
+};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, ToTokens};
 use std::collections::HashMap;
-use std::ops::Index;
-
-use proc_macro2::TokenStream;
-use quote::ToTokens;
-use syn::{Data, DataEnum, DeriveInput, Field, Fields};
-use utils::{field_idents, get_field_types, named_to_vec, number_idents, unnamed_to_vec};
+use syn::{parse::Result, DeriveInput, Ident, Index};
 
 /// Provides the hook to expand `#[derive(From)]` into an implementation of `From`
-pub fn expand(input: &DeriveInput, trait_name: &str) -> TokenStream {
-    match input.data {
-        Data::Struct(ref data_struct) => match data_struct.fields {
-            Fields::Unnamed(ref fields) => tuple_from(input, &unnamed_to_vec(fields)),
-            Fields::Named(ref fields) => struct_from(input, &named_to_vec(fields)),
-            Fields::Unit => struct_from(input, &[]),
+pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStream> {
+    let state = State::with_attr_params(
+        input,
+        trait_name,
+        quote!(::core::convert),
+        trait_name.to_lowercase(),
+        AttrParams {
+            enum_: vec!["forward", "ignore"],
+            variant: vec!["forward", "ignore"],
+            struct_: vec!["forward"],
+            field: vec!["forward"],
         },
-        Data::Enum(ref data_enum) => enum_from(input, data_enum),
-        _ => panic!(format!(
-            "Only structs and enums can use derive({})",
-            trait_name
-        )),
+    )?;
+    if state.derive_type == DeriveType::Enum {
+        Ok(enum_from(input, state))
+    } else {
+        Ok(struct_from(input, &state))
     }
 }
 
-pub fn from_impl<T: ToTokens>(input: &DeriveInput, fields: &[&Field], body: T) -> TokenStream {
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let input_type = &input.ident;
-    let original_types = &get_field_types(fields);
-    quote!{
-        impl#impl_generics ::std::convert::From<(#(#original_types),*)> for
+pub fn struct_from(input: &DeriveInput, state: &State) -> TokenStream {
+    let multi_field_data = state.enabled_fields_data();
+    let MultiFieldData {
+        fields,
+        infos,
+        input_type,
+        trait_path,
+        ..
+    } = multi_field_data.clone();
+
+    let mut new_generics = input.generics.clone();
+    let sub_items: Vec<_> = infos
+        .iter()
+        .zip(fields.iter())
+        .enumerate()
+        .map(|(i, (info, field))| {
+            let field_type = &field.ty;
+            let variable = if fields.len() == 1 {
+                quote!(original)
+            } else {
+                let tuple_index = Index::from(i);
+                quote!(original.#tuple_index)
+            };
+            if info.forward {
+                let type_param =
+                    &Ident::new(&format!("__FromT{}", i), Span::call_site());
+                let sub_trait_path = quote!(#trait_path<#type_param>);
+                let type_where_clauses = quote! {
+                    where #field_type: #sub_trait_path
+                };
+                new_generics = add_where_clauses_for_new_ident(
+                    &input.generics,
+                    &[field],
+                    type_param,
+                    type_where_clauses,
+                    true,
+                );
+                let casted_trait = quote!(<#field_type as #sub_trait_path>);
+                (quote!(#casted_trait::from(#variable)), quote!(#type_param))
+            } else {
+                (variable, quote!(#field_type))
+            }
+        })
+        .collect();
+    let initializers: Vec<_> = sub_items.iter().map(|i| &i.0).collect();
+    let from_types: Vec<_> = sub_items.iter().map(|i| &i.1).collect();
+
+    let body = multi_field_data.initializer(&initializers);
+    let (impl_generics, _, where_clause) = new_generics.split_for_impl();
+    let (_, ty_generics, _) = input.generics.split_for_impl();
+
+    quote! {
+        impl#impl_generics #trait_path<(#(#from_types),*)> for
             #input_type#ty_generics #where_clause {
 
             #[allow(unused_variables)]
             #[inline]
-            fn from(original: (#(#original_types),*)) -> #input_type#ty_generics {
+            fn from(original: (#(#from_types),*)) -> #input_type#ty_generics {
                 #body
             }
         }
     }
 }
 
-fn tuple_from(input: &DeriveInput, fields: &[&Field]) -> TokenStream {
-    let input_type = &input.ident;
-    let body = tuple_body(input_type, fields);
-    from_impl(input, fields, body)
-}
-
-fn tuple_body<T: ToTokens>(return_type: T, fields: &[&Field]) -> TokenStream {
-    if fields.len() == 1 {
-        quote!(#return_type(original))
-    } else {
-        let field_names = &number_idents(fields.len());
-        quote!(#return_type(#(original.#field_names),*))
-    }
-}
-
-fn struct_from(input: &DeriveInput, fields: &[&Field]) -> TokenStream {
-    let input_type = &input.ident;
-    let body = struct_body(input_type, fields);
-    from_impl(input, fields, body)
-}
-
-fn struct_body<T: ToTokens>(return_type: T, fields: &[&Field]) -> TokenStream {
-    if fields.len() == 1 {
-        let field_name = &fields[0].ident;
-        quote!(#return_type{#field_name: original})
-    } else {
-        let argument_field_names = &number_idents(fields.len());
-        let field_names = &field_idents(fields);
-        quote!(#return_type{#(#field_names: original.#argument_field_names),*})
-    }
-}
-
-fn enum_from(input: &DeriveInput, data_enum: &DataEnum) -> TokenStream {
-    let mut type_signature_counts = HashMap::new();
-    let input_type = &input.ident;
-
-    for variant in &data_enum.variants {
-        match variant.fields {
-            Fields::Unnamed(ref fields) => {
-                let original_types = unnamed_to_vec(fields).iter().map(|f| &f.ty).collect();
-                let counter = type_signature_counts.entry(original_types).or_insert(0);
-                *counter += 1;
-            }
-            Fields::Named(ref fields) => {
-                let original_types = named_to_vec(fields).iter().map(|f| &f.ty).collect();
-                let counter = type_signature_counts.entry(original_types).or_insert(0);
-                *counter += 1;
-            }
-            Fields::Unit => {
-                let counter = type_signature_counts.entry(vec![]).or_insert(0);
-                *counter += 1;
-            }
-        }
-    }
-
+fn enum_from(input: &DeriveInput, state: State) -> TokenStream {
     let mut tokens = TokenStream::new();
 
-    for variant in &data_enum.variants {
-        match variant.fields {
-            Fields::Unnamed(ref fields) => {
-                let field_vec = &unnamed_to_vec(fields);
-                let original_types = get_field_types(field_vec);
-
-                if *type_signature_counts.index(&original_types) == 1 {
-                    let variant_ident = &variant.ident;
-                    let body = tuple_body(quote!(#input_type::#variant_ident), field_vec);
-                    from_impl(input, field_vec, body).to_tokens(&mut tokens)
-                }
+    let mut variants_per_types = HashMap::new();
+    for variant_state in state.enabled_variant_data().variant_states {
+        let multi_field_data = variant_state.enabled_fields_data();
+        let MultiFieldData { field_types, .. } = multi_field_data.clone();
+        variants_per_types
+            .entry(field_types.clone())
+            .or_insert_with(Vec::new)
+            .push(variant_state);
+    }
+    for (ref field_types, ref variant_states) in variants_per_types {
+        for variant_state in variant_states {
+            let multi_field_data = variant_state.enabled_fields_data();
+            let MultiFieldData {
+                variant_info,
+                infos,
+                ..
+            } = multi_field_data.clone();
+            // If there would be a conflict on a empty tuple derive, ignore the
+            // variants that are not explicitely enabled or have explicitely enabled
+            // or disabled fields
+            if field_types.is_empty()
+                && variant_states.len() > 1
+                && !std::iter::once(variant_info)
+                    .chain(infos)
+                    .any(|info| info.info.enabled.is_some())
+            {
+                continue;
             }
-
-            Fields::Named(ref fields) => {
-                let field_vec = &named_to_vec(fields);
-                let original_types = get_field_types(field_vec);
-
-                if *type_signature_counts.index(&original_types) == 1 {
-                    let variant_ident = &variant.ident;
-                    let body = struct_body(quote!(#input_type::#variant_ident), field_vec);
-                    from_impl(input, field_vec, body).to_tokens(&mut tokens)
-                }
-            }
-            Fields::Unit => {
-                if *type_signature_counts.index(&vec![]) == 1 {
-                    let variant_ident = &variant.ident;
-                    let body = struct_body(quote!(#input_type::#variant_ident), &[]);
-                    from_impl(input, &[], body).to_tokens(&mut tokens)
-                }
-            }
+            struct_from(input, variant_state).to_tokens(&mut tokens);
         }
     }
     tokens
