@@ -1,12 +1,15 @@
-use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
-use std::iter;
-use syn::{Data, DataEnum, DeriveInput, Field, Fields, Ident, Index};
-use utils::{
-    add_extra_type_param_bound_op_output, field_idents, named_to_vec, numbered_vars, unnamed_to_vec,
+use crate::add_helpers::{struct_exprs, tuple_exprs};
+use crate::utils::{
+    add_extra_type_param_bound_op_output, field_idents, named_to_vec, numbered_vars,
+    unnamed_to_vec,
 };
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, ToTokens};
+use std::iter;
+use syn::{Data, DataEnum, DeriveInput, Field, Fields, Ident};
 
 pub fn expand(input: &DeriveInput, trait_name: &str) -> TokenStream {
+    let trait_name = trait_name.trim_end_matches("Self");
     let trait_ident = Ident::new(trait_name, Span::call_site());
     let method_name = trait_name.to_lowercase();
     let method_ident = Ident::new(&method_name, Span::call_site());
@@ -28,7 +31,7 @@ pub fn expand(input: &DeriveInput, trait_name: &str) -> TokenStream {
             _ => panic!(format!("Unit structs cannot use derive({})", trait_name)),
         },
         Data::Enum(ref data_enum) => (
-            quote!(::std::result::Result<#input_type#ty_generics, &'static str>),
+            quote!(::core::result::Result<#input_type#ty_generics, &'static str>),
             enum_content(input_type, data_enum, &method_ident),
         ),
 
@@ -39,7 +42,7 @@ pub fn expand(input: &DeriveInput, trait_name: &str) -> TokenStream {
     };
 
     quote!(
-        impl#impl_generics ::std::ops::#trait_ident for #input_type#ty_generics #where_clause {
+        impl#impl_generics ::core::ops::#trait_ident for #input_type#ty_generics #where_clause {
             type Output = #output_type;
             #[inline]
             fn #method_ident(self, rhs: #input_type#ty_generics) -> #output_type {
@@ -58,19 +61,11 @@ fn tuple_content<T: ToTokens>(
     quote!(#input_type(#(#exprs),*))
 }
 
-pub fn tuple_exprs(fields: &[&Field], method_ident: &Ident) -> Vec<TokenStream> {
-    let mut exprs = vec![];
-
-    for i in 0..fields.len() {
-        let i = Index::from(i);
-        // generates `self.0.add(rhs.0)`
-        let expr = quote!(self.#i.#method_ident(rhs.#i));
-        exprs.push(expr);
-    }
-    exprs
-}
-
-fn struct_content(input_type: &Ident, fields: &[&Field], method_ident: &Ident) -> TokenStream {
+fn struct_content(
+    input_type: &Ident,
+    fields: &[&Field],
+    method_ident: &Ident,
+) -> TokenStream {
     // It's safe to unwrap because struct fields always have an identifier
     let exprs = struct_exprs(fields, method_ident);
     let field_names = field_idents(fields);
@@ -78,20 +73,12 @@ fn struct_content(input_type: &Ident, fields: &[&Field], method_ident: &Ident) -
     quote!(#input_type{#(#field_names: #exprs),*})
 }
 
-pub fn struct_exprs(fields: &[&Field], method_ident: &Ident) -> Vec<TokenStream> {
-    let mut exprs = vec![];
-
-    for field in fields {
-        // It's safe to unwrap because struct fields always have an identifier
-        let field_id = field.ident.as_ref().unwrap();
-        // generates `x: self.x.add(rhs.x)`
-        let expr = quote!(self.#field_id.#method_ident(rhs.#field_id));
-        exprs.push(expr)
-    }
-    exprs
-}
-
-fn enum_content(input_type: &Ident, data_enum: &DataEnum, method_ident: &Ident) -> TokenStream {
+#[allow(clippy::cognitive_complexity)]
+fn enum_content(
+    input_type: &Ident,
+    data_enum: &DataEnum,
+    method_ident: &Ident,
+) -> TokenStream {
     let mut matches = vec![];
     let mut method_iter = iter::repeat(method_ident);
 
@@ -107,10 +94,10 @@ fn enum_content(input_type: &Ident, data_enum: &DataEnum, method_ident: &Ident) 
                 let l_vars = &numbered_vars(size, "l_");
                 let r_vars = &numbered_vars(size, "r_");
                 let method_iter = method_iter.by_ref();
-                let matcher = quote!{
+                let matcher = quote! {
                     (#subtype(#(#l_vars),*),
                      #subtype(#(#r_vars),*)) => {
-                        ::std::result::Result::Ok(#subtype(#(#l_vars.#method_iter(#r_vars)),*))
+                        ::core::result::Result::Ok(#subtype(#(#l_vars.#method_iter(#r_vars)),*))
                     }
                 };
                 matches.push(matcher);
@@ -126,17 +113,18 @@ fn enum_content(input_type: &Ident, data_enum: &DataEnum, method_ident: &Ident) 
                 let l_vars = &numbered_vars(size, "l_");
                 let r_vars = &numbered_vars(size, "r_");
                 let method_iter = method_iter.by_ref();
-                let matcher = quote!{
+                let matcher = quote! {
                     (#subtype{#(#field_names: #l_vars),*},
                      #subtype{#(#field_names: #r_vars),*}) => {
-                        ::std::result::Result::Ok(#subtype{#(#field_names: #l_vars.#method_iter(#r_vars)),*})
+                        ::core::result::Result::Ok(#subtype{#(#field_names: #l_vars.#method_iter(#r_vars)),*})
                     }
                 };
                 matches.push(matcher);
             }
             Fields::Unit => {
-                let message = format!("Cannot {}() unit variants", method_ident.to_string());
-                matches.push(quote!((#subtype, #subtype) => ::std::result::Result::Err(#message)));
+                let message =
+                    format!("Cannot {}() unit variants", method_ident.to_string());
+                matches.push(quote!((#subtype, #subtype) => ::core::result::Result::Err(#message)));
             }
         }
     }
@@ -148,7 +136,7 @@ fn enum_content(input_type: &Ident, data_enum: &DataEnum, method_ident: &Ident) 
             "Trying to {} mismatched enum variants",
             method_ident.to_string()
         );
-        matches.push(quote!(_ => ::std::result::Result::Err(#message)));
+        matches.push(quote!(_ => ::core::result::Result::Err(#message)));
     }
     quote!(
         match (self, rhs) {
