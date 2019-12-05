@@ -61,10 +61,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFind)
 NS_IMPL_CYCLE_COLLECTION(nsFind)
 
 nsFind::nsFind()
-    : mFindBackward(false),
-      mCaseSensitive(false),
-      mMatchDiacritics(false),
-      mWordBreaker(nullptr) {}
+    : mFindBackward(false), mCaseSensitive(false), mWordBreaker(nullptr) {}
 
 nsFind::~nsFind() = default;
 
@@ -400,22 +397,6 @@ nsFind::SetEntireWord(bool aEntireWord) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFind::GetMatchDiacritics(bool* aMatchDiacritics) {
-  if (!aMatchDiacritics) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aMatchDiacritics = mMatchDiacritics;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFind::SetMatchDiacritics(bool aMatchDiacritics) {
-  mMatchDiacritics = aMatchDiacritics;
-  return NS_OK;
-}
-
 // Here begins the find code. A ten-thousand-foot view of how it works: Find
 // needs to be able to compare across inline (but not block) nodes, e.g. find
 // for "abc" should match a<b>b</b>c. So after we've searched a node, we're not
@@ -525,9 +506,6 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   nsAutoString patAutoStr(aPatText);
   if (!mCaseSensitive) {
     ToFoldedCase(patAutoStr);
-  }
-  if (!mMatchDiacritics) {
-    ToNaked(patAutoStr);
   }
 
   // Ignore soft hyphens in the pattern
@@ -707,13 +685,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     }
     if (!inWhitespace && IsSpace(patc)) {
       inWhitespace = true;
-    } else if (!inWhitespace) {
-      if (!mCaseSensitive) {
-        c = ToFoldedCase(c);
-      }
-      if (!mMatchDiacritics) {
-        c = ToNaked(c);
-      }
+    } else if (!inWhitespace && !mCaseSensitive) {
+      c = ToFoldedCase(c);
     }
 
     if (c == CH_SHY) {

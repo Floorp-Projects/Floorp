@@ -22,6 +22,5 @@ interface nsIFindService : nsISupports
     attribute boolean wrapFind;
     attribute boolean entireWord;
     attribute boolean matchCase;
-    attribute boolean matchDiacritics;
 
 };
