@@ -196,7 +196,7 @@ const proto = {
   },
 
   removeWatchpoints() {
-    this._originalDescriptors.forEach(property =>
+    this._originalDescriptors.forEach((_, property) =>
       this.removeWatchpoint(property)
     );
   },
