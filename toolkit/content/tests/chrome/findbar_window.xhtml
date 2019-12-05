@@ -28,7 +28,7 @@
 
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
-    const SEARCH_TEXT = "Text Test (δοκιμή)";
+    const SEARCH_TEXT = "Text Test";
     const NOT_FOUND_TEXT = "This text is not on the page."
     const ITERATOR_TIMEOUT = gPrefsvc.getIntPref("findbar.iteratorTimeout");
 
@@ -88,7 +88,7 @@
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf-8,<h2 id='h2'>" + SEARCH_TEXT +
+      BrowserTestUtils.loadURI(gBrowser, "data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
         "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" +
         SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>",
         { triggeringPrincipal: window.document.nodePrincipal });
@@ -733,24 +733,6 @@
       gFindBar.onFindAgainCommand();
       await promise;
       ok(gFindBar.hidden, "Successful Find Again leaves the find bar closed.");
-    }
-
-    async function testToggleDiacriticMatching() {
-      await openFindbar();
-      let promise = promiseFindResult();
-      await enterStringIntoFindField("δοκιμη", false);
-      let result = await promise;
-      is(result.result, Ci.nsITypeAheadFind.FIND_FOUND, "Text should be found");
-
-      await new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
-      promise = promiseFindResult();
-      let check = gFindBar.getElement("find-match-diacritics");
-      check.click();
-      result = await promise;
-      is(result.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "Text should NOT be found");
-
-      check.click();
-      gFindBar.close(true);
     }
 
     async function testToggleEntireWord() {

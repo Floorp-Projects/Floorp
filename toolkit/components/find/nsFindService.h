@@ -40,5 +40,4 @@ class nsFindService : public nsIFindService {
   bool mWrapFind;
   bool mEntireWord;
   bool mMatchCase;
-  bool mMatchDiacritics;
 };
