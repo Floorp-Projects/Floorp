@@ -12,7 +12,8 @@ DevToolsModules(
     'style-change-tracker.js',
     'style-inspector-menu.js',
     'tooltips-overlay.js',
-    'utils.js'
+    'utils.js',
+    'walker-event-listener.js'
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
