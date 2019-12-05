@@ -142,6 +142,7 @@ export const UserEventAction = Joi.object().keys({
           "pocket",
           "search",
           "spoc",
+          "organic",
         ]),
         search_vendor: Joi.valid(["google", "amazon"]),
         has_flow_params: Joi.bool(),
