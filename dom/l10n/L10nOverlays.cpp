@@ -452,7 +452,15 @@ void L10nOverlays::TranslateElement(Element& aElement,
                                     nsTArray<L10nOverlaysError>& aErrors,
                                     ErrorResult& aRv) {
   if (!aTranslation.mValue.IsVoid()) {
-    if (!ContainsMarkup(aTranslation.mValue)) {
+    NodeInfo* nodeInfo = aElement.NodeInfo();
+    if (nodeInfo->NameAtom() == nsGkAtoms::title &&
+        nodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
+      // A special case for the HTML title element whose content must be text.
+      aElement.SetTextContent(aTranslation.mValue, aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
+    } else if (!ContainsMarkup(aTranslation.mValue)) {
       // If the translation doesn't contain any markup skip the overlay logic.
       aElement.SetTextContent(aTranslation.mValue, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
