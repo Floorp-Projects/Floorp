@@ -54,35 +54,14 @@ public class WebExtension {
      */
     public final @WebExtensionFlags long flags;
 
-    /** Provides information about this {@link WebExtension}. */
-    // TODO: move to @NonNull when we remove registerWebExtension
-    public final @Nullable MetaData metaData;
+    // TODO: make public
+    final MetaData metaData;
 
     // TODO: make public
     final boolean isBuiltIn;
 
     // TODO: make public
     final boolean isEnabled;
-
-    /** Called whenever a delegate is set or unset on this {@link WebExtension} instance.
-    /* package */ interface DelegateObserver {
-        void onMessageDelegate(final String nativeApp, final MessageDelegate delegate);
-        void onActionDelegate(final ActionDelegate delegate);
-    }
-
-    private WeakReference<DelegateObserver> mDelegateObserver = new WeakReference<>(null);
-
-    /* package */ void setDelegateObserver(final DelegateObserver observer) {
-        mDelegateObserver = new WeakReference<>(observer);
-
-        if (observer != null) {
-            // Notify observers of already attached delegates
-            for (final Map.Entry<String, MessageDelegate> entry : messageDelegates.entrySet()) {
-                observer.onMessageDelegate(entry.getKey(), entry.getValue());
-            }
-            observer.onActionDelegate(actionDelegate);
-        }
-    }
 
     /**
      * Delegates that handle messaging between this WebExtension and the app.
@@ -240,10 +219,6 @@ public class WebExtension {
     @UiThread
     public void setMessageDelegate(final @Nullable MessageDelegate messageDelegate,
                                    final @NonNull String nativeApp) {
-        final DelegateObserver observer = mDelegateObserver.get();
-        if (observer != null) {
-            observer.onMessageDelegate(nativeApp, messageDelegate);
-        }
         if (messageDelegate == null) {
             messageDelegates.remove(nativeApp);
             return;
@@ -1047,58 +1022,6 @@ public class WebExtension {
         }
     }
 
-    /** Extension thrown when an error occurs during extension installation. */
-    public static class InstallException extends Exception {
-        public static class ErrorCodes {
-            /** The download failed due to network problems. */
-            public static final int ERROR_NETWORK_FAILURE = -1;
-            /** The downloaded file did not match the provided hash. */
-            public static final int ERROR_INCORRECT_HASH = -2;
-            /** The downloaded file seems to be corrupted in some way. */
-            public static final int ERROR_CORRUPT_FILE = -3;
-            /** An error occurred trying to write to the filesystem. */
-            public static final int ERROR_FILE_ACCESS = -4;
-            /** The extension must be signed and isn't. */
-            public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
-            /** The downloaded extension had a different type than expected. */
-            public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
-            /** The extension did not have the expected ID. */
-            public static final int ERROR_INCORRECT_ID = -7;
-
-            /** For testing. */
-            protected ErrorCodes() {}
-        }
-
-        @Retention(RetentionPolicy.SOURCE)
-        @IntDef(value = {
-                ErrorCodes.ERROR_NETWORK_FAILURE,
-                ErrorCodes.ERROR_INCORRECT_HASH,
-                ErrorCodes.ERROR_CORRUPT_FILE,
-                ErrorCodes.ERROR_FILE_ACCESS,
-                ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED,
-                ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE,
-                ErrorCodes.ERROR_INCORRECT_ID
-        })
-        /* package */ @interface Codes {}
-
-        /** One of {@link ErrorCodes} that provides more information about this exception. */
-        public final @Codes int code;
-
-        /** For testing */
-        protected InstallException() {
-            this.code = ErrorCodes.ERROR_NETWORK_FAILURE;
-        }
-
-        @Override
-        public String toString() {
-            return "InstallException: " + code;
-        }
-
-        /* package */ InstallException(final @Codes int code) {
-            this.code = code;
-        }
-    }
-
     /**
      * Set the Action delegate for this WebExtension.
      *
@@ -1112,11 +1035,6 @@ public class WebExtension {
      */
     @AnyThread
     public void setActionDelegate(final @Nullable ActionDelegate delegate) {
-        final DelegateObserver observer = mDelegateObserver.get();
-        if (observer != null) {
-            observer.onActionDelegate(delegate);
-        }
-
         actionDelegate = delegate;
 
         final GeckoBundle bundle = new GeckoBundle(1);
@@ -1126,27 +1044,15 @@ public class WebExtension {
                 "GeckoView:ActionDelegate:Attached", bundle);
     }
 
-    /** Describes the signed status for a {@link WebExtension}.
-     *
-     * See <a href="https://support.mozilla.org/en-US/kb/add-on-signing-in-firefox">
-     *   Add-on signing in Firefox.
-     * </a>
-     */
-    public static class SignedStateFlags {
-        // Keep in sync with AddonManager.jsm
-        /** This extension may be signed but by a certificate that doesn't
-         * chain to our our trusted certificate. */
-        public final static int UNKNOWN = -1;
-        /** This extension is unsigned. */
-        public final static int MISSING = 0;
-        /** This extension has been preliminarily reviewed. */
-        public final static int PRELIMINARY = 1;
-        /** This extension has been fully reviewed. */
-        public final static int SIGNED = 2;
-        /** This extension is a system add-on. */
-        public final static int SYSTEM = 3;
-        /** This extension is signed with a "Mozilla Extensions" certificate. */
-        public final static int PRIVILEGED = 4;
+    // TODO: make public
+    // Keep in sync with AddonManager.jsm
+    static class SignedStateFlags {
+        final static int UNKNOWN = -1;
+        final static int MISSING = 0;
+        final static int PRELIMINARY = 1;
+        final static int SIGNED = 2;
+        final static int SYSTEM = 3;
+        final static int PRIVILEGED = 4;
 
         /* package */ final static int LAST = PRIVILEGED;
     }
@@ -1156,136 +1062,40 @@ public class WebExtension {
         SignedStateFlags.SIGNED, SignedStateFlags.SYSTEM, SignedStateFlags.PRIVILEGED})
     @interface SignedState {}
 
-    /** Describes the blocklist state for a {@link WebExtension}.
-     *  See <a href="https://support.mozilla.org/en-US/kb/add-ons-cause-issues-are-on-blocklist">
-     *      Add-ons that cause stability or security issues are put on a blocklist
-     *  </a>.
-     */
-    public static class BlocklistStateFlags {
-        // Keep in sync with nsIBlocklistService.idl
-        /** This extension does not appear in the blocklist. */
-        public final static int NOT_BLOCKED = 0;
-        /** This extension is in the blocklist but the problem is not severe
-         * enough to warant forcibly blocking. */
-        public final static int SOFTBLOCKED = 1;
-        /** This extension should be blocked and never used. */
-        public final static int BLOCKED = 2;
-        /** This extension is considered outdated, and there is a known update
-         * available. */
-        public final static int OUTDATED = 3;
-        /** This extension is vulnerable and there is an update. */
-        public final static int VULNERABLE_UPDATE_AVAILABLE = 4;
-        /** This extension is vulnerable and there is no update. */
-        public final static int VULNERABLE_NO_UPDATE = 5;
+    // TODO: make public
+    // Keep in sync with nsIBlocklistService.idl
+    static class BlockedReasonFlags {
+        final static int NOT_BLOCKED = 0;
+        final static int SOFTBLOCKED = 1;
+        final static int BLOCKED = 2;
+        final static int OUTDATED = 3;
+        final static int VULNERABLE_UPDATE_AVAILABLE = 4;
+        final static int VULNERABLE_NO_UPDATE = 5;
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ BlocklistStateFlags.NOT_BLOCKED, BlocklistStateFlags.SOFTBLOCKED,
-            BlocklistStateFlags.BLOCKED, BlocklistStateFlags.OUTDATED,
-            BlocklistStateFlags.VULNERABLE_UPDATE_AVAILABLE,
-            BlocklistStateFlags.VULNERABLE_NO_UPDATE})
-    @interface BlocklistState {}
+    @IntDef({ BlockedReasonFlags.NOT_BLOCKED, BlockedReasonFlags.SOFTBLOCKED,
+            BlockedReasonFlags.BLOCKED, BlockedReasonFlags.OUTDATED,
+            BlockedReasonFlags.VULNERABLE_UPDATE_AVAILABLE,
+            BlockedReasonFlags.VULNERABLE_NO_UPDATE})
+    @interface BlockedReason {}
 
-    /** Provides information about a {@link WebExtension}. */
-    public class MetaData {
-        /** Main {@link Icon} branding for this {@link WebExtension}.
-          * Can be used when displaying prompts. */
-        public final @NonNull Icon icon;
-        /** API permissions requested or granted to this extension.
-          *
-          * Permission identifiers match entries in the manifest, see
-          * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-          *   API permissions
-          * </a>.
-          */
-        public final @NonNull String[] permissions;
-        /** Host permissions requested or granted to this extension.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions">
-          *   Host permissions
-          * </a>.
-          */
-        public final @NonNull String[] origins;
-        /** Branding name for this extension.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/name">
-          *   manifest.json/name
-          * </a>
-          */
-        public final @Nullable String name;
-        /** Branding description for this extension. This string will be
-          * localized using the current GeckoView language setting.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/description">
-          *   manifest.json/description
-          * </a>
-          */
-        public final @Nullable String description;
-        /** Version string for this extension.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version">
-          *   manifest.json/version
-          * </a>
-          */
-        public final @NonNull String version;
-        /** Creator name as provided in the manifest.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/developer">
-          *   manifest.json/developer
-          * </a>
-          */
-        public final @Nullable String creatorName;
-        /** Creator url as provided in the manifest.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/developer">
-          *   manifest.json/developer
-          * </a>
-          */
-        public final @Nullable String creatorUrl;
-        /** Homepage url as provided in the manifest.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/homepage_url">
-          *   manifest.json/homepage_url
-          * </a>
-          */
-        public final @Nullable String homepageUrl;
-        /** Options page as provided in the manifest.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui">
-          *   manifest.json/options_ui
-          * </a>
-          */
-        // TODO: Bug 1598792
-        final @Nullable String optionsPageUrl;
-        /** Whether the options page should be open in a Tab or not.
-          *
-          * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui#Syntax">
-          *   manifest.json/options_ui#Syntax
-          * </a>
-          */
-        // TODO: Bug 1598792
+    // TODO: make public
+    class MetaData {
+        final Icon icon;
+        final String[] permissions;
+        final String[] origins;
+        final String name;
+        final String description;
+        final String version;
+        final String creatorName;
+        final String creatorUrl;
+        final String homepageUrl;
+        final String optionsPageUrl;
         final boolean openOptionsPageInTab;
-        /** Whether or not this is a recommended extension.
-          *
-          * See <a href="https://blog.mozilla.org/firefox/firefox-recommended-extensions/">
-          *   Recommended Extensions program
-          * </a>
-          */
-        public final boolean isRecommended;
-        /** Blocklist status for this extension.
-          *
-          * See <a href="https://support.mozilla.org/en-US/kb/add-ons-cause-issues-are-on-blocklist">
-          *     Add-ons that cause stability or security issues are put on a blocklist
-          * </a>.
-          */
-        public final @BlocklistState int blocklistState;
-        /** Signed status for this extension.
-          *
-          * See <a href="https://support.mozilla.org/en-US/kb/add-on-signing-in-firefox">
-          *   Add-on signing in Firefox.
-          * </a>.
-          */
-        public final @SignedState int signedState;
+        final boolean isRecommended;
+        final @BlockedReason int blockedReason;
+        final @SignedState int signedState;
 
         /** Override for testing. */
         protected MetaData() {
@@ -1301,7 +1111,7 @@ public class WebExtension {
             optionsPageUrl = null;
             openOptionsPageInTab = false;
             isRecommended = false;
-            blocklistState = BlocklistStateFlags.NOT_BLOCKED;
+            blockedReason = BlockedReasonFlags.NOT_BLOCKED;
             signedState = SignedStateFlags.UNKNOWN;
         }
 
@@ -1317,7 +1127,7 @@ public class WebExtension {
             optionsPageUrl = bundle.getString("optionsPageUrl");
             openOptionsPageInTab = bundle.getBoolean("openOptionsPageInTab");
             isRecommended = bundle.getBoolean("isRecommended");
-            blocklistState = bundle.getInt("blocklistState", BlocklistStateFlags.NOT_BLOCKED);
+            blockedReason = bundle.getInt("blockedReason", BlockedReasonFlags.NOT_BLOCKED);
 
             int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
             if (signedState <= SignedStateFlags.LAST) {

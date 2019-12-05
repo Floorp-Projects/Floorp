@@ -74,7 +74,6 @@ GeckoViewStartup.prototype = {
             "GeckoView:PageAction:Click",
             "GeckoView:RegisterWebExtension",
             "GeckoView:UnregisterWebExtension",
-            "GeckoView:WebExtension:Get",
             "GeckoView:WebExtension:Disable",
             "GeckoView:WebExtension:Enable",
             "GeckoView:WebExtension:Install",
