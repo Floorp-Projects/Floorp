@@ -92,7 +92,6 @@ UNIFIED_SOURCES += [
     'testRegExp.cpp',
     'testResolveRecursion.cpp',
     'tests.cpp',
-    'testSABAccounting.cpp',
     'testSameValue.cpp',
     'testSavedStacks.cpp',
     'testScriptInfo.cpp',
