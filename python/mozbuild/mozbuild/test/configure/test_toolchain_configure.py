@@ -1670,6 +1670,22 @@ def gen_invoke_rustc(version, rustup_wrapper=False):
                     'x86_64-uwp-windows-gnu',
                     'x86_64-wrs-vxworks',
                 ]
+            # Additional targets from 1.38
+            if Version(version) >= '1.39.0':
+                rust_targets += [
+                    'aarch64-uwp-windows-msvc',
+                    'armv7-wrs-vxworks-eabihf',
+                    'i686-unknown-uefi',
+                    'i686-uwp-windows-msvc',
+                    'mips64-unknown-linux-muslabi64',
+                    'mips64el-unknown-linux-muslabi64',
+                    'sparc64-unknown-openbsd',
+                    'x86_64-linux-kernel',
+                    'x86_64-uwp-windows-msvc',
+                ]
+                rust_targets.remove('armv7-wrs-vxworks')
+                rust_targets.remove('i586-wrs-vxworks')
+
             return 0, '\n'.join(sorted(rust_targets)), ''
         if (len(args) == 6 and args[:2] == ('--crate-type', 'staticlib') and
             args[2].startswith('--target=') and args[3] == '-o'):
@@ -1681,7 +1697,7 @@ def gen_invoke_rustc(version, rustup_wrapper=False):
 
 
 class RustTest(BaseConfigureTest):
-    def get_rust_target(self, target, compiler_type='gcc', version='1.38.0',
+    def get_rust_target(self, target, compiler_type='gcc', version='1.39.0',
                         arm_target=None):
         environ = {
             'PATH': os.pathsep.join(
@@ -1765,6 +1781,7 @@ class RustTest(BaseConfigureTest):
             ('x86_64-pc-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
             ('i686-w64-mingw32', 'clang', 'i686-pc-windows-gnu'),
             ('x86_64-w64-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
+            ('aarch64-windows-mingw32', 'clang-cl', 'aarch64-pc-windows-msvc'),
         ):
             self.assertEqual(self.get_rust_target(autoconf, building_with_gcc), rust)
 
