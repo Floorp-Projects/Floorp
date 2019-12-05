@@ -16,6 +16,7 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
+#include "InitializedOnce.h"
 #include "js/StructuredClone.h"
 #include "js/Value.h"
 #include "jsapi.h"
@@ -7612,34 +7613,40 @@ class Cursor final : public PBackgroundIDBCursorParent {
   const RefPtr<TransactionBase> mTransaction;
   const RefPtr<Database> mDatabase;
   const RefPtr<FileManager> mFileManager;
-  PBackgroundParent* mBackgroundParent;
 
-  // These should only be touched on the PBackground thread to check whether the
-  // objectStore or index has been deleted. Holding these saves a hash lookup
-  // for every call to continue()/advance().
-  RefPtr<FullObjectStoreMetadata> mObjectStoreMetadata;
-  RefPtr<FullIndexMetadata> mIndexMetadata;
+  struct ActorDependentInfo {
+    PBackgroundParent* mBackgroundParent;
+
+    // These should only be touched on the PBackground thread to check whether
+    // the objectStore or index has been deleted. Holding these saves a hash
+    // lookup for every call to continue()/advance().
+    RefPtr<FullObjectStoreMetadata> mObjectStoreMetadata;
+    RefPtr<FullIndexMetadata> mIndexMetadata;
+  };
+
+  InitializedOnce<const ActorDependentInfo> mActorDependentInfo;
 
   const int64_t mObjectStoreId;
   const int64_t mIndexId;
 
-  // TODO: mContinueQuery, mContinueToQuery, mContinuePrimaryKeyQuery and
-  // mLocaleAwareRangeBound are initialized by OpenOp, and only read by
-  // ContinueOp. For ContinueOp, they should only be visible as const.
+  struct ContinueQueries {
+    nsCString mContinueQuery;
+    nsCString mContinueToQuery;
+    nsCString mContinuePrimaryKeyQuery;
+  };
 
-  nsCString mContinueQuery;
-  nsCString mContinueToQuery;
-  nsCString mContinuePrimaryKeyQuery;
-  const nsCString
-      mLocale;  ///< The locale if the cursor is locale-aware, otherwise empty.
-                ///< Note that only index-based cursors can be locale-aware.
-
-  Key mLocaleAwareRangeBound;  ///< If the cursor is based on a key range, the
+  InitializedOnce<const ContinueQueries, LazyInit::Allow> mContinueQueries;
+  InitializedOnce<const Key, LazyInit::Allow>
+      mLocaleAwareRangeBound;  ///< If the cursor is based on a key range, the
                                ///< bound in the direction of iteration (e.g.
                                ///< the upper bound in case of mDirection ==
                                ///< NEXT). If the cursor is based on a key, it
                                ///< is unset. If mLocale is set, this was
                                ///< converted to mLocale.
+
+  const nsCString
+      mLocale;  ///< The locale if the cursor is locale-aware, otherwise empty.
+                ///< Note that only index-based cursors can be locale-aware.
 
   CursorOpBase* mCurrentlyRunningOp;
 
@@ -7650,7 +7657,6 @@ class Cursor final : public PBackgroundIDBCursorParent {
 
   const bool mUniqueIndex;
   const bool mIsSameProcessActor;
-  bool mActorDestroyed;
 
   struct ConstructFromTransactionBase {};
 
@@ -7666,7 +7672,7 @@ class Cursor final : public PBackgroundIDBCursorParent {
 
  private:
   // Reference counted.
-  ~Cursor() override { MOZ_ASSERT(mActorDestroyed); }
+  ~Cursor() override { MOZ_ASSERT(!mActorDependentInfo); }
 
   bool VerifyRequestParams(const CursorRequestParams& aParams,
                            const CursorPosition& aPosition) const;
@@ -15263,35 +15269,40 @@ Cursor::Cursor(RefPtr<TransactionBase> aTransaction, const Type aType,
     : mTransaction(std::move(aTransaction)),
       mDatabase(!IsKeyCursor(aType) ? mTransaction->GetDatabase() : nullptr),
       mFileManager(!IsKeyCursor(aType) ? mDatabase->GetFileManager() : nullptr),
-      mBackgroundParent(
-          !IsKeyCursor(aType) ? mTransaction->GetBackgroundParent() : nullptr),
-      mObjectStoreMetadata(std::move(aObjectStoreMetadata)),
-      mIndexMetadata(std::move(aIndexMetadata)),
-      mObjectStoreId(mObjectStoreMetadata->mCommonMetadata.id()),
-      mIndexId(mIndexMetadata ? mIndexMetadata->mCommonMetadata.id() : 0),
-      mLocale(mIndexMetadata ? mIndexMetadata->mCommonMetadata.locale()
-                             : EmptyCString()),
+      mActorDependentInfo(
+          !IsKeyCursor(aType) ? mTransaction->GetBackgroundParent() : nullptr,
+          std::move(aObjectStoreMetadata), std::move(aIndexMetadata)),
+      mObjectStoreId(
+          mActorDependentInfo->mObjectStoreMetadata->mCommonMetadata.id()),
+      mIndexId(mActorDependentInfo->mIndexMetadata
+                   ? mActorDependentInfo->mIndexMetadata->mCommonMetadata.id()
+                   : 0),
+      mLocale(
+          mActorDependentInfo->mIndexMetadata
+              ? mActorDependentInfo->mIndexMetadata->mCommonMetadata.locale()
+              : EmptyCString()),
       mCurrentlyRunningOp(nullptr),
       mType(aType),
       mDirection(aDirection),
       mMaxExtraCount(IndexedDatabaseManager::MaxPreloadExtraRecords()),
-      mUniqueIndex(mIndexMetadata ? mIndexMetadata->mCommonMetadata.unique()
-                                  : false),
+      mUniqueIndex(
+          mActorDependentInfo->mIndexMetadata
+              ? mActorDependentInfo->mIndexMetadata->mCommonMetadata.unique()
+              : false),
       mIsSameProcessActor(!BackgroundParent::IsOtherProcessActor(
-          mTransaction->GetBackgroundParent())),
-      mActorDestroyed(false) {
+          mTransaction->GetBackgroundParent())) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(mType != OpenCursorParams::T__None);
-  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT(mActorDependentInfo->mObjectStoreMetadata);
   MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
                     mType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                mIndexMetadata);
+                mActorDependentInfo->mIndexMetadata);
 
   if (!IsKeyCursor(aType)) {
     MOZ_ASSERT(mDatabase);
     MOZ_ASSERT(mFileManager);
-    MOZ_ASSERT(mBackgroundParent);
+    MOZ_ASSERT(mActorDependentInfo->mBackgroundParent);
   }
 
   static_assert(
@@ -15303,19 +15314,20 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
                                  const CursorPosition& aPosition) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
-  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT(mActorDependentInfo->mObjectStoreMetadata);
   MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
                     mType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                mIndexMetadata);
+                mActorDependentInfo->mIndexMetadata);
 
 #ifdef DEBUG
   {
     const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
         mTransaction->GetMetadataForObjectStoreId(mObjectStoreId);
     if (objectStoreMetadata) {
-      MOZ_ASSERT(objectStoreMetadata == mObjectStoreMetadata);
+      MOZ_ASSERT(objectStoreMetadata ==
+                 mActorDependentInfo->mObjectStoreMetadata);
     } else {
-      MOZ_ASSERT(mObjectStoreMetadata->mDeleted);
+      MOZ_ASSERT(mActorDependentInfo->mObjectStoreMetadata->mDeleted);
     }
 
     if (objectStoreMetadata &&
@@ -15324,16 +15336,17 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
       const RefPtr<FullIndexMetadata> indexMetadata =
           mTransaction->GetMetadataForIndexId(objectStoreMetadata, mIndexId);
       if (indexMetadata) {
-        MOZ_ASSERT(indexMetadata == mIndexMetadata);
+        MOZ_ASSERT(indexMetadata == mActorDependentInfo->mIndexMetadata);
       } else {
-        MOZ_ASSERT(mIndexMetadata->mDeleted);
+        MOZ_ASSERT(mActorDependentInfo->mIndexMetadata->mDeleted);
       }
     }
   }
 #endif
 
-  if (NS_WARN_IF(mObjectStoreMetadata->mDeleted) ||
-      (mIndexMetadata && NS_WARN_IF(mIndexMetadata->mDeleted))) {
+  if (NS_WARN_IF(mActorDependentInfo->mObjectStoreMetadata->mDeleted) ||
+      (mActorDependentInfo->mIndexMetadata &&
+       NS_WARN_IF(mActorDependentInfo->mIndexMetadata->mDeleted))) {
     ASSERT_UNLESS_FUZZING();
     return false;
   }
@@ -15416,7 +15429,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
 bool Cursor::Start(const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() == mType);
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorDependentInfo);
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
@@ -15456,7 +15469,7 @@ void Cursor::SendResponseInternal(
               CursorResponse::TArrayOfObjectStoreKeyCursorResponse ||
           aResponse.type() == CursorResponse::TArrayOfIndexKeyCursorResponse,
       aFiles.IsEmpty());
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorDependentInfo);
   MOZ_ASSERT(mCurrentlyRunningOp);
 
   for (size_t i = 0; i < aFiles.Length(); ++i) {
@@ -15467,11 +15480,11 @@ void Cursor::SendResponseInternal(
                  aResponse.type() ==
                      CursorResponse::TArrayOfIndexCursorResponse);
       MOZ_ASSERT(mDatabase);
-      MOZ_ASSERT(mBackgroundParent);
+      MOZ_ASSERT(mActorDependentInfo->mBackgroundParent);
 
-      auto res =
-          SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, files,
-                                        /* aForPreprocess */ false);
+      auto res = SerializeStructuredCloneFiles(
+          mActorDependentInfo->mBackgroundParent, mDatabase, files,
+          /* aForPreprocess */ false);
       if (NS_WARN_IF(res.isErr())) {
         aResponse = ClampResultCode(res.inspectErr());
         break;
@@ -15515,23 +15528,18 @@ void Cursor::SendResponseInternal(
 
 void Cursor::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  mActorDestroyed = true;
+  MOZ_ASSERT(mActorDependentInfo);
 
   if (mCurrentlyRunningOp) {
     mCurrentlyRunningOp->NoteActorDestroyed();
   }
 
-  mBackgroundParent = nullptr;
-
-  mObjectStoreMetadata = nullptr;
-  mIndexMetadata = nullptr;
+  mActorDependentInfo.reset();
 }
 
 mozilla::ipc::IPCResult Cursor::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mActorDependentInfo);
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
@@ -15550,11 +15558,11 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(
     const Key& aCurrentObjectStoreKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
-  MOZ_ASSERT(!mActorDestroyed);
-  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT(mActorDependentInfo);
+  MOZ_ASSERT(mActorDependentInfo->mObjectStoreMetadata);
   MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
                     mType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                mIndexMetadata);
+                mActorDependentInfo->mIndexMetadata);
 
   const bool trustParams =
 #ifdef DEBUG
@@ -26101,8 +26109,9 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
 
 void Cursor::SetOptionalKeyRange(
     const Maybe<SerializedKeyRange>& aOptionalKeyRange, bool* const aOpen) {
-  MOZ_ASSERT(mLocaleAwareRangeBound.IsUnset());
   MOZ_ASSERT(aOpen);
+
+  Key localeAwareRangeBound;
 
   if (aOptionalKeyRange.isSome()) {
     const SerializedKeyRange& range = aOptionalKeyRange.ref();
@@ -26115,7 +26124,7 @@ void Cursor::SetOptionalKeyRange(
         (range.isOnly() || lowerBound) ? range.lower() : range.upper();
     if (IsLocaleAware()) {
       ErrorResult rv;
-      Unused << bound.ToLocaleAwareKey(mLocaleAwareRangeBound, mLocale, rv);
+      Unused << bound.ToLocaleAwareKey(localeAwareRangeBound, mLocale, rv);
 
       // XXX Explain why the error is ignored here (If it's impossible, then we
       //     should change this to an assertion.)
@@ -26123,11 +26132,13 @@ void Cursor::SetOptionalKeyRange(
         rv.SuppressException();
       }
     } else {
-      mLocaleAwareRangeBound = bound;
+      localeAwareRangeBound = bound;
     }
   } else {
     *aOpen = false;
   }
+
+  mLocaleAwareRangeBound.init(std::move(localeAwareRangeBound));
 }
 
 void Cursor::OpenOp::PrepareKeyConditionClauses(
@@ -26146,9 +26157,8 @@ void Cursor::OpenOp::PrepareKeyConditionClauses(
     bool open;
     mCursor->SetOptionalKeyRange(mOptionalKeyRange, &open);
 
-    // TODO: The first condition is probably redundant.
     if (mOptionalKeyRange.isSome() &&
-        !mCursor->mLocaleAwareRangeBound.IsUnset()) {
+        !mCursor->mLocaleAwareRangeBound->IsUnset()) {
       AppendConditionClause(aKeyString, kStmtParamNameRangeBound,
                             isIncreasingOrder, !open, keyRangeClause);
       AppendConditionClause(aKeyString, kStmtParamNameRangeBound,
@@ -26158,9 +26168,10 @@ void Cursor::OpenOp::PrepareKeyConditionClauses(
 
   const nsAutoCString suffix = aDirectionClause + kOpenLimit +
                                NS_LITERAL_CSTRING(":") + kStmtParamNameLimit;
-  mCursor->mContinueQuery = aQueryStart + keyRangeClause + suffix;
 
-  mCursor->mContinueToQuery = aQueryStart + continueToKeyRangeClause + suffix;
+  mCursor->mContinueQueries.init(
+      aQueryStart + keyRangeClause + suffix,
+      aQueryStart + continueToKeyRangeClause + suffix);
 }
 
 void Cursor::OpenOp::PrepareIndexKeyConditionClause(
@@ -26172,13 +26183,15 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
     bool open;
     mCursor->SetOptionalKeyRange(mOptionalKeyRange, &open);
     if (mOptionalKeyRange.isSome() &&
-        !mCursor->mLocaleAwareRangeBound.IsUnset()) {
+        !mCursor->mLocaleAwareRangeBound->IsUnset()) {
       AppendConditionClause(aSortColumn, kStmtParamNameRangeBound,
                             isIncreasingOrder, !open, aQueryStart);
     }
   }
 
-  mCursor->mContinueToQuery =
+  nsCString continueQuery, continueToQuery, continuePrimaryKeyQuery;
+
+  continueToQuery =
       aQueryStart + NS_LITERAL_CSTRING(" AND ") +
       GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterOrEquals
                                          : ComparisonOperator::LessOrEquals,
@@ -26187,7 +26200,7 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::PREV:
-      mCursor->mContinueQuery =
+      continueQuery =
           aQueryStart + NS_LITERAL_CSTRING(" AND ") +
           GetSortKeyClause(isIncreasingOrder
                                ? ComparisonOperator::GreaterOrEquals
@@ -26205,7 +26218,7 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
               kStmtParamNameObjectStorePosition) +
           NS_LITERAL_CSTRING(" ) ");
 
-      mCursor->mContinuePrimaryKeyQuery =
+      continuePrimaryKeyQuery =
           aQueryStart +
           NS_LITERAL_CSTRING(
               " AND ("
@@ -26227,7 +26240,7 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
 
     case IDBCursor::NEXT_UNIQUE:
     case IDBCursor::PREV_UNIQUE:
-      mCursor->mContinueQuery =
+      continueQuery =
           aQueryStart + NS_LITERAL_CSTRING(" AND ") +
           GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterThan
                                              : ComparisonOperator::LessThan,
@@ -26240,11 +26253,15 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
 
   const nsAutoCString suffix = aDirectionClause + kOpenLimit +
                                NS_LITERAL_CSTRING(":") + kStmtParamNameLimit;
-  mCursor->mContinueQuery += suffix;
-  mCursor->mContinueToQuery += suffix;
-  if (!mCursor->mContinuePrimaryKeyQuery.IsEmpty()) {
-    mCursor->mContinuePrimaryKeyQuery += suffix;
+  continueQuery += suffix;
+  continueToQuery += suffix;
+  if (!continuePrimaryKeyQuery.IsEmpty()) {
+    continuePrimaryKeyQuery += suffix;
   }
+
+  mCursor->mContinueQueries.init(std::move(continueQuery),
+                                 std::move(continueToQuery),
+                                 std::move(continuePrimaryKeyQuery));
 }
 
 nsresult Cursor::OpenOp::ProcessStatementSteps(
@@ -26588,9 +26605,7 @@ nsresult Cursor::OpenOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(mCursor);
-  MOZ_ASSERT(mCursor->mContinueQuery.IsEmpty());
-  MOZ_ASSERT(mCursor->mContinueToQuery.IsEmpty());
-  MOZ_ASSERT(mCursor->mContinuePrimaryKeyQuery.IsEmpty());
+  MOZ_ASSERT(!mCursor->mContinueQueries);
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoDatabaseWork", DOM);
 
@@ -26647,8 +26662,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mCursor->mObjectStoreId);
-  MOZ_ASSERT(!mCursor->mContinueQuery.IsEmpty());
-  MOZ_ASSERT(!mCursor->mContinueToQuery.IsEmpty());
+  MOZ_ASSERT(!mCursor->mContinueQueries->mContinueQuery.IsEmpty());
+  MOZ_ASSERT(!mCursor->mContinueQueries->mContinueToQuery.IsEmpty());
   MOZ_ASSERT(!mCurrentPosition.mPosition.IsUnset());
 
   const bool isIndex =
@@ -26657,7 +26672,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   MOZ_ASSERT_IF(isIndex && (mCursor->mDirection == IDBCursor::NEXT ||
                             mCursor->mDirection == IDBCursor::PREV),
-                !mCursor->mContinuePrimaryKeyQuery.IsEmpty());
+                !mCursor->mContinueQueries->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT_IF(isIndex, mCursor->mIndexId);
   MOZ_ASSERT_IF(isIndex, !mCurrentPosition.mObjectStorePosition.IsUnset());
 
@@ -26711,9 +26726,10 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   const nsCString& continueQuery =
-      hasContinuePrimaryKey ? mCursor->mContinuePrimaryKeyQuery
-                            : hasContinueKey ? mCursor->mContinueToQuery
-                                             : mCursor->mContinueQuery;
+      hasContinuePrimaryKey
+          ? mCursor->mContinueQueries->mContinuePrimaryKeyQuery
+          : hasContinueKey ? mCursor->mContinueQueries->mContinueToQuery
+                           : mCursor->mContinueQueries->mContinueQuery;
 
   // TODO: Whether it makes sense to preload depends on the kind of the
   // subsequent operations, not of the current operation. We could assume that
@@ -26764,8 +26780,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   // Bind range bound if it is specified.
-  if (!mCursor->mLocaleAwareRangeBound.IsUnset()) {
-    rv = mCursor->mLocaleAwareRangeBound.BindToStatement(
+  if (!mCursor->mLocaleAwareRangeBound->IsUnset()) {
+    rv = mCursor->mLocaleAwareRangeBound->BindToStatement(
         &*stmt, kStmtParamNameRangeBound);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
