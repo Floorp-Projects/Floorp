@@ -409,58 +409,6 @@ class Settings extends PureComponent {
   }
 
   /**
-   * about:profiling doesn't need to collapse the children into details/summary,
-   * but the popup and devtools do (for now).
-   *
-   * @param {string} id
-   * @param {React.ReactNode} title
-   * @param {React.ReactNode} children
-   * @returns React.ReactNode
-   */
-  _renderSection(id, title, children) {
-    const { pageContext } = this.props;
-    switch (pageContext) {
-      case "popup":
-      case "devtools":
-        // Render the section with a dropdown summary.
-        return details(
-          {
-            className: "perf-settings-details",
-            // @ts-ignore - The React type definitions don't know about onToggle.
-            onToggle: _handleToggle,
-          },
-          summary(
-            {
-              className: "perf-settings-summary",
-              id,
-            },
-            // Concatenating strings like this isn't very localizable, but it should go
-            // away by the time we localize these components.
-            title + ":"
-          ),
-          // Contain the overflow of the slide down animation with the first div.
-          div(
-            { className: "perf-settings-details-contents" },
-            // Provide a second <div> element for the contents of the slide down
-            // animation.
-            div(
-              { className: "perf-settings-details-contents-slider" },
-              children
-            )
-          )
-        );
-      case "aboutprofiling":
-        // Render the section without a dropdown summary.
-        return div(
-          { className: "perf-settings-sections" },
-          div(null, h2(null, title), children)
-        );
-      default:
-        throw new UnhandledCaseError(pageContext, "PageContext");
-    }
-  }
-
-  /**
    * @param {ThreadColumn[]} threadDisplay
    * @param {number} index
    * @return {React.ReactNode}
@@ -472,7 +420,8 @@ class Settings extends PureComponent {
       threadDisplay.map(({ name, title, id }) =>
         label(
           {
-            className: "perf-settings-checkbox-label",
+            className:
+              "perf-settings-checkbox-label perf-settings-thread-label",
             key: name,
             title,
           },
@@ -492,9 +441,12 @@ class Settings extends PureComponent {
 
   _renderThreads() {
     const { temporaryThreadText } = this.state;
-    return this._renderSection(
+    const { pageContext, threads } = this.props;
+
+    return renderSection(
       "perf-settings-threads-summary",
       "Threads",
+      pageContext,
       div(
         null,
         div(
@@ -519,7 +471,7 @@ class Settings extends PureComponent {
               type: "text",
               value:
                 temporaryThreadText === null
-                  ? this.props.threads.join(",")
+                  ? threads.join(",")
                   : temporaryThreadText,
               onBlur: this._handleThreadTextCleanup,
               onFocus: this._setThreadTextFromInput,
@@ -590,9 +542,10 @@ class Settings extends PureComponent {
   }
 
   _renderFeatures() {
-    return this._renderSection(
+    return renderSection(
       "perf-settings-features-summary",
       "Features",
+      this.props.pageContext,
       div(
         null,
         // Render the supported features first.
@@ -612,10 +565,11 @@ class Settings extends PureComponent {
   }
 
   _renderLocalBuildSection() {
-    const { objdirs } = this.props;
-    return this._renderSection(
+    const { objdirs, pageContext } = this.props;
+    return renderSection(
       "perf-settings-local-build-summary",
       "Local build",
+      pageContext,
       div(
         null,
         p(
@@ -734,6 +688,55 @@ function _handleToggle() {
 
   if (popupWindow.gResizePopup) {
     popupWindow.gResizePopup(document.body.clientHeight);
+  }
+}
+
+/**
+ * about:profiling doesn't need to collapse the children into details/summary,
+ * but the popup and devtools do (for now).
+ *
+ * @param {string} id
+ * @param {React.ReactNode} title
+ * @param {PageContext} pageContext
+ * @param {React.ReactNode} children
+ * @returns React.ReactNode
+ */
+function renderSection(id, title, pageContext, children) {
+  switch (pageContext) {
+    case "popup":
+    case "devtools":
+      // Render the section with a dropdown summary.
+      return details(
+        {
+          className: "perf-settings-details",
+          // @ts-ignore - The React type definitions don't know about onToggle.
+          onToggle: _handleToggle,
+        },
+        summary(
+          {
+            className: "perf-settings-summary",
+            id,
+          },
+          // Concatenating strings like this isn't very localizable, but it should go
+          // away by the time we localize these components.
+          title + ":"
+        ),
+        // Contain the overflow of the slide down animation with the first div.
+        div(
+          { className: "perf-settings-details-contents" },
+          // Provide a second <div> element for the contents of the slide down
+          // animation.
+          div({ className: "perf-settings-details-contents-slider" }, children)
+        )
+      );
+    case "aboutprofiling":
+      // Render the section without a dropdown summary.
+      return div(
+        { className: "perf-settings-sections" },
+        div(null, h2(null, title), children)
+      );
+    default:
+      throw new UnhandledCaseError(pageContext, "PageContext");
   }
 }
 

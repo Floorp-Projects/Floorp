@@ -72,7 +72,8 @@ static const RedirEntry kRedirMap[] = {
 #if !defined(ANDROID) && defined(NIGHTLY_BUILD)
     // about:profiling is Nightly-only while it is in active development. Once
     // the feature matures, it will be released across all desktop channels.
-    {"profiling", "chrome://devtools/content/performance-new/popup/popup.xhtml",
+    {"profiling",
+     "chrome://devtools/content/performance-new/aboutprofiling/index.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
 #endif
     {"rights", "chrome://global/content/aboutRights.xhtml",
