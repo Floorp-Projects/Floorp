@@ -318,8 +318,8 @@ impl Transaction {
     }
 
     ///
-    pub fn set_is_transform_pinch_zooming(&mut self, is_zooming: bool, animation_id: PropertyBindingId) {
-        self.frame_ops.push(FrameMsg::SetIsTransformPinchZooming(is_zooming, animation_id));
+    pub fn set_is_transform_async_zooming(&mut self, is_zooming: bool, animation_id: PropertyBindingId) {
+        self.frame_ops.push(FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id));
     }
 
     ///
@@ -836,7 +836,7 @@ pub enum FrameMsg {
     ///
     SetPinchZoom(ZoomFactor),
     ///
-    SetIsTransformPinchZooming(bool, PropertyBindingId),
+    SetIsTransformAsyncZooming(bool, PropertyBindingId),
 }
 
 impl fmt::Debug for SceneMsg {
@@ -865,7 +865,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::SetPinchZoom(..) => "FrameMsg::SetPinchZoom",
-            FrameMsg::SetIsTransformPinchZooming(..) => "FrameMsg::SetIsTransformPinchZooming",
+            FrameMsg::SetIsTransformAsyncZooming(..) => "FrameMsg::SetIsTransformAsyncZooming",
         })
     }
 }
