@@ -1,58 +1,60 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// @ts-check
-
-/**
- * @template P
- * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
- */
-
-/**
- * @typedef {Object} StateProps
- * @property {PerfFront} perfFront
- * @property {RecordingState} recordingState
- * @property {boolean?} isSupportedPlatform
- * @property {PageContext} pageContext
- * @property {string | null} promptEnvRestart
- */
-
-/**
- * @typedef {Object} ThunkDispatchProps
- * @property {typeof actions.changeRecordingState} changeRecordingState
- * @property {typeof actions.reportProfilerReady} reportProfilerReady
- */
-
-/**
- * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
- * @typedef {StateProps & DispatchProps} Props
- * @typedef {import("../@types/perf").PerfFront} PerfFront
- * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PageContext} PageContext
- */
-
-/**
- * @typedef {import("../@types/perf").PanelWindow} PanelWindow
- */
-
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  div,
+  button,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const RecordingButton = createFactory(
+  require("devtools/client/performance-new/components/RecordingButton.js")
+);
+const Settings = createFactory(
+  require("devtools/client/performance-new/components/Settings.js")
+);
+const Description = createFactory(
+  require("devtools/client/performance-new/components/Description.js")
+);
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
-const { UnhandledCaseError } = require("devtools/client/performance-new/utils");
+const {
+  restartBrowserWithEnvironmentVariable,
+} = require("devtools/client/performance-new/browser");
 
 /**
- * This component state changes for the performance recording. e.g. If the profiler
+ * This is the top level component for initializing the performance recording panel.
+ * It has two jobs:
+ *
+ * 1) It manages state changes for the performance recording. e.g. If the profiler
  * suddenly becomes unavailable, it needs to react to those changes, and update the
  * recordingState in the store.
  *
- * @extends {React.PureComponent<Props>}
+ * 2) It mounts all of the sub components, but is itself very light on actual
+ * markup for presentation.
  */
-class ProfilerEventHandling extends PureComponent {
-  /** @param {Props} props */
+class Perf extends PureComponent {
+  static get propTypes() {
+    return {
+      // StateProps:
+      perfFront: PropTypes.object.isRequired,
+      recordingState: PropTypes.string.isRequired,
+      isSupportedPlatform: PropTypes.bool,
+      isPopup: PropTypes.bool,
+      promptEnvRestart: PropTypes.string,
+
+      // DispatchProps:
+      changeRecordingState: PropTypes.func.isRequired,
+      reportProfilerReady: PropTypes.func.isRequired,
+    };
+  }
+
   constructor(props) {
     super(props);
     this.handleProfilerStarting = this.handleProfilerStarting.bind(this);
@@ -63,10 +65,11 @@ class ProfilerEventHandling extends PureComponent {
     this.handlePrivateBrowsingEnding = this.handlePrivateBrowsingEnding.bind(
       this
     );
+    this.handleRestart = this.handleRestart.bind(this);
   }
 
   componentDidMount() {
-    const { perfFront, reportProfilerReady, pageContext } = this.props;
+    const { perfFront, reportProfilerReady, isPopup } = this.props;
 
     // Ask for the initial state of the profiler.
     Promise.all([
@@ -87,22 +90,9 @@ class ProfilerEventHandling extends PureComponent {
         if (isLockedForPrivateBrowsing) {
           recordingState = "locked-by-private-browsing";
         } else if (isActive) {
-          switch (pageContext) {
-            case "popup":
-            case "aboutprofiling":
-              // These page contexts are in global control of the profiler, so allow it
-              // to take control of recording.
-              recordingState = "recording";
-              break;
-            case "devtools":
-              // The DevTools performance recording shouldn't take control of others
-              // use of the Gecko Profiler, since it's more interested in the current
-              // page.
-              recordingState = "other-is-recording";
-              break;
-            default:
-              throw new UnhandledCaseError(pageContext, "PageContext");
-          }
+          // The popup is a global control for the recording, so allow it to take
+          // control of it.
+          recordingState = isPopup ? "recording" : "other-is-recording";
         } else {
           recordingState = "available-to-record";
         }
@@ -113,12 +103,8 @@ class ProfilerEventHandling extends PureComponent {
       // it will show. This defers the initial visibility of the popup until the
       // React components have fully rendered, and thus there is no annoying "blip"
       // to the screen when the page goes from fully blank, to showing the content.
-      /** @type {any} */
-      const anyWindow = window;
-      /** @type {PanelWindow} - Coerce the window into the PanelWindow. */
-      const { gReportReady } = anyWindow;
-      if (gReportReady) {
-        gReportReady();
+      if (window.gReportReady) {
+        window.gReportReady();
       }
     });
 
@@ -157,7 +143,7 @@ class ProfilerEventHandling extends PureComponent {
   }
 
   handleProfilerStarting() {
-    const { changeRecordingState, recordingState, pageContext } = this.props;
+    const { changeRecordingState, recordingState, isPopup } = this.props;
     switch (recordingState) {
       case "not-yet-known":
       // We couldn't have started it yet, so it must have been someone
@@ -168,21 +154,14 @@ class ProfilerEventHandling extends PureComponent {
       // We requested to stop the profiler, but someone else already started
       // it up. (fallthrough)
       case "request-to-get-profile-and-stop-profiler":
-        switch (pageContext) {
-          case "popup":
-          case "aboutprofiling":
-            // These page contexts are in global control of the profiler, so allow it
-            // to take control of recording.
-            changeRecordingState("recording");
-            break;
-          case "devtools":
-            // The DevTools performance recording shouldn't take control of others
-            // use of the Gecko Profiler, since it's more interested in the current
-            // page.
-            changeRecordingState("other-is-recording");
-            break;
-          default:
-            throw new UnhandledCaseError(pageContext, "PageContext");
+        if (isPopup) {
+          // The profiler popup doesn't care who is recording. It will take control
+          // of it.
+          changeRecordingState("recording");
+        } else {
+          // Someone re-started the profiler while we were asking for the completed
+          // profile.
+          changeRecordingState("other-is-recording");
         }
         break;
 
@@ -273,26 +252,66 @@ class ProfilerEventHandling extends PureComponent {
     this.props.changeRecordingState("available-to-record");
   }
 
+  handleRestart() {
+    const { promptEnvRestart } = this.props;
+    if (!promptEnvRestart) {
+      throw new Error(
+        "handleRestart() should only be called when promptEnvRestart exists."
+      );
+    }
+    restartBrowserWithEnvironmentVariable(promptEnvRestart, "1");
+  }
+
   render() {
-    return null;
+    const { isSupportedPlatform, isPopup, promptEnvRestart } = this.props;
+
+    if (isSupportedPlatform === null) {
+      // We don't know yet if this is a supported platform, wait for a response.
+      return null;
+    }
+
+    const additionalClassName = isPopup ? "perf-popup" : "perf-devtools";
+
+    return div(
+      { className: `perf ${additionalClassName}` },
+      promptEnvRestart
+        ? div(
+            { className: "perf-env-restart" },
+            div(
+              {
+                className:
+                  "perf-photon-message-bar perf-photon-message-bar-warning perf-env-restart-fixed",
+              },
+              div({ className: "perf-photon-message-bar-warning-icon" }),
+              "The browser must be restarted to enable this feature.",
+              button(
+                {
+                  className: "perf-photon-button perf-photon-button-micro",
+                  type: "button",
+                  onClick: this.handleRestart,
+                },
+                "Restart"
+              )
+            )
+          )
+        : null,
+      RecordingButton(),
+      Settings(),
+      isPopup ? null : Description()
+    );
   }
 }
 
-/**
- * @param {StoreState} state
- * @returns {StateProps}
- */
 function mapStateToProps(state) {
   return {
     perfFront: selectors.getPerfFront(state),
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
-    pageContext: selectors.getPageContext(state),
+    isPopup: selectors.getIsPopup(state),
     promptEnvRestart: selectors.getPromptEnvRestart(state),
   };
 }
 
-/** @type {ThunkDispatchProps} */
 const mapDispatchToProps = {
   changeRecordingState: actions.changeRecordingState,
   reportProfilerReady: actions.reportProfilerReady,
@@ -301,4 +320,4 @@ const mapDispatchToProps = {
 module.exports = connect(
   mapStateToProps,
   mapDispatchToProps
-)(ProfilerEventHandling);
+)(Perf);

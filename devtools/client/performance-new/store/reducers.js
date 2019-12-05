@@ -152,7 +152,7 @@ function initializedValues(state = null, action) {
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
         setRecordingPreferences: action.setRecordingPreferences,
-        pageContext: action.pageContext,
+        isPopup: Boolean(action.isPopup),
         getSymbolTableGetter: action.getSymbolTableGetter,
         supportedFeatures: action.supportedFeatures,
       };

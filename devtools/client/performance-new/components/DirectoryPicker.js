@@ -1,17 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// @ts-check
-
-/**
- * @typedef {Object} Props
- * @property {string[]} dirs
- * @property {() => void} onAdd
- * @property {(index: number) => void} onRemove
- */
-
 "use strict";
-
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const {
   div,
@@ -22,24 +12,29 @@ const {
 const {
   withCommonPathPrefixRemoved,
 } = require("devtools/client/performance-new/utils");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-/**
- * A list of directories with add and remove buttons.
- * Looks like this:
- *
- * +---------------------------------------------+
- * | code/obj-m-android-opt                      |
- * | code/obj-m-android-debug                    |
- * | test/obj-m-test                             |
- * |                                             |
- * +---------------------------------------------+
- *
- *  [+] [-]
- *
- * @extends {React.PureComponent<Props>}
- */
+// A list of directories with add and remove buttons.
+// Looks like this:
+//
+// +---------------------------------------------+
+// | code/obj-m-android-opt                      |
+// | code/obj-m-android-debug                    |
+// | test/obj-m-test                             |
+// |                                             |
+// +---------------------------------------------+
+//
+//  [+] [-]
+
 class DirectoryPicker extends PureComponent {
-  /** @param {Props} props */
+  static get propTypes() {
+    return {
+      dirs: PropTypes.array.isRequired,
+      onAdd: PropTypes.func.isRequired,
+      onRemove: PropTypes.func.isRequired,
+    };
+  }
+
   constructor(props) {
     super(props);
     this._listBox = null;
@@ -48,9 +43,6 @@ class DirectoryPicker extends PureComponent {
     this._handleRemoveButtonClick = this._handleRemoveButtonClick.bind(this);
   }
 
-  /**
-   * @param {HTMLSelectElement} element
-   */
   _takeListBoxRef(element) {
     this._listBox = element;
   }
@@ -72,7 +64,7 @@ class DirectoryPicker extends PureComponent {
       select(
         {
           className: "perf-settings-dir-list",
-          size: 4,
+          size: "4",
           ref: this._takeListBoxRef,
         },
         dirs.map((fullPath, i) =>

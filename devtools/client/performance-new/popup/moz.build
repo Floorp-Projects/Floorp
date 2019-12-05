@@ -9,4 +9,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')
