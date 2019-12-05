@@ -196,9 +196,25 @@ angle::Result TextureD3D::setStorageExternalMemory(const gl::Context *context,
     return angle::Result::Continue;
 }
 
-bool TextureD3D::shouldUseSetData(const ImageD3D *image) const
+bool TextureD3D::couldUseSetData() const
 {
     if (!mRenderer->getFeatures().setDataFasterThanImageUpload.enabled)
+    {
+        return false;
+    }
+
+    if (!mRenderer->getFeatures().setDataFasterThanImageUploadOn128bitFormats.enabled)
+    {
+        gl::InternalFormat internalFormat = gl::GetSizedInternalFormatInfo(getBaseLevelInternalFormat());
+        return internalFormat.pixelBytes < 16;
+    }
+
+    return true;
+}
+
+bool TextureD3D::shouldUseSetData(const ImageD3D *image) const
+{
+    if (!couldUseSetData())
     {
         return false;
     }
@@ -474,7 +490,7 @@ angle::Result TextureD3D::generateMipmapUsingImages(const gl::Context *context,
     // When making mipmaps with the setData workaround enabled, the texture storage has
     // the image data already. For non-render-target storage, we have to pull it out into
     // an image layer.
-    if (mRenderer->getFeatures().setDataFasterThanImageUpload.enabled && mTexStorage)
+    if (mTexStorage && couldUseSetData())
     {
         if (!mTexStorage->isRenderTarget())
         {
