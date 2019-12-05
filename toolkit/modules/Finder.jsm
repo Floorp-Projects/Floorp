@@ -170,6 +170,14 @@ Finder.prototype = {
     this.iterator.reset();
   },
 
+  set matchDiacritics(aMatchDiacritics) {
+    if (this._fastFind.matchDiacritics === aMatchDiacritics) {
+      return;
+    }
+    this._fastFind.matchDiacritics = aMatchDiacritics;
+    this.iterator.reset();
+  },
+
   set entireWord(aEntireWord) {
     if (this._fastFind.entireWord === aEntireWord) {
       return;
@@ -341,6 +349,7 @@ Finder.prototype = {
         caseSensitive: this._fastFind.caseSensitive,
         entireWord: this._fastFind.entireWord,
         linksOnly: aArgs.linksOnly,
+        matchDiacritics: this._fastFind.matchDiacritics,
         word: aArgs.searchString,
         useSubFrames: aArgs.useSubFrames,
       })
@@ -589,6 +598,7 @@ Finder.prototype = {
       caseSensitive: this._fastFind.caseSensitive,
       entireWord: this._fastFind.entireWord,
       linksOnly: aLinksOnly,
+      matchDiacritics: this._fastFind.matchDiacritics,
       word: aWord,
       useSubFrames: aUseSubFrames,
     };

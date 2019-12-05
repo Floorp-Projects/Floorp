@@ -42,6 +42,7 @@ class nsFind : public nsIFind {
   // Parameters set from the interface:
   bool mFindBackward;
   bool mCaseSensitive;
+  bool mMatchDiacritics;
 
   // Use "find entire words" mode by setting to a word breaker or null, to
   // disable "entire words" mode.
