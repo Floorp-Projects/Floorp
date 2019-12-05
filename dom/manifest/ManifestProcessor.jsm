@@ -216,21 +216,22 @@ var ManifestProcessor = {
       };
       let scopeURL;
       const startURL = new URL(processedManifest.start_url);
+      const defaultScope = new URL(".", startURL).href;
       const value = extractor.extractValue(spec);
       if (value === undefined || value === "") {
-        return undefined;
+        return defaultScope;
       }
       try {
         scopeURL = new URL(value, manifestURL);
       } catch (e) {
         const warn = domBundle.GetStringFromName("ManifestScopeURLInvalid");
         errors.push({ warn });
-        return undefined;
+        return defaultScope;
       }
       if (scopeURL.origin !== docURL.origin) {
         const warn = domBundle.GetStringFromName("ManifestScopeNotSameOrigin");
         errors.push({ warn });
-        return undefined;
+        return defaultScope;
       }
       // If start URL is not within scope of scope URL:
       let isSameOrigin = startURL && startURL.origin !== scopeURL.origin;
@@ -239,7 +240,7 @@ var ManifestProcessor = {
           "ManifestStartURLOutsideScope"
         );
         errors.push({ warn });
-        return undefined;
+        return defaultScope;
       }
       return scopeURL.href;
     }
