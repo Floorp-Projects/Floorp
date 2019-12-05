@@ -1014,7 +1014,8 @@ static void CollectCertTelemetry(
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const UniqueCERTCertList& aBuiltCertChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
+    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
+    CRLiteTelemetryInfo crliteTelemetryInfo) {
   uint32_t evStatus = (aCertVerificationResult != Success)
                           ? 0  // 0 = Failure
                           : (aEvOidPolicy == SEC_OID_UNKNOWN) ? 1   // 1 = DV
@@ -1052,6 +1053,38 @@ static void CollectCertTelemetry(
     GatherCertificateTransparencyTelemetry(
         aBuiltCertChain,
         /*isEV*/ aEvOidPolicy != SEC_OID_UNKNOWN, aCertificateTransparencyInfo);
+  }
+
+  switch (crliteTelemetryInfo) {
+    case CRLiteTelemetryInfo::FilterNotAvailable:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::FilterNotAvailable);
+      break;
+    case CRLiteTelemetryInfo::IssuerNotEnrolled:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::IssuerNotEnrolled);
+      break;
+    case CRLiteTelemetryInfo::CertificateTooNew:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::CertificateTooNew);
+      break;
+    case CRLiteTelemetryInfo::CertificateValid:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::CertificateValid);
+      break;
+    case CRLiteTelemetryInfo::CertificateRevoked:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::CertificateRevoked);
+      break;
+    case CRLiteTelemetryInfo::LibraryFailure:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::LibraryFailure);
+      break;
+    case CRLiteTelemetryInfo::NeverChecked:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled CRLiteTelemetryInfo value?");
+      break;
   }
 }
 
@@ -1116,6 +1149,7 @@ Result AuthCertificate(CertVerifier& certVerifier,
   SHA1ModeResult sha1ModeResult = SHA1ModeResult::NeverChecked;
   PinningTelemetryInfo pinningTelemetryInfo;
   CertificateTransparencyInfo certificateTransparencyInfo;
+  CRLiteTelemetryInfo crliteTelemetryInfo = CRLiteTelemetryInfo::NeverChecked;
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
   for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
@@ -1134,11 +1168,12 @@ Result AuthCertificate(CertVerifier& certVerifier,
       certVerifierFlags, Some(peerCertsBytes), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, infoObject->GetOriginAttributes(),
       saveIntermediates, &evOidPolicy, &ocspStaplingStatus, &keySizeStatus,
-      &sha1ModeResult, &pinningTelemetryInfo, &certificateTransparencyInfo);
+      &sha1ModeResult, &pinningTelemetryInfo, &certificateTransparencyInfo,
+      &crliteTelemetryInfo);
 
   CollectCertTelemetry(rv, evOidPolicy, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
-                       certificateTransparencyInfo);
+                       certificateTransparencyInfo, crliteTelemetryInfo);
 
   AuthCertificateSetResults(infoObject, cert, builtCertChain, peerCertChain,
                             certificateTransparencyInfo, evOidPolicy,

@@ -18,10 +18,17 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const { CRLiteFiltersClient } = RemoteSecuritySettings.init();
+const {
+  CRLiteFiltersClient,
+  IntermediatePreloadsClient,
+} = RemoteSecuritySettings.init();
 
 const CRLITE_FILTERS_ENABLED_PREF =
   "security.remote_settings.crlite_filters.enabled";
+const INTERMEDIATES_ENABLED_PREF =
+  "security.remote_settings.intermediates.enabled";
+const INTERMEDIATES_DL_PER_POLL_PREF =
+  "security.remote_settings.intermediates.downloads_per_poll";
 
 function getHashCommon(aStr, useBase64) {
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
@@ -54,7 +61,7 @@ async function syncAndDownload(filters) {
   await localDB.clear();
 
   for (let filter of filters) {
-    const file = do_get_file("test_crlite_filters.js");
+    const file = do_get_file("test_cert_storage_direct/test-filter.crlite");
     const fileBytes = readFile(file);
 
     const record = {
@@ -66,9 +73,11 @@ async function syncAndDownload(filters) {
         size: fileBytes.length,
         // This test ensures we're downloading the most recent full filter and any subsequent
         // incremental filters, so the actual contents doesn't matter right now.
-        filename: "totally_a_crlite_filter",
+        // Since we currently only make use of full filters, we can use the same file for every
+        // request.
+        filename: "crlite.filter",
         location:
-          "security-state-workspace/cert-revocations/test_crlite_filters.js",
+          "security-state-workspace/cert-revocations/test_cert_storage_direct/test-filter.crlite",
         mimetype: "application/octet-stream",
       },
       incremental: filter.type == "diff",
@@ -222,6 +231,90 @@ add_task(
   }
 );
 
+function getCRLiteEnrollmentRecordFor(nsCert) {
+  let { subjectString, spkiHashString } = getSubjectAndSPKIHash(nsCert);
+  return {
+    subjectDN: btoa(subjectString),
+    pubKeyHash: spkiHashString,
+    crlite_enrolled: true,
+  };
+}
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
+  async function test_crlite_filters_and_check_revocation() {
+    Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+    Services.prefs.setIntPref(
+      "security.pki.crlite_mode",
+      CRLiteModeEnforcePrefValue
+    );
+    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+
+    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+      Ci.nsIX509CertDB
+    );
+    let validCertIssuer = constructCertFromFile(
+      "test_cert_storage_direct/valid-cert-issuer.pem"
+    );
+    let revokedCertIssuer = constructCertFromFile(
+      "test_cert_storage_direct/revoked-cert-issuer.pem"
+    );
+
+    let crliteEnrollmentRecords = [
+      getCRLiteEnrollmentRecordFor(validCertIssuer),
+      getCRLiteEnrollmentRecordFor(revokedCertIssuer),
+    ];
+
+    await IntermediatePreloadsClient.onSync({
+      data: {
+        current: crliteEnrollmentRecords,
+        created: crliteEnrollmentRecords,
+        updated: [],
+        deleted: [],
+      },
+    });
+
+    let result = await syncAndDownload([
+      { timestamp: "2019-11-19T00:00:00Z", type: "full" },
+    ]);
+    equal(
+      result,
+      "finished;2019-11-19T00:00:00Z-full",
+      "CRLite filter download should have run"
+    );
+
+    let validCert = constructCertFromFile(
+      "test_cert_storage_direct/valid-cert.pem"
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    let revokedCert = constructCertFromFile(
+      "test_cert_storage_direct/revoked-cert.pem"
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+  }
+);
+
 let server;
 
 function run_test() {
@@ -252,6 +345,9 @@ function run_test() {
     "services.settings.server",
     `http://localhost:${server.identity.primaryPort}/v1`
   );
+
+  // Set intermediate preloading to download 0 intermediates at a time.
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 0);
 
   Services.prefs.setCharPref("browser.policies.loglevel", "debug");
 

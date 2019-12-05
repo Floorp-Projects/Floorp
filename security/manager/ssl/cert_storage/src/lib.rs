@@ -7,10 +7,14 @@ extern crate byteorder;
 extern crate crossbeam_utils;
 #[macro_use]
 extern crate log;
+extern crate memmap;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
+#[macro_use]
+extern crate rental;
 extern crate rkv;
+extern crate rust_cascade;
 extern crate sha2;
 extern crate thin_vec;
 extern crate time;
@@ -21,20 +25,22 @@ extern crate tempfile;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
+use memmap::Mmap;
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
+use rkv::backend::{BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment};
 use rkv::{StoreError, StoreOptions, Value};
-use rkv::backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment, BackendEnvironmentBuilder};
+use rust_cascade::Cascade;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fmt::Display;
 use std::fs::{create_dir_all, remove_file, File};
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::mem::size_of;
 use std::os::raw::c_char;
 use std::path::{Path, PathBuf};
@@ -95,11 +101,28 @@ struct EnvAndStore {
     store: SingleStore,
 }
 
+// In Rust, structs cannot have self references (if a struct gets moved, the compiler has no
+// guarantees that the references are still valid). In our case, since the memmapped data is at a
+// particular place in memory (and that's what we're referencing), we can use the rental crate to
+// create a struct that does reference itself.
+rental! {
+    mod holding {
+        use super::{Cascade, Mmap};
+
+        #[rental]
+        pub struct CRLiteFilter {
+            backing_file: Box<Mmap>,
+            cascade: Box<Cascade<'backing_file>>,
+        }
+    }
+}
+
 /// `SecurityState`
 struct SecurityState {
     profile_path: PathBuf,
     env_and_store: Option<EnvAndStore>,
     int_prefs: HashMap<String, u32>,
+    crlite_filter: Option<holding::CRLiteFilter>,
 }
 
 impl SecurityState {
@@ -110,6 +133,7 @@ impl SecurityState {
             profile_path,
             env_and_store: None,
             int_prefs: HashMap::new(),
+            crlite_filter: None,
         })
     }
 
@@ -149,6 +173,7 @@ impl SecurityState {
             )),
             None => Ok(()),
         }?;
+        self.load_crlite_filter()?;
         Ok(())
     }
 
@@ -340,6 +365,120 @@ impl SecurityState {
         }
     }
 
+    pub fn set_full_crlite_filter(
+        &mut self,
+        filter: Vec<u8>,
+        timestamp: u64,
+    ) -> Result<(), SecurityStateError> {
+        // First drop any existing crlite filter.
+        {
+            let _ = self.crlite_filter.take();
+        }
+        // Write the new full filter.
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.filter");
+        {
+            let mut filter_file = File::create(&path)?;
+            filter_file.write_all(&filter)?;
+        }
+        self.load_crlite_filter()?;
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        // Make a note of the timestamp of the full filter.
+        env_and_store.store.put(
+            &mut writer,
+            &make_key!(
+                PREFIX_DATA_TYPE,
+                &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8]
+            ),
+            &Value::U64(timestamp),
+        )?;
+        writer.commit()?;
+        Ok(())
+    }
+
+    fn load_crlite_filter(&mut self) -> Result<(), SecurityStateError> {
+        if self.crlite_filter.is_some() {
+            return Err(SecurityStateError::from(
+                "crlite_filter should be None here",
+            ));
+        }
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.filter");
+        // Before we've downloaded any filters, this file won't exist.
+        if !path.exists() {
+            return Ok(());
+        }
+        let filter_file = File::open(path)?;
+        let mmap = unsafe { Mmap::map(&filter_file)? };
+        let crlite_filter = holding::CRLiteFilter::try_new(Box::new(mmap), |mmap| {
+            match Cascade::from_bytes(mmap)? {
+                Some(cascade) => Ok(cascade),
+                None => Err(SecurityStateError::from("invalid CRLite filter")),
+            }
+        })
+        .map_err(|_| SecurityStateError::from("unable to initialize CRLite filter"))?;
+        let old_crlite_filter_should_be_none = self.crlite_filter.replace(crlite_filter);
+        assert!(old_crlite_filter_should_be_none.is_none());
+        Ok(())
+    }
+
+    pub fn get_crlite_revocation_state(
+        &self,
+        issuer: &[u8],
+        issuer_spki: &[u8],
+        serial_number: &[u8],
+    ) -> Result<(u64, i16), SecurityStateError> {
+        let timestamp = {
+            let env_and_store = match self.env_and_store.as_ref() {
+                Some(env_and_store) => env_and_store,
+                None => return Err(SecurityStateError::from("env and store not initialized?")),
+            };
+            let reader = env_and_store.env.read()?;
+            match env_and_store.store.get(
+                &reader,
+                &make_key!(
+                    PREFIX_DATA_TYPE,
+                    &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8]
+                ),
+            ) {
+                Ok(Some(Value::U64(timestamp))) => timestamp,
+                // If we don't have a timestamp yet, we won't have a filter. Return the earliest
+                // timestamp possible to indicate this to callers.
+                Ok(None) => return Ok((0, nsICertStorage::STATE_UNSET as i16)),
+                Ok(_) => {
+                    return Err(SecurityStateError::from(
+                        "unexpected type when trying to get Value::U64",
+                    ))
+                }
+                Err(_) => return Err(SecurityStateError::from("error getting CRLite timestamp")),
+            }
+        };
+        let enrollment_state = self.get_crlite_state(issuer, issuer_spki)?;
+        if enrollment_state != nsICertStorage::STATE_ENFORCE as i16 {
+            return Ok((timestamp, nsICertStorage::STATE_NOT_ENROLLED as i16));
+        }
+        let mut digest = Sha256::default();
+        digest.input(issuer_spki);
+        let mut lookup_key = digest.result().as_slice().to_vec();
+        lookup_key.extend_from_slice(serial_number);
+        debug!("CRLite lookup key: {:?}", lookup_key);
+        let result = match &self.crlite_filter {
+            Some(crlite_filter) => crlite_filter.rent(|filter| filter.has(&lookup_key)),
+            // This can only happen if the backing file was deleted or if it or our database has
+            // become corrupted. In any case, we have no information, so again return the earliest
+            // timestamp to indicate this to the user.
+            None => return Ok((0, nsICertStorage::STATE_UNSET as i16)),
+        };
+        match result {
+            true => Ok((timestamp, nsICertStorage::STATE_ENFORCE as i16)),
+            false => Ok((timestamp, nsICertStorage::STATE_UNSET as i16)),
+        }
+    }
+
     pub fn is_data_fresh(
         &self,
         update_pref: &str,
@@ -447,20 +586,17 @@ impl SecurityState {
 
         for hash in hashes {
             let cert_key = make_key!(PREFIX_CERT, hash);
-            if let Some(Value::Blob(cert_bytes)) =
-                env_and_store.store.get(&reader, &cert_key)?
-            {
+            if let Some(Value::Blob(cert_bytes)) = env_and_store.store.get(&reader, &cert_key)? {
                 if let Ok(cert) = Cert::from_bytes(cert_bytes) {
                     let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
                     let empty_vec = Vec::new();
                     // We have to use the writer here to make sure we have an up-to-date view of
                     // the cert hash list.
-                    let old_cert_hash_list =
-                        match env_and_store.store.get(&writer, &subject_key)? {
-                            Some(Value::Blob(hashes)) => hashes.to_owned(),
-                            Some(_) => empty_vec,
-                            None => empty_vec,
-                        };
+                    let old_cert_hash_list = match env_and_store.store.get(&writer, &subject_key)? {
+                        Some(Value::Blob(hashes)) => hashes.to_owned(),
+                        Some(_) => empty_vec,
+                        None => empty_vec,
+                    };
                     let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, hash)?;
                     if new_cert_hash_list.len() != old_cert_hash_list.len() {
                         env_and_store.store.put(
@@ -743,6 +879,7 @@ fn make_env(path: &Path) -> Result<Rkv, SecurityStateError> {
     let mut builder = Rkv::environment_builder::<SafeMode>();
     builder.set_max_dbs(2);
     builder.set_map_size(16777216); // 16MB
+
     // Bug 1595004: Migrate databases between backends in the future,
     // and handle 32 and 64 bit architectures in case of LMDB.
     Rkv::from_builder(path, builder).map_err(SecurityStateError::from)
@@ -1174,6 +1311,61 @@ impl CertStorage {
         let ss = get_security_state!(self);
         match ss.get_crlite_state(&*subject, &*pub_key) {
             Ok(st) => {
+                *state = st;
+                NS_OK
+            }
+            _ => NS_ERROR_FAILURE,
+        }
+    }
+
+    unsafe fn SetFullCRLiteFilter(
+        &self,
+        filter: *const ThinVec<u8>,
+        timestamp: u64,
+        callback: *const nsICertStorageCallback,
+    ) -> nserror::nsresult {
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if filter.is_null() || callback.is_null() {
+            return NS_ERROR_NULL_POINTER;
+        }
+        let filter_owned = (*filter).to_vec();
+        let task = Box::new(SecurityStateTask::new(
+            &*callback,
+            &self.security_state,
+            move |ss| ss.set_full_crlite_filter(filter_owned, timestamp),
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("SetFullCRLiteFilter", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
+    }
+
+    unsafe fn GetCRLiteRevocationState(
+        &self,
+        issuer: *const ThinVec<u8>,
+        issuerSPKI: *const ThinVec<u8>,
+        serialNumber: *const ThinVec<u8>,
+        valid_before: *mut u64,
+        state: *mut i16,
+    ) -> nserror::nsresult {
+        // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
+        // can't do so until bug 1406854 is fixed.
+        if issuer.is_null()
+            || issuerSPKI.is_null()
+            || serialNumber.is_null()
+            || valid_before.is_null()
+            || state.is_null()
+        {
+            return NS_ERROR_NULL_POINTER;
+        }
+        *valid_before = 0;
+        *state = nsICertStorage::STATE_UNSET as i16;
+        let ss = get_security_state!(self);
+        match ss.get_crlite_revocation_state(&*issuer, &*issuerSPKI, &*serialNumber) {
+            Ok((crlite_timestamp, st)) => {
+                *valid_before = crlite_timestamp;
                 *state = st;
                 NS_OK
             }

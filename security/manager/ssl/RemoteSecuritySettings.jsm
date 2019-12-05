@@ -415,9 +415,6 @@ class IntermediatePreloads {
   }
 
   async updatePreloadedIntermediates() {
-    // Bug 1429800: once the CertStateService has the correct interface, also
-    // store the whitelist status and crlite enrollment status
-
     if (!Services.prefs.getBoolPref(INTERMEDIATES_ENABLED_PREF, true)) {
       log.debug("Intermediate Preloading is disabled");
       Services.obs.notifyObservers(
@@ -769,12 +766,16 @@ class IntermediatePreloads {
   }
 }
 
+function filterToDate(filter) {
+  return new Date(filter.details.name.replace(/-(full|diff)$/, ""));
+}
+
 // Helper function to compare filters. One filter is "less than" another filter (i.e. it sorts
 // earlier) if its date is older than the other. Non-incremental filters sort earlier than
 // incremental filters of the same date.
 function compareFilters(filterA, filterB) {
-  let timeA = new Date(filterA.details.name.replace(/-(full|diff)$/, ""));
-  let timeB = new Date(filterB.details.name.replace(/-(full|diff)$/, ""));
+  let timeA = filterToDate(filterA);
+  let timeB = filterToDate(filterB);
   // If timeA is older (i.e. it is less than) timeB, it sorts earlier, so return a value less than
   // 0.
   if (timeA < timeB) {
@@ -853,9 +854,26 @@ class CRLiteFilters {
         let buffer = await (await fetch(localURI)).arrayBuffer();
         let bytes = new Uint8Array(buffer);
         log.debug(`Downloaded ${filter.details.name}: ${bytes.length} bytes`);
-        // In a future bug, this code will pass the downloaded filter on to nsICertStorage.
         filtersDownloaded.push(filter.details.name);
+        if (filter.details.name.endsWith("-full")) {
+          let timestamp = filterToDate(filter).getTime() / 1000;
+          log.debug(`setting CRLite filter timestamp to ${timestamp}`);
+          const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
+            Ci.nsICertStorage
+          );
+          await new Promise(resolve => {
+            certList.setFullCRLiteFilter(bytes, timestamp, rv => {
+              log.debug(`setFullCRLiteFilter: ${rv}`);
+              resolve();
+            });
+          });
+        } else {
+          log.debug(
+            "downloaded filter diff, but we don't support consuming them yet."
+          );
+        }
       } catch (e) {
+        log.debug(e);
         Cu.reportError("failed to download CRLite filter", e);
       }
     }

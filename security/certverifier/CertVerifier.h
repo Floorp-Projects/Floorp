@@ -79,6 +79,12 @@ enum DistrustedCAPolicy : uint32_t {
 // update this to account for new entries in DistrustedCAPolicy.
 const uint32_t DistrustedCAPolicyMaxAllowedValueMask = 0b0011;
 
+enum class CRLiteMode {
+  Disabled = 0,
+  TelemetryOnly = 1,
+  Enforce = 2,
+};
+
 enum class NetscapeStepUpPolicy : uint32_t;
 
 class PinningTelemetryInfo {
@@ -134,6 +140,16 @@ class DelegatedCredentialInfo {
   uint32_t authKeyBits;
 };
 
+enum class CRLiteTelemetryInfo {
+  NeverChecked = 0,
+  FilterNotAvailable = 1,
+  IssuerNotEnrolled = 2,
+  CertificateTooNew = 3,
+  CertificateValid = 4,
+  CertificateRevoked = 5,
+  LibraryFailure = 6,
+};
+
 class NSSCertDBTrustDomain;
 
 class CertVerifier {
@@ -173,7 +189,8 @@ class CertVerifier {
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
-      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
+      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
+      /*optional out*/ CRLiteTelemetryInfo* crliteInfo = nullptr);
 
   mozilla::pkix::Result VerifySSLServerCert(
       const UniqueCERTCertificate& peerCert, mozilla::pkix::Time time,
@@ -194,7 +211,8 @@ class CertVerifier {
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
-      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
+      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
+      /*optional out*/ CRLiteTelemetryInfo* crliteInfo = nullptr);
 
   enum PinningMode {
     pinningDisabled = 0,
@@ -229,7 +247,7 @@ class CertVerifier {
                SHA1Mode sha1Mode, BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode,
-               DistrustedCAPolicy distrustedCAPolicy,
+               DistrustedCAPolicy distrustedCAPolicy, CRLiteMode crliteMode,
                const Vector<EnterpriseCert>& thirdPartyCerts);
   ~CertVerifier();
 
@@ -246,6 +264,7 @@ class CertVerifier {
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
   const DistrustedCAPolicy mDistrustedCAPolicy;
+  const CRLiteMode mCRLiteMode;
 
  private:
   OCSPCache mOCSPCache;
