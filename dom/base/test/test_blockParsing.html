@@ -15,6 +15,10 @@ async function runTest(url, initialHTML, finalHTML) {
 
   let blockerPromise;
   let promise = TestUtils.topicObserved("document-element-inserted", document => {
+    if (document !== iframe.contentDocument) {
+      return false;
+    }
+
     blockerPromise = new Promise(resolve => {
       setTimeout(resolve, 0);
     }).then(() => {
