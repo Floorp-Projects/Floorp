@@ -12,6 +12,9 @@ include protocol PRemoteDecoderManager;
 include protocol PVideoBridge;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
 
 namespace mozilla {
 
@@ -43,6 +46,8 @@ parent:
 
   async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint);
 
+  async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
 child:
 
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
@@ -50,6 +55,8 @@ child:
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);
 
+  async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+      returns (ModulesMapResult? modMapResult);
 };
 
 } // namespace mozilla

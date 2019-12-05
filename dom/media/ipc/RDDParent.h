@@ -38,6 +38,8 @@ class RDDParent final : public PRDDParent {
       const uint32_t& generation, const bool& anonymize,
       const bool& minimizeMemoryUsage,
       const Maybe<ipc::FileDescriptor>& DMDFile);
+  mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
+      GetUntrustedModulesDataResolver&& aResolver);
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref);
 
