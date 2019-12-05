@@ -14,7 +14,6 @@
  * @typedef {import("../@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
- * @typedef {import("../@types/perf").PageContext} PageContext
  */
 /**
  * @template S
@@ -86,8 +85,8 @@ const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
 const getSetRecordingPreferencesFn = state =>
   getInitializedValues(state).setRecordingPreferences;
 
-/** @type {Selector<PageContext>} */
-const getPageContext = state => getInitializedValues(state).pageContext;
+/** @type {Selector<boolean>} */
+const getIsPopup = state => getInitializedValues(state).isPopup;
 
 /** @type {Selector<(profile: Object) => GetSymbolTableCallback>} */
 const getSymbolTableGetter = state =>
@@ -115,7 +114,7 @@ module.exports = {
   getPerfFront,
   getReceiveProfileFn,
   getSetRecordingPreferencesFn,
-  getPageContext,
+  getIsPopup,
   getSymbolTableGetter,
   getPromptEnvRestart,
   getSupportedFeatures,

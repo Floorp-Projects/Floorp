@@ -401,7 +401,6 @@ var Policies = {
         blockAboutPage(manager, "about:devtools");
         blockAboutPage(manager, "about:debugging");
         blockAboutPage(manager, "about:devtools-toolbox");
-        blockAboutPage(manager, "about:profiling");
       }
     },
   },

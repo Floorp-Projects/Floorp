@@ -1,37 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// @ts-check
-
-/**
- * @template P
- * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
- */
-
-/**
- * @typedef {Object} StateProps
- * @property {RecordingState} recordingState
- * @property {boolean} isSupportedPlatform
- * @property {boolean} recordingUnexpectedlyStopped
- * @property {PageContext} pageContext
- */
-
-/**
- * @typedef {Object} ThunkDispatchProps
- * @property {typeof actions.startRecording} startRecording
- * @property {typeof actions.getProfileAndStopProfiler} getProfileAndStopProfiler
- * @property {typeof actions.stopProfilerAndDiscardProfile} stopProfilerAndDiscardProfile
-
- */
-
-/**
- * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
- * @typedef {StateProps & DispatchProps} Props
- * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PageContext} PageContext
- */
-
 "use strict";
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
@@ -41,6 +10,7 @@ const {
   span,
   img,
 } = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
@@ -49,30 +19,29 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  * This component is not responsible for the full life cycle of recording a profile. It
  * is only responsible for the actual act of stopping and starting recordings. It
  * also reacts to the changes of the recording state from external changes.
- *
- * @extends {React.PureComponent<Props>}
  */
 class RecordingButton extends PureComponent {
-  /** @param {Props} props */
+  static get propTypes() {
+    return {
+      // StateProps
+      recordingState: PropTypes.string.isRequired,
+      isSupportedPlatform: PropTypes.bool,
+      recordingUnexpectedlyStopped: PropTypes.bool.isRequired,
+      isPopup: PropTypes.bool.isRequired,
+
+      // DispatchProps
+      startRecording: PropTypes.func.isRequired,
+      getProfileAndStopProfiler: PropTypes.func.isRequired,
+      stopProfilerAndDiscardProfile: PropTypes.func.isRequired,
+    };
+  }
+
   constructor(props) {
     super(props);
     this._getProfileAndStopProfiler = () =>
       this.props.getProfileAndStopProfiler(window);
   }
 
-  /** @param {{
-   *   disabled?: boolean,
-   *   label?: React.ReactNode,
-   *   onClick?: any,
-   *   additionalMessage?: React.ReactNode,
-   *   isPrimary?: boolean,
-   *   pageContext?: PageContext,
-   *   additionalButton?: {
-   *     label: string,
-   *     onClick: any,
-   *   },
-   * }} buttonSettings
-   */
   renderButton(buttonSettings) {
     const {
       disabled,
@@ -80,12 +49,12 @@ class RecordingButton extends PureComponent {
       onClick,
       additionalMessage,
       isPrimary,
-      pageContext,
+      isPopup,
       additionalButton,
     } = buttonSettings;
 
     const nbsp = "\u00A0";
-    const showAdditionalMessage = pageContext === "popup" && additionalMessage;
+    const showAdditionalMessage = isPopup && additionalMessage;
     const buttonClass = isPrimary ? "primary" : "default";
 
     return div(
@@ -101,6 +70,7 @@ class RecordingButton extends PureComponent {
         button(
           {
             className: `perf-photon-button perf-photon-button-${buttonClass} perf-button`,
+            "data-standalone": true,
             disabled,
             onClick,
           },
@@ -110,6 +80,7 @@ class RecordingButton extends PureComponent {
           ? button(
               {
                 className: `perf-photon-button perf-photon-button-default perf-button`,
+                "data-standalone": true,
                 onClick: additionalButton.onClick,
                 disabled,
               },
@@ -213,10 +184,6 @@ class RecordingButton extends PureComponent {
   }
 }
 
-/**
- * @param {StoreState} state
- * @returns {StateProps}
- */
 function mapStateToProps(state) {
   return {
     recordingState: selectors.getRecordingState(state),
@@ -224,11 +191,10 @@ function mapStateToProps(state) {
     recordingUnexpectedlyStopped: selectors.getRecordingUnexpectedlyStopped(
       state
     ),
-    pageContext: selectors.getPageContext(state),
+    isPopup: selectors.getIsPopup(state),
   };
 }
 
-/** @type {ThunkDispatchProps} */
 const mapDispatchToProps = {
   startRecording: actions.startRecording,
   stopProfilerAndDiscardProfile: actions.stopProfilerAndDiscardProfile,

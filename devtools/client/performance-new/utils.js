@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-/**
- * @typedef {import("./@types/perf").NumberScaler} NumberScaler
- * @typedef {import("./@types/perf").ScaleFunctions} ScaleFunctions
- */
 "use strict";
 
 // @ts-ignore
@@ -69,12 +65,24 @@ function formatFileSize(num) {
 }
 
 /**
+ * Scale a number value.
+ *
+ * @callback NumberScaler
+ * @param {number} value
+ * @returns {number}
+ */
+
+/**
  * Creates numbers that scale exponentially.
  *
  * @param {number} rangeStart
  * @param {number} rangeEnd
  *
- * @returns {ScaleFunctions}
+ * @returns {{
+ *  fromFractionToValue: NumberScaler,
+ *  fromValueToFraction: NumberScaler,
+ *  fromFractionToSingleDigitValue: NumberScaler,
+ * }}
  */
 function makeExponentialScale(rangeStart, rangeEnd) {
   const startExp = Math.log(rangeStart);
@@ -247,22 +255,10 @@ function withCommonPathPrefixRemoved(pathArray) {
   );
 }
 
-class UnhandledCaseError extends Error {
-  /**
-   * @param {never} value - Check that
-   * @param {string} typeName - A friendly type name.
-   */
-  constructor(value, typeName) {
-    super(`There was an unhandled case for "${typeName}": ${value}`);
-    this.name = "UnhandledCaseError";
-  }
-}
-
 module.exports = {
   formatFileSize,
   makeExponentialScale,
   scaleRangeWithClamping,
   calculateOverhead,
   withCommonPathPrefixRemoved,
-  UnhandledCaseError,
 };
