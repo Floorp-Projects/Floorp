@@ -7078,7 +7078,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-11-20T17:10:44Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-12-02T17:16:24Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8747,9 +8747,6 @@ lancaster
 
 // lancia : 2015-07-31 Fiat Chrysler Automobiles N.V.
 lancia
-
-// lancome : 2015-07-23 L'Oréal
-lancome
 
 // land : 2013-09-10 Binky Moon, LLC
 land
