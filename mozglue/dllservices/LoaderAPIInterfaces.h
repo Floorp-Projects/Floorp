@@ -92,6 +92,15 @@ class NS_NO_VTABLE LoaderAPI {
    * backing it.
    */
   virtual AllocatedUnicodeString GetSectionName(void* aSectionAddr) = 0;
+
+  using InitDllBlocklistOOPFnPtr =
+      LauncherVoidResultWithLineInfo (*)(const wchar_t*, HANDLE);
+
+  /**
+   * Return a pointer to the cross-process DLL Blocklist Init function.
+   * Used by sandboxBroker::LaunchApp.
+   */
+  virtual InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() = 0;
 };
 
 }  // namespace nt

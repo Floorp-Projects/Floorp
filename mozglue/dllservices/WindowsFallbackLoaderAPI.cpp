@@ -67,6 +67,12 @@ nt::AllocatedUnicodeString FallbackLoaderAPI::GetSectionName(
   return nt::AllocatedUnicodeString(&buf.mSectionFileName);
 }
 
+nt::LoaderAPI::InitDllBlocklistOOPFnPtr
+FallbackLoaderAPI::GetDllBlocklistInitFn() {
+  MOZ_ASSERT_UNREACHABLE("This should not be called so soon!");
+  return nullptr;
+}
+
 void FallbackLoaderAPI::SetObserver(nt::LoaderObserver* aLoaderObserver) {
   mLoaderObserver = aLoaderObserver;
 }
