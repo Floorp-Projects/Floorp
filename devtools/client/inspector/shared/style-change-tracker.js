@@ -5,6 +5,7 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const WalkerEventListener = require("./walker-event-listener");
 
 /**
  * The InspectorStyleChangeTracker simply emits an event when it detects any changes in
@@ -18,45 +19,22 @@ const EventEmitter = require("devtools/shared/event-emitter");
  */
 class InspectorStyleChangeTracker {
   constructor(inspector) {
-    this.inspector = inspector;
     this.selection = inspector.selection;
 
     this.onMutations = this.onMutations.bind(this);
     this.onResized = this.onResized.bind(this);
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
-    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
 
-    this.init();
+    this.walkerEventListener = new WalkerEventListener(inspector, {
+      mutations: this.onMutations,
+      resize: this.onResized,
+    });
 
     EventEmitter.decorate(this);
   }
 
-  init() {
-    this.inspector.toolbox.targetList.watchTargets(
-      [this.inspector.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
-    );
-  }
-
   destroy() {
-    this.inspector.toolbox.targetList.unwatchTargets(
-      [this.inspector.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
-    );
-
-    const targets = this.inspector.toolbox.targetList.getAllTargets(
-      this.inspector.toolbox.targetList.TYPES.FRAME
-    );
-    for (const target of targets) {
-      this.onTargetDestroyed(
-        this.inspector.toolbox.targetList.TYPES.FRAME,
-        target
-      );
-    }
-
-    this.inspector = null;
+    this.walkerEventListener.destroy();
+    this.walkerEventListener = null;
     this.selection = null;
   }
 
@@ -116,22 +94,6 @@ class InspectorStyleChangeTracker {
    */
   onResized() {
     this.emit("style-changed");
-  }
-
-  async onTargetAvailable(type, targetFront, isTopLevel) {
-    const inspectorFront = await targetFront.getFront("inspector");
-    const { walker } = inspectorFront;
-    walker.on("mutations", this.onMutations);
-    walker.on("resize", this.onResized);
-  }
-
-  onTargetDestroyed(type, targetFront, isTopLevel) {
-    const inspectorFront = targetFront.getCachedFront("inspector");
-    if (inspectorFront) {
-      const { walker } = inspectorFront;
-      walker.off("mutations", this.onMutations);
-      walker.off("resize", this.onResized);
-    }
   }
 }
 
