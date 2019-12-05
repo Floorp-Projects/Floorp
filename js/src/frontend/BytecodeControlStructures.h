@@ -102,7 +102,7 @@ class LoopControl : public BreakableControl {
   //     {loop update if present}
   //
   //     # Loop end, backward jump
-  //     JSOP_GOTO/JSOP_IFEQ/JSOP_IFNE head
+  //     JSOP_GOTO/JSOP_IFNE head
   //
   //   breakTarget:
 

@@ -274,7 +274,6 @@ static inline bool IsBackedgePC(jsbytecode* pc) {
   switch (JSOp(*pc)) {
     case JSOP_GOTO:
     case JSOP_IFNE:
-    case JSOP_IFEQ:
       return GET_JUMP_OFFSET(pc) < 0;
     default:
       return false;
