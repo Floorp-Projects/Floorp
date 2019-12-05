@@ -6909,6 +6909,12 @@
   value: false
   mirror: always
 
+# Whether to send the User-Agent header for TRR requests
+- name: network.trr.send_user-agent_headers
+  type: bool
+  value: false
+  mirror: always
+
 # This pref controls if TRR will still be enabled when a VPN is detected on
 # the system. Detection is not foolproof, and some VPNs may not be detected.
 # See bug 1565004 comment 3 for details.
