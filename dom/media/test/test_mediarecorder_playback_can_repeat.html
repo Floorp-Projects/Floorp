@@ -25,7 +25,7 @@ function startTest() {
 
   let stream = canvas.captureStream();
 
-  let numVideoPlayingEvents = 0;
+  let numVideoSeekedEvents = 0;
 
   let blob;
 
@@ -77,10 +77,10 @@ function startTest() {
       SimpleTest.finish();
     };
 
-    video.onplaying = () => {
-      // We get a playing event when the video starts (including loop induced starts)
-      info("Got 'onplaying' event");
-      if(++numVideoPlayingEvents == 2) {
+    video.onseeked = () => {
+      // We get a seeked event when the video has restarted.
+      info("Got 'onseeked' event");
+      if(++numVideoSeekedEvents == 2) {
         // We've looped the video
         video.pause();
         SimpleTest.finish();
