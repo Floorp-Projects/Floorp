@@ -263,9 +263,11 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       case "GeckoView:SetActive":
         if (content) {
           if (!aMsg.data.active) {
+            docShell.contentViewer.pausePainting();
             content.windowUtils.suspendTimeouts();
             this.timeoutsSuspended = true;
           } else if (this.timeoutsSuspended) {
+            docShell.contentViewer.resumePainting();
             content.windowUtils.resumeTimeouts();
             this.timeoutsSuspended = false;
           }
