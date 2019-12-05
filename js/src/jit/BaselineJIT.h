@@ -110,6 +110,9 @@ class RetAddrEntry {
     // A callVM for the over-recursion check on function entry.
     StackCheck,
 
+    // A callVM for an interrupt check.
+    InterruptCheck,
+
     // DebugTrapHandler (for debugger breakpoints/stepping).
     DebugTrap,
 
