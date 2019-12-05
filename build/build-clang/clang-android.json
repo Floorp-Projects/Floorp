@@ -50,6 +50,7 @@
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",
       "rename_gcov_flush.patch",
+      "rG7e18aeba5062.patch",
       "revert-r362047-and-r362065.patch"
     ]
 }
