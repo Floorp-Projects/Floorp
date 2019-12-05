@@ -29,6 +29,10 @@
   overflow: auto;
 }
 
+#font-container, #font-editor {
+  min-width: 300px;
+}
+
 #font-container {
   flex: auto;
 }
