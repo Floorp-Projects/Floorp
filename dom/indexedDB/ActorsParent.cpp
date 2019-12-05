@@ -26074,6 +26074,7 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     Key* const aOptPreviousSortKey) {
   AssertIsOnConnectionThread();
 
+  auto accumulatedResponseSize = aInitialResponseSize;
   uint32_t extraCount = 0;
   do {
     bool hasResult;
@@ -26107,8 +26108,18 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
       break;
     }
 
-    // TODO: Check accumulated size of individual responses and maybe break
-    // early.
+    // Check accumulated size of individual responses and maybe break early.
+    accumulatedResponseSize += res.inspect();
+    if (accumulatedResponseSize > IPC::Channel::kMaximumMessageSize / 2) {
+      IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+          "PRELOAD: %s: Dropping entries because maximum message size is "
+          "exceeded: %" PRIu32 "/%zu bytes",
+          "Dropping too large", IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
+          mTransactionLoggingSerialNumber, mLoggingSerialNumber,
+          aOperation.get(), extraCount, accumulatedResponseSize);
+
+      break;
+    }
 
     // TODO: Do not count entries skipped for unique cursors.
     ++extraCount;
