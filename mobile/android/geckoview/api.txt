@@ -1395,6 +1395,7 @@ package org.mozilla.geckoview {
     field public final long flags;
     field @NonNull public final String id;
     field @NonNull public final String location;
+    field @Nullable public final WebExtension.MetaData metaData;
   }
 
   @AnyThread public static class WebExtension.Action {
@@ -1416,6 +1417,16 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable default public GeckoResult<GeckoSession> onTogglePopup(@NonNull WebExtension, @NonNull WebExtension.Action);
   }
 
+  public static class WebExtension.BlocklistStateFlags {
+    ctor public BlocklistStateFlags();
+    field public static final int BLOCKED = 2;
+    field public static final int NOT_BLOCKED = 0;
+    field public static final int OUTDATED = 3;
+    field public static final int SOFTBLOCKED = 1;
+    field public static final int VULNERABLE_NO_UPDATE = 5;
+    field public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
+  }
+
   public static class WebExtension.Flags {
     ctor protected Flags();
     field public static final long ALLOW_CONTENT_MESSAGING = 1L;
@@ -1425,6 +1436,22 @@ package org.mozilla.geckoview {
   public static class WebExtension.Icon {
     ctor protected Icon();
     method @AnyThread @NonNull public GeckoResult<Bitmap> get(int);
+  }
+
+  public static class WebExtension.InstallException extends Exception {
+    ctor protected InstallException();
+    field public final int code;
+  }
+
+  public static class WebExtension.InstallException.ErrorCodes {
+    ctor protected ErrorCodes();
+    field public static final int ERROR_CORRUPT_FILE = -3;
+    field public static final int ERROR_FILE_ACCESS = -4;
+    field public static final int ERROR_INCORRECT_HASH = -2;
+    field public static final int ERROR_INCORRECT_ID = -7;
+    field public static final int ERROR_NETWORK_FAILURE = -1;
+    field public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
+    field public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
   }
 
   @UiThread public static interface WebExtension.MessageDelegate {
@@ -1443,6 +1470,22 @@ package org.mozilla.geckoview {
     field @NonNull public final WebExtension webExtension;
   }
 
+  public class WebExtension.MetaData {
+    ctor protected MetaData();
+    field public final int blocklistState;
+    field @Nullable public final String creatorName;
+    field @Nullable public final String creatorUrl;
+    field @Nullable public final String description;
+    field @Nullable public final String homepageUrl;
+    field @NonNull public final WebExtension.Icon icon;
+    field public final boolean isRecommended;
+    field @Nullable public final String name;
+    field @NonNull public final String[] origins;
+    field @NonNull public final String[] permissions;
+    field public final int signedState;
+    field @NonNull public final String version;
+  }
+
   @UiThread public static class WebExtension.Port {
     ctor protected Port();
     method public void disconnect();
@@ -1457,9 +1500,27 @@ package org.mozilla.geckoview {
     method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
   }
 
+  public static class WebExtension.SignedStateFlags {
+    ctor public SignedStateFlags();
+    field public static final int MISSING = 0;
+    field public static final int PRELIMINARY = 1;
+    field public static final int PRIVILEGED = 4;
+    field public static final int SIGNED = 2;
+    field public static final int SYSTEM = 3;
+    field public static final int UNKNOWN = -1;
+  }
+
   public class WebExtensionController {
+    method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
+    method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
+    method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
+    method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
+  }
+
+  @UiThread public static interface WebExtensionController.PromptDelegate {
+    method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
   }
 
   public static interface WebExtensionController.TabDelegate {
