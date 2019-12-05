@@ -25,65 +25,43 @@ const aside = {
   header: "Instantly Send Tabs to Mobile",
   content: `Test your site on mobile and other devices without having to copy, paste, or leave the browser.`,
   cta: "Learn More About Send Tabs",
-  href: `https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices?${utmParams}`,
+  href: `https://support.mozilla.org/kb/send-tab-firefox-other-devices?${utmParams}`,
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 70 & 71)",
+  title: "What’s New in DevTools (Firefox 72 & 71)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/71?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/72?${utmParams}`,
   features: [
     {
-      header: `New WebSocket Messages Inspector`,
-      description: `The Network panel has a new Messages tab for inspecting WebSocket frames sent and received through the selected connection.`,
-      href:
-        "https://hacks.mozilla.org/2019/10/firefoxs-new-websocket-inspector/",
+      header: `Debug Variables with Watchpoints`,
+      description: `Debugger’s new Watchpoint feature lets you pause when properties get read or write. Right-click object properties in the Scopes pane when paused to use the new “Break on…” menu.`,
+      href: `https://wiki.developer.mozilla.org/docs/Tools/Debugger/How_to/Set_a_watchpoint_on_a_property?${utmParams}`,
     },
     {
-      header: `Block URLs in the Network panel`,
+      header: `Improvements to VS Code’s Debugger for Firefox`,
+      description: `A new source map integration makes debugging faster and also integrates with VSCode’s new column breakpoints UI for fine-grained control. The new Watchpoints can be used via VSCode’s Data Points.`,
+      href: `https://marketplace.visualstudio.com/items?itemName=firefox-devtools.vscode-firefox-debug`,
+    },
+    {
+      header: `Async Stacks for Console traces`,
+      description: `Stack Traces in the Console include the full chain of asynchronous promises and callbacks over time, including timeouts and events.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/Console_messages?${utmParams}`,
+    },
+    {
+      header: `New in 71: New WebSocket Messages Inspector`,
+      description: `The Network panel has a new Messages tab for inspecting WebSocket frames sent and received through the selected connection.`,
+      href: `https://hacks.mozilla.org/2019/10/firefoxs-new-websocket-inspector/?${utmParams}`,
+    },
+    {
+      header: `New in 71: Block URLs in the Network panel`,
       description: `Test how a page loads without specific files, like CSS or JavaScript. Right-click network requests and select “Block URL” or use the new Request Blocking pane.`,
       href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?${utmParams}#Block_a_specific_URL`,
     },
     {
-      header: `New multi-line editor mode in Console`,
-      description: `Iterate quickly on JavaScript snippets with the new multi-line editor input. It combines the ease of authoring code in an IDE with the workflow of repeatedly executing code in the context of the page.`,
-      href: `https://developer.mozilla.org/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}`,
-      hidden: true,
-    },
-    {
-      header: `Search across all Network Headers and Content`,
-      description: `The new Search pane lets you search across all network headers and response bodies in the Network panel.`,
-      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?${utmParams}#Search_Requests`,
-    },
-    {
-      header: `Log on Events`,
+      header: `New in 71: Log on Events`,
       description: `Enabling logging for Event Listener Breakpoints in the Debugger lets you observe which event handlers are being executed without the overhead of pausing.`,
       href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
-    },
-    {
-      header: `Quick search in Event Listeners Breakpoints`,
-      description: `Quickly find the right event category and type with the new filter field in the Debugger’s Event Listener Breakpoints pane. `,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
-    },
-    {
-      header: `New in 70: Inactive CSS rules indicator in Rules pane`,
-      description: `The Inspector now grays out CSS declarations that don’t affect the selected element and shows a tooltip explaining why—and even how to fix it.`,
-      href: `https://hacks.mozilla.org/2019/10/firefox-70-a-bountiful-release-for-all/#developertools`,
-    },
-    {
-      header: `New in 70: Pause on DOM Mutation in Debugger`,
-      description: `DOM Mutation Breakpoints (aka DOM Change Breakpoints) let you pause scripts that add, remove, or change specific elements.`,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Break_on_DOM_mutation?${utmParams}`,
-    },
-    {
-      header: `New in 70: Color contrast information in the color picker`,
-      description: `In the CSS Rules view, you can click foreground colors with the color picker to determine if their contrast with the background color meets accessibility guidelines.`,
-      href: `https://developer.mozilla.org/docs/Tools/Page_Inspector/How_to/Inspect_and_select_colors?${utmParams}`,
-    },
-    {
-      header: `New in 70: Auditing checks in the Accessibility inspector`,
-      description: `The Accessibility Inspector’s “Check for issues” tool can now audit for keyboard accessibility in addition to color contrast and text labels.`,
-      href: `https://developer.mozilla.org/docs/Tools/Accessibility_inspector?${utmParams}#Check_for_accessibility_issues`,
     },
   ],
 };
@@ -94,9 +72,19 @@ const dev = {
   linkText: "Get DevEdition",
   features: [
     {
-      header: `Debug Variables with Watchpoints`,
-      description: `Debugger’s new Watchpoints feature lets you pause when properties get read or written. Right-click object properties in the Scopes pane when paused to use the new “Break on…” menu.`,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/How_to/Set_a_watchpoint_on_a_property?${utmParams}`,
+      header: `Asynchronous Stacks in Debugger`,
+      description: `Asynchronous call stacks in the Debugger let you examine the event-driven function calls at previous points in time.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}`,
+    },
+    {
+      header: `Correct Meta Viewport in Responsive Design Mode`,
+      description: `RDM with touch simulation enabled will now correctly simulate the meta viewport rendering of a mobile device.`,
+      href: `https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode?${utmParams}`,
+    },
+    {
+      header: `CSP Style Directives No Longer Prevent CSS Edits`,
+      description: `Editing an element’s inline style from Inspector’s rule-view now works even if style-src is blocked by CSP.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_and_edit_CSS?${utmParams}`,
     },
   ],
 };
