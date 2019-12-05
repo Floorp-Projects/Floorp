@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsString.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 
@@ -24,6 +25,7 @@ const char* DllServices::kTopicDllLoadedMainThread = "dll-loaded-main-thread";
 const char* DllServices::kTopicDllLoadedNonMainThread =
     "dll-loaded-non-main-thread";
 
+/* static */
 DllServices* DllServices::Get() {
   static StaticLocalRefPtr<DllServices> sInstance(
       []() -> already_AddRefed<DllServices> {
@@ -50,8 +52,11 @@ DllServices* DllServices::Get() {
   return sInstance;
 }
 
-DllServices::DllServices()
-    : mUntrustedModulesProcessor(UntrustedModulesProcessor::Create()) {}
+void DllServices::StartUntrustedModulesProcessor() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mUntrustedModulesProcessor);
+  mUntrustedModulesProcessor = UntrustedModulesProcessor::Create();
+}
 
 RefPtr<UntrustedModulesPromise> DllServices::GetUntrustedModulesData() {
   if (!mUntrustedModulesProcessor) {
@@ -60,6 +65,25 @@ RefPtr<UntrustedModulesPromise> DllServices::GetUntrustedModulesData() {
   }
 
   return mUntrustedModulesProcessor->GetProcessedData();
+}
+
+void DllServices::DisableFull() {
+  if (mUntrustedModulesProcessor) {
+    mUntrustedModulesProcessor->Disable();
+  }
+
+  glue::DllServices::DisableFull();
+}
+
+RefPtr<ModulesTrustPromise> DllServices::GetModulesTrust(
+    ModulePaths&& aModPaths, bool aRunAtNormalPriority) {
+  if (!mUntrustedModulesProcessor) {
+    return ModulesTrustPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED,
+                                                __func__);
+  }
+
+  return mUntrustedModulesProcessor->GetModulesTrust(std::move(aModPaths),
+                                                     aRunAtNormalPriority);
 }
 
 void DllServices::NotifyDllLoad(glue::EnhancedModuleLoadInfo&& aModLoadInfo) {
@@ -83,6 +107,10 @@ void DllServices::NotifyDllLoad(glue::EnhancedModuleLoadInfo&& aModLoadInfo) {
   }
 
   nsCOMPtr<nsIObserverService> obsServ(mozilla::services::GetObserverService());
+  if (!obsServ) {
+    return;
+  }
+
   obsServ->NotifyObservers(nullptr, topic, dllFilePath.get());
 }
 
