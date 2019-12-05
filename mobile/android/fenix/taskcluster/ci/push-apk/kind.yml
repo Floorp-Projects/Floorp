@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
     - signing
+    - startup-test 
 
 primary-dependency: signing
 

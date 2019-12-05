@@ -35,7 +35,7 @@ job-defaults:
               json: true
     run-on-tasks-for: []
     attributes:
-        build-type: debug
+        build-type: nightly 
         nightly: true
     dependencies:
         signing: signing-nightly
