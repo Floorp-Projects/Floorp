@@ -267,7 +267,7 @@ var GeckoViewWebExtension = {
     }
   },
 
-  extensionById(aId) {
+  async extensionById(aId) {
     const scope = this.extensionScopes.get(aId);
     if (!scope) {
       return null;
@@ -276,12 +276,12 @@ var GeckoViewWebExtension = {
     return scope.extension;
   },
 
-  onEvent(aEvent, aData, aCallback) {
+  async onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
 
     switch (aEvent) {
       case "GeckoView:BrowserAction:Click": {
-        const extension = this.extensionById(aData.extensionId);
+        const extension = await this.extensionById(aData.extensionId);
         if (!extension) {
           return;
         }
@@ -295,7 +295,7 @@ var GeckoViewWebExtension = {
         break;
       }
       case "GeckoView:PageAction:Click": {
-        const extension = this.extensionById(aData.extensionId);
+        const extension = await this.extensionById(aData.extensionId);
         if (!extension) {
           return;
         }
@@ -353,7 +353,7 @@ var GeckoViewWebExtension = {
       }
 
       case "GeckoView:ActionDelegate:Attached": {
-        const extension = this.extensionById(aData.extensionId);
+        const extension = await this.extensionById(aData.extensionId);
         if (!extension) {
           return;
         }
