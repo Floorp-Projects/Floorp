@@ -344,6 +344,12 @@ extern JS_PUBLIC_API JSRuntime* JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API void JS_SetFutexCanWait(JSContext* cx);
 
+// Returns true if there are any live SharedArrayBuffer objects, including those
+// for wasm memories, associated with the context.  This is conservative,
+// because it does not run GC.  Some dead objects may not have been collected
+// yet and thus will be thought live.
+extern JS_PUBLIC_API bool JS_ContainsSharedArrayBuffer(JSContext* cx);
+
 namespace js {
 
 void AssertHeapIsIdle();

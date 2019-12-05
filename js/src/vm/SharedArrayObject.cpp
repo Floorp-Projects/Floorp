@@ -251,6 +251,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(
 
   MOZ_ASSERT(obj->getClass() == &class_);
 
+  cx->runtime()->incSABCount();
   obj->acceptRawBuffer(buffer, length);
 
   return obj;
@@ -273,7 +274,9 @@ SharedArrayRawBuffer* SharedArrayBufferObject::rawBufferObject() const {
 }
 
 void SharedArrayBufferObject::Finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->maybeOnHelperThread());
+  // Must be foreground finalizable so that we can account for the object.
+  MOZ_ASSERT(fop->onMainThread());
+  fop->runtime()->decSABCount();
 
   SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
 
@@ -327,6 +330,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
     return nullptr;
   }
 
+  cx->runtime()->incSABCount();
   obj->acceptRawBuffer(buffer, initialSize);
 
   return obj;
@@ -373,7 +377,7 @@ const JSClass SharedArrayBufferObject::class_ = {
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
-        JSCLASS_BACKGROUND_FINALIZE,
+        JSCLASS_FOREGROUND_FINALIZE,
     &SharedArrayBufferObjectClassOps, &SharedArrayBufferObjectClassSpec,
     JS_NULL_CLASS_EXT};
 
