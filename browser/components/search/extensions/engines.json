@@ -134,23 +134,23 @@
       "extraParams": [{
         "name": "form",
         "condition": "purpose",
-        "purpose": "searchbar",
-        "value": "MOZSBR"
-      }, {
-        "name": "form",
-        "condition": "purpose",
-        "purpose": "keyword",
-        "value": "MOZLBR"
-      }, {
-        "name": "form",
-        "condition": "purpose",
         "purpose": "contextmenu",
         "value": "MOZCON"
       }, {
         "name": "form",
         "condition": "purpose",
+        "purpose": "searchbar",
+        "value": "MOZSBR"
+      }, {
+        "name": "form",
+        "condition": "purpose",
         "purpose": "homepage",
         "value": "MOZSPG"
+      }, {
+        "name": "form",
+        "condition": "purpose",
+        "purpose": "keyword",
+        "value": "MOZLBR"
       }, {
         "name": "form",
         "condition": "purpose",
@@ -838,8 +838,8 @@
       "extraParams": [{
         "name": "t",
         "condition": "purpose",
-        "purpose": "searchbar",
-        "value": "ffsb"
+        "purpose": "contextmenu",
+        "value": "ffcm"
       }, {
         "name": "t",
         "condition": "purpose",
@@ -848,8 +848,8 @@
       }, {
         "name": "t",
         "condition": "purpose",
-        "purpose": "contextmenu",
-        "value": "ffcm"
+        "purpose": "searchbar",
+        "value": "ffsb"
       }, {
         "name": "t",
         "condition": "purpose",
