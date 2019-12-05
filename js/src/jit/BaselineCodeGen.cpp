@@ -1282,7 +1282,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   // if --ion-eager is used.
   JSScript* script = handler.script();
   jsbytecode* pc = handler.pc();
-  if (JSOp(*pc) == JSOP_LOOPENTRY) {
+  if (JSOp(*pc) == JSOP_LOOPHEAD) {
     uint32_t pcOffset = script->pcToOffset(pc);
     uint32_t nativeOffset = masm.currentOffset();
     if (!handler.osrEntries().emplaceBack(pcOffset, nativeOffset)) {
@@ -1309,15 +1309,15 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  if (JSOp(*pc) == JSOP_LOOPENTRY) {
+  if (JSOp(*pc) == JSOP_LOOPHEAD) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
-    if (handler.analysis().info(pc).loopEntryInCatchOrFinally) {
+    if (handler.analysis().info(pc).loopHeadInCatchOrFinally) {
       return true;
     }
 
-    if (!LoopEntryCanIonOsr(pc)) {
-      // OSR into Ion not possible at this loop entry.
+    if (!LoopHeadCanIonOsr(pc)) {
+      // OSR into Ion not possible at this loop.
       return true;
     }
   }
@@ -1338,7 +1338,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
                  &done);
 
   // Try to compile and/or finish a compilation.
-  if (JSOp(*pc) == JSOP_LOOPENTRY) {
+  if (JSOp(*pc) == JSOP_LOOPHEAD) {
     // Try to OSR into Ion.
     computeFrameSize(R0.scratchReg());
 
@@ -2245,7 +2245,13 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LOOPHEAD() {
   if (!emit_JSOP_JUMPTARGET()) {
     return false;
   }
-  return emitInterruptCheck();
+  if (!emitInterruptCheck()) {
+    return false;
+  }
+  if (!emitWarmUpCounterIncrement()) {
+    return false;
+  }
+  return emitIncExecutionProgressCounter(R0.scratchReg());
 }
 
 template <typename Handler>
@@ -2262,19 +2268,6 @@ bool BaselineCodeGen<Handler>::emitIncExecutionProgressCounter(
   };
   return emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
                             true, incCounter, scratch);
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_LOOPENTRY() {
-  if (!emit_JSOP_JUMPTARGET()) {
-    return false;
-  }
-  frame.syncStack(0);
-  if (!emitWarmUpCounterIncrement()) {
-    return false;
-  }
-
-  return emitIncExecutionProgressCounter(R0.scratchReg());
 }
 
 template <typename Handler>
@@ -6941,6 +6934,7 @@ MethodStatus BaselineCompiler::emitBody() {
       case JSOP_UNUSED106:
       case JSOP_UNUSED120:
       case JSOP_UNUSED149:
+      case JSOP_UNUSED227:
       case JSOP_LIMIT:
         MOZ_CRASH("Unexpected op");
 

@@ -238,7 +238,7 @@ class IonBuilder : public MIRGenerator,
       MBasicBlock* at, size_t stackDepth, jsbytecode* pc,
       MBasicBlock* maybePredecessor = nullptr);
   AbortReasonOr<MBasicBlock*> newOsrPreheader(MBasicBlock* header,
-                                              jsbytecode* loopEntry);
+                                              jsbytecode* loopHead);
   AbortReasonOr<MBasicBlock*> newPendingLoopHeader(MBasicBlock* predecessor,
                                                    jsbytecode* pc, bool osr,
                                                    bool canOsr,
@@ -278,6 +278,8 @@ class IonBuilder : public MIRGenerator,
                                            TemporaryTypeSet* typeSet);
   AbortReasonOr<Ok> maybeAddOsrTypeBarriers();
 
+  AbortReasonOr<Ok> emitLoopHeadInstructions(jsbytecode* pc);
+
   // Restarts processing of a loop if the type information at its header was
   // incomplete.
   AbortReasonOr<Ok> restartLoop(MBasicBlock* header);
@@ -290,7 +292,7 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> resumeAfter(MInstruction* ins);
   AbortReasonOr<Ok> maybeInsertResume();
 
-  void insertRecompileCheck();
+  void insertRecompileCheck(jsbytecode* pc);
 
   bool usesEnvironmentChain();
 
@@ -729,7 +731,6 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> jsop_andor(JSOp op);
   AbortReasonOr<Ok> jsop_dup2();
   AbortReasonOr<Ok> jsop_goto(bool* restarted);
-  AbortReasonOr<Ok> jsop_loopentry(bool* restarted);
   AbortReasonOr<Ok> jsop_loophead(jsbytecode* pc);
   AbortReasonOr<Ok> jsop_compare(JSOp op);
   AbortReasonOr<Ok> jsop_compare(JSOp op, MDefinition* left,

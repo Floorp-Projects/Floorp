@@ -1110,17 +1110,22 @@
      */ \
     MACRO(JSOP_FUNCALL, 108, "funcall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * Another no-op.
-     *
      * This opcode is the target of the backwards jump for some loop.
+     *
+     * The uint8 argument is a bitfield. The lower 7 bits of the argument
+     * indicate the loop depth. This value starts at 1 and is just a hint:
+     * deeply nested loops all have the same value. The upper bit is set if Ion
+     * should be able to OSR at this point, which is true unless there is
+     * non-loop state on the stack.
+     *
      * See JSOP_JUMPTARGET for the icIndex operand.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: uint32_t icIndex
+     *   Operands: uint32_t icIndex, uint8_t BITFIELD
      *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPHEAD, 109, "loophead", NULL, 5, 0, 0, JOF_ICINDEX) \
+    MACRO(JSOP_LOOPHEAD, 109, "loophead", NULL, 6, 0, 0, JOF_LOOPHEAD) \
     /*
      * Looks up name on the environment chain and pushes the environment which
      * contains the name onto the stack. If not found, pushes global lexical
@@ -2406,19 +2411,8 @@
      */ \
     MACRO(JSOP_IMPLICITTHIS, 226, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     * This opcode is the target of the entry jump for some loop. The uint8
-     * argument is a bitfield. The lower 7 bits of the argument indicate the
-     * loop depth. This value starts at 1 and is just a hint: deeply nested
-     * loops all have the same value. The upper bit is set if Ion should be
-     * able to OSR at this point, which is true unless there is non-loop state
-     * on the stack. See JSOP_JUMPTARGET for the icIndex argument.
-     *
-     *   Category: Statements
-     *   Type: Jumps
-     *   Operands: uint32_t icIndex, uint8_t BITFIELD
-     *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPENTRY, 227, "loopentry", NULL, 6, 0, 0, JOF_LOOPENTRY) \
+    MACRO(JSOP_UNUSED227, 227, "unused", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Converts the value on the top of the stack to a String.
      *

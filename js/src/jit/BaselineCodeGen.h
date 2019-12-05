@@ -42,7 +42,6 @@ namespace jit {
   _(JSOP_POS)                       \
   _(JSOP_TONUMERIC)                 \
   _(JSOP_LOOPHEAD)                  \
-  _(JSOP_LOOPENTRY)                 \
   _(JSOP_VOID)                      \
   _(JSOP_UNDEFINED)                 \
   _(JSOP_HOLE)                      \

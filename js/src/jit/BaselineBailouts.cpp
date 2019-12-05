@@ -440,19 +440,18 @@ static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
   return code.bailoutReturnAddr(BailoutReturnKind::Call);
 }
 
-static inline jsbytecode* GetNextNonLoopEntryPc(jsbytecode* pc,
-                                                jsbytecode** skippedLoopEntry) {
+static inline jsbytecode* GetNextNonLoopHeadPc(jsbytecode* pc,
+                                               jsbytecode** skippedLoopHead) {
   JSOp op = JSOp(*pc);
   switch (op) {
     case JSOP_GOTO:
       return pc + GET_JUMP_OFFSET(pc);
 
-    case JSOP_LOOPENTRY:
-      *skippedLoopEntry = pc;
+    case JSOP_LOOPHEAD:
+      *skippedLoopHead = pc;
       return GetNextPc(pc);
 
     case JSOP_NOP:
-    case JSOP_LOOPHEAD:
       return GetNextPc(pc);
 
     default:
@@ -467,22 +466,22 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
     return GetNextPc(pc);
   }
 
-  // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
+  // If we are resuming at a LOOPHEAD op, resume at the next op to avoid
   // a bailout -> enter Ion -> bailout loop with --ion-eager.
   //
   // The algorithm below is the "tortoise and the hare" algorithm. See bug
   // 994444 for more explanation.
-  jsbytecode* skippedLoopEntry = nullptr;
+  jsbytecode* skippedLoopHead = nullptr;
   jsbytecode* fasterPc = pc;
   while (true) {
-    pc = GetNextNonLoopEntryPc(pc, &skippedLoopEntry);
-    fasterPc = GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry);
-    fasterPc = GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry);
+    pc = GetNextNonLoopHeadPc(pc, &skippedLoopHead);
+    fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
+    fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
     if (fasterPc == pc) {
       break;
     }
   }
-  if (skippedLoopEntry && script->trackRecordReplayProgress()) {
+  if (skippedLoopHead && script->trackRecordReplayProgress()) {
     mozilla::recordreplay::AdvanceExecutionProgressCounter();
   }
 
