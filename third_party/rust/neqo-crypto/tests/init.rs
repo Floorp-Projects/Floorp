@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![cfg_attr(feature = "deny-warnings", deny(warnings))]
 
 // This uses external interfaces to neqo_crypto rather than being a module
 // inside of lib.rs. Because all other code uses the test_fixture module,

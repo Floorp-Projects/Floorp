@@ -128,7 +128,7 @@ impl Http3Client {
     }
 
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self], "Close senidng side stream={}.", stream_id);
+        qinfo!([self], "Close sending side stream={}.", stream_id);
         self.base_handler
             .stream_close_send(&mut self.conn, stream_id)
     }
@@ -660,6 +660,26 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         sent = neqo_trans_conn.stream_send(control_stream, &[0x4]);
+        assert_eq!(sent, Ok(1));
+        let out = neqo_trans_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = neqo_trans_conn.stream_send(control_stream, &[0x61]);
+        assert_eq!(sent, Ok(1));
+        let out = neqo_trans_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = neqo_trans_conn.stream_send(control_stream, &[0x62]);
+        assert_eq!(sent, Ok(1));
+        let out = neqo_trans_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = neqo_trans_conn.stream_send(control_stream, &[0x63]);
+        assert_eq!(sent, Ok(1));
+        let out = neqo_trans_conn.process(None, now());
+        hconn.process(out.dgram(), now());
+
+        sent = neqo_trans_conn.stream_send(control_stream, &[0x64]);
         assert_eq!(sent, Ok(1));
         let out = neqo_trans_conn.process(None, now());
         hconn.process(out.dgram(), now());

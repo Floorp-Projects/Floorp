@@ -139,6 +139,9 @@ impl<T> Timer<T> {
         if time < self.now {
             return None;
         }
+        if time > self.now + self.span() {
+            return None;
+        }
         let bucket = self.time_bucket(time);
         let start_index = match self.items[bucket].binary_search_by_key(&time, TimerItem::time) {
             Ok(idx) => idx,
@@ -353,5 +356,26 @@ mod test {
             assert_eq!(Some(i), t.remove(*NOW + *time, |&x| x == i));
         }
         assert_eq!(None, t.next_time());
+    }
+
+    #[test]
+    fn remove_future() {
+        let mut t = Timer::new(*NOW, GRANULARITY, CAPACITY);
+        let future = *NOW + Duration::from_millis(117);
+        let v = 9;
+        t.add(future, v);
+
+        assert_eq!(Some(v), t.remove(future, |candidate| *candidate == v));
+    }
+
+    #[test]
+    fn remove_too_far_future() {
+        let mut t = Timer::new(*NOW, GRANULARITY, CAPACITY);
+        let future = *NOW + Duration::from_millis(117);
+        let too_far_future = *NOW + t.span() + Duration::from_millis(117);
+        let v = 9;
+        t.add(future, v);
+
+        assert_eq!(None, t.remove(too_far_future, |candidate| *candidate == v));
     }
 }

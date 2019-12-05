@@ -40,8 +40,9 @@ use crate::recv_stream::{RecvStream, RecvStreams, RX_STREAM_DATA_WINDOW};
 use crate::send_stream::{SendStream, SendStreams};
 use crate::stats::Stats;
 use crate::stream_id::{StreamId, StreamIndex, StreamIndexes};
-use crate::tparams::consts as tp_const;
-use crate::tparams::{TransportParameter, TransportParameters, TransportParametersHandler};
+use crate::tparams::{
+    tp_constants, TransportParameter, TransportParameters, TransportParametersHandler,
+};
 use crate::tracking::{AckTracker, PNSpace};
 use crate::QUIC_VERSION;
 use crate::{AppError, ConnectionError, Error, Res};
@@ -378,22 +379,31 @@ impl Connection {
 
     fn set_tp_defaults(tps: &mut TransportParameters) {
         tps.set_integer(
-            tp_const::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL,
+            tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL,
             RX_STREAM_DATA_WINDOW,
         );
         tps.set_integer(
-            tp_const::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE,
+            tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE,
             RX_STREAM_DATA_WINDOW,
         );
-        tps.set_integer(tp_const::INITIAL_MAX_STREAM_DATA_UNI, RX_STREAM_DATA_WINDOW);
-        tps.set_integer(tp_const::INITIAL_MAX_STREAMS_BIDI, LOCAL_STREAM_LIMIT_BIDI);
-        tps.set_integer(tp_const::INITIAL_MAX_STREAMS_UNI, LOCAL_STREAM_LIMIT_UNI);
-        tps.set_integer(tp_const::INITIAL_MAX_DATA, LOCAL_MAX_DATA);
         tps.set_integer(
-            tp_const::IDLE_TIMEOUT,
+            tp_constants::INITIAL_MAX_STREAM_DATA_UNI,
+            RX_STREAM_DATA_WINDOW,
+        );
+        tps.set_integer(
+            tp_constants::INITIAL_MAX_STREAMS_BIDI,
+            LOCAL_STREAM_LIMIT_BIDI,
+        );
+        tps.set_integer(
+            tp_constants::INITIAL_MAX_STREAMS_UNI,
+            LOCAL_STREAM_LIMIT_UNI,
+        );
+        tps.set_integer(tp_constants::INITIAL_MAX_DATA, LOCAL_MAX_DATA);
+        tps.set_integer(
+            tp_constants::IDLE_TIMEOUT,
             LOCAL_IDLE_TIMEOUT.as_millis().try_into().unwrap(),
         );
-        tps.set_empty(tp_const::DISABLE_MIGRATION);
+        tps.set_empty(tp_constants::DISABLE_MIGRATION);
     }
 
     fn new(
@@ -449,7 +459,7 @@ impl Connection {
         self.tps
             .borrow_mut()
             .local
-            .set_bytes(tp_const::ORIGINAL_CONNECTION_ID, odcid.to_vec());
+            .set_bytes(tp_constants::ORIGINAL_CONNECTION_ID, odcid.to_vec());
     }
 
     /// Set ALPN preferences. Strings that appear earlier in the list are given
@@ -592,10 +602,10 @@ impl Connection {
         res
     }
 
-    /// For use with process().  Errors there can be ignored, but this needs to
-    /// ensure that the state is updated.
-    fn absorb_error(&mut self, now: Instant, res: Res<()>) {
-        let _ = self.capture_error(now, 0, res);
+    /// For use with process_input(). Errors there can be ignored, but this
+    /// needs to ensure that the state is updated.
+    fn absorb_error<T>(&mut self, now: Instant, res: Res<T>) -> Option<T> {
+        self.capture_error(now, 0, res).ok()
     }
 
     pub fn process_timer(&mut self, now: Instant) {
@@ -620,6 +630,15 @@ impl Connection {
         let res = self.input(dgram, now);
         self.absorb_error(now, res);
         self.cleanup_streams();
+    }
+
+    /// Just like above but returns frames parsed from the datagram
+    #[cfg(test)]
+    pub fn test_process_input(&mut self, dgram: Datagram, now: Instant) -> Vec<(Frame, Epoch)> {
+        let res = self.input(dgram, now);
+        let frames = self.absorb_error(now, res).unwrap_or_default();
+        self.cleanup_streams();
+        frames
     }
 
     /// Get the time that we next need to be called back, relative to `now`.
@@ -755,10 +774,11 @@ impl Connection {
         Ok(())
     }
 
-    fn input(&mut self, d: Datagram, now: Instant) -> Res<()> {
+    fn input(&mut self, d: Datagram, now: Instant) -> Res<Vec<(Frame, Epoch)>> {
         let mut slc = &d[..];
+        let mut frames = Vec::new();
 
-        qinfo!([self], "input {}", hex(&**d));
+        qdebug!([self], "input {}", hex(&**d));
 
         // Handle each packet in the datagram
         while !slc.is_empty() {
@@ -772,7 +792,7 @@ impl Connection {
                         hex(slc),
                         e
                     );
-                    return Ok(()); // Drop the remainder of the datagram.
+                    return Ok(frames); // Drop the remainder of the datagram.
                 }
             };
             self.stats.packets_rx += 1;
@@ -784,11 +804,12 @@ impl Connection {
                     return Err(Error::VersionNegotiation);
                 }
                 (PacketType::Retry { odcid, token }, State::WaitInitial, Role::Client) => {
-                    return self.handle_retry(hdr.scid.as_ref().unwrap(), odcid, token);
+                    self.handle_retry(hdr.scid.as_ref().unwrap(), odcid, token)?;
+                    return Ok(frames);
                 }
                 (PacketType::VN(_), ..) | (PacketType::Retry { .. }, ..) => {
                     qwarn!("dropping {:?}", hdr.tipe);
-                    return Ok(());
+                    return Ok(frames);
                 }
                 _ => {}
             };
@@ -800,20 +821,20 @@ impl Connection {
                         hdr.version.unwrap(),
                         self.version,
                     );
-                    return Ok(());
+                    return Ok(frames);
                 }
             }
 
             match self.state {
                 State::Init => {
                     qinfo!([self], "Received message while in Init state");
-                    return Ok(());
+                    return Ok(frames);
                 }
                 State::WaitInitial => {
                     qinfo!([self], "Received packet in WaitInitial");
                     if self.role == Role::Server {
                         if !self.is_valid_initial(&hdr) {
-                            return Ok(());
+                            return Ok(frames);
                         }
                         self.crypto.create_initial_state(self.role, &hdr.dcid);
                     }
@@ -821,18 +842,18 @@ impl Connection {
                 State::Handshaking | State::Connected => {
                     if !self.is_valid_cid(&hdr.dcid) {
                         qinfo!([self], "Ignoring packet with CID {:?}", hdr.dcid);
-                        return Ok(());
+                        return Ok(frames);
                     }
                 }
                 State::Closing { .. } => {
                     // Don't bother processing the packet. Instead ask to get a
                     // new close frame.
                     self.flow_mgr.borrow_mut().set_need_close_frame(true);
-                    return Ok(());
+                    return Ok(frames);
                 }
                 State::Closed(..) => {
                     // Do nothing.
-                    return Ok(());
+                    return Ok(frames);
                 }
             }
 
@@ -847,14 +868,14 @@ impl Connection {
                 // OK, we have a valid packet.
                 self.idle_timeout.on_packet_received(now);
                 dump_packet(self, "-> RX", &hdr, &body);
-                if self.process_packet(&hdr, body, now)? {
-                    continue;
+                frames.extend(self.process_packet(&hdr, body, now)?);
+                if matches!(self.state, State::WaitInitial) {
+                    self.start_handshake(hdr, &d)?;
                 }
-                self.start_handshake(hdr, &d)?;
                 self.process_migrations(&d)?;
             }
         }
-        Ok(())
+        Ok(frames)
     }
 
     fn decrypt_body(&mut self, mut hdr: &mut PacketHdr, slc: &[u8]) -> Option<Vec<u8>> {
@@ -864,13 +885,16 @@ impl Connection {
         let largest_acknowledged = self
             .loss_recovery
             .largest_acknowledged_pn(PNSpace::from(hdr.epoch));
-        if (self.state == State::Handshaking) && (hdr.epoch == 3) {
-            // Server has keys for epoch 3 but it is still in state Handshaking -> discharge packet.
-            debug_assert_eq!(self.role(), Role::Server);
-            return None;
-        }
         match self.crypto.obtain_crypto_state(self.role, hdr.epoch) {
             Ok(CryptoState { rx: Some(rx), .. }) => {
+                if (self.state == State::Handshaking) && (hdr.epoch == 3) {
+                    // We got a packet for epoch 3 but it is still in state Handshaking ->
+                    // discharge packet.
+                    // On the server side we have keys for epoch 3 before we enter epoch,
+                    // but we still need to discharge the packet.
+                    debug_assert_eq!(self.role(), Role::Server);
+                    return None;
+                }
                 let pn_decoder = PacketNumberDecoder::new(largest_acknowledged);
                 decrypt_packet(rx, pn_decoder, &mut hdr, slc).ok()
             }
@@ -879,7 +903,12 @@ impl Connection {
     }
 
     /// Ok(true) if the packet is a duplicate
-    fn process_packet(&mut self, hdr: &PacketHdr, body: Vec<u8>, now: Instant) -> Res<bool> {
+    fn process_packet(
+        &mut self,
+        hdr: &PacketHdr,
+        body: Vec<u8>,
+        now: Instant,
+    ) -> Res<Vec<(Frame, Epoch)>> {
         // TODO(ekr@rtfm.com): Have the server blow away the initial
         // crypto state if this fails? Otherwise, we will get a panic
         // on the assert for doesn't exist.
@@ -887,7 +916,6 @@ impl Connection {
 
         // TODO(ekr@rtfm.com): Filter for valid for this epoch.
 
-        let ack_eliciting = self.input_packet(hdr.epoch, Decoder::from(&body[..]), now)?;
         let space = PNSpace::from(hdr.epoch);
         if self.acks[space].is_duplicate(hdr.pn) {
             qdebug!(
@@ -897,18 +925,29 @@ impl Connection {
                 hdr.pn
             );
             self.stats.dups_rx += 1;
-            Ok(true)
-        } else {
-            self.acks[space].set_received(now, hdr.pn, ack_eliciting);
-            Ok(false)
+            return Ok(vec![]);
         }
+
+        let mut ack_eliciting = false;
+        let mut d = Decoder::from(&body[..]);
+        #[allow(unused_mut)]
+        let mut frames = Vec::new();
+        while d.remaining() > 0 {
+            let f = decode_frame(&mut d)?;
+            if cfg!(test) {
+                frames.push((f.clone(), hdr.epoch));
+            }
+            ack_eliciting |= f.ack_eliciting();
+            let t = f.get_type();
+            let res = self.input_frame(hdr.epoch, f, now);
+            self.capture_error(now, t, res)?;
+        }
+        self.acks[space].set_received(now, hdr.pn, ack_eliciting);
+
+        Ok(frames)
     }
 
     fn start_handshake(&mut self, hdr: PacketHdr, d: &Datagram) -> Res<()> {
-        // No handshake to process.
-        if !matches!(self.state, State::WaitInitial) {
-            return Ok(());
-        }
         if self.role == Role::Server {
             assert!(matches!(hdr.tipe, PacketType::Initial(..)));
             // A server needs to accept the client's selected CID during the handshake.
@@ -954,22 +993,6 @@ impl Connection {
         }
     }
 
-    // Return whether the packet had ack-eliciting frames.
-    fn input_packet(&mut self, epoch: Epoch, mut d: Decoder, now: Instant) -> Res<bool> {
-        let mut ack_eliciting = false;
-
-        // Handle each frame in the packet
-        while d.remaining() > 0 {
-            let f = decode_frame(&mut d)?;
-            ack_eliciting |= f.ack_eliciting();
-            let t = f.get_type();
-            let res = self.input_frame(epoch, f, now);
-            self.capture_error(now, t, res)?;
-        }
-
-        Ok(ack_eliciting)
-    }
-
     fn output(&mut self, now: Instant) -> Option<Datagram> {
         let mut out = None;
         if self.path.is_some() {
@@ -980,7 +1003,8 @@ impl Connection {
                 Err(e) => {
                     if !matches!(self.state, State::Closing{..}) {
                         // An error here causes us to transition to closing.
-                        self.absorb_error(now, Err(e));
+                        let err: Result<Option<Datagram>, Error> = Err(e);
+                        self.absorb_error(now, err);
                         // Rerun to give a chance to send a CONNECTION_CLOSE.
                         out = match self.output_pkt_for_path(now) {
                             Ok(x) => x,
@@ -1180,18 +1204,18 @@ impl Connection {
         let tps = self.tps.borrow();
         let remote = tps.remote();
         self.indexes.remote_max_stream_bidi =
-            StreamIndex::new(remote.get_integer(tp_const::INITIAL_MAX_STREAMS_BIDI));
+            StreamIndex::new(remote.get_integer(tp_constants::INITIAL_MAX_STREAMS_BIDI));
         self.indexes.remote_max_stream_uni =
-            StreamIndex::new(remote.get_integer(tp_const::INITIAL_MAX_STREAMS_UNI));
+            StreamIndex::new(remote.get_integer(tp_constants::INITIAL_MAX_STREAMS_UNI));
         self.flow_mgr
             .borrow_mut()
-            .conn_increase_max_credit(remote.get_integer(tp_const::INITIAL_MAX_DATA));
+            .conn_increase_max_credit(remote.get_integer(tp_constants::INITIAL_MAX_DATA));
     }
 
     fn validate_odcid(&self) -> Res<()> {
         if let Some(info) = &self.retry_info {
             let tph = self.tps.borrow();
-            let tp = tph.remote().get_bytes(tp_const::ORIGINAL_CONNECTION_ID);
+            let tp = tph.remote().get_bytes(tp_constants::ORIGINAL_CONNECTION_ID);
             if let Some(odcid_tp) = tp {
                 if odcid_tp[..] == info.odcid[..] {
                     Ok(())
@@ -1638,10 +1662,15 @@ impl Connection {
                         );
                         return Err(Error::StreamLimitError);
                     }
+                    // From the local perspective, this is a remote- originated BiDi stream. From
+                    // the remote perspective, this is a local-originated BiDi stream. Therefore,
+                    // look at the local transport parameters for the
+                    // INITIAL_MAX_STREAM_DATA_BIDI_REMOTE value to decide how much this endpoint
+                    // will allow its peer to send.
                     self.tps
                         .borrow()
                         .local
-                        .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE)
+                        .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE)
                 } else {
                     if stream_idx > self.indexes.local_max_stream_uni {
                         qwarn!(
@@ -1655,7 +1684,7 @@ impl Connection {
                     self.tps
                         .borrow()
                         .local
-                        .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_UNI)
+                        .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_UNI)
                 };
 
                 loop {
@@ -1674,11 +1703,16 @@ impl Connection {
                     if next_stream_id.is_uni() {
                         self.events.new_stream(next_stream_id);
                     } else {
+                        // From the local perspective, this is a remote- originated BiDi stream.
+                        // From the remote perspective, this is a local-originated BiDi stream.
+                        // Therefore, look at the remote's transport parameters for the
+                        // INITIAL_MAX_STREAM_DATA_BIDI_LOCAL value to decide how much this endpoint
+                        // is allowed to send its peer.
                         let send_initial_max_stream_data = self
                             .tps
                             .borrow()
                             .remote()
-                            .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE);
+                            .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL);
                         self.send_streams.insert(
                             next_stream_id,
                             SendStream::new(
@@ -1748,7 +1782,7 @@ impl Connection {
                     .tps
                     .borrow()
                     .remote()
-                    .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_UNI);
+                    .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_UNI);
 
                 self.send_streams.insert(
                     new_id,
@@ -1779,11 +1813,15 @@ impl Connection {
                     .remote_next_stream_bidi
                     .to_stream_id(StreamType::BiDi, self.role);
                 self.indexes.remote_next_stream_bidi += 1;
+                // From the local perspective, this is a local- originated BiDi stream. From the
+                // remote perspective, this is a remote-originated BiDi stream. Therefore, look at
+                // the remote transport parameters for the INITIAL_MAX_STREAM_DATA_BIDI_REMOTE value
+                // to decide how much this endpoint is allowed to send its peer.
                 let send_initial_max_stream_data = self
                     .tps
                     .borrow()
                     .remote()
-                    .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE);
+                    .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE);
 
                 self.send_streams.insert(
                     new_id,
@@ -1794,12 +1832,15 @@ impl Connection {
                         self.events.clone(),
                     ),
                 );
-
+                // From the local perspective, this is a local- originated BiDi stream. From the
+                // remote perspective, this is a remote-originated BiDi stream. Therefore, look at
+                // the local transport parameters for the INITIAL_MAX_STREAM_DATA_BIDI_LOCAL value
+                // to decide how much this endpoint will allow its peer to send.
                 let recv_initial_max_stream_data = self
                     .tps
                     .borrow()
                     .local
-                    .get_integer(tp_const::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL);
+                    .get_integer(tp_constants::INITIAL_MAX_STREAM_DATA_BIDI_LOCAL);
 
                 self.recv_streams.insert(
                     new_id,
@@ -2758,7 +2799,10 @@ mod tests {
     fn set_local_tparam() {
         let client = default_client();
 
-        client.set_local_tparam(tp_const::INITIAL_MAX_DATA, TransportParameter::Integer(55))
+        client.set_local_tparam(
+            tp_constants::INITIAL_MAX_DATA,
+            TransportParameter::Integer(55),
+        )
     }
 
     #[test]

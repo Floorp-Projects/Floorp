@@ -62,7 +62,7 @@ pub enum HFrame {
     },
     PushPromise {
         push_id: u64,
-        len: u64, // length of the header block.
+        header_block: Vec<u8>,
     },
     Goaway {
         stream_id: u64,
@@ -123,11 +123,13 @@ impl HFrame {
                     }
                 });
             }
-            HFrame::PushPromise { push_id, len } => {
-                // This one is tricky because we don't encode the body, we encode the length.
-                // TODO(mt) work out whether this needs to stay this way.
-                enc.encode_varint(*len + (Encoder::varint_len(*push_id) as u64));
+            HFrame::PushPromise {
+                push_id,
+                header_block,
+            } => {
+                enc.encode_varint((header_block.len() + (Encoder::varint_len(*push_id))) as u64);
                 enc.encode_varint(*push_id);
+                enc.encode(header_block);
             }
             HFrame::Goaway { stream_id } => {
                 enc.encode_vvec_with(|enc_inner| {
@@ -166,7 +168,6 @@ enum HFrameReaderState {
     BeforeFrame,
     GetType,
     GetLength,
-    GetPushPromiseData,
     GetData,
     UnknownFrameDischargeData,
     Done,
@@ -178,7 +179,6 @@ pub struct HFrameReader {
     decoder: IncrementalDecoder,
     hframe_type: u64,
     hframe_len: u64,
-    push_id_len: usize,
     payload: Vec<u8>,
 }
 
@@ -194,7 +194,6 @@ impl HFrameReader {
             state: HFrameReaderState::BeforeFrame,
             hframe_type: 0,
             hframe_len: 0,
-            push_id_len: 0, // TODO(mt) remove this, it's bad
             decoder: IncrementalDecoder::decode_varint(),
             payload: Vec::new(),
         }
@@ -241,10 +240,7 @@ impl HFrameReader {
                 }
             };
 
-            // TODO(mt) this amount_read thing is terrible.
-            let mut amount_read = input.remaining();
             let progress = self.decoder.consume(&mut input);
-            amount_read -= input.remaining();
             match self.state {
                 HFrameReaderState::BeforeFrame | HFrameReaderState::GetType => match progress {
                     IncrementalDecoderResult::Uint(v) => {
@@ -274,17 +270,14 @@ impl HFrameReader {
                                 H3_FRAME_TYPE_DATA | H3_FRAME_TYPE_HEADERS => {
                                     HFrameReaderState::Done
                                 }
-                                // For push frame we only decode the first varint. Headers blocks will be picked up separately.
-                                H3_FRAME_TYPE_PUSH_PROMISE => {
-                                    self.decoder = IncrementalDecoder::decode_varint();
-                                    HFrameReaderState::GetPushPromiseData
-                                }
+
                                 // for other frames get all data before decoding.
                                 H3_FRAME_TYPE_CANCEL_PUSH
                                 | H3_FRAME_TYPE_SETTINGS
                                 | H3_FRAME_TYPE_GOAWAY
                                 | H3_FRAME_TYPE_MAX_PUSH_ID
-                                | H3_FRAME_TYPE_DUPLICATE_PUSH => {
+                                | H3_FRAME_TYPE_DUPLICATE_PUSH
+                                | H3_FRAME_TYPE_PUSH_PROMISE => {
                                     if len == 0 {
                                         HFrameReaderState::Done
                                     } else {
@@ -306,21 +299,6 @@ impl HFrameReader {
                         IncrementalDecoderResult::InProgress => {}
                         _ => panic!("We must be in one of the states above"),
                     }
-                }
-                HFrameReaderState::GetPushPromiseData => {
-                    self.push_id_len += amount_read;
-                    match progress {
-                        IncrementalDecoderResult::Uint(push_id) => {
-                            // put the push ID back into the payload
-                            // TODO(mt) this is not a good design
-                            let mut enc = Encoder::with_capacity(8);
-                            enc.encode_uint(8, push_id);
-                            self.payload = enc.into();
-                            self.state = HFrameReaderState::Done;
-                        }
-                        IncrementalDecoderResult::InProgress => {}
-                        _ => panic!("We must be in one of the states above"),
-                    };
                 }
                 HFrameReaderState::GetData => {
                     match progress {
@@ -414,12 +392,14 @@ impl HFrameReader {
                 HFrame::Settings { settings }
             }
             H3_FRAME_TYPE_PUSH_PROMISE => {
-                let push_id = match dec.decode_uint(8) {
+                let push_id = match dec.decode_varint() {
                     Some(v) => v,
-                    _ => unreachable!(),
+                    _ => return Err(Error::NotEnoughData),
                 };
-                let len = self.hframe_len - self.push_id_len as u64;
-                HFrame::PushPromise { push_id, len }
+                HFrame::PushPromise {
+                    push_id,
+                    header_block: dec.decode_remainder().to_vec(),
+                }
             }
             H3_FRAME_TYPE_GOAWAY => HFrame::Goaway {
                 stream_id: match dec.decode_varint() {
@@ -536,8 +516,11 @@ mod tests {
 
     #[test]
     fn test_push_promise_frame4() {
-        let f = HFrame::PushPromise { push_id: 4, len: 4 };
-        enc_dec(&f, "05050401020304", 4);
+        let f = HFrame::PushPromise {
+            push_id: 4,
+            header_block: vec![0x61, 0x62, 0x63, 0x64],
+        };
+        enc_dec(&f, "05050461626364", 0);
     }
 
     #[test]
@@ -716,17 +699,21 @@ mod tests {
         assert_eq!(Ok(false), fr.receive(&mut conn_c, stream_id));
 
         // headers are still on the stream.
-        // assert that we have 3 bytes in the stream
+        // assert that we do not have any more date on the stream
         let mut buf = [0u8; 100];
         let (amount, _) = conn_c.stream_recv(stream_id, &mut buf).unwrap();
-        assert_eq!(amount, 3);
+        assert_eq!(amount, 0);
 
         assert!(fr.done());
         let f = fr.get_frame();
         assert!(f.is_ok());
-        if let HFrame::PushPromise { push_id, len } = f.unwrap() {
-            assert!(push_id == 257);
-            assert!(len == 3);
+        if let HFrame::PushPromise {
+            push_id,
+            header_block,
+        } = f.unwrap()
+        {
+            assert_eq!(push_id, 257);
+            assert_eq!(header_block, &[0x1, 0x2, 0x3]);
         } else {
             panic!("wrong frame type");
         }
@@ -1030,12 +1017,14 @@ mod tests {
         test_complete_and_incomplete_frame(&buf, buf.len());
 
         // H3_FRAME_TYPE_PUSH_PROMISE
-        let f = HFrame::PushPromise { push_id: 4, len: 4 };
+        let f = HFrame::PushPromise {
+            push_id: 4,
+            header_block: vec![0x01, 0x02, 0x03, 0x04],
+        };
         let mut enc = Encoder::default();
         f.encode(&mut enc);
-        let mut buf: Vec<_> = enc.into();
-        buf.resize(4 + 4 + buf.len(), 0);
-        test_complete_and_incomplete_frame(&buf, 3);
+        let buf: Vec<_> = enc.into();
+        test_complete_and_incomplete_frame(&buf, buf.len());
 
         // H3_FRAME_TYPE_GOAWAY
         let f = HFrame::Goaway { stream_id: 5 };

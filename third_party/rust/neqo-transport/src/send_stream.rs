@@ -8,12 +8,11 @@
 
 use std::cell::RefCell;
 use std::cmp::{max, min};
-use std::collections::{hash_map::IterMut, BTreeMap, HashMap};
+use std::collections::{hash_map::IterMut, BTreeMap, HashMap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 use std::rc::Rc;
 
-use slice_deque::SliceDeque;
 use smallvec::SmallVec;
 
 use neqo_common::{matches, qdebug, qerror, qinfo, qtrace, qwarn};
@@ -274,9 +273,9 @@ impl RangeTracker {
 /// Buffer to contain queued bytes and track their state.
 #[derive(Debug, Default, PartialEq)]
 pub struct TxBuffer {
-    retired: u64,             // contig acked bytes, no longer in buffer
-    send_buf: SliceDeque<u8>, // buffer of not-acked bytes
-    ranges: RangeTracker,     // ranges in buffer that have been sent or acked
+    retired: u64,           // contig acked bytes, no longer in buffer
+    send_buf: VecDeque<u8>, // buffer of not-acked bytes
+    ranges: RangeTracker,   // ranges in buffer that have been sent or acked
 }
 
 impl TxBuffer {
@@ -284,7 +283,7 @@ impl TxBuffer {
 
     pub fn new() -> Self {
         Self {
-            send_buf: SliceDeque::with_capacity(TxBuffer::BUFFER_SIZE),
+            send_buf: VecDeque::with_capacity(TxBuffer::BUFFER_SIZE),
             ..Self::default()
         }
     }
@@ -310,18 +309,22 @@ impl TxBuffer {
 
                 let buff_off = usize::try_from(start - self.retired).unwrap();
                 match maybe_len {
-                    Some(len) => Some((
-                        start,
-                        &self.send_buf[buff_off..buff_off + usize::try_from(len).unwrap()],
-                    )),
-                    None => Some((start, &self.send_buf[buff_off..])),
+                    Some(len) => {
+                        let len = min(len, self.send_buf.as_slices().0.len().try_into().unwrap());
+                        Some((
+                            start,
+                            &self.send_buf.as_slices().0
+                                [buff_off..buff_off + usize::try_from(len).unwrap()],
+                        ))
+                    }
+                    None => Some((start, &self.send_buf.as_slices().0[buff_off..])),
                 }
             }
             TxMode::Pto => {
                 if self.buffered() == 0 {
                     None
                 } else {
-                    Some((self.retired, &self.send_buf))
+                    Some((self.retired, &self.send_buf.as_slices().0))
                 }
             }
         }
@@ -340,7 +343,11 @@ impl TxBuffer {
         let new_retirable = self.ranges.acked_from_zero() - self.retired;
         let keep_len =
             self.buffered() - usize::try_from(new_retirable).expect("should fit in usize");
-        self.send_buf.truncate_front(keep_len);
+
+        // Truncate front
+        self.send_buf.rotate_left(self.buffered() - keep_len);
+        self.send_buf.truncate(keep_len);
+
         self.retired += new_retirable;
     }
 
@@ -856,6 +863,20 @@ mod tests {
         rt.mark_range(0, 200, RangeState::Sent);
         assert_eq!(rt.highest_offset(), 400);
         assert_eq!(rt.acked_from_zero(), 400);
+    }
+
+    #[test]
+    fn truncate_front() {
+        let mut v = VecDeque::new();
+        v.push_back(5);
+        v.push_back(6);
+        v.push_back(7);
+        v.push_front(4usize);
+
+        v.rotate_left(1);
+        v.truncate(3);
+        assert_eq!(*v.front().unwrap(), 5);
+        assert_eq!(*v.back().unwrap(), 7);
     }
 
     #[test]
