@@ -218,9 +218,16 @@ Accessing this property will throw if `.onStack == false`.
 ### `onStack`
 True if the frame this `Debugger.Frame` instance refers to is still on
 the stack; false if it has completed execution or been popped in some other way.
-Note that this property may be accessed at any time, so it can be used to
-verify whether it is safe to access other properties that require an on-stack
-frame.
+Note that this property may be accessed regardless of what state the frame is
+in, so it can be used to verify whether it is safe to access other properties
+that require an on-stack frame.
+
+### `terminated`
+True if the frame this `Debugger.Frame` instance refers to will never run
+again; false if it is on-stack or is a suspended generator/async call that
+may be resumed later. Note that this property may be accessed regardless of
+what state the frame is in, so it can be used to verify whether it is safe to
+access other properties that require a non-terminated frame.
 
 ### `script`
 The script being executed in this frame (a [`Debugger.Script`][script]

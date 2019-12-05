@@ -1219,6 +1219,7 @@ struct MOZ_STACK_CLASS DebuggerFrame::CallData {
   bool generatorGetter();
   bool liveGetter();
   bool onStackGetter();
+  bool terminatedGetter();
   bool offsetGetter();
   bool olderGetter();
   bool getScript();
@@ -1247,6 +1248,7 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   // These methods do not require liveness.
   bool checkOnStack = MyMethod != &CallData::liveGetter &&
                       MyMethod != &CallData::onStackGetter &&
+                      MyMethod != &CallData::terminatedGetter &&
                       MyMethod != &CallData::onStepGetter &&
                       MyMethod != &CallData::onStepSetter &&
                       MyMethod != &CallData::onPopGetter &&
@@ -1539,6 +1541,11 @@ bool DebuggerFrame::CallData::onStackGetter() {
   return true;
 }
 
+bool DebuggerFrame::CallData::terminatedGetter() {
+  args.rval().setBoolean(!frame->isOnStack() && !frame->hasGenerator());
+  return true;
+}
+
 static bool IsValidHook(const Value& v) {
   return v.isUndefined() || (v.isObject() && v.toObject().isCallable());
 }
@@ -1681,6 +1688,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_DEBUG_PSG("generator", generatorGetter),
     JS_DEBUG_PSG("live", liveGetter),
     JS_DEBUG_PSG("onStack", onStackGetter),
+    JS_DEBUG_PSG("terminated", terminatedGetter),
     JS_DEBUG_PSG("offset", offsetGetter),
     JS_DEBUG_PSG("older", olderGetter),
     JS_DEBUG_PSG("script", getScript),
