@@ -976,6 +976,10 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   min-width: 20em;
 }
 
+#selectedLocales {
+  height: 150px;
+}
+
 #selectedLocales > richlistitem {
   padding-inline-start: 13px;
 }
