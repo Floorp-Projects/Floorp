@@ -16,6 +16,7 @@ export interface PanelWindow {
   gTarget?: any;
   gInit(perfFront: any, preferenceFront: any): void;
   gDestroy(): void;
+  gReportReady?(): void
 }
 
 /**
@@ -55,6 +56,8 @@ export interface PerfFront {
   isActive: () => MaybePromise<boolean>;
   isSupportedPlatform: () => MaybePromise<boolean>;
   isLockedForPrivateBrowsing: () => MaybePromise<boolean>;
+  on: (type: string, listener: () => void) => void;
+  off: (type: string, listener: () => void) => void;
   /**
    * This method was was added in Firefox 72.
    */
@@ -355,4 +358,18 @@ export interface PerformancePref {
  */
 export interface PopupWindow extends Window {
   gResizePopup?: (height: number) => void;
+}
+
+/**
+ * Scale a number value.
+ */
+export type NumberScaler = (value: number) => number;
+
+/**
+ * A collection of functions to scale numbers.
+ */
+export interface ScaleFunctions {
+  fromFractionToValue: NumberScaler,
+  fromValueToFraction: NumberScaler,
+  fromFractionToSingleDigitValue: NumberScaler,
 }

@@ -1,6 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+
+/**
+ * @typedef {{}} Props - This is an empty object.
+ */
+
 "use strict";
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
@@ -13,25 +19,34 @@ const {
 /**
  * This component provides a helpful description for what is going on in the component
  * and provides some external links.
+ * @extends {React.PureComponent<Props>}
  */
 class Description extends PureComponent {
-  static get propTypes() {
-    return {};
-  }
-
+  /**
+   * @param {Props} props
+   */
   constructor(props) {
     super(props);
     this.handleLinkClick = this.handleLinkClick.bind(this);
   }
 
+  /**
+   * @param {React.MouseEvent<HTMLButtonElement>} event
+   */
   handleLinkClick(event) {
     const { openDocLink } = require("devtools/client/shared/link");
-    openDocLink(event.target.value);
+
+    /** @type HTMLButtonElement */
+    const target = /** @type {any} */ (event.target);
+
+    openDocLink(target.value, {});
   }
 
   /**
    * Implement links as buttons to avoid any risk of loading the link in the
    * the panel.
+   * @param {string} href
+   * @param {string} text
    */
   renderLink(href, text) {
     return button(
