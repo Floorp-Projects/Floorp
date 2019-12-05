@@ -70,8 +70,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 
   loopInfo_.emplace(bce_, iterDepth, allowSelfHostedIter_, iterKind_);
 
-  // Annotate so IonMonkey can find the loop-closing jump.
-  if (!bce_->newSrcNote(SRC_FOR_OF, &noteIndex_)) {
+  if (!bce_->newSrcNote(SRC_FOR_OF)) {
     return false;
   }
 
@@ -240,12 +239,6 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   }
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_);
-
-  // Let Ion know where the closing jump of this loop is.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Loop::BackJumpOffset,
-                              loopInfo_->loopEndOffsetFromLoopHead())) {
-    return false;
-  }
 
   if (!loopInfo_->patchBreaksAndContinues(bce_)) {
     return false;

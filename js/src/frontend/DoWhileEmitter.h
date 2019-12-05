@@ -34,9 +34,6 @@ struct BytecodeEmitter;
 class MOZ_STACK_CLASS DoWhileEmitter {
   BytecodeEmitter* bce_;
 
-  // The source note index for SRC_DO_WHILE.
-  unsigned noteIndex_ = 0;
-
   mozilla::Maybe<LoopControl> loopInfo_;
 
 #ifdef DEBUG
