@@ -37,9 +37,6 @@ struct BytecodeEmitter;
 class MOZ_STACK_CLASS WhileEmitter {
   BytecodeEmitter* bce_;
 
-  // The source note index for SRC_WHILE.
-  unsigned noteIndex_ = 0;
-
   mozilla::Maybe<LoopControl> loopInfo_;
 
   // Cache for the loop body, which is enclosed by the cache in `loopInfo_`,

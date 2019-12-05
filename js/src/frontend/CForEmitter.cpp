@@ -67,7 +67,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& condPos) {
     }
   }
 
-  if (!bce_->newSrcNote(SRC_FOR, &noteIndex_)) {
+  if (!bce_->newSrcNote(SRC_FOR)) {
     return false;
   }
 
@@ -172,14 +172,6 @@ bool CForEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   // Emit the loop-closing jump.
   if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO)) {
     //              [stack]
-    return false;
-  }
-
-  // The note offset helps us find the loop-closing jump.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Loop::BackJumpOffset,
-                              loopInfo_->loopEndOffsetFromLoopHead()))
-
-  {
     return false;
   }
 
