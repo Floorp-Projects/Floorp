@@ -161,14 +161,11 @@ using PendingEdgesMap =
 // LoopState stores information about a loop that's being compiled to MIR.
 class LoopState {
   MBasicBlock* header_ = nullptr;
-  jsbytecode* successorStart_ = nullptr;
 
  public:
-  LoopState(MBasicBlock* header, jsbytecode* successorStart)
-      : header_(header), successorStart_(successorStart) {}
+  explicit LoopState(MBasicBlock* header) : header_(header) {}
 
   MBasicBlock* header() const { return header_; }
-  jsbytecode* successorStart() const { return successorStart_; }
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
@@ -219,8 +216,7 @@ class IonBuilder : public MIRGenerator,
                                        InliningTargets& targets,
                                        uint32_t maxTargets);
 
-  AbortReasonOr<Ok> analyzeNewLoopTypes(MBasicBlock* entry,
-                                        jsbytecode* loopStopPc);
+  AbortReasonOr<Ok> analyzeNewLoopTypes(MBasicBlock* entry);
   AbortReasonOr<Ok> analyzeNewLoopTypesForLocation(
       MBasicBlock* entry, const BytecodeLocation loc,
       const mozilla::Maybe<BytecodeLocation>& last_,
