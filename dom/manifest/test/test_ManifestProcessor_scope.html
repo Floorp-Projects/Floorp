@@ -17,28 +17,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  **/
 "use strict";
 
-var expected = "Expect non-string scope to be undefined";
+var expected = "Expect non-string scope to be the default";
 typeTests.forEach((type) => {
   data.jsonText = JSON.stringify({
     scope: type,
   });
   var result = processor.process(data);
-  is(result.scope, undefined, expected);
+  is(result.scope, new URL(".", docURL).href, expected);
 });
 
-expected = "Expect different origin to be treated as undefined";
+expected = "Expect different origin to be the default";
 data.jsonText = JSON.stringify({
   scope: "http://not-same-origin",
 });
 var result = processor.process(data);
-is(result.scope, undefined, expected);
+is(result.scope, new URL(".", docURL).href, expected);
 
-expected = "Expect the empty string to be treated as undefined.";
+expected = "Expect the empty string to be the default";
 data.jsonText = JSON.stringify({
   scope: "",
 });
 result = processor.process(data);
-is(result.scope, undefined, expected);
+is(result.scope, new URL(".", docURL).href, expected);
 
 expected = "Resolve URLs relative to manifest.";
 var URLs = ["path", "/path", "../../path"];
@@ -52,13 +52,14 @@ URLs.forEach((url) => {
   is(result.scope, absURL, expected);
 });
 
-expected = "If start URL is not in scope, return undefined.";
+expected = "If start URL is not in scope, return the default.";
 data.jsonText = JSON.stringify({
   scope: "foo",
   start_url: "bar",
 });
 result = processor.process(data);
-is(result.scope, undefined, expected);
+let expected_start = new URL("bar", docURL);
+is(result.scope, new URL(document.location.origin).href, expected);
 
 expected = "If start URL is in scope, use the scope.";
 data.jsonText = JSON.stringify({
