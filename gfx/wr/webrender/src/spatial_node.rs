@@ -65,9 +65,9 @@ pub struct SpatialNode {
     /// node will not be clipped by clips that are transformed by this node.
     pub invertible: bool,
 
-    /// Whether this specific node is currently being pinch zoomed.
-    /// Should be set when a SetIsTransformPinchZooming FrameMsg is received.
-    pub is_pinch_zooming: bool,
+    /// Whether this specific node is currently being async zoomed.
+    /// Should be set when a SetIsTransformAsyncZooming FrameMsg is received.
+    pub is_async_zooming: bool,
 
     /// Whether this node or any of its ancestors is being pinch zoomed.
     /// This is calculated in update(). This will be used to decide whether
@@ -140,7 +140,7 @@ impl SpatialNode {
             pipeline_id,
             node_type,
             invertible: true,
-            is_pinch_zooming: false,
+            is_async_zooming: false,
             is_ancestor_or_self_zooming: false,
         }
     }
@@ -288,7 +288,7 @@ impl SpatialNode {
             Some(parent) => previous_spatial_nodes[parent.0 as usize].is_ancestor_or_self_zooming,
             _ => false,
         };
-        self.is_ancestor_or_self_zooming = self.is_pinch_zooming | is_parent_zooming;
+        self.is_ancestor_or_self_zooming = self.is_async_zooming | is_parent_zooming;
 
         // If this node is a reference frame, we check if it has a non-invertible matrix.
         // For non-reference-frames we assume that they will produce only additional
