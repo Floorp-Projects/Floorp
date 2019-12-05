@@ -17,6 +17,11 @@ git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
 tag = "v0.1.6"
 
+[source."https://github.com/mheese/rust-pkcs11"]
+git = "https://github.com/mheese/rust-pkcs11"
+replace-with = "vendored-sources"
+rev = "0810cd5adf4ac8031cc204df3e877d84595c7438"
+
 [source."https://github.com/kvark/spirv_cross"]
 branch = "wgpu"
 git = "https://github.com/kvark/spirv_cross"
@@ -30,11 +35,6 @@ tag = "v0.3.0"
 [source."https://github.com/hsivonen/packed_simd"]
 branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"
-replace-with = "vendored-sources"
-
-[source."https://github.com/emilio/rust-pkcs11"]
-branch = "master"
-git = "https://github.com/emilio/rust-pkcs11"
 replace-with = "vendored-sources"
 
 [source."https://github.com/alexcrichton/mio-named-pipes"]
