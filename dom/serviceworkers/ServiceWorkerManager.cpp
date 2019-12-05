@@ -317,6 +317,16 @@ ServiceWorkerManager::~ServiceWorkerManager() {
   if (!ServiceWorkersAreCrossProcess()) {
     MOZ_ASSERT(!mActor);
   }
+
+  // This can happen if the browser is started up in ProfileManager mode, in
+  // which case XPCOM will startup and shutdown, but there won't be any
+  // profile-* topic notifications. The shutdown blocker expects to be in a
+  // NotAcceptingPromises state when it's destroyed, and this transition
+  // normally happens in the "profile-change-teardown" notification callback
+  // (which won't be called in ProfileManager mode).
+  if (!mShuttingDown && mShutdownBlocker) {
+    mShutdownBlocker->StopAcceptingPromises();
+  }
 }
 
 void ServiceWorkerManager::BlockShutdownOn(
