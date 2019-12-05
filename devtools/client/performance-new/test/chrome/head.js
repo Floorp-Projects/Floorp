@@ -224,7 +224,7 @@ function createPerfComponent() {
         recordingPreferences: getRecordingPreferencesFromBrowser(),
         setRecordingPreferences: recordingPreferencesMock,
         getSymbolTableGetter: () => noop,
-        isPopup: false,
+        pageContext: "devtools",
         supportedFeatures: perfFrontMock.getSupportedFeatures(),
       })
     );
