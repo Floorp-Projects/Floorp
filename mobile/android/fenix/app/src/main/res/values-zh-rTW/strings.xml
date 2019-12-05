@@ -5,6 +5,8 @@
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
     <string name="app_name_private_2">Firefox Preview 隱私模式</string>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview（隱私瀏覽）</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">更多選項</string>
@@ -117,6 +119,17 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">開啟剪貼簿中的鏈結</string>
 
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">允許</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">不允許</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">要允許在隱私瀏覽階段中顯示搜尋建議嗎？</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s 將與預設搜尋引擎分享您在網址列輸入的任何內容。</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">了解更多</string>
+
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">搜尋</string>
@@ -135,6 +148,8 @@
     <string name="preferences_default_search_engine">預設搜尋引擎</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">搜尋</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">網址列</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">說明</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -168,6 +183,8 @@
     <string name="preferences_category_account">帳號</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">登入</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">工具列</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">佈景主題</string>
     <!-- Preference description for banner about signing in -->
@@ -193,6 +210,8 @@
     <string name="preferences_show_search_shortcuts">顯示搜尋捷徑</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">顯示搜尋建議</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">於隱私上網模式顯示</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">顯示剪貼簿內容建議</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -309,6 +328,12 @@
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">取消</string>
 
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">頂端</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">底端</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">亮色</string>
@@ -356,6 +381,8 @@
     <string name="tab_header_label">開啟分頁</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">隱私瀏覽階段</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">隱私分頁</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">新增分頁</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -654,6 +681,8 @@
     <string name="notification_pbm_channel_name">隱私瀏覽階段</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">清除隱私分頁</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">關閉隱私分頁</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">開啟</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -890,6 +919,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">在保護與效能間取得平衡。</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">頁面可正常載入，但封鎖少一點追蹤器。</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">標準追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">嚴格</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -900,6 +931,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">嚴格（建議）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">保護更強大，但可能會導致某些網站或內容故障。</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">嚴格追蹤保護會封鎖哪些內容</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">已封鎖</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -927,9 +960,9 @@
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">盾牌變成紫色時，就代表 %s 封鎖了這個網站上的追蹤器。可點擊看看封鎖了哪些項目。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">此網站的追蹤保護已開啟</string>
+    <string name="etp_panel_on">已開啟此網站的追蹤保護</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">此網站的追蹤保護已關閉</string>
+    <string name="etp_panel_off">已關閉此網站的追蹤保護</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">針對下列網站關閉加強型追蹤保護</string>
     <!-- About page Your rights link text -->

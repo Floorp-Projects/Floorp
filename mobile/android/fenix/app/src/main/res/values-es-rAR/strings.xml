@@ -4,6 +4,8 @@
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
     <string name="app_name_private_2">Firefox Preview privado</string>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (privado)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Más opciones</string>
@@ -120,6 +122,18 @@
     <string name="awesomebar_clipboard_title">Completar enlace desde el portapapeles</string>
 
 
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Permitir</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">No permitir</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">¿Permitir sugerencias de búsqueda en sesiones privadas?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s va a compartir todo lo que escribas en la barra de direcciones con tu motor de búsqueda predeterminado.</string>
+
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Conocer más</string>
+
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Buscar</string>
@@ -137,6 +151,8 @@
     <string name="preferences_default_search_engine">Motor de búsqueda predeterminado</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Buscar</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Barra de direcciones</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ayuda</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -170,6 +186,8 @@
     <string name="preferences_category_account">Cuenta</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Iniciar sesión</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Barra de herramientas</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference description for banner about signing in -->
@@ -194,6 +212,8 @@
     <string name="preferences_show_search_shortcuts">Mostrar atajos de teclado para búsquedas</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugerencias de búsqueda</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Mostrar en sesiones privadas</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Mostrar sugerencias del portapapeles</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -313,6 +333,12 @@
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Cancelar</string>
 
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Superior</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Inferior</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">Claro</string>
@@ -361,6 +387,8 @@
     <string name="tab_header_label">Pestañas abiertas</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Sesión privada</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Pestañas privadas</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Agregar pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -651,6 +679,8 @@
     <string name="notification_pbm_channel_name">Sesión de navegación privada</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">Eliminar pestañas privadas</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Cerrar pestañas privadas</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Abrir</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -885,6 +915,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">Equilibrado para protección y rendimiento.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Las páginas se van a cargar normalmente, pero bloquean menos rastreadores.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Qué es lo que está bloqueado por la protección de rastreo estándar</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -895,6 +927,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Estricto (recomendada)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Mayor protección, pero puede causar que algunos sitios o contenido no se carguen.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Qué es lo que está bloqueado por la protección de rastreo estricta</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Bloqueado</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->

@@ -4,6 +4,8 @@
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
     <string name="app_name_private_2">Privat Firefox Preview</string>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (Privat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Fler alternativ</string>
@@ -120,6 +122,17 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Kopiera länk från urklipp</string>
 
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Tillåt</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Tillåt inte</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Tillåter sökförslag i privata sessioner?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s delar allt du skriver i adressfältet med din standardsökmotor.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Läs mer</string>
+
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Sök</string>
@@ -137,6 +150,8 @@
     <string name="preferences_default_search_engine">Standardsökmotor</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Sök</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Adressfält</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Hjälp</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -170,6 +185,8 @@
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Logga in</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Verktygsfält</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference description for banner about signing in -->
@@ -194,6 +211,8 @@
     <string name="preferences_show_search_shortcuts">Visa sökgenvägar</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Visa sökförslag</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Visa i privata sessioner</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Visa förslag från urklipp</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -310,6 +329,12 @@
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Avbryt</string>
 
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Överst</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Nederst</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">Ljust</string>
@@ -358,6 +383,8 @@
     <string name="tab_header_label">Öppna flikar</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Privat session</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Privata flikar</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lägg till flik</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -644,6 +671,8 @@
     <string name="notification_pbm_channel_name">Privat surfsession</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">Ta bort privata flikar</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Stäng privata flikar</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Öppna</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -879,6 +908,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">Balanserad för skydd och prestanda.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Sidor laddas normalt men blockerar färre spårare.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Vad blockeras av spårningsskydd standard</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strikt</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -889,6 +920,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Strikt (rekommenderas)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Starkare skydd, men kan leda till att vissa webbplatser eller innehåll inte fungerar.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Vad blockeras av spårningsskydd strikt</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blockerad</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
