@@ -2182,12 +2182,12 @@ var AddonManagerInternal = {
 
   /**
    * Starts installation of an AddonInstall notifying the registered
-   * web install listener of blocked or started installs.
+   * web install listener of a blocked or started install.
    *
    * @param  aMimetype
-   *         The mimetype of add-ons being installed
+   *         The mimetype of the add-on being installed
    * @param  aBrowser
-   *         The optional browser element that started the installs
+   *         The optional browser element that started the install
    * @param  aInstallingPrincipal
    *         The nsIPrincipal that initiated the install
    * @param  aInstall
@@ -2231,15 +2231,18 @@ var AddonManagerInternal = {
     // main tab's browser). Check this by seeing if the browser we've been
     // passed is in a content type docshell and if so get the outer-browser.
     let topBrowser = aBrowser;
-    let docShell = aBrowser.ownerGlobal.docShell;
-    if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent) {
-      topBrowser = docShell.chromeEventHandler;
+    // GeckoView does not pass a browser.
+    if (aBrowser) {
+      let docShell = aBrowser.ownerGlobal.docShell;
+      if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent) {
+        topBrowser = docShell.chromeEventHandler;
+      }
     }
 
     try {
       // Use fullscreenElement to check for DOM fullscreen, while still allowing
       // macOS fullscreen, which still has a browser chrome.
-      if (topBrowser.ownerDocument.fullscreenElement) {
+      if (topBrowser && topBrowser.ownerDocument.fullscreenElement) {
         // Addon installation and the resulting notifications should be
         // blocked in DOM fullscreen for security and usability reasons.
         // Installation prompts in fullscreen can trick the user into
@@ -2267,19 +2270,20 @@ var AddonManagerInternal = {
         return;
       } else if (
         aInstallingPrincipal.isNullPrincipal ||
-        !aBrowser.contentPrincipal ||
-        // When we attempt to handle an XPI load immediately after a
-        // process switch, the DocShell it's being loaded into will have
-        // a null principal, since it won't have been initialized yet.
-        // Allowing installs in this case is relatively safe, since
-        // there isn't much to gain by spoofing an install request from
-        // a null principal in any case. This exception can be removed
-        // once content handlers are triggered by DocumentChannel in the
-        // parent process.
-        !(
-          aBrowser.contentPrincipal.isNullPrincipal ||
-          aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)
-        ) ||
+        (aBrowser &&
+          (!aBrowser.contentPrincipal ||
+            // When we attempt to handle an XPI load immediately after a
+            // process switch, the DocShell it's being loaded into will have
+            // a null principal, since it won't have been initialized yet.
+            // Allowing installs in this case is relatively safe, since
+            // there isn't much to gain by spoofing an install request from
+            // a null principal in any case. This exception can be removed
+            // once content handlers are triggered by DocumentChannel in the
+            // parent process.
+            !(
+              aBrowser.contentPrincipal.isNullPrincipal ||
+              aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)
+            ))) ||
         !this.isInstallAllowedByPolicy(
           aInstallingPrincipal,
           aInstall,
@@ -2297,10 +2301,12 @@ var AddonManagerInternal = {
         return;
       }
 
-      // The install may start now depending on the web install listener,
-      // listen for the browser navigating to a new origin and cancel the
-      // install in that case.
-      new BrowserListener(aBrowser, aInstallingPrincipal, aInstall);
+      if (aBrowser) {
+        // The install may start now depending on the web install listener,
+        // listen for the browser navigating to a new origin and cancel the
+        // install in that case.
+        new BrowserListener(aBrowser, aInstallingPrincipal, aInstall);
+      }
 
       let startInstall = source => {
         AddonManagerInternal.setupPromptHandler(
