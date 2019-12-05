@@ -209,7 +209,9 @@ static void AttachSandboxReporter(base::file_handle_mapping_vector* aFdMap) {
 
 class SandboxFork : public base::LaunchOptions::ForkDelegate {
  public:
-  explicit SandboxFork(int aFlags, bool aChroot);
+  explicit SandboxFork(int aFlags, bool aChroot,
+                       int aServerFd = -1,
+                       int aClientFd = -1);
   virtual ~SandboxFork();
 
   void PrepareMapping(base::file_handle_mapping_vector* aMap);
@@ -321,18 +323,64 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
   }
 
   if (canChroot || flags != 0) {
-    auto forker = MakeUnique<SandboxFork>(flags | CLONE_NEWUSER, canChroot);
+    flags |= CLONE_NEWUSER;
+    auto forker = MakeUnique<SandboxFork>(flags, canChroot);
     forker->PrepareMapping(&aOptions->fds_to_remap);
     aOptions->fork_delegate = std::move(forker);
     if (canChroot) {
-      aOptions->env_map[kSandboxChrootEnvFlag] = "1";
+      aOptions->env_map[kSandboxChrootEnvFlag] = std::to_string(flags);
     }
   }
 }
 
-SandboxFork::SandboxFork(int aFlags, bool aChroot)
-    : mFlags(aFlags), mChrootServer(-1), mChrootClient(-1) {
-  if (aChroot) {
+#if defined(MOZ_ENABLE_FORKSERVER)
+/**
+ * Called by the fork server to install a fork delegator.
+ *
+ * In the case of fork server, the value of the flags of |SandboxFork|
+ * are passed as an env variable to the fork server so that we can
+ * recreate a |SandboxFork| as a fork delegator at the fork server.
+ */
+void SandboxLaunchForkServerPrepare(const std::vector<std::string>& aArgv,
+                                    base::LaunchOptions& aOptions) {
+  auto chroot = std::find_if(aOptions.env_map.begin(),
+                             aOptions.env_map.end(),
+                             [](auto& elt) {
+                               return elt.first == kSandboxChrootEnvFlag;
+                             });
+  if (chroot == aOptions.env_map.end()) {
+    return;
+  }
+  int flags = atoi(chroot->second.c_str());
+  if (flags == 0) {
+    return;
+  }
+
+  // Find chroot server fd.  It is supposed to be map to
+  // kSandboxChrootServerFd so that we find it out from the mapping.
+  auto fdmap = std::find_if(aOptions.fds_to_remap.begin(),
+                            aOptions.fds_to_remap.end(),
+                            [](auto& elt) {
+                              return elt.second == kSandboxChrootServerFd;
+                            });
+  MOZ_ASSERT(fdmap != aOptions.fds_to_remap.end(),
+             "ChrootServerFd is not found with sandbox chroot");
+  int chrootserverfd = fdmap->first;
+  aOptions.fds_to_remap.erase(fdmap);
+
+  // Set only the chroot server fd, not the client fd.  Because, the
+  // client fd is already in |fds_to_remap|, we don't need the forker
+  // to do it again.  And, the forker need only the server fd, that
+  // chroot server uses it to sync with the client (content).  See
+  // |SandboxFox::StartChrootServer()|.
+  auto forker = MakeUnique<SandboxFork>(flags, true, chrootserverfd);
+  aOptions.fork_delegate = std::move(forker);
+}
+#endif
+
+SandboxFork::SandboxFork(int aFlags, bool aChroot, int aServerFd, int aClientFd)
+    : mFlags(aFlags), mChrootServer(aServerFd), mChrootClient(aClientFd) {
+  if (aChroot && mChrootServer < 0) {
     int fds[2];
     int rv = socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fds);
     if (rv != 0) {
@@ -345,9 +393,15 @@ SandboxFork::SandboxFork(int aFlags, bool aChroot)
 }
 
 void SandboxFork::PrepareMapping(base::file_handle_mapping_vector* aMap) {
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_ForkServer);
   if (mChrootClient >= 0) {
     aMap->push_back({mChrootClient, kSandboxChrootClientFd});
   }
+#if defined(MOZ_ENABLE_FORKSERVER)
+  if (mChrootServer >= 0) {
+    aMap->push_back({mChrootServer, kSandboxChrootServerFd});
+  }
+#endif
 }
 
 SandboxFork::~SandboxFork() {
