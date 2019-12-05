@@ -3442,6 +3442,13 @@ nsDocShell::GetCurrentSHEntry(nsISHEntry** aEntry, bool* aOSHE) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::SynchronizeLayoutHistoryState() {
+  if (mOSHE) {
+    mOSHE->SynchronizeLayoutHistoryState();
+  }
+  return NS_OK;
+}
+
 nsIScriptGlobalObject* nsDocShell::GetScriptGlobalObject() {
   NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), nullptr);
   return mScriptGlobal;

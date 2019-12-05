@@ -13,6 +13,7 @@
 
 [ptr] native PresStatePtr(mozilla::PresState);
 native PresStateUnique(mozilla::UniquePtr<mozilla::PresState>);
+native PresState(mozilla::PresState);
 [ref] native nsCString(const nsCString);
 native constBool(const bool);
 
@@ -94,6 +95,18 @@ interface nsILayoutHistoryState : nsISupports
    * Resets PresState::GetScrollState of all PresState objects to 0,0.
    */
   [noscript, notxpcom, nostdcall] void ResetScrollState();
+
+  /**
+   * Get the contents of the layout history.
+   */
+  [noscript, notxpcom, nostdcall] void GetContents(out boolean aScrollPositionOnly,
+                                                   out Array<ACString> aKeys,
+                                                   out Array<PresState> aStates);
+
+  /**
+   * Remove all the states and clear the scroll position only flag.
+   */
+  [noscript, notxpcom, nostdcall] void Reset();
 };
 
 %{C++

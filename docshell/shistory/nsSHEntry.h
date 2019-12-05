@@ -89,9 +89,6 @@ class nsLegacySHEntry final : public nsSHEntry {
   using nsISHEntry::GetRefreshURIList;
   NS_IMETHOD GetRefreshURIList(nsIMutableArray** aRefreshURIList) override;
   NS_IMETHOD SetRefreshURIList(nsIMutableArray* aRefreshURIList) override;
-  using nsSHEntry::GetLayoutHistoryState;
-  NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState** aResult) override;
-  NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState* aState) override;
   using nsISHEntry::GetSaveLayoutStateFlag;
   NS_IMETHOD GetSaveLayoutStateFlag(bool* aSaveLayoutStateFlag) override;
   NS_IMETHOD SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag) override;
@@ -100,7 +97,6 @@ class nsLegacySHEntry final : public nsSHEntry {
                           nsIDocShellTreeItem** aShell) override;
   NS_IMETHOD_(void) ClearChildShells() override;
   NS_IMETHOD_(void) SyncPresentationState() override;
-  NS_IMETHOD InitLayoutHistoryState(nsILayoutHistoryState** aState) override;
   NS_IMETHOD Create(
       nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
       uint32_t aCacheKey, const nsACString& aContentType,
