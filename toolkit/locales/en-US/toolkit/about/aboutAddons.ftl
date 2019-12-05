@@ -13,9 +13,6 @@ search-header =
 search-header-shortcut =
     .key = f
 
-loading-label =
-    .value = Loading…
-
 list-empty-installed =
     .value = You don’t have any add-ons of this type installed
 
@@ -81,17 +78,6 @@ cmd-contribute =
     .label = Contribute
     .accesskey = C
     .tooltiptext = Contribute to the development of this add-on
-
-discover-title = What are Add-ons?
-
-discover-description =
-    Add-ons are applications that let you personalize { -brand-short-name } with
-    extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make { -brand-short-name }
-    your own.
-
-discover-footer =
-    When you’re connected to the internet, this pane will feature
-    some of the best and most popular add-ons for you to try out.
 
 detail-version =
     .label = Version

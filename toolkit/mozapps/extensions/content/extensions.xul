@@ -82,37 +82,6 @@
     <vbox class="main-content" flex="1">
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">
-        <!-- discover view -->
-        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0">
-          <vbox id="discover-loading" align="center" pack="stretch" flex="1" class="alert-container">
-            <spacer class="alert-spacer-before"/>
-            <hbox class="alert loading" align="center">
-              <image/>
-              <label data-l10n-id="loading-label"/>
-            </hbox>
-            <spacer class="alert-spacer-after"/>
-          </vbox>
-          <vbox id="discover-error" align="center" pack="stretch" flex="1" class="alert-container">
-            <spacer class="alert-spacer-before"/>
-            <hbox>
-              <spacer class="discover-spacer-before"/>
-              <vbox class="alert" align="center">
-                <image class="discover-logo"/>
-                <vbox flex="1" align="stretch">
-                  <label class="discover-title" data-l10n-id="discover-title"></label>
-                  <description class="discover-description" data-l10n-id="discover-description"></description>
-                  <description class="discover-footer" data-l10n-id="discover-footer"></description>
-                </vbox>
-              </vbox>
-              <spacer class="discover-spacer-after"/>
-            </hbox>
-            <spacer class="alert-spacer-after"/>
-          </vbox>
-
-          <browser id="discover-browser" type="content" flex="1"
-                   disablehistory="true"/>
-        </deck>
-
         <!-- container for views with the search/tools header -->
         <vbox id="headered-views" flex="1">
           <deck id="headered-views-content" flex="1" selectedIndex="0">
