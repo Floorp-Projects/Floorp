@@ -17,8 +17,8 @@ from condprof.util import download_file, TASK_CLUSTER, get_logger, ArchiveNotFou
 from condprof.changelog import Changelog
 
 
-ROOT_URL = "https://index.taskcluster.net"
-INDEX_PATH = "gecko.v2.try.latest.firefox.condprof-%(platform)s"
+ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index"
+INDEX_PATH = "gecko.v2.%(repo)s.latest.firefox.condprof-%(platform)s"
 PUBLIC_DIR = "artifacts/public/condprof"
 TC_LINK = ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/"
 ARTIFACT_NAME = "profile-%(platform)s-%(scenario)s-%(customization)s.tgz"
@@ -40,6 +40,7 @@ def get_profile(
     customization="default",
     task_id=None,
     download_cache=True,
+    repo="mozilla-central"
 ):
     """Extract a conditioned profile in the target directory.
 
@@ -52,6 +53,7 @@ def get_profile(
         "scenario": scenario,
         "customization": customization,
         "task_id": task_id,
+        "repo": repo
     }
     filename = ARTIFACT_NAME % params
     if task_id is None:
@@ -97,8 +99,8 @@ def get_profile(
     return target_dir
 
 
-def read_changelog(platform):
-    params = {"platform": platform}
+def read_changelog(platform, repo="mozilla-central"):
+    params = {"platform": platform, "repo": repo}
     changelog_url = CHANGELOG_LINK % params
     get_logger().msg("Getting %s" % changelog_url)
     download_dir = tempfile.mkdtemp()
