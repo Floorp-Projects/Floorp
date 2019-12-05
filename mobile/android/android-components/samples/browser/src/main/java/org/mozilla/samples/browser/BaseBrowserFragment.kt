@@ -27,21 +27,23 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
+import org.mozilla.samples.browser.integration.P2PIntegration
 
 /**
  * Base fragment extended by [BrowserFragment] and [ExternalAppBrowserFragment].
  * This class only contains shared code focused on the main browsing content.
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
+@SuppressWarnings("LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
@@ -50,6 +52,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
+    private val p2pIntegration = ViewBoundFeatureWrapper<P2PIntegration>()
 
     protected val sessionId: String?
         get() = arguments?.getString(SESSION_ID_KEY)
@@ -185,6 +188,22 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             owner = this,
             view = layout)
 
+        p2pIntegration.set(
+            feature = P2PIntegration(
+                store = components.store,
+                engine = components.engine,
+                view = layout.p2p,
+                thunk = { components.nearbyConnection },
+                sessionManager = components.sessionManager,
+                tabsUseCases = components.tabsUseCases,
+                sessionUseCases = components.sessionUseCases
+            ) { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_P2P_PERMISSIONS)
+            },
+            owner = this,
+            view = layout
+        )
+
         val secureWindowFeature = SecureWindowFeature(
             window = requireActivity().window,
             store = components.store,
@@ -212,6 +231,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.get()
             REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.get()
             REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.get()
+            REQUEST_CODE_P2P_PERMISSIONS -> p2pIntegration.get()?.feature
             else -> null
         }
         feature?.onPermissionsResult(permissions, grantResults)
@@ -228,6 +248,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+        internal const val REQUEST_CODE_P2P_PERMISSIONS = 4
 
         @JvmStatic
         protected fun Bundle.putSessionId(sessionId: String?) {

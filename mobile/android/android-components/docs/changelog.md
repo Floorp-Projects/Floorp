@@ -43,6 +43,9 @@ permalink: /changelog/
 * **feature-share**
   * Added `RecentAppsStorage.deleteRecentApp` and `RecentAppsDao.deleteRecentApp` to allow deleting a `RecentAppEntity`
 
+* **feature-p2p**
+  * Add new `P2PFeature` to send URLs and web pages through peer-to-peer networking.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
@@ -626,7 +629,6 @@ permalink: /changelog/
 
 * **service-sync-logins**
   * `AsyncLoginsStorage` interface gained a new method: `importLoginsAsync`, used for bulk-inserting logins (for example, during a migration).
-
 
 # 24.0.0
 

@@ -59,10 +59,12 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.lib.nearby.NearbyConnection
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.media.MediaService
+import org.mozilla.samples.browser.integration.P2PIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -180,6 +182,11 @@ open class DefaultComponents(private val applicationContext: Context) {
     val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
     val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, webAppShortcutManager) }
 
+    // P2P communication
+    val nearbyConnection by lazy {
+        NearbyConnection(applicationContext)
+    }
+
     // Intent
     val tabIntentProcessor by lazy {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
@@ -226,6 +233,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             },
             SimpleBrowserMenuItem("Find In Page") {
                 FindInPageIntegration.launch?.invoke()
+            },
+            SimpleBrowserMenuItem("P2P") {
+                P2PIntegration.launch?.invoke()
             },
             BrowserMenuDivider()
         )
@@ -284,27 +294,28 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val menuToolbar by lazy {
         val forward = BrowserMenuItemToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-                iconTintColorResource = R.color.photonBlue90,
-                contentDescription = "Forward",
-                isEnabled = { sessionManager.selectedSession?.canGoForward == true }
+            mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            iconTintColorResource = R.color.photonBlue90,
+            contentDescription = "Forward",
+            isEnabled = { sessionManager.selectedSession?.canGoForward == true }
         ) {
             sessionUseCases.goForward()
         }
 
         val refresh = BrowserMenuItemToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-                iconTintColorResource = R.color.photonBlue90,
-                contentDescription = "Refresh",
-                isEnabled = { sessionManager.selectedSession?.loading != true }
+            mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            iconTintColorResource = R.color.photonBlue90,
+            contentDescription = "Refresh",
+            isEnabled = { sessionManager.selectedSession?.loading != true }
         ) {
             sessionUseCases.reload()
         }
 
         val stop = BrowserMenuItemToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
-                iconTintColorResource = R.color.photonBlue90,
-                contentDescription = "Stop") {
+            mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            iconTintColorResource = R.color.photonBlue90,
+            contentDescription = "Stop"
+        ) {
             sessionUseCases.stopLoading()
         }
 

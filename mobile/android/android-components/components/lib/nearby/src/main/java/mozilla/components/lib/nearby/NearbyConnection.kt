@@ -225,7 +225,8 @@ class NearbyConnection(
 
     // The is mutated only in updateState(), which can be called from both the main thread and in
     // callbacks so is synchronized.
-    private var connectionState: ConnectionState = ConnectionState.Isolated
+    var connectionState: ConnectionState = ConnectionState.Isolated
+        private set
 
     // Override all 3 register() methods to notify listener of initial state.
     override fun register(observer: NearbyConnectionObserver) {

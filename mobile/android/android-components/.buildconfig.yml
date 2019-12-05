@@ -64,6 +64,10 @@ projects:
     path: components/feature/media
     description: 'Feature component for website media related features.'
     publish: true
+  feature-p2p:
+    path: components/feature/p2p
+    description: 'Feature used for peer-to-peer communication.'
+    publish: true
   feature-webnotifications:
     path: components/feature/webnotifications
     description: 'Feature component for Web Notifications.'

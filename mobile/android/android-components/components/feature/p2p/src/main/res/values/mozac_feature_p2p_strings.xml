@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- String for button for this device to advertise its presence to nearby devices. -->
+    <string name="mozac_feature_p2p_advertise">Advertise</string>
+
+    <!-- String for button for this device to discover the presence of nearby devices. -->
+    <string name="mozac_feature_p2p_discover">Discover</string>
+
+    <!-- String for button to reset the connection to a neighboring device. -->
+    <string name="mozac_feature_p2p_reset">Reset</string>
+
+    <!-- User prompt to accept a connection from a neighbor; %1$s will be replaced by the neighbor name. -->
+    <string name="mozac_feature_p2p_accept_connection">Accept connection to %1$s?</string>
+
+    <!-- User prompt to confirm that the neighboring device shows the same token; %1$s will be replaced by the token (a short alphanumeric string). -->
+    <string name="mozac_feature_p2p_accept_token">Confirm the code matches on both devices: %1$s</string>
+
+    <!-- String for button to send URL to neighboring device. -->
+    <string name="mozac_feature_p2p_send_url">Send URL</string>
+
+    <!-- String for button to send page to neighboring device. -->
+    <string name="mozac_feature_p2p_send_page">Send Page</string>
+
+    <!-- String for title of AlertDialog to open URL received from neighbor; %1$s will be replaced by the neighbor name -->
+    <string name="mozac_feature_p2p_open_url_title">Open URL from %1$s?</string>
+
+    <!-- String for title of AlertDialog to open page received from neighbor; %1$s will be replaced by the neighbor name -->
+    <string name="mozac_feature_p2p_open_page_title">Open page from %1$s?</string>
+
+    <!-- Body of AlertDialog asking the user whether to open a page received from a neighboring device. -->
+    <string name="mozac_feature_p2p_open_page_body">Would you like to open the sent page?</string>
+
+    <!-- String for button to open content in new tab -->
+    <string name="mozac_feature_p2p_open_in_new_tab">new tab</string>
+
+    <!-- String for button to open content in current tab -->
+    <string name="mozac_feature_p2p_open_in_current_tab">current tab</string>
+
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "p2p bar" UI. -->
+    <string name="mozac_feature_p2p_dismiss">Dismiss P2P bar</string>
+
+    <!-- String to be displayed when there is no connection to a neighboring device (nor has a connection been initiated. -->
+    <string name="mozac_feature_p2p_isolated">Not connected</string>
+
+    <!-- String to be displayed when this device is advertising its presence to nearby devices. See mozac_feature_p2p_advertise. -->
+    <string name="mozac_feature_p2p_advertising">Advertising</string>
+
+    <!-- String to be displayed when this device is trying to discvoer nearby devices. See mozac_feature_p2p_discover. -->
+    <string name="mozac_feature_p2p_discovering">Discovering</string>
+
+    <!-- String to be displayed when this device is initiating a connection a neighboring device after discovering it. -->
+    <string name="mozac_feature_p2p_initiating">Initiating</string>
+
+    <!-- String to be displayed when this device is authenticating a connection to a neighboring device. -->
+    <string name="mozac_feature_p2p_authenticating">Authenticating</string>
+
+    <!-- String to be displayed when this device is going through any of several steps in establishing a connection to a neighboring device. -->
+    <string name="mozac_feature_p2p_connecting">Connecting</string>
+
+    <!-- String to be displayed when this device is connected to a neighboring device and ready to send or receive messages. -->
+    <string name="mozac_feature_p2p_connected">Connected</string>
+
+    <!-- String to be displayed when this device is in the process of packaging an outgoing message. -->
+    <string name="mozac_feature_p2p_packaging">Packaging</string>
+
+    <!-- String to be displayed when this device is in the process of sending a message to a connected device. -->
+    <string name="mozac_feature_p2p_sending">Sending</string>
+
+    <!-- String to be displayed when there was a failure in communicating with or connecting to a neighboring device. -->
+    <string name="mozac_feature_p2p_failure">Failure</string>
+
+    <!-- String to be displayed when a url has been sent to a neighboring device. -->
+    <string name="mozac_feature_p2p_url_sent">URL sent</string>
+
+    <!-- String to be displayed when a page has been sent to a neighboring device. -->
+    <string name="mozac_feature_p2p_page_sent">Page sent</string>
+
+</resources>
