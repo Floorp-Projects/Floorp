@@ -9493,6 +9493,11 @@ struct CommonCursorTypeTraits {
     aResponse->key() = std::move(mPosition);
   }
 
+  template <typename Response>
+  static size_t GetKeySize(const Response* const aResponse) {
+    return aResponse->key().GetBuffer().Length();
+  }
+
  protected:
   const Key& GetPosition() const { return mPosition; }
 
@@ -9542,6 +9547,13 @@ struct IndexCursorTypeTraits : CommonCursorTypeTraits {
     aResponse->objectKey() = std::move(mObjectStorePosition);
   }
 
+  template <typename Response>
+  static size_t GetKeySize(const Response* const aResponse) {
+    return CommonCursorTypeTraits::GetKeySize(aResponse) +
+           aResponse->sortKey().GetBuffer().Length() +
+           aResponse->objectKey().GetBuffer().Length();
+  }
+
  private:
   Key mLocaleAwarePosition, mObjectStorePosition;
 };
@@ -9556,6 +9568,12 @@ struct KeyCursorTypeTraits {
   template <typename Response>
   static constexpr void MaybeFillCloneInfo(Response* const /*aResponse*/,
                                            FilesArray* const /*aFiles*/) {}
+
+  template <typename Response>
+  static constexpr size_t MaybeGetCloneInfoSize(
+      const Response* const /*aResponse*/) {
+    return 0;
+  }
 };
 
 template <bool StatementHasIndexKeyBindings>
@@ -9585,6 +9603,11 @@ struct ValueCursorTypeTraits {
   void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
     aResponse->cloneInfo().data().data = std::move(mCloneInfo.mData);
     aFiles->AppendElement(std::move(mCloneInfo.mFiles));
+  }
+
+  template <typename Response>
+  static size_t MaybeGetCloneInfoSize(const Response* const aResponse) {
+    return aResponse->cloneInfo().data().data.Size();
   }
 
  private:
@@ -26014,11 +26037,12 @@ Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
 
   auto& responses = cursorTypeTraits.GetTypedResponse(&mResponse);
   auto* response = responses.AppendElement();
+
   cursorTypeTraits.FillKeys(response);
   cursorTypeTraits.MaybeFillCloneInfo(response, &mFiles);
 
-  // TODO: Calculate real size and return it.
-  return 0;
+  return cursorTypeTraits.GetKeySize(response) +
+         cursorTypeTraits.MaybeGetCloneInfoSize(response);
 }
 
 Cursor::CursorOpBase::ResponseSizeOrError
