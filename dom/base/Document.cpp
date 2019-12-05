@@ -10330,6 +10330,11 @@ void Document::RemovedFromDocShell() {
        child = child->GetNextSibling()) {
     child->SaveSubtreeState();
   }
+
+  nsIDocShell* docShell = GetDocShell();
+  if (docShell) {
+    docShell->SynchronizeLayoutHistoryState();
+  }
 }
 
 already_AddRefed<nsILayoutHistoryState> Document::GetLayoutHistoryState()

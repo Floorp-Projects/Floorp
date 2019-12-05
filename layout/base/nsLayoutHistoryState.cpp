@@ -135,6 +135,23 @@ void nsLayoutHistoryState::ResetScrollState() {
   }
 }
 
+void nsLayoutHistoryState::GetContents(bool* aScrollPositionOnly,
+                                       nsTArray<nsCString>& aKeys,
+                                       nsTArray<mozilla::PresState>& aStates) {
+  *aScrollPositionOnly = mScrollPositionOnly;
+  aKeys.SetCapacity(mStates.Count());
+  aStates.SetCapacity(mStates.Count());
+  for (auto iter = mStates.Iter(); !iter.Done(); iter.Next()) {
+    aKeys.AppendElement(iter.Key());
+    aStates.AppendElement(*(iter.Data().get()));
+  }
+}
+
+void nsLayoutHistoryState::Reset() {
+  mScrollPositionOnly = false;
+  mStates.Clear();
+}
+
 namespace mozilla {
 UniquePtr<PresState> NewPresState() {
   return MakeUnique<PresState>(
