@@ -1374,7 +1374,7 @@ class UrlbarView {
   }
 
   _enableOrDisableRowWrap() {
-    if (getBoundsWithoutFlushing(this.input.textbox).width <= 425) {
+    if (getBoundsWithoutFlushing(this.input.textbox).width <= 500) {
       this._rows.setAttribute("wrap", "true");
     } else {
       this._rows.removeAttribute("wrap");
