@@ -22,6 +22,12 @@ this.activityLog = class extends ExtensionAPI {
           context,
           name: "activityLog.onExtensionActivity",
           register: (fire, id) => {
+            // A logger cannot log itself.
+            if (id === context.extension.id) {
+              throw new ExtensionUtils.ExtensionError(
+                "Extension cannot monitor itself."
+              );
+            }
             function handler(details) {
               fire.async(details);
             }
