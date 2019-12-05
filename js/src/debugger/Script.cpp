@@ -1672,7 +1672,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_IS_CONSTRUCTING:
     case JSOP_OPTIMIZE_SPREADCALL:
     case JSOP_IMPORTMETA:
-    case JSOP_LOOPENTRY:
     case JSOP_INSTRUMENTATION_ACTIVE:
     case JSOP_INSTRUMENTATION_CALLBACK:
     case JSOP_INSTRUMENTATION_SCRIPT_ID:
@@ -1715,6 +1714,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_UNUSED106:
     case JSOP_UNUSED120:
     case JSOP_UNUSED149:
+    case JSOP_UNUSED227:
     case JSOP_LIMIT:
       return false;
   }

@@ -1981,20 +1981,20 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_UNUSED106)
     CASE(JSOP_UNUSED120)
     CASE(JSOP_UNUSED149)
+    CASE(JSOP_UNUSED227)
     CASE(JSOP_TRY) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
       ADVANCE_AND_DISPATCH(1);
     }
 
-    CASE(JSOP_JUMPTARGET)
-    CASE(JSOP_LOOPHEAD) {
-      MOZ_ASSERT(CodeSpec[*REGS.pc].length == JSOP_JUMPTARGET_LENGTH);
+    CASE(JSOP_JUMPTARGET) {
       COUNT_COVERAGE();
       ADVANCE_AND_DISPATCH(JSOP_JUMPTARGET_LENGTH);
     }
 
-    CASE(JSOP_LOOPENTRY) {
+    CASE(JSOP_LOOPHEAD) {
       COUNT_COVERAGE();
+
       // Attempt on-stack replacement into the Baseline Interpreter.
       if (jit::IsBaselineInterpreterEnabled()) {
         script->incWarmUpCounter();
@@ -2038,7 +2038,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         mozilla::recordreplay::AdvanceExecutionProgressCounter();
       }
     }
-    END_CASE(JSOP_LOOPENTRY)
+    END_CASE(JSOP_LOOPHEAD)
 
     CASE(JSOP_LINENO)
     END_CASE(JSOP_LINENO)
