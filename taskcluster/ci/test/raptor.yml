@@ -986,13 +986,15 @@ raptor-jetstream2-firefox-profiling:
 browsertime-tp6:
     description: "Raptor (browsertime) tp6 page-load tests"
     raptor-test: tp6
-    raptor-subtests: ['amazon', 'bing-search', 'facebook', 'google-search',
-                      'google-slides', 'wikipedia', 'yahoo-news', 'youtube']
-    run-on-projects: ['mozilla-central', 'integration', 'try']
+    raptor-subtests: ['amazon']
+    run-on-projects:
+        by-test-platform:
+            .*shippable[^-qr].*: ['mozilla-central', 'try']
+            default: []
     apps: ['firefox', 'chrome']
     variants:
         by-app:
-            firefox: ['fission']
+            firefox: []
             default: []
     pageload:
         by-app:
