@@ -6,8 +6,15 @@ function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "application/json", false);
+
+  // CORS stuff
+  const origin = request.hasHeader("Origin") ? request.getHeader("Origin") : null;
+  if (origin) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+  }
   const short_name = request.hasHeader("Cookie")
-    ? `FAIL - cookie was present: ${request.getHeader("Cookie")}`
-    : "PASS";
+    ? request.getHeader("Cookie")
+    : "no cookie";
   response.write(JSON.stringify({ short_name }));
 }
