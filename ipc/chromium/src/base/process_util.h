@@ -45,6 +45,7 @@
 
 #if defined(MOZ_ENABLE_FORKSERVER)
 #include "nsString.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 
 namespace mozilla {
@@ -124,6 +125,10 @@ struct LaunchOptions {
   // A mapping of (src fd -> dest fd) to propagate into the child
   // process.  All other fds will be closed, except std{in,out,err}.
   file_handle_mapping_vector fds_to_remap;
+#endif
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+  bool use_forkserver = false;
 #endif
 
 #if defined(OS_LINUX)
@@ -213,6 +218,15 @@ private:
   std::vector<std::string> argv_;
 };
 
+void InitForkServerProcess();
+
+/**
+ * Make a FD not being closed when create a new content process.
+ *
+ * AppProcessBuilder would close most unrelated FDs for new content
+ * processes.  You may want to reserve some of FDs to keep using them
+ * in content processes.
+ */
 void RegisterForkServerNoCloseFD(int aFd);
 #endif
 
@@ -275,6 +289,11 @@ class EnvironmentLog {
 
   DISALLOW_EVIL_CONSTRUCTORS(EnvironmentLog);
 };
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+typedef Tuple<nsCString, nsCString> EnvVar;
+typedef Tuple<mozilla::ipc::FileDescriptor, int> FdMapping;
+#endif
 
 }  // namespace mozilla
 
