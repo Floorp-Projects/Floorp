@@ -22,14 +22,18 @@ namespace embedding {
 
 class MockWebBrowserPrint final : public nsIWebBrowserPrint {
  public:
-  explicit MockWebBrowserPrint(const PrintData& aData);
+  explicit MockWebBrowserPrint(const nsAString& aDocName,
+                               bool aIsIFrameSelected, bool aIsRangeSelection);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBBROWSERPRINT
 
  private:
   ~MockWebBrowserPrint();
-  PrintData mData;
+
+  nsAutoString mDocName;
+  bool mIsIFrameSelected;
+  bool mIsRangeSelection;
 };
 
 }  // namespace embedding
