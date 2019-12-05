@@ -68,6 +68,18 @@ static MOZ_NEVER_INLINE bool ReadIPDLParam(const IPC::Message* aMsg,
   return IPDLParamTraits<P>::Read(aMsg, aIter, aActor, aResult);
 }
 
+template <typename P>
+static MOZ_NEVER_INLINE bool ReadIPDLParamInfallible(const IPC::Message* aMsg,
+                                                     PickleIterator* aIter,
+                                                     IProtocol* aActor, P* aResult,
+                                                     const char* aCrashMessage) {
+  bool ok = ReadIPDLParam(aMsg, aIter, aActor, aResult);
+  if (!ok) {
+    MOZ_CRASH_UNSAFE(aCrashMessage);
+  }
+  return ok;
+}
+
 constexpr void WriteIPDLParamList(IPC::Message*, IProtocol*) {}
 
 template <typename P, typename... Ps>
