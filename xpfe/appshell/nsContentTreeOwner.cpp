@@ -404,7 +404,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetLinkStatus(const nsAString& aStatusText) {
   mAppWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
 
   if (xulBrowserWindow) {
-    xulBrowserWindow->SetOverLink(aStatusText, nullptr);
+    xulBrowserWindow->SetOverLink(aStatusText);
   }
 
   return NS_OK;

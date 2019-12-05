@@ -32,7 +32,7 @@ interface nsIXULBrowserWindow : nsISupports
    * Tells the object implementing this function what link we are currently
    * over.
    */
-  void setOverLink(in AString link, in Element element);
+  void setOverLink(in AString link);
 
   /**
    * Determines the appropriate target for a link.
