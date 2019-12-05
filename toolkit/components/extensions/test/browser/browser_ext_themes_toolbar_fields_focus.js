@@ -92,7 +92,7 @@ add_task(async function test_toolbar_field_focus_low_alpha() {
     : gURLBar.textbox;
   Assert.equal(
     window.getComputedStyle(urlBar).backgroundColor,
-    `rgba(0, 0, 255, 0.7)`,
+    `rgba(0, 0, 255, 0.9)`,
     "Background color has minimum opacity enforced"
   );
   Assert.equal(
