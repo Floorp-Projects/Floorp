@@ -106,7 +106,7 @@ linux64-fuzzing/debug:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
+            - linux64-gcc-8
             - linux64-cbindgen
             - linux64-sccache
             - linux64-rust
