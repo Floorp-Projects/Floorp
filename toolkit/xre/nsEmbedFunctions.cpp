@@ -133,6 +133,10 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #  include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 
+#if defined(MOZ_ENABLE_FORKSERVER)
+#  include "mozilla/ipc/ForkServer.h"
+#endif
+
 #include "VRProcessChild.h"
 
 using namespace mozilla;
@@ -264,7 +268,8 @@ void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
 
 void XRE_SetProcessType(const char* aProcessTypeString) {
   static bool called = false;
-  if (called) {
+  if (called &&
+      sChildProcessType != GeckoProcessType_ForkServer) {
     MOZ_CRASH();
   }
   called = true;
@@ -730,6 +735,12 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
           process = new RemoteSandboxBrokerProcessChild(parentPID);
           break;
 #endif
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+        case GeckoProcessType_ForkServer:
+          MOZ_CRASH("Fork server should not go here");
+          break;
+#endif
         default:
           MOZ_CRASH("Unknown main thread class");
       }
@@ -1023,5 +1034,11 @@ void XRE_InstallX11ErrorHandler() {
 #  else
   InstallX11ErrorHandler();
 #  endif
+}
+#endif
+
+#ifdef MOZ_ENABLE_FORKSERVER
+int XRE_ForkServer(int* aArgc, char*** aArgv) {
+  return mozilla::ipc::ForkServer::RunForkServer(aArgc, aArgv) ? 1 : 0;
 }
 #endif
