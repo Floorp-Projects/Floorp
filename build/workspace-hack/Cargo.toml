@@ -15,13 +15,14 @@ version = "0.1.0"
 
 [build-dependencies]
 void = { features = ["std", "default"], version = "1.0.2" }
-syn = { features = ["clone-impls", "default", "derive", "extra-traits", "fold", "full", "parsing", "printing", "proc-macro", "quote", "visit"],  version = "0.15" }
+syn = { features = ["clone-impls", "default", "derive", "extra-traits", "fold", "full", "parsing", "printing", "proc-macro", "quote", "visit"],  version = "1.0" }
 log = { features = ["release_max_level_info", "release_max_level_warn", "std"],  version = "0.4.6" }
-serde = { features = ["default", "rc", "serde_derive", "std"], version = "1.0.66" }
+serde = { features = ["default", "derive", "rc", "serde_derive", "std"], version = "1.0.66" }
 serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
 smallvec = { features = ["default", "serde", "std"], version = "0.6.10" }
-quote = { features = ["default", "proc-macro"], version = "0.6.11" }
+quote = { features = ["default", "proc-macro"], version = "1.0" }
 proc-macro2 = { features = ["default", "proc-macro"], version = "0.4.27" }
+libc = { features = ["default", "std", "use_std"], version = "0.2" }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"
