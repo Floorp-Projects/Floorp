@@ -41,7 +41,7 @@ add_task(async function test_defaultEngineNameUserPrefUS() {
   // Set the browser.search.defaultenginename pref.
   Services.prefs.setCharPref(kDefaultenginenamePref, "Bing");
 
-  await asyncReInit({ skipReset: true });
+  await asyncReInit();
   Assert.equal(
     (await Services.search.getDefault()).name,
     defaultEngineName,
@@ -66,7 +66,7 @@ add_task(async function test_defaultEngineNameDefaultPrefUS() {
     "data:text/plain,browser.search.defaultenginename=Bing"
   );
 
-  await asyncReInit({ skipReset: true });
+  await asyncReInit();
   Assert.equal(
     (await Services.search.getDefault()).name,
     "Bing",
