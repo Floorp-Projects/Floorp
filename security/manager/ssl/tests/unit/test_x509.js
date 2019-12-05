@@ -5,9 +5,7 @@
 
 // Tests X509.jsm functionality.
 
-var { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
-
-function stringToBytes(s) {
+function stringToArray(s) {
   let b = [];
   for (let i = 0; i < s.length; i++) {
     b.push(s.charCodeAt(i));
@@ -16,7 +14,7 @@ function stringToBytes(s) {
 }
 
 function readPEMToBytes(filename) {
-  return stringToBytes(atob(pemToBase64(readFile(do_get_file(filename)))));
+  return stringToArray(atob(pemToBase64(readFile(do_get_file(filename)))));
 }
 
 function run_test() {
@@ -82,7 +80,7 @@ function run_test() {
   );
   deepEqual(
     certificate.tbsCertificate.issuer.rdns[0].avas[0].value.value,
-    stringToBytes("Test CA"),
+    stringToArray("Test CA"),
     "expired-ee.pem should have issuer 'Test CA'"
   );
 
@@ -109,7 +107,7 @@ function run_test() {
   );
   deepEqual(
     certificate.tbsCertificate.subject.rdns[0].avas[0].value.value,
-    stringToBytes("Expired Test End-entity"),
+    stringToArray("Expired Test End-entity"),
     "expired-ee.pem should have subject 'Expired Test End-entity'"
   );
 

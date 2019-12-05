@@ -1266,6 +1266,19 @@ void nsNSSComponent::setValidationOptions(
     distrustedCAPolicy = defaultCAPolicyMode;
   }
 
+  CRLiteMode defaultCRLiteMode = CRLiteMode::Disabled;
+  CRLiteMode crliteMode = static_cast<CRLiteMode>(Preferences::GetUint(
+      "security.pki.crlite_mode", static_cast<uint32_t>(defaultCRLiteMode)));
+  switch (crliteMode) {
+    case CRLiteMode::Disabled:
+    case CRLiteMode::TelemetryOnly:
+    case CRLiteMode::Enforce:
+      break;
+    default:
+      crliteMode = defaultCRLiteMode;
+      break;
+  }
+
   CertVerifier::OcspDownloadConfig odc;
   CertVerifier::OcspStrictConfig osc;
   uint32_t certShortLifetimeInDays;
@@ -1278,7 +1291,7 @@ void nsNSSComponent::setValidationOptions(
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, pinningMode,
       sha1Mode, nameMatchingMode, netscapeStepUpPolicy, ctMode,
-      distrustedCAPolicy, mEnterpriseCerts);
+      distrustedCAPolicy, crliteMode, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1297,7 +1310,8 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mPinningMode,
       oldCertVerifier->mSHA1Mode, oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
-      oldCertVerifier->mDistrustedCAPolicy, mEnterpriseCerts);
+      oldCertVerifier->mDistrustedCAPolicy, oldCertVerifier->mCRLiteMode,
+      mEnterpriseCerts);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -2043,7 +2057,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                    "security.OCSP.timeoutMilliseconds.soft") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.hard") ||
-               prefName.EqualsLiteral("security.pki.distrust_ca_policy")) {
+               prefName.EqualsLiteral("security.pki.distrust_ca_policy") ||
+               prefName.EqualsLiteral("security.pki.crlite_mode")) {
       MutexAutoLock lock(mMutex);
       setValidationOptions(false, lock);
 #ifdef DEBUG

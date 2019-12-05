@@ -1,55 +1,114 @@
-extern crate bit_reverse;
-extern crate bit_vec;
 extern crate byteorder;
 extern crate digest;
 extern crate murmurhash3;
-extern crate rand;
 
-use bit_reverse::ParallelReverse;
-use bit_vec::BitVec;
 use byteorder::ReadBytesExt;
 use murmurhash3::murmurhash3_x86_32;
 
-use std::io::{Error, ErrorKind, Read};
+use std::io::{Error, ErrorKind};
 
-#[derive(Debug)]
-pub struct Bloom {
-    level: u32,
-    n_hash_funcs: u32,
-    size: usize,
-    bitvec: BitVec,
+/// Helper struct to provide read-only bit access to a slice of bytes.
+struct BitSlice<'a> {
+    /// The slice of bytes we're interested in.
+    bytes: &'a [u8],
+    /// The number of bits that are valid to access in the slice.
+    /// Not necessarily equal to `bytes.len() * 8`, but it will not be greater than that.
+    bit_len: usize,
 }
 
-pub fn calculate_n_hash_funcs(error_rate: f32) -> u32 {
-    ((1.0 / error_rate).ln() / (2.0_f32).ln()).ceil() as u32
-}
-
-pub fn calculate_size(elements: usize, error_rate: f32) -> usize {
-    let n_hash_funcs = calculate_n_hash_funcs(error_rate);
-    let hashes = n_hash_funcs as f32;
-    (1.0_f32
-        - (hashes * (elements as f32 + 0.5) / (1.0_f32 - error_rate.powf(1.0 / hashes)).ln()))
-    .ceil() as usize
-}
-
-impl Bloom {
-    pub fn new(size: usize, n_hash_funcs: u32, level: u32) -> Bloom {
-        let bitvec: BitVec = BitVec::from_elem(size, false);
-
-        Bloom {
-            level: level,
-            n_hash_funcs: n_hash_funcs,
-            size: size,
-            bitvec: bitvec,
+impl<'a> BitSlice<'a> {
+    /// Creates a new `BitSlice` of the given bit length over the given slice of data.
+    /// Panics if the indicated bit length is larger than fits in the slice.
+    ///
+    /// # Arguments
+    /// * `bytes` - The slice of bytes we need bit-access to
+    /// * `bit_len` - The number of bits that are valid to access in the slice
+    fn new(bytes: &'a [u8], bit_len: usize) -> BitSlice<'a> {
+        if bit_len > bytes.len() * 8 {
+            panic!(
+                "bit_len too large for given data: {} > {} * 8",
+                bit_len,
+                bytes.len()
+            );
         }
+        BitSlice { bytes, bit_len }
     }
 
-    pub fn from_bytes(cursor: &mut &[u8]) -> Result<Bloom, Error> {
+    /// Get the value of the specified bit.
+    /// Panics if the specified bit is out of range for the number of bits in this instance.
+    ///
+    /// # Arguments
+    /// * `bit_index` - The bit index to access
+    fn get(&self, bit_index: usize) -> bool {
+        if bit_index >= self.bit_len {
+            panic!(
+                "bit index out of range for bit slice: {} >= {}",
+                bit_index, self.bit_len
+            );
+        }
+        let byte_index = bit_index / 8;
+        let final_bit_index = bit_index % 8;
+        let byte = self.bytes[byte_index];
+        let test_value = match final_bit_index {
+            0 => byte & 0b00000001u8,
+            1 => byte & 0b00000010u8,
+            2 => byte & 0b00000100u8,
+            3 => byte & 0b00001000u8,
+            4 => byte & 0b00010000u8,
+            5 => byte & 0b00100000u8,
+            6 => byte & 0b01000000u8,
+            7 => byte & 0b10000000u8,
+            _ => panic!("impossible final_bit_index value: {}", final_bit_index),
+        };
+        test_value > 0
+    }
+}
+
+/// A Bloom filter representing a specific level in a multi-level cascading Bloom filter.
+struct Bloom<'a> {
+    /// What level this filter is in
+    level: u32,
+    /// How many hash functions this filter uses
+    n_hash_funcs: u32,
+    /// The bit length of the filter
+    size: usize,
+    /// The data of the filter
+    bit_slice: BitSlice<'a>,
+}
+
+const HASH_ALGORITHM_MURMUR_3: u8 = 1;
+
+impl<'a> Bloom<'a> {
+    /// Attempts to decode and return a pair that consists of the Bloom filter represented by the
+    /// given bytes and any remaining unprocessed bytes in the given bytes.
+    ///
+    /// # Arguments
+    /// * `bytes` - The encoded representation of this Bloom filter. May include additional data
+    /// describing further Bloom filters. Any additional data is returned unconsumed.
+    /// The format of an encoded Bloom filter is:
+    /// [1 byte] - the hash algorithm to use in the filter
+    /// [4 little endian bytes] - the length in bits of the filter
+    /// [4 little endian bytes] - the number of hash functions to use in the filter
+    /// [1 byte] - which level in the cascade this filter is
+    /// [variable length bytes] - the filter itself (the length is determined by Ceiling(bit length
+    /// / 8)
+    pub fn from_bytes(bytes: &'a [u8]) -> Result<(Bloom<'a>, &'a [u8]), Error> {
+        let mut cursor = bytes;
         // Load the layer metadata. bloomer.py writes size, nHashFuncs and level as little-endian
         // unsigned ints.
+        let hash_algorithm = cursor.read_u8()?;
+        if hash_algorithm != HASH_ALGORITHM_MURMUR_3 {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "Invalid Bloom filter: unsupported algorithm ({})",
+                    hash_algorithm
+                ),
+            ));
+        }
         let size = cursor.read_u32::<byteorder::LittleEndian>()? as usize;
         let n_hash_funcs = cursor.read_u32::<byteorder::LittleEndian>()?;
-        let level = cursor.read_u32::<byteorder::LittleEndian>()?;
+        let level = cursor.read_u8()? as u32;
 
         let shifted_size = size.wrapping_shr(3);
         let byte_count = if size % 8 != 0 {
@@ -57,19 +116,20 @@ impl Bloom {
         } else {
             shifted_size
         };
-
-        let mut bitvec_buf = vec![0u8; byte_count];
-        cursor.read_exact(&mut bitvec_buf)?;
-
-        // swap the bits, since the bit order of our python libraries differs
-        let v: Vec<u8> = bitvec_buf.into_iter().map(|x| x.swap_bits()).collect();
-
-        Ok(Bloom {
+        if byte_count > cursor.len() {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Invalid Bloom filter: too short",
+            ));
+        }
+        let (bits_bytes, rest_of_bytes) = cursor.split_at(byte_count);
+        let bloom = Bloom {
             level,
             n_hash_funcs,
             size,
-            bitvec: BitVec::from_bytes(&v),
-        })
+            bit_slice: BitSlice::new(bits_bytes, size),
+        };
+        Ok((bloom, rest_of_bytes))
     }
 
     fn hash(&self, n_fn: u32, key: &[u8]) -> usize {
@@ -78,90 +138,64 @@ impl Bloom {
         h
     }
 
-    pub fn put(&mut self, item: &[u8]) {
-        for i in 0..self.n_hash_funcs {
-            let index = self.hash(i, item);
-            self.bitvec.set(index, true);
-        }
-    }
-
+    /// Test for the presence of a given sequence of bytes in this Bloom filter.
+    ///
+    /// # Arguments
+    /// `item` - The slice of bytes to test for
     pub fn has(&self, item: &[u8]) -> bool {
         for i in 0..self.n_hash_funcs {
-            match self.bitvec.get(self.hash(i, item)) {
-                Some(false) => return false,
-                Some(true) => (),
-                None => panic!(
-                    "access outside the bloom filter bit vector (this is almost certainly a bug)"
-                ),
+            if !self.bit_slice.get(self.hash(i, item)) {
+                return false;
             }
         }
-
         true
     }
-
-    pub fn clear(&mut self) {
-        self.bitvec.clear()
-    }
 }
 
-#[derive(Debug)]
-pub struct Cascade {
-    filter: Bloom,
-    child_layer: Option<Box<Cascade>>,
+/// A multi-level cascading Bloom filter.
+pub struct Cascade<'a> {
+    /// The Bloom filter for this level in the cascade
+    filter: Bloom<'a>,
+    /// The next (lower) level in the cascade
+    child_layer: Option<Box<Cascade<'a>>>,
 }
 
-impl Cascade {
-    pub fn new(size: usize, n_hash_funcs: u32) -> Cascade {
-        return Cascade::new_layer(size, n_hash_funcs, 1);
-    }
-
-    pub fn from_bytes(bytes: &[u8]) -> Result<Option<Box<Cascade>>, Error> {
+impl<'a> Cascade<'a> {
+    /// Attempts to decode and return a multi-level cascading Bloom filter. NB: `Cascade` does not
+    /// take ownership of the given data. This is to facilitate decoding cascading filters
+    /// backed by memory-mapped files.
+    ///
+    /// # Arguments
+    /// `bytes` - The encoded representation of the Bloom filters in this cascade. Starts with 2
+    /// little endian bytes indicating the version. The current version is 1. See the documentation
+    /// for `Bloom`. May be of length 0, in which case `None` is returned.
+    pub fn from_bytes(bytes: &'a [u8]) -> Result<Option<Box<Cascade<'a>>>, Error> {
         if bytes.len() == 0 {
             return Ok(None);
         }
         let mut cursor = bytes;
         let version = cursor.read_u16::<byteorder::LittleEndian>()?;
         if version != 1 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Invalid version"));
+            return Err(Error::new(ErrorKind::InvalidData, "Invalid version"));
         }
+        Cascade::child_layer_from_bytes(cursor)
+    }
+
+    fn child_layer_from_bytes(bytes: &'a [u8]) -> Result<Option<Box<Cascade<'a>>>, Error> {
+        if bytes.len() == 0 {
+            return Ok(None);
+        }
+        let (filter, rest_of_bytes) = Bloom::from_bytes(bytes)?;
         Ok(Some(Box::new(Cascade {
-            filter: Bloom::from_bytes(&mut cursor)?,
-            child_layer: Cascade::from_bytes(cursor)?,
+            filter,
+            child_layer: Cascade::child_layer_from_bytes(rest_of_bytes)?,
         })))
     }
 
-    fn new_layer(size: usize, n_hash_funcs: u32, layer: u32) -> Cascade {
-        Cascade {
-            filter: Bloom::new(size, n_hash_funcs, layer),
-            child_layer: Option::None,
-        }
-    }
-
-    pub fn initialize(&mut self, entries: Vec<Vec<u8>>, exclusions: Vec<Vec<u8>>) {
-        let mut false_positives = Vec::new();
-        for entry in &entries {
-            self.filter.put(entry);
-        }
-
-        for entry in exclusions {
-            if self.filter.has(&entry) {
-                false_positives.push(entry);
-            }
-        }
-
-        if false_positives.len() > 0 {
-            let n_hash_funcs = calculate_n_hash_funcs(0.5);
-            let size = calculate_size(false_positives.len(), 0.5);
-            let mut child = Box::new(Cascade::new_layer(
-                size,
-                n_hash_funcs,
-                self.filter.level + 1,
-            ));
-            child.initialize(false_positives, entries);
-            self.child_layer = Some(child);
-        }
-    }
-
+    /// Determine if the given sequence of bytes is in the cascade.
+    ///
+    /// # Arguments
+    /// `entry` - The slice of bytes to test for
     pub fn has(&self, entry: &[u8]) -> bool {
         if self.filter.has(&entry) {
             match self.child_layer {
@@ -176,85 +210,25 @@ impl Cascade {
         }
         return false;
     }
-
-    pub fn check(&self, entries: Vec<Vec<u8>>, exclusions: Vec<Vec<u8>>) -> bool {
-        for entry in entries {
-            if !self.has(&entry) {
-                return false;
-            }
-        }
-
-        for entry in exclusions {
-            if self.has(&entry) {
-                return false;
-            }
-        }
-
-        true
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use calculate_n_hash_funcs;
-    use calculate_size;
-    use rand::Rng;
     use Bloom;
     use Cascade;
 
     #[test]
-    fn bloom_test_bloom_size() {
-        let error_rate = 0.01;
-        let elements = 1024;
-        let n_hash_funcs = calculate_n_hash_funcs(error_rate);
-        let size = calculate_size(elements, error_rate);
-
-        let bloom = Bloom::new(size, n_hash_funcs, 0);
-        assert!(bloom.bitvec.len() == 9829);
-    }
-
-    #[test]
-    fn bloom_test_put() {
-        let error_rate = 0.01;
-        let elements = 1024;
-        let n_hash_funcs = calculate_n_hash_funcs(error_rate);
-        let size = calculate_size(elements, error_rate);
-
-        let mut bloom = Bloom::new(size, n_hash_funcs, 0);
-        let key: &[u8] = b"foo";
-
-        bloom.put(key);
-    }
-
-    #[test]
-    fn bloom_test_has() {
-        let error_rate = 0.01;
-        let elements = 1024;
-        let n_hash_funcs = calculate_n_hash_funcs(error_rate);
-        let size = calculate_size(elements, error_rate);
-
-        let mut bloom = Bloom::new(size, n_hash_funcs, 0);
-        let key: &[u8] = b"foo";
-
-        bloom.put(key);
-        assert!(bloom.has(key) == true);
-        assert!(bloom.has(b"bar") == false);
-    }
-
-    #[test]
     fn bloom_test_from_bytes() {
         let src: Vec<u8> = vec![
-            0x09, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41, 0x00,
+            0x01, 0x09, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x41, 0x00,
         ];
 
-        match Bloom::from_bytes(&mut &src[..]) {
-            Ok(mut bloom) => {
+        match Bloom::from_bytes(&src) {
+            Ok((bloom, rest_of_bytes)) => {
+                assert!(rest_of_bytes.len() == 0);
                 assert!(bloom.has(b"this") == true);
                 assert!(bloom.has(b"that") == true);
                 assert!(bloom.has(b"other") == false);
-
-                bloom.put(b"other");
-                assert!(bloom.has(b"other") == true);
             }
             Err(_) => {
                 panic!("Parsing failed");
@@ -262,54 +236,9 @@ mod tests {
         };
 
         let short: Vec<u8> = vec![
-            0x09, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x41,
+            0x01, 0x09, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x41,
         ];
-        match Bloom::from_bytes(&mut &short[..]) {
-            Ok(_) => {
-                panic!("Parsing should fail; data is truncated");
-            }
-            Err(_) => {}
-        };
-    }
-
-    #[test]
-    fn bloom_test_from_file() {
-        let v = include_bytes!("../test_data/test_bf");
-        let bloom = Bloom::from_bytes(&mut &v[..]).expect("parsing Bloom should succeed");
-        assert!(bloom.has(b"this") == true);
-        assert!(bloom.has(b"that") == true);
-        assert!(bloom.has(b"yet another test") == false);
-    }
-
-    #[test]
-    fn cascade_test() {
-        // thread_rng is often the most convenient source of randomness:
-        let mut rng = rand::thread_rng();
-
-        // create some entries and exclusions
-        let mut foo: Vec<Vec<u8>> = Vec::new();
-        let mut bar: Vec<Vec<u8>> = Vec::new();
-
-        for i in 0..500 {
-            let s = format!("{}", i);
-            let bytes = s.into_bytes();
-            foo.push(bytes);
-        }
-
-        for _ in 0..100 {
-            let idx = rng.gen_range(0, foo.len());
-            bar.push(foo.swap_remove(idx));
-        }
-
-        let error_rate = 0.5;
-        let elements = 500;
-        let n_hash_funcs = calculate_n_hash_funcs(error_rate);
-        let size = calculate_size(elements, error_rate);
-
-        let mut cascade = Cascade::new(size, n_hash_funcs);
-        cascade.initialize(foo.clone(), bar.clone());
-
-        assert!(cascade.check(foo.clone(), bar.clone()) == true);
+        assert!(Bloom::from_bytes(&short).is_err());
     }
 
     #[test]
@@ -318,14 +247,32 @@ mod tests {
         let cascade = Cascade::from_bytes(v)
             .expect("parsing Cascade should succeed")
             .expect("Cascade should be Some");
-        assert!(cascade.has(b"test") == true);
-        assert!(cascade.has(b"another test") == true);
-        assert!(cascade.has(b"yet another test") == true);
-        assert!(cascade.has(b"blah") == false);
-        assert!(cascade.has(b"blah blah") == false);
-        assert!(cascade.has(b"blah blah blah") == false);
+        // Key format is SHA256(issuer SPKI) + serial number
+        #[rustfmt::skip]
+        let key_for_revoked_cert_1 =
+            [ 0x2e, 0xb2, 0xd5, 0xa8, 0x60, 0xfe, 0x50, 0xe9, 0xc2, 0x42, 0x36, 0x85, 0x52, 0x98,
+              0x01, 0x50, 0xe4, 0x5d, 0xb5, 0x32, 0x1a, 0x5b, 0x00, 0x5e, 0x26, 0xd6, 0x76, 0x25,
+              0x3a, 0x40, 0x9b, 0xf5,
+              0x06, 0x2d, 0xf5, 0x68, 0xa0, 0x51, 0x31, 0x08, 0x20, 0xd7, 0xec, 0x43, 0x27, 0xe1,
+              0xba, 0xfd ];
+        assert!(cascade.has(&key_for_revoked_cert_1));
+        #[rustfmt::skip]
+        let key_for_revoked_cert_2 =
+            [ 0xf1, 0x1c, 0x3d, 0xd0, 0x48, 0xf7, 0x4e, 0xdb, 0x7c, 0x45, 0x19, 0x2b, 0x83, 0xe5,
+              0x98, 0x0d, 0x2f, 0x67, 0xec, 0x84, 0xb4, 0xdd, 0xb9, 0x39, 0x6e, 0x33, 0xff, 0x51,
+              0x73, 0xed, 0x69, 0x8f,
+              0x00, 0xd2, 0xe8, 0xf6, 0xaa, 0x80, 0x48, 0x1c, 0xd4 ];
+        assert!(cascade.has(&key_for_revoked_cert_2));
+        #[rustfmt::skip]
+        let key_for_valid_cert =
+            [ 0x99, 0xfc, 0x9d, 0x40, 0xf1, 0xad, 0xb1, 0x63, 0x65, 0x61, 0xa6, 0x1d, 0x68, 0x3d,
+              0x9e, 0xa6, 0xb4, 0x60, 0xc5, 0x7d, 0x0c, 0x75, 0xea, 0x00, 0xc3, 0x41, 0xb9, 0xdf,
+              0xb9, 0x0b, 0x5f, 0x39,
+              0x0b, 0x77, 0x75, 0xf7, 0xaf, 0x9a, 0xe5, 0x42, 0x65, 0xc9, 0xcd, 0x32, 0x57, 0x10,
+              0x77, 0x8e ];
+        assert!(!cascade.has(&key_for_valid_cert));
 
         let v = include_bytes!("../test_data/test_short_mlbf");
-        Cascade::from_bytes(v).expect_err("parsing truncated Cascade should fail");
+        assert!(Cascade::from_bytes(v).is_err());
     }
 }

@@ -403,3 +403,170 @@ add_task(
     Assert.equal(bogusValueStateValue, -3);
   }
 );
+
+async function enrollCertForCRLite(nsCert) {
+  let { subjectString, spkiHashString } = getSubjectAndSPKIHash(nsCert);
+  let crliteState = new CRLiteState(
+    subjectString,
+    spkiHashString,
+    Ci.nsICertStorage.STATE_ENFORCE
+  );
+  await addCRLiteState([crliteState]);
+}
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
+  async function test_crlite_filter() {
+    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+      Ci.nsIX509CertDB
+    );
+    let validCertIssuer = constructCertFromFile(
+      "test_cert_storage_direct/valid-cert-issuer.pem"
+    );
+    await enrollCertForCRLite(validCertIssuer);
+    let validCert = constructCertFromFile(
+      "test_cert_storage_direct/valid-cert.pem"
+    );
+    let revokedCertIssuer = constructCertFromFile(
+      "test_cert_storage_direct/revoked-cert-issuer.pem"
+    );
+    await enrollCertForCRLite(revokedCertIssuer);
+    let revokedCert = constructCertFromFile(
+      "test_cert_storage_direct/revoked-cert.pem"
+    );
+
+    let filterFile = do_get_file(
+      "test_cert_storage_direct/test-filter.crlite",
+      false
+    );
+    ok(filterFile.exists(), "test filter file should exist");
+    let filterBytes = stringToArray(readFile(filterFile));
+    // First simulate the filter being from before the certificates being tested are valid. With
+    // CRLite enabled, none of the certificates should appear to be revoked.
+    let setFullCRLiteFilterResult = await new Promise(resolve => {
+      certStorage.setFullCRLiteFilter(
+        filterBytes,
+        new Date("2017-10-28T00:00:00Z").getTime() / 1000,
+        resolve
+      );
+    });
+    Assert.equal(
+      setFullCRLiteFilterResult,
+      Cr.NS_OK,
+      "setFullCRLiteFilter should succeed"
+    );
+
+    Services.prefs.setIntPref(
+      "security.pki.crlite_mode",
+      CRLiteModeEnforcePrefValue
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    // Now "replace" the filter with a more recent one. The revoked certificate should be revoked.
+    setFullCRLiteFilterResult = await new Promise(resolve => {
+      certStorage.setFullCRLiteFilter(
+        filterBytes,
+        new Date("2019-10-28T00:00:00Z").getTime() / 1000,
+        resolve
+      );
+    });
+    Assert.equal(
+      setFullCRLiteFilterResult,
+      Cr.NS_OK,
+      "setFullCRLiteFilter should succeed"
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    // If we're only collecting telemetry, none of the certificates should appear to be revoked.
+    Services.prefs.setIntPref(
+      "security.pki.crlite_mode",
+      CRLiteModeTelemetryOnlyPrefValue
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+
+    // If CRLite is disabled, none of the certificates should appear to be revoked.
+    Services.prefs.setIntPref(
+      "security.pki.crlite_mode",
+      CRLiteModeDisabledPrefValue
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      validCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "skynew.jp",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedCert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2019-11-04T00:00:00Z").getTime() / 1000,
+      false,
+      "schunk-group.com",
+      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+    );
+  }
+);
