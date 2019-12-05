@@ -270,6 +270,22 @@ static inline void SetLoopHeadDepthHintAndFlags(jsbytecode* pc,
   SET_UINT8(pc + 4, data);
 }
 
+static inline bool IsBackedgePC(jsbytecode* pc) {
+  switch (JSOp(*pc)) {
+    case JSOP_GOTO:
+    case JSOP_IFNE:
+    case JSOP_IFEQ:
+      return GET_JUMP_OFFSET(pc) < 0;
+    default:
+      return false;
+  }
+}
+
+static inline bool IsBackedgeForLoopHead(jsbytecode* pc, jsbytecode* loopHead) {
+  MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
+  return IsBackedgePC(pc) && pc + GET_JUMP_OFFSET(pc) == loopHead;
+}
+
 /*
  * Describes the 'hops' component of a JOF_ENVCOORD opcode.
  *
