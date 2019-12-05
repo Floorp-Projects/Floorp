@@ -202,7 +202,7 @@ class TransactionWrapper final {
       const layers::ScrollableLayerGuid::ViewID& aScrollId,
       const wr::LayoutPoint& aScrollPosition);
   void UpdatePinchZoom(float aZoom);
-  void UpdateIsTransformPinchZooming(uint64_t aAnimationId, bool aIsZooming);
+  void UpdateIsTransformAsyncZooming(uint64_t aAnimationId, bool aIsZooming);
 
  private:
   Transaction* mTxn;
