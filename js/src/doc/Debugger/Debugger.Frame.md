@@ -235,7 +235,7 @@ instance), or `null` on frames that do not represent calls to debuggee
 code. On frames whose `callee` property is not null, this is equal to
 `callee.script`.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `offset`
 The offset of the bytecode instruction currently being executed in

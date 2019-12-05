@@ -182,9 +182,19 @@ class DebuggerFrame : public NativeObject {
       mozilla::Range<const char16_t> chars, HandleObject bindings,
       const EvalOptions& options);
 
-  MOZ_MUST_USE bool requireOnStack(JSContext* cx);
+  enum class MinState {
+    // The frame is guaranteed to have FrameIter::Data.
+    OnStack,
+
+    // The frame is guaranteed to have FrameIter::Data or GeneratorInfo.
+    OnStackOrSuspended,
+
+    // The frame may have FrameIter::Data, GeneratorInfo, or neither.
+    OnStackOrSuspendedOrTerminated,
+  };
+
   static MOZ_MUST_USE DebuggerFrame* check(JSContext* cx, HandleValue thisv,
-                                           bool checkOnStack);
+                                           MinState minState);
 
   bool isOnStack() const;
 
