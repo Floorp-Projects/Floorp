@@ -1,1 +1,2 @@
 HTTP == accept-image-catchall.html accept-image-catchall-ref.html
+!= moz-icon-1.html about:blank
