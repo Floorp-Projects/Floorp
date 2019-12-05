@@ -6,6 +6,12 @@ const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
 
@@ -77,12 +83,12 @@ function handleRequest(request, response) {
   });
 }
 
-server.registerPathHandler("/interruptible.html", handleRequest);
+server.registerPrefixHandler("/interruptible/", handleRequest);
 
 let interruptibleCount = 0;
-function getInterruptibleUrl() {
+function getInterruptibleUrl(filename = "interruptible.html") {
   let n = interruptibleCount++;
-  return `${ROOT}/interruptible.html?count=${n}`;
+  return `${ROOT}/interruptible/${filename}?count=${n}`;
 }
 
 function backgroundScript() {
@@ -224,6 +230,29 @@ function backgroundScript() {
 
 let downloadDir;
 let extension;
+
+async function waitForCreatedPartFile(baseFilename = "interruptible.html") {
+  const partFilePath = `${downloadDir.path}/${baseFilename}.part`;
+
+  info(`Wait for ${partFilePath} to be created`);
+  let lastError;
+  await TestUtils.waitForCondition(
+    async () =>
+      OS.File.stat(partFilePath).then(
+        () => true,
+        err => {
+          lastError = err;
+          return false;
+        }
+      ),
+    `Wait for the ${partFilePath} to exists before pausing the download`
+  ).catch(err => {
+    if (lastError) {
+      throw lastError;
+    }
+    throw err;
+  });
+}
 
 async function clearDownloads(callback) {
   let list = await Downloads.getList(Downloads.ALL);
@@ -402,7 +431,8 @@ add_task(async function test_cancel() {
 });
 
 add_task(async function test_pauseresume() {
-  let url = getInterruptibleUrl();
+  const filename = "pauseresume.html";
+  let url = getInterruptibleUrl(filename);
   let msg = await runInExtension("download", { url });
   equal(msg.status, "success", "download() succeeded");
   const id = msg.result;
@@ -417,6 +447,11 @@ add_task(async function test_pauseresume() {
   await progressPromise;
   info(`download reached ${INT_PARTIAL_LEN} bytes`);
 
+  // Prevent intermittent timeouts due to the part file not yet created
+  // (e.g. see Bug 1573360).
+  await waitForCreatedPartFile(filename);
+
+  info("Pause the download item");
   msg = await runInExtension("pause", id);
   equal(msg.status, "success", "pause() succeeded");
 
@@ -736,7 +771,8 @@ add_task(async function test_file_removal() {
 });
 
 add_task(async function test_removal_of_incomplete_download() {
-  let url = getInterruptibleUrl();
+  const filename = "remove-incomplete.html";
+  let url = getInterruptibleUrl(filename);
   let msg = await runInExtension("download", { url });
   equal(msg.status, "success", "download() succeeded");
   const id = msg.result;
@@ -750,6 +786,10 @@ add_task(async function test_removal_of_incomplete_download() {
 
   await progressPromise;
   info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  // Prevent intermittent timeouts due to the part file not yet created
+  // (e.g. see Bug 1573360).
+  await waitForCreatedPartFile(filename);
 
   msg = await runInExtension("pause", id);
   equal(msg.status, "success", "pause() succeeded");
