@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "MediaHardwareKeysEventSourceMac.h"
+
 #import <AppKit/AppKit.h>
 #import <AppKit/NSEvent.h>
 #import <IOKit/hidsystem/ev_keymap.h>
 
-#include "MediaHardwareKeysEventSourceMac.h"
-#include "MediaControlUtils.h"
+#include "mozilla/dom/MediaControlUtils.h"
+
+using namespace mozilla::dom;
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -43,9 +46,6 @@ static const char* ToMediaControlKeyStr(int aKeyCode) {
 // http://lists.apple.com/archives/cocoa-dev/2007/Aug/msg00499.html
 const int kSystemDefinedEventMediaKeysSubtype = 8;
 
-namespace mozilla {
-namespace dom {
-
 static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
   switch (aKeyCode) {
     case NX_KEYTYPE_PLAY:
@@ -61,6 +61,9 @@ static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
   }
   return MediaControlKeysEvent::eNone;
 }
+
+namespace mozilla {
+namespace widget {
 
 MediaHardwareKeysEventSourceMac::MediaHardwareKeysEventSourceMac() {
   LOG("Create MediaHardwareKeysEventSourceMac");
@@ -163,5 +166,5 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(CGEventTapProxy pro
   return event;
 }
 
-}  // namespace dom
+}  // namespace widget
 }  // namespace mozilla

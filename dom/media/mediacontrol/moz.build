@@ -17,14 +17,6 @@ EXPORTS.ipc += [
     'MediaControlIPC.h',
 ]
 
-if CONFIG['MOZ_APPLEMEDIA']:
-  EXPORTS += [
-      'MediaHardwareKeysEventSourceMac.h',
-  ]
-  UNIFIED_SOURCES += [
-      'MediaHardwareKeysEventSourceMac.mm',
-  ]
-
 UNIFIED_SOURCES += [
     'AudioFocusManager.cpp',
     'MediaControlKeysEvent.cpp',

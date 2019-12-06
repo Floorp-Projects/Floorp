@@ -89,6 +89,7 @@ UNIFIED_SOURCES += [
 # The following files cannot be built in unified mode because of name clashes.
 SOURCES += [
     'JumpListBuilder.cpp',
+    'MediaKeysEventSourceFactory.cpp',
     'nsBidiKeyboard.cpp',
     'nsFilePicker.cpp',
     'nsWidgetFactory.cpp',
