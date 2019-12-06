@@ -9,4 +9,4 @@ The terminal printing is shimmed when the `termcolor` crate is not available.
 #[cfg_attr(not(feature = "termcolor"), path = "shim_impl.rs")]
 mod imp;
 
-pub(in ::fmt) use self::imp::*;
+pub(in crate::fmt) use self::imp::*;

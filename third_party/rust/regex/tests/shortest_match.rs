@@ -6,7 +6,7 @@ macro_rules! shortmat {
             let re = regex!($re);
             assert_eq!($shortest_match, re.shortest_match(text));
         }
-    }
+    };
 }
 
 shortmat!(t01, r"a+", r"aa", Some(1));

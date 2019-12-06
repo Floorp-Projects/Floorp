@@ -1,25 +1,15 @@
-// Copyright 2014-2016 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use std::collections::HashMap;
 use std::iter;
 use std::result;
 use std::sync::Arc;
 
-use syntax::is_word_byte;
 use syntax::hir::{self, Hir};
-use utf8_ranges::{Utf8Range, Utf8Sequence, Utf8Sequences};
+use syntax::is_word_byte;
+use syntax::utf8::{Utf8Range, Utf8Sequence, Utf8Sequences};
 
 use prog::{
-    Program, Inst, InstPtr, EmptyLook,
-    InstSave, InstSplit, InstEmptyLook, InstChar, InstRanges, InstBytes,
+    EmptyLook, Inst, InstBytes, InstChar, InstEmptyLook, InstPtr, InstRanges,
+    InstSave, InstSplit, Program,
 };
 
 use Error;
@@ -119,10 +109,7 @@ impl Compiler {
     /// The compiler is guaranteed to succeed unless the program exceeds the
     /// specified size limit. If the size limit is exceeded, then compilation
     /// stops and returns an error.
-    pub fn compile(
-        mut self,
-        exprs: &[Hir],
-    ) -> result::Result<Program, Error> {
+    pub fn compile(mut self, exprs: &[Hir]) -> result::Result<Program, Error> {
         debug_assert!(exprs.len() >= 1);
         self.num_exprs = exprs.len();
         if exprs.len() == 1 {
@@ -262,16 +249,12 @@ impl Compiler {
         self.check_size()?;
         match *expr.kind() {
             Empty => Ok(Patch { hole: Hole::None, entry: self.insts.len() }),
-            Literal(hir::Literal::Unicode(c)) => {
-                self.c_char(c)
-            }
+            Literal(hir::Literal::Unicode(c)) => self.c_char(c),
             Literal(hir::Literal::Byte(b)) => {
                 assert!(self.compiled.uses_bytes());
                 self.c_byte(b)
             }
-            Class(hir::Class::Unicode(ref cls)) => {
-                self.c_class(cls.ranges())
-            }
+            Class(hir::Class::Unicode(ref cls)) => self.c_class(cls.ranges()),
             Class(hir::Class::Bytes(ref cls)) => {
                 if self.compiled.uses_bytes() {
                     self.c_class_bytes(cls.ranges())
@@ -314,11 +297,25 @@ impl Compiler {
                 self.c_empty_look(prog::EmptyLook::EndText)
             }
             WordBoundary(hir::WordBoundary::Unicode) => {
+                if !cfg!(feature = "unicode-perl") {
+                    return Err(Error::Syntax(
+                        "Unicode word boundaries are unavailable when \
+                         the unicode-perl feature is disabled"
+                            .to_string(),
+                    ));
+                }
                 self.compiled.has_unicode_word_boundary = true;
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::WordBoundary)
             }
             WordBoundary(hir::WordBoundary::UnicodeNegate) => {
+                if !cfg!(feature = "unicode-perl") {
+                    return Err(Error::Syntax(
+                        "Unicode word boundaries are unavailable when \
+                         the unicode-perl feature is disabled"
+                            .to_string(),
+                    ));
+                }
                 self.compiled.has_unicode_word_boundary = true;
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::NotWordBoundary)
@@ -331,25 +328,23 @@ impl Compiler {
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::NotWordBoundaryAscii)
             }
-            Group(ref g) => {
-                match g.kind {
-                    hir::GroupKind::NonCapturing => self.c(&g.hir),
-                    hir::GroupKind::CaptureIndex(index) => {
-                        if index as usize >= self.compiled.captures.len() {
-                            self.compiled.captures.push(None);
-                        }
-                        self.c_capture(2 * index as usize, &g.hir)
+            Group(ref g) => match g.kind {
+                hir::GroupKind::NonCapturing => self.c(&g.hir),
+                hir::GroupKind::CaptureIndex(index) => {
+                    if index as usize >= self.compiled.captures.len() {
+                        self.compiled.captures.push(None);
                     }
-                    hir::GroupKind::CaptureName { index, ref name } => {
-                        if index as usize >= self.compiled.captures.len() {
-                            let n = name.to_string();
-                            self.compiled.captures.push(Some(n.clone()));
-                            self.capture_name_idx.insert(n, index as usize);
-                        }
-                        self.c_capture(2 * index as usize, &g.hir)
-                    }
+                    self.c_capture(2 * index as usize, &g.hir)
                 }
-            }
+                hir::GroupKind::CaptureName { index, ref name } => {
+                    if index as usize >= self.compiled.captures.len() {
+                        let n = name.to_string();
+                        self.compiled.captures.push(Some(n.clone()));
+                        self.capture_name_idx.insert(n, index as usize);
+                    }
+                    self.c_capture(2 * index as usize, &g.hir)
+                }
+            },
             Concat(ref es) => {
                 if self.compiled.is_reverse {
                     self.c_concat(es.iter().rev())
@@ -402,10 +397,7 @@ impl Compiler {
     fn c_class(&mut self, ranges: &[hir::ClassUnicodeRange]) -> Result {
         assert!(!ranges.is_empty());
         if self.compiled.uses_bytes() {
-            CompileClass {
-                c: self,
-                ranges: ranges,
-            }.compile()
+            CompileClass { c: self, ranges: ranges }.compile()
         } else {
             let ranges: Vec<(char, char)> =
                 ranges.iter().map(|r| (r.start(), r.end())).collect();
@@ -434,16 +426,17 @@ impl Compiler {
             let next = self.insts.len();
             self.byte_classes.set_range(r.start(), r.end());
             holes.push(self.push_hole(InstHole::Bytes {
-                start: r.start(), end: r.end(),
+                start: r.start(),
+                end: r.end(),
             }));
             prev_hole = self.fill_split(split, Some(next), None);
         }
         let next = self.insts.len();
         let r = &ranges[ranges.len() - 1];
         self.byte_classes.set_range(r.start(), r.end());
-        holes.push(self.push_hole(InstHole::Bytes {
-            start: r.start(), end: r.end(),
-        }));
+        holes.push(
+            self.push_hole(InstHole::Bytes { start: r.start(), end: r.end() }),
+        );
         self.fill(prev_hole, next);
         Ok(Patch { hole: Hole::Many(holes), entry: first_split_entry })
     }
@@ -454,7 +447,9 @@ impl Compiler {
     }
 
     fn c_concat<'a, I>(&mut self, exprs: I) -> Result
-            where I: IntoIterator<Item=&'a Hir> {
+    where
+        I: IntoIterator<Item = &'a Hir>,
+    {
         let mut exprs = exprs.into_iter();
         let first = match exprs.next() {
             Some(expr) => expr,
@@ -473,7 +468,9 @@ impl Compiler {
 
     fn c_alternate(&mut self, exprs: &[Hir]) -> Result {
         debug_assert!(
-            exprs.len() >= 2, "alternates must have at least 2 exprs");
+            exprs.len() >= 2,
+            "alternates must have at least 2 exprs"
+        );
 
         // Initial entry point is always the first split.
         let first_split_entry = self.insts.len();
@@ -496,7 +493,9 @@ impl Compiler {
                 // anyway, so don't feel too bad.
                 return Err(Error::Syntax(
                     "alternations cannot currently contain \
-                     empty sub-expressions".to_string()));
+                     empty sub-expressions"
+                        .to_string(),
+                ));
             }
             holes.push(hole);
             prev_hole = self.fill_split(split, Some(entry), None);
@@ -507,7 +506,9 @@ impl Compiler {
             // TODO(burntsushi): See TODO above.
             return Err(Error::Syntax(
                 "alternations cannot currently contain \
-                 empty sub-expressions".to_string()));
+                 empty sub-expressions"
+                    .to_string(),
+            ));
         }
         holes.push(hole);
         self.fill(prev_hole, entry);
@@ -662,24 +663,24 @@ impl Compiler {
     ) -> Hole {
         match hole {
             Hole::None => Hole::None,
-            Hole::One(pc) => {
-                match (goto1, goto2) {
-                    (Some(goto1), Some(goto2)) => {
-                        self.insts[pc].fill_split(goto1, goto2);
-                        Hole::None
-                    }
-                    (Some(goto1), None) => {
-                        self.insts[pc].half_fill_split_goto1(goto1);
-                        Hole::One(pc)
-                    }
-                    (None, Some(goto2)) => {
-                        self.insts[pc].half_fill_split_goto2(goto2);
-                        Hole::One(pc)
-                    }
-                    (None, None) => unreachable!("at least one of the split \
-                                                  holes must be filled"),
+            Hole::One(pc) => match (goto1, goto2) {
+                (Some(goto1), Some(goto2)) => {
+                    self.insts[pc].fill_split(goto1, goto2);
+                    Hole::None
                 }
-            }
+                (Some(goto1), None) => {
+                    self.insts[pc].half_fill_split_goto1(goto1);
+                    Hole::One(pc)
+                }
+                (None, Some(goto2)) => {
+                    self.insts[pc].half_fill_split_goto2(goto2);
+                    Hole::One(pc)
+                }
+                (None, None) => unreachable!(
+                    "at least one of the split \
+                     holes must be filled"
+                ),
+            },
             Hole::Many(holes) => {
                 let mut new_holes = vec![];
                 for hole in holes {
@@ -749,8 +750,11 @@ impl MaybeInst {
             MaybeInst::Split2(goto2) => {
                 Inst::Split(InstSplit { goto1: goto, goto2: goto2 })
             }
-            _ => unreachable!("not all instructions were compiled! \
-                               found uncompiled instruction: {:?}", self),
+            _ => unreachable!(
+                "not all instructions were compiled! \
+                 found uncompiled instruction: {:?}",
+                self
+            ),
         };
         *self = MaybeInst::Compiled(filled);
     }
@@ -760,8 +764,11 @@ impl MaybeInst {
             MaybeInst::Split => {
                 Inst::Split(InstSplit { goto1: goto1, goto2: goto2 })
             }
-            _ => unreachable!("must be called on Split instruction, \
-                               instead it was called on: {:?}", self),
+            _ => unreachable!(
+                "must be called on Split instruction, \
+                 instead it was called on: {:?}",
+                self
+            ),
         };
         *self = MaybeInst::Compiled(filled);
     }
@@ -769,8 +776,11 @@ impl MaybeInst {
     fn half_fill_split_goto1(&mut self, goto1: InstPtr) {
         let half_filled = match *self {
             MaybeInst::Split => goto1,
-            _ => unreachable!("must be called on Split instruction, \
-                               instead it was called on: {:?}", self),
+            _ => unreachable!(
+                "must be called on Split instruction, \
+                 instead it was called on: {:?}",
+                self
+            ),
         };
         *self = MaybeInst::Split1(half_filled);
     }
@@ -778,8 +788,11 @@ impl MaybeInst {
     fn half_fill_split_goto2(&mut self, goto2: InstPtr) {
         let half_filled = match *self {
             MaybeInst::Split => goto2,
-            _ => unreachable!("must be called on Split instruction, \
-                               instead it was called on: {:?}", self),
+            _ => unreachable!(
+                "must be called on Split instruction, \
+                 instead it was called on: {:?}",
+                self
+            ),
         };
         *self = MaybeInst::Split2(half_filled);
     }
@@ -787,8 +800,11 @@ impl MaybeInst {
     fn unwrap(self) -> Inst {
         match self {
             MaybeInst::Compiled(inst) => inst,
-            _ => unreachable!("must be called on a compiled instruction, \
-                               instead it was called on: {:?}", self),
+            _ => unreachable!(
+                "must be called on a compiled instruction, \
+                 instead it was called on: {:?}",
+                self
+            ),
         }
     }
 }
@@ -805,27 +821,19 @@ enum InstHole {
 impl InstHole {
     fn fill(&self, goto: InstPtr) -> Inst {
         match *self {
-            InstHole::Save { slot } => Inst::Save(InstSave {
-                goto: goto,
-                slot: slot,
-            }),
-            InstHole::EmptyLook { look } => Inst::EmptyLook(InstEmptyLook {
-                goto: goto,
-                look: look,
-            }),
-            InstHole::Char { c } => Inst::Char(InstChar {
-                goto: goto,
-                c: c,
-            }),
-            InstHole::Ranges { ref ranges } => Inst::Ranges(InstRanges {
-                goto: goto,
-                ranges: ranges.clone(),
-            }),
-            InstHole::Bytes { start, end } => Inst::Bytes(InstBytes {
-                goto: goto,
-                start: start,
-                end: end,
-            }),
+            InstHole::Save { slot } => {
+                Inst::Save(InstSave { goto: goto, slot: slot })
+            }
+            InstHole::EmptyLook { look } => {
+                Inst::EmptyLook(InstEmptyLook { goto: goto, look: look })
+            }
+            InstHole::Char { c } => Inst::Char(InstChar { goto: goto, c: c }),
+            InstHole::Ranges { ref ranges } => {
+                Inst::Ranges(InstRanges { goto: goto, ranges: ranges.clone() })
+            }
+            InstHole::Bytes { start, end } => {
+                Inst::Bytes(InstBytes { goto: goto, start: start, end: end })
+            }
         }
     }
 }
@@ -868,15 +876,13 @@ impl<'a, 'b> CompileClass<'a, 'b> {
                     last_split = self.c.push_split_hole();
                     let Patch { hole, entry } = self.c_utf8_seq(&utf8_seq)?;
                     holes.push(hole);
-                    last_split = self.c.fill_split(last_split, Some(entry), None);
+                    last_split =
+                        self.c.fill_split(last_split, Some(entry), None);
                 }
             }
         }
         self.c.utf8_seqs = Some(utf8_seqs);
-        Ok(Patch {
-            hole: Hole::Many(holes),
-            entry: initial_entry.unwrap(),
-        })
+        Ok(Patch { hole: Hole::Many(holes), entry: initial_entry.unwrap() })
     }
 
     fn c_utf8_seq(&mut self, seq: &Utf8Sequence) -> Result {
@@ -888,7 +894,9 @@ impl<'a, 'b> CompileClass<'a, 'b> {
     }
 
     fn c_utf8_seq_<'r, I>(&mut self, seq: I) -> Result
-            where I: IntoIterator<Item=&'r Utf8Range> {
+    where
+        I: IntoIterator<Item = &'r Utf8Range>,
+    {
         // The initial instruction for each UTF-8 sequence should be the same.
         let mut from_inst = ::std::usize::MAX;
         let mut last_hole = Hole::None;
@@ -983,10 +991,7 @@ impl SuffixCache {
             }
         }
         *pos = self.dense.len();
-        self.dense.push(SuffixCacheEntry {
-            key: key,
-            pc: pc,
-        });
+        self.dense.push(SuffixCacheEntry { key: key, pc: pc });
         None
     }
 

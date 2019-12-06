@@ -18,55 +18,58 @@
 // is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.
 
-use core::ptr;
+#[cfg_attr(feature = "no-panic", inline)]
+pub fn decimal_length9(v: u32) -> u32 {
+    // Function precondition: v is not a 10-digit number.
+    // (f2s: 9 digits are sufficient for round-tripping.)
+    debug_assert!(v < 1000000000);
+
+    if v >= 100000000 {
+        9
+    } else if v >= 10000000 {
+        8
+    } else if v >= 1000000 {
+        7
+    } else if v >= 100000 {
+        6
+    } else if v >= 10000 {
+        5
+    } else if v >= 1000 {
+        4
+    } else if v >= 100 {
+        3
+    } else if v >= 10 {
+        2
+    } else {
+        1
+    }
+}
 
 // Returns e == 0 ? 1 : ceil(log_2(5^e)).
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn pow5bits(e: i32) -> u32 {
+pub fn pow5bits(e: i32) -> i32 {
     // This approximation works up to the point that the multiplication overflows at e = 3529.
     // If the multiplication were done in 64 bits, it would fail at 5^4004 which is just greater
     // than 2^9297.
     debug_assert!(e >= 0);
     debug_assert!(e <= 3528);
-    ((e as u32 * 1217359) >> 19) + 1
+    (((e as u32 * 1217359) >> 19) + 1) as i32
 }
 
 // Returns floor(log_10(2^e)).
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn log10_pow2(e: i32) -> i32 {
+pub fn log10_pow2(e: i32) -> u32 {
     // The first value this approximation fails for is 2^1651 which is just greater than 10^297.
     debug_assert!(e >= 0);
     debug_assert!(e <= 1650);
-    ((e as u32 * 78913) >> 18) as i32
+    (e as u32 * 78913) >> 18
 }
 
 // Returns floor(log_10(5^e)).
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn log10_pow5(e: i32) -> i32 {
+pub fn log10_pow5(e: i32) -> u32 {
     // The first value this approximation fails for is 5^2621 which is just greater than 10^1832.
     debug_assert!(e >= 0);
     debug_assert!(e <= 2620);
-    ((e as u32 * 732923) >> 20) as i32
-}
-
-#[cfg_attr(feature = "no-panic", inline)]
-pub unsafe fn copy_special_str(
-    result: *mut u8,
-    sign: bool,
-    exponent: bool,
-    mantissa: bool,
-) -> usize {
-    if mantissa {
-        ptr::copy_nonoverlapping(b"NaN".as_ptr(), result, 3);
-        return 3;
-    }
-    if sign {
-        *result = b'-';
-    }
-    if exponent {
-        ptr::copy_nonoverlapping(b"Infinity".as_ptr(), result.offset(sign as isize), 8);
-        return sign as usize + 8;
-    }
-    ptr::copy_nonoverlapping(b"0E0".as_ptr(), result.offset(sign as isize), 3);
-    sign as usize + 3
+    (e as u32 * 732923) >> 20
 }

@@ -44,9 +44,10 @@ test rfc3339_humantime_seconds  ... bench:          24 ns/iter (+/- 1)
 test result: ok. 0 passed; 0 failed; 0 ignored; 6 measured; 0 filtered out
 ```
 
-See [serde-humantime] for serde integration.
+See [humantime-serde] for serde integration (previous crate [serde-humantime] looks unmaintained).
 
 [serde-humantime]: https://docs.rs/serde-humantime/0.1.1/serde_humantime/
+[humantime-serde]: https://docs.rs/humantime-serde
 
 License
 =======

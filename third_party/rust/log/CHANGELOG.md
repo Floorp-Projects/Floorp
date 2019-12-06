@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [0.4.8] - 2019-07-28
+
+### New
+
+* Support attempting to get `Record` fields as static strings.
+
+## [0.4.7] - 2019-07-06
+
+### New
+
+* Support for embedded environments with thread-unsafe initialization.
+* Initial unstable support for capturing structured data under the `kv_unstable`
+feature gate. This new API doesn't affect existing users and may change in future
+patches (so those changes may not appear in the changelog until it stabilizes).
+
+### Improved
+
+* Docs for using `log` with the 2018 edition.
+* Error messages for macros missing arguments.
+
 ## [0.4.6] - 2018-10-27
 
 ### Improved
@@ -112,7 +132,9 @@ version using log 0.4.x to avoid losing module and file information.
 
 Look at the [release tags] for information about older releases.
 
-[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.6...HEAD
+[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.8...HEAD
+[0.4.8]: https://github.com/rust-lang-nursery/log/compare/0.4.7...0.4.8
+[0.4.7]: https://github.com/rust-lang-nursery/log/compare/0.4.6...0.4.7
 [0.4.6]: https://github.com/rust-lang-nursery/log/compare/0.4.5...0.4.6
 [0.4.5]: https://github.com/rust-lang-nursery/log/compare/0.4.4...0.4.5
 [0.4.4]: https://github.com/rust-lang-nursery/log/compare/0.4.3...0.4.4

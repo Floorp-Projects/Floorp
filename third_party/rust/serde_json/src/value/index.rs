@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use std::fmt;
 use std::ops;
 
@@ -28,11 +20,9 @@ use map::Map;
 ///
 /// # Examples
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate serde_json;
+/// ```edition2018
+/// # use serde_json::json;
 /// #
-/// # fn main() {
 /// let data = json!({ "inner": [1, 2, 3] });
 ///
 /// // Data is a JSON map so it can be indexed with a string.
@@ -42,7 +32,6 @@ use map::Map;
 /// let first = &inner[0];
 ///
 /// assert_eq!(first, 1);
-/// # }
 /// ```
 pub trait Index: private::Sealed {
     /// Return None if the key is not already in the array or object.
@@ -204,11 +193,9 @@ where
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// # #[macro_use]
-    /// # extern crate serde_json;
+    /// ```edition2018
+    /// # use serde_json::json;
     /// #
-    /// # fn main() {
     /// let data = json!({
     ///     "x": {
     ///         "y": ["z", "zz"]
@@ -220,7 +207,6 @@ where
     ///
     /// assert_eq!(data["a"], json!(null)); // returns null for undefined values
     /// assert_eq!(data["a"]["b"], json!(null)); // does not panic
-    /// # }
     /// ```
     fn index(&self, index: I) -> &Value {
         static NULL: Value = Value::Null;
@@ -246,11 +232,9 @@ where
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// # #[macro_use]
-    /// # extern crate serde_json;
+    /// ```edition2018
+    /// # use serde_json::json;
     /// #
-    /// # fn main() {
     /// let mut data = json!({ "x": 0 });
     ///
     /// // replace an existing key
@@ -266,7 +250,6 @@ where
     /// data["a"]["b"]["c"]["d"] = json!(true);
     ///
     /// println!("{}", data);
-    /// # }
     /// ```
     fn index_mut(&mut self, index: I) -> &mut Value {
         index.index_or_insert(self)

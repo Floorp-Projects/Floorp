@@ -1,18 +1,8 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 /// Construct a `serde_json::Value` from a JSON literal.
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate serde_json;
+/// ```edition2018
+/// # use serde_json::json;
 /// #
-/// # fn main() {
 /// let value = json!({
 ///     "code": 200,
 ///     "success": true,
@@ -23,7 +13,6 @@
 ///         ]
 ///     }
 /// });
-/// # }
 /// ```
 ///
 /// Variables or expressions can be interpolated into the JSON literal. Any type
@@ -33,38 +22,32 @@
 /// interpolated type decides to fail, or if the interpolated type contains a
 /// map with non-string keys, the `json!` macro will panic.
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate serde_json;
+/// ```edition2018
+/// # use serde_json::json;
 /// #
-/// # fn main() {
 /// let code = 200;
 /// let features = vec!["serde", "json"];
 ///
 /// let value = json!({
-///    "code": code,
-///    "success": code == 200,
-///    "payload": {
-///        features[0]: features[1]
-///    }
+///     "code": code,
+///     "success": code == 200,
+///     "payload": {
+///         features[0]: features[1]
+///     }
 /// });
-/// # }
 /// ```
 ///
 /// Trailing commas are allowed inside both arrays and objects.
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate serde_json;
+/// ```edition2018
+/// # use serde_json::json;
 /// #
-/// # fn main() {
 /// let value = json!([
 ///     "notice",
 ///     "the",
 ///     "trailing",
 ///     "comma -->",
 /// ]);
-/// # }
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! json {

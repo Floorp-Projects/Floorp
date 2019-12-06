@@ -1,16 +1,15 @@
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::fmt;
 use std::io::{self, Write};
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use log::Level;
 use termcolor::{self, ColorChoice, ColorSpec, WriteColor};
 
-use ::WriteStyle;
-use ::fmt::{Formatter, Target};
+use crate::fmt::{Formatter, Target, WriteStyle};
 
-pub(in ::fmt::writer) mod glob {
+pub(in crate::fmt::writer) mod glob {
     pub use super::*;
 }
 
@@ -47,7 +46,7 @@ impl Formatter {
     }
 
     /// Get the default [`Style`] for the given level.
-    /// 
+    ///
     /// The style can be used to print other values besides the level.
     pub fn default_level_style(&self, level: Level) -> Style {
         let mut level_style = self.style();
@@ -62,54 +61,46 @@ impl Formatter {
     }
 
     /// Get a printable [`Style`] for the given level.
-    /// 
+    ///
     /// The style can only be used to print the level.
     pub fn default_styled_level(&self, level: Level) -> StyledValue<'static, Level> {
         self.default_level_style(level).into_value(level)
     }
 }
 
-pub(in ::fmt::writer) struct BufferWriter {
+pub(in crate::fmt::writer) struct BufferWriter {
     inner: termcolor::BufferWriter,
     test_target: Option<Target>,
 }
 
-pub(in ::fmt) struct Buffer {
+pub(in crate::fmt) struct Buffer {
     inner: termcolor::Buffer,
     test_target: Option<Target>,
 }
 
 impl BufferWriter {
-    pub(in ::fmt::writer) fn stderr(is_test: bool, write_style: WriteStyle) -> Self {
+    pub(in crate::fmt::writer) fn stderr(is_test: bool, write_style: WriteStyle) -> Self {
         BufferWriter {
             inner: termcolor::BufferWriter::stderr(write_style.into_color_choice()),
-            test_target: if is_test {
-                Some(Target::Stderr)
-            } else {
-                None
-            },
+            test_target: if is_test { Some(Target::Stderr) } else { None },
         }
     }
 
-    pub(in ::fmt::writer) fn stdout(is_test: bool, write_style: WriteStyle) -> Self {
+    pub(in crate::fmt::writer) fn stdout(is_test: bool, write_style: WriteStyle) -> Self {
         BufferWriter {
             inner: termcolor::BufferWriter::stdout(write_style.into_color_choice()),
-            test_target: if is_test {
-                Some(Target::Stdout)
-            } else {
-                None
-            },
+            test_target: if is_test { Some(Target::Stdout) } else { None },
         }
     }
 
-    pub(in ::fmt::writer) fn buffer(&self) -> Buffer {
+    pub(in crate::fmt::writer) fn buffer(&self) -> Buffer {
         Buffer {
             inner: self.inner.buffer(),
             test_target: self.test_target,
         }
     }
 
-    pub(in ::fmt::writer) fn print(&self, buf: &Buffer) -> io::Result<()> {
+    pub(in crate::fmt::writer) fn print(&self, buf: &Buffer) -> io::Result<()> {
         if let Some(target) = self.test_target {
             // This impl uses the `eprint` and `print` macros
             // instead of `termcolor`'s buffer.
@@ -129,19 +120,19 @@ impl BufferWriter {
 }
 
 impl Buffer {
-    pub(in ::fmt) fn clear(&mut self) {
+    pub(in crate::fmt) fn clear(&mut self) {
         self.inner.clear()
     }
 
-    pub(in ::fmt) fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    pub(in crate::fmt) fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.inner.write(buf)
     }
 
-    pub(in ::fmt) fn flush(&mut self) -> io::Result<()> {
+    pub(in crate::fmt) fn flush(&mut self) -> io::Result<()> {
         self.inner.flush()
     }
 
-    pub(in ::fmt) fn bytes(&self) -> &[u8] {
+    pub(in crate::fmt) fn bytes(&self) -> &[u8] {
         self.inner.as_slice()
     }
 
@@ -374,7 +365,7 @@ impl Style {
     pub fn value<T>(&self, value: T) -> StyledValue<T> {
         StyledValue {
             style: Cow::Borrowed(self),
-            value
+            value,
         }
     }
 
@@ -382,7 +373,7 @@ impl Style {
     pub(crate) fn into_value<T>(&mut self, value: T) -> StyledValue<'static, T> {
         StyledValue {
             style: Cow::Owned(self.clone()),
-            value
+            value,
         }
     }
 }
@@ -392,7 +383,11 @@ impl<'a, T> StyledValue<'a, T> {
     where
         F: FnOnce() -> fmt::Result,
     {
-        self.style.buf.borrow_mut().set_color(&self.style.spec).map_err(|_| fmt::Error)?;
+        self.style
+            .buf
+            .borrow_mut()
+            .set_color(&self.style.spec)
+            .map_err(|_| fmt::Error)?;
 
         // Always try to reset the terminal style, even if writing failed
         let write = f();
@@ -403,7 +398,7 @@ impl<'a, T> StyledValue<'a, T> {
 }
 
 impl fmt::Debug for Style {
-    fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Style").field("spec", &self.spec).finish()
     }
 }
@@ -429,7 +424,8 @@ impl_styled_value_fmt!(
     fmt::UpperHex,
     fmt::LowerHex,
     fmt::UpperExp,
-    fmt::LowerExp);
+    fmt::LowerExp
+);
 
 // The `Color` type is copied from https://github.com/BurntSushi/ripgrep/tree/master/termcolor
 

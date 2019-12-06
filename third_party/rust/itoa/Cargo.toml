@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "itoa"
-version = "0.4.1"
+version = "0.4.4"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 exclude = ["performance.png"]
 description = "Fast functions for printing integer primitives to an io::Write"
@@ -26,3 +26,5 @@ repository = "https://github.com/dtolnay/itoa"
 default = ["std"]
 i128 = []
 std = []
+[badges.travis-ci]
+repository = "dtolnay/itoa"

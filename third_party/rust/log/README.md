@@ -3,7 +3,7 @@ log
 
 A Rust library providing a lightweight logging *facade*.
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/log.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/log)
+[![Build Status](https://travis-ci.com/rust-lang-nursery/log.svg?branch=master)](https://travis-ci.com/rust-lang-nursery/log)
 [![Build status](https://ci.appveyor.com/api/projects/status/nopdjmmjt45xcrki?svg=true)](https://ci.appveyor.com/project/alexcrichton/log)
 [![Latest version](https://img.shields.io/crates/v/log.svg)](https://crates.io/crates/log)
 [![Documentation](https://docs.rs/log/badge.svg)](https://docs.rs/log)
@@ -15,6 +15,13 @@ A logging facade provides a single logging API that abstracts over the actual
 logging implementation. Libraries can use the logging API provided by this
 crate, and the consumer of those libraries can choose the logging
 implementation that is most suitable for its use case.
+
+
+## Minimum supported `rustc`
+
+`1.16.0+`
+
+This version is explicitly tested in CI and may be bumped in any release as needed. Maintaining compatibility with older compilers is a priority though, so the bar for bumping the minimum supported version is set very high. Any changes to the supported minimum version will be called out in the release notes.
 
 ## Usage
 
@@ -29,8 +36,7 @@ log = "0.4"
 ```
 
 ```rust
-#[macro_use]
-extern crate log;
+use log::{info, trace, warn};
 
 pub fn shave_the_yak(yak: &mut Yak) {
     trace!("Commencing yak shaving");
@@ -50,19 +56,9 @@ pub fn shave_the_yak(yak: &mut Yak) {
 }
 ```
 
-If you use Rust 2018, you can use instead the following code to import the crate macros:
-
-```rust
-use log::{info, trace, warn};
-
-pub fn shave_the_yak(yak: &mut Yak) {
-    // …
-}
-```
-
 ## In executables
 
-In order to produce log output executables have to use a logger implementation compatible with the facade.
+In order to produce log output, executables have to use a logger implementation compatible with the facade.
 There are many available implementations to chose from, here are some of the most popular ones:
 
 * Simple minimal loggers:
@@ -79,6 +75,8 @@ There are many available implementations to chose from, here are some of the mos
     * [`syslog`](https://docs.rs/syslog/*/syslog/)
     * [`slog-stdlog`](https://docs.rs/slog-stdlog/*/slog_stdlog/)
     * [`android_log`](https://docs.rs/android_log/*/android_log/)
+* For WebAssembly binaries:
+    * [`console_log`](https://docs.rs/console_log/*/console_log/)
 
 Executables should choose a logger implementation and initialize it early in the
 runtime of the program. Logger implementations will typically include a

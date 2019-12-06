@@ -730,9 +730,7 @@ fn forward_pos(mask: i32) -> usize {
 fn forward_pos2(mask1: i32, mask2: i32) -> usize {
     debug_assert!(mask1 != 0 || mask2 != 0);
 
-    let i1 = forward_pos(mask1);
-    let i2 = forward_pos(mask2);
-    if i1 < i2 { i1 } else { i2 }
+    forward_pos(mask1 | mask2)
 }
 
 /// Compute the position of the first matching byte from the given masks. The
@@ -744,16 +742,7 @@ fn forward_pos2(mask1: i32, mask2: i32) -> usize {
 fn forward_pos3(mask1: i32, mask2: i32, mask3: i32) -> usize {
     debug_assert!(mask1 != 0 || mask2 != 0 || mask3 != 0);
 
-    let i1 = forward_pos(mask1);
-    let i2 = forward_pos(mask2);
-    let i3 = forward_pos(mask3);
-    if i1 < i2 && i1 < i3 {
-        i1
-    } else if i2 < i3 {
-        i2
-    } else {
-        i3
-    }
+    forward_pos(mask1 | mask2 | mask3)
 }
 
 /// Compute the position of the last matching byte from the given mask. The
@@ -779,15 +768,7 @@ fn reverse_pos(mask: i32) -> usize {
 fn reverse_pos2(mask1: i32, mask2: i32) -> usize {
     debug_assert!(mask1 != 0 || mask2 != 0);
 
-    if mask1 == 0 {
-        reverse_pos(mask2)
-    } else if mask2 == 0 {
-        reverse_pos(mask1)
-    } else {
-        let i1 = reverse_pos(mask1);
-        let i2 = reverse_pos(mask2);
-        if i1 > i2 { i1 } else { i2 }
-    }
+    reverse_pos(mask1 | mask2)
 }
 
 /// Compute the position of the last matching byte from the given masks. The
@@ -799,24 +780,7 @@ fn reverse_pos2(mask1: i32, mask2: i32) -> usize {
 fn reverse_pos3(mask1: i32, mask2: i32, mask3: i32) -> usize {
     debug_assert!(mask1 != 0 || mask2 != 0 || mask3 != 0);
 
-    if mask1 == 0 {
-        reverse_pos2(mask2, mask3)
-    } else if mask2 == 0 {
-        reverse_pos2(mask1, mask3)
-    } else if mask3 == 0 {
-        reverse_pos2(mask1, mask2)
-    } else {
-        let i1 = reverse_pos(mask1);
-        let i2 = reverse_pos(mask2);
-        let i3 = reverse_pos(mask3);
-        if i1 > i2 && i1 > i3 {
-            i1
-        } else if i2 > i3 {
-            i2
-        } else {
-            i3
-        }
-    }
+    reverse_pos(mask1 | mask2 | mask3)
 }
 
 /// Subtract `b` from `a` and return the difference. `a` should be greater than
