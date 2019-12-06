@@ -261,11 +261,6 @@ or `null` if this is not a `"call"` frame.
 
 Accessing this property will throw if `.terminated == true`.
 
-### `generator`
-True if this frame is a generator frame, false otherwise.
-
-Accessing this property will throw if `.onStack == false`.
-
 ### `constructing`
 True if this frame is for a function called as a constructor, false
 otherwise.

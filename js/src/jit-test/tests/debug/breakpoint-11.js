@@ -6,8 +6,6 @@ var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     function hit(frame) {
-        assertEq(frame.generator, true);
-        assertEq(frame.older.generator, true);
         frame.older.eval("q += 16");
     }
 

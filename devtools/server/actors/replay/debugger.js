@@ -1013,9 +1013,6 @@ ReplayDebuggerFrame.prototype = {
   get environment() {
     return this._pool.getObject(this._data.environment);
   },
-  get generator() {
-    return this._data.generator;
-  },
   get constructing() {
     return this._data.constructing;
   },

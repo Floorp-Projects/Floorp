@@ -1,4 +1,4 @@
-// Test .type and .generator fields of topmost stack frame passed to onDebuggerStatement.
+// Test .type fields of topmost stack frame passed to onDebuggerStatement.
 
 var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
@@ -6,7 +6,7 @@ var expected, hits;
 dbg.onDebuggerStatement = function (f) {
     assertEq(Object.getPrototypeOf(f), Debugger.Frame.prototype);
     assertEq(f.type, expected.type);
-    assertEq(f.generator, expected.generator);
+    assertEq(f.script.isGeneratorFunction, expected.generator);
     assertEq(f.constructing, expected.constructing);
     hits++;
 };
