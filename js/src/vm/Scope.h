@@ -428,6 +428,12 @@ class LexicalScope : public Scope {
                                       uint32_t firstFrameSlot,
                                       HandleScope enclosing);
 
+  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
+                                      uint32_t firstFrameSlot,
+                                      HandleScope enclosing,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      MutableHandleShape envShape);
+
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -541,6 +547,13 @@ class FunctionScope : public Scope {
                                bool hasParameterExprs, bool needsEnvironment,
                                HandleFunction fun, HandleScope enclosing);
 
+  static bool prepareForScopeCreation(JSContext* cx,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      bool hasParameterExprs,
+                                      IsFieldInitializer isFieldInitializer,
+                                      bool needsEnvironment, HandleFunction fun,
+                                      MutableHandleShape envShape);
+
   static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
                               HandleFunction fun, HandleScope enclosing);
 
@@ -638,6 +651,12 @@ class VarScope : public Scope {
                                   MutableHandle<UniquePtr<Data>> data,
                                   uint32_t firstFrameSlot,
                                   bool needsEnvironment, HandleScope enclosing);
+
+  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      uint32_t firstFrameSlot,
+                                      bool needsEnvironment,
+                                      MutableHandleShape envShape);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
@@ -811,6 +830,10 @@ class EvalScope : public Scope {
                                    MutableHandle<UniquePtr<Data>> data,
                                    HandleScope enclosing);
 
+  static bool prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      MutableHandleShape envShape);
+
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -897,6 +920,11 @@ class ModuleScope : public Scope {
                                      MutableHandle<UniquePtr<Data>> data,
                                      Handle<ModuleObject*> module,
                                      HandleScope enclosing);
+
+  static bool prepareForScopeCreation(JSContext* cx,
+                                      MutableHandle<UniquePtr<Data>> data,
+                                      HandleModuleObject module,
+                                      MutableHandleShape envShape);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
