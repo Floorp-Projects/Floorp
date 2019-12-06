@@ -1163,9 +1163,6 @@ collection-header = { -brand-short-name } Data Collection and Use
 collection-description = We strive to provide you with choices and collect only what we need to provide and improve { -brand-short-name } for everyone. We always ask permission before receiving personal information.
 collection-privacy-notice = Privacy Notice
 
-collection-health-report-telemetry-disabled = You’re no longer allowing { -vendor-short-name } to capture technical and interaction data. All past data will be deleted within 30 days. 
-collection-health-report-telemetry-disabled-link = Learn more
-
 collection-health-report =
     .label = Allow { -brand-short-name } to send technical and interaction data to { -vendor-short-name }
     .accesskey = r
