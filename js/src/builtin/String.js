@@ -65,10 +65,26 @@ function String_matchAll(regexp) {
 
     // Step 2.
     if (regexp !== undefined && regexp !== null) {
-        // Step 2.a.
+        // Steps 2.a-b.
+        if (IsRegExp(regexp)) {
+            // Step 2.b.i.
+            var flags = regexp.flags;
+
+            // Step 2.b.ii.
+            if (flags === undefined || flags === null) {
+                ThrowTypeError(JSMSG_FLAGS_UNDEFINED_OR_NULL);
+            }
+
+            // Step 2.b.iii.
+            if (!callFunction(std_String_includes, ToString(flags), "g")) {
+                ThrowTypeError(JSMSG_REQUIRES_GLOBAL_REGEXP, "matchAll");
+            }
+        }
+
+        // Step 2.c.
         var matcher = GetMethod(regexp, std_matchAll);
 
-        // Step 2.b.
+        // Step 2.d.
         if (matcher !== undefined)
             return callContentFunction(matcher, regexp, this);
     }

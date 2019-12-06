@@ -450,10 +450,6 @@ skip script test262/intl402/ListFormat/constructor/constructor/options-toobject-
 skip script test262/intl402/ListFormat/constructor/constructor/options-order.js
 skip script test262/intl402/ListFormat/constructor/constructor/options-type-valid.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1590543
-skip script test262/built-ins/String/prototype/matchAll/flags-nonglobal-throws.js
-skip script test262/built-ins/String/prototype/matchAll/flags-undefined-throws.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1591099
 skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-realm.js
 skip script test262/intl402/Locale/proto-from-ctor-realm.js
