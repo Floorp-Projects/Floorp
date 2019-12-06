@@ -62,6 +62,17 @@ export default function update(
         ...state,
         threads: state.threads.filter(w => !threads.includes(w.actor)),
       };
+    case "UPDATE_SERVICE_WORKER_STATUS":
+      const { thread, status } = action;
+      return {
+        ...state,
+        threads: state.threads.map(t => {
+          if (t.actor == thread) {
+            return { ...t, serviceWorkerStatus: status };
+          }
+          return t;
+        }),
+      };
     case "NAVIGATE":
       return {
         ...initialThreadsState(),

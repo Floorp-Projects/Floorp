@@ -155,6 +155,12 @@ export type DebuggeeAction =
       +threads: Array<ThreadId>,
     |}
   | {|
+      +type: "UPDATE_SERVICE_WORKER_STATUS",
+      +cx: Context,
+      +thread: string,
+      +status: string,
+    |}
+  | {|
       +type: "SELECT_THREAD",
       +cx: Context,
       +thread: ThreadId,
