@@ -150,7 +150,8 @@ class TimedRunner(object):
 
         # Add twice the timeout multiplier since the called function is expected to
         # wait at least self.timeout + self.extra_timeout and this gives some leeway
-        finished = self.result_flag.wait(self.timeout + 2 * self.extra_timeout)
+        timeout = self.timeout + 2 * self.extra_timeout if self.timeout else None
+        finished = self.result_flag.wait(timeout)
         if self.result is None:
             if finished:
                 # flag is True unless we timeout; this *shouldn't* happen, but
