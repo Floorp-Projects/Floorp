@@ -1,4 +1,4 @@
-use crate::rust::{vec::Vec, string::String, borrow::ToOwned};
+use alloc::{vec::Vec, borrow::ToOwned, string::String};
 use crate::{io, elements};
 use super::{
 	Serialize,

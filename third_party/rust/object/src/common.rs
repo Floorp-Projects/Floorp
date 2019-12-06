@@ -146,8 +146,17 @@ pub enum RelocationKind {
     SectionOffset,
     /// The index of the section containing the symbol.
     SectionIndex,
-    /// Some other operation and encoding. The value is dependent on file format and machine.
-    Other(u32),
+    /// Some other ELF relocation. The value is dependent on the architecture.
+    Elf(u32),
+    /// Some other Mach-O relocation. The value is dependent on the architecture.
+    MachO {
+        /// The relocation type.
+        value: u8,
+        /// Whether the relocation is relative to the place.
+        relative: bool,
+    },
+    /// Some other COFF relocation. The value is dependent on the architecture.
+    Coff(u16),
 }
 
 /// Information about how the result of the relocation operation is encoded in the place.

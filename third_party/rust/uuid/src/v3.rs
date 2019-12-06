@@ -1,8 +1,8 @@
+use crate::prelude::*;
 use md5;
-use prelude::*;
 
 impl Uuid {
-    /// Creates a [`Uuid`] using a name from a namespace, based on the MD5
+    /// Creates a UUID using a name from a namespace, based on the MD5
     /// hash.
     ///
     /// A number of namespaces are available as constants in this crate:
@@ -15,28 +15,34 @@ impl Uuid {
     /// Note that usage of this method requires the `v3` feature of this crate
     /// to be enabled.
     ///
-    /// [`NAMESPACE_DNS`]: ../ns/const.NAMESPACE_DNS.html
-    /// [`NAMESPACE_OID`]: ../ns/const.NAMESPACE_OID.html
-    /// [`NAMESPACE_URL`]: ../ns/const.NAMESPACE_URL.html
-    /// [`NAMESPACE_X500`]: ../ns/const.NAMESPACE_X500.html
-    /// [`Uuid`]: ../struct.Uuid.html
+    /// [`NAMESPACE_DNS`]: ns/const.NAMESPACE_DNS.html
+    /// [`NAMESPACE_OID`]: ns/const.NAMESPACE_OID.html
+    /// [`NAMESPACE_URL`]: ns/const.NAMESPACE_URL.html
+    /// [`NAMESPACE_X500`]: ns/const.NAMESPACE_X500.html
     pub fn new_v3(namespace: &Uuid, name: &[u8]) -> Uuid {
         let mut context = md5::Context::new();
 
         context.consume(namespace.as_bytes());
         context.consume(name);
 
-        let mut uuid = Uuid::from_bytes(context.compute().into());
+        let computed = context.compute();
+        let bytes = computed.into();
 
-        uuid.set_variant(Variant::RFC4122);
-        uuid.set_version(Version::Md5);
-        uuid
+        let mut builder = crate::builder::Builder::from_bytes(bytes);
+
+        builder
+            .set_variant(Variant::RFC4122)
+            .set_version(Version::Md5);
+
+        builder.build()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use prelude::*;
+    use super::*;
+
+    use crate::std::string::ToString;
 
     static FIXTURE: &'static [(&'static Uuid, &'static str, &'static str)] = &[
         (

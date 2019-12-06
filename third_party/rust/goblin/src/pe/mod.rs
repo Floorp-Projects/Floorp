@@ -116,9 +116,12 @@ impl<'a> PE<'a> {
                 debug_data = Some(debug::DebugData::parse(bytes, debug_table, &sections, file_alignment)?);
             }
 
-            debug!("exception data: {:#?}", exception_data);
-            if let Some(exception_table) = *optional_header.data_directories.get_exception_table() {
-                exception_data = Some(exception::ExceptionData::parse(bytes, exception_table, &sections, file_alignment)?);
+            if header.coff_header.machine == header::COFF_MACHINE_X86_64 {
+                // currently only x86_64 is supported
+                debug!("exception data: {:#?}", exception_data);
+                if let Some(exception_table) = *optional_header.data_directories.get_exception_table() {
+                    exception_data = Some(exception::ExceptionData::parse(bytes, exception_table, &sections, file_alignment)?);
+                }
             }
         }
         Ok( PE {

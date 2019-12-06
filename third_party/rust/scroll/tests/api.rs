@@ -4,14 +4,13 @@
 // packed structs. See https://github.com/rust-lang/rust/issues/46043
 #![deny(safe_packed_borrows)]
 
-extern crate scroll;
-
 // #[macro_use] extern crate scroll_derive;
 
 use std::ops::{Deref,  DerefMut};
 use scroll::{ctx, Result, Cread, Pread};
 use scroll::ctx::SizeWith;
 
+#[derive(Default)]
 pub struct Section<'a> {
     pub sectname:  [u8; 16],
     pub segname:   [u8; 16],
@@ -35,7 +34,6 @@ impl<'a> Section<'a> {
 }
 
 impl<'a> ctx::SizeWith for Section<'a> {
-    type Units = usize;
     fn size_with(_ctx: &()) -> usize {
         4
     }
@@ -61,10 +59,8 @@ pub struct Section32 {
 
 impl<'a> ctx::TryFromCtx<'a, ()> for Section<'a> {
     type Error = scroll::Error;
-    type Size = usize;
-    fn try_from_ctx(_bytes: &'a [u8], _ctx: ()) -> ::std::result::Result<(Self, Self::Size), Self::Error> {
-        //let section = Section::from_ctx(bytes, bytes.pread_with::<Section32>(offset, ctx)?);
-        let section = unsafe { ::std::mem::uninitialized::<Section>()};
+    fn try_from_ctx(_bytes: &'a [u8], _ctx: ()) -> ::std::result::Result<(Self, usize), Self::Error> {
+        let section = Section::default();
         Ok((section, ::std::mem::size_of::<Section>()))
     }
 }
@@ -106,7 +102,6 @@ impl<'a> Segment<'a> {
 }
 
 impl<'a> ctx::SizeWith for Segment<'a> {
-    type Units = usize;
     fn size_with(_ctx: &()) -> usize {
         4
     }
@@ -186,8 +181,7 @@ impl scroll::ctx::FromCtx<scroll::Endian> for Foo {
 }
 
 impl scroll::ctx::SizeWith<scroll::Endian> for Foo {
-    type Units = usize;
-    fn size_with(_: &scroll::Endian) -> Self::Units {
+    fn size_with(_: &scroll::Endian) -> usize {
         ::std::mem::size_of::<Foo>()
     }
 }
@@ -218,7 +212,6 @@ struct Bar {
 
 impl scroll::ctx::FromCtx<scroll::Endian> for Bar {
     fn from_ctx(bytes: &[u8], ctx: scroll::Endian) -> Self {
-        use scroll::Cread;
         Bar { foo: bytes.cread_with(0, ctx), bar: bytes.cread_with(4, ctx) }
     }
 }

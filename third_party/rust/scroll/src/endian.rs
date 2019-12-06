@@ -38,7 +38,7 @@ impl Endian {
         NETWORK
     }
     #[inline]
-    pub fn is_little (&self) -> bool {
+    pub fn is_little(&self) -> bool {
         match *self {
             LE => true,
             _ => false,

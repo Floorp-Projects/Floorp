@@ -1,4 +1,4 @@
-use prelude::*;
+use crate::prelude::*;
 use sha1;
 
 impl Uuid {
@@ -25,19 +25,24 @@ impl Uuid {
         hash.update(name);
 
         let buffer = hash.digest().bytes();
-        let mut uuid = Uuid::default();
 
-        uuid.0.copy_from_slice(&buffer[..16]);
-        uuid.set_variant(Variant::RFC4122);
-        uuid.set_version(Version::Sha1);
+        let mut bytes = crate::Bytes::default();
+        bytes.copy_from_slice(&buffer[..16]);
 
-        uuid
+        let mut builder = crate::builder::Builder::from_bytes(bytes);
+        builder
+            .set_variant(Variant::RFC4122)
+            .set_version(Version::Sha1);
+
+        builder.build()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use prelude::*;
+    use super::*;
+
+    use crate::std::string::ToString;
 
     static FIXTURE: &'static [(&'static Uuid, &'static str, &'static str)] = &[
         (

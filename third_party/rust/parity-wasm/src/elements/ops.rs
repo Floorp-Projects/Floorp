@@ -1,4 +1,4 @@
-use crate::rust::{fmt, vec::Vec, boxed::Box};
+use alloc::{boxed::Box, vec::Vec};
 use crate::io;
 use super::{
 	Serialize, Deserialize, Error,
@@ -6,6 +6,7 @@ use super::{
 	Uint32, Uint64, CountedListWriter,
 	VarInt32, VarInt64,
 };
+use core::fmt;
 
 /// List of instructions (usually inside a block section).
 #[derive(Debug, Clone, PartialEq)]

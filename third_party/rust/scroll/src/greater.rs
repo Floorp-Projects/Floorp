@@ -1,6 +1,6 @@
 use core::ops::{Index, IndexMut, RangeFrom};
 
-use ctx::{FromCtx, IntoCtx};
+use crate::ctx::{FromCtx, IntoCtx};
 
 /// Core-read - core, no_std friendly trait for reading basic traits from byte buffers. Cannot fail unless the buffer is too small, in which case an assert fires and the program panics.
 ///
@@ -52,7 +52,7 @@ pub trait Cread<Ctx, I = usize> : Index<I> + Index<RangeFrom<I>>
     /// assert_eq!(bar, 0xdeadbeef);
     /// ```
     #[inline]
-    fn cread_with<'a, N: FromCtx<Ctx, <Self as Index<RangeFrom<I>>>::Output>>(&'a self, offset: I, ctx: Ctx) -> N {
+    fn cread_with<N: FromCtx<Ctx, <Self as Index<RangeFrom<I>>>::Output>>(&self, offset: I, ctx: Ctx) -> N {
         N::from_ctx(&self[offset..], ctx)
     }
     /// Reads a value implementing `FromCtx` from `Self` at `offset`,
@@ -78,7 +78,7 @@ pub trait Cread<Ctx, I = usize> : Index<I> + Index<RangeFrom<I>>
     /// assert_eq!(bar, 0xefbe0000);
     /// ```
     #[inline]
-    fn cread<'a, N: FromCtx<Ctx, <Self as Index<RangeFrom<I>>>::Output>>(&'a self, offset: I) -> N where Ctx: Default {
+    fn cread<N: FromCtx<Ctx, <Self as Index<RangeFrom<I>>>::Output>>(&self, offset: I) -> N where Ctx: Default {
         let ctx = Ctx::default();
         N::from_ctx(&self[offset..], ctx)
     }

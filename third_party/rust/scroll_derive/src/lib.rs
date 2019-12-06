@@ -1,10 +1,8 @@
 #![recursion_limit="1024"]
 
 extern crate proc_macro;
-extern crate proc_macro2;
-#[macro_use]
-extern crate quote;
-extern crate syn;
+use proc_macro2;
+use quote::quote;
 
 use proc_macro::TokenStream;
 
@@ -12,13 +10,13 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Tok
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
-                        let size = int.value();
+                        let size = int.base10_parse::<usize>().unwrap();
                         quote! {
-                            #ident: { let mut __tmp: #ty = [0; #size as usize]; src.gread_inout_with(offset, &mut __tmp, ctx)?; __tmp }
+                            #ident: { let mut __tmp: #ty = [0; #size]; src.gread_inout_with(offset, &mut __tmp, ctx)?; __tmp }
                         }
                     },
                     _ => panic!("Pread derive with bad array constexpr")
@@ -31,13 +29,12 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Tok
             }
         }
     }).collect();
-    
+
     quote! {
         impl<'a> ::scroll::ctx::TryFromCtx<'a, ::scroll::Endian> for #name where #name: 'a {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, Self::Size), Self::Error> {
+            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, usize), Self::Error> {
                 use ::scroll::Pread;
                 let offset = &mut 0;
                 let data  = #name { #(#items,)* };
@@ -75,8 +72,8 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(_) => {
+        match *ty {
+            syn::Type::Array(_) => {
                 quote! {
                     for i in 0..self.#ident.len() {
                         dst.gwrite_with(&self.#ident[i], offset, ctx)?;
@@ -90,13 +87,12 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
             }
         }
     }).collect();
-    
+
     quote! {
         impl<'a> ::scroll::ctx::TryIntoCtx<::scroll::Endian> for &'a #name {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<usize, Self::Error> {
                 use ::scroll::Pwrite;
                 let offset = &mut 0;
                 #(#items;)*;
@@ -106,9 +102,8 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
 
         impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<usize, Self::Error> {
                 (&self).try_into_ctx(dst, ctx)
             }
         }
@@ -142,12 +137,12 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
 fn size_with(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let elem = &array.elem;
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
-                        let size = int.value() as usize;
+                        let size = int.base10_parse::<usize>().unwrap();
                         quote! {
                             (#size * <#elem>::size_with(ctx))
                         }
@@ -164,9 +159,8 @@ fn size_with(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Token
     }).collect();
     quote! {
         impl ::scroll::ctx::SizeWith<::scroll::Endian> for #name {
-            type Units = usize;
             #[inline]
-            fn size_with(ctx: &::scroll::Endian) -> Self::Units {
+            fn size_with(ctx: &::scroll::Endian) -> usize {
                 0 #(+ #items)*
             }
         }
@@ -201,16 +195,16 @@ fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let arrty = &array.elem;
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
-                        let size = int.value();
+                        let size = int.base10_parse::<usize>().unwrap();
                         let incr = quote! { ::scroll::export::mem::size_of::<#arrty>() };
                         quote! {
                             #ident: {
-                                let mut __tmp: #ty = [0; #size as usize];
+                                let mut __tmp: #ty = [0; #size];
                                 for i in 0..__tmp.len() {
                                     __tmp[i] = src.cread_with(*offset, ctx);
                                     *offset += #incr;
@@ -273,8 +267,8 @@ fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::T
         let ident = &f.ident;
         let ty = &f.ty;
         let size = quote! { ::scroll::export::mem::size_of::<#ty>() };
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let arrty = &array.elem;
                 quote! {
                     let size = ::scroll::export::mem::size_of::<#arrty>();

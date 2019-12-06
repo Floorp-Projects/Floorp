@@ -1,10 +1,9 @@
 #![feature(test)]
 extern crate test;
-extern crate uuid;
 
 use std::io::Write;
 use test::Bencher;
-use uuid::prelude::*;
+use uuid::Uuid;
 
 #[bench]
 fn bench_hyphen(b: &mut Bencher) {

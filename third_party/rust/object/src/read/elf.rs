@@ -278,6 +278,11 @@ impl<'data, 'file> ObjectSegment<'data> for ElfSegment<'data, 'file> {
         self.segment.p_align
     }
 
+    #[inline]
+    fn file_range(&self) -> (u64, u64) {
+        (self.segment.p_offset, self.segment.p_filesz)
+    }
+
     fn data(&self) -> &'data [u8] {
         &self.file.data[self.segment.p_offset as usize..][..self.segment.p_filesz as usize]
     }
@@ -326,11 +331,19 @@ where
 }
 
 impl<'data, 'file> ElfSection<'data, 'file> {
-    fn raw_data(&self) -> &'data [u8] {
+    fn raw_offset(&self) -> Option<(u64, u64)> {
         if self.section.sh_type == elf::section_header::SHT_NOBITS {
-            &[]
+            None
         } else {
-            &self.file.data[self.section.sh_offset as usize..][..self.section.sh_size as usize]
+            Some((self.section.sh_offset, self.section.sh_size))
+        }
+    }
+
+    fn raw_data(&self) -> &'data [u8] {
+        if let Some((offset, size)) = self.raw_offset() {
+            &self.file.data[offset as usize..][..size as usize]
+        } else {
+            &[]
         }
     }
 
@@ -421,6 +434,11 @@ impl<'data, 'file> ObjectSection<'data> for ElfSection<'data, 'file> {
     #[inline]
     fn align(&self) -> u64 {
         self.section.sh_addralign
+    }
+
+    #[inline]
+    fn file_range(&self) -> Option<(u64, u64)> {
+        self.raw_offset()
     }
 
     #[inline]
@@ -613,7 +631,7 @@ impl<'data, 'file> Iterator for ElfRelocationIterator<'data, 'file> {
                     let (kind, size) = match self.file.elf.header.e_machine {
                         elf::header::EM_ARM => match reloc.r_type {
                             elf::reloc::R_ARM_ABS32 => (RelocationKind::Absolute, 32),
-                            _ => (RelocationKind::Other(reloc.r_type), 0),
+                            _ => (RelocationKind::Elf(reloc.r_type), 0),
                         },
                         elf::header::EM_AARCH64 => match reloc.r_type {
                             elf::reloc::R_AARCH64_ABS64 => (RelocationKind::Absolute, 64),
@@ -622,7 +640,7 @@ impl<'data, 'file> Iterator for ElfRelocationIterator<'data, 'file> {
                             elf::reloc::R_AARCH64_PREL64 => (RelocationKind::Relative, 64),
                             elf::reloc::R_AARCH64_PREL32 => (RelocationKind::Relative, 32),
                             elf::reloc::R_AARCH64_PREL16 => (RelocationKind::Relative, 16),
-                            _ => (RelocationKind::Other(reloc.r_type), 0),
+                            _ => (RelocationKind::Elf(reloc.r_type), 0),
                         },
                         elf::header::EM_386 => match reloc.r_type {
                             elf::reloc::R_386_32 => (RelocationKind::Absolute, 32),
@@ -635,7 +653,7 @@ impl<'data, 'file> Iterator for ElfRelocationIterator<'data, 'file> {
                             elf::reloc::R_386_PC16 => (RelocationKind::Relative, 16),
                             elf::reloc::R_386_8 => (RelocationKind::Absolute, 8),
                             elf::reloc::R_386_PC8 => (RelocationKind::Relative, 8),
-                            _ => (RelocationKind::Other(reloc.r_type), 0),
+                            _ => (RelocationKind::Elf(reloc.r_type), 0),
                         },
                         elf::header::EM_X86_64 => match reloc.r_type {
                             elf::reloc::R_X86_64_64 => (RelocationKind::Absolute, 64),
@@ -652,9 +670,9 @@ impl<'data, 'file> Iterator for ElfRelocationIterator<'data, 'file> {
                             elf::reloc::R_X86_64_PC16 => (RelocationKind::Relative, 16),
                             elf::reloc::R_X86_64_8 => (RelocationKind::Absolute, 8),
                             elf::reloc::R_X86_64_PC8 => (RelocationKind::Relative, 8),
-                            _ => (RelocationKind::Other(reloc.r_type), 0),
+                            _ => (RelocationKind::Elf(reloc.r_type), 0),
                         },
-                        _ => (RelocationKind::Other(reloc.r_type), 0),
+                        _ => (RelocationKind::Elf(reloc.r_type), 0),
                     };
                     let target = RelocationTarget::Symbol(SymbolIndex(reloc.r_sym as usize));
                     return Some((

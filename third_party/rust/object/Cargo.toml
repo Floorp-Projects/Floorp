@@ -13,19 +13,21 @@
 [package]
 edition = "2018"
 name = "object"
-version = "0.14.0"
+version = "0.16.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "Philip Craig <philipjcraig@gmail.com>"]
 exclude = ["/.coveralls.yml", "/.travis.yml"]
 description = "A unified interface for parsing object file formats."
 keywords = ["object", "loader", "elf", "mach-o", "pe"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/gimli-rs/object"
+[package.metadata.docs.rs]
+all-features = true
 
 [[example]]
 name = "objcopy"
 required-features = ["read", "write"]
 [dependencies.crc32fast]
-version = "1"
+version = "1.2"
 optional = true
 
 [dependencies.flate2]
@@ -33,27 +35,27 @@ version = "1"
 optional = true
 
 [dependencies.goblin]
-version = "0.0.24"
+version = "0.1"
 features = ["endian_fd", "elf32", "elf64", "mach32", "mach64", "pe32", "pe64", "archive"]
 default-features = false
 
 [dependencies.indexmap]
-version = "1"
+version = "1.1"
 optional = true
 
 [dependencies.parity-wasm]
-version = "0.40.0"
+version = "0.41.0"
 optional = true
 
 [dependencies.scroll]
-version = "0.9"
+version = "0.10"
 default-features = false
 
 [dependencies.target-lexicon]
-version = "0.8"
+version = "0.9"
 
 [dependencies.uuid]
-version = "0.7"
+version = "0.8"
 default-features = false
 [dev-dependencies.memmap]
 version = "0.7"

@@ -5,7 +5,7 @@ Low-level WebAssembly format library.
 [![Build Status](https://travis-ci.org/paritytech/parity-wasm.svg?branch=master)](https://travis-ci.org/paritytech/parity-wasm)
 [![crates.io link](https://img.shields.io/crates/v/parity-wasm.svg)](https://crates.io/crates/parity-wasm)
 
-[Documentation](https://paritytech.github.io/parity-wasm/parity_wasm/)
+[Documentation](https://docs.rs/parity-wasm/0.40.2/parity_wasm/)
 
 ## Rust WebAssembly format serializing/deserializing
 
@@ -13,15 +13,12 @@ Add to Cargo.toml
 
 ```toml
 [dependencies]
-parity-wasm = "0.40"
+parity-wasm = "0.41"
 ```
 
 and then
 
 ```rust
-
-extern crate parity_wasm;
-
 let module = parity_wasm::deserialize_file("./res/cases/v1/hello.wasm").unwrap();
 assert!(module.code_section().is_some());
 
@@ -54,10 +51,8 @@ in a `no_std` context, add the following to your `Cargo.toml` (still requires al
 
 ```toml
 [dependencies]
-parity-wasm = { version = "0.40", default-features = false }
+parity-wasm = { version = "0.41", default-features = false }
 ```
-
-Until allocator api is stabilized, this type of use is limited to nightly Rust.
 
 # License
 

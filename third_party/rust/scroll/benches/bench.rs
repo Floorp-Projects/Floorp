@@ -1,11 +1,7 @@
 #![feature(test)]
 extern crate test;
-extern crate byteorder;
-extern crate scroll;
-extern crate rayon;
-//extern crate byteio;
 
-use scroll::{Cread, Cwrite, Pread, Pwrite, IOread, IOwrite, LE};
+use scroll::{Cread, Pread, LE};
 use test::black_box;
 
 #[bench]

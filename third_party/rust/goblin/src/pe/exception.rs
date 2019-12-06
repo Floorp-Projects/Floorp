@@ -345,13 +345,11 @@ pub struct UnwindCode {
 
 impl<'a> TryFromCtx<'a, UnwindOpContext> for UnwindCode {
     type Error = error::Error;
-    type Size = usize;
-
     #[inline]
     fn try_from_ctx(
         bytes: &'a [u8],
         ctx: UnwindOpContext,
-    ) -> Result<(Self, Self::Size), Self::Error> {
+    ) -> Result<(Self, usize), Self::Error> {
         let mut read = 0;
         let code_offset = bytes.gread_with::<u8>(&mut read, scroll::LE)?;
         let operation = bytes.gread_with::<u8>(&mut read, scroll::LE)?;
@@ -675,10 +673,10 @@ impl<'a> ExceptionData<'a> {
         let size = directory.size as usize;
 
         if size % RUNTIME_FUNCTION_SIZE != 0 {
-            Err(scroll::Error::BadInput {
+            return Err(error::Error::from(scroll::Error::BadInput {
                 size,
                 msg: "invalid exception directory table size",
-            })?;
+            }));
         }
 
         let rva = directory.virtual_address as usize;
@@ -687,7 +685,7 @@ impl<'a> ExceptionData<'a> {
         })?;
 
         if offset % 4 != 0 {
-            Err(scroll::Error::BadOffset(offset))?;
+            return Err(error::Error::from(scroll::Error::BadOffset(offset)));
         }
 
         Ok(ExceptionData {
@@ -723,7 +721,7 @@ impl<'a> ExceptionData<'a> {
 
     /// Returns the function at the given index.
     pub fn get_function(&self, index: usize) -> error::Result<RuntimeFunction> {
-        self.get_function_by_offset(index * RUNTIME_FUNCTION_SIZE)
+        self.get_function_by_offset(self.offset + index * RUNTIME_FUNCTION_SIZE)
     }
 
     /// Performs a binary search to find a function entry covering the given RVA relative to the
@@ -797,10 +795,10 @@ impl<'a> ExceptionData<'a> {
 
     #[inline]
     fn get_function_by_offset(&self, offset: usize) -> error::Result<RuntimeFunction> {
-        debug_assert!(offset % RUNTIME_FUNCTION_SIZE == 0);
-        debug_assert!(offset < self.size);
+        debug_assert!((offset - self.offset) % RUNTIME_FUNCTION_SIZE == 0);
+        debug_assert!(offset < self.offset + self.size);
 
-        Ok(self.bytes.pread_with(self.offset + offset, scroll::LE)?)
+        Ok(self.bytes.pread_with(offset, scroll::LE)?)
     }
 }
 
@@ -822,5 +820,199 @@ impl<'a> IntoIterator for &'_ ExceptionData<'a> {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.functions()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_size_of_runtime_function() {
+        assert_eq!(
+            std::mem::size_of::<RuntimeFunction>(),
+            RUNTIME_FUNCTION_SIZE
+        );
+    }
+
+    // Tests disabled until there is a solution for handling binary test data
+    // See https://github.com/m4b/goblin/issues/185
+
+    // macro_rules! microsoft_symbol {
+    //     ($name:literal, $id:literal) => {{
+    //         use std::fs::File;
+    //         use std::path::Path;
+
+    //         let path = Path::new(concat!("cache/", $name));
+    //         if !path.exists() {
+    //             let url = format!(
+    //                 "https://msdl.microsoft.com/download/symbols/{}/{}/{}",
+    //                 $name, $id, $name
+    //             );
+
+    //             let mut response = reqwest::get(&url).expect(concat!("get ", $name));
+    //             let mut target = File::create(path).expect(concat!("create ", $name));
+    //             response
+    //                 .copy_to(&mut target)
+    //                 .expect(concat!("download ", $name));
+    //         }
+
+    //         std::fs::read(path).expect(concat!("open ", $name))
+    //     }};
+    // }
+
+    // lazy_static::lazy_static! {
+    //     static ref PE_DATA: Vec<u8> = microsoft_symbol!("WSHTCPIP.DLL", "4a5be0b77000");
+    // }
+
+    // #[test]
+    // fn test_parse() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     assert_eq!(exception_data.len(), 19);
+    //     assert!(!exception_data.is_empty());
+    // }
+
+    // #[test]
+    // fn test_iter_functions() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     let functions: Vec<RuntimeFunction> = exception_data
+    //         .functions()
+    //         .map(|result| result.expect("parse runtime function"))
+    //         .collect();
+
+    //     assert_eq!(functions.len(), 19);
+
+    //     let expected = RuntimeFunction {
+    //         begin_address: 0x1355,
+    //         end_address: 0x1420,
+    //         unwind_info_address: 0x4019,
+    //     };
+
+    //     assert_eq!(functions[4], expected);
+    // }
+
+    // #[test]
+    // fn test_get_function() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     let expected = RuntimeFunction {
+    //         begin_address: 0x1355,
+    //         end_address: 0x1420,
+    //         unwind_info_address: 0x4019,
+    //     };
+
+    //     assert_eq!(
+    //         exception_data.get_function(4).expect("find function"),
+    //         expected
+    //     );
+    // }
+
+    // #[test]
+    // fn test_find_function() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     let expected = RuntimeFunction {
+    //         begin_address: 0x1355,
+    //         end_address: 0x1420,
+    //         unwind_info_address: 0x4019,
+    //     };
+
+    //     assert_eq!(
+    //         exception_data.find_function(0x1400).expect("find function"),
+    //         Some(expected)
+    //     );
+    // }
+
+    // #[test]
+    // fn test_find_function_none() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     // 0x1d00 is the end address of the last function.
+
+    //     assert_eq!(
+    //         exception_data.find_function(0x1d00).expect("find function"),
+    //         None
+    //     );
+    // }
+
+    // #[test]
+    // fn test_get_unwind_info() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     // runtime function #0 directly refers to unwind info
+    //     let rt_function = RuntimeFunction {
+    //         begin_address: 0x1010,
+    //         end_address: 0x1090,
+    //         unwind_info_address: 0x25d8,
+    //     };
+
+    //     let unwind_info = exception_data
+    //         .get_unwind_info(rt_function, &pe.sections)
+    //         .expect("get unwind info");
+
+    //     // Unwind codes just used to assert that the right unwind info was resolved
+    //     let expected = &[4, 98];
+
+    //     assert_eq!(unwind_info.code_bytes, expected);
+    // }
+
+    // #[test]
+    // fn test_get_unwind_info_redirect() {
+    //     let pe = PE::parse(&PE_DATA).expect("parse PE");
+    //     let exception_data = pe.exception_data.expect("get exception data");
+
+    //     // runtime function #4 has a redirect (unwind_info_address & 1).
+    //     let rt_function = RuntimeFunction {
+    //         begin_address: 0x1355,
+    //         end_address: 0x1420,
+    //         unwind_info_address: 0x4019,
+    //     };
+
+    //     let unwind_info = exception_data
+    //         .get_unwind_info(rt_function, &pe.sections)
+    //         .expect("get unwind info");
+
+    //     // Unwind codes just used to assert that the right unwind info was resolved
+    //     let expected = &[
+    //         28, 100, 15, 0, 28, 84, 14, 0, 28, 52, 12, 0, 28, 82, 24, 240, 22, 224, 20, 208, 18,
+    //         192, 16, 112,
+    //     ];
+
+    //     assert_eq!(unwind_info.code_bytes, expected);
+    // }
+
+    #[test]
+    fn test_iter_unwind_codes() {
+        let unwind_info = UnwindInfo {
+            version: 1,
+            size_of_prolog: 4,
+            frame_register: Register(0),
+            frame_register_offset: 0,
+            chained_info: None,
+            handler: None,
+            code_bytes: &[4, 98],
+        };
+
+        let unwind_codes: Vec<UnwindCode> = unwind_info
+            .unwind_codes()
+            .map(|result| result.expect("parse unwind code"))
+            .collect();
+
+        assert_eq!(unwind_codes.len(), 1);
+
+        let expected = UnwindCode {
+            code_offset: 4,
+            operation: UnwindOperation::Alloc(56),
+        };
+
+        assert_eq!(unwind_codes[0], expected);
     }
 }

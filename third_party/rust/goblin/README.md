@@ -23,7 +23,7 @@ Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-goblin = "0.0.24"
+goblin = "0.1"
 ```
 
 ### Features
@@ -99,7 +99,7 @@ Here are some things you could do with this crate (or help to implement so they 
 
 Thank you all :heart: !
 
-In alphabetic order:
+In lexicographic order:
 
 - [@amanieu]
 - [@burjui]
@@ -108,11 +108,14 @@ In alphabetic order:
 - [@jan-auer]
 - [@jdub]
 - [@jrmuizel]
+- [@jsgf]
 - [@kjempelodott]
 - [@le-jzr]
 - [@lion128]
 - [@llogiq]
 - [@lzutao]
+- [@lzybkr]
+- [@m4b]
 - [@mitsuhiko]
 - [@mre]
 - [@pchickey]
@@ -126,37 +129,41 @@ In alphabetic order:
 - [@ticki]
 - [@wickerwacka]
 - [@willglynn]
+- [@wyxloading]
 - [@xcoldhandsx]
 
 <!-- Contributors -->
 
-[@m4b]: https://github.com/m4b
 [@amanieu]: https://github.com/amanieu
+[@burjui]: https://github.com/burjui
 [@flanfly]: https://github.com/flanfly
 [@ibabushkin]: https://github.com/ibabushkin
 [@jan-auer]: https://github.com/jan-auer
 [@jdub]: https://github.com/jdub
 [@jrmuizel]: https://github.com/jrmuizel
+[@jsgf]: https://github.com/jsgf
 [@kjempelodott]: https://github.com/kjempelodott
 [@le-jzr]: https://github.com/le-jzr
 [@lion128]: https://github.com/lion128
 [@llogiq]: https://github.com/llogiq
+[@lzutao]: https://github.com/lzutao
+[@lzybkr]: https://github.com/lzybkr
+[@m4b]: https://github.com/m4b
 [@mitsuhiko]: https://github.com/mitsuhiko
 [@mre]: https://github.com/mre
 [@pchickey]: https://github.com/pchickey
 [@philipc]: https://github.com/philipc
 [@Pzixel]: https://github.com/Pzixel
+[@raindev]: https://github.com/raindev
 [@rocallahan]: https://github.com/rocallahan
 [@sanxiyn]: https://github.com/sanxiyn
 [@tathanhdinh]: https://github.com/tathanhdinh
 [@Techno-coder]: https://github.com/Techno-coder
 [@ticki]: https://github.com/ticki
-[@willglynn]: https://github.com/willglynn
-[@xcoldhandsx]: https://github.com/xcoldhandsx
-[@lzutao]: https://github.com/lzutao
 [@wickerwacka]: https://github.com/wickerwaka
-[@raindev]: https://github.com/raindev
-[@burjui]: https://github.com/burjui
+[@willglynn]: https://github.com/willglynn
+[@wyxloading]: https://github.com/wyxloading
+[@xcoldhandsx]: https://github.com/xcoldhandsx
 
 ## Contributing
 

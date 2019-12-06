@@ -1,6 +1,4 @@
-extern crate scroll;
-#[macro_use]
-extern crate scroll_derive;
+use scroll_derive::{Pread, Pwrite, IOread, IOwrite, SizeWith};
 
 #[derive(Debug, PartialEq, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 #[repr(C)]

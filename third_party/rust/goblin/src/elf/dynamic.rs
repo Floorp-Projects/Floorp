@@ -1,11 +1,14 @@
-
 macro_rules! elf_dyn {
     ($size:ty) => {
-        #[cfg(feature = "alloc")]
-        use scroll::{Pread, Pwrite, SizeWith};
+        // XXX: Do not import scroll traits here.
+        // See: https://github.com/rust-lang/rust/issues/65090#issuecomment-538668155
+
         #[repr(C)]
         #[derive(Copy, Clone, PartialEq, Default)]
-        #[cfg_attr(feature = "alloc", derive(Pread, Pwrite, SizeWith))]
+        #[cfg_attr(
+            feature = "alloc",
+            derive(scroll::Pread, scroll::Pwrite, scroll::SizeWith)
+        )]
         /// An entry in the dynamic array
         pub struct Dyn {
             /// Dynamic entry type
@@ -16,7 +19,7 @@ macro_rules! elf_dyn {
 
         use plain;
         unsafe impl plain::Plain for Dyn {}
-    }
+    };
 }
 
 // TODO: figure out what's the best, most friendly + safe API choice here - u32s or u64s
@@ -305,7 +308,6 @@ if_alloc! {
     }
 
     impl ctx::SizeWith<Ctx> for Dyn {
-        type Units = usize;
         fn size_with(&Ctx { container, .. }: &Ctx) -> usize {
             match container {
                 Container::Little => {
@@ -320,8 +322,7 @@ if_alloc! {
 
     impl<'a> ctx::TryFromCtx<'a, Ctx> for Dyn {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, Self::Size), Self::Error> {
+        fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, usize), Self::Error> {
             use scroll::Pread;
             let dynamic = match container {
                 Container::Little => {
@@ -337,8 +338,7 @@ if_alloc! {
 
     impl ctx::TryIntoCtx<Ctx> for Dyn {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_into_ctx(self, bytes: &mut [u8], Ctx { container, le}: Ctx) -> result::Result<Self::Size, Self::Error> {
+        fn try_into_ctx(self, bytes: &mut [u8], Ctx { container, le}: Ctx) -> result::Result<usize, Self::Error> {
             use scroll::Pwrite;
             match container {
                 Container::Little => {

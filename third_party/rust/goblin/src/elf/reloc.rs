@@ -308,8 +308,7 @@ if_alloc! {
     type RelocCtx = (bool, Ctx);
 
     impl ctx::SizeWith<RelocCtx> for Reloc {
-        type Units = usize;
-        fn size_with( &(is_rela, Ctx { container, .. }): &RelocCtx) -> Self::Units {
+        fn size_with( &(is_rela, Ctx { container, .. }): &RelocCtx) -> usize {
             match container {
                 Container::Little => {
                     if is_rela { reloc32::SIZEOF_RELA } else { reloc32::SIZEOF_REL }
@@ -323,8 +322,7 @@ if_alloc! {
 
     impl<'a> ctx::TryFromCtx<'a, RelocCtx> for Reloc {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_from_ctx(bytes: &'a [u8], (is_rela, Ctx { container, le }): RelocCtx) -> result::Result<(Self, Self::Size), Self::Error> {
+        fn try_from_ctx(bytes: &'a [u8], (is_rela, Ctx { container, le }): RelocCtx) -> result::Result<(Self, usize), Self::Error> {
             use scroll::Pread;
             let reloc = match container {
                 Container::Little => {
@@ -348,10 +346,8 @@ if_alloc! {
 
     impl ctx::TryIntoCtx<RelocCtx> for Reloc {
         type Error = crate::error::Error;
-        type Size = usize;
-        // TODO: I think this is a bad idea
         /// Writes the relocation into `bytes`
-        fn try_into_ctx(self, bytes: &mut [u8], (is_rela, Ctx {container, le}): RelocCtx) -> result::Result<Self::Size, Self::Error> {
+        fn try_into_ctx(self, bytes: &mut [u8], (is_rela, Ctx {container, le}): RelocCtx) -> result::Result<usize, Self::Error> {
             use scroll::Pwrite;
             match container {
                 Container::Little => {

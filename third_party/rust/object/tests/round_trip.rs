@@ -58,7 +58,7 @@ fn coff_x86_64() {
 
     let (func1_symbol, symbol) = symbols.next().unwrap();
     println!("{:?}", symbol);
-    assert_eq!(symbol.name(), Some("_func1"));
+    assert_eq!(symbol.name(), Some("func1"));
     assert_eq!(symbol.address(), func1_offset);
     assert_eq!(symbol.kind(), SymbolKind::Text);
     assert_eq!(symbol.section_index(), Some(text_index));

@@ -102,32 +102,31 @@
 //!
 //! For example, suppose we have a datatype and we want to specify how to parse or serialize this datatype out of some arbitrary
 //! byte buffer. In order to do this, we need to provide a [TryFromCtx](trait.TryFromCtx.html) impl for our datatype.
-//! 
+//!
 //! In particular, if we do this for the `[u8]` target, using the convention `(usize, YourCtx)`, you will automatically get access to
 //! calling `pread_with::<YourDatatype>` on arrays of bytes.
-//! 
+//!
 //! ```rust
 //! use scroll::{self, ctx, Pread, BE, Endian};
-//! 
+//!
 //! struct Data<'a> {
 //!   name: &'a str,
 //!   id: u32,
 //! }
-//! 
+//!
 //! // note the lifetime specified here
 //! impl<'a> ctx::TryFromCtx<'a, Endian> for Data<'a> {
 //!   type Error = scroll::Error;
-//!   type Size = usize;
 //!   // and the lifetime annotation on `&'a [u8]` here
 //!   fn try_from_ctx (src: &'a [u8], endian: Endian)
-//!     -> Result<(Self, Self::Size), Self::Error> {
+//!     -> Result<(Self, usize), Self::Error> {
 //!     let offset = &mut 0;
 //!     let name = src.gread::<&str>(offset)?;
 //!     let id = src.gread_with(offset, endian)?;
 //!     Ok((Data { name: name, id: id }, *offset))
 //!   }
 //! }
-//! 
+//!
 //! let bytes = b"UserName\x00\x01\x02\x03\x04";
 //! let data = bytes.pread_with::<Data>(0, BE).unwrap();
 //! assert_eq!(data.id, 0x01020304);
@@ -140,12 +139,7 @@
 
 #[cfg(feature = "derive")]
 #[allow(unused_imports)]
-#[macro_use]
-extern crate scroll_derive;
-
-#[cfg(feature = "derive")]
-#[doc(hidden)]
-pub use scroll_derive::*;
+pub use scroll_derive::{Pread, Pwrite, SizeWith, IOread, IOwrite};
 
 #[cfg(feature = "std")]
 extern crate core;
@@ -160,14 +154,14 @@ mod leb128;
 #[cfg(feature = "std")]
 mod lesser;
 
-pub use endian::*;
-pub use pread::*;
-pub use pwrite::*;
-pub use greater::*;
-pub use error::*;
-pub use leb128::*;
+pub use crate::endian::*;
+pub use crate::pread::*;
+pub use crate::pwrite::*;
+pub use crate::greater::*;
+pub use crate::error::*;
+pub use crate::leb128::*;
 #[cfg(feature = "std")]
-pub use lesser::*;
+pub use crate::lesser::*;
 
 #[doc(hidden)]
 pub mod export {
@@ -333,7 +327,7 @@ mod tests {
         fn description(&self) -> &str {
             "ExternalError"
         }
-        fn cause(&self) -> Option<&error::Error> { None}
+        fn cause(&self) -> Option<&dyn error::Error> { None}
     }
 
     impl From<super::Error> for ExternalError {
@@ -350,8 +344,7 @@ mod tests {
 
     impl super::ctx::TryIntoCtx<super::Endian> for Foo {
         type Error = ExternalError;
-        type Size = usize;
-        fn try_into_ctx(self, this: &mut [u8], le: super::Endian) -> Result<Self::Size, Self::Error> {
+        fn try_into_ctx(self, this: &mut [u8], le: super::Endian) -> Result<usize, Self::Error> {
             use super::Pwrite;
             if this.len() < 2 { return Err((ExternalError {}).into()) }
             this.pwrite_with(self.0, 0, le)?;
@@ -361,8 +354,7 @@ mod tests {
 
     impl<'a> super::ctx::TryFromCtx<'a, super::Endian> for Foo {
         type Error = ExternalError;
-        type Size = usize;
-        fn try_from_ctx(this: &'a [u8], le: super::Endian) -> Result<(Self, Self::Size), Self::Error> {
+        fn try_from_ctx(this: &'a [u8], le: super::Endian) -> Result<(Self, usize), Self::Error> {
             use super::Pread;
             if this.len() > 2 { return Err((ExternalError {}).into()) }
             let n = this.pread_with(0, le)?;

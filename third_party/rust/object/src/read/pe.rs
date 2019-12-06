@@ -192,6 +192,14 @@ impl<'data, 'file> ObjectSegment<'data> for PeSegment<'data, 'file> {
         self.file.section_alignment()
     }
 
+    #[inline]
+    fn file_range(&self) -> (u64, u64) {
+        (
+            self.section.pointer_to_raw_data as u64,
+            self.section.size_of_raw_data as u64,
+        )
+    }
+
     fn data(&self) -> &'data [u8] {
         let offset = self.section.pointer_to_raw_data as usize;
         let size = cmp::min(self.section.virtual_size, self.section.size_of_raw_data) as usize;
@@ -270,6 +278,14 @@ impl<'data, 'file> ObjectSection<'data> for PeSection<'data, 'file> {
     #[inline]
     fn align(&self) -> u64 {
         self.file.section_alignment()
+    }
+
+    #[inline]
+    fn file_range(&self) -> Option<(u64, u64)> {
+        Some((
+            self.section.pointer_to_raw_data as u64,
+            self.section.size_of_raw_data as u64,
+        ))
     }
 
     fn data(&self) -> Cow<'data, [u8]> {

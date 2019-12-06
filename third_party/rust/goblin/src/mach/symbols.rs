@@ -236,7 +236,6 @@ impl Nlist {
 }
 
 impl ctx::SizeWith<container::Ctx> for Nlist {
-    type Units = usize;
     fn size_with(ctx: &container::Ctx) -> usize {
         match ctx.container {
             Container::Little => {
@@ -299,8 +298,7 @@ impl From<Nlist> for Nlist64 {
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], container::Ctx { container, le }: container::Ctx) -> crate::error::Result<(Self, Self::Size)> {
+    fn try_from_ctx(bytes: &'a [u8], container::Ctx { container, le }: container::Ctx) -> crate::error::Result<(Self, usize)> {
         let nlist = match container {
             Container::Little => {
                 (bytes.pread_with::<Nlist32>(0, le)?.into(), SIZEOF_NLIST_32)
@@ -315,9 +313,7 @@ impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
 
 impl ctx::TryIntoCtx<container::Ctx> for Nlist {
     type Error = crate::error::Error;
-    type Size = usize;
-
-    fn try_into_ctx(self, bytes: &mut [u8], container::Ctx { container, le }: container::Ctx) -> Result<Self::Size, Self::Error> {
+    fn try_into_ctx(self, bytes: &mut [u8], container::Ctx { container, le }: container::Ctx) -> Result<usize, Self::Error> {
         let size = match container {
             Container::Little => {
                 (bytes.pwrite_with::<Nlist32>(self.into(), 0, le)?)
@@ -345,10 +341,9 @@ pub struct SymbolsCtx {
 
 impl<'a, T: ?Sized> ctx::TryFromCtx<'a, SymbolsCtx, T> for Symbols<'a> where T: AsRef<[u8]> {
     type Error = crate::error::Error;
-    type Size = usize;
     fn try_from_ctx(bytes: &'a T, SymbolsCtx {
         nsyms, strtab, ctx
-    }: SymbolsCtx) -> crate::error::Result<(Self, Self::Size)> {
+    }: SymbolsCtx) -> crate::error::Result<(Self, usize)> {
         let data = bytes.as_ref();
         Ok ((Symbols {
             data,

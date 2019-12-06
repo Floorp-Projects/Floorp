@@ -1,5 +1,5 @@
 use std::io::{Result, Read, Write};
-use ctx::{FromCtx, IntoCtx, SizeWith};
+use crate::ctx::{FromCtx, IntoCtx, SizeWith};
 
 /// An extension trait to `std::io::Read` streams; this only deserializes simple types, like `u8`, `i32`, `f32`, `usize`, etc.
 ///
@@ -26,9 +26,8 @@ use ctx::{FromCtx, IntoCtx, SizeWith};
 /// }
 ///
 /// impl ctx::SizeWith<scroll::Endian> for Foo {
-///     type Units = usize;
 ///     // our parsing context doesn't influence our size
-///     fn size_with(_: &scroll::Endian) -> Self::Units {
+///     fn size_with(_: &scroll::Endian) -> usize {
 ///         ::std::mem::size_of::<Foo>()
 ///     }
 /// }
@@ -69,7 +68,7 @@ pub trait IOread<Ctx: Copy> : Read
     /// assert_eq!(0xefbe, beef);
     /// ```
     #[inline]
-    fn ioread<N: FromCtx<Ctx> + SizeWith<Ctx, Units = usize>>(&mut self) -> Result<N> where Ctx: Default {
+    fn ioread<N: FromCtx<Ctx> + SizeWith<Ctx>>(&mut self) -> Result<N> where Ctx: Default {
         let ctx = Ctx::default();
         self.ioread_with(ctx)
     }
@@ -95,7 +94,7 @@ pub trait IOread<Ctx: Copy> : Read
     /// assert_eq!(0xfeeddead, feeddead);
     /// ```
     #[inline]
-    fn ioread_with<N: FromCtx<Ctx> + SizeWith<Ctx, Units = usize>>(&mut self, ctx: Ctx) -> Result<N> {
+    fn ioread_with<N: FromCtx<Ctx> + SizeWith<Ctx>>(&mut self, ctx: Ctx) -> Result<N> {
         let mut scratch = [0u8; 256];
         let size = N::size_with(&ctx);
         let mut buf = &mut scratch[0..size];
@@ -133,7 +132,7 @@ pub trait IOwrite<Ctx: Copy>: Write
     /// assert_eq!(bytes.into_inner(), [0xde, 0xad, 0xbe, 0xef,]);
     /// ```
     #[inline]
-    fn iowrite<N: SizeWith<Ctx, Units = usize> + IntoCtx<Ctx>>(&mut self, n: N) -> Result<()> where Ctx: Default {
+    fn iowrite<N: SizeWith<Ctx> + IntoCtx<Ctx>>(&mut self, n: N) -> Result<()> where Ctx: Default {
         let ctx = Ctx::default();
         self.iowrite_with(n, ctx)
     }
@@ -155,7 +154,7 @@ pub trait IOwrite<Ctx: Copy>: Write
     /// assert_eq!(cursor.into_inner(), [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0xde, 0xad, 0xbe, 0xef, 0x0]);
     /// ```
     #[inline]
-    fn iowrite_with<N: SizeWith<Ctx, Units = usize> + IntoCtx<Ctx>>(&mut self, n: N, ctx: Ctx) -> Result<()> {
+    fn iowrite_with<N: SizeWith<Ctx> + IntoCtx<Ctx>>(&mut self, n: N, ctx: Ctx) -> Result<()> {
         let mut buf = [0u8; 256];
         let size = N::size_with(&ctx);
         let buf = &mut buf[0..size];

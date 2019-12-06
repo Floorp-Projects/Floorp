@@ -319,6 +319,10 @@ impl<'data, 'file> ObjectSegment<'data> for Segment<'data, 'file> {
         with_inner!(self.inner, SegmentInternal, |x| x.align())
     }
 
+    fn file_range(&self) -> (u64, u64) {
+        with_inner!(self.inner, SegmentInternal, |x| x.file_range())
+    }
+
     fn data(&self) -> &'data [u8] {
         with_inner!(self.inner, SegmentInternal, |x| x.data())
     }
@@ -416,6 +420,10 @@ impl<'data, 'file> ObjectSection<'data> for Section<'data, 'file> {
 
     fn align(&self) -> u64 {
         with_inner!(self.inner, SectionInternal, |x| x.align())
+    }
+
+    fn file_range(&self) -> Option<(u64, u64)> {
+        with_inner!(self.inner, SectionInternal, |x| x.file_range())
     }
 
     fn data(&self) -> Cow<'data, [u8]> {

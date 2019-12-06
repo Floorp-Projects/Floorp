@@ -1,6 +1,7 @@
-extern crate scroll;
-#[macro_use]
-extern crate scroll_derive;
+use scroll_derive::{Pread, Pwrite, SizeWith, IOread, IOwrite};
+use scroll::{Pread, Pwrite, Cread, Cwrite, LE};
+
+use scroll::ctx::SizeWith;
 
 #[derive(Debug, PartialEq, Pread, Pwrite)]
 struct Data {
@@ -8,8 +9,6 @@ struct Data {
   timestamp: f64,
 }
 
-use scroll::{Pread, Pwrite, Cread, Cwrite, LE};
-use scroll::ctx::SizeWith;
 
 #[test]
 fn test_data (){

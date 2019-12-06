@@ -63,7 +63,110 @@ impl Object {
                 &b"__bss"[..],
                 SectionKind::UninitializedData,
             ),
+            StandardSection::Tls => (&b"__DATA"[..], &b"__thread_data"[..], SectionKind::Tls),
+            StandardSection::UninitializedTls => (
+                &b"__DATA"[..],
+                &b"__thread_bss"[..],
+                SectionKind::UninitializedTls,
+            ),
+            StandardSection::TlsVariables => (
+                &b"__DATA"[..],
+                &b"__thread_vars"[..],
+                SectionKind::TlsVariables,
+            ),
         }
+    }
+
+    fn macho_tlv_bootstrap(&mut self) -> SymbolId {
+        match self.tlv_bootstrap {
+            Some(id) => id,
+            None => {
+                let id = self.add_symbol(Symbol {
+                    name: b"_tlv_bootstrap".to_vec(),
+                    value: 0,
+                    size: 0,
+                    kind: SymbolKind::Text,
+                    scope: SymbolScope::Dynamic,
+                    weak: false,
+                    section: None,
+                });
+                self.tlv_bootstrap = Some(id);
+                id
+            }
+        }
+    }
+
+    /// Create the `__thread_vars` entry for a TLS variable.
+    ///
+    /// The symbol given by `symbol_id` will be updated to point to this entry.
+    ///
+    /// A new `SymbolId` will be returned. The caller must update this symbol
+    /// to point to the initializer.
+    ///
+    /// If `symbol_id` is not for a TLS variable, then it is returned unchanged.
+    pub(crate) fn macho_add_thread_var(&mut self, symbol_id: SymbolId) -> SymbolId {
+        let symbol = self.symbol_mut(symbol_id);
+        if symbol.kind != SymbolKind::Tls {
+            return symbol_id;
+        }
+
+        // Create the initializer symbol.
+        let mut name = symbol.name.clone();
+        name.extend(b"$tlv$init");
+        let init_symbol_id = self.add_raw_symbol(Symbol {
+            name,
+            value: 0,
+            size: 0,
+            kind: SymbolKind::Tls,
+            scope: SymbolScope::Compilation,
+            weak: false,
+            section: None,
+        });
+
+        // Add the tlv entry.
+        // Three pointers in size:
+        //   - __tlv_bootstrap - used to make sure support exists
+        //   - spare pointer - used when mapped by the runtime
+        //   - pointer to symbol initializer
+        let section = self.section_id(StandardSection::TlsVariables);
+        let pointer_width = self.architecture.pointer_width().unwrap().bytes();
+        let size = u64::from(pointer_width) * 3;
+        let data = vec![0; size as usize];
+        let offset = self.append_section_data(section, &data, u64::from(pointer_width));
+
+        let tlv_bootstrap = self.macho_tlv_bootstrap();
+        self.add_relocation(
+            section,
+            Relocation {
+                offset: offset,
+                size: pointer_width * 8,
+                kind: RelocationKind::Absolute,
+                encoding: RelocationEncoding::Generic,
+                symbol: tlv_bootstrap,
+                addend: 0,
+            },
+        )
+        .unwrap();
+        self.add_relocation(
+            section,
+            Relocation {
+                offset: offset + u64::from(pointer_width) * 2,
+                size: pointer_width * 8,
+                kind: RelocationKind::Absolute,
+                encoding: RelocationEncoding::Generic,
+                symbol: init_symbol_id,
+                addend: 0,
+            },
+        )
+        .unwrap();
+
+        // Update the symbol to point to the tlv.
+        let symbol = self.symbol_mut(symbol_id);
+        symbol.value = offset;
+        symbol.size = size;
+        symbol.section = Some(section);
+
+        init_symbol_id
     }
 
     pub(crate) fn macho_fixup_relocation(&mut self, mut relocation: &mut Relocation) -> i64 {
@@ -140,7 +243,7 @@ impl Object {
         for (index, symbol) in self.symbols.iter().enumerate() {
             if !symbol.is_undefined() {
                 match symbol.kind {
-                    SymbolKind::Text | SymbolKind::Data => {}
+                    SymbolKind::Text | SymbolKind::Data | SymbolKind::Tls => {}
                     SymbolKind::File | SymbolKind::Section => continue,
                     _ => return Err(format!("unimplemented symbol {:?}", symbol)),
                 }
@@ -309,7 +412,7 @@ impl Object {
         for (index, symbol) in self.symbols.iter().enumerate() {
             if !symbol.is_undefined() {
                 match symbol.kind {
-                    SymbolKind::Text | SymbolKind::Data => {}
+                    SymbolKind::Text | SymbolKind::Data | SymbolKind::Tls => {}
                     SymbolKind::File | SymbolKind::Section => continue,
                     _ => return Err(format!("unimplemented symbol {:?}", symbol)),
                 }
@@ -420,6 +523,9 @@ impl Object {
                                 RelocationEncoding::X86RipRelativeMovq,
                                 -4,
                             ) => (1, mach::X86_64_RELOC_GOT_LOAD),
+                            (RelocationKind::MachO { value, relative }, _, _) => {
+                                (u32::from(relative), value)
+                            }
                             _ => return Err(format!("unimplemented relocation {:?}", reloc)),
                         },
                         _ => {
