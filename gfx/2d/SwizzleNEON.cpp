@@ -367,5 +367,68 @@ template void Swizzle_NEON<true, false>(const uint8_t*, int32_t, uint8_t*,
 template void Swizzle_NEON<true, true>(const uint8_t*, int32_t, uint8_t*,
                                        int32_t, IntSize);
 
+template <bool aSwapRB>
+void UnpackRowRGB24(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength);
+
+template <bool aSwapRB>
+void UnpackRowRGB24_NEON(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
+  // Because this implementation will read an additional 4 bytes of data that
+  // is ignored and masked over, we cannot use the accelerated version for the
+  // last 1-5 pixels (3-15 bytes remaining) to guarantee we don't access memory
+  // outside the buffer (we read in 16 byte chunks).
+  if (aLength < 6) {
+    UnpackRowRGB24<aSwapRB>(aSrc, aDst, aLength);
+    return;
+  }
+
+  // Because we are expanding, we can only process the data back to front in
+  // case we are performing this in place.
+  int32_t alignedRow = (aLength - 2) & ~3;
+  int32_t remainder = aLength - alignedRow;
+
+  const uint8_t* src = aSrc + alignedRow * 3;
+  uint8_t* dst = aDst + alignedRow * 4;
+
+  // Handle 2-5 remaining pixels.
+  UnpackRowRGB24<aSwapRB>(src, dst, remainder);
+
+  uint8x8_t masklo;
+  uint8x8_t maskhi;
+  if (aSwapRB) {
+    static const uint8_t masklo_data[] = {2, 1, 0, 0, 5, 4, 3, 0};
+    static const uint8_t maskhi_data[] = {4, 3, 2, 0, 7, 6, 5, 0};
+    masklo = vld1_u8(masklo_data);
+    maskhi = vld1_u8(maskhi_data);
+  } else {
+    static const uint8_t masklo_data[] = {0, 1, 2, 0, 3, 4, 5, 0};
+    static const uint8_t maskhi_data[] = {2, 3, 4, 0, 5, 6, 7, 0};
+    masklo = vld1_u8(masklo_data);
+    maskhi = vld1_u8(maskhi_data);
+  }
+
+  uint8x16_t alpha = vreinterpretq_u8_u32(vdupq_n_u32(0xFF000000));
+
+  // Process all 4-pixel chunks as one vector.
+  src -= 4 * 3;
+  dst -= 4 * 4;
+  while (src >= aSrc) {
+    uint8x16_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(src));
+    // G2R2B1G1 R1B0G0R0 -> X1R1G1B1 X0R0G0B0
+    uint8x8_t pxlo = vtbl1_u8(vget_low_u8(px), masklo);
+    // B3G3R3B2 G2R2B1G1 -> X3R3G3B3 X2R2G2B2
+    uint8x8_t pxhi =
+        vtbl1_u8(vext_u8(vget_low_u8(px), vget_high_u8(px), 4), maskhi);
+    px = vcombine_u8(pxlo, pxhi);
+    px = vorrq_u8(px, alpha);
+    vst1q_u16(reinterpret_cast<uint16_t*>(dst), px);
+    src -= 4 * 3;
+    dst -= 4 * 4;
+  }
+}
+
+// Force instantiation of swizzle variants here.
+template void UnpackRowRGB24_NEON<false>(const uint8_t*, uint8_t*, int32_t);
+template void UnpackRowRGB24_NEON<true>(const uint8_t*, uint8_t*, int32_t);
+
 }  // namespace gfx
 }  // namespace mozilla
