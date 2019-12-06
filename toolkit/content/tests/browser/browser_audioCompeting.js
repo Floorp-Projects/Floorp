@@ -90,12 +90,16 @@ add_task(async function cross_tabs_audio_competing() {
     "about:blank"
   );
   await SpecialPowers.spawn(
-    tab2.linkedBrowser, [], audio_should_keep_playing_even_go_to_background
+    tab2.linkedBrowser,
+    [],
+    audio_should_keep_playing_even_go_to_background
   );
 
   info("- play audio from background tab 1 -");
   await SpecialPowers.spawn(
-    tab1.linkedBrowser, [], play_audio_from_invisible_tab
+    tab1.linkedBrowser,
+    [],
+    play_audio_from_invisible_tab
   );
 
   info("- remove tabs -");

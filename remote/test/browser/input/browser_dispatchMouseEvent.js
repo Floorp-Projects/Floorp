@@ -21,9 +21,13 @@ add_task(async function testDispatchMouseEvent(client) {
     });
   });
 
-  const { x, y } = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return content.document.querySelector("div").getBoundingClientRect();
-  });
+  const { x, y } = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      return content.document.querySelector("div").getBoundingClientRect();
+    }
+  );
 
   await Input.dispatchMouseEvent({
     type: "mousePressed",

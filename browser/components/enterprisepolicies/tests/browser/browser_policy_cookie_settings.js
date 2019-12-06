@@ -126,7 +126,9 @@ async function test_cookie_settings({
   );
   await tab.linkedBrowser.contentWindow.gotoPref("panePrivacy");
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ cookiesEnabled, cookieSettingsLocked }], async function({ cookiesEnabled, cookieSettingsLocked }) {
+    tab.linkedBrowser,
+    [{ cookiesEnabled, cookieSettingsLocked }],
+    async function({ cookiesEnabled, cookieSettingsLocked }) {
       let deleteOnCloseCheckbox = content.document.getElementById(
         "deleteOnClose"
       );

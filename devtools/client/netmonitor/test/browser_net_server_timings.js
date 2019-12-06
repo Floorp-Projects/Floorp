@@ -15,7 +15,9 @@ add_task(async function() {
 
   let wait = waitForNetworkEvents(monitor, 1);
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [SERVER_TIMINGS_TYPE_SJS], async function(url) {
+    tab.linkedBrowser,
+    [SERVER_TIMINGS_TYPE_SJS],
+    async function(url) {
       content.wrappedJSObject.performRequests(1, url);
     }
   );

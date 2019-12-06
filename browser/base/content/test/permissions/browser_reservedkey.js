@@ -189,7 +189,9 @@ add_task(async function test_backspace() {
   EventUtils.synthesizeKey("KEY_Backspace", {});
 
   let fieldValue = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], async function() {
+    tab.linkedBrowser,
+    [],
+    async function() {
       return content.keysPromise;
     }
   );

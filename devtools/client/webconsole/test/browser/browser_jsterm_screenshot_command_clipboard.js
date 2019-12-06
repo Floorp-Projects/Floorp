@@ -137,7 +137,9 @@ async function createScrollbarOverflow() {
 
 async function getScrollbarSize() {
   const scrollbarSize = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], function() {
+    gBrowser.selectedBrowser,
+    [],
+    function() {
       const winUtils = content.windowUtils;
       const scrollbarHeight = {};
       const scrollbarWidth = {};
@@ -154,7 +156,9 @@ async function getScrollbarSize() {
 
 async function getContentSize() {
   const contentSize = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], function() {
+    gBrowser.selectedBrowser,
+    [],
+    function() {
       return {
         scrollMaxY: content.scrollMaxY,
         scrollMaxX: content.scrollMaxX,

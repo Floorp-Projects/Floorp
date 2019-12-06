@@ -80,7 +80,9 @@ async function generateCssMessageStubs() {
       });
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(subCode) {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
+      subCode
+    ) {
       content.docShell.cssErrorReportingEnabled = true;
       const style = content.document.createElement("style");
       style.append(content.document.createTextNode(subCode));

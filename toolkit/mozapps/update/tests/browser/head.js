@@ -869,7 +869,9 @@ function runAboutPrefsUpdateTest(params, steps) {
     const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
       await SpecialPowers.spawn(
-        tab.linkedBrowser, [{ panelId }], async ({ panelId }) => {
+        tab.linkedBrowser,
+        [{ panelId }],
+        async ({ panelId }) => {
           let updateDeck = content.document.getElementById("updateDeck");
           // Also continue if the selected panel ID is 'apply' since there are no
           // other panels after 'apply'.
@@ -951,7 +953,9 @@ function runAboutPrefsUpdateTest(params, steps) {
       }
 
       await SpecialPowers.spawn(
-        tab.linkedBrowser, [{ panelId, gDetailsURL }], async ({ panelId, gDetailsURL }) => {
+        tab.linkedBrowser,
+        [{ panelId, gDetailsURL }],
+        async ({ panelId, gDetailsURL }) => {
           let linkPanels = [
             "downloadFailed",
             "manualUpdate",

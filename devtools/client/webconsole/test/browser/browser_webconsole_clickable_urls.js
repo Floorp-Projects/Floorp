@@ -16,9 +16,13 @@ add_task(async function() {
 
   const firstURL = "http://example.com/";
   const secondURL = "http://example.com/?id=secondURL";
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [[firstURL, secondURL]], urls => {
-    content.wrappedJSObject.console.log("Visit ", urls[0], " and ", urls[1]);
-  });
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [[firstURL, secondURL]],
+    urls => {
+      content.wrappedJSObject.console.log("Visit ", urls[0], " and ", urls[1]);
+    }
+  );
 
   const node = await waitFor(() => findMessage(hud, firstURL));
   const [urlEl1, urlEl2] = Array.from(node.querySelectorAll("a.url"));

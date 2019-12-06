@@ -174,12 +174,14 @@ async function simulateClick(browser, id) {
 }
 
 var checkStyle = async function(browser, styleProperty, expected) {
-  let value = await SpecialPowers.spawn(browser, [styleProperty], async function(
-    styleProperty
-  ) {
-    let style = content.getComputedStyle(content.document.body);
-    return style.getPropertyValue(styleProperty);
-  });
+  let value = await SpecialPowers.spawn(
+    browser,
+    [styleProperty],
+    async function(styleProperty) {
+      let style = content.getComputedStyle(content.document.body);
+      return style.getPropertyValue(styleProperty);
+    }
+  );
   is(value, expected, "Correct value of " + styleProperty);
 };
 

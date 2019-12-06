@@ -45,7 +45,9 @@ add_task(async function setup() {
 // that event is triggered.
 async function testInstall(browser, args, steps, description) {
   let success = await SpecialPowers.spawn(
-    browser, [{ args, steps }], async function(opts) {
+    browser,
+    [{ args, steps }],
+    async function(opts) {
       let { args, steps } = opts;
       let install = await content.navigator.mozAddonManager.createInstall(args);
       if (!install) {
@@ -380,31 +382,33 @@ add_task(
 add_task(async function test_permissions() {
   function testBadUrl(url, pattern, successMessage) {
     return BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
-      let result = await SpecialPowers.spawn(browser, [{ url, pattern }], function(
-        opts
-      ) {
-        return new Promise(resolve => {
-          content.navigator.mozAddonManager
-            .createInstall({ url: opts.url })
-            .then(
-              () => {
-                resolve({
-                  success: false,
-                  message: "createInstall should not have succeeded",
-                });
-              },
-              err => {
-                if (err.message.match(new RegExp(opts.pattern))) {
-                  resolve({ success: true });
+      let result = await SpecialPowers.spawn(
+        browser,
+        [{ url, pattern }],
+        function(opts) {
+          return new Promise(resolve => {
+            content.navigator.mozAddonManager
+              .createInstall({ url: opts.url })
+              .then(
+                () => {
+                  resolve({
+                    success: false,
+                    message: "createInstall should not have succeeded",
+                  });
+                },
+                err => {
+                  if (err.message.match(new RegExp(opts.pattern))) {
+                    resolve({ success: true });
+                  }
+                  resolve({
+                    success: false,
+                    message: `Wrong error message: ${err.message}`,
+                  });
                 }
-                resolve({
-                  success: false,
-                  message: `Wrong error message: ${err.message}`,
-                });
-              }
-            );
-        });
-      });
+              );
+          });
+        }
+      );
       is(result.success, true, result.message || successMessage);
     });
   }

@@ -253,7 +253,9 @@ function clickLink(
   );
   promises.push(
     SpecialPowers.spawn(
-      browser, [[isFrame, linkId]], ([contentIsFrame, contentLinkId]) => {
+      browser,
+      [[isFrame, linkId]],
+      ([contentIsFrame, contentLinkId]) => {
         let doc = content.document;
         if (contentIsFrame) {
           let frame = content.document.getElementById("frame");

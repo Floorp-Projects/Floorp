@@ -52,7 +52,9 @@ async function testClearData(clearSiteData, clearCache) {
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
 
   let initialSizeLabelValue = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       let sizeLabel = content.document.getElementById("totalSiteDataSize");
       return sizeLabel.textContent;
     }
@@ -170,7 +172,9 @@ async function testClearData(clearSiteData, clearCache) {
   if (clearCache || clearSiteData) {
     // Check that the size label in about:preferences updates after we cleared data.
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{ initialSizeLabelValue }], async function(opts) {
+      gBrowser.selectedBrowser,
+      [{ initialSizeLabelValue }],
+      async function(opts) {
         let sizeLabel = content.document.getElementById("totalSiteDataSize");
         await ContentTaskUtils.waitForCondition(
           () => sizeLabel.textContent != opts.initialSizeLabelValue,

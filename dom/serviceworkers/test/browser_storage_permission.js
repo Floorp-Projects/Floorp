@@ -25,7 +25,9 @@ add_task(async function setup() {
   await BrowserTestUtils.browserLoaded(browser);
 
   await SpecialPowers.spawn(
-    browser, [{ script: SW_SCRIPT, scope: SCOPE }], async function(opts) {
+    browser,
+    [{ script: SW_SCRIPT, scope: SCOPE }],
+    async function(opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
       });

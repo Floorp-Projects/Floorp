@@ -138,7 +138,9 @@ async function testAddIframe(front) {
   const update = front.once("stores-update");
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [ALT_DOMAIN_SECURED], secured => {
+    gBrowser.selectedBrowser,
+    [ALT_DOMAIN_SECURED],
+    secured => {
       const doc = content.document;
 
       const iframe = doc.createElement("iframe");

@@ -32,17 +32,25 @@ add_task(async () => {
             eventFired = true;
           };
 
-          docShell.chromeEventHandler.addEventListener("MozStopPictureInPicture", listener, {
-            capture: true,
-          });
+          docShell.chromeEventHandler.addEventListener(
+            "MozStopPictureInPicture",
+            listener,
+            {
+              capture: true,
+            }
+          );
           otherVideo.remove();
           Assert.ok(
             !eventFired,
             "Should not have seen MozStopPictureInPicture for other video"
           );
-          docShell.chromeEventHandler.removeEventListener("MozStopPictureInPicture", listener, {
-            capture: true,
-          });
+          docShell.chromeEventHandler.removeEventListener(
+            "MozStopPictureInPicture",
+            listener,
+            {
+              capture: true,
+            }
+          );
         });
 
         Assert.ok(!pipWin.closed, "PiP window should still be open.");

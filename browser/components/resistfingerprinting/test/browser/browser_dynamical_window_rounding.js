@@ -189,7 +189,9 @@ async function test_dynamical_window_rounding(aWindow, aCheckFunc) {
     info(caseString + "Get innerWidth/Height from the content.");
     await BrowserTestUtils.waitForCondition(async () => {
       let { contentWidth, contentHeight } = await SpecialPowers.spawn(
-        tab.linkedBrowser, [], () => {
+        tab.linkedBrowser,
+        [],
+        () => {
           return {
             contentWidth: content.innerWidth,
             contentHeight: content.innerHeight,
