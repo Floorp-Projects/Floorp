@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WinDllServices.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
@@ -330,6 +331,22 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
         CloseHandle(targetInfo.hProcess);
         return false;
       }
+    }
+  }
+
+  if (XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
+    RefPtr<DllServices> dllSvc(DllServices::Get());
+    LauncherVoidResultWithLineInfo blocklistInitOk =
+        dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess);
+    if (blocklistInitOk.isErr()) {
+      LOG_E("InitDllBlocklistOOP failed at %s:%d with HRESULT 0x%08lX",
+            blocklistInitOk.unwrapErr().mFile,
+            blocklistInitOk.unwrapErr().mLine,
+            blocklistInitOk.unwrapErr().mError.AsHResult());
+      TerminateProcess(targetInfo.hProcess, 1);
+      CloseHandle(targetInfo.hThread);
+      CloseHandle(targetInfo.hProcess);
+      return false;
     }
   }
 
