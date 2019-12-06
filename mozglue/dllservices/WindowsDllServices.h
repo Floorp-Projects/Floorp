@@ -10,12 +10,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Authenticode.h"
 #include "mozilla/LoaderAPIInterfaces.h"
-#include "mozilla/Move.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDllBlocklist.h"
-#include "mozilla/WinHeaderOnlyUtils.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 
@@ -59,17 +57,6 @@ class DllServicesBase : public Authenticode {
     mAuthenticode = aAuthenticode;
   }
 
-  void SetInitDllBlocklistOOPFnPtr(
-      nt::LoaderAPI::InitDllBlocklistOOPFnPtr aPtr) {
-    mInitDllBlocklistOOPFnPtr = aPtr;
-  }
-
-  template <typename... Args>
-  LauncherVoidResultWithLineInfo InitDllBlocklistOOP(Args&&... aArgs) {
-    MOZ_RELEASE_ASSERT(mInitDllBlocklistOOPFnPtr);
-    return mInitDllBlocklistOOPFnPtr(std::forward<Args>(aArgs)...);
-  }
-
   // In debug builds we override GetBinaryOrgName to add a Gecko-specific
   // assertion. OTOH, we normally do not want people overriding this function,
   // so we'll make it final in the release case, thus covering all bases.
@@ -90,7 +77,7 @@ class DllServicesBase : public Authenticode {
     return mAuthenticode->GetBinaryOrgName(aFilePath, aFlags);
   }
 
-  virtual void DisableFull() { DllBlocklist_SetFullDllServices(nullptr); }
+  void DisableFull() { DllBlocklist_SetFullDllServices(nullptr); }
 
   DllServicesBase(const DllServicesBase&) = delete;
   DllServicesBase(DllServicesBase&&) = delete;
@@ -98,8 +85,7 @@ class DllServicesBase : public Authenticode {
   DllServicesBase& operator=(DllServicesBase&&) = delete;
 
  protected:
-  DllServicesBase()
-      : mAuthenticode(nullptr), mInitDllBlocklistOOPFnPtr(nullptr) {}
+  DllServicesBase() : mAuthenticode(nullptr) {}
 
   virtual ~DllServicesBase() = default;
 
@@ -108,7 +94,6 @@ class DllServicesBase : public Authenticode {
 
  private:
   Authenticode* mAuthenticode;
-  nt::LoaderAPI::InitDllBlocklistOOPFnPtr mInitDllBlocklistOOPFnPtr;
 };
 
 }  // namespace detail

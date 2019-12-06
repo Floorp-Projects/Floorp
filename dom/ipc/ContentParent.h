@@ -1209,10 +1209,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
       BrowsingContext* aContext, bool aAudible);
 
-  mozilla::ipc::IPCResult RecvGetModulesTrust(
-      ModulePaths&& aModPaths, bool aRunAtNormalPriority,
-      GetModulesTrustResolver&& aResolver);
-
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
