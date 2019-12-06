@@ -11,7 +11,11 @@ use std::io::{self, Read};
 use std::sync::Arc;
 use std::thread;
 
-macro_rules! regex { ($re:expr) => { ::regex::bytes::Regex::new($re).unwrap() } }
+macro_rules! regex {
+    ($re:expr) => {
+        ::regex::bytes::Regex::new($re).unwrap()
+    };
+}
 
 fn main() {
     let mut seq = Vec::with_capacity(51 * (1 << 20));

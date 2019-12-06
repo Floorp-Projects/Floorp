@@ -1,6 +1,6 @@
 use std::str;
 
-use memchr::memchr;
+use find_byte::find_byte;
 
 use re_bytes;
 use re_unicode;
@@ -11,7 +11,7 @@ pub fn expand_str(
     dst: &mut String,
 ) {
     while !replacement.is_empty() {
-        match memchr(b'$', replacement.as_bytes()) {
+        match find_byte(b'$', replacement.as_bytes()) {
             None => break,
             Some(i) => {
                 dst.push_str(&replacement[..i]);
@@ -35,12 +35,12 @@ pub fn expand_str(
         replacement = &replacement[cap_ref.end..];
         match cap_ref.cap {
             Ref::Number(i) => {
-                dst.push_str(
-                    caps.get(i).map(|m| m.as_str()).unwrap_or(""));
+                dst.push_str(caps.get(i).map(|m| m.as_str()).unwrap_or(""));
             }
             Ref::Named(name) => {
                 dst.push_str(
-                    caps.name(name).map(|m| m.as_str()).unwrap_or(""));
+                    caps.name(name).map(|m| m.as_str()).unwrap_or(""),
+                );
             }
         }
     }
@@ -53,7 +53,7 @@ pub fn expand_bytes(
     dst: &mut Vec<u8>,
 ) {
     while !replacement.is_empty() {
-        match memchr(b'$', replacement) {
+        match find_byte(b'$', replacement) {
             None => break,
             Some(i) => {
                 dst.extend(&replacement[..i]);
@@ -77,12 +77,12 @@ pub fn expand_bytes(
         replacement = &replacement[cap_ref.end..];
         match cap_ref.cap {
             Ref::Number(i) => {
-                dst.extend(
-                    caps.get(i).map(|m| m.as_bytes()).unwrap_or(b""));
+                dst.extend(caps.get(i).map(|m| m.as_bytes()).unwrap_or(b""));
             }
             Ref::Named(name) => {
                 dst.extend(
-                    caps.name(name).map(|m| m.as_bytes()).unwrap_or(b""));
+                    caps.name(name).map(|m| m.as_bytes()).unwrap_or(b""),
+                );
             }
         }
     }
@@ -149,8 +149,8 @@ fn find_cap_ref<T: ?Sized + AsRef<[u8]>>(
     // We just verified that the range 0..cap_end is valid ASCII, so it must
     // therefore be valid UTF-8. If we really cared, we could avoid this UTF-8
     // check with either unsafe or by parsing the number straight from &[u8].
-    let cap = str::from_utf8(&rep[i..cap_end])
-                  .expect("valid UTF-8 capture name");
+    let cap =
+        str::from_utf8(&rep[i..cap_end]).expect("valid UTF-8 capture name");
     if brace {
         if !rep.get(cap_end).map_or(false, |&b| b == b'}') {
             return None;
@@ -169,14 +169,14 @@ fn find_cap_ref<T: ?Sized + AsRef<[u8]>>(
 /// Returns true if and only if the given byte is allowed in a capture name.
 fn is_valid_cap_letter(b: &u8) -> bool {
     match *b {
-        b'0' ... b'9' | b'a' ... b'z' | b'A' ... b'Z' | b'_' => true,
+        b'0'..=b'9' | b'a'..=b'z' | b'A'..=b'Z' | b'_' => true,
         _ => false,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CaptureRef, find_cap_ref};
+    use super::{find_cap_ref, CaptureRef};
 
     macro_rules! find {
         ($name:ident, $text:expr) => {
@@ -213,8 +213,8 @@ mod tests {
     find!(find_cap_ref11, "$");
     find!(find_cap_ref12, " ");
     find!(find_cap_ref13, "");
-    find!(find_cap_ref14, "$1-$2", c!(1,2));
-    find!(find_cap_ref15, "$1_$2", c!("1_",3));
-    find!(find_cap_ref16, "$x-$y", c!("x",2));
-    find!(find_cap_ref17, "$x_$y", c!("x_",3));
+    find!(find_cap_ref14, "$1-$2", c!(1, 2));
+    find!(find_cap_ref15, "$1_$2", c!("1_", 3));
+    find!(find_cap_ref16, "$x-$y", c!("x", 2));
+    find!(find_cap_ref17, "$x_$y", c!("x_", 3));
 }

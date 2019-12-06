@@ -48,3 +48,19 @@ On x86 platforms, when the `use_std` feature is disabled, the SSE2
 implementation of memchr will be used in compilers that support it. When
 `use_std` is enabled, the AVX implementation of memchr will be used if the CPU
 is determined to support it at runtime.
+
+### Using libc
+
+`memchr` is a routine that is part of libc, although this crate does not use
+libc by default. Instead, it uses its own routines, which are either vectorized
+or generic fallback routines. In general, these should be competitive with
+what's in libc, although this has not been tested for all architectures. If
+using `memchr` from libc is desirable and a vectorized routine is not otherwise
+available in this crate, then enabling the `libc` feature will use libc's
+version of `memchr`.
+
+The rest of the functions in this crate, e.g., `memchr2` or `memrchr3`, are not
+a standard part of libc, so they will always use the implementations in this
+crate. One exception to this is `memrchr`, which is an extension commonly found
+on Linux. On Linux, `memrchr` is used in precisely the same scenario as
+`memchr`, as described above.

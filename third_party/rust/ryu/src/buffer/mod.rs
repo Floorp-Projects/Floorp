@@ -1,21 +1,31 @@
 use core::{mem, slice, str};
 
-use pretty;
+#[cfg(maybe_uninit)]
+use core::mem::MaybeUninit;
+
+use raw;
 
 #[cfg(feature = "no-panic")]
 use no_panic::no_panic;
+
+const NAN: &'static str = "NaN";
+const INFINITY: &'static str = "inf";
+const NEG_INFINITY: &'static str = "-inf";
 
 /// Safe API for formatting floating point numbers to text.
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```edition2018
 /// let mut buffer = ryu::Buffer::new();
-/// let printed = buffer.format(1.234);
+/// let printed = buffer.format_finite(1.234);
 /// assert_eq!(printed, "1.234");
 /// ```
 #[derive(Copy, Clone)]
 pub struct Buffer {
+    #[cfg(maybe_uninit)]
+    bytes: [MaybeUninit<u8>; 24],
+    #[cfg(not(maybe_uninit))]
     bytes: [u8; 24],
 }
 
@@ -25,8 +35,34 @@ impl Buffer {
     #[inline]
     #[cfg_attr(feature = "no-panic", no_panic)]
     pub fn new() -> Self {
-        Buffer {
-            bytes: unsafe { mem::uninitialized() },
+        // assume_init is safe here, since this is an array of MaybeUninit, which does not need
+        // to be initialized.
+        #[cfg(maybe_uninit)]
+        let bytes = unsafe { MaybeUninit::uninit().assume_init() };
+        #[cfg(not(maybe_uninit))]
+        let bytes = unsafe { mem::uninitialized() };
+
+        Buffer { bytes: bytes }
+    }
+
+    /// Print a floating point number into this buffer and return a reference to
+    /// its string representation within the buffer.
+    ///
+    /// # Special cases
+    ///
+    /// This function formats NaN as the string "NaN", positive infinity as
+    /// "inf", and negative infinity as "-inf" to match std::fmt.
+    ///
+    /// If your input is known to be finite, you may get better performance by
+    /// calling the `format_finite` method instead of `format` to avoid the
+    /// checks for special cases.
+    #[cfg_attr(feature = "no-panic", inline)]
+    #[cfg_attr(feature = "no-panic", no_panic)]
+    pub fn format<F: Float>(&mut self, f: F) -> &str {
+        if f.is_nonfinite() {
+            f.format_nonfinite()
+        } else {
+            self.format_finite(f)
         }
     }
 
@@ -47,13 +83,37 @@ impl Buffer {
     /// [`is_infinite`]: https://doc.rust-lang.org/std/primitive.f64.html#method.is_infinite
     #[inline]
     #[cfg_attr(feature = "no-panic", no_panic)]
-    pub fn format<F: Float>(&mut self, f: F) -> &str {
+    pub fn format_finite<F: Float>(&mut self, f: F) -> &str {
         unsafe {
-            let n = f.write_to_ryu_buffer(&mut self.bytes[0]);
+            let n = f.write_to_ryu_buffer(self.first_byte_pointer_mut());
             debug_assert!(n <= self.bytes.len());
-            let slice = slice::from_raw_parts(&self.bytes[0], n);
+            let slice = slice::from_raw_parts(self.first_byte_pointer(), n);
             str::from_utf8_unchecked(slice)
         }
+    }
+
+    #[inline]
+    #[cfg(maybe_uninit)]
+    fn first_byte_pointer(&self) -> *const u8 {
+        self.bytes[0].as_ptr()
+    }
+
+    #[inline]
+    #[cfg(not(maybe_uninit))]
+    fn first_byte_pointer(&self) -> *const u8 {
+        &self.bytes[0] as *const u8
+    }
+
+    #[inline]
+    #[cfg(maybe_uninit)]
+    fn first_byte_pointer_mut(&mut self) -> *mut u8 {
+        self.bytes[0].as_mut_ptr()
+    }
+
+    #[inline]
+    #[cfg(not(maybe_uninit))]
+    fn first_byte_pointer_mut(&mut self) -> *mut u8 {
+        &mut self.bytes[0] as *mut u8
     }
 }
 
@@ -70,28 +130,70 @@ impl Default for Buffer {
 ///
 /// This trait is sealed and cannot be implemented for types outside of the
 /// `ryu` crate.
-pub trait Float: Sealed {
-    // Not public API.
-    #[doc(hidden)]
+pub trait Float: Sealed {}
+impl Float for f32 {}
+impl Float for f64 {}
+
+pub trait Sealed: Copy {
+    fn is_nonfinite(self) -> bool;
+    fn format_nonfinite(self) -> &'static str;
     unsafe fn write_to_ryu_buffer(self, result: *mut u8) -> usize;
 }
 
-impl Float for f32 {
+impl Sealed for f32 {
     #[inline]
-    #[cfg_attr(feature = "no-panic", no_panic)]
+    fn is_nonfinite(self) -> bool {
+        const EXP_MASK: u32 = 0x7f800000;
+        let bits = unsafe { mem::transmute::<f32, u32>(self) };
+        bits & EXP_MASK == EXP_MASK
+    }
+
+    #[cold]
+    #[cfg_attr(feature = "no-panic", inline)]
+    fn format_nonfinite(self) -> &'static str {
+        const MANTISSA_MASK: u32 = 0x007fffff;
+        const SIGN_MASK: u32 = 0x80000000;
+        let bits = unsafe { mem::transmute::<f32, u32>(self) };
+        if bits & MANTISSA_MASK != 0 {
+            NAN
+        } else if bits & SIGN_MASK != 0 {
+            NEG_INFINITY
+        } else {
+            INFINITY
+        }
+    }
+
+    #[inline]
     unsafe fn write_to_ryu_buffer(self, result: *mut u8) -> usize {
-        pretty::f2s_buffered_n(self, result)
+        raw::format32(self, result)
     }
 }
 
-impl Float for f64 {
+impl Sealed for f64 {
     #[inline]
-    #[cfg_attr(feature = "no-panic", no_panic)]
+    fn is_nonfinite(self) -> bool {
+        const EXP_MASK: u64 = 0x7ff0000000000000;
+        let bits = unsafe { mem::transmute::<f64, u64>(self) };
+        bits & EXP_MASK == EXP_MASK
+    }
+
+    #[cold]
+    #[cfg_attr(feature = "no-panic", inline)]
+    fn format_nonfinite(self) -> &'static str {
+        const MANTISSA_MASK: u64 = 0x000fffffffffffff;
+        const SIGN_MASK: u64 = 0x8000000000000000;
+        let bits = unsafe { mem::transmute::<f64, u64>(self) };
+        if bits & MANTISSA_MASK != 0 {
+            NAN
+        } else if bits & SIGN_MASK != 0 {
+            NEG_INFINITY
+        } else {
+            INFINITY
+        }
+    }
+
+    #[inline]
     unsafe fn write_to_ryu_buffer(self, result: *mut u8) -> usize {
-        pretty::d2s_buffered_n(self, result)
+        raw::format64(self, result)
     }
 }
-
-pub trait Sealed {}
-impl Sealed for f32 {}
-impl Sealed for f64 {}

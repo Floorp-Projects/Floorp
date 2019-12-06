@@ -1,8 +1,8 @@
-extern crate log;
 extern crate env_logger;
+extern crate log;
 
-use std::process;
 use std::env;
+use std::process;
 use std::str;
 
 fn main() {
@@ -20,7 +20,7 @@ fn main() {
             .unwrap_err();
 
         assert_eq!(log::LevelFilter::Debug, log::max_level());
-        return
+        return;
     }
 
     let exe = env::current_exe().unwrap();
@@ -30,7 +30,7 @@ fn main() {
         .output()
         .unwrap_or_else(|e| panic!("Unable to start child process: {}", e));
     if out.status.success() {
-        return
+        return;
     }
 
     println!("test failed: {}", out.status);

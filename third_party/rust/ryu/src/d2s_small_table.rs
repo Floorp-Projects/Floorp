@@ -20,7 +20,7 @@
 
 use common::*;
 #[cfg(not(integer128))]
-use mulshift128::*;
+use d2s_intrinsics::*;
 
 pub static DOUBLE_POW5_TABLE: [u64; 26] = [
     1,
@@ -168,9 +168,9 @@ pub unsafe fn compute_pow5(i: u32) -> (u64, u64) {
     let delta = pow5bits(i as i32) - pow5bits(base2 as i32);
     debug_assert!(base < POW5_OFFSETS.len() as u32);
     (
-        shiftright128(low0, sum, delta)
+        shiftright128(low0, sum, delta as u32)
             + ((*POW5_OFFSETS.get_unchecked(base as usize) >> offset) & 1) as u64,
-        shiftright128(sum, high1, delta),
+        shiftright128(sum, high1, delta as u32),
     )
 }
 
@@ -198,9 +198,9 @@ pub unsafe fn compute_inv_pow5(i: u32) -> (u64, u64) {
     let delta = pow5bits(base2 as i32) - pow5bits(i as i32);
     debug_assert!(base < POW5_INV_OFFSETS.len() as u32);
     (
-        shiftright128(low0, sum, delta)
+        shiftright128(low0, sum, delta as u32)
             + 1
             + ((*POW5_INV_OFFSETS.get_unchecked((i / 16) as usize) >> ((i % 16) << 1)) & 3) as u64,
-        shiftright128(sum, high1, delta),
+        shiftright128(sum, high1, delta as u32),
     )
 }

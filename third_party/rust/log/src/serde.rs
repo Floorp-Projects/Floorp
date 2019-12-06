@@ -1,9 +1,11 @@
 #![cfg(feature = "serde")]
 
 extern crate serde;
+use self::serde::de::{
+    Deserialize, DeserializeSeed, Deserializer, EnumAccess, Error, Unexpected, VariantAccess,
+    Visitor,
+};
 use self::serde::ser::{Serialize, Serializer};
-use self::serde::de::{Deserialize, DeserializeSeed, Deserializer, Visitor, EnumAccess,
-                      Unexpected, VariantAccess, Error};
 
 use {Level, LevelFilter, LOG_LEVEL_NAMES};
 

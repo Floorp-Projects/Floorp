@@ -1,0 +1,27 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
+ *   2. Run `make cbindgen`
+ */
+
+"""
+
+language = "C"
+
+[export]
+# The `glean_initialize_migration` symbol is only needed in the Kotlin
+# FFI layer to allow migrating data from glean-ac to glean-core. It does
+# not need to be exposed to all the platform: it's only needed on Android.
+exclude = ["glean_initialize_migration"]
+
+[parse.expand]
+crates = ["glean-ffi"]
+
+[parse]
+parse_deps = true
+include = ["glean-core", "ffi-support"]

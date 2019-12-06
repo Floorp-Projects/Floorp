@@ -28,11 +28,11 @@ mod common;
 #[path = "../src/d2s_full_table.rs"]
 mod d2s_full_table;
 
+#[path = "../src/d2s_intrinsics.rs"]
+mod d2s_intrinsics;
+
 #[path = "../src/d2s_small_table.rs"]
 mod d2s_small_table;
-
-#[path = "../src/mulshift128.rs"]
-mod mulshift128;
 
 use d2s_full_table::*;
 use d2s_small_table::*;

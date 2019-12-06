@@ -1,25 +1,23 @@
+// The code in this file is based on Rust's compiler-builtins crate. The Rust
+// compiler automatically links programs against this crate for target-specific
+// runtime support. We have copied the implementation of `__udivmodti4()` which
+// is an intrinsic implementing division with remainder for architectures
+// without 128-bit integers. This implementation works around some poor codegen
+// by LLVM (https://github.com/rust-lang/rust/issues/44545) and allows for
+// inlining which does not happen with the intrinsic.
+//
+// The compiler-builtins crate carries the following license, which is available
+// in full at:
+// https://github.com/rust-lang-nursery/compiler-builtins/blob/master/LICENSE.TXT
+//
+// ---
+//
 // Copyright 2009-2016 compiler-builtins Developers
 //
 // The compiler-builtins crate is dual licensed under both the University of
-// Illinois "BSD-Like" license and the MIT license.  As a user of this code you may
-// choose to use it under either license. As a contributor, you agree to allow
-// your code to be used under both.
-//
-// Full text of the relevant licenses is found here:
-// https://github.com/rust-lang-nursery/compiler-builtins/blob/master/LICENSE.TXT
-//
-//
-//
-// The following code is based on Rust’s [compiler-builtins crate]
-// (https://github.com/rust-lang-nursery/compiler-builtins) which
-// provides runtime functions for the Rust programs. The Rust
-// compiler will automatically link your programs against this crate.
-//
-// We copied the implementation of '__udivmodti4()' which is an intrinsic
-// implementing division with remainder for architectures without 128-bit integer support.
-// We have done this two reasons, to work around [bad optimization by LLVM]
-// (https://github.com/rust-lang/rust/issues/44545) and to allow function
-// inlining which doesn’t happen with the intrinsic.
+// Illinois "BSD-Like" license and the MIT license. As a user of this code you
+// may choose to use it under either license. As a contributor, you agree to
+// allow your code to be used under both.
 
 #[inline]
 pub fn udivmod_1e19(n: u128) -> (u128, u64) {

@@ -1,28 +1,20 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 //! # Serde JSON
 //!
 //! JSON is a ubiquitous open-standard format that uses human-readable text to
 //! transmit data objects consisting of key-value pairs.
 //!
-//! ```json,ignore
+//! ```json
 //! {
-//!   "name": "John Doe",
-//!   "age": 43,
-//!   "address": {
-//!     "street": "10 Downing Street",
-//!     "city": "London"
-//!   },
-//!   "phones": [
-//!     "+44 1234567",
-//!     "+44 2345678"
-//!   ]
+//!     "name": "John Doe",
+//!     "age": 43,
+//!     "address": {
+//!         "street": "10 Downing Street",
+//!         "city": "London"
+//!     },
+//!     "phones": [
+//!         "+44 1234567",
+//!         "+44 2345678"
+//!     ]
 //! }
 //! ```
 //!
@@ -48,7 +40,7 @@
 //! Any valid JSON data can be manipulated in the following recursive enum
 //! representation. This data structure is [`serde_json::Value`][value].
 //!
-//! ```rust
+//! ```edition2018
 //! # use serde_json::{Number, Map};
 //! #
 //! # #[allow(dead_code)]
@@ -68,21 +60,20 @@
 //! [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
 //! a TCP stream.
 //!
-//! ```rust
-//! extern crate serde_json;
+//! ```edition2018
+//! use serde_json::{Result, Value};
 //!
-//! use serde_json::{Value, Error};
-//!
-//! fn untyped_example() -> Result<(), Error> {
+//! fn untyped_example() -> Result<()> {
 //!     // Some JSON input data as a &str. Maybe this comes from the user.
-//!     let data = r#"{
-//!                     "name": "John Doe",
-//!                     "age": 43,
-//!                     "phones": [
-//!                       "+44 1234567",
-//!                       "+44 2345678"
-//!                     ]
-//!                   }"#;
+//!     let data = r#"
+//!         {
+//!             "name": "John Doe",
+//!             "age": 43,
+//!             "phones": [
+//!                 "+44 1234567",
+//!                 "+44 2345678"
+//!             ]
+//!         }"#;
 //!
 //!     // Parse the string of data into serde_json::Value.
 //!     let v: Value = serde_json::from_str(data)?;
@@ -127,14 +118,9 @@
 //! Serde provides a powerful way of mapping JSON data into Rust data structures
 //! largely automatically.
 //!
-//! ```rust
-//! extern crate serde;
-//! extern crate serde_json;
-//!
-//! #[macro_use]
-//! extern crate serde_derive;
-//!
-//! use serde_json::Error;
+//! ```edition2018
+//! use serde::{Deserialize, Serialize};
+//! use serde_json::Result;
 //!
 //! #[derive(Serialize, Deserialize)]
 //! struct Person {
@@ -143,16 +129,17 @@
 //!     phones: Vec<String>,
 //! }
 //!
-//! fn typed_example() -> Result<(), Error> {
+//! fn typed_example() -> Result<()> {
 //!     // Some JSON input data as a &str. Maybe this comes from the user.
-//!     let data = r#"{
-//!                     "name": "John Doe",
-//!                     "age": 43,
-//!                     "phones": [
-//!                       "+44 1234567",
-//!                       "+44 2345678"
-//!                     ]
-//!                   }"#;
+//!     let data = r#"
+//!         {
+//!             "name": "John Doe",
+//!             "age": 43,
+//!             "phones": [
+//!                 "+44 1234567",
+//!                 "+44 2345678"
+//!             ]
+//!         }"#;
 //!
 //!     // Parse the string of data into a Person object. This is exactly the
 //!     // same function as the one that produced serde_json::Value above, but
@@ -191,22 +178,20 @@
 //! # Constructing JSON values
 //!
 //! Serde JSON provides a [`json!` macro][macro] to build `serde_json::Value`
-//! objects with very natural JSON syntax. In order to use this macro,
-//! `serde_json` needs to be imported with the `#[macro_use]` attribute.
+//! objects with very natural JSON syntax.
 //!
-//! ```rust
-//! #[macro_use]
-//! extern crate serde_json;
+//! ```edition2018
+//! use serde_json::json;
 //!
 //! fn main() {
 //!     // The type of `john` is `serde_json::Value`
 //!     let john = json!({
-//!       "name": "John Doe",
-//!       "age": 43,
-//!       "phones": [
-//!         "+44 1234567",
-//!         "+44 2345678"
-//!       ]
+//!         "name": "John Doe",
+//!         "age": 43,
+//!         "phones": [
+//!             "+44 1234567",
+//!             "+44 2345678"
+//!         ]
 //!     });
 //!
 //!     println!("first phone number: {}", john["phones"][0]);
@@ -224,26 +209,22 @@
 //! will check at compile time that the value you are interpolating is able to
 //! be represented as JSON.
 //!
-//! ```rust
-//! # #[macro_use]
-//! # extern crate serde_json;
+//! ```edition2018
+//! # use serde_json::json;
 //! #
 //! # fn random_phone() -> u16 { 0 }
 //! #
-//! # fn main() {
 //! let full_name = "John Doe";
 //! let age_last_year = 42;
 //!
 //! // The type of `john` is `serde_json::Value`
 //! let john = json!({
-//!   "name": full_name,
-//!   "age": age_last_year + 1,
-//!   "phones": [
-//!     format!("+44 {}", random_phone())
-//!   ]
+//!     "name": full_name,
+//!     "age": age_last_year + 1,
+//!     "phones": [
+//!         format!("+44 {}", random_phone())
+//!     ]
 //! });
-//! #     let _ = john;
-//! # }
 //! ```
 //!
 //! This is amazingly convenient but we have the problem we had before with
@@ -259,14 +240,9 @@
 //! [`serde_json::to_writer`][to_writer] which serializes to any `io::Write`
 //! such as a File or a TCP stream.
 //!
-//! ```rust
-//! extern crate serde;
-//! extern crate serde_json;
-//!
-//! #[macro_use]
-//! extern crate serde_derive;
-//!
-//! use serde_json::Error;
+//! ```edition2018
+//! use serde::{Deserialize, Serialize};
+//! use serde_json::Result;
 //!
 //! #[derive(Serialize, Deserialize)]
 //! struct Address {
@@ -274,7 +250,7 @@
 //!     city: String,
 //! }
 //!
-//! fn print_an_address() -> Result<(), Error> {
+//! fn print_an_address() -> Result<()> {
 //!     // Some data structure.
 //!     let address = Address {
 //!         street: "10 Downing Street".to_owned(),
@@ -315,45 +291,47 @@
 //! [macro]: https://docs.serde.rs/serde_json/macro.json.html
 //! [`serde-json-core`]: https://japaric.github.io/serde-json-core/serde_json_core/
 
-#![doc(html_root_url = "https://docs.rs/serde_json/1.0.26")]
+#![doc(html_root_url = "https://docs.rs/serde_json/1.0.44")]
+#![allow(unknown_lints, bare_trait_objects, ellipsis_inclusive_range_patterns)]
+#![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
-// Whitelisted clippy lints
+// Ignored clippy lints
 #![cfg_attr(
     feature = "cargo-clippy",
-    allow(doc_markdown, needless_pass_by_value)
+    allow(deprecated_cfg_attr, doc_markdown, needless_doctest_main)
 )]
-// Whitelisted clippy_pedantic lints
+// Ignored clippy_pedantic lints
 #![cfg_attr(feature = "cargo-clippy", allow(
-// Deserializer::from_str, into_iter
+    // Deserializer::from_str, into_iter
     should_implement_trait,
-// integer and float ser/de requires these sorts of casts
-    cast_possible_truncation,
+    // integer and float ser/de requires these sorts of casts
     cast_possible_wrap,
     cast_precision_loss,
     cast_sign_loss,
-// string ser/de uses indexing and slicing
-    indexing_slicing,
-// things are often more readable this way
+    // correctly used
+    integer_division,
+    // things are often more readable this way
     cast_lossless,
-    shadow_reuse,
+    module_name_repetitions,
     shadow_unrelated,
     single_match_else,
-    stutter,
+    too_many_lines,
     use_self,
-// not practical
-    missing_docs_in_private_items,
-    similar_names,
-// we support older compilers
+    zero_prefixed_literal,
+    // we support older compilers
+    checked_conversions,
     redundant_field_names,
+    // noisy
+    must_use_candidate,
 ))]
 #![deny(missing_docs)]
 
 #[macro_use]
 extern crate serde;
-extern crate ryu;
 #[cfg(feature = "preserve_order")]
 extern crate indexmap;
 extern crate itoa;
+extern crate ryu;
 
 #[doc(inline)]
 pub use self::de::{from_reader, from_slice, from_str, Deserializer, StreamDeserializer};
@@ -389,3 +367,6 @@ pub mod value;
 mod iter;
 mod number;
 mod read;
+
+#[cfg(feature = "raw_value")]
+mod raw;

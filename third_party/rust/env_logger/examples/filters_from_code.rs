@@ -4,7 +4,6 @@ Specify logging filters in code instead of using an environment variable.
 
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 
 fn main() {
     env_logger::builder()

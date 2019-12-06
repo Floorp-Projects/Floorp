@@ -18,17 +18,12 @@
 // is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.
 
-use core::{mem, ptr};
-
 use common::*;
-use digit_table::*;
-
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 pub const FLOAT_MANTISSA_BITS: u32 = 23;
 pub const FLOAT_EXPONENT_BITS: u32 = 8;
 
+const FLOAT_BIAS: i32 = 127;
 const FLOAT_POW5_INV_BITCOUNT: i32 = 59;
 const FLOAT_POW5_BITCOUNT: i32 = 61;
 
@@ -178,59 +173,32 @@ fn mul_pow5_div_pow2(m: u32, i: u32, j: i32) -> u32 {
     unsafe { mul_shift(m, *FLOAT_POW5_SPLIT.get_unchecked(i as usize), j) }
 }
 
-#[cfg_attr(feature = "no-panic", inline)]
-pub fn decimal_length(v: u32) -> u32 {
-    // Function precondition: v is not a 10-digit number.
-    // (9 digits are sufficient for round-tripping.)
-    debug_assert!(v < 1000000000);
-
-    if v >= 100000000 {
-        9
-    } else if v >= 10000000 {
-        8
-    } else if v >= 1000000 {
-        7
-    } else if v >= 100000 {
-        6
-    } else if v >= 10000 {
-        5
-    } else if v >= 1000 {
-        4
-    } else if v >= 100 {
-        3
-    } else if v >= 10 {
-        2
-    } else {
-        1
-    }
-}
-
 // A floating decimal representing m * 10^e.
 pub struct FloatingDecimal32 {
     pub mantissa: u32,
+    // Decimal exponent's range is -45 to 38
+    // inclusive, and can fit in i16 if needed.
     pub exponent: i32,
 }
 
 #[cfg_attr(feature = "no-panic", inline)]
 pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
-    let bias = (1u32 << (FLOAT_EXPONENT_BITS - 1)) - 1;
-
     let (e2, m2) = if ieee_exponent == 0 {
         (
             // We subtract 2 so that the bounds computation has 2 additional bits.
-            1 - bias as i32 - FLOAT_MANTISSA_BITS as i32 - 2,
+            1 - FLOAT_BIAS - FLOAT_MANTISSA_BITS as i32 - 2,
             ieee_mantissa,
         )
     } else {
         (
-            ieee_exponent as i32 - bias as i32 - FLOAT_MANTISSA_BITS as i32 - 2,
+            ieee_exponent as i32 - FLOAT_BIAS - FLOAT_MANTISSA_BITS as i32 - 2,
             (1u32 << FLOAT_MANTISSA_BITS) | ieee_mantissa,
         )
     };
     let even = (m2 & 1) == 0;
     let accept_bounds = even;
 
-    // Step 2: Determine the interval of legal decimal representations.
+    // Step 2: Determine the interval of valid decimal representations.
     let mv = 4 * m2;
     let mp = 4 * m2 + 2;
     // Implicit bool -> int conversion. True is 1, false is 0.
@@ -246,9 +214,9 @@ pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
     let mut vr_is_trailing_zeros = false;
     let mut last_removed_digit = 0u8;
     if e2 >= 0 {
-        let q = log10_pow2(e2) as u32;
+        let q = log10_pow2(e2);
         e10 = q as i32;
-        let k = FLOAT_POW5_INV_BITCOUNT + pow5bits(q as i32) as i32 - 1;
+        let k = FLOAT_POW5_INV_BITCOUNT + pow5bits(q as i32) - 1;
         let i = -e2 + q as i32 + k;
         vr = mul_pow5_inv_div_pow2(mv, q, i);
         vp = mul_pow5_inv_div_pow2(mp, q, i);
@@ -257,7 +225,7 @@ pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
             // We need to know one removed digit even if we are not going to loop below. We could use
             // q = X - 1 above, except that would require 33 bits for the result, and we've found that
             // 32-bit arithmetic is faster even on 64-bit machines.
-            let l = FLOAT_POW5_INV_BITCOUNT + pow5bits(q as i32 - 1) as i32 - 1;
+            let l = FLOAT_POW5_INV_BITCOUNT + pow5bits(q as i32 - 1) - 1;
             last_removed_digit =
                 (mul_pow5_inv_div_pow2(mv, q - 1, -e2 + q as i32 - 1 + l) % 10) as u8;
         }
@@ -273,16 +241,16 @@ pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
             }
         }
     } else {
-        let q = log10_pow5(-e2) as u32;
+        let q = log10_pow5(-e2);
         e10 = q as i32 + e2;
         let i = -e2 - q as i32;
-        let k = pow5bits(i) as i32 - FLOAT_POW5_BITCOUNT;
+        let k = pow5bits(i) - FLOAT_POW5_BITCOUNT;
         let mut j = q as i32 - k;
         vr = mul_pow5_div_pow2(mv, i as u32, j);
         vp = mul_pow5_div_pow2(mp, i as u32, j);
         vm = mul_pow5_div_pow2(mm, i as u32, j);
         if q != 0 && (vp - 1) / 10 <= vm / 10 {
-            j = q as i32 - 1 - (pow5bits(i + 1) as i32 - FLOAT_POW5_BITCOUNT);
+            j = q as i32 - 1 - (pow5bits(i + 1) - FLOAT_POW5_BITCOUNT);
             last_removed_digit = (mul_pow5_div_pow2(mv, (i + 1) as u32, j) % 10) as u8;
         }
         if q <= 1 {
@@ -302,8 +270,8 @@ pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
         }
     }
 
-    // Step 4: Find the shortest decimal representation in the interval of legal representations.
-    let mut removed = 0u32;
+    // Step 4: Find the shortest decimal representation in the interval of valid representations.
+    let mut removed = 0i32;
     let output = if vm_is_trailing_zeros || vr_is_trailing_zeros {
         // General case, which happens rarely (~4.0%).
         while vp / 10 > vm / 10 {
@@ -346,149 +314,10 @@ pub fn f2d(ieee_mantissa: u32, ieee_exponent: u32) -> FloatingDecimal32 {
         // We need to take vr + 1 if vr is outside bounds or we need to round up.
         vr + (vr == vm || last_removed_digit >= 5) as u32
     };
-    let exp = e10 + removed as i32;
+    let exp = e10 + removed;
 
     FloatingDecimal32 {
         exponent: exp,
         mantissa: output,
     }
-}
-
-#[cfg_attr(feature = "no-panic", inline)]
-unsafe fn to_chars(v: FloatingDecimal32, sign: bool, result: *mut u8) -> usize {
-    // Step 5: Print the decimal representation.
-    let mut index = 0isize;
-    if sign {
-        *result.offset(index) = b'-';
-        index += 1;
-    }
-
-    let mut output = v.mantissa;
-    let olength = decimal_length(output);
-
-    // Print the decimal digits.
-    // The following code is equivalent to:
-    // for (uint32_t i = 0; i < olength - 1; ++i) {
-    //   const uint32_t c = output % 10; output /= 10;
-    //   result[index + olength - i] = (char) ('0' + c);
-    // }
-    // result[index] = '0' + output % 10;
-    let mut i = 0isize;
-    while output >= 10000 {
-        let c = output - 10000 * (output / 10000);
-        output /= 10000;
-        let c0 = (c % 100) << 1;
-        let c1 = (c / 100) << 1;
-        ptr::copy_nonoverlapping(
-            DIGIT_TABLE.get_unchecked(c0 as usize),
-            result.offset(index + olength as isize - i - 1),
-            2,
-        );
-        ptr::copy_nonoverlapping(
-            DIGIT_TABLE.get_unchecked(c1 as usize),
-            result.offset(index + olength as isize - i - 3),
-            2,
-        );
-        i += 4;
-    }
-    if output >= 100 {
-        let c = (output % 100) << 1;
-        output /= 100;
-        ptr::copy_nonoverlapping(
-            DIGIT_TABLE.get_unchecked(c as usize),
-            result.offset(index + olength as isize - i - 1),
-            2,
-        );
-        i += 2;
-    }
-    if output >= 10 {
-        let c = output << 1;
-        // We can't use memcpy here: the decimal dot goes between these two digits.
-        *result.offset(index + olength as isize - i) = *DIGIT_TABLE.get_unchecked(c as usize + 1);
-        *result.offset(index) = *DIGIT_TABLE.get_unchecked(c as usize);
-    } else {
-        *result.offset(index) = b'0' + output as u8;
-    }
-
-    // Print decimal point if needed.
-    if olength > 1 {
-        *result.offset(index + 1) = b'.';
-        index += olength as isize + 1;
-    } else {
-        index += 1;
-    }
-
-    // Print the exponent.
-    *result.offset(index) = b'E';
-    index += 1;
-    let mut exp = v.exponent + olength as i32 - 1;
-    if exp < 0 {
-        *result.offset(index) = b'-';
-        index += 1;
-        exp = -exp;
-    }
-
-    if exp >= 10 {
-        ptr::copy_nonoverlapping(
-            DIGIT_TABLE.get_unchecked((2 * exp) as usize),
-            result.offset(index),
-            2,
-        );
-        index += 2;
-    } else {
-        *result.offset(index) = b'0' + exp as u8;
-        index += 1;
-    }
-
-    debug_assert!(index <= 15);
-    index as usize
-}
-
-/// Print f32 to the given buffer and return number of bytes written.
-///
-/// At most 15 bytes will be written.
-///
-/// ## Special cases
-///
-/// This function represents any NaN as `NaN`, positive infinity as `Infinity`,
-/// and negative infinity as `-Infinity`.
-///
-/// ## Safety
-///
-/// The `result` pointer argument must point to sufficiently many writable bytes
-/// to hold Ryū's representation of `f`.
-///
-/// ## Example
-///
-/// ```rust
-/// let f = 1.234f32;
-///
-/// unsafe {
-///     let mut buffer: [u8; 15] = std::mem::uninitialized();
-///     let n = ryu::raw::f2s_buffered_n(f, &mut buffer[0]);
-///     let s = std::str::from_utf8_unchecked(&buffer[..n]);
-///     assert_eq!(s, "1.234E0");
-/// }
-/// ```
-#[cfg_attr(must_use_return, must_use)]
-#[cfg_attr(feature = "no-panic", no_panic)]
-pub unsafe fn f2s_buffered_n(f: f32, result: *mut u8) -> usize {
-    // Step 1: Decode the floating-point number, and unify normalized and subnormal cases.
-    let bits = mem::transmute::<f32, u32>(f);
-
-    // Decode bits into sign, mantissa, and exponent.
-    let ieee_sign = ((bits >> (FLOAT_MANTISSA_BITS + FLOAT_EXPONENT_BITS)) & 1) != 0;
-    let ieee_mantissa = bits & ((1u32 << FLOAT_MANTISSA_BITS) - 1);
-    let ieee_exponent =
-        ((bits >> FLOAT_MANTISSA_BITS) & ((1u32 << FLOAT_EXPONENT_BITS) - 1)) as u32;
-
-    // Case distinction; exit early for the easy cases.
-    if ieee_exponent == ((1u32 << FLOAT_EXPONENT_BITS) - 1)
-        || (ieee_exponent == 0 && ieee_mantissa == 0)
-    {
-        return copy_special_str(result, ieee_sign, ieee_exponent != 0, ieee_mantissa != 0);
-    }
-
-    let v = f2d(ieee_mantissa, ieee_exponent);
-    to_chars(v, ieee_sign, result)
 }

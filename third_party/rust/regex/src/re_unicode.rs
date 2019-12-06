@@ -1,13 +1,3 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
@@ -15,7 +5,7 @@ use std::ops::Index;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use memchr::memchr;
+use find_byte::find_byte;
 use syntax;
 
 use error::Error;
@@ -64,11 +54,7 @@ impl<'t> Match<'t> {
     /// Creates a new match from the given haystack and byte offsets.
     #[inline]
     fn new(haystack: &'t str, start: usize, end: usize) -> Match<'t> {
-        Match {
-            text: haystack,
-            start: start,
-            end: end,
-        }
+        Match { text: haystack, start: start, end: end }
     }
 }
 
@@ -368,10 +354,7 @@ impl Regex {
     /// # }
     /// ```
     pub fn split<'r, 't>(&'r self, text: &'t str) -> Split<'r, 't> {
-        Split {
-            finder: self.find_iter(text),
-            last: 0,
-        }
+        Split { finder: self.find_iter(text), last: 0 }
     }
 
     /// Returns an iterator of at most `limit` substrings of `text` delimited
@@ -394,12 +377,12 @@ impl Regex {
     /// assert_eq!(fields, vec!("Hey", "How", "are you?"));
     /// # }
     /// ```
-    pub fn splitn<'r, 't>(&'r self, text: &'t str, limit: usize)
-                         -> SplitN<'r, 't> {
-        SplitN {
-            splits: self.split(text),
-            n: limit,
-        }
+    pub fn splitn<'r, 't>(
+        &'r self,
+        text: &'t str,
+        limit: usize,
+    ) -> SplitN<'r, 't> {
+        SplitN { splits: self.split(text), n: limit }
     }
 
     /// Replaces the leftmost-first match with the replacement provided.
@@ -558,7 +541,7 @@ impl Regex {
             let mut last_match = 0;
             for (i, m) in it {
                 if limit > 0 && i >= limit {
-                    break
+                    break;
                 }
                 new.push_str(&text[last_match..m.start()]);
                 new.push_str(&rep);
@@ -578,7 +561,7 @@ impl Regex {
         let mut last_match = 0;
         for (i, cap) in it {
             if limit > 0 && i >= limit {
-                break
+                break;
             }
             // unwrap on 0 is OK because captures only reports matches
             let m = cap.get(0).unwrap();
@@ -653,9 +636,10 @@ impl Regex {
         text: &'t str,
         start: usize,
     ) -> Option<Match<'t>> {
-        self.0.searcher_str().find_at(text, start).map(|(s, e)| {
-            Match::new(text, s, e)
-        })
+        self.0
+            .searcher_str()
+            .find_at(text, start)
+            .map(|(s, e)| Match::new(text, s, e))
     }
 
     /// This is like `captures`, but uses
@@ -815,7 +799,7 @@ impl<'r, 't> Iterator for SplitN<'r, 't> {
 
     fn next(&mut self) -> Option<&'t str> {
         if self.n == 0 {
-            return None
+            return None;
         }
         self.n -= 1;
         if self.n == 0 {
@@ -937,10 +921,7 @@ impl<'t> Captures<'t> {
     ///
     /// The first match always corresponds to the overall match of the regex.
     pub fn iter<'c>(&'c self) -> SubCaptureMatches<'c, 't> {
-        SubCaptureMatches {
-            caps: self,
-            it: self.locs.iter(),
-        }
+        SubCaptureMatches { caps: self, it: self.locs.iter() }
     }
 
     /// Expands all instances of `$name` in `replacement` to the corresponding
@@ -1015,7 +996,8 @@ impl<'t> Index<usize> for Captures<'t> {
     type Output = str;
 
     fn index(&self, i: usize) -> &str {
-        self.get(i).map(|m| m.as_str())
+        self.get(i)
+            .map(|m| m.as_str())
             .unwrap_or_else(|| panic!("no group at index '{}'", i))
     }
 }
@@ -1036,7 +1018,8 @@ impl<'t, 'i> Index<&'i str> for Captures<'t> {
     type Output = str;
 
     fn index<'a>(&'a self, name: &'i str) -> &'a str {
-        self.name(name).map(|m| m.as_str())
+        self.name(name)
+            .map(|m| m.as_str())
             .unwrap_or_else(|| panic!("no group named '{}'", name))
     }
 }
@@ -1059,7 +1042,8 @@ impl<'c, 't> Iterator for SubCaptureMatches<'c, 't> {
     type Item = Option<Match<'t>>;
 
     fn next(&mut self) -> Option<Option<Match<'t>>> {
-        self.it.next()
+        self.it
+            .next()
             .map(|cap| cap.map(|(s, e)| Match::new(self.caps.text, s, e)))
     }
 }
@@ -1071,7 +1055,9 @@ impl<'c, 't> Iterator for SubCaptureMatches<'c, 't> {
 ///
 /// `'r` is the lifetime of the compiled regular expression and `'t` is the
 /// lifetime of the matched string.
-pub struct CaptureMatches<'r, 't>(re_trait::CaptureMatches<'t, ExecNoSyncStr<'r>>);
+pub struct CaptureMatches<'r, 't>(
+    re_trait::CaptureMatches<'t, ExecNoSyncStr<'r>>,
+);
 
 impl<'r, 't> Iterator for CaptureMatches<'r, 't> {
     type Item = Captures<'t>;
@@ -1177,14 +1163,18 @@ impl<'a> Replacer for &'a str {
     }
 
     fn no_expansion(&mut self) -> Option<Cow<str>> {
-        match memchr(b'$', self.as_bytes()) {
+        match find_byte(b'$', self.as_bytes()) {
             Some(_) => None,
             None => Some(Cow::Borrowed(*self)),
         }
     }
 }
 
-impl<F, T> Replacer for F where F: FnMut(&Captures) -> T, T: AsRef<str> {
+impl<F, T> Replacer for F
+where
+    F: FnMut(&Captures) -> T,
+    T: AsRef<str>,
+{
     fn replace_append(&mut self, caps: &Captures, dst: &mut String) {
         dst.push_str((*self)(caps).as_ref());
     }
