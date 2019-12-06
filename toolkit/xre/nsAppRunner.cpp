@@ -4228,6 +4228,7 @@ nsresult XREMain::XRE_mainRun() {
 
 #if defined(XP_WIN)
   RefPtr<mozilla::DllServices> dllServices(mozilla::DllServices::Get());
+  dllServices->StartUntrustedModulesProcessor();
   auto dllServicesDisable =
       MakeScopeExit([&dllServices]() { dllServices->DisableFull(); });
 #endif  // defined(XP_WIN)
