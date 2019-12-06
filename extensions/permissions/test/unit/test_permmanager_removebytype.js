@@ -5,9 +5,7 @@ function run_test() {
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
 
   // initialize the permission manager service
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   Assert.equal(pm.all.length, 0);
 

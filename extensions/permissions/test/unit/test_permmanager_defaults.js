@@ -61,9 +61,7 @@ add_task(async function do_test() {
     "permissions.isolateBy.userContext"
   );
 
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   // test the default permission was applied.
   let principal = Services.scriptSecurityManager.createContentPrincipal(
@@ -416,11 +414,7 @@ function findCapabilityViaDB(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("permissions.sqlite");
 
-  let storage = Cc["@mozilla.org/storage/service;1"].getService(
-    Ci.mozIStorageService
-  );
-
-  let connection = storage.openDatabase(file);
+  let connection = Services.storage.openDatabase(file);
 
   let query = connection.createStatement(
     "SELECT permission FROM moz_perms WHERE origin = :origin AND type = :type"

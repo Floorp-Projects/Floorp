@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
 var DEBUG_TEST = false;
 
 function run_test() {
@@ -10,9 +9,7 @@ function run_test() {
   var file = dir.clone();
   file.append("permissions.sqlite");
 
-  var storage = Cc["@mozilla.org/storage/service;1"].getService(
-    Ci.mozIStorageService
-  );
+  var storage = Services.storage;
 
   // Create database.
   var connection = storage.openDatabase(file);
@@ -223,12 +220,8 @@ function run_test() {
   // This will force the permission-manager to reload the data.
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
-  let earliestNow = Number(Date.now());
   // Initialize the permission manager service
-  var pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
-  let latestNow = Number(Date.now());
+  var pm = Services.perms;
 
   // The schema should be upgraded to 10, and a 'modificationTime' column should
   // exist with all records having a value of 0.
@@ -251,9 +244,7 @@ function run_test() {
   );
 
   // This permission should always be there.
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  let ssm = Services.scriptSecurityManager;
   let uri = NetUtil.newURI("http://example.org");
   let principal = ssm.createContentPrincipal(uri, {});
   Assert.equal(
