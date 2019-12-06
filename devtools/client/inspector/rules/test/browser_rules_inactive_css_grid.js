@@ -28,6 +28,11 @@ const TEST_URI = `
       flex-direction: row
     }
 
+    #abspos {
+      position: absolute;
+      grid-column: 2;
+    }
+
     #self-aligned {
       align-self: stretch;
     }
@@ -40,6 +45,9 @@ const TEST_URI = `
       <div class="grid-item item-2">2</div>
       <div class="grid-item item-3">3</div>
       <div class="grid-item item-4">4</div>
+      <div class="grid-item item-5">
+        <div id="abspos">AbsPos item</div>
+      </div>
     </div>
     <div id="self-aligned"></div>
 </body>`;
@@ -86,6 +94,17 @@ const BEFORE = [
       {
         declaration: {
           "flex-direction": "row",
+        },
+        ruleIndex: 1,
+      },
+    ],
+  },
+  {
+    selector: "#abspos",
+    activeDeclarations: [
+      {
+        declarations: {
+          "grid-column": 2,
         },
         ruleIndex: 1,
       },
