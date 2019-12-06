@@ -1354,6 +1354,13 @@ struct ParamTraits<mozilla::WheelDeltaAdjustmentStrategy>
           mozilla::WheelDeltaAdjustmentStrategy::eSentinel> {};
 
 template <>
+struct ParamTraits<mozilla::layers::APZWheelAction>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::APZWheelAction,
+          mozilla::layers::APZWheelAction::Scroll,
+          mozilla::layers::kHighestAPZWheelAction> {};
+
+template <>
 struct ParamTraits<mozilla::ScrollWheelInput> {
   typedef mozilla::ScrollWheelInput paramType;
 
@@ -1375,6 +1382,7 @@ struct ParamTraits<mozilla::ScrollWheelInput> {
     WriteParam(aMsg, aParam.mIsMomentum);
     WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
     WriteParam(aMsg, aParam.mWheelDeltaAdjustmentStrategy);
+    WriteParam(aMsg, aParam.mAPZAction);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1396,7 +1404,8 @@ struct ParamTraits<mozilla::ScrollWheelInput> {
            ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
            ReadParam(aMsg, aIter,
                      &aResult->mAllowToOverrideSystemScrollSpeed) &&
-           ReadParam(aMsg, aIter, &aResult->mWheelDeltaAdjustmentStrategy);
+           ReadParam(aMsg, aIter, &aResult->mWheelDeltaAdjustmentStrategy) &&
+           ReadParam(aMsg, aIter, &aResult->mAPZAction);
   }
 };
 
