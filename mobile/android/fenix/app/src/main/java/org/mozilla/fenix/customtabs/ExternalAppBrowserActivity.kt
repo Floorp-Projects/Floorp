@@ -14,11 +14,8 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.browsingmode.CustomTabBrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.theme.CustomTabThemeManager
 import java.security.InvalidParameterException
 
 /**
@@ -59,11 +56,6 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             )
         }
     }
-
-    final override fun createBrowsingModeManager(initialMode: BrowsingMode) =
-        CustomTabBrowsingModeManager()
-
-    final override fun createThemeManager() = CustomTabThemeManager()
 
     override fun onDestroy() {
         super.onDestroy()

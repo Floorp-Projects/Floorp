@@ -27,7 +27,8 @@ class CustomTabsIntegration(
     sessionId: String,
     activity: Activity,
     engineLayout: View,
-    onItemTapped: (ToolbarMenu.Item) -> Unit = {}
+    onItemTapped: (ToolbarMenu.Item) -> Unit = {},
+    isPrivate: Boolean
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
     init {
@@ -73,6 +74,15 @@ class CustomTabsIntegration(
                     activity,
                     R.drawable.ic_tracking_protection_disabled
                 )!!
+            )
+        }
+
+        // If in private mode, override toolbar background to use private color
+        // See #5334
+        if (isPrivate) {
+            toolbar.background = AppCompatResources.getDrawable(
+                activity,
+                R.drawable.toolbar_background
             )
         }
     }

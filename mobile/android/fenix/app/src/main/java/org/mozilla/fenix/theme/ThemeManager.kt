@@ -121,9 +121,3 @@ class DefaultThemeManager(
             }
         }
 }
-
-class CustomTabThemeManager : ThemeManager() {
-    override var currentTheme
-        get() = BrowsingMode.Normal
-        set(_) { /* noop */ }
-}

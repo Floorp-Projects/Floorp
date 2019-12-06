@@ -10,13 +10,51 @@ import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import mozilla.components.feature.intent.processing.TabIntentProcessor
+import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.utils.Browsers
+import org.mozilla.fenix.components.IntentProcessors
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
+
+enum class IntentProcessorType {
+    EXTERNAL_APP, NEW_TAB, OTHER;
+
+    /**
+     * The destination activity based on this intent
+     */
+    val activityClassName: String
+        get() = when (this) {
+            EXTERNAL_APP -> ExternalAppBrowserActivity::class.java.name
+            NEW_TAB -> HomeActivity::class.java.name
+            OTHER -> HomeActivity::class.java.name
+        }
+
+    /**
+     * Should this intent automatically navigate to the browser?
+     */
+    fun shouldOpenToBrowser(intent: Intent): Boolean = when (this) {
+        EXTERNAL_APP -> true
+        NEW_TAB -> intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+        OTHER -> false
+    }
+}
+
+/**
+ * Classifies the [IntentType] based on the [IntentProcessor] that handled the [Intent]
+ */
+fun IntentProcessor?.getType(intentProcessors: IntentProcessors): IntentProcessorType {
+    return when {
+        intentProcessors.externalAppIntentProcessors.contains(this) ||
+            intentProcessors.customTabIntentProcessor == this ||
+            intentProcessors.privateCustomTabIntentProcessor == this -> IntentProcessorType.EXTERNAL_APP
+        intentProcessors.intentProcessor == this ||
+                intentProcessors.privateIntentProcessor == this -> IntentProcessorType.NEW_TAB
+        else -> IntentProcessorType.OTHER
+    }
+}
 
 /**
  * Processes incoming intents and sends them to the corresponding activity.
@@ -47,49 +85,35 @@ class IntentReceiverActivity : Activity() {
             ))
         }
 
-        val tabIntentProcessor = if (settings().openLinksInAPrivateTab) {
-            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
-            components.intentProcessors.privateIntentProcessor
-        } else {
-            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
-            components.intentProcessors.intentProcessor
-        }
+        val modeDependentProcessors = if (settings().openLinksInAPrivateTab) {
+                components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
+                listOf(
+                    components.intentProcessors.privateCustomTabIntentProcessor,
+                    components.intentProcessors.privateIntentProcessor
+                )
+            } else {
+                components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
+                listOf(
+                    components.intentProcessors.customTabIntentProcessor,
+                    components.intentProcessors.intentProcessor
+                )
+            }
 
         val intentProcessors = components.intentProcessors.externalAppIntentProcessors +
-                tabIntentProcessor +
+                modeDependentProcessors +
                 NewTabShortcutIntentProcessor()
 
+        // Call process for side effects, short on the first that returns true
         intentProcessors.any { it.process(intent) }
-        setIntentActivity(intent, tabIntentProcessor)
 
+        val intentProcessorType = intentProcessors
+            .firstOrNull { it.matches(intent) }
+            .getType(components.intentProcessors)
+
+        intent.setClassName(applicationContext, intentProcessorType.activityClassName)
+        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
         startActivity(intent)
 
         finish()
-    }
-
-    /**
-     * Sets the activity that this [intent] will launch.
-     */
-    private fun setIntentActivity(intent: Intent, tabIntentProcessor: TabIntentProcessor) {
-        val openToBrowser = when {
-            components.intentProcessors.externalAppIntentProcessors.any { it.matches(intent) } -> {
-                intent.setClassName(applicationContext, ExternalAppBrowserActivity::class.java.name)
-                true
-            }
-            tabIntentProcessor.matches(intent) -> {
-                intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                // This Intent was launched from history (recent apps). Android will redeliver the
-                // original Intent (which might be a VIEW intent). However if there's no active browsing
-                // session then we do not want to re-process the Intent and potentially re-open a website
-                // from a session that the user already "erased".
-                intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-            }
-            else -> {
-                intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                false
-            }
-        }
-
-        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
     }
 }

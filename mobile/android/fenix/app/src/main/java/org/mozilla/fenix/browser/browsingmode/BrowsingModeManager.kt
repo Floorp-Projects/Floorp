@@ -44,9 +44,3 @@ class DefaultBrowsingModeManager(
             modeDidChange(value)
         }
 }
-
-class CustomTabBrowsingModeManager : BrowsingModeManager {
-    override var mode
-        get() = BrowsingMode.Normal
-        set(_) { /* no-op */ }
-}

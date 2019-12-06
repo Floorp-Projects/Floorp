@@ -45,7 +45,11 @@ class IntentProcessors(
     }
 
     val customTabIntentProcessor by lazy {
-        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources)
+        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources, isPrivate = false)
+    }
+
+    val privateCustomTabIntentProcessor by lazy {
+        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources, isPrivate = true)
     }
 
     val externalAppIntentProcessors by lazy {
@@ -58,8 +62,7 @@ class IntentProcessors(
                 apiKey = BuildConfig.DIGITAL_ASSET_LINKS_TOKEN,
                 store = customTabsStore
             ),
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(context)),
-            customTabIntentProcessor
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(context))
         )
     }
 }

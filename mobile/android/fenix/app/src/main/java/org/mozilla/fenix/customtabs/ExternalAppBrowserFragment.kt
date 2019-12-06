@@ -28,6 +28,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
@@ -67,7 +68,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         sessionId = customTabSessionId,
                         activity = activity,
                         engineLayout = view.swipeRefresh,
-                        onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) }
+                        onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) },
+                        isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
                     ),
                     owner = this,
                     view = view)

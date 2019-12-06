@@ -10,11 +10,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
@@ -37,6 +39,8 @@ class IntentReceiverActivityTest {
 
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
         `when`(testContext.components.intentProcessors.intentProcessor.matches(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.matches(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -55,6 +59,7 @@ class IntentReceiverActivityTest {
         intent.action = NewTabShortcutIntentProcessor.ACTION_OPEN_PRIVATE_TAB
 
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(false)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -74,6 +79,7 @@ class IntentReceiverActivityTest {
         intent.action = NewTabShortcutIntentProcessor.ACTION_OPEN_TAB
 
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -91,6 +97,7 @@ class IntentReceiverActivityTest {
 
         val intent = Intent()
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -107,6 +114,7 @@ class IntentReceiverActivityTest {
 
         val intent = Intent()
         `when`(testContext.components.intentProcessors.privateIntentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.privateCustomTabIntentProcessor.process(intent)).thenReturn(false)
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
 
@@ -122,6 +130,7 @@ class IntentReceiverActivityTest {
 
         val intent = Intent()
         `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(false)
 
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
         activity.processIntent(intent)
@@ -130,5 +139,45 @@ class IntentReceiverActivityTest {
         // and mockito makes this easier to read.
         verify(testContext.components.intentProcessors.privateIntentProcessor, never()).process(intent)
         verify(testContext.components.intentProcessors.intentProcessor).process(intent)
+    }
+
+    @Test
+    fun `process custom tab intent`() = runBlockingTest {
+        testContext.settings().openLinksInAPrivateTab = false
+
+        val intent = Intent()
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.customTabIntentProcessor.matches(intent)).thenReturn(true)
+
+        val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
+        activity.processIntent(intent)
+
+        // Not using mockk here because process is a suspend function
+        // and mockito makes this easier to read.
+        verify(testContext.components.intentProcessors.privateIntentProcessor, never()).process(intent)
+        verify(testContext.components.intentProcessors.customTabIntentProcessor).process(intent)
+
+        assertEquals(ExternalAppBrowserActivity::class.java.name, intent.component!!.className)
+        assertTrue(intent.getBooleanExtra(HomeActivity.OPEN_TO_BROWSER, false))
+    }
+
+    @Test
+    fun `process private custom tab intent`() = runBlockingTest {
+        testContext.settings().openLinksInAPrivateTab = true
+
+        val intent = Intent()
+        `when`(testContext.components.intentProcessors.privateCustomTabIntentProcessor.process(intent)).thenReturn(true)
+        `when`(testContext.components.intentProcessors.privateCustomTabIntentProcessor.matches(intent)).thenReturn(true)
+
+        val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
+        activity.processIntent(intent)
+
+        // Not using mockk here because process is a suspend function
+        // and mockito makes this easier to read.
+        verify(testContext.components.intentProcessors.intentProcessor, never()).process(intent)
+        verify(testContext.components.intentProcessors.privateCustomTabIntentProcessor).process(intent)
+
+        assertEquals(ExternalAppBrowserActivity::class.java.name, intent.component!!.className)
+        assertTrue(intent.getBooleanExtra(HomeActivity.OPEN_TO_BROWSER, false))
     }
 }
