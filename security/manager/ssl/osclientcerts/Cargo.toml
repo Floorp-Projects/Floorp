@@ -12,8 +12,7 @@ byteorder = "1.3"
 env_logger = {version = "0.6", default-features = false } # disable `regex` to reduce code size
 lazy_static = "1"
 log = "0.4"
-# Waiting for a release with https://github.com/mheese/rust-pkcs11/pull/16, then this can go
-pkcs11 = { git = "https://github.com/mheese/rust-pkcs11", rev="0810cd5adf4ac8031cc204df3e877d84595c7438" }
+pkcs11 = "0.4"
 sha2 = "0.8"
 
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
