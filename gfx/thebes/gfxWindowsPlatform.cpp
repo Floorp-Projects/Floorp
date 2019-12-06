@@ -2022,6 +2022,18 @@ void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
   }
 }
 
+bool gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing() {
+  // Ensure devices initialization for plugin's DXGISurface. The devices are
+  // lazily initialized with WebRender to reduce memory usage.
+  EnsureDevicesInitialized();
+
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  if (!dm->GetContentDevice() || !dm->TextureSharingWorks()) {
+    return false;
+  }
+  return true;
+}
+
 bool gfxWindowsPlatform::CheckVariationFontSupport() {
   // Variation font support is only available on Fall Creators Update or later.
   return IsWin10FallCreatorsUpdateOrLater();

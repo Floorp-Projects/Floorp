@@ -1617,11 +1617,6 @@
   value: 30
   mirror: always
 
-- name: dom.ipc.plugins.allow_dxgi_surface
-  type: bool
-  value: true
-  mirror: always
-
 # Enable e10s hang monitoring (slow script checking and plugin hang detection).
 - name: dom.ipc.processHangMonitor
   type: bool

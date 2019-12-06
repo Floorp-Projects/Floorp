@@ -14,30 +14,21 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 
 namespace mozilla {
+namespace dom {
+class RemoteDecoderManagerChild;
+}
 namespace gl {
 class GLBlitHelper;
 }
 namespace layers {
 
-class IGPUVideoSurfaceManager {
- protected:
-  virtual ~IGPUVideoSurfaceManager(){};
-
- public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  virtual already_AddRefed<gfx::SourceSurface> Readback(
-      const SurfaceDescriptorGPUVideo& aSD) = 0;
-  virtual void DeallocateSurfaceDescriptor(
-      const SurfaceDescriptorGPUVideo& aSD) = 0;
-};
-
-// Represents an animated Image that is known to the GPU process.
+// Image class that refers to a decoded video frame within
+// the GPU process.
 class GPUVideoImage final : public Image {
   friend class gl::GLBlitHelper;
 
  public:
-  GPUVideoImage(IGPUVideoSurfaceManager* aManager,
+  GPUVideoImage(RemoteDecoderManagerChild* aManager,
                 const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize)
       : Image(nullptr, ImageFormat::GPU_VIDEO), mSize(aSize) {
     // Create the TextureClient immediately since the GPUVideoTextureData

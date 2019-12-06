@@ -2120,7 +2120,7 @@ nsresult PluginModuleParent::NPP_NewInternal(
     // direct path for flash objects that have wmode=window or no wmode
     // specified.
     if (supportsAsyncRender && supportsForceDirect &&
-        PluginInstanceParent::SupportsPluginDirectDXGISurfaceDrawing()) {
+        gfxWindowsPlatform::GetPlatform()->SupportsPluginDirectDXGIDrawing()) {
       ForceDirect(names, values);
     }
 #endif

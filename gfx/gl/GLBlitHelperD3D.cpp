@@ -175,26 +175,13 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
   if (!data) return false;
 
   const auto& desc = data->SD();
-
-  if (desc.type() ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorPlugin) {
-    MOZ_ASSERT_UNREACHABLE(
-        "BlitImage does not support plugin surface descriptors");
-    return false;
-  }
-
-  MOZ_ASSERT(
-      desc.type() ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder);
-  const auto& subdescUnion =
-      desc.get_SurfaceDescriptorRemoteDecoder().subdesc();
-
+  const auto& subdescUnion = desc.subdesc();
   switch (subdescUnion.type()) {
-    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
+    case layers::GPUVideoSubDescriptor::TSurfaceDescriptorD3D10: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorD3D10();
       return BlitDescriptor(subdesc, destSize, destOrigin);
     }
-    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDXGIYCbCr: {
+    case layers::GPUVideoSubDescriptor::TSurfaceDescriptorDXGIYCbCr: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorDXGIYCbCr();
 
       const auto& clipSize = subdesc.size();

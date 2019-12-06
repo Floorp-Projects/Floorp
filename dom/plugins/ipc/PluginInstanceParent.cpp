@@ -58,9 +58,6 @@
 #  include "nsIWidget.h"
 #  include "nsPluginNativeWindow.h"
 #  include "PluginQuirks.h"
-#  include "mozilla/layers/CompositorBridgeChild.h"
-#  include "GPUVideoImage.h"
-#  include "mozilla/layers/SynchronousTask.h"
 extern const wchar_t* kFlashFullscreenClass;
 #elif defined(MOZ_WIDGET_GTK)
 #  include "mozilla/dom/ContentChild.h"
@@ -321,6 +318,17 @@ static inline bool AllowDirectBitmapSurfaceDrawing() {
   return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();
 }
 
+static inline bool AllowDirectDXGISurfaceDrawing() {
+  if (!StaticPrefs::dom_ipc_plugins_asyncdrawing_enabled()) {
+    return false;
+  }
+#if defined(XP_WIN)
+  return gfxWindowsPlatform::GetPlatform()->SupportsPluginDirectDXGIDrawing();
+#else
+  return false;
+#endif
+}
+
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
     bool* value) {
@@ -328,29 +336,43 @@ PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
   return IPC_OK();
 }
 
-/* static */
-bool PluginInstanceParent::SupportsPluginDirectDXGISurfaceDrawing() {
-  bool value = false;
-#if defined(XP_WIN)
-  if (StaticPrefs::dom_ipc_plugins_allow_dxgi_surface()) {
-    auto cbc = CompositorBridgeChild::Get();
-    if (cbc) {
-      cbc->SendSupportsAsyncDXGISurface(&value);
-    }
-  }
-#endif
-  return value;
+mozilla::ipc::IPCResult
+PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value) {
+  *value = AllowDirectDXGISurfaceDrawing();
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_PreferredDXGIAdapter(
     DxgiAdapterDesc* aOutDesc) {
   PodZero(aOutDesc);
-#if defined(XP_WIN)
-  auto cbc = CompositorBridgeChild::Get();
-  if (cbc) {
-    cbc->SendPreferredDXGIAdapter(aOutDesc);
+#ifdef XP_WIN
+  if (!AllowDirectDXGISurfaceDrawing()) {
+    return IPC_FAIL_NO_REASON(this);
   }
+
+  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
+  if (!device) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  RefPtr<IDXGIDevice> dxgi;
+  if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice),
+                                    getter_AddRefs(dxgi))) ||
+      !dxgi) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  RefPtr<IDXGIAdapter> adapter;
+  if (FAILED(dxgi->GetAdapter(getter_AddRefs(adapter))) || !adapter) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  DXGI_ADAPTER_DESC desc;
+  if (FAILED(adapter->GetDesc(&desc))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  *aOutDesc = DxgiAdapterDesc::From(desc);
 #endif
   return IPC_OK();
 }
@@ -400,7 +422,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
       allowed = true;
       break;
     case NPDrawingModelAsyncWindowsDXGISurface:
-      allowed = SupportsPluginDirectDXGISurfaceDrawing();
+      allowed = AllowDirectDXGISurfaceDrawing();
       break;
 #elif defined(MOZ_X11)
     case NPDrawingModelSyncX:
@@ -539,181 +561,6 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvRevokeCurrentDirectSurface() {
   return IPC_OK();
 }
 
-#if defined(XP_WIN)
-// Uses the ImageBridge to perform IGPUVideoSurfaceManager operations
-// in the GPU process.
-class AsyncPluginSurfaceManager : public IGPUVideoSurfaceManager {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPluginSurfaceManager, override)
-
-  already_AddRefed<gfx::SourceSurface> Readback(
-      const SurfaceDescriptorGPUVideo& aSD) override {
-    SurfaceDescriptorPlugin pluginSD = aSD;
-    if (!InImageBridgeChildThread()) {
-      SynchronousTask task("AsyncPluginSurfaceManager readback sync");
-      RefPtr<gfx::SourceSurface> result;
-      ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-          NewRunnableFunction("AsyncPluginSurfaceManager readback",
-                              &DoSyncReadback, &pluginSD, &result, &task));
-      task.Wait();
-      return result.forget();
-    }
-
-    return DoReadback(pluginSD);
-  }
-
-  void DeallocateSurfaceDescriptor(
-      const SurfaceDescriptorGPUVideo& aSD) override {
-    SurfaceDescriptorPlugin pluginSD = aSD;
-    if (!InImageBridgeChildThread()) {
-      ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-          NewRunnableFunction("AsyncPluginSurfaceManager dealloc", &DoDealloc,
-                              &pluginSD));
-      return;
-    }
-
-    return DoDealloc(&pluginSD);
-  }
-
-  // Set of display surfaces for which the related plugin surface has been
-  // freed.  They are freed when the AsyncPluginSurfaceManager is told it is
-  // safe.
-  static HashSet<WindowsHandle> sOrphanedDisplaySurfaces;
-
- private:
-  ~AsyncPluginSurfaceManager() {}
-
-  struct SurfaceDescriptorUserData {
-    explicit SurfaceDescriptorUserData(layers::SurfaceDescriptor& aSD)
-        : mSD(aSD) {}
-
-    ~SurfaceDescriptorUserData() {
-      auto ibc = ImageBridgeChild::GetSingleton();
-      if (!ibc) {
-        return;
-      }
-      DestroySurfaceDescriptor(ibc, &mSD);
-    }
-
-    layers::SurfaceDescriptor mSD;
-  };
-
-  static void DeleteSurfaceDescriptorUserData(void* aClosure) {
-    SurfaceDescriptorUserData* sd =
-        reinterpret_cast<SurfaceDescriptorUserData*>(aClosure);
-    delete sd;
-  }
-
-  static already_AddRefed<gfx::SourceSurface> DoReadback(
-      const SurfaceDescriptorPlugin& aSD) {
-    MOZ_ASSERT(InImageBridgeChildThread());
-
-    RefPtr<DataSourceSurface> source;
-    auto ibc = ImageBridgeChild::GetSingleton();
-    if (!ibc) {
-      return nullptr;
-    }
-
-    layers::SurfaceDescriptor dataSD = null_t();
-    ibc->SendReadbackAsyncPluginSurface(aSD, &dataSD);
-    if (!IsSurfaceDescriptorValid(dataSD)) {
-      NS_WARNING("Bad SurfaceDescriptor received in Readback");
-      return nullptr;
-    }
-
-    source = GetSurfaceForDescriptor(dataSD);
-    if (!source) {
-      DestroySurfaceDescriptor(ibc, &dataSD);
-      NS_WARNING("Failed to map SurfaceDescriptor in Readback");
-      return nullptr;
-    }
-
-    static UserDataKey sSurfaceDescriptor;
-    source->AddUserData(&sSurfaceDescriptor,
-                        new SurfaceDescriptorUserData(dataSD),
-                        DeleteSurfaceDescriptorUserData);
-
-    return source.forget();
-  }
-
-  static void DoSyncReadback(const SurfaceDescriptorPlugin* aSD,
-                             RefPtr<gfx::SourceSurface>* aResult,
-                             SynchronousTask* aTask) {
-    AutoCompleteTask act(aTask);
-    *aResult = DoReadback(*aSD);
-  }
-
-  static void DoDealloc(const SurfaceDescriptorPlugin* aSD) {
-    MOZ_ASSERT(InImageBridgeChildThread());
-
-    // If the plugin already Finalized and freed its surface then, since the
-    // compositor is now also done with the display surface, we can free
-    // it too.
-    WindowsHandle handle = aSD->displaySurf().handle();
-    auto surfIt = sOrphanedDisplaySurfaces.lookup(handle);
-    if (!surfIt) {
-      // We wil continue to use the surfaces with future GPUVideoImages.
-      return;
-    }
-
-    sOrphanedDisplaySurfaces.remove(surfIt);
-    auto ibc = ImageBridgeChild::GetSingleton();
-    if (!ibc) {
-      return;
-    }
-    ibc->SendRemoveAsyncPluginSurface(*aSD, true);
-  }
-};
-
-/* static */ HashSet<WindowsHandle>
-    AsyncPluginSurfaceManager::sOrphanedDisplaySurfaces;
-
-void InitDXGISurface(const gfx::SurfaceFormat& aFormat,
-                     const gfx::IntSize& aSize,
-                     SurfaceDescriptorPlugin* aSDPlugin,
-                     SynchronousTask* aTask) {
-  MOZ_ASSERT(InImageBridgeChildThread());
-
-  AutoCompleteTask act(aTask);
-  auto ibc = ImageBridgeChild::GetSingleton();
-  if (!ibc) {
-    return;
-  }
-
-  layers::SurfaceDescriptorPlugin sd;
-  if (!ibc->SendMakeAsyncPluginSurfaces(aFormat, aSize, &sd)) {
-    return;
-  }
-  *aSDPlugin = sd;
-}
-
-void FinalizeDXGISurface(const SurfaceDescriptorPlugin& aSD) {
-  MOZ_ASSERT(InImageBridgeChildThread());
-
-  Unused << AsyncPluginSurfaceManager::sOrphanedDisplaySurfaces.put(
-      aSD.displaySurf().handle());
-
-  auto ibc = ImageBridgeChild::GetSingleton();
-  if (!ibc) {
-    return;
-  }
-  ibc->SendRemoveAsyncPluginSurface(aSD, false);
-}
-
-void CopyDXGISurface(const SurfaceDescriptorPlugin& aSD,
-                     SynchronousTask* aTask) {
-  MOZ_ASSERT(InImageBridgeChildThread());
-
-  AutoCompleteTask act(aTask);
-  auto ibc = ImageBridgeChild::GetSingleton();
-  if (!ibc) {
-    return;
-  }
-  ibc->SendUpdateAsyncPluginSurface(aSD);
-}
-
-#endif  //  defined(XP_WIN)
-
 mozilla::ipc::IPCResult PluginInstanceParent::RecvInitDXGISurface(
     const gfx::SurfaceFormat& format, const gfx::IntSize& size,
     WindowsHandle* outHandle, NPError* outError) {
@@ -721,7 +568,6 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvInitDXGISurface(
   *outError = NPERR_GENERIC_ERROR;
 
 #if defined(XP_WIN)
-  MOZ_ASSERT(NS_IsMainThread());
   if (format != SurfaceFormat::B8G8R8A8 && format != SurfaceFormat::B8G8R8X8) {
     *outError = NPERR_INVALID_PARAM;
     return IPC_OK();
@@ -731,62 +577,59 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvInitDXGISurface(
     return IPC_OK();
   }
 
-  if (!ImageBridgeChild::GetSingleton()) {
+  ImageContainer* container = GetImageContainer();
+  if (!container) {
     return IPC_OK();
   }
 
-  // Ask the ImageBridge thread to generate two SurfaceDescriptorPlugins --
-  // one for the GPU process to display and one for the Plugin process to
-  // render to.
-  SurfaceDescriptorPlugin sd;
-  SynchronousTask task("SendMakeAsyncPluginSurfaces sync");
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-      NewRunnableFunction("SendingMakeAsyncPluginSurfaces", &InitDXGISurface,
-                          format, size, &sd, &task));
-  task.Wait();
-
-  if (!sd.id()) {
-    NS_WARNING("SendMakeAsyncPluginSurfaces failed");
+  RefPtr<ImageBridgeChild> forwarder = ImageBridgeChild::GetSingleton();
+  if (!forwarder) {
     return IPC_OK();
   }
 
-  WindowsHandle pluginSurfHandle = sd.pluginSurf().handle();
-  bool ok = mAsyncSurfaceMap.put(pluginSurfHandle, AsyncSurfaceInfo{sd, size});
-  if (!ok) {
+  RefPtr<ID3D11Device> d3d11 = DeviceManagerDx::Get()->GetContentDevice();
+  if (!d3d11) {
     return IPC_OK();
   }
 
-  *outHandle = pluginSurfHandle;
+  // Create the texture we'll give to the plugin process.
+  HANDLE sharedHandle = 0;
+  RefPtr<ID3D11Texture2D> back;
+  {
+    CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, size.width,
+                               size.height, 1, 1);
+    desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    if (FAILED(d3d11->CreateTexture2D(&desc, nullptr, getter_AddRefs(back))) ||
+        !back) {
+      return IPC_OK();
+    }
+
+    RefPtr<IDXGIResource> resource;
+    if (FAILED(back->QueryInterface(IID_IDXGIResource,
+                                    getter_AddRefs(resource))) ||
+        !resource) {
+      return IPC_OK();
+    }
+    if (FAILED(resource->GetSharedHandle(&sharedHandle) || !sharedHandle)) {
+      return IPC_OK();
+    }
+  }
+
+  RefPtr<D3D11SurfaceHolder> holder =
+      new D3D11SurfaceHolder(back, format, size);
+  mD3D11Surfaces.Put(reinterpret_cast<void*>(sharedHandle), holder);
+
+  *outHandle = reinterpret_cast<uintptr_t>(sharedHandle);
   *outError = NPERR_NO_ERROR;
 #endif
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult PluginInstanceParent::RecvFinalizeDXGISurface(
-    const WindowsHandle& pluginSurfHandle) {
+    const WindowsHandle& handle) {
 #if defined(XP_WIN)
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!ImageBridgeChild::GetSingleton()) {
-    return IPC_OK();
-  }
-
-  auto asiIt = mAsyncSurfaceMap.lookup(pluginSurfHandle);
-  if (!asiIt) {
-    NS_WARNING("Plugin surface did not exist to finalize");
-    return IPC_OK();
-  }
-
-  AsyncSurfaceInfo& asi = asiIt->value();
-
-  // Release the plugin surface but keep the display surface since it may
-  // still be displayed.  Also let the display surface know that it should
-  // not receive further requests to copy from the plugin surface.
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-      NewRunnableFunction("SendingRemoveAsyncPluginSurface",
-                          &FinalizeDXGISurface, asi.mSD));
-
-  mAsyncSurfaceMap.remove(asiIt);
+  mD3D11Surfaces.Remove(reinterpret_cast<void*>(handle));
 #endif
   return IPC_OK();
 }
@@ -880,43 +723,48 @@ void PluginInstanceParent::SetCurrentImage(Image* aImage) {
 }
 
 mozilla::ipc::IPCResult PluginInstanceParent::RecvShowDirectDXGISurface(
-    const WindowsHandle& pluginSurfHandle, const gfx::IntRect& dirty) {
+    const WindowsHandle& handle, const gfx::IntRect& dirty) {
 #if defined(XP_WIN)
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!ImageBridgeChild::GetSingleton()) {
-    return IPC_OK();
+  RefPtr<D3D11SurfaceHolder> surface;
+  if (!mD3D11Surfaces.Get(reinterpret_cast<void*>(handle),
+                          getter_AddRefs(surface))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  if (!surface->IsValid()) {
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  auto asiIt = mAsyncSurfaceMap.lookup(pluginSurfHandle);
-  if (!asiIt) {
-    NS_WARNING("Plugin surface did not exist to finalize");
-    return IPC_OK();
-  }
-
-  AsyncSurfaceInfo& asi = asiIt->value();
-
-  // Tell the ImageBridge to copy from the plugin surface to the display surface
-  SynchronousTask task("SendUpdateAsyncPluginSurface sync");
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-      NewRunnableFunction("SendingUpdateAsyncPluginSurface", &CopyDXGISurface,
-                          asi.mSD, &task));
-  task.Wait();
-
-  // Make sure we have an ImageContainer for SetCurrentImage.
   ImageContainer* container = GetImageContainer();
   if (!container) {
-    return IPC_OK();
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  SetCurrentImage(
-      new GPUVideoImage(new AsyncPluginSurfaceManager(), asi.mSD, asi.mSize));
+  RefPtr<TextureClientRecycleAllocator> allocator =
+      mParent->EnsureTextureAllocatorForDXGISurface();
+  RefPtr<TextureClient> texture = allocator->CreateOrRecycle(
+      surface->GetFormat(), surface->GetSize(), BackendSelector::Content,
+      TextureFlags::NO_FLAGS, ALLOC_FOR_OUT_OF_BAND_CONTENT);
+  if (!texture) {
+    NS_WARNING("Could not allocate a TextureClient for plugin!");
+    return IPC_FAIL_NO_REASON(this);
+  }
 
-  PLUGIN_LOG_DEBUG(("   (RecvShowDirectDXGISurface received handle=%p rect=%s)",
-                    reinterpret_cast<void*>(pluginSurfHandle),
-                    Stringify(dirty).c_str()));
-#endif
+  surface->CopyToTextureClient(texture);
+
+  gfx::IntSize size(surface->GetSize());
+  gfx::IntRect pictureRect(gfx::IntPoint(0, 0), size);
+
+  // Wrap the texture in an image and ship it off.
+  RefPtr<TextureWrapperImage> image =
+      new TextureWrapperImage(texture, pictureRect);
+  SetCurrentImage(image);
+
+  PLUGIN_LOG_DEBUG(("   (RecvShowDirect3D10Surface received handle=%p rect=%s)",
+                    reinterpret_cast<void*>(handle), Stringify(dirty).c_str()));
   return IPC_OK();
+#else
+  return IPC_FAIL_NO_REASON(this);
+#endif
 }
 
 mozilla::ipc::IPCResult PluginInstanceParent::RecvShow(
@@ -1057,20 +905,10 @@ nsresult PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow) {
   MaybeCreateChildPopupSurrogate();
 #endif
 
-#if defined(OS_WIN)
-  // Windows async surfaces must be Win32.  In particular, it is incompatible
-  // with in-memory surface types.
-  gfxSurfaceType surfType = gfxSurfaceType::Win32;
-#else
-  gfxSurfaceType surfType =
-      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
-#endif
-
-  if (surfType == (gfxSurfaceType)-1) {
+  if (!SendAsyncSetWindow(
+          gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType(),
+          window))
     return NS_ERROR_FAILURE;
-  }
-
-  if (!SendAsyncSetWindow(surfType, window)) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -1593,8 +1431,7 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
           wchar_t szClass[26];
           HWND hwnd = GetForegroundWindow();
           if (hwnd && hwnd != mPluginHWND &&
-              GetClassNameW(hwnd, szClass,
-                            sizeof(szClass) / sizeof(char16_t)) &&
+              GetClassNameW(hwnd, szClass, sizeof(szClass) / sizeof(char16_t)) &&
               !wcscmp(szClass, kFlashFullscreenClass)) {
             return 0;
           }

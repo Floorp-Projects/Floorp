@@ -289,14 +289,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       Endpoint<PCanvasParent>&& aEndpoint) = 0;
   virtual mozilla::ipc::IPCResult RecvReleasePCanvasParent() = 0;
 
-  virtual mozilla::ipc::IPCResult RecvSupportsAsyncDXGISurface(bool* value) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  virtual mozilla::ipc::IPCResult RecvPreferredDXGIAdapter(
-      DxgiAdapterDesc* desc) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
   bool mCanSend;
 
  private:

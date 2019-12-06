@@ -155,10 +155,7 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
       // The Image here creates a TextureData object that takes ownership
       // of the SurfaceDescriptor, and is responsible for making sure that
       // it gets deallocated.
-      SurfaceDescriptorRemoteDecoder remoteSD =
-          static_cast<const SurfaceDescriptorGPUVideo&>(data.sd());
-      remoteSD.source() = Some(GetManager()->GetSource());
-      image = new GPUVideoImage(GetManager(), remoteSD, data.frameSize());
+      image = new GPUVideoImage(GetManager(), data.sd(), data.frameSize());
     }
 
     RefPtr<VideoData> video = VideoData::CreateFromImage(
