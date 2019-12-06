@@ -249,8 +249,8 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
                                              rval);
   }
 
-  InvokeArgsMaybeIgnoresReturnValue args(cx, ignoresReturnValue);
-  if (!args.init(cx, argc)) {
+  InvokeArgsMaybeIgnoresReturnValue args(cx);
+  if (!args.init(cx, argc, ignoresReturnValue)) {
     return false;
   }
 

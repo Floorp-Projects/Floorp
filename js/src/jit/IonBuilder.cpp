@@ -5920,6 +5920,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
   if (target && target->realm() == script()->realm()) {
     apply->setNotCrossRealm();
   }
+  if (BytecodeIsPopped(pc)) {
+    apply->setIgnoresReturnValue();
+  }
 
   // TypeBarrier the call result
   TemporaryTypeSet* types = bytecodeTypes(pc);
@@ -6077,6 +6080,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarray(uint32_t argc) {
   if (target && target->realm() == script()->realm()) {
     apply->setNotCrossRealm();
   }
+  if (BytecodeIsPopped(pc)) {
+    apply->setIgnoresReturnValue();
+  }
 
   TemporaryTypeSet* types = bytecodeTypes(pc);
   return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
@@ -6142,6 +6148,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarguments(uint32_t argc) {
 
     if (target && target->realm() == script()->realm()) {
       apply->setNotCrossRealm();
+    }
+    if (BytecodeIsPopped(pc)) {
+      apply->setIgnoresReturnValue();
     }
 
     TemporaryTypeSet* types = bytecodeTypes(pc);

@@ -2869,6 +2869,7 @@ class MApplyArgs : public MTernaryInstruction,
   // Monomorphic cache of single target from TI, or nullptr.
   WrappedFunction* target_;
   bool maybeCrossRealm_ = true;
+  bool ignoresReturnValue_ = false;
 
   MApplyArgs(WrappedFunction* target, MDefinition* fun, MDefinition* argc,
              MDefinition* self)
@@ -2888,6 +2889,9 @@ class MApplyArgs : public MTernaryInstruction,
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
 
+  bool ignoresReturnValue() const { return ignoresReturnValue_; }
+  void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
+
   bool possiblyCalls() const override { return true; }
 
   bool appendRoots(MRootList& roots) const override {
@@ -2906,6 +2910,7 @@ class MApplyArray
   // Monomorphic cache of single target from TI, or nullptr.
   WrappedFunction* target_;
   bool maybeCrossRealm_ = true;
+  bool ignoresReturnValue_ = false;
 
   MApplyArray(WrappedFunction* target, MDefinition* fun, MDefinition* elements,
               MDefinition* self)
@@ -2923,6 +2928,9 @@ class MApplyArray
 
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
+
+  bool ignoresReturnValue() const { return ignoresReturnValue_; }
+  void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
 
   bool possiblyCalls() const override { return true; }
 
