@@ -20,15 +20,15 @@ print(BUGNUMBER + ": " + summary);
 // Various testing of column-number computations, with respect to counting as
 // code points or units, for very long lines.
 //
-// This test should be valid regardless whether
-// |JS_COLUMN_DIMENSION_IS_CODE_POINTS()| is 0 or 1.  It also *should* pass no
-// matter what valid value |TokenStreamAnyChars::ColumnChunkLength| takes (it
-// must be at least 4 so that the maximum-length code point in UTF-8/16 will fit
-// in a single chunk), because the value of that constant should be externally
-// invisible save for perf effects. (As a result, recompiling and running this
-// test with a variety of different values assigned to that constant is a good
-// smoke-test of column number computation, that doesn't require having to
-// closely inspect any column-related code.)
+// This test should pass when column numbers are counts of code points (current
+// behavior) or code units (past behavior).  It also *should* pass for any valid
+// |TokenStreamAnyChars::ColumnChunkLength| value (it must be at least 4 so that
+// the maximum-length code point in UTF-8/16 will fit in a single chunk),
+// because the value of that constant should be externally invisible save for
+// perf effects. (As a result, recompiling and running this test with a variety
+// of different values assigned to that constant is a good smoke-test of column
+// number computation, that doesn't require having to closely inspect any
+// column-related code.)
 //
 // However, this test is structured on the assumption that that constant has the
 // value 128, in order to exercise in targeted fashion various column number
