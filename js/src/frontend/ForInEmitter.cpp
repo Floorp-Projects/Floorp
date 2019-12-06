@@ -149,12 +149,9 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   MOZ_ASSERT(stackDepth == loopDepth_);
   bce_->bytecodeSection().setStackDepth(stackDepth);
 
-  // Pop the enumeration value.
-  if (!bce_->emit1(JSOP_POP)) {
-    //              [stack] ITER
-    return false;
-  }
+  //                [stack] ITER ITERVAL
 
+  // Pop the value and iterator and close the iterator.
   if (!bce_->emit1(JSOP_ENDITER)) {
     //              [stack]
     return false;
