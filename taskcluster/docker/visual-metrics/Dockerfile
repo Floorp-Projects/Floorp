@@ -12,7 +12,13 @@ RUN apt-get update && \
       python3 \
       python3-pip
 
+WORKDIR /builds/worker
+
+# %include testing/mozharness/external_tools/performance-artifact-schema.json
+ADD topsrcdir/testing/mozharness/external_tools/performance-artifact-schema.json /builds/worker/performance-artifact-schema.json
+
 COPY requirements.txt /builds/worker/requirements.txt
+RUN pip3 install setuptools==42.0.2
 RUN pip3 install --require-hashes -r /builds/worker/requirements.txt && \
     rm /builds/worker/requirements.txt
 

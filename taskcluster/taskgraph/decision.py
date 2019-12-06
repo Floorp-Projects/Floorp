@@ -120,6 +120,7 @@ PER_PROJECT_PARAMETERS = {
 visual_metrics_jobs_schema = Schema({
         Required('jobs'): [
             {
+                Required('test_name'): str,
                 Required('json_location'): str,
                 Required('video_location'): str,
             }
