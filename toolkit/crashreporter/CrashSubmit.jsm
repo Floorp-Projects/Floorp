@@ -332,13 +332,9 @@ Submitter.prototype = {
     let id = this.id;
 
     if (this.recordSubmission) {
-      p = p
-        .then(() => {
-          return manager.ensureCrashIsPresent(id);
-        })
-        .then(() => {
-          return manager.addSubmissionAttempt(id, submissionID, new Date());
-        });
+      p = p.then(() => {
+        return manager.addSubmissionAttempt(id, submissionID, new Date());
+      });
     }
     p.then(() => {
       xhr.send(formData);
@@ -378,6 +374,10 @@ Submitter.prototype = {
   },
 
   submit: async function Submitter_submit() {
+    if (this.recordSubmission) {
+      await Services.crashmanager.ensureCrashIsPresent(this.id);
+    }
+
     let [dump, extra, memory] = getPendingMinidump(this.id);
     let [dumpExists, extraExists, memoryExists] = await Promise.all([
       OS.File.exists(dump),
