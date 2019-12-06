@@ -1508,12 +1508,11 @@ getHardcodedLayout = basic => {
               header: {
                 title: {
                   id: "newtab-section-header-pocket",
-                  values: { provider: "pocket" },
+                  values: { provider: "Pocket" },
                 },
                 subtitle: "",
                 link_text: {
                   id: "newtab-pocket-whats-pocket",
-                  values: { provider: "pocket" },
                 },
                 link_url: "https://getpocket.com/firefox/new_tab_learn_more",
                 icon:
@@ -1616,12 +1615,11 @@ getHardcodedLayout = basic => {
             header: {
               title: {
                 id: "newtab-section-header-pocket",
-                values: { provider: "pocket" },
+                values: { provider: "Pocket" },
               },
               subtitle: "",
               link_text: {
                 id: "newtab-pocket-whats-pocket",
-                values: { provider: "pocket" },
               },
               link_url: "https://getpocket.com/firefox/new_tab_learn_more",
               icon:
