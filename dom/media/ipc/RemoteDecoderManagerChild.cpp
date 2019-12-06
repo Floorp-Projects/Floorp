@@ -294,13 +294,13 @@ already_AddRefed<SourceSurface> RemoteDecoderManagerChild::Readback(
   return source.forget();
 }
 
-void RemoteDecoderManagerChild::DeallocateSurfaceDescriptor(
+void RemoteDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo(
     const SurfaceDescriptorGPUVideo& aSD) {
   RefPtr<RemoteDecoderManagerChild> ref = this;
   SurfaceDescriptorGPUVideo sd = std::move(aSD);
   sRemoteDecoderManagerChildThread->Dispatch(
       NS_NewRunnableFunction(
-          "RemoteDecoderManagerChild::DeallocateSurfaceDescriptor",
+          "RemoteDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo",
           [ref, sd]() {
             if (ref->CanSend()) {
               ref->SendDeallocateSurfaceDescriptorGPUVideo(sd);

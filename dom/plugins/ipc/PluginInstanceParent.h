@@ -13,7 +13,6 @@
 #  include "mozilla/gfx/SharedDIBWin.h"
 #  include <d3d10_1.h>
 #  include "nsRefPtrHashtable.h"
-#  include "mozilla/layers/LayersSurfaces.h"
 #elif defined(MOZ_WIDGET_COCOA)
 #  include "mozilla/gfx/QuartzSupport.h"
 #endif
@@ -102,12 +101,8 @@ class PluginInstanceParent : public PPluginInstanceParent {
   mozilla::ipc::IPCResult AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
       bool* value);
 
-  static bool SupportsPluginDirectDXGISurfaceDrawing();
   mozilla::ipc::IPCResult AnswerNPN_GetValue_SupportsAsyncDXGISurface(
-      bool* value) {
-    *value = SupportsPluginDirectDXGISurfaceDrawing();
-    return IPC_OK();
-  }
+      bool* value);
 
   mozilla::ipc::IPCResult AnswerNPN_GetValue_PreferredDXGIAdapter(
       DxgiAdapterDesc* desc);
@@ -149,35 +144,11 @@ class PluginInstanceParent : public PPluginInstanceParent {
 
   mozilla::ipc::IPCResult RecvRevokeCurrentDirectSurface();
 
-  /**
-   * Windows async plugin rendering uses DXGI surface objects, entirely
-   * maintained by the compositor process, to back the rendering of plugins.
-   * The expected mechanics are:
-   * - The PluginInstanceChild (PIC) in the plugin process sends
-   *   InitDXGISurface to us, the content process' PluginInstanceParent (PIP).
-   * - The PIP uses the ImageBridge to tell the compositor to create 2
-   *   surfaces -- one to be written to by the plugin process and another
-   *   to be displayed by the compositor.  The PIP returns the plugin
-   *   surface to the PIC.
-   * - The PIC repeatedly issues ShowDirectDXGISurface calls to tell the
-   *   PIP to blit the plugin surface to the display surface.  These
-   *   requests are forwarded to the compositor via the ImageBridge.
-   * - The PIC sends FinalizeDXGISurface tio the PIP when it no longer needs
-   *   the surface.  The PIP then tells the compositor to destroy the
-   *   plugin surface.  After this, the PIP will tell the compositor to
-   *   also destroy the display surface as soon as the ImageBridge says it
-   *   no longer needs it.
-   */
   mozilla::ipc::IPCResult RecvInitDXGISurface(const gfx::SurfaceFormat& format,
                                               const gfx::IntSize& size,
                                               WindowsHandle* outHandle,
                                               NPError* outError);
-  mozilla::ipc::IPCResult RecvShowDirectDXGISurface(const WindowsHandle& handle,
-                                                    const gfx::IntRect& rect);
-
   mozilla::ipc::IPCResult RecvFinalizeDXGISurface(const WindowsHandle& handle);
-
-  // --
 
   mozilla::ipc::IPCResult RecvShowDirectBitmap(Shmem&& buffer,
                                                const gfx::SurfaceFormat& format,
@@ -185,6 +156,10 @@ class PluginInstanceParent : public PPluginInstanceParent {
                                                const gfx::IntSize& size,
                                                const gfx::IntRect& dirty);
 
+  mozilla::ipc::IPCResult RecvShowDirectDXGISurface(const WindowsHandle& handle,
+                                                    const gfx::IntRect& rect);
+
+  // Async rendering
   mozilla::ipc::IPCResult RecvShow(const NPRect& updatedRect,
                                    const SurfaceDescriptor& newSurface,
                                    SurfaceDescriptor* prevSurface);
@@ -364,15 +339,7 @@ class PluginInstanceParent : public PPluginInstanceParent {
   HWND mChildPluginHWND;
   HWND mChildPluginsParentHWND;
   WNDPROC mPluginWndProc;
-
-  struct AsyncSurfaceInfo {
-    layers::SurfaceDescriptorPlugin mSD;
-    gfx::IntSize mSize;
-  };
-  // Key is plugin surface's texture's handle
-  HashMap<WindowsHandle, AsyncSurfaceInfo> mAsyncSurfaceMap;
-#endif  // defined(OS_WIN)
-
+#endif  // defined(XP_WIN)
 #if defined(MOZ_WIDGET_COCOA)
  private:
   Shmem mShSurface;

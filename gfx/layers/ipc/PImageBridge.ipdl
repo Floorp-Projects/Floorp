@@ -56,13 +56,6 @@ parent:
 
   sync NewCompositable(CompositableHandle aHandle, TextureInfo aInfo, LayersBackend aBackend);
   async ReleaseCompositable(CompositableHandle aHandle);
-
-  sync MakeAsyncPluginSurfaces(SurfaceFormat format, IntSize size)
-    returns (SurfaceDescriptorPlugin aSD);
-  async UpdateAsyncPluginSurface(SurfaceDescriptorPlugin aSD);
-  sync ReadbackAsyncPluginSurface(SurfaceDescriptorPlugin aSD)
-    returns (SurfaceDescriptor result);
-  async RemoveAsyncPluginSurface(SurfaceDescriptorPlugin aSD, bool isFrontSurface);
 };
 
 
