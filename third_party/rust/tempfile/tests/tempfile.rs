@@ -1,8 +1,9 @@
-extern crate tempfile;
-use std::io::{Read, Seek, SeekFrom, Write};
+#![deny(rust_2018_idioms)]
+
 use std::fs;
-use std::thread;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::sync::mpsc::{sync_channel, TryRecvError};
+use std::thread;
 
 #[test]
 fn test_basic() {

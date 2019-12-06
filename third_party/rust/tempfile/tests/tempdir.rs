@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate tempfile;
+#![deny(rust_2018_idioms)]
 
 use std::env;
 use std::fs;
@@ -222,7 +222,8 @@ pub fn dont_double_panic() {
         // Panic. If TempDir panics *again* due to the rmdir
         // error then the process will abort.
         panic!();
-    }).join();
+    })
+    .join();
     assert!(r.is_err());
 }
 

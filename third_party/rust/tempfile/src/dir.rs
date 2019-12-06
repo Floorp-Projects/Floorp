@@ -12,8 +12,8 @@ use remove_dir_all::remove_dir_all;
 use std::path::{self, Path, PathBuf};
 use std::{fmt, fs, io};
 
-use error::IoResultExt;
-use Builder;
+use crate::error::IoResultExt;
+use crate::Builder;
 
 /// Create a new temporary directory.
 ///
@@ -33,7 +33,6 @@ use Builder;
 /// # Examples
 ///
 /// ```
-/// # extern crate tempfile;
 /// use tempfile::tempdir;
 /// use std::fs::File;
 /// use std::io::{self, Write};
@@ -83,7 +82,6 @@ pub fn tempdir() -> io::Result<TempDir> {
 /// # Examples
 ///
 /// ```
-/// # extern crate tempfile;
 /// use tempfile::tempdir;
 /// use std::fs::File;
 /// use std::io::{self, Write};
@@ -237,7 +235,7 @@ impl TempDir {
     }
 
     /// Attempts to make a temporary directory inside of `dir`.
-    /// The directory and everything inside it will be automatically 
+    /// The directory and everything inside it will be automatically
     /// deleted once the returned `TempDir` is destroyed.
     ///
     /// # Errors
@@ -385,7 +383,7 @@ impl AsRef<Path> for TempDir {
 }
 
 impl fmt::Debug for TempDir {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TempDir")
             .field("path", &self.path())
             .finish()

@@ -1,4 +1,5 @@
-extern crate tempfile;
+#![deny(rust_2018_idioms)]
+
 use std::env;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -93,6 +94,19 @@ fn test_customnamed() {
     assert!(name.starts_with("tmp"));
     assert!(name.ends_with(".rs"));
     assert_eq!(name.len(), 18);
+}
+
+#[test]
+fn test_append() {
+    let mut tmpfile = Builder::new().append(true).tempfile().unwrap();
+    tmpfile.write(b"a").unwrap();
+    tmpfile.seek(SeekFrom::Start(0)).unwrap();
+    tmpfile.write(b"b").unwrap();
+
+    tmpfile.seek(SeekFrom::Start(0)).unwrap();
+    let mut buf = vec![0u8; 1];
+    tmpfile.read_exact(&mut buf).unwrap();
+    assert_eq!(buf, b"a");
 }
 
 #[test]
@@ -200,4 +214,70 @@ fn test_temppath_persist_noclobber() {
     f.read_to_string(&mut buf).unwrap();
     assert_eq!("abcde", buf);
     std::fs::remove_file(&persist_path).unwrap();
+}
+
+#[test]
+fn test_write_after_close() {
+    let path = NamedTempFile::new().unwrap().into_temp_path();
+    File::create(path).unwrap().write_all(b"test").unwrap();
+}
+
+#[test]
+fn test_change_dir() {
+    env::set_current_dir(env::temp_dir()).unwrap();
+    let tmpfile = NamedTempFile::new_in(".").unwrap();
+    let path = env::current_dir().unwrap().join(tmpfile.path());
+    env::set_current_dir("/").unwrap();
+    drop(tmpfile);
+    assert!(!exists(path))
+}
+
+#[test]
+fn test_into_parts() {
+    let mut file = NamedTempFile::new().unwrap();
+    write!(file, "abcd").expect("write failed");
+
+    let (mut file, temp_path) = file.into_parts();
+
+    let path = temp_path.to_path_buf();
+
+    assert!(path.exists());
+    drop(temp_path);
+    assert!(!path.exists());
+
+    write!(file, "efgh").expect("write failed");
+
+    file.seek(SeekFrom::Start(0)).unwrap();
+    let mut buf = String::new();
+    file.read_to_string(&mut buf).unwrap();
+    assert_eq!("abcdefgh", buf);
+}
+
+#[test]
+fn test_keep() {
+    let mut tmpfile = NamedTempFile::new().unwrap();
+    write!(tmpfile, "abcde").unwrap();
+    let (mut f, temp_path) = tmpfile.into_parts();
+    let path;
+    {
+        assert!(exists(&temp_path));
+        path = temp_path.keep().unwrap();
+        assert!(exists(&path));
+
+        // Check original file
+        f.seek(SeekFrom::Start(0)).unwrap();
+        let mut buf = String::new();
+        f.read_to_string(&mut buf).unwrap();
+        assert_eq!("abcde", buf);
+    }
+
+    {
+        // Try opening it again.
+        let mut f = File::open(&path).unwrap();
+        f.seek(SeekFrom::Start(0)).unwrap();
+        let mut buf = String::new();
+        f.read_to_string(&mut buf).unwrap();
+        assert_eq!("abcde", buf);
+    }
+    std::fs::remove_file(&path).unwrap();
 }
