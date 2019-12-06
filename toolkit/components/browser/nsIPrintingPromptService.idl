@@ -97,7 +97,6 @@ interface nsIPrintingPromptService : nsISupports
    *  Shows the print progress dialog
    *
    *  @param parent - a DOM windows the dialog will be parented to
-   *  @param webBrowserPrint - represents the document to be printed
    *  @param printSettings - PrintSettings for print "job"
    *  @param openDialogObserver - an observer that will be notifed when the dialog is opened
    *  @param isForPrinting - true - for printing, false for print preview
@@ -109,7 +108,6 @@ interface nsIPrintingPromptService : nsISupports
    *                        For Print Preview Progress there is intermediate progress
    */
   void showPrintProgressDialog(in mozIDOMWindowProxy parent,
-                               in nsIWebBrowserPrint webBrowserPrint,
                                in nsIPrintSettings printSettings,
                                in nsIObserver openDialogObserver,
                                in boolean isForPrinting,
