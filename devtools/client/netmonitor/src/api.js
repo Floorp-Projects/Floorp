@@ -20,8 +20,6 @@ const {
   getSortedRequests,
 } = require("./selectors/index");
 
-loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
-
 /**
  * API object for NetMonitor panel (like a facade). This object can be
  * consumed by other panels, WebExtension API, etc.
@@ -229,16 +227,6 @@ NetMonitorAPI.prototype = {
     // Send custom request with same url, headers and body as the request
     // with the given requestId.
     this.store.dispatch(Actions.sendCustomRequest(this.connector, requestId));
-  },
-
-  /**
-   * Fire events for the owner object. These events are only
-   * used in tests so, don't fire them in production release.
-   */
-  emitForTests(type, data) {
-    if (flags.testing) {
-      this.emit(type, data);
-    }
   },
 };
 
