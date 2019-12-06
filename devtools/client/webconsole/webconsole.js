@@ -437,6 +437,17 @@ class WebConsole {
   }
 
   /**
+   * Evaluate a JavaScript expression asynchronously.
+   *
+   * @param {String} string: The code you want to evaluate.
+   * @param {Object} options: Options for evaluation. See evaluateJSAsync method on
+   *                          devtools/shared/fronts/webconsole.js
+   */
+  evaluateJSAsync(expression, options = {}) {
+    return this.ui._commands.evaluateJSAsync(expression, options);
+  }
+
+  /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
    *
