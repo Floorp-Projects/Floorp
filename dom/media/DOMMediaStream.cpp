@@ -25,7 +25,6 @@
 #include "mozilla/media/MediaUtils.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
-#include "nsIScriptError.h"
 #include "nsIUUIDGenerator.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"

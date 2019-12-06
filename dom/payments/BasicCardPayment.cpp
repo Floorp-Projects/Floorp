@@ -8,7 +8,6 @@
 #include "PaymentAddress.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsArrayUtils.h"
-#include "nsISupportsPrimitives.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDataHashtable.h"
 

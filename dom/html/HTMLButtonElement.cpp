@@ -14,7 +14,6 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFormControl.h"
-#include "nsIURL.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "mozilla/dom/Document.h"

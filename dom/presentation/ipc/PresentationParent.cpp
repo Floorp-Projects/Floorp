@@ -9,7 +9,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Unused.h"
-#include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationSessionTransport.h"
 #include "nsIPresentationSessionTransportBuilder.h"
 #include "nsServiceManagerUtils.h"

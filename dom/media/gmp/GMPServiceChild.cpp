@@ -9,7 +9,6 @@
 #include "GMPLog.h"
 #include "GMPParent.h"
 #include "GMPContentParent.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"

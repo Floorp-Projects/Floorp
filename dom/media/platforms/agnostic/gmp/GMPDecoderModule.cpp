@@ -14,7 +14,6 @@
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "gmp-video-decode.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/StaticMutex.h"
 #include "nsServiceManagerUtils.h"
 #ifdef XP_WIN

@@ -8,7 +8,6 @@
 #define mozilla_dom_LocalStorageCache_h
 
 #include "nsIPrincipal.h"
-#include "nsITimer.h"
 
 #include "nsString.h"
 #include "nsDataHashtable.h"

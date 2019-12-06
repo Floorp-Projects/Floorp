@@ -18,11 +18,6 @@
 #include "VideoFrameContainer.h"
 #include "VideoOutput.h"
 
-#include "nsIScriptSecurityManager.h"
-#include "nsIXPConnect.h"
-
-#include "nsITimer.h"
-
 #include "FrameStatistics.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"

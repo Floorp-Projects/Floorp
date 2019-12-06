@@ -17,8 +17,6 @@
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsIStreamListener.h"
-#include "nsIURIFixup.h"
-#include "nsIImageLoadingContent.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsReadableUtils.h"
 

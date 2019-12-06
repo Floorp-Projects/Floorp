@@ -18,7 +18,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsCOMArray.h"
-#include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
 #include "nsIScriptContext.h"
 #include "nsCycleCollectionParticipant.h"

@@ -17,6 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIXPConnect.h"
 #include "nsString.h"
 #include "nsStringEnumerator.h"
 

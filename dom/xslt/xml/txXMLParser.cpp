@@ -11,7 +11,6 @@
 #include "nsSyncLoadService.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
-#include "nsIPrincipal.h"
 
 using namespace mozilla::dom;
 

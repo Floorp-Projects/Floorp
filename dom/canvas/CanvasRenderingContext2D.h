@@ -22,7 +22,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/UniquePtr.h"
 #include "gfx2DGlue.h"
-#include "imgIEncoder.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "FilterSupport.h"

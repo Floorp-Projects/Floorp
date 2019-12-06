@@ -15,7 +15,6 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 
-#include "nsIGfxInfo.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"

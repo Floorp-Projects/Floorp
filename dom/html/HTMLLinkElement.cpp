@@ -27,7 +27,6 @@
 #include "nsINode.h"
 #include "nsIPrefetchService.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIURL.h"
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"

@@ -16,12 +16,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsIObserver.h"
-#include "nsIStreamListener.h"
-#include "nsIChannelEventSink.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsITimer.h"
-#include "nsIHttpChannel.h"
 #include "nsDeque.h"
 
 class nsIGlobalObject;

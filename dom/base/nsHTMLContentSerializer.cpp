@@ -18,7 +18,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIServiceManager.h"
 #include "nsIDocumentEncoder.h"
 #include "nsGkAtoms.h"
 #include "nsIURI.h"
@@ -28,9 +27,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
-#include "nsIDocShell.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "mozilla/dom/Element.h"
 #include "nsParserConstants.h"
 

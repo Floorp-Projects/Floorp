@@ -14,7 +14,6 @@
 #include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
 
 namespace mozilla {

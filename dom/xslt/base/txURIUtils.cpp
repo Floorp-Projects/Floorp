@@ -6,7 +6,6 @@
 #include "txURIUtils.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/Document.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/nsCSPContext.h"

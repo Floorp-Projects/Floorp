@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "js/TypeDecls.h"
-#include "nsICancelable.h"
 
 class nsITCPSocketCallback;
 

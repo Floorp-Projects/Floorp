@@ -12,7 +12,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInputStream.h"
-#include "nsIWebVTTParserWrapper.h"
 
 extern mozilla::LazyLogModule gTextTrackLog;
 #define LOG(msg, ...)                     \
