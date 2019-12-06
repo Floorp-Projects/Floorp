@@ -283,7 +283,8 @@ int main(int argc, char* argv[], char* envp[]) {
   // main
   if (argc > 1 && IsArg(argv[1], "contentproc")) {
 #  ifdef HAS_DLL_BLOCKLIST
-    DllBlocklist_Initialize(eDllBlocklistInitFlagIsChildProcess);
+    DllBlocklist_Initialize(gBlocklistInitFlags |
+                            eDllBlocklistInitFlagIsChildProcess);
 #  endif
 #  if defined(XP_WIN) && defined(MOZ_SANDBOX)
     // We need to initialize the sandbox TargetServices before InitXPCOMGlue
