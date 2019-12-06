@@ -12,6 +12,7 @@
 #include "MediaHardwareKeysEventSourceMac.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::widget;
 
 static const int kSystemDefinedEventMediaKeysSubtype = 8;
 

@@ -2,20 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_MEDIACONTROL_MEDIAHARDWAREKEYSEVENTSOURCEMAC_H_
-#define DOM_MEDIA_MEDIACONTROL_MEDIAHARDWAREKEYSEVENTSOURCEMAC_H_
+#ifndef WIDGET_COCOA_MEDIAHARDWAREKEYSEVENTSOURCEMAC_H_
+#define WIDGET_COCOA_MEDIAHARDWAREKEYSEVENTSOURCEMAC_H_
 
 #import <ApplicationServices/ApplicationServices.h>
 #import <CoreFoundation/CoreFoundation.h>
 
-#include "MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaControlKeysEvent.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
-namespace dom {
+namespace widget {
 
 class MediaHardwareKeysEventSourceMac final
-    : public MediaControlKeysEventSource {
+    : public mozilla::dom::MediaControlKeysEventSource {
  public:
   MediaHardwareKeysEventSourceMac();
   ~MediaHardwareKeysEventSourceMac();
@@ -32,7 +32,7 @@ class MediaHardwareKeysEventSourceMac final
   CFRunLoopSourceRef mEventTapSource = nullptr;
 };
 
-}  // namespace dom
+}  // namespace widget
 }  // namespace mozilla
 
 #endif

@@ -10,10 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
-
-#ifdef MOZ_APPLEMEDIA
-#  include "MediaHardwareKeysEventSourceMac.h"
-#endif
+#include "mozilla/widget/MediaKeysEventSourceFactory.h"
 
 #undef LOG
 #define LOG(msg, ...)                        \
@@ -48,9 +45,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
 }
 
 void MediaControlKeysManager::CreateEventSource() {
-#ifdef MOZ_APPLEMEDIA
-  mEventSource = new MediaHardwareKeysEventSourceMac();
-#endif
+  mEventSource = widget::CreateMediaControlKeysEventSource();
   if (mEventSource) {
     mEventSource->AddListener(this);
   }
