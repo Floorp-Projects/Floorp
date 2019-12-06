@@ -27,7 +27,6 @@
 !define AB_CD                 "@AB_CD@"
 
 !define FileMainEXE           "@MOZ_APP_NAME@.exe"
-!define WindowClass           "FirefoxMessageWindow"
 !define MainWindowClass       "MozillaWindowClass"
 !define DialogWindowClass     "MozillaDialogClass"
 !define DDEApplication        "Firefox"
