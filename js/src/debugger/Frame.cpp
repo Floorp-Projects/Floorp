@@ -1200,8 +1200,7 @@ void DebuggerFrame::trace(JSTracer* trc) {
 }
 
 /* static */
-DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv,
-                                    MinState minState) {
+DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv) {
   JSObject* thisobj = RequireObject(cx, thisv);
   if (!thisobj) {
     return nullptr;
@@ -1225,26 +1224,6 @@ DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               "method", "prototype object");
     return nullptr;
-  }
-
-  switch (minState) {
-    case MinState::OnStack:
-      if (!frame->isOnStack()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_DEBUG_NOT_ON_STACK, "Debugger.Frame");
-        return nullptr;
-      }
-      break;
-    case MinState::OnStackOrSuspended:
-      if (!frame->isOnStack() && !frame->hasGenerator()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_DEBUG_NOT_ON_STACK_OR_SUSPENDED,
-                                  "Debugger.Frame");
-        return nullptr;
-      }
-      break;
-    case MinState::OnStackOrSuspendedOrTerminated:
-      break;
   }
 
   return frame;
@@ -1285,6 +1264,9 @@ struct MOZ_STACK_CLASS DebuggerFrame::CallData {
 
   template <Method MyMethod>
   static bool ToNative(JSContext* cx, unsigned argc, Value* vp);
+
+  bool ensureOnStack() const;
+  bool ensureOnStackOrSuspended() const;
 };
 
 template <DebuggerFrame::CallData::Method MyMethod>
@@ -1293,25 +1275,7 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  MinState minState = MinState::OnStack;
-  if (MyMethod == &CallData::asyncPromiseGetter ||
-      MyMethod == &CallData::calleeGetter || MyMethod == &CallData::getScript ||
-      MyMethod == &CallData::offsetGetter) {
-    minState = MinState::OnStackOrSuspended;
-  } else if (
-      // These methods do not require any frame metadata.
-      MyMethod == &CallData::liveGetter ||
-      MyMethod == &CallData::onStackGetter ||
-      MyMethod == &CallData::terminatedGetter ||
-      MyMethod == &CallData::onStepGetter ||
-      MyMethod == &CallData::onStepSetter ||
-      MyMethod == &CallData::onPopGetter ||
-      MyMethod == &CallData::onPopSetter) {
-    minState = MinState::OnStackOrSuspendedOrTerminated;
-  }
-
-  RootedDebuggerFrame frame(cx,
-                            DebuggerFrame::check(cx, args.thisv(), minState));
+  RootedDebuggerFrame frame(cx, DebuggerFrame::check(cx, args.thisv()));
   if (!frame) {
     return false;
   }
@@ -1320,7 +1284,40 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   return (data.*MyMethod)();
 }
 
+static bool EnsureOnStack(JSContext* cx, HandleDebuggerFrame frame) {
+  MOZ_ASSERT(frame);
+  if (!frame->isOnStack()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEBUG_NOT_ON_STACK, "Debugger.Frame");
+    return false;
+  }
+
+  return true;
+}
+static bool EnsureOnStackOrSuspended(JSContext* cx, HandleDebuggerFrame frame) {
+  MOZ_ASSERT(frame);
+  if (!frame->isOnStack() && !frame->hasGenerator()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEBUG_NOT_ON_STACK_OR_SUSPENDED,
+                              "Debugger.Frame");
+    return false;
+  }
+
+  return true;
+}
+
+bool DebuggerFrame::CallData::ensureOnStack() const {
+  return EnsureOnStack(cx, frame);
+}
+bool DebuggerFrame::CallData::ensureOnStackOrSuspended() const {
+  return EnsureOnStackOrSuspended(cx, frame);
+}
+
 bool DebuggerFrame::CallData::typeGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   DebuggerFrameType type = DebuggerFrame::getType(frame);
 
   JSString* str;
@@ -1349,6 +1346,10 @@ bool DebuggerFrame::CallData::typeGetter() {
 }
 
 bool DebuggerFrame::CallData::implementationGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   DebuggerFrameImplementation implementation =
       DebuggerFrame::getImplementation(frame);
 
@@ -1380,6 +1381,10 @@ bool DebuggerFrame::CallData::implementationGetter() {
 }
 
 bool DebuggerFrame::CallData::environmentGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   RootedDebuggerEnvironment result(cx);
   if (!DebuggerFrame::getEnvironment(cx, frame, &result)) {
     return false;
@@ -1390,6 +1395,10 @@ bool DebuggerFrame::CallData::environmentGetter() {
 }
 
 bool DebuggerFrame::CallData::calleeGetter() {
+  if (!ensureOnStackOrSuspended()) {
+    return false;
+  }
+
   RootedDebuggerObject result(cx);
   if (!DebuggerFrame::getCallee(cx, frame, &result)) {
     return false;
@@ -1400,11 +1409,19 @@ bool DebuggerFrame::CallData::calleeGetter() {
 }
 
 bool DebuggerFrame::CallData::generatorGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   args.rval().setBoolean(DebuggerFrame::getIsGenerator(frame));
   return true;
 }
 
 bool DebuggerFrame::CallData::constructingGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   bool result;
   if (!DebuggerFrame::getIsConstructing(cx, frame, result)) {
     return false;
@@ -1415,6 +1432,10 @@ bool DebuggerFrame::CallData::constructingGetter() {
 }
 
 bool DebuggerFrame::CallData::asyncPromiseGetter() {
+  if (!ensureOnStackOrSuspended()) {
+    return false;
+  }
+
   RootedScript script(cx);
   if (frame->isOnStack()) {
     FrameIter iter(*frame->frameIterData());
@@ -1444,10 +1465,18 @@ bool DebuggerFrame::CallData::asyncPromiseGetter() {
 }
 
 bool DebuggerFrame::CallData::thisGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   return DebuggerFrame::getThis(cx, frame, args.rval());
 }
 
 bool DebuggerFrame::CallData::olderGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   RootedDebuggerFrame result(cx);
   if (!DebuggerFrame::getOlder(cx, frame, &result)) {
     return false;
@@ -1477,9 +1506,8 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedValue framev(cx, argsobj->as<NativeObject>().getReservedSlot(
                              JSSLOT_DEBUGARGUMENTS_FRAME));
-  RootedDebuggerFrame thisobj(
-      cx, DebuggerFrame::check(cx, framev, DebuggerFrame::MinState::OnStack));
-  if (!thisobj) {
+  RootedDebuggerFrame thisobj(cx, DebuggerFrame::check(cx, framev));
+  if (!thisobj || !EnsureOnStack(cx, thisobj)) {
     return false;
   }
 
@@ -1572,6 +1600,10 @@ DebuggerArguments* DebuggerArguments::create(JSContext* cx, HandleObject proto,
 }
 
 bool DebuggerFrame::CallData::argumentsGetter() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   RootedDebuggerArguments result(cx);
   if (!DebuggerFrame::getArguments(cx, frame, &result)) {
     return false;
@@ -1582,6 +1614,10 @@ bool DebuggerFrame::CallData::argumentsGetter() {
 }
 
 bool DebuggerFrame::CallData::getScript() {
+  if (!ensureOnStackOrSuspended()) {
+    return false;
+  }
+
   RootedDebuggerScript scriptObject(cx);
 
   Debugger* debug = Debugger::fromChildJSObject(frame);
@@ -1610,6 +1646,10 @@ bool DebuggerFrame::CallData::getScript() {
 }
 
 bool DebuggerFrame::CallData::offsetGetter() {
+  if (!ensureOnStackOrSuspended()) {
+    return false;
+  }
+
   size_t result;
   if (!DebuggerFrame::getOffset(cx, frame, result)) {
     return false;
@@ -1711,6 +1751,10 @@ bool DebuggerFrame::CallData::onPopSetter() {
 }
 
 bool DebuggerFrame::CallData::evalMethod() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.eval", 1)) {
     return false;
   }
@@ -1734,6 +1778,10 @@ bool DebuggerFrame::CallData::evalMethod() {
 }
 
 bool DebuggerFrame::CallData::evalWithBindingsMethod() {
+  if (!ensureOnStack()) {
+    return false;
+  }
+
   if (!args.requireAtLeast(cx, "Debugger.Frame.prototype.evalWithBindings",
                            2)) {
     return false;
