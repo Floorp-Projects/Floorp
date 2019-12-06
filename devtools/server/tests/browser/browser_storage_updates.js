@@ -255,7 +255,9 @@ async function addCookie(name, value) {
   info(`addCookie("${name}", "${value}")`);
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[name, value]], ([iName, iValue]) => {
+    gBrowser.selectedBrowser,
+    [[name, value]],
+    ([iName, iValue]) => {
       content.wrappedJSObject.window.addCookie(iName, iValue);
     }
   );
@@ -273,7 +275,9 @@ async function localStorageSetItem(name, value) {
   info(`localStorageSetItem("${name}", "${value}")`);
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[name, value]], ([iName, iValue]) => {
+    gBrowser.selectedBrowser,
+    [[name, value]],
+    ([iName, iValue]) => {
       content.window.localStorage.setItem(iName, iValue);
     }
   );
@@ -291,7 +295,9 @@ async function sessionStorageSetItem(name, value) {
   info(`sessionStorageSetItem("${name}", "${value}")`);
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[name, value]], ([iName, iValue]) => {
+    gBrowser.selectedBrowser,
+    [[name, value]],
+    ([iName, iValue]) => {
       content.window.sessionStorage.setItem(iName, iValue);
     }
   );

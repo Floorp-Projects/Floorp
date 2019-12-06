@@ -23,7 +23,9 @@ add_task(async function() {
   await closeConsole();
 
   const isFocused = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       await this.onFocus;
       return Services.focus.focusedWindow == content;
     }

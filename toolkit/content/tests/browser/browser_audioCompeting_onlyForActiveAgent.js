@@ -151,7 +151,9 @@ async function audio_competing_for_active_agent(url, browser) {
 
   info("- the default suspended state of all audio should be non-suspened -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_all_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_all_audio_suspended
   );
 
   info("- only pause playing audio in the page -");
@@ -159,40 +161,44 @@ async function audio_competing_for_active_agent(url, browser) {
 
   info("- page shouldn't have any playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
+  await SpecialPowers.spawn(browser, [true], check_all_audio_pause_state);
   await SpecialPowers.spawn(
-    browser, [true], check_all_audio_pause_state
-  );
-  await SpecialPowers.spawn(
-    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_all_audio_suspended
+    browser,
+    [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE],
+    check_all_audio_suspended
   );
 
   info("- resume audio1 from page -");
   await SpecialPowers.spawn(browser, [], play_audio1_from_page);
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio1_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio1_suspended
   );
 
   info("- audio2 should still be suspended -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_audio2_suspended
+    browser,
+    [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE],
+    check_audio2_suspended
   );
-  await SpecialPowers.spawn(
-    browser, [true], check_audio2_pause_state
-  );
+  await SpecialPowers.spawn(browser, [true], check_audio2_pause_state);
 
   info("- stop audio1 from page -");
   await SpecialPowers.spawn(browser, [], stop_audio1_from_page);
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio1_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio1_suspended
   );
 
   info("- audio2 should still be suspended -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_audio2_suspended
+    browser,
+    [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE],
+    check_audio2_suspended
   );
-  await SpecialPowers.spawn(
-    browser, [true], check_audio2_pause_state
-  );
+  await SpecialPowers.spawn(browser, [true], check_audio2_pause_state);
 }
 
 add_task(async function setup_test_preference() {

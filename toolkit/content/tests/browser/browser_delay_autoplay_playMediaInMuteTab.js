@@ -61,7 +61,9 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
 
   info("- audio shouldn't be muted -");
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [false], check_audio_volume_and_mute
+    tab.linkedBrowser,
+    [false],
+    check_audio_volume_and_mute
   );
 
   info("- tab shouldn't display unblocking icon -");
@@ -82,7 +84,9 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
 
   info("- audio shoule be muted, but not be blocked -");
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [true], check_audio_volume_and_mute
+    tab.linkedBrowser,
+    [true],
+    check_audio_volume_and_mute
   );
 
   info("- tab should not display unblocking icon -");

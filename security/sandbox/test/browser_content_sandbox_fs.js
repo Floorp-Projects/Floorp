@@ -264,7 +264,11 @@ async function createTempFile() {
     ok(!fileDeleted, "deleting a file in content temp is not permitted");
 
     let path = fileInTempDir().path;
-    let symlinkCreated = await SpecialPowers.spawn(browser, [path], createSymlink);
+    let symlinkCreated = await SpecialPowers.spawn(
+      browser,
+      [path],
+      createSymlink
+    );
     ok(!symlinkCreated, "created a symlink in content temp is not permitted");
   } else {
     ok(!!fileDeleted, "deleting a file in content temp is permitted");
@@ -614,7 +618,9 @@ async function testFileAccess() {
     }
 
     let result = await SpecialPowers.spawn(
-      test.browser, [test.file.path], test.func
+      test.browser,
+      [test.file.path],
+      test.func
     );
 
     ok(

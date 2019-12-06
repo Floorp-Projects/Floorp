@@ -39,7 +39,9 @@ async function applyMutations(knownTab, mutations) {
 
 async function verifyState(knownTab, expectedState) {
   let actualState = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [], function() {
+    knownTab.tab.linkedBrowser,
+    [],
+    function() {
       return content.wrappedJSObject.getState();
     }
   );
@@ -57,7 +59,9 @@ async function verifyState(knownTab, expectedState) {
 
 async function getKeys(knownTab) {
   let keys = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [], function() {
+    knownTab.tab.linkedBrowser,
+    [],
+    function() {
       return content.wrappedJSObject.getKeys();
     }
   );

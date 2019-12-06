@@ -53,7 +53,9 @@ add_task(async function checkPermanentExceptionPref() {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
     info("Clicking the exceptionDialogButton in advanced panel");
     let securityInfoAsString = await SpecialPowers.spawn(
-      browser, [], async function() {
+      browser,
+      [],
+      async function() {
         let doc = content.document;
         let exceptionButton = doc.getElementById("exceptionDialogButton");
         exceptionButton.click();
@@ -128,7 +130,9 @@ add_task(async function checkBadStsCert() {
     });
 
     let message = await SpecialPowers.spawn(
-      browser, [{ frame: useFrame }], async function({ frame }) {
+      browser,
+      [{ frame: useFrame }],
+      async function({ frame }) {
         let doc = frame
           ? content.document.querySelector("iframe").contentDocument
           : content.document;

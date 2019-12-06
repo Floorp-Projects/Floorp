@@ -97,7 +97,9 @@ add_task(async function() {
     let iconPromise = waitForFaviconMessage(!testCase.richIcon, expectedIcon);
 
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [[testCase.icons, ROOTURI + ICON]], ([icons, defaultIcon]) => {
+      gBrowser.selectedBrowser,
+      [[testCase.icons, ROOTURI + ICON]],
+      ([icons, defaultIcon]) => {
         let doc = content.document;
         let head = doc.head;
 

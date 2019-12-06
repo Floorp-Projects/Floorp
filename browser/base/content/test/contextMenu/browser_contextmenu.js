@@ -1243,7 +1243,9 @@ add_task(async function test_pagemenu() {
         ok(item, "Got generated XUL menu item");
         item.doCommand();
         await SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [], async function() {
+          gBrowser.selectedBrowser,
+          [],
+          async function() {
             let pagemenu = content.document.getElementById("test-pagemenu");
             Assert.ok(
               !pagemenu.hasAttribute("hopeless"),
@@ -1312,7 +1314,9 @@ add_task(async function test_dom_full_screen() {
           ["full-screen-api.transition-duration.leave", "0 0"]
         );
         await SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [], async function() {
+          gBrowser.selectedBrowser,
+          [],
+          async function() {
             let doc = content.document;
             let win = doc.defaultView;
             let full_screen_element = doc.getElementById(
@@ -1329,7 +1333,9 @@ add_task(async function test_dom_full_screen() {
       },
       async postCheckContextMenuFn() {
         await SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [], async function() {
+          gBrowser.selectedBrowser,
+          [],
+          async function() {
             let win = content.document.defaultView;
             let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
               win,
@@ -1465,7 +1471,9 @@ add_task(async function test_select_text_link() {
       },
       async postCheckContextMenuFn() {
         await SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [], async function() {
+          gBrowser.selectedBrowser,
+          [],
+          async function() {
             let win = content.document.defaultView;
             win.getSelection().removeAllRanges();
           }
@@ -1968,18 +1976,20 @@ add_task(async function test_cleanup_html() {
  *        the element that will be referenced.
  */
 async function selectText(selector) {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], async function(
-    contentSelector
-  ) {
-    info(`Selecting text of ${contentSelector}`);
-    let doc = content.document;
-    let win = doc.defaultView;
-    win.getSelection().removeAllRanges();
-    let div = doc.createRange();
-    let element = doc.querySelector(contentSelector);
-    Assert.ok(element, "Found element to select text from");
-    div.setStartBefore(element);
-    div.setEndAfter(element);
-    win.getSelection().addRange(div);
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    async function(contentSelector) {
+      info(`Selecting text of ${contentSelector}`);
+      let doc = content.document;
+      let win = doc.defaultView;
+      win.getSelection().removeAllRanges();
+      let div = doc.createRange();
+      let element = doc.querySelector(contentSelector);
+      Assert.ok(element, "Found element to select text from");
+      div.setStartBefore(element);
+      div.setEndAfter(element);
+      win.getSelection().addRange(div);
+    }
+  );
 }

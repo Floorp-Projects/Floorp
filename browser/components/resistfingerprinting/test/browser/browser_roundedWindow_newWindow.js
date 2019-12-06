@@ -35,7 +35,9 @@ add_task(async function test_new_window() {
   );
 
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ gMaxAvailWidth, gMaxAvailHeight }], async function(input) {
+    tab.linkedBrowser,
+    [{ gMaxAvailWidth, gMaxAvailHeight }],
+    async function(input) {
       is(
         content.screen.width,
         input.gMaxAvailWidth,

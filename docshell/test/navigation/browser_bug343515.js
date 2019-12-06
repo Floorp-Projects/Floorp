@@ -222,7 +222,10 @@ add_task(async function() {
 
   async function checkBrowser(browser, outerTabNum, outerActive) {
     let data = { tabNum: outerTabNum, active: outerActive };
-    await SpecialPowers.spawn(browser, [data], async function({ tabNum, active }) {
+    await SpecialPowers.spawn(browser, [data], async function({
+      tabNum,
+      active,
+    }) {
       function isActive(aWindow) {
         var docshell = aWindow.docShell;
         return docshell.isActive;

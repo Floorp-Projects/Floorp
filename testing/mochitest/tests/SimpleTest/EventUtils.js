@@ -34,25 +34,28 @@
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.  The real |Components| property
 // is read-only.
-window.__defineGetter__('_EU_Ci', function() {
-  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+window.__defineGetter__("_EU_Ci", function() {
+  var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? Ci : SpecialPowers.Ci;
 });
 
-window.__defineGetter__('_EU_Cc', function() {
-  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+window.__defineGetter__("_EU_Cc", function() {
+  var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? Cc : SpecialPowers.Cc;
 });
 
-window.__defineGetter__('_EU_Cu', function() {
-  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+window.__defineGetter__("_EU_Cu", function() {
+  var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? Cu : SpecialPowers.Cu;
 });
 
 window.__defineGetter__("_EU_OS", function() {
   delete this._EU_OS;
   try {
-    this._EU_OS = this._EU_Cu.import("resource://gre/modules/AppConstants.jsm", {}).platform;
+    this._EU_OS = this._EU_Cu.import(
+      "resource://gre/modules/AppConstants.jsm",
+      {}
+    ).platform;
   } catch (ex) {
     this._EU_OS = null;
   }
@@ -121,12 +124,12 @@ function _EU_maybeWrap(o) {
     // Not much we can do here.
     return o;
   }
-  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+  var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? o : SpecialPowers.wrap(o);
 }
 
 function _EU_maybeUnwrap(o) {
-  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+  var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? o : SpecialPowers.unwrap(o);
 }
 
@@ -140,23 +143,33 @@ function _EU_maybeUnwrap(o) {
  * sendMouseEvent({type:'click'}, 'node');
  */
 function getElement(id) {
-  return ((typeof(id) == "string") ?
-    document.getElementById(id) : id); 
-};   
+  return typeof id == "string" ? document.getElementById(id) : id;
+}
 
 this.$ = this.getElement;
 
 function computeButton(aEvent) {
-  if (typeof aEvent.button != 'undefined') {
+  if (typeof aEvent.button != "undefined") {
     return aEvent.button;
   }
-  return aEvent.type == 'contextmenu' ? 2 : 0;
+  return aEvent.type == "contextmenu" ? 2 : 0;
 }
 
 function sendMouseEvent(aEvent, aTarget, aWindow) {
-  if (!['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover',
-        'mouseout'].includes(aEvent.type)) {
-    throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
+  if (
+    ![
+      "click",
+      "contextmenu",
+      "dblclick",
+      "mousedown",
+      "mouseup",
+      "mouseover",
+      "mouseout",
+    ].includes(aEvent.type)
+  ) {
+    throw new Error(
+      "sendMouseEvent doesn't know about event type '" + aEvent.type + "'"
+    );
   }
 
   if (!aWindow) {
@@ -167,31 +180,49 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
     aTarget = aWindow.document.getElementById(aTarget);
   }
 
-  var event = aWindow.document.createEvent('MouseEvent');
+  var event = aWindow.document.createEvent("MouseEvent");
 
-  var typeArg          = aEvent.type;
-  var canBubbleArg     = true;
-  var cancelableArg    = true;
-  var viewArg          = aWindow;
-  var detailArg        = aEvent.detail        || (aEvent.type == 'click'     ||
-                                                  aEvent.type == 'mousedown' ||
-                                                  aEvent.type == 'mouseup' ? 1 :
-                                                  aEvent.type == 'dblclick'? 2 : 0);
-  var screenXArg       = aEvent.screenX       || 0;
-  var screenYArg       = aEvent.screenY       || 0;
-  var clientXArg       = aEvent.clientX       || 0;
-  var clientYArg       = aEvent.clientY       || 0;
-  var ctrlKeyArg       = aEvent.ctrlKey       || false;
-  var altKeyArg        = aEvent.altKey        || false;
-  var shiftKeyArg      = aEvent.shiftKey      || false;
-  var metaKeyArg       = aEvent.metaKey       || false;
-  var buttonArg        = computeButton(aEvent);
+  var typeArg = aEvent.type;
+  var canBubbleArg = true;
+  var cancelableArg = true;
+  var viewArg = aWindow;
+  var detailArg =
+    aEvent.detail ||
+    (aEvent.type == "click" ||
+    aEvent.type == "mousedown" ||
+    aEvent.type == "mouseup"
+      ? 1
+      : aEvent.type == "dblclick"
+      ? 2
+      : 0);
+  var screenXArg = aEvent.screenX || 0;
+  var screenYArg = aEvent.screenY || 0;
+  var clientXArg = aEvent.clientX || 0;
+  var clientYArg = aEvent.clientY || 0;
+  var ctrlKeyArg = aEvent.ctrlKey || false;
+  var altKeyArg = aEvent.altKey || false;
+  var shiftKeyArg = aEvent.shiftKey || false;
+  var metaKeyArg = aEvent.metaKey || false;
+  var buttonArg = computeButton(aEvent);
   var relatedTargetArg = aEvent.relatedTarget || null;
 
-  event.initMouseEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg,
-                       screenXArg, screenYArg, clientXArg, clientYArg,
-                       ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
-                       buttonArg, relatedTargetArg);
+  event.initMouseEvent(
+    typeArg,
+    canBubbleArg,
+    cancelableArg,
+    viewArg,
+    detailArg,
+    screenXArg,
+    screenYArg,
+    clientXArg,
+    clientYArg,
+    ctrlKeyArg,
+    altKeyArg,
+    shiftKeyArg,
+    metaKeyArg,
+    buttonArg,
+    relatedTargetArg
+  );
 
   // If documentURIObject exists or `window` is a stub object, we're in
   // a chrome scope, so don't bother trying to go through SpecialPowers.
@@ -212,8 +243,20 @@ function isHidden(aElement) {
  * have. This includes the type of the drag event.
  */
 function sendDragEvent(aEvent, aTarget, aWindow = window) {
-  if (!['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].includes(aEvent.type)) {
-    throw new Error("sendDragEvent doesn't know about event type '" + aEvent.type + "'");
+  if (
+    ![
+      "drag",
+      "dragstart",
+      "dragend",
+      "dragover",
+      "dragenter",
+      "dragleave",
+      "drop",
+    ].includes(aEvent.type)
+  ) {
+    throw new Error(
+      "sendDragEvent doesn't know about event type '" + aEvent.type + "'"
+    );
   }
 
   if (typeof aTarget == "string") {
@@ -224,7 +267,7 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
    * Drag event cannot be performed if the element is hidden, except 'dragend'
    * event where the element can becomes hidden after start dragging.
    */
-  if (aEvent.type != 'dragend' && isHidden(aTarget)) {
+  if (aEvent.type != "dragend" && isHidden(aTarget)) {
     var targetName = aTarget.nodeName;
     if ("id" in aTarget && aTarget.id) {
       targetName += "#" + aTarget.id;
@@ -232,29 +275,43 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
     throw new Error(`${aEvent.type} event target ${targetName} is hidden`);
   }
 
-  var event = aWindow.document.createEvent('DragEvent');
+  var event = aWindow.document.createEvent("DragEvent");
 
-  var typeArg          = aEvent.type;
-  var canBubbleArg     = true;
-  var cancelableArg    = true;
-  var viewArg          = aWindow;
-  var detailArg        = aEvent.detail        || 0;
-  var screenXArg       = aEvent.screenX       || 0;
-  var screenYArg       = aEvent.screenY       || 0;
-  var clientXArg       = aEvent.clientX       || 0;
-  var clientYArg       = aEvent.clientY       || 0;
-  var ctrlKeyArg       = aEvent.ctrlKey       || false;
-  var altKeyArg        = aEvent.altKey        || false;
-  var shiftKeyArg      = aEvent.shiftKey      || false;
-  var metaKeyArg       = aEvent.metaKey       || false;
-  var buttonArg        = computeButton(aEvent);
+  var typeArg = aEvent.type;
+  var canBubbleArg = true;
+  var cancelableArg = true;
+  var viewArg = aWindow;
+  var detailArg = aEvent.detail || 0;
+  var screenXArg = aEvent.screenX || 0;
+  var screenYArg = aEvent.screenY || 0;
+  var clientXArg = aEvent.clientX || 0;
+  var clientYArg = aEvent.clientY || 0;
+  var ctrlKeyArg = aEvent.ctrlKey || false;
+  var altKeyArg = aEvent.altKey || false;
+  var shiftKeyArg = aEvent.shiftKey || false;
+  var metaKeyArg = aEvent.metaKey || false;
+  var buttonArg = computeButton(aEvent);
   var relatedTargetArg = aEvent.relatedTarget || null;
-  var dataTransfer     = aEvent.dataTransfer  || null;
+  var dataTransfer = aEvent.dataTransfer || null;
 
-  event.initDragEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg,
-                      screenXArg, screenYArg, clientXArg, clientYArg,
-                      ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
-                      buttonArg, relatedTargetArg, dataTransfer);
+  event.initDragEvent(
+    typeArg,
+    canBubbleArg,
+    cancelableArg,
+    viewArg,
+    detailArg,
+    screenXArg,
+    screenYArg,
+    clientXArg,
+    clientYArg,
+    ctrlKeyArg,
+    altKeyArg,
+    shiftKeyArg,
+    metaKeyArg,
+    buttonArg,
+    relatedTargetArg,
+    dataTransfer
+  );
 
   if (aEvent._domDispatchOnly) {
     return aTarget.dispatchEvent(event);
@@ -291,7 +348,7 @@ function sendChar(aChar, aWindow) {
     case "{":
     case "}":
     case ":":
-    case "\"":
+    case '"':
     case "|":
     case "<":
     case ">":
@@ -299,8 +356,9 @@ function sendChar(aChar, aWindow) {
       hasShift = true;
       break;
     default:
-      hasShift = aChar.toLowerCase() != aChar.toUpperCase() &&
-                 aChar == aChar.toUpperCase();
+      hasShift =
+        aChar.toLowerCase() != aChar.toUpperCase() &&
+        aChar == aChar.toUpperCase();
       break;
   }
   synthesizeKey(aChar, { shiftKey: hasShift }, aWindow);
@@ -333,8 +391,7 @@ function sendKey(aKey, aWindow) {
  * Parse the key modifier flags from aEvent. Used to share code between
  * synthesizeMouse and synthesizeKey.
  */
-function _parseModifiers(aEvent, aWindow = window)
-{
+function _parseModifiers(aEvent, aWindow = window) {
   var navigator = _getNavigator(aWindow);
   var nsIDOMWindowUtils = _EU_Ci.nsIDOMWindowUtils;
   var mval = 0;
@@ -351,8 +408,9 @@ function _parseModifiers(aEvent, aWindow = window)
     mval |= nsIDOMWindowUtils.MODIFIER_META;
   }
   if (aEvent.accelKey) {
-    mval |= _EU_isMac(aWindow) ?
-      nsIDOMWindowUtils.MODIFIER_META : nsIDOMWindowUtils.MODIFIER_CONTROL;
+    mval |= _EU_isMac(aWindow)
+      ? nsIDOMWindowUtils.MODIFIER_META
+      : nsIDOMWindowUtils.MODIFIER_CONTROL;
   }
   if (aEvent.altGrKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_ALTGRAPH;
@@ -400,17 +458,23 @@ function _parseModifiers(aEvent, aWindow = window)
  *
  * Returns whether the event had preventDefault() called on it.
  */
-function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
-{
+function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  return synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
-       aEvent, aWindow);
+  return synthesizeMouseAtPoint(
+    rect.left + aOffsetX,
+    rect.top + aOffsetY,
+    aEvent,
+    aWindow
+  );
 }
-function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
-{
+function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  return synthesizeTouchAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
-       aEvent, aWindow);
+  return synthesizeTouchAtPoint(
+    rect.left + aOffsetX,
+    rect.top + aOffsetY,
+    aEvent,
+    aWindow
+  );
 }
 
 /*
@@ -424,8 +488,7 @@ function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window)
-{
+function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
   var utils = _getDOMWindowUtils(aWindow);
   var defaultPrevented = false;
 
@@ -433,53 +496,89 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window)
     var button = computeButton(aEvent);
     var clickCount = aEvent.clickCount || 1;
     var modifiers = _parseModifiers(aEvent, aWindow);
-    var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
+    var pressure = "pressure" in aEvent ? aEvent.pressure : 0;
 
     // aWindow might be cross-origin from us.
     var MouseEvent = _EU_maybeWrap(aWindow).MouseEvent;
 
     // Default source to mouse.
-    var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource :
-                                                  MouseEvent.MOZ_SOURCE_MOUSE;
+    var inputSource =
+      "inputSource" in aEvent
+        ? aEvent.inputSource
+        : MouseEvent.MOZ_SOURCE_MOUSE;
     // Compute a pointerId if needed.
     var id;
     if ("id" in aEvent) {
       id = aEvent.id;
     } else {
       var isFromPen = inputSource === MouseEvent.MOZ_SOURCE_PEN;
-      id = isFromPen ? utils.DEFAULT_PEN_POINTER_ID :
-                       utils.DEFAULT_MOUSE_POINTER_ID;
+      id = isFromPen
+        ? utils.DEFAULT_PEN_POINTER_ID
+        : utils.DEFAULT_MOUSE_POINTER_ID;
     }
 
     var isDOMEventSynthesized =
-      ("isSynthesized" in aEvent) ? aEvent.isSynthesized : true;
+      "isSynthesized" in aEvent ? aEvent.isSynthesized : true;
     var isWidgetEventSynthesized =
-      ("isWidgetEventSynthesized" in aEvent) ? aEvent.isWidgetEventSynthesized : false;
-    var buttons = ("buttons" in aEvent) ? aEvent.buttons :
-                                          utils.MOUSE_BUTTONS_NOT_SPECIFIED;
-    if (("type" in aEvent) && aEvent.type) {
-      defaultPrevented = utils.sendMouseEvent(aEvent.type, left, top, button,
-                                              clickCount, modifiers, false,
-                                              pressure, inputSource,
-                                              isDOMEventSynthesized,
-                                              isWidgetEventSynthesized,
-                                              buttons, id);
-    }
-    else {
-      utils.sendMouseEvent("mousedown", left, top, button, clickCount, modifiers,
-                           false, pressure, inputSource, isDOMEventSynthesized,
-                           isWidgetEventSynthesized, buttons, id);
-      utils.sendMouseEvent("mouseup", left, top, button, clickCount, modifiers,
-                           false, pressure, inputSource, isDOMEventSynthesized,
-                           isWidgetEventSynthesized, buttons, id);
+      "isWidgetEventSynthesized" in aEvent
+        ? aEvent.isWidgetEventSynthesized
+        : false;
+    var buttons =
+      "buttons" in aEvent ? aEvent.buttons : utils.MOUSE_BUTTONS_NOT_SPECIFIED;
+    if ("type" in aEvent && aEvent.type) {
+      defaultPrevented = utils.sendMouseEvent(
+        aEvent.type,
+        left,
+        top,
+        button,
+        clickCount,
+        modifiers,
+        false,
+        pressure,
+        inputSource,
+        isDOMEventSynthesized,
+        isWidgetEventSynthesized,
+        buttons,
+        id
+      );
+    } else {
+      utils.sendMouseEvent(
+        "mousedown",
+        left,
+        top,
+        button,
+        clickCount,
+        modifiers,
+        false,
+        pressure,
+        inputSource,
+        isDOMEventSynthesized,
+        isWidgetEventSynthesized,
+        buttons,
+        id
+      );
+      utils.sendMouseEvent(
+        "mouseup",
+        left,
+        top,
+        button,
+        clickCount,
+        modifiers,
+        false,
+        pressure,
+        inputSource,
+        isDOMEventSynthesized,
+        isWidgetEventSynthesized,
+        buttons,
+        id
+      );
     }
   }
 
   return defaultPrevented;
 }
 
-function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window)
-{
+function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
   var utils = _getDOMWindowUtils(aWindow);
   let defaultPrevented = false;
 
@@ -491,29 +590,60 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window)
     var force = aEvent.force || 1;
     var modifiers = _parseModifiers(aEvent, aWindow);
 
-    if (("type" in aEvent) && aEvent.type) {
-      defaultPrevented = utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
-    }
-    else {
-      utils.sendTouchEvent("touchstart", [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
-      utils.sendTouchEvent("touchend", [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
+    if ("type" in aEvent && aEvent.type) {
+      defaultPrevented = utils.sendTouchEvent(
+        aEvent.type,
+        [id],
+        [left],
+        [top],
+        [rx],
+        [ry],
+        [angle],
+        [force],
+        modifiers
+      );
+    } else {
+      utils.sendTouchEvent(
+        "touchstart",
+        [id],
+        [left],
+        [top],
+        [rx],
+        [ry],
+        [angle],
+        [force],
+        modifiers
+      );
+      utils.sendTouchEvent(
+        "touchend",
+        [id],
+        [left],
+        [top],
+        [rx],
+        [ry],
+        [angle],
+        [force],
+        modifiers
+      );
     }
   }
   return defaultPrevented;
 }
 
 // Call synthesizeMouse with coordinates at the center of aTarget.
-function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
-{
+function synthesizeMouseAtCenter(aTarget, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  return synthesizeMouse(aTarget, rect.width / 2, rect.height / 2, aEvent,
-                         aWindow);
+  return synthesizeMouse(
+    aTarget,
+    rect.width / 2,
+    rect.height / 2,
+    aEvent,
+    aWindow
+  );
 }
-function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
-{
+function synthesizeTouchAtCenter(aTarget, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeTouch(aTarget, rect.width / 2, rect.height / 2, aEvent,
-                  aWindow);
+  synthesizeTouch(aTarget, rect.width / 2, rect.height / 2, aEvent, aWindow);
 }
 
 /**
@@ -533,8 +663,7 @@ function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window)
-{
+function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return;
@@ -583,17 +712,29 @@ function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window)
   }
 
   var lineOrPageDeltaX =
-    aEvent.lineOrPageDeltaX != null ? aEvent.lineOrPageDeltaX :
-                  aEvent.deltaX > 0 ? Math.floor(aEvent.deltaX) :
-                                      Math.ceil(aEvent.deltaX);
+    aEvent.lineOrPageDeltaX != null
+      ? aEvent.lineOrPageDeltaX
+      : aEvent.deltaX > 0
+      ? Math.floor(aEvent.deltaX)
+      : Math.ceil(aEvent.deltaX);
   var lineOrPageDeltaY =
-    aEvent.lineOrPageDeltaY != null ? aEvent.lineOrPageDeltaY :
-                  aEvent.deltaY > 0 ? Math.floor(aEvent.deltaY) :
-                                      Math.ceil(aEvent.deltaY);
-  utils.sendWheelEvent(aLeft, aTop,
-                       aEvent.deltaX, aEvent.deltaY, aEvent.deltaZ,
-                       aEvent.deltaMode, modifiers,
-                       lineOrPageDeltaX, lineOrPageDeltaY, options);
+    aEvent.lineOrPageDeltaY != null
+      ? aEvent.lineOrPageDeltaY
+      : aEvent.deltaY > 0
+      ? Math.floor(aEvent.deltaY)
+      : Math.ceil(aEvent.deltaY);
+  utils.sendWheelEvent(
+    aLeft,
+    aTop,
+    aEvent.deltaX,
+    aEvent.deltaY,
+    aEvent.deltaZ,
+    aEvent.deltaMode,
+    modifiers,
+    lineOrPageDeltaX,
+    lineOrPageDeltaY,
+    options
+  );
 }
 
 /**
@@ -614,25 +755,32 @@ function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window)
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
-{
+function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeWheelAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
-                         aEvent, aWindow);
+  synthesizeWheelAtPoint(
+    rect.left + aOffsetX,
+    rect.top + aOffsetY,
+    aEvent,
+    aWindow
+  );
 }
 
 const _FlushModes = {
   FLUSH: 0,
-  NOFLUSH: 1
+  NOFLUSH: 1,
 };
 
-function _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
-                            aEvent, aCallback,
-                            aFlushMode = _FlushModes.FLUSH,
-                            aWindow = window) {
+function _sendWheelAndPaint(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aEvent,
+  aCallback,
+  aFlushMode = _FlushModes.FLUSH,
+  aWindow = window
+) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils)
-    return;
+  if (!utils) return;
 
   if (utils.isMozAfterPaintPending) {
     // If a paint is pending, then APZ may be waiting for a scroll acknowledgement
@@ -640,10 +788,15 @@ function _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
     // by APZ (or its scroll offset could be overridden). To avoid problems we
     // just wait for the paint to complete.
     aWindow.waitForAllPaintsFlushed(function() {
-      _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
-                         aEvent, aCallback,
-                         aFlushMode,
-                         aWindow);
+      _sendWheelAndPaint(
+        aTarget,
+        aOffsetX,
+        aOffsetY,
+        aEvent,
+        aCallback,
+        aFlushMode,
+        aWindow
+      );
     });
     return;
   }
@@ -661,15 +814,21 @@ function _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
         return;
       }
 
-      var waitForPaints = function () {
-        SpecialPowers.Services.obs.removeObserver(waitForPaints, "apz-repaints-flushed");
+      var waitForPaints = function() {
+        SpecialPowers.Services.obs.removeObserver(
+          waitForPaints,
+          "apz-repaints-flushed"
+        );
         aWindow.waitForAllPaintsFlushed(function() {
           utils.restoreNormalRefresh();
           aCallback();
         });
-      }
+      };
 
-      SpecialPowers.Services.obs.addObserver(waitForPaints, "apz-repaints-flushed");
+      SpecialPowers.Services.obs.addObserver(
+        waitForPaints,
+        "apz-repaints-flushed"
+      );
       if (!utils.flushApzRepaints(aWindow)) {
         waitForPaints();
       }
@@ -698,13 +857,23 @@ function _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
  * determining scroll completion and the refresh driver is not automatically
  * restored.
  */
-function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
-                           aEvent, aCallback,
-                           aWindow = window) {
-  _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
-                     aEvent, aCallback,
-                     _FlushModes.FLUSH,
-                     aWindow);
+function sendWheelAndPaint(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aEvent,
+  aCallback,
+  aWindow = window
+) {
+  _sendWheelAndPaint(
+    aTarget,
+    aOffsetX,
+    aOffsetY,
+    aEvent,
+    aCallback,
+    _FlushModes.FLUSH,
+    aWindow
+  );
 }
 
 /**
@@ -712,24 +881,52 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
  * |aTarget| position in |aWindow| before sending the wheel event.
  * |aOffsetX| and |aOffsetY| should be offsets against aWindow.
  */
-function sendWheelAndPaintNoFlush(aTarget, aOffsetX, aOffsetY,
-                                  aEvent, aCallback,
-                                  aWindow = window) {
-  _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
-                     aEvent, aCallback,
-                     _FlushModes.NOFLUSH,
-                     aWindow);
+function sendWheelAndPaintNoFlush(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aEvent,
+  aCallback,
+  aWindow = window
+) {
+  _sendWheelAndPaint(
+    aTarget,
+    aOffsetX,
+    aOffsetY,
+    aEvent,
+    aCallback,
+    _FlushModes.NOFLUSH,
+    aWindow
+  );
 }
 
-function synthesizeNativeTapAtCenter(aTarget, aLongTap = false, aCallback = null, aWindow = window) {
+function synthesizeNativeTapAtCenter(
+  aTarget,
+  aLongTap = false,
+  aCallback = null,
+  aWindow = window
+) {
   let rect = aTarget.getBoundingClientRect();
-  return synthesizeNativeTap(aTarget, rect.width / 2, rect.height / 2, aLongTap, aCallback, aWindow);
+  return synthesizeNativeTap(
+    aTarget,
+    rect.width / 2,
+    rect.height / 2,
+    aLongTap,
+    aCallback,
+    aWindow
+  );
 }
 
-function synthesizeNativeTap(aTarget, aOffsetX, aOffsetY, aLongTap = false, aCallback = null, aWindow = window) {
+function synthesizeNativeTap(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aLongTap = false,
+  aCallback = null,
+  aWindow = window
+) {
   let utils = _getDOMWindowUtils(aWindow);
-  if (!utils)
-    return;
+  if (!utils) return;
 
   let scale = utils.screenPixelsPerCSSPixel;
   let rect = aTarget.getBoundingClientRect();
@@ -741,15 +938,20 @@ function synthesizeNativeTap(aTarget, aOffsetX, aOffsetY, aLongTap = false, aCal
       if (aCallback && topic == "mouseevent") {
         aCallback(data);
       }
-    }
+    },
   };
   utils.sendNativeTouchTap(x, y, aLongTap, observer);
 }
 
-function synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, aCallback, aWindow = window) {
+function synthesizeNativeMouseMove(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aCallback,
+  aWindow = window
+) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils)
-    return;
+  if (!utils) return;
 
   var rect = aTarget.getBoundingClientRect();
   var x = aOffsetX + window.mozInnerScreenX + rect.left;
@@ -761,7 +963,7 @@ function synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, aCallback, aWind
       if (aCallback && topic == "mouseevent") {
         aCallback(data);
       }
-    }
+    },
   };
   utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
 }
@@ -773,31 +975,43 @@ function synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, aCallback, aWind
  * This API is supposed to be used in those test cases that synthesize some
  * input events to chrome process and have some checks in content.
  */
-function synthesizeAndWaitNativeMouseMove(aTarget, aOffsetX, aOffsetY,
-                                          aCallback, aWindow = window) {
+function synthesizeAndWaitNativeMouseMove(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aCallback,
+  aWindow = window
+) {
   let browser = gBrowser.selectedTab.linkedBrowser;
   let mm = browser.messageManager;
-  let ContentTask =
-    _EU_Cu.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
+  let ContentTask = _EU_Cu.import(
+    "resource://testing-common/ContentTask.jsm",
+    null
+  ).ContentTask;
 
   let eventRegisteredPromise = new Promise(resolve => {
-    mm.addMessageListener("Test:MouseMoveRegistered", function processed(message) {
+    mm.addMessageListener("Test:MouseMoveRegistered", function processed(
+      message
+    ) {
       mm.removeMessageListener("Test:MouseMoveRegistered", processed);
       resolve();
     });
   });
-  let eventReceivedPromise = ContentTask.spawn(browser, [aOffsetX, aOffsetY],
-                                               ([clientX, clientY]) => {
-    return new Promise(resolve => {
-      addEventListener("mousemove", function onMouseMoveEvent(e) {
-        if (e.clientX == clientX && e.clientY == clientY) {
-          removeEventListener("mousemove", onMouseMoveEvent);
-          resolve();
-        }
+  let eventReceivedPromise = ContentTask.spawn(
+    browser,
+    [aOffsetX, aOffsetY],
+    ([clientX, clientY]) => {
+      return new Promise(resolve => {
+        addEventListener("mousemove", function onMouseMoveEvent(e) {
+          if (e.clientX == clientX && e.clientY == clientY) {
+            removeEventListener("mousemove", onMouseMoveEvent);
+            resolve();
+          }
+        });
+        sendAsyncMessage("Test:MouseMoveRegistered");
       });
-      sendAsyncMessage("Test:MouseMoveRegistered");
-    });
-  });
+    }
+  );
   eventRegisteredPromise.then(() => {
     synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, null, aWindow);
   });
@@ -848,8 +1062,7 @@ function synthesizeAndWaitNativeMouseMove(aTarget, aOffsetX, aOffsetY,
  * aWindow is optional, and defaults to the current window object.
  * aCallback is optional, use the callback for receiving notifications of TIP.
  */
-function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback)
-{
+function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback) {
   var event = aEvent === undefined || aEvent === null ? {} : aEvent;
 
   var TIP = _getTIP(aWindow, aCallback);
@@ -863,7 +1076,7 @@ function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback)
   var dispatchKeydown =
     !("type" in event) || event.type === "keydown" || !event.type;
   var dispatchKeyup =
-    !("type" in event) || event.type === "keyup"   || !event.type;
+    !("type" in event) || event.type === "keyup" || !event.type;
 
   try {
     if (dispatchKeydown) {
@@ -892,13 +1105,21 @@ function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback)
  * This API is supposed to be used in those test cases that synthesize some
  * input events to chrome process and have some checks in content.
  */
-function synthesizeAndWaitKey(aKey, aEvent, aWindow = window,
-                              checkBeforeSynthesize, checkAfterSynthesize)
-{
+function synthesizeAndWaitKey(
+  aKey,
+  aEvent,
+  aWindow = window,
+  checkBeforeSynthesize,
+  checkAfterSynthesize
+) {
   let browser = gBrowser.selectedTab.linkedBrowser;
   let mm = browser.messageManager;
-  let keyCode = _createKeyboardEventDictionary(aKey, aEvent, null, aWindow).dictionary.keyCode;
-  let ContentTask = _EU_Cu.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
+  let keyCode = _createKeyboardEventDictionary(aKey, aEvent, null, aWindow)
+    .dictionary.keyCode;
+  let ContentTask = _EU_Cu.import(
+    "resource://testing-common/ContentTask.jsm",
+    null
+  ).ContentTask;
 
   let keyRegisteredPromise = new Promise(resolve => {
     mm.addMessageListener("Test:KeyRegistered", function processed(message) {
@@ -906,7 +1127,7 @@ function synthesizeAndWaitKey(aKey, aEvent, aWindow = window,
       resolve();
     });
   });
-  let keyReceivedPromise = ContentTask.spawn(browser, keyCode, (keyCode) => {
+  let keyReceivedPromise = ContentTask.spawn(browser, keyCode, keyCode => {
     return new Promise(resolve => {
       addEventListener("keyup", function onKeyEvent(e) {
         if (e.keyCode == keyCode) {
@@ -929,8 +1150,7 @@ function synthesizeAndWaitKey(aKey, aEvent, aWindow = window,
   return keyReceivedPromise;
 }
 
-function _parseNativeModifiers(aModifiers, aWindow = window)
-{
+function _parseNativeModifiers(aModifiers, aWindow = window) {
   var navigator = _getNavigator(aWindow);
   var modifiers;
   if (aModifiers.capsLockKey) {
@@ -991,57 +1211,108 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
 // Win: These constants can be found by inspecting registry keys under
 //      HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
 
-const KEYBOARD_LAYOUT_ARABIC =
-  { name: "Arabic",             Mac: 6,
-                                Win: 0x00000401, hasAltGrOnWin: false };
-const KEYBOARD_LAYOUT_ARABIC_PC =
-  { name: "Arabic - PC",        Mac: 7,
-                                Win: null,       hasAltGrOnWin: false };
-const KEYBOARD_LAYOUT_BRAZILIAN_ABNT =
-  { name: "Brazilian ABNT",     Mac: null,
-                                Win: 0x00000416, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_DVORAK_QWERTY =
-  { name: "Dvorak-QWERTY",      Mac: 4,
-                                Win: null,       hasAltGrOnWin: false };
-const KEYBOARD_LAYOUT_EN_US =
-  { name: "US",                 Mac: 0,
-                                Win: 0x00000409, hasAltGrOnWin: false };
-const KEYBOARD_LAYOUT_FRENCH =
-  { name: "French",             Mac: 8,
-                                Win: 0x0000040C, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_GREEK =
-  { name: "Greek",              Mac: 1,
-                                Win: 0x00000408, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_GERMAN =
-  { name: "German",             Mac: 2,
-                                Win: 0x00000407, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_HEBREW =
-  { name: "Hebrew",             Mac: 9,
-                                Win: 0x0000040D, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_JAPANESE =
-  { name: "Japanese",           Mac: null,
-                                Win: 0x00000411, hasAltGrOnWin: false };
-const KEYBOARD_LAYOUT_KHMER =
-  { name: "Khmer",              Mac: null,
-                                Win: 0x00000453, hasAltGrOnWin: true  }; // available on Win7 or later.
-const KEYBOARD_LAYOUT_LITHUANIAN =
-  { name: "Lithuanian",         Mac: 10,
-                                Win: 0x00010427, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_NORWEGIAN =
-  { name: "Norwegian",          Mac: 11,
-                                Win: 0x00000414, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC =
-  { name: "Russian - Mnemonic", Mac: null,
-                                Win: 0x00020419, hasAltGrOnWin: true  }; // available on Win8 or later.
-const KEYBOARD_LAYOUT_SPANISH =
-  { name: "Spanish",            Mac: 12,
-                                Win: 0x0000040A, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_SWEDISH =
-  { name: "Swedish",            Mac: 3,
-                                Win: 0x0000041D, hasAltGrOnWin: true  };
-const KEYBOARD_LAYOUT_THAI =
-  { name: "Thai",               Mac: 5,
-                                Win: 0x0002041E, hasAltGrOnWin: false };
+const KEYBOARD_LAYOUT_ARABIC = {
+  name: "Arabic",
+  Mac: 6,
+  Win: 0x00000401,
+  hasAltGrOnWin: false,
+};
+const KEYBOARD_LAYOUT_ARABIC_PC = {
+  name: "Arabic - PC",
+  Mac: 7,
+  Win: null,
+  hasAltGrOnWin: false,
+};
+const KEYBOARD_LAYOUT_BRAZILIAN_ABNT = {
+  name: "Brazilian ABNT",
+  Mac: null,
+  Win: 0x00000416,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_DVORAK_QWERTY = {
+  name: "Dvorak-QWERTY",
+  Mac: 4,
+  Win: null,
+  hasAltGrOnWin: false,
+};
+const KEYBOARD_LAYOUT_EN_US = {
+  name: "US",
+  Mac: 0,
+  Win: 0x00000409,
+  hasAltGrOnWin: false,
+};
+const KEYBOARD_LAYOUT_FRENCH = {
+  name: "French",
+  Mac: 8,
+  Win: 0x0000040c,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_GREEK = {
+  name: "Greek",
+  Mac: 1,
+  Win: 0x00000408,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_GERMAN = {
+  name: "German",
+  Mac: 2,
+  Win: 0x00000407,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_HEBREW = {
+  name: "Hebrew",
+  Mac: 9,
+  Win: 0x0000040d,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_JAPANESE = {
+  name: "Japanese",
+  Mac: null,
+  Win: 0x00000411,
+  hasAltGrOnWin: false,
+};
+const KEYBOARD_LAYOUT_KHMER = {
+  name: "Khmer",
+  Mac: null,
+  Win: 0x00000453,
+  hasAltGrOnWin: true,
+}; // available on Win7 or later.
+const KEYBOARD_LAYOUT_LITHUANIAN = {
+  name: "Lithuanian",
+  Mac: 10,
+  Win: 0x00010427,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_NORWEGIAN = {
+  name: "Norwegian",
+  Mac: 11,
+  Win: 0x00000414,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC = {
+  name: "Russian - Mnemonic",
+  Mac: null,
+  Win: 0x00020419,
+  hasAltGrOnWin: true,
+}; // available on Win8 or later.
+const KEYBOARD_LAYOUT_SPANISH = {
+  name: "Spanish",
+  Mac: 12,
+  Win: 0x0000040a,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_SWEDISH = {
+  name: "Swedish",
+  Mac: 3,
+  Win: 0x0000041d,
+  hasAltGrOnWin: true,
+};
+const KEYBOARD_LAYOUT_THAI = {
+  name: "Thai",
+  Mac: 5,
+  Win: 0x0002041e,
+  hasAltGrOnWin: false,
+};
 
 /**
  * synthesizeNativeKey() dispatches native key event on active window.
@@ -1069,9 +1340,15 @@ const KEYBOARD_LAYOUT_THAI =
  *                              native key event.  Otherwise, false.
  */
 
-function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
-                             aChars, aUnmodifiedChars, aCallback, aWindow = window)
-{
+function synthesizeNativeKey(
+  aKeyboardLayout,
+  aNativeKeyCode,
+  aModifiers,
+  aChars,
+  aUnmodifiedChars,
+  aCallback,
+  aWindow = window
+) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return false;
@@ -1092,11 +1369,16 @@ function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
       if (aCallback && aTopic == "keyevent") {
         aCallback(aData);
       }
-    }
+    },
   };
-  utils.sendNativeKeyEvent(nativeKeyboardLayout, aNativeKeyCode,
-                           _parseNativeModifiers(aModifiers, aWindow),
-                           aChars, aUnmodifiedChars, observer);
+  utils.sendNativeKeyEvent(
+    nativeKeyboardLayout,
+    aNativeKeyCode,
+    _parseNativeModifiers(aModifiers, aWindow),
+    aChars,
+    aUnmodifiedChars,
+    observer
+  );
   return true;
 }
 
@@ -1107,19 +1389,25 @@ var _gSeenEvent = false;
  * a type of aExpectedEvent is expected to be fired, or not expected to
  * be fired.
  */
-function _expectEvent(aExpectedTarget, aExpectedEvent, aTestName)
-{
-  if (!aExpectedTarget || !aExpectedEvent)
-    return null;
+function _expectEvent(aExpectedTarget, aExpectedEvent, aTestName) {
+  if (!aExpectedTarget || !aExpectedEvent) return null;
 
   _gSeenEvent = false;
 
-  var type = (aExpectedEvent.charAt(0) == "!") ?
-             aExpectedEvent.substring(1) : aExpectedEvent;
+  var type =
+    aExpectedEvent.charAt(0) == "!"
+      ? aExpectedEvent.substring(1)
+      : aExpectedEvent;
   var eventHandler = function(event) {
-    var epassed = (!_gSeenEvent && event.originalTarget == aExpectedTarget &&
-                   event.type == type);
-    is(epassed, true, aTestName + " " + type + " event target " + (_gSeenEvent ? "twice" : ""));
+    var epassed =
+      !_gSeenEvent &&
+      event.originalTarget == aExpectedTarget &&
+      event.type == type;
+    is(
+      epassed,
+      true,
+      aTestName + " " + type + " event target " + (_gSeenEvent ? "twice" : "")
+    );
     _gSeenEvent = true;
   };
 
@@ -1131,15 +1419,18 @@ function _expectEvent(aExpectedTarget, aExpectedEvent, aTestName)
  * Check if the event was fired or not. The event handler aEventHandler
  * will be removed.
  */
-function _checkExpectedEvent(aExpectedTarget, aExpectedEvent, aEventHandler, aTestName)
-{
+function _checkExpectedEvent(
+  aExpectedTarget,
+  aExpectedEvent,
+  aEventHandler,
+  aTestName
+) {
   if (aEventHandler) {
-    var expectEvent = (aExpectedEvent.charAt(0) != "!");
+    var expectEvent = aExpectedEvent.charAt(0) != "!";
     var type = expectEvent ? aExpectedEvent : aExpectedEvent.substring(1);
     aExpectedTarget.removeEventListener(type, aEventHandler);
     var desc = type + " event";
-    if (!expectEvent)
-      desc += " not";
+    if (!expectEvent) desc += " not";
     is(_gSeenEvent, expectEvent, aTestName + " " + desc + " fired");
   }
 
@@ -1160,10 +1451,16 @@ function _checkExpectedEvent(aExpectedTarget, aExpectedEvent, aEventHandler, aTe
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeMouseExpectEvent(aTarget, aOffsetX, aOffsetY, aEvent,
-                                    aExpectedTarget, aExpectedEvent, aTestName,
-                                    aWindow)
-{
+function synthesizeMouseExpectEvent(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aEvent,
+  aExpectedTarget,
+  aExpectedEvent,
+  aTestName,
+  aWindow
+) {
   var eventHandler = _expectEvent(aExpectedTarget, aExpectedEvent, aTestName);
   synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
   _checkExpectedEvent(aExpectedTarget, aExpectedEvent, eventHandler, aTestName);
@@ -1182,22 +1479,25 @@ function synthesizeMouseExpectEvent(aTarget, aOffsetX, aOffsetY, aEvent,
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeKeyExpectEvent(key, aEvent, aExpectedTarget, aExpectedEvent,
-                                  aTestName, aWindow)
-{
+function synthesizeKeyExpectEvent(
+  key,
+  aEvent,
+  aExpectedTarget,
+  aExpectedEvent,
+  aTestName,
+  aWindow
+) {
   var eventHandler = _expectEvent(aExpectedTarget, aExpectedEvent, aTestName);
   synthesizeKey(key, aEvent, aWindow);
   _checkExpectedEvent(aExpectedTarget, aExpectedEvent, eventHandler, aTestName);
 }
 
-function disableNonTestMouseEvents(aDisable)
-{
+function disableNonTestMouseEvents(aDisable) {
   var domutils = _getDOMWindowUtils();
   domutils.disableNonTestMouseEvents(aDisable);
 }
 
-function _getDOMWindowUtils(aWindow = window)
-{
+function _getDOMWindowUtils(aWindow = window) {
   // Leave this here as something, somewhere, passes a falsy argument
   // to this, causing the |window| default argument not to get picked up.
   if (!aWindow) {
@@ -1229,7 +1529,7 @@ function _defineConstant(name, value) {
   Object.defineProperty(this, name, {
     value: value,
     enumerable: true,
-    writable: false
+    writable: false,
   });
 }
 
@@ -1238,18 +1538,26 @@ const COMPOSITION_ATTR_RAW_CLAUSE =
 _defineConstant("COMPOSITION_ATTR_RAW_CLAUSE", COMPOSITION_ATTR_RAW_CLAUSE);
 const COMPOSITION_ATTR_SELECTED_RAW_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_RAW_CLAUSE;
-_defineConstant("COMPOSITION_ATTR_SELECTED_RAW_CLAUSE", COMPOSITION_ATTR_SELECTED_RAW_CLAUSE);
+_defineConstant(
+  "COMPOSITION_ATTR_SELECTED_RAW_CLAUSE",
+  COMPOSITION_ATTR_SELECTED_RAW_CLAUSE
+);
 const COMPOSITION_ATTR_CONVERTED_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_CONVERTED_CLAUSE;
-_defineConstant("COMPOSITION_ATTR_CONVERTED_CLAUSE", COMPOSITION_ATTR_CONVERTED_CLAUSE);
+_defineConstant(
+  "COMPOSITION_ATTR_CONVERTED_CLAUSE",
+  COMPOSITION_ATTR_CONVERTED_CLAUSE
+);
 const COMPOSITION_ATTR_SELECTED_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE;
-_defineConstant("COMPOSITION_ATTR_SELECTED_CLAUSE", COMPOSITION_ATTR_SELECTED_CLAUSE);
+_defineConstant(
+  "COMPOSITION_ATTR_SELECTED_CLAUSE",
+  COMPOSITION_ATTR_SELECTED_CLAUSE
+);
 
 var TIPMap = new WeakMap();
 
-function _getTIP(aWindow, aCallback)
-{
+function _getTIP(aWindow, aCallback) {
   if (!aWindow) {
     aWindow = window;
   }
@@ -1257,9 +1565,9 @@ function _getTIP(aWindow, aCallback)
   if (TIPMap.has(aWindow)) {
     tip = TIPMap.get(aWindow);
   } else {
-    tip =
-      _EU_Cc["@mozilla.org/text-input-processor;1"].
-        createInstance(_EU_Ci.nsITextInputProcessor);
+    tip = _EU_Cc["@mozilla.org/text-input-processor;1"].createInstance(
+      _EU_Ci.nsITextInputProcessor
+    );
     TIPMap.set(aWindow, tip);
   }
   if (!tip.beginInputTransactionForTests(aWindow, aCallback)) {
@@ -1269,8 +1577,7 @@ function _getTIP(aWindow, aCallback)
   return tip;
 }
 
-function _getKeyboardEvent(aWindow = window)
-{
+function _getKeyboardEvent(aWindow = window) {
   if (typeof KeyboardEvent != "undefined") {
     try {
       // See if the object can be instantiated; sometimes this yields
@@ -1279,22 +1586,20 @@ function _getKeyboardEvent(aWindow = window)
       return KeyboardEvent;
     } catch (ex) {}
   }
-  if (typeof content != "undefined" && ("KeyboardEvent" in content)) {
+  if (typeof content != "undefined" && "KeyboardEvent" in content) {
     return content.KeyboardEvent;
   }
   return aWindow.KeyboardEvent;
 }
 
-function _getNavigator(aWindow = window)
-{
+function _getNavigator(aWindow = window) {
   if (typeof navigator != "undefined") {
     return navigator;
   }
   return aWindow.navigator;
 }
 
-function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window)
-{
+function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window) {
   var KeyboardEvent = _getKeyboardEvent(aWindow);
   switch (aKeyCode) {
     case KeyboardEvent.DOM_VK_CANCEL:
@@ -1442,14 +1747,18 @@ function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window)
   }
 }
 
-function _createKeyboardEventDictionary(aKey, aKeyEvent,
-                                        aTIP = null,
-                                        aWindow = window) {
+function _createKeyboardEventDictionary(
+  aKey,
+  aKeyEvent,
+  aTIP = null,
+  aWindow = window
+) {
   var result = { dictionary: null, flags: 0 };
   var keyCodeIsDefined = "keyCode" in aKeyEvent;
   var keyCode =
-    (keyCodeIsDefined && aKeyEvent.keyCode >= 0 && aKeyEvent.keyCode <= 255) ?
-      aKeyEvent.keyCode : 0;
+    keyCodeIsDefined && aKeyEvent.keyCode >= 0 && aKeyEvent.keyCode <= 255
+      ? aKeyEvent.keyCode
+      : 0;
   var keyName = "Unidentified";
   var code = aKeyEvent.code;
   if (!aTIP) {
@@ -1459,8 +1768,10 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent,
     keyName = aKey.substr("KEY_".length);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
     if (code === undefined) {
-      code =
-        aTIP.computeCodeValueOfNonPrintableKey(keyName, aKeyEvent.location);
+      code = aTIP.computeCodeValueOfNonPrintableKey(
+        keyName,
+        aKeyEvent.location
+      );
     }
   } else if (aKey.indexOf("VK_") == 0) {
     keyCode = _getKeyboardEvent(aWindow)["DOM_" + aKey];
@@ -1470,15 +1781,18 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent,
     keyName = _guessKeyNameFromKeyCode(keyCode, aWindow);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
     if (code === undefined) {
-      code =
-        aTIP.computeCodeValueOfNonPrintableKey(keyName, aKeyEvent.location);
+      code = aTIP.computeCodeValueOfNonPrintableKey(
+        keyName,
+        aKeyEvent.location
+      );
     }
   } else if (aKey != "") {
     keyName = aKey;
     if (!keyCodeIsDefined) {
-      keyCode =
-        aTIP.guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
-               aKey, aKeyEvent.location);
+      keyCode = aTIP.guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+        aKey,
+        aKeyEvent.location
+      );
     }
     if (!keyCode) {
       result.flags |= _EU_Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;
@@ -1486,7 +1800,9 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent,
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
     if (code === undefined) {
       code = aTIP.guessCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
-               keyName, aKeyEvent.location);
+        keyName,
+        aKeyEvent.location
+      );
     }
   }
   var locationIsDefined = "location" in aKeyEvent;
@@ -1510,8 +1826,7 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent,
   return result;
 }
 
-function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
-{
+function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window) {
   if (!aKeyEvent) {
     return null;
   }
@@ -1520,25 +1835,24 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
 
   var modifiers = {
     normal: [
-      { key: "Alt",        attr: "altKey" },
-      { key: "AltGraph",   attr: "altGraphKey" },
-      { key: "Control",    attr: "ctrlKey" },
-      { key: "Fn",         attr: "fnKey" },
-      { key: "Meta",       attr: "metaKey" },
-      { key: "OS",         attr: "osKey" },
-      { key: "Shift",      attr: "shiftKey" },
-      { key: "Symbol",     attr: "symbolKey" },
-      { key: _EU_isMac(aWindow) ? "Meta" : "Control",
-                           attr: "accelKey" },
+      { key: "Alt", attr: "altKey" },
+      { key: "AltGraph", attr: "altGraphKey" },
+      { key: "Control", attr: "ctrlKey" },
+      { key: "Fn", attr: "fnKey" },
+      { key: "Meta", attr: "metaKey" },
+      { key: "OS", attr: "osKey" },
+      { key: "Shift", attr: "shiftKey" },
+      { key: "Symbol", attr: "symbolKey" },
+      { key: _EU_isMac(aWindow) ? "Meta" : "Control", attr: "accelKey" },
     ],
     lockable: [
-      { key: "CapsLock",   attr: "capsLockKey" },
-      { key: "FnLock",     attr: "fnLockKey" },
-      { key: "NumLock",    attr: "numLockKey" },
+      { key: "CapsLock", attr: "capsLockKey" },
+      { key: "FnLock", attr: "fnLockKey" },
+      { key: "NumLock", attr: "numLockKey" },
       { key: "ScrollLock", attr: "scrollLockKey" },
       { key: "SymbolLock", attr: "symbolLockKey" },
-    ]
-  }
+    ],
+  };
 
   for (var i = 0; i < modifiers.normal.length; i++) {
     if (!aKeyEvent[modifiers.normal[i].attr]) {
@@ -1548,8 +1862,10 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
       continue; // already activated.
     }
     var event = new KeyboardEvent("", { key: modifiers.normal[i].key });
-    aTIP.keydown(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    aTIP.keydown(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
     modifiers.normal[i].activated = true;
   }
   for (var i = 0; i < modifiers.lockable.length; i++) {
@@ -1560,17 +1876,20 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
       continue; // already activated.
     }
     var event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
-    aTIP.keydown(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
-    aTIP.keyup(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    aTIP.keydown(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
+    aTIP.keyup(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
     modifiers.lockable[i].activated = true;
   }
   return modifiers;
 }
 
-function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window)
-{
+function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window) {
   if (!aModifiers) {
     return;
   }
@@ -1580,8 +1899,10 @@ function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window)
       continue;
     }
     var event = new KeyboardEvent("", { key: aModifiers.normal[i].key });
-    aTIP.keyup(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    aTIP.keyup(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
   }
   for (var i = 0; i < aModifiers.lockable.length; i++) {
     if (!aModifiers.lockable[i].activated) {
@@ -1591,10 +1912,14 @@ function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window)
       continue; // who already inactivated this?
     }
     var event = new KeyboardEvent("", { key: aModifiers.lockable[i].key });
-    aTIP.keydown(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
-    aTIP.keyup(event,
-      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    aTIP.keydown(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
+    aTIP.keyup(
+      event,
+      aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
   }
 }
 
@@ -1644,8 +1969,7 @@ function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window)
  * @param aCallback            Optional (If non-null, use the callback for
  *                             receiving notifications to IME)
  */
-function synthesizeComposition(aEvent, aWindow = window, aCallback)
-{
+function synthesizeComposition(aEvent, aWindow = window, aCallback) {
   var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
     return false;
@@ -1653,20 +1977,31 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback)
   var KeyboardEvent = _getKeyboardEvent(aWindow);
   var modifiers = _emulateToActivateModifiers(TIP, aEvent.key, aWindow);
   var ret = false;
-  var keyEventDict = {dictionary: null, flags: 0};
+  var keyEventDict = { dictionary: null, flags: 0 };
   var keyEvent = null;
   if (aEvent.key && typeof aEvent.key.key === "string") {
-    keyEventDict =
-      _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, TIP, aWindow);
-    keyEvent = new KeyboardEvent(aEvent.key.type === "keydown" ?
-                                   "keydown" :
-                                   aEvent.key.type === "keyup" ?
-                                     "keyup" : "",
-                                 keyEventDict.dictionary)
+    keyEventDict = _createKeyboardEventDictionary(
+      aEvent.key.key,
+      aEvent.key,
+      TIP,
+      aWindow
+    );
+    keyEvent = new KeyboardEvent(
+      aEvent.key.type === "keydown"
+        ? "keydown"
+        : aEvent.key.type === "keyup"
+        ? "keyup"
+        : "",
+      keyEventDict.dictionary
+    );
   } else if (aEvent.key === undefined) {
-    keyEventDict =
-      _createKeyboardEventDictionary("KEY_Process", {}, TIP, aWindow);
-    keyEvent = new KeyboardEvent("", keyEventDict.dictionary)
+    keyEventDict = _createKeyboardEventDictionary(
+      "KEY_Process",
+      {},
+      TIP,
+      aWindow
+    );
+    keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
   }
   try {
     switch (aEvent.type) {
@@ -1677,8 +2012,11 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback)
         ret = TIP.commitComposition(keyEvent, keyEventDict.flags);
         break;
       case "compositioncommit":
-        ret = TIP.commitCompositionWith(aEvent.data, keyEvent,
-                                        keyEventDict.flags);
+        ret = TIP.commitCompositionWith(
+          aEvent.data,
+          keyEvent,
+          keyEventDict.flags
+        );
         break;
     }
   } finally {
@@ -1749,16 +2087,18 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback)
  * @param aCallback     Optional (If non-null, use the callback for receiving
  *                      notifications to IME)
  */
-function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
-{
+function synthesizeCompositionChange(aEvent, aWindow = window, aCallback) {
   var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
     return;
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
 
-  if (!aEvent.composition || !aEvent.composition.clauses ||
-      !aEvent.composition.clauses[0]) {
+  if (
+    !aEvent.composition ||
+    !aEvent.composition.clauses ||
+    !aEvent.composition.clauses[0]
+  ) {
     return;
   }
 
@@ -1771,8 +2111,9 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
         case TIP.ATTR_CONVERTED_CLAUSE:
         case TIP.ATTR_SELECTED_CLAUSE:
           TIP.appendClauseToPendingComposition(
-                aEvent.composition.clauses[i].length,
-                aEvent.composition.clauses[i].attr);
+            aEvent.composition.clauses[i].length,
+            aEvent.composition.clauses[i].attr
+          );
           break;
         case 0:
           // Ignore dummy clause for the argument.
@@ -1790,21 +2131,31 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
 
   var modifiers = _emulateToActivateModifiers(TIP, aEvent.key, aWindow);
   try {
-    var keyEventDict = {dictionary: null, flags: 0};
+    var keyEventDict = { dictionary: null, flags: 0 };
     var keyEvent = null;
     if (aEvent.key && typeof aEvent.key.key === "string") {
-      keyEventDict =
-        _createKeyboardEventDictionary(aEvent.key.key, aEvent.key,
-                                       TIP, aWindow);
-      keyEvent = new KeyboardEvent(aEvent.key.type === "keydown" ?
-                                     "keydown" :
-                                     aEvent.key.type === "keyup" ?
-                                       "keyup" : "",
-                                   keyEventDict.dictionary)
+      keyEventDict = _createKeyboardEventDictionary(
+        aEvent.key.key,
+        aEvent.key,
+        TIP,
+        aWindow
+      );
+      keyEvent = new KeyboardEvent(
+        aEvent.key.type === "keydown"
+          ? "keydown"
+          : aEvent.key.type === "keyup"
+          ? "keyup"
+          : "",
+        keyEventDict.dictionary
+      );
     } else if (aEvent.key === undefined) {
-      keyEventDict =
-        _createKeyboardEventDictionary("KEY_Process", {}, TIP, aWindow);
-      keyEvent = new KeyboardEvent("", keyEventDict.dictionary)
+      keyEventDict = _createKeyboardEventDictionary(
+        "KEY_Process",
+        {},
+        TIP,
+        aWindow
+      );
+      keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
     }
     TIP.flushPendingComposition(keyEvent, keyEventDict.flags);
   } finally {
@@ -1813,25 +2164,25 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
 }
 
 // Must be synchronized with nsIDOMWindowUtils.
-const QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK          = 0x0000;
-const QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK              = 0x0001;
+const QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+const QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK = 0x0001;
 
-const QUERY_CONTENT_FLAG_SELECTION_NORMAL                    = 0x0000;
-const QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK                = 0x0002;
-const QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT              = 0x0004;
-const QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT       = 0x0008;
-const QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT         = 0x0010;
+const QUERY_CONTENT_FLAG_SELECTION_NORMAL = 0x0000;
+const QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK = 0x0002;
+const QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT = 0x0004;
+const QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT = 0x0008;
+const QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT = 0x0010;
 const QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT = 0x0020;
-const QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY             = 0x0040;
-const QUERY_CONTENT_FLAG_SELECTION_FIND                      = 0x0080;
-const QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY              = 0x0100;
-const QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT              = 0x0200;
+const QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY = 0x0040;
+const QUERY_CONTENT_FLAG_SELECTION_FIND = 0x0080;
+const QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY = 0x0100;
+const QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT = 0x0200;
 
-const QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT  = 0x0400;
+const QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT = 0x0400;
 
-const SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK          = 0x0000;
-const SELECTION_SET_FLAG_USE_XP_LINE_BREAK              = 0x0001;
-const SELECTION_SET_FLAG_REVERSE                        = 0x0002;
+const SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK = 0x0000;
+const SELECTION_SET_FLAG_USE_XP_LINE_BREAK = 0x0001;
+const SELECTION_SET_FLAG_REVERSE = 0x0002;
 
 /**
  * Synthesize a query text content event.
@@ -1846,8 +2197,7 @@ const SELECTION_SET_FLAG_REVERSE                        = 0x0002;
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow)
-{
+function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nullptr;
@@ -1856,8 +2206,14 @@ function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow)
   if (aIsRelative === true) {
     flags |= QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_TEXT_CONTENT,
-                                     aOffset, aLength, 0, 0, flags);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_TEXT_CONTENT,
+    aOffset,
+    aLength,
+    0,
+    0,
+    flags
+  );
 }
 
 /**
@@ -1870,8 +2226,7 @@ function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQuerySelectedText(aSelectionType, aWindow)
-{
+function synthesizeQuerySelectedText(aSelectionType, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return null;
@@ -1882,8 +2237,14 @@ function synthesizeQuerySelectedText(aSelectionType, aWindow)
     flags |= aSelectionType;
   }
 
-  return utils.sendQueryContentEvent(utils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
-                                     flags);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_SELECTED_TEXT,
+    0,
+    0,
+    0,
+    0,
+    flags
+  );
 }
 
 /**
@@ -1895,15 +2256,19 @@ function synthesizeQuerySelectedText(aSelectionType, aWindow)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryCaretRect(aOffset, aWindow)
-{
+function synthesizeQueryCaretRect(aOffset, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return null;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_CARET_RECT,
-                                     aOffset, 0, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_CARET_RECT,
+    aOffset,
+    0,
+    0,
+    0,
+    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+  );
 }
 
 /**
@@ -1918,8 +2283,7 @@ function synthesizeQueryCaretRect(aOffset, aWindow)
  * @param aWindow  Optional (If null, current |window| will be used)
  * @return         True, if succeeded.  Otherwise false.
  */
-function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow)
-{
+function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return false;
@@ -1937,13 +2301,16 @@ function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow)
  * when the library or any of function are not found, or something goes wrong
  * in native functions.
  */
-function synthesizeNativeOSXClick(x, y)
-{
+function synthesizeNativeOSXClick(x, y) {
   var { ctypes } = _EU_Cu.import("resource://gre/modules/ctypes.jsm", {});
 
   // Library
-  var CoreFoundation = ctypes.open("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
-  var CoreGraphics = ctypes.open("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics");
+  var CoreFoundation = ctypes.open(
+    "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+  );
+  var CoreGraphics = ctypes.open(
+    "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+  );
 
   // Contants
   var kCGEventLeftMouseDown = 1;
@@ -1963,36 +2330,48 @@ function synthesizeNativeOSXClick(x, y)
   var CGFloat = ctypes.voidptr_t.size == 4 ? ctypes.float : ctypes.double;
   var CGMouseButton = ctypes.uint32_t;
 
-  var CGPoint = new ctypes.StructType(
-    "CGPoint",
-    [ { "x" : CGFloat },
-      { "y" : CGFloat } ]);
+  var CGPoint = new ctypes.StructType("CGPoint", [
+    { x: CGFloat },
+    { y: CGFloat },
+  ]);
 
   // Functions
   var CGEventSourceCreate = CoreGraphics.declare(
     "CGEventSourceCreate",
     ctypes.default_abi,
-    CGEventSourceRef, CGEventSourceStateID);
+    CGEventSourceRef,
+    CGEventSourceStateID
+  );
   var CGEventCreateMouseEvent = CoreGraphics.declare(
     "CGEventCreateMouseEvent",
     ctypes.default_abi,
     CGEventRef,
-    CGEventSourceRef, CGEventType, CGPoint, CGMouseButton);
+    CGEventSourceRef,
+    CGEventType,
+    CGPoint,
+    CGMouseButton
+  );
   var CGEventSetIntegerValueField = CoreGraphics.declare(
     "CGEventSetIntegerValueField",
     ctypes.default_abi,
     ctypes.void_t,
-    CGEventRef, CGEventField, ctypes.int64_t);
+    CGEventRef,
+    CGEventField,
+    ctypes.int64_t
+  );
   var CGEventPost = CoreGraphics.declare(
     "CGEventPost",
     ctypes.default_abi,
     ctypes.void_t,
-    CGEventTapLocation, CGEventRef);
+    CGEventTapLocation,
+    CGEventRef
+  );
   var CFRelease = CoreFoundation.declare(
     "CFRelease",
     ctypes.default_abi,
     ctypes.void_t,
-    CGEventRef);
+    CGEventRef
+  );
 
   var source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
   if (!source) {
@@ -2000,23 +2379,37 @@ function synthesizeNativeOSXClick(x, y)
   }
 
   var loc = new CGPoint({ x: x, y: y });
-  var event = CGEventCreateMouseEvent(source, kCGEventLeftMouseDown, loc,
-                                      kCGMouseButtonLeft);
+  var event = CGEventCreateMouseEvent(
+    source,
+    kCGEventLeftMouseDown,
+    loc,
+    kCGMouseButtonLeft
+  );
   if (!event) {
     throw new Error("CGEventCreateMouseEvent returns null");
   }
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState,
-                              new ctypes.Int64(1));
+  CGEventSetIntegerValueField(
+    event,
+    kCGMouseEventClickState,
+    new ctypes.Int64(1)
+  );
   CGEventPost(kCGHIDEventTap, event);
   CFRelease(event);
 
-  event = CGEventCreateMouseEvent(source, kCGEventLeftMouseUp, loc,
-                                      kCGMouseButtonLeft);
+  event = CGEventCreateMouseEvent(
+    source,
+    kCGEventLeftMouseUp,
+    loc,
+    kCGMouseButtonLeft
+  );
   if (!event) {
     throw new Error("CGEventCreateMouseEvent returns null");
   }
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState,
-                              new ctypes.Int64(1));
+  CGEventSetIntegerValueField(
+    event,
+    kCGMouseEventClickState,
+    new ctypes.Int64(1)
+  );
   CGEventPost(kCGHIDEventTap, event);
   CFRelease(event);
 
@@ -2046,10 +2439,8 @@ function synthesizeNativeOSXClick(x, y)
  * see bug 462172 for example of use
  *
  */
-function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
-{
-  if (!aWindow)
-    aWindow = window;
+function synthesizeDragStart(element, expectedDragData, aWindow, x, y) {
+  if (!aWindow) aWindow = window;
   x = x || 2;
   y = y || 2;
   const step = 9;
@@ -2060,38 +2451,42 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
       // We must wrap only in plain mochitests, not chrome
       var dataTransfer = _EU_maybeWrap(event.dataTransfer);
       result = null;
-      if (!dataTransfer)
-        throw "no dataTransfer";
-      if (expectedDragData == null ||
-          dataTransfer.mozItemCount != expectedDragData.length)
+      if (!dataTransfer) throw "no dataTransfer";
+      if (
+        expectedDragData == null ||
+        dataTransfer.mozItemCount != expectedDragData.length
+      )
         throw dataTransfer;
       for (var i = 0; i < dataTransfer.mozItemCount; i++) {
         var dtTypes = dataTransfer.mozTypesAt(i);
-        if (dtTypes.length != expectedDragData[i].length)
-          throw dataTransfer;
+        if (dtTypes.length != expectedDragData[i].length) throw dataTransfer;
         for (var j = 0; j < dtTypes.length; j++) {
-          if (dtTypes[j] != expectedDragData[i][j].type)
-            throw dataTransfer;
-          var dtData = dataTransfer.mozGetDataAt(dtTypes[j],i);
+          if (dtTypes[j] != expectedDragData[i][j].type) throw dataTransfer;
+          var dtData = dataTransfer.mozGetDataAt(dtTypes[j], i);
           if (expectedDragData[i][j].eqTest) {
-            if (!expectedDragData[i][j].eqTest(dtData, expectedDragData[i][j].data))
+            if (
+              !expectedDragData[i][j].eqTest(
+                dtData,
+                expectedDragData[i][j].data
+              )
+            )
               throw dataTransfer;
-          }
-          else if (expectedDragData[i][j].data != dtData)
-            throw dataTransfer;
+          } else if (expectedDragData[i][j].data != dtData) throw dataTransfer;
         }
       }
-    } catch(ex) {
+    } catch (ex) {
       result = ex;
     }
     event.preventDefault();
     event.stopPropagation();
-  }
+  };
   aWindow.addEventListener("dragstart", trapDrag);
   synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
-  x += step; y += step;
+  x += step;
+  y += step;
   synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
-  x += step; y += step;
+  x += step;
+  y += step;
   synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
   aWindow.removeEventListener("dragstart", trapDrag);
   synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
@@ -2109,15 +2504,19 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryTextRect(aOffset, aLength, aWindow)
-{
+function synthesizeQueryTextRect(aOffset, aLength, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nullptr;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_TEXT_RECT,
-                                     aOffset, aLength, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_TEXT_RECT,
+    aOffset,
+    aLength,
+    0,
+    0,
+    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+  );
 }
 
 /**
@@ -2131,15 +2530,19 @@ function synthesizeQueryTextRect(aOffset, aLength, aWindow)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryTextRectArray(aOffset, aLength, aWindow)
-{
+function synthesizeQueryTextRectArray(aOffset, aLength, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nullptr;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_TEXT_RECT_ARRAY,
-                                     aOffset, aLength, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_TEXT_RECT_ARRAY,
+    aOffset,
+    aLength,
+    0,
+    0,
+    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+  );
 }
 
 /**
@@ -2149,14 +2552,19 @@ function synthesizeQueryTextRectArray(aOffset, aLength, aWindow)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQueryEditorRect(aWindow)
-{
+function synthesizeQueryEditorRect(aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nullptr;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_EDITOR_RECT, 0, 0, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_EDITOR_RECT,
+    0,
+    0,
+    0,
+    0,
+    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+  );
 }
 
 /**
@@ -2167,15 +2575,19 @@ function synthesizeQueryEditorRect(aWindow)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeCharAtPoint(aX, aY, aWindow)
-{
+function synthesizeCharAtPoint(aX, aY, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return nullptr;
   }
-  return utils.sendQueryContentEvent(utils.QUERY_CHARACTER_AT_POINT,
-                                     0, 0, aX, aY,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+  return utils.sendQueryContentEvent(
+    utils.QUERY_CHARACTER_AT_POINT,
+    0,
+    0,
+    aX,
+    aY,
+    QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK
+  );
 }
 
 /**
@@ -2191,9 +2603,13 @@ function synthesizeCharAtPoint(aX, aY, aWindow)
  *                       object
  * @return               An object to pass to sendDragEvent.
  */
-function createDragEventObject(aType, aDestElement, aDestWindow, aDataTransfer,
-                               aDragEvent)
-{
+function createDragEventObject(
+  aType,
+  aDestElement,
+  aDestWindow,
+  aDataTransfer,
+  aDragEvent
+) {
   var destRect = aDestElement.getBoundingClientRect();
   var destClientX = destRect.left + destRect.width / 2;
   var destClientY = destRect.top + destRect.height / 2;
@@ -2207,20 +2623,27 @@ function createDragEventObject(aType, aDestElement, aDestWindow, aDataTransfer,
   }
 
   // Wrap only in plain mochitests
-  let dataTransfer = _EU_maybeUnwrap(_EU_maybeWrap(aDataTransfer).mozCloneForEvent(aType));
+  let dataTransfer = _EU_maybeUnwrap(
+    _EU_maybeWrap(aDataTransfer).mozCloneForEvent(aType)
+  );
 
   // Copy over the drop effect. This isn't copied over by Clone, as it uses more
   // complex logic in the actual implementation (see
   // nsContentUtils::SetDataTransferInEvent for actual impl).
   dataTransfer.dropEffect = aDataTransfer.dropEffect;
 
-  return Object.assign({
-    type: aType,
-    screenX: destScreenX, screenY: destScreenY,
-    clientX: destClientX, clientY: destClientY,
-    dataTransfer: dataTransfer,
-    _domDispatchOnly: aDragEvent._domDispatchOnly,
-  }, aDragEvent);
+  return Object.assign(
+    {
+      type: aType,
+      screenX: destScreenX,
+      screenY: destScreenY,
+      clientX: destClientX,
+      clientY: destClientY,
+      dataTransfer: dataTransfer,
+      _domDispatchOnly: aDragEvent._domDispatchOnly,
+    },
+    aDragEvent
+  );
 }
 
 /**
@@ -2245,8 +2668,15 @@ function createDragEventObject(aType, aDestElement, aDestWindow, aDataTransfer,
  *                      dragover event, and the second element is the
  *                      dataTransfer for the current drag session.
  */
-function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, aWindow, aDestWindow, aDragEvent={})
-{
+function synthesizeDragOver(
+  aSrcElement,
+  aDestElement,
+  aDragData,
+  aDropEffect,
+  aWindow,
+  aDestWindow,
+  aDragEvent = {}
+) {
   if (!aWindow) {
     aWindow = window;
   }
@@ -2254,8 +2684,12 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
     aDestWindow = aWindow;
   }
 
-  const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(_EU_Ci.nsIObserverService);
-  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(_EU_Ci.nsIDragService);
+  const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(
+    _EU_Ci.nsIObserverService
+  );
+  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
+    _EU_Ci.nsIDragService
+  );
   var sess = ds.getCurrentSession();
 
   // This method runs before other callbacks, and acts as a way to inject the
@@ -2265,7 +2699,11 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
       for (var i = 0; i < aDragData.length; i++) {
         var item = aDragData[i];
         for (var j = 0; j < item.length; j++) {
-          _EU_maybeWrap(event.dataTransfer).mozSetDataAt(item[j].type, item[j].data, i);
+          _EU_maybeWrap(event.dataTransfer).mozSetDataAt(
+            item[j].type,
+            item[j].data,
+            i
+          );
         }
       }
     }
@@ -2275,7 +2713,9 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
 
   function trapDrag(subject, topic) {
     if (topic == "on-datatransfer-available") {
-      sess.dataTransfer = _EU_maybeUnwrap(_EU_maybeWrap(subject).mozCloneForEvent("drop"));
+      sess.dataTransfer = _EU_maybeUnwrap(
+        _EU_maybeWrap(subject).mozCloneForEvent("drop")
+      );
       sess.dataTransfer.dropEffect = subject.dropEffect;
     }
   }
@@ -2289,7 +2729,7 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
   var x = rect.width / 2;
   var y = rect.height / 2;
   synthesizeMouse(aSrcElement, x, y, { type: "mousemove" }, aWindow);
-  synthesizeMouse(aSrcElement, x+10, y+10, { type: "mousemove" }, aWindow);
+  synthesizeMouse(aSrcElement, x + 10, y + 10, { type: "mousemove" }, aWindow);
   aWindow.removeEventListener("dragstart", fillDrag, true);
   obs.removeObserver(trapDrag, "on-datatransfer-available");
 
@@ -2299,8 +2739,13 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
   }
 
   // The EventStateManager will fire our dragenter event if it needs to.
-  var event = createDragEventObject("dragover", aDestElement, aDestWindow,
-                                    dataTransfer, aDragEvent);
+  var event = createDragEventObject(
+    "dragover",
+    aDestElement,
+    aDestWindow,
+    dataTransfer,
+    aDragEvent
+  );
   var result = sendDragEvent(event, aDestElement, aDestWindow);
 
   return [result, dataTransfer];
@@ -2321,8 +2766,13 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
  * @return               "none" if aResult is true,
  *                       aDataTransfer.dropEffect otherwise.
  */
-function synthesizeDropAfterDragOver(aResult, aDataTransfer, aDestElement, aDestWindow, aDragEvent={})
-{
+function synthesizeDropAfterDragOver(
+  aResult,
+  aDataTransfer,
+  aDestElement,
+  aDestWindow,
+  aDragEvent = {}
+) {
   if (!aDestWindow) {
     aDestWindow = window;
   }
@@ -2333,8 +2783,13 @@ function synthesizeDropAfterDragOver(aResult, aDataTransfer, aDestElement, aDest
   if (aResult) {
     effect = "none";
   } else if (effect != "none") {
-    event = createDragEventObject("drop", aDestElement, aDestWindow,
-                                  aDataTransfer, aDragEvent);
+    event = createDragEventObject(
+      "drop",
+      aDestElement,
+      aDestWindow,
+      aDataTransfer,
+      aDragEvent
+    );
     sendDragEvent(event, aDestElement, aDestWindow);
   }
   synthesizeMouse(aDestElement, 2, 2, { type: "mouseup" }, aDestWindow);
@@ -2362,8 +2817,15 @@ function synthesizeDropAfterDragOver(aResult, aDataTransfer, aDestElement, aDest
  *                      passed to sendDragEvent.
  * @return              The drop effect that was desired.
  */
-function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWindow, aDestWindow, aDragEvent={})
-{
+function synthesizeDrop(
+  aSrcElement,
+  aDestElement,
+  aDragData,
+  aDropEffect,
+  aWindow,
+  aDestWindow,
+  aDragEvent = {}
+) {
   if (!aWindow) {
     aWindow = window;
   }
@@ -2371,18 +2833,29 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
     aDestWindow = aWindow;
   }
 
-  var ds = _EU_Cc["@mozilla.org/widget/dragservice;1"]
-           .getService(_EU_Ci.nsIDragService);
+  var ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
+    _EU_Ci.nsIDragService
+  );
 
   ds.startDragSession();
 
   try {
-    var [result, dataTransfer] = synthesizeDragOver(aSrcElement, aDestElement,
-                                                    aDragData, aDropEffect,
-                                                    aWindow, aDestWindow,
-                                                    aDragEvent);
-    return synthesizeDropAfterDragOver(result, dataTransfer, aDestElement,
-                                       aDestWindow, aDragEvent);
+    var [result, dataTransfer] = synthesizeDragOver(
+      aSrcElement,
+      aDestElement,
+      aDragData,
+      aDropEffect,
+      aWindow,
+      aDestWindow,
+      aDragEvent
+    );
+    return synthesizeDropAfterDragOver(
+      result,
+      dataTransfer,
+      aDestElement,
+      aDestWindow,
+      aDragEvent
+    );
   } finally {
     ds.endDragSession(true, _parseModifiers(aDragEvent));
   }
@@ -2411,8 +2884,7 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
  *                        defaults to the current window object
  *        }
  */
-async function synthesizePlainDragAndDrop(aParams)
-{
+async function synthesizePlainDragAndDrop(aParams) {
   let {
     srcElement,
     destElement,
@@ -2426,8 +2898,9 @@ async function synthesizePlainDragAndDrop(aParams)
     destWindow = window,
   } = aParams;
 
-  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"]
-        .getService(_EU_Ci.nsIDragService);
+  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
+    _EU_Ci.nsIDragService
+  );
   ds.startDragSession();
 
   try {
@@ -2442,12 +2915,14 @@ async function synthesizePlainDragAndDrop(aParams)
     // (e.g. menu) work like the real user input.
     await new Promise(r => setTimeout(r, 0));
 
-    srcX += stepX; srcY += stepY;
+    srcX += stepX;
+    srcY += stepY;
     synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
 
     await new Promise(r => setTimeout(r, 0));
 
-    srcX += stepX; srcY += stepY;
+    srcX += stepX;
+    srcY += stepY;
     synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
 
     await new Promise(r => setTimeout(r, 0));
@@ -2461,35 +2936,48 @@ async function synthesizePlainDragAndDrop(aParams)
       // dragover and drop are only fired to a valid drop target. If the
       // destElement parameter is null, this function is being used to
       // simulate a drag'n'drop over an invalid drop target.
-      event = createDragEventObject("dragover", destElement, destWindow,
-                                        dataTransfer, {});
+      event = createDragEventObject(
+        "dragover",
+        destElement,
+        destWindow,
+        dataTransfer,
+        {}
+      );
       sendDragEvent(event, destElement, destWindow);
 
       await new Promise(r => setTimeout(r, 0));
 
-      event = createDragEventObject("drop", destElement, destWindow,
-                                    dataTransfer, {});
+      event = createDragEventObject(
+        "drop",
+        destElement,
+        destWindow,
+        dataTransfer,
+        {}
+      );
       sendDragEvent(event, destElement, destWindow);
     }
 
     // dragend is fired, by definition, on the srcElement
-    event = createDragEventObject("dragend", srcElement, srcWindow,
-                                  dataTransfer, {clientX: finalX, clientY: finalY});
+    event = createDragEventObject(
+      "dragend",
+      srcElement,
+      srcWindow,
+      dataTransfer,
+      { clientX: finalX, clientY: finalY }
+    );
     sendDragEvent(event, srcElement, srcWindow);
 
     await new Promise(r => setTimeout(r, 0));
-
   } finally {
     ds.endDragSession(true, 0);
   }
 }
 
-var PluginUtils =
-{
-  withTestPlugin : function(callback)
-  {
-    var ph = _EU_Cc["@mozilla.org/plugin/host;1"]
-             .getService(_EU_Ci.nsIPluginHost);
+var PluginUtils = {
+  withTestPlugin: function(callback) {
+    var ph = _EU_Cc["@mozilla.org/plugin/host;1"].getService(
+      _EU_Ci.nsIPluginHost
+    );
     var tags = ph.getPluginTags();
 
     // Find the test plugin
@@ -2501,7 +2989,7 @@ var PluginUtils =
     }
     todo(false, "Need a test plugin on this platform");
     return false;
-  }
+  },
 };
 
 class EventCounter {
@@ -2515,14 +3003,17 @@ class EventCounter {
     // SpecialPowers is picky and needs to be passed an explicit reference to
     // the function to be called. To avoid having to bind "this", we therefore
     // define the method this way, via a property.
-    this.handleEvent = (aEvent) => {
-        this.eventCount++;
+    this.handleEvent = aEvent => {
+      this.eventCount++;
     };
 
     if (aOptions.mozSystemGroup) {
-      SpecialPowers.addSystemEventListener(aTarget, aType,
-                                           this.handleEvent,
-                                           aOptions.capture);
+      SpecialPowers.addSystemEventListener(
+        aTarget,
+        aType,
+        this.handleEvent,
+        aOptions.capture
+      );
     } else {
       aTarget.addEventListener(aType, this, aOptions);
     }
@@ -2530,9 +3021,12 @@ class EventCounter {
 
   unregister() {
     if (this.options.mozSystemGroup) {
-      SpecialPowers.removeSystemEventListener(this.target, this.type,
-                                              this.handleEvent,
-                                              this.options.capture);
+      SpecialPowers.removeSystemEventListener(
+        this.target,
+        this.type,
+        this.handleEvent,
+        this.options.capture
+      );
     } else {
       this.target.removeEventListener(this.type, this, this.options);
     }
