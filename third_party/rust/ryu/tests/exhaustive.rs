@@ -38,9 +38,9 @@ fn test_exhaustive() {
                 if !f.is_finite() {
                     continue;
                 }
-                let n = unsafe { ryu::raw::f2s_buffered_n(f, &mut bytes[0]) };
+                let n = unsafe { ryu::raw::format32(f, &mut bytes[0]) };
                 assert_eq!(Ok(Ok(f)), str::from_utf8(&bytes[..n]).map(str::parse));
-                assert_eq!(Ok(f), buffer.format(f).parse());
+                assert_eq!(Ok(f), buffer.format_finite(f).parse());
             }
 
             let increment = (max - min + 1) as usize;

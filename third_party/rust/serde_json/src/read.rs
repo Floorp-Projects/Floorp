@@ -1,17 +1,15 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use std::ops::Deref;
 use std::{char, cmp, io, str};
 
+#[cfg(feature = "raw_value")]
+use serde::de::Visitor;
+
 use iter::LineColIterator;
 
-use super::error::{Error, ErrorCode, Result};
+use error::{Error, ErrorCode, Result};
+
+#[cfg(feature = "raw_value")]
+use raw::{BorrowedRawDeserializer, OwnedRawDeserializer};
 
 /// Trait used by the deserializer for iterating over input. This is manually
 /// "specialized" for iterating over &[u8]. Once feature(specialization) is
@@ -21,9 +19,9 @@ use super::error::{Error, ErrorCode, Result};
 /// `serde_json`.
 pub trait Read<'de>: private::Sealed {
     #[doc(hidden)]
-    fn next(&mut self) -> io::Result<Option<u8>>;
+    fn next(&mut self) -> Result<Option<u8>>;
     #[doc(hidden)]
-    fn peek(&mut self) -> io::Result<Option<u8>>;
+    fn peek(&mut self) -> Result<Option<u8>>;
 
     /// Only valid after a call to peek(). Discards the peeked byte.
     #[doc(hidden)]
@@ -76,6 +74,26 @@ pub trait Read<'de>: private::Sealed {
     /// string until the next quotation mark but discards the data.
     #[doc(hidden)]
     fn ignore_str(&mut self) -> Result<()>;
+
+    /// Assumes the previous byte was a hex escape sequnce ('\u') in a string.
+    /// Parses next hexadecimal sequence.
+    #[doc(hidden)]
+    fn decode_hex_escape(&mut self) -> Result<u16>;
+
+    /// Switch raw buffering mode on.
+    ///
+    /// This is used when deserializing `RawValue`.
+    #[cfg(feature = "raw_value")]
+    #[doc(hidden)]
+    fn begin_raw_buffering(&mut self);
+
+    /// Switch raw buffering mode off and provides the raw buffered data to the
+    /// given visitor.
+    #[cfg(feature = "raw_value")]
+    #[doc(hidden)]
+    fn end_raw_buffering<V>(&mut self, visitor: V) -> Result<V::Value>
+    where
+        V: Visitor<'de>;
 }
 
 pub struct Position {
@@ -107,6 +125,8 @@ where
     iter: LineColIterator<io::Bytes<R>>,
     /// Temporary storage of peeked byte.
     ch: Option<u8>,
+    #[cfg(feature = "raw_value")]
+    raw_buffer: Option<Vec<u8>>,
 }
 
 /// JSON input source that reads from a slice of bytes.
@@ -117,6 +137,8 @@ pub struct SliceRead<'a> {
     slice: &'a [u8],
     /// Index of the *next* byte that will be returned by next() or peek().
     index: usize,
+    #[cfg(feature = "raw_value")]
+    raw_buffering_start_index: usize,
 }
 
 /// JSON input source that reads from a UTF-8 string.
@@ -124,6 +146,8 @@ pub struct SliceRead<'a> {
 // Able to elide UTF-8 checks by assuming that the input is valid UTF-8.
 pub struct StrRead<'a> {
     delegate: SliceRead<'a>,
+    #[cfg(feature = "raw_value")]
+    data: &'a str,
 }
 
 // Prevent users from implementing the Read trait.
@@ -139,9 +163,20 @@ where
 {
     /// Create a JSON input source to read from a std::io input stream.
     pub fn new(reader: R) -> Self {
-        IoRead {
-            iter: LineColIterator::new(reader.bytes()),
-            ch: None,
+        #[cfg(not(feature = "raw_value"))]
+        {
+            IoRead {
+                iter: LineColIterator::new(reader.bytes()),
+                ch: None,
+            }
+        }
+        #[cfg(feature = "raw_value")]
+        {
+            IoRead {
+                iter: LineColIterator::new(reader.bytes()),
+                ch: None,
+                raw_buffer: None,
+            }
         }
     }
 }
@@ -191,23 +226,39 @@ where
     R: io::Read,
 {
     #[inline]
-    fn next(&mut self) -> io::Result<Option<u8>> {
+    fn next(&mut self) -> Result<Option<u8>> {
         match self.ch.take() {
-            Some(ch) => Ok(Some(ch)),
+            Some(ch) => {
+                #[cfg(feature = "raw_value")]
+                {
+                    if let Some(ref mut buf) = self.raw_buffer {
+                        buf.push(ch);
+                    }
+                }
+                Ok(Some(ch))
+            }
             None => match self.iter.next() {
-                Some(Err(err)) => Err(err),
-                Some(Ok(ch)) => Ok(Some(ch)),
+                Some(Err(err)) => Err(Error::io(err)),
+                Some(Ok(ch)) => {
+                    #[cfg(feature = "raw_value")]
+                    {
+                        if let Some(ref mut buf) = self.raw_buffer {
+                            buf.push(ch);
+                        }
+                    }
+                    Ok(Some(ch))
+                }
                 None => Ok(None),
             },
         }
     }
 
     #[inline]
-    fn peek(&mut self) -> io::Result<Option<u8>> {
+    fn peek(&mut self) -> Result<Option<u8>> {
         match self.ch {
             Some(ch) => Ok(Some(ch)),
             None => match self.iter.next() {
-                Some(Err(err)) => Err(err),
+                Some(Err(err)) => Err(Error::io(err)),
                 Some(Ok(ch)) => {
                     self.ch = Some(ch);
                     Ok(self.ch)
@@ -217,9 +268,19 @@ where
         }
     }
 
+    #[cfg(not(feature = "raw_value"))]
     #[inline]
     fn discard(&mut self) {
         self.ch = None;
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn discard(&mut self) {
+        if let Some(ch) = self.ch.take() {
+            if let Some(ref mut buf) = self.raw_buffer {
+                buf.push(ch);
+            }
+        }
     }
 
     fn position(&self) -> Position {
@@ -274,6 +335,36 @@ where
             }
         }
     }
+
+    fn decode_hex_escape(&mut self) -> Result<u16> {
+        let mut n = 0;
+        for _ in 0..4 {
+            match decode_hex_val(try!(next_or_eof(self))) {
+                None => return error(self, ErrorCode::InvalidEscape),
+                Some(val) => {
+                    n = (n << 4) + val;
+                }
+            }
+        }
+        Ok(n)
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn begin_raw_buffering(&mut self) {
+        self.raw_buffer = Some(Vec::new());
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn end_raw_buffering<V>(&mut self, visitor: V) -> Result<V::Value>
+    where
+        V: Visitor<'de>,
+    {
+        let raw = self.raw_buffer.take().unwrap();
+        let raw = String::from_utf8(raw).unwrap();
+        visitor.visit_map(OwnedRawDeserializer {
+            raw_value: Some(raw),
+        })
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -281,9 +372,20 @@ where
 impl<'a> SliceRead<'a> {
     /// Create a JSON input source to read from a slice of bytes.
     pub fn new(slice: &'a [u8]) -> Self {
-        SliceRead {
-            slice: slice,
-            index: 0,
+        #[cfg(not(feature = "raw_value"))]
+        {
+            SliceRead {
+                slice: slice,
+                index: 0,
+            }
+        }
+        #[cfg(feature = "raw_value")]
+        {
+            SliceRead {
+                slice: slice,
+                index: 0,
+                raw_buffering_start_index: 0,
+            }
         }
     }
 
@@ -347,10 +449,10 @@ impl<'a> SliceRead<'a> {
                     start = self.index;
                 }
                 _ => {
+                    self.index += 1;
                     if validate {
                         return error(self, ErrorCode::ControlCharacterWhileParsingString);
                     }
-                    self.index += 1;
                 }
             }
         }
@@ -361,7 +463,7 @@ impl<'a> private::Sealed for SliceRead<'a> {}
 
 impl<'a> Read<'a> for SliceRead<'a> {
     #[inline]
-    fn next(&mut self) -> io::Result<Option<u8>> {
+    fn next(&mut self) -> Result<Option<u8>> {
         // `Ok(self.slice.get(self.index).map(|ch| { self.index += 1; *ch }))`
         // is about 10% slower.
         Ok(if self.index < self.slice.len() {
@@ -374,7 +476,7 @@ impl<'a> Read<'a> for SliceRead<'a> {
     }
 
     #[inline]
-    fn peek(&mut self) -> io::Result<Option<u8>> {
+    fn peek(&mut self) -> Result<Option<u8>> {
         // `Ok(self.slice.get(self.index).map(|ch| *ch))` is about 10% slower
         // for some reason.
         Ok(if self.index < self.slice.len() {
@@ -437,6 +539,43 @@ impl<'a> Read<'a> for SliceRead<'a> {
             }
         }
     }
+
+    fn decode_hex_escape(&mut self) -> Result<u16> {
+        if self.index + 4 > self.slice.len() {
+            self.index = self.slice.len();
+            return error(self, ErrorCode::EofWhileParsingString);
+        }
+
+        let mut n = 0;
+        for _ in 0..4 {
+            let ch = decode_hex_val(self.slice[self.index]);
+            self.index += 1;
+            match ch {
+                None => return error(self, ErrorCode::InvalidEscape),
+                Some(val) => {
+                    n = (n << 4) + val;
+                }
+            }
+        }
+        Ok(n)
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn begin_raw_buffering(&mut self) {
+        self.raw_buffering_start_index = self.index;
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn end_raw_buffering<V>(&mut self, visitor: V) -> Result<V::Value>
+    where
+        V: Visitor<'a>,
+    {
+        let raw = &self.slice[self.raw_buffering_start_index..self.index];
+        let raw = str::from_utf8(raw).unwrap();
+        visitor.visit_map(BorrowedRawDeserializer {
+            raw_value: Some(raw),
+        })
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -444,8 +583,18 @@ impl<'a> Read<'a> for SliceRead<'a> {
 impl<'a> StrRead<'a> {
     /// Create a JSON input source to read from a UTF-8 string.
     pub fn new(s: &'a str) -> Self {
-        StrRead {
-            delegate: SliceRead::new(s.as_bytes()),
+        #[cfg(not(feature = "raw_value"))]
+        {
+            StrRead {
+                delegate: SliceRead::new(s.as_bytes()),
+            }
+        }
+        #[cfg(feature = "raw_value")]
+        {
+            StrRead {
+                delegate: SliceRead::new(s.as_bytes()),
+                data: s,
+            }
         }
     }
 }
@@ -454,12 +603,12 @@ impl<'a> private::Sealed for StrRead<'a> {}
 
 impl<'a> Read<'a> for StrRead<'a> {
     #[inline]
-    fn next(&mut self) -> io::Result<Option<u8>> {
+    fn next(&mut self) -> Result<Option<u8>> {
         self.delegate.next()
     }
 
     #[inline]
-    fn peek(&mut self) -> io::Result<Option<u8>> {
+    fn peek(&mut self) -> Result<Option<u8>> {
         self.delegate.peek()
     }
 
@@ -498,40 +647,60 @@ impl<'a> Read<'a> for StrRead<'a> {
     fn ignore_str(&mut self) -> Result<()> {
         self.delegate.ignore_str()
     }
+
+    fn decode_hex_escape(&mut self) -> Result<u16> {
+        self.delegate.decode_hex_escape()
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn begin_raw_buffering(&mut self) {
+        self.delegate.begin_raw_buffering()
+    }
+
+    #[cfg(feature = "raw_value")]
+    fn end_raw_buffering<V>(&mut self, visitor: V) -> Result<V::Value>
+    where
+        V: Visitor<'a>,
+    {
+        let raw = &self.data[self.delegate.raw_buffering_start_index..self.delegate.index];
+        visitor.visit_map(BorrowedRawDeserializer {
+            raw_value: Some(raw),
+        })
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-const CT: bool = true; // control character \x00...\x1F
-const QU: bool = true; // quote \x22
-const BS: bool = true; // backslash \x5C
-const O: bool = false; // allow unescaped
-
 // Lookup table of bytes that must be escaped. A value of true at index i means
 // that byte i requires an escape sequence in the input.
-#[cfg_attr(rustfmt, rustfmt_skip)]
-static ESCAPE: [bool; 256] = [
-    //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-    CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 0
-    CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 1
-     O,  O, QU,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 2
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 3
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 4
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, BS,  O,  O,  O, // 5
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 6
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 7
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 8
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // 9
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // A
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // B
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // C
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // D
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // E
-     O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O,  O, // F
-];
+static ESCAPE: [bool; 256] = {
+    const CT: bool = true; // control character \x00...\x1F
+    const QU: bool = true; // quote \x22
+    const BS: bool = true; // backslash \x5C
+    const __: bool = false; // allow unescaped
+    [
+        //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+        CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 0
+        CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 1
+        __, __, QU, __, __, __, __, __, __, __, __, __, __, __, __, __, // 2
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 3
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 4
+        __, __, __, __, __, __, __, __, __, __, __, __, BS, __, __, __, // 5
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 6
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 7
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 8
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 9
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // A
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // B
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // C
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // D
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // E
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // F
+    ]
+};
 
 fn next_or_eof<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<u8> {
-    match try!(read.next().map_err(Error::io)) {
+    match try!(read.next()) {
         Some(b) => Ok(b),
         None => error(read, ErrorCode::EofWhileParsingString),
     }
@@ -561,7 +730,7 @@ fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Resul
         b'r' => scratch.push(b'\r'),
         b't' => scratch.push(b'\t'),
         b'u' => {
-            let c = match try!(decode_hex_escape(read)) {
+            let c = match try!(read.decode_hex_escape()) {
                 0xDC00...0xDFFF => {
                     return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
                 }
@@ -576,7 +745,7 @@ fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Resul
                         return error(read, ErrorCode::UnexpectedEndOfHexEscape);
                     }
 
-                    let n2 = try!(decode_hex_escape(read));
+                    let n2 = try!(read.decode_hex_escape());
 
                     if n2 < 0xDC00 || n2 > 0xDFFF {
                         return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
@@ -618,7 +787,7 @@ fn ignore_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<()> {
     match ch {
         b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {}
         b'u' => {
-            let n = match try!(decode_hex_escape(read)) {
+            let n = match try!(read.decode_hex_escape()) {
                 0xDC00...0xDFFF => {
                     return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
                 }
@@ -633,7 +802,7 @@ fn ignore_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<()> {
                         return error(read, ErrorCode::UnexpectedEndOfHexEscape);
                     }
 
-                    let n2 = try!(decode_hex_escape(read));
+                    let n2 = try!(read.decode_hex_escape());
 
                     if n2 < 0xDC00 || n2 > 0xDFFF {
                         return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
@@ -657,21 +826,34 @@ fn ignore_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<()> {
     Ok(())
 }
 
-fn decode_hex_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<u16> {
-    let mut n = 0;
-    for _ in 0..4 {
-        n = match try!(next_or_eof(read)) {
-            c @ b'0'...b'9' => n * 16_u16 + ((c as u16) - (b'0' as u16)),
-            b'a' | b'A' => n * 16_u16 + 10_u16,
-            b'b' | b'B' => n * 16_u16 + 11_u16,
-            b'c' | b'C' => n * 16_u16 + 12_u16,
-            b'd' | b'D' => n * 16_u16 + 13_u16,
-            b'e' | b'E' => n * 16_u16 + 14_u16,
-            b'f' | b'F' => n * 16_u16 + 15_u16,
-            _ => {
-                return error(read, ErrorCode::InvalidEscape);
-            }
-        };
+static HEX: [u8; 256] = {
+    const __: u8 = 255; // not a hex digit
+    [
+        //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 0
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 1
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 2
+        00, 01, 02, 03, 04, 05, 06, 07, 08, 09, __, __, __, __, __, __, // 3
+        __, 10, 11, 12, 13, 14, 15, __, __, __, __, __, __, __, __, __, // 4
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 5
+        __, 10, 11, 12, 13, 14, 15, __, __, __, __, __, __, __, __, __, // 6
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 7
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 8
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 9
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // A
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // B
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // C
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // D
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // E
+        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // F
+    ]
+};
+
+fn decode_hex_val(val: u8) -> Option<u16> {
+    let n = HEX[val as usize] as u16;
+    if n == 255 {
+        None
+    } else {
+        Some(n)
     }
-    Ok(n)
 }

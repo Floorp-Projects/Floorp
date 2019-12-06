@@ -1,9 +1,10 @@
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 
-use std::process;
-use std::fmt;
 use std::env;
+use std::fmt;
+use std::process;
 use std::str;
 
 struct Foo;
@@ -28,7 +29,7 @@ fn main() {
         .output()
         .unwrap_or_else(|e| panic!("Unable to start child process: {}", e));
     if out.status.success() {
-        return
+        return;
     }
 
     println!("test failed: {}", out.status);

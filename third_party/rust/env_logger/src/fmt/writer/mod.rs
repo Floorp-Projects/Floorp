@@ -1,16 +1,16 @@
-mod termcolor;
 mod atty;
+mod termcolor;
 
-use std::{fmt, io};
+use self::atty::{is_stderr, is_stdout};
 use self::termcolor::BufferWriter;
-use self::atty::{is_stdout, is_stderr};
+use std::{fmt, io};
 
-pub(in ::fmt) mod glob {
+pub(in crate::fmt) mod glob {
     pub use super::termcolor::glob::*;
     pub use super::*;
 }
 
-pub(in ::fmt) use self::termcolor::Buffer;
+pub(in crate::fmt) use self::termcolor::Buffer;
 
 /// Log target, either `stdout` or `stderr`.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -55,11 +55,11 @@ impl Writer {
         self.write_style
     }
 
-    pub(in ::fmt) fn buffer(&self) -> Buffer {
+    pub(in crate::fmt) fn buffer(&self) -> Buffer {
         self.inner.buffer()
     }
 
-    pub(in ::fmt) fn print(&self, buf: &Buffer) -> io::Result<()> {
+    pub(in crate::fmt) fn print(&self, buf: &Buffer) -> io::Result<()> {
         self.inner.print(buf)
     }
 }
@@ -127,7 +127,7 @@ impl Builder {
                 } else {
                     WriteStyle::Never
                 }
-            },
+            }
             color_choice => color_choice,
         };
 
@@ -150,16 +150,16 @@ impl Default for Builder {
 }
 
 impl fmt::Debug for Builder {
-    fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Logger")
-        .field("target", &self.target)
-        .field("write_style", &self.write_style)
-        .finish()
+            .field("target", &self.target)
+            .field("write_style", &self.write_style)
+            .finish()
     }
 }
 
 impl fmt::Debug for Writer {
-    fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Writer").finish()
     }
 }
@@ -192,12 +192,7 @@ mod tests {
 
     #[test]
     fn parse_write_style_invalid() {
-        let inputs = vec![
-            "",
-            "true",
-            "false",
-            "NEVER!!"
-        ];
+        let inputs = vec!["", "true", "false", "NEVER!!"];
 
         for input in inputs {
             assert_eq!(WriteStyle::Auto, parse_write_style(input));

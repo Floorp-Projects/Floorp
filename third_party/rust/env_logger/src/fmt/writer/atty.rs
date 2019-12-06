@@ -11,24 +11,24 @@ from being printed.
 mod imp {
     use atty;
 
-    pub(in ::fmt) fn is_stdout() -> bool {
+    pub(in crate::fmt) fn is_stdout() -> bool {
         atty::is(atty::Stream::Stdout)
     }
 
-    pub(in ::fmt) fn is_stderr() -> bool {
+    pub(in crate::fmt) fn is_stderr() -> bool {
         atty::is(atty::Stream::Stderr)
     }
 }
 
 #[cfg(not(feature = "atty"))]
 mod imp {
-    pub(in ::fmt) fn is_stdout() -> bool {
+    pub(in crate::fmt) fn is_stdout() -> bool {
         false
     }
 
-    pub(in ::fmt) fn is_stderr() -> bool {
+    pub(in crate::fmt) fn is_stderr() -> bool {
         false
     }
 }
 
-pub(in ::fmt) use self::imp::*;
+pub(in crate::fmt) use self::imp::*;

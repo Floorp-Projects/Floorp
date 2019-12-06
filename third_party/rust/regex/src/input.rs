@@ -1,13 +1,3 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use std::char;
 use std::cmp::Ordering;
 use std::fmt;
@@ -18,7 +8,7 @@ use syntax;
 
 use literal::LiteralSearcher;
 use prog::InstEmptyLook;
-use utf8::{decode_utf8, decode_last_utf8};
+use utf8::{decode_last_utf8, decode_utf8};
 
 /// Represents a location in the input.
 #[derive(Clone, Copy, Debug)]
@@ -76,7 +66,7 @@ impl InputAt {
 }
 
 /// An abstraction over input used in the matching engines.
-pub trait Input {
+pub trait Input: fmt::Debug {
     /// Return an encoding of the position at byte offset `i`.
     fn at(&self, i: usize) -> InputAt;
 
@@ -105,18 +95,26 @@ pub trait Input {
     fn len(&self) -> usize;
 
     /// Whether the input is empty.
-    fn is_empty(&self) -> bool { self.len() == 0 }
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     /// Return the given input as a sequence of bytes.
     fn as_bytes(&self) -> &[u8];
 }
 
 impl<'a, T: Input> Input for &'a T {
-    fn at(&self, i: usize) -> InputAt { (**self).at(i) }
+    fn at(&self, i: usize) -> InputAt {
+        (**self).at(i)
+    }
 
-    fn next_char(&self, at: InputAt) -> Char { (**self).next_char(at) }
+    fn next_char(&self, at: InputAt) -> Char {
+        (**self).next_char(at)
+    }
 
-    fn previous_char(&self, at: InputAt) -> Char { (**self).previous_char(at) }
+    fn previous_char(&self, at: InputAt) -> Char {
+        (**self).previous_char(at)
+    }
 
     fn is_empty_match(&self, at: InputAt, empty: &InstEmptyLook) -> bool {
         (**self).is_empty_match(at, empty)
@@ -130,9 +128,13 @@ impl<'a, T: Input> Input for &'a T {
         (**self).prefix_at(prefixes, at)
     }
 
-    fn len(&self) -> usize { (**self).len() }
+    fn len(&self) -> usize {
+        (**self).len()
+    }
 
-    fn as_bytes(&self) -> &[u8] { (**self).as_bytes() }
+    fn as_bytes(&self) -> &[u8] {
+        (**self).as_bytes()
+    }
 }
 
 /// An input reader over characters.
@@ -156,12 +158,11 @@ impl<'t> ops::Deref for CharInput<'t> {
 
 impl<'t> Input for CharInput<'t> {
     fn at(&self, i: usize) -> InputAt {
-        let c = decode_utf8(&self[i..]).map(|(c, _)| c).into();
-        InputAt {
-            pos: i,
-            c: c,
-            byte: None,
-            len: c.len_utf8(),
+        if i >= self.len() {
+            InputAt { pos: self.len(), c: None.into(), byte: None, len: 0 }
+        } else {
+            let c = decode_utf8(&self[i..]).map(|(c, _)| c).into();
+            InputAt { pos: i, c: c, byte: None, len: c.len_utf8() }
         }
     }
 
@@ -232,10 +233,7 @@ pub struct ByteInput<'t> {
 impl<'t> ByteInput<'t> {
     /// Return a new byte-based input reader for the given string.
     pub fn new(text: &'t [u8], only_utf8: bool) -> ByteInput<'t> {
-        ByteInput {
-            text: text,
-            only_utf8: only_utf8,
-        }
+        ByteInput { text: text, only_utf8: only_utf8 }
     }
 }
 
@@ -249,11 +247,15 @@ impl<'t> ops::Deref for ByteInput<'t> {
 
 impl<'t> Input for ByteInput<'t> {
     fn at(&self, i: usize) -> InputAt {
-        InputAt {
-            pos: i,
-            c: None.into(),
-            byte: self.get(i).cloned(),
-            len: 1,
+        if i >= self.len() {
+            InputAt { pos: self.len(), c: None.into(), byte: None, len: 0 }
+        } else {
+            InputAt {
+                pos: i,
+                c: None.into(),
+                byte: self.get(i).cloned(),
+                len: 1,
+            }
         }
     }
 
@@ -357,20 +359,26 @@ impl fmt::Debug for Char {
 impl Char {
     /// Returns true iff the character is absent.
     #[inline]
-    pub fn is_none(self) -> bool { self.0 == u32::MAX }
+    pub fn is_none(self) -> bool {
+        self.0 == u32::MAX
+    }
 
     /// Returns the length of the character's UTF-8 encoding.
     ///
-    /// If the character is absent, then `0` is returned.
+    /// If the character is absent, then `1` is returned.
     #[inline]
     pub fn len_utf8(self) -> usize {
-        char::from_u32(self.0).map_or(0, |c| c.len_utf8())
+        char::from_u32(self.0).map_or(1, |c| c.len_utf8())
     }
 
     /// Returns true iff the character is a word character.
     ///
     /// If the character is absent, then false is returned.
     pub fn is_word_char(self) -> bool {
+        // is_word_character can panic if the Unicode data for \w isn't
+        // available. However, our compiler ensures that if a Unicode word
+        // boundary is used, then the data must also be available. If it isn't,
+        // then the compiler returns an error.
         char::from_u32(self.0).map_or(false, syntax::is_word_character)
     }
 
@@ -386,7 +394,9 @@ impl Char {
 }
 
 impl From<char> for Char {
-    fn from(c: char) -> Char { Char(c as u32) }
+    fn from(c: char) -> Char {
+        Char(c as u32)
+    }
 }
 
 impl From<Option<char>> for Char {
@@ -397,12 +407,16 @@ impl From<Option<char>> for Char {
 
 impl PartialEq<char> for Char {
     #[inline]
-    fn eq(&self, other: &char) -> bool { self.0 == *other as u32 }
+    fn eq(&self, other: &char) -> bool {
+        self.0 == *other as u32
+    }
 }
 
 impl PartialEq<Char> for char {
     #[inline]
-    fn eq(&self, other: &Char) -> bool { *self as u32 == other.0 }
+    fn eq(&self, other: &Char) -> bool {
+        *self as u32 == other.0
+    }
 }
 
 impl PartialOrd<char> for Char {
