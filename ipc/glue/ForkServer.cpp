@@ -89,7 +89,7 @@ CleanString(std::string& str) {
       "\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef"
       "\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef";
   int pos = 0;
-  unsigned long sz = str.size();
+  size_t sz = str.size();
   while (sz > 0) {
     int toclean = std::min(sz, sizeof(deadbeef) - 1);
     str.replace(pos, toclean, deadbeef);
