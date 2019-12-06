@@ -42,6 +42,9 @@ struct LazyScriptCreationData {
     }
     return true;
   }
+
+  bool create(JSContext* cx, FunctionBox* funbox,
+              HandleScriptSourceObject sourceObject, ParseGoal parseGoal);
 };
 
 // Metadata that can be used to allocate a JSFunction object.
