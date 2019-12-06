@@ -1731,6 +1731,7 @@ name = "jsrust"
 version = "0.1.0"
 dependencies = [
  "jsrust_shared 0.1.0",
+ "mozglue-static 0.1.0",
 ]
 
 [[package]]
