@@ -473,17 +473,14 @@ nsresult ReferrerInfo::HandleUserReferrerSendingPolicy(nsIHttpChannel* aChannel,
 bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  nsCOMPtr<nsIURI> triggeringURI;
-  loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringURI));
-
-  if (!triggeringURI) {
+  if (!loadInfo->TriggeringPrincipal()->GetIsContentPrincipal()) {
     LOG(("no triggering URI via loadInfo, assuming load is cross-origin"));
     return true;
   }
 
   if (LOG_ENABLED()) {
     nsAutoCString triggeringURISpec;
-    triggeringURI->GetAsciiSpec(triggeringURISpec);
+    loadInfo->TriggeringPrincipal()->GetAsciiSpec(triggeringURISpec);
     LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
   }
 
@@ -493,11 +490,14 @@ bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
     return true;
   }
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-
-  rv = ssm->CheckSameOriginURI(triggeringURI, uri, false, isPrivateWin);
-  return (NS_FAILED(rv));
+  bool isSameOrigin = false;
+  rv = loadInfo->TriggeringPrincipal()->IsSameOrigin(uri, isPrivateWin,
+                                                     &isSameOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+  return !isSameOrigin;
 }
 
 ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
