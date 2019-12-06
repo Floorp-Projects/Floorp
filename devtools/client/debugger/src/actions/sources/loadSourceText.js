@@ -146,7 +146,7 @@ export function loadSourceById(cx: Context, sourceId: string) {
 }
 
 export const loadSourceText: MemoizedAction<
-  { cx: Context, source: Source },
+  {| cx: Context, source: Source |},
   ?Source
 > = memoizeableAction("loadSourceText", {
   getValue: ({ source }, { getState }) => {

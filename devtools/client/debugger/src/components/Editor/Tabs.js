@@ -30,8 +30,7 @@ import AccessibleImage from "../shared/AccessibleImage";
 import CommandBar from "../SecondaryPanes/CommandBar";
 
 import type { Source, Context } from "../../types";
-
-type SourcesList = Source[];
+import type { TabsSources } from "../../reducers/types";
 
 type OwnProps = {|
   horizontal: boolean,
@@ -40,7 +39,7 @@ type OwnProps = {|
 |};
 type Props = {
   cx: Context,
-  tabSources: SourcesList,
+  tabSources: TabsSources,
   selectedSource: ?Source,
   horizontal: boolean,
   startPanelCollapsed: boolean,
@@ -55,12 +54,12 @@ type Props = {
 
 type State = {
   dropdownShown: boolean,
-  hiddenTabs: SourcesList,
+  hiddenTabs: TabsSources,
 };
 
 function haveTabSourcesChanged(
-  tabSources: SourcesList,
-  prevTabSources: SourcesList
+  tabSources: TabsSources,
+  prevTabSources: TabsSources
 ): boolean {
   if (tabSources.length !== prevTabSources.length) {
     return true;

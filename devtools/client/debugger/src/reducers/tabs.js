@@ -13,34 +13,52 @@ import { createSelector } from "reselect";
 import { isOriginalId } from "devtools-source-map";
 import move from "lodash-move";
 
-import { asyncStore } from "../utils/prefs";
+import { isSimilarTab, persistTabs } from "../utils/tabs";
+import { makeShallowQuery } from "../utils/resource";
+
 import {
   getSource,
-  getSources,
-  getSourceInSources,
-  getUrls,
   getSpecificSourceByURL,
-  getSpecificSourceByURLInSources,
+  getSources,
+  resourceAsSourceBase,
 } from "./sources";
 
 import type { Action } from "../actions/types";
-import type { SourcesState } from "./sources";
-import type { Source } from "../types";
-import type { Selector } from "./types";
+import type { Selector, State } from "./types";
+import type { SourceBase } from "./sources";
 
-export type Tab = {
+export type PersistedTab = {|
   url: string,
   framework?: string | null,
   isOriginal: boolean,
-  sourceId?: string,
-};
+  sourceId: null,
+|};
+
+export type VisibleTab = {| ...Tab, sourceId: string |};
+
+export type Tab = PersistedTab | VisibleTab;
+
 export type TabList = Tab[];
 
-function isSimilarTab(tab: Tab, url: string, isOriginal: boolean) {
-  return tab.url === url && tab.isOriginal === isOriginal;
+export type TabsSources = $ReadOnlyArray<SourceBase>;
+
+export type TabsState = {
+  tabs: TabList,
+};
+
+function initialTabState() {
+  return { tabs: [] };
 }
 
-function update(state: TabList = [], action: Action): TabList {
+function resetTabState(state) {
+  const tabs = persistTabs(state.tabs);
+  return { tabs };
+}
+
+function update(
+  state: TabsState = initialTabState(),
+  action: Action
+): TabsState {
   switch (action.type) {
     case "ADD_TAB":
     case "UPDATE_TAB":
@@ -50,71 +68,28 @@ function update(state: TabList = [], action: Action): TabList {
       return moveTabInList(state, action);
 
     case "CLOSE_TAB":
+      return removeSourceFromTabList(state, action);
+
     case "CLOSE_TABS":
-      asyncStore.tabs = action.tabs;
-      return action.tabs;
+      return removeSourcesFromTabList(state, action);
+
+    case "ADD_SOURCE":
+      return addVisibleTabs(state, [action.source]);
+
+    case "ADD_SOURCES":
+      return addVisibleTabs(state, action.sources);
+
+    case "SET_SELECTED_LOCATION": {
+      return addSelectedSource(state, action.source);
+    }
+
+    case "NAVIGATE": {
+      return resetTabState(state);
+    }
 
     default:
       return state;
   }
-}
-
-export function removeSourceFromTabList(
-  tabs: TabList,
-  source: Source
-): TabList {
-  return tabs.filter(
-    tab => tab.url !== source.url || tab.isOriginal != isOriginalId(source.id)
-  );
-}
-
-export function removeSourcesFromTabList(tabs: TabList, sources: Source[]) {
-  return sources.reduce(
-    (t, source) => removeSourceFromTabList(t, source),
-    tabs
-  );
-}
-
-/**
- * Adds the new source to the tab list if it is not already there
- * @memberof reducers/tabs
- * @static
- */
-function updateTabList(
-  tabs: TabList,
-  { url, framework = null, sourceId, isOriginal = false }
-) {
-  // Set currentIndex to -1 for URL-less tabs so that they aren't
-  // filtered by isSimilarTab
-  const currentIndex = url
-    ? tabs.findIndex(tab => isSimilarTab(tab, url, isOriginal))
-    : -1;
-
-  if (currentIndex === -1) {
-    tabs = [{ url, framework, sourceId, isOriginal }, ...tabs];
-  } else if (framework) {
-    tabs[currentIndex].framework = framework;
-  }
-
-  asyncStore.tabs = persistTabs(tabs);
-  return tabs;
-}
-
-function persistTabs(tabs) {
-  return tabs
-    .filter(tab => tab.url)
-    .map(tab => {
-      const newTab = { ...tab };
-      delete newTab.sourceId;
-      return newTab;
-    });
-}
-
-function moveTabInList(tabs: TabList, { url, tabIndex: newIndex }) {
-  const currentIndex = tabs.findIndex(tab => tab.url == url);
-  tabs = move(tabs, currentIndex, newIndex);
-  asyncStore.tabs = tabs;
-  return tabs;
 }
 
 /**
@@ -126,11 +101,9 @@ function moveTabInList(tabs: TabList, { url, tabIndex: newIndex }) {
  * @memberof reducers/tabs
  * @static
  */
-export function getNewSelectedSourceId(
-  state: OuterState,
-  availableTabs: TabList
-): string {
+export function getNewSelectedSourceId(state: State, tabList: TabList): string {
   const selectedLocation = state.sources.selectedLocation;
+  const availableTabs = state.tabs.tabs;
   if (!selectedLocation) {
     return "";
   }
@@ -163,7 +136,7 @@ export function getNewSelectedSourceId(
     return "";
   }
 
-  const tabUrls = state.tabs.map(t => t.url);
+  const tabUrls = tabList.map(t => t.url);
   const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
   const lastAvailbleTabIndex = availableTabs.length - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
@@ -184,46 +157,130 @@ export function getNewSelectedSourceId(
   return "";
 }
 
-// Selectors
+function matchesSource(tab: VisibleTab, source) {
+  return tab.sourceId === source.id || matchesUrl(tab, source);
+}
 
-// Unfortunately, it's really hard to make these functions accept just
-// the state that we care about and still type it with Flow. The
-// problem is that we want to re-export all selectors from a single
-// module for the UI, and all of those selectors should take the
-// top-level app state, so we'd have to "wrap" them to automatically
-// pick off the piece of state we're interested in. It's impossible
-// (right now) to type those wrapped functions.
-type OuterState = { tabs: TabList, sources: SourcesState };
+function matchesUrl(tab: Tab, source) {
+  return tab.url === source.url && tab.isOriginal == isOriginalId(source.id);
+}
 
-export const getTabs = (state: OuterState): TabList => state.tabs;
-
-export const getSourceTabs: Selector<Tab[]> = createSelector(
-  getTabs,
-  getSources,
-  getUrls,
-  (tabs, sources, urls) =>
-    tabs.filter(tab => getTabWithOrWithoutUrl(tab, sources, urls))
-);
-
-export const getSourcesForTabs: Selector<Source[]> = createSelector(
-  getSourceTabs,
-  getSources,
-  getUrls,
-  (tabs, sources, urls) =>
-    tabs.map(tab => getTabWithOrWithoutUrl(tab, sources, urls)).filter(Boolean)
-);
-
-function getTabWithOrWithoutUrl(tab, sources, urls) {
-  if (tab.url) {
-    return getSpecificSourceByURLInSources(
-      sources,
-      urls,
-      tab.url,
-      tab.isOriginal
-    );
+function addSelectedSource(state: TabsState, source) {
+  if (
+    state.tabs
+      .filter(({ sourceId }) => sourceId)
+      .map(({ sourceId }) => sourceId)
+      .includes(source.id)
+  ) {
+    return state;
   }
 
-  return tab.sourceId ? getSourceInSources(sources, tab.sourceId) : null;
+  const isOriginal = isOriginalId(source.id);
+  return updateTabList(state, {
+    url: source.url,
+    isOriginal,
+    framework: null,
+    sourceId: source.id,
+  });
+}
+
+function addVisibleTabs(state: TabsState, sources) {
+  const tabCount = state.tabs.filter(({ sourceId }) => sourceId).length;
+  const tabs = state.tabs
+    .map(tab => {
+      const source = sources.find(src => matchesUrl(tab, src));
+      if (!source) {
+        return tab;
+      }
+      return { ...tab, sourceId: source.id };
+    })
+    .filter(tab => tab.sourceId);
+
+  if (tabs.length == tabCount) {
+    return state;
+  }
+
+  return { tabs };
+}
+
+function removeSourceFromTabList(state: TabsState, { source }): TabsState {
+  const { tabs } = state;
+  const newTabs = tabs.filter(tab => !matchesSource(tab, source));
+  return { tabs: newTabs };
+}
+
+function removeSourcesFromTabList(state: TabsState, { sources }) {
+  const { tabs } = state;
+
+  const newTabs = sources.reduce(
+    (tabList, source) => tabList.filter(tab => !matchesSource(tab, source)),
+    tabs
+  );
+
+  return { tabs: newTabs };
+}
+
+/**
+ * Adds the new source to the tab list if it is not already there
+ * @memberof reducers/tabs
+ * @static
+ */
+function updateTabList(
+  state: TabsState,
+  { url, framework = null, sourceId, isOriginal = false }
+) {
+  let { tabs } = state;
+  // Set currentIndex to -1 for URL-less tabs so that they aren't
+  // filtered by isSimilarTab
+  const currentIndex = url
+    ? tabs.findIndex(tab => isSimilarTab(tab, url, isOriginal))
+    : -1;
+
+  if (currentIndex === -1) {
+    const newTab = {
+      url,
+      framework,
+      sourceId,
+      isOriginal,
+    };
+    tabs = [newTab, ...tabs];
+  } else if (framework) {
+    tabs[currentIndex].framework = framework;
+  }
+
+  return { ...state, tabs };
+}
+
+function moveTabInList(state: TabsState, { url, tabIndex: newIndex }) {
+  let { tabs } = state;
+  const currentIndex = tabs.findIndex(tab => tab.url == url);
+  tabs = move(tabs, currentIndex, newIndex);
+  return { tabs };
+}
+
+// Selectors
+
+export const getTabs = (state: State): TabList => state.tabs.tabs;
+
+export const getSourceTabs: Selector<VisibleTab[]> = createSelector(
+  state => state.tabs,
+  ({ tabs }) => tabs.filter(tab => tab.sourceId)
+);
+
+export const getSourcesForTabs: Selector<TabsSources> = state => {
+  const tabs = getSourceTabs(state);
+  const sources = getSources(state);
+  return querySourcesForTabs(sources, tabs);
+};
+
+const querySourcesForTabs = makeShallowQuery({
+  filter: (_, tabs) => tabs.map(({ sourceId }) => sourceId),
+  map: resourceAsSourceBase,
+  reduce: items => items,
+});
+
+export function tabExists(state: State, sourceId: string) {
+  return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
 }
 
 export default update;

@@ -201,6 +201,7 @@ export function mapFrames(cx: ThreadContext) {
       cx.thread,
       mappedFrames
     );
+
     dispatch({
       type: "MAP_FRAMES",
       cx,

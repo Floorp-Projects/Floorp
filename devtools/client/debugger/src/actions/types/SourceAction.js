@@ -63,13 +63,11 @@ export type SourceAction =
     |}
   | {|
       +type: "CLOSE_TAB",
-      +url: string,
-      +tabs: any,
+      +source: Source,
     |}
   | {|
       +type: "CLOSE_TABS",
       +sources: Array<Source>,
-      +tabs: any,
     |}
   | {|
       type: "SET_ORIGINAL_BREAKABLE_LINES",

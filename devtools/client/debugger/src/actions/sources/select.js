@@ -12,7 +12,7 @@
 import { isOriginalId } from "devtools-source-map";
 
 import { getSourceFromId, getSourceWithContent } from "../../reducers/sources";
-import { getSourcesForTabs } from "../../reducers/tabs";
+import { tabExists } from "../../reducers/tabs";
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
@@ -156,8 +156,7 @@ export function selectLocation(
       source = getSourceFromId(getState(), location.sourceId);
     }
 
-    const tabSources = getSourcesForTabs(getState());
-    if (!tabSources.includes(source)) {
+    if (tabExists(getState(), source.id)) {
       dispatch(addTab(source));
     }
 
@@ -172,6 +171,7 @@ export function selectLocation(
       // If there was a navigation while we were loading the loadedSource
       return;
     }
+
     const sourceWithContent = getSourceWithContent(getState(), source.id);
 
     if (
