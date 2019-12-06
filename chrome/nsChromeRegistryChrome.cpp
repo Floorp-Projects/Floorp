@@ -29,8 +29,6 @@
 
 #include "nsIAppStartup.h"
 #include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "mozilla/Preferences.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"

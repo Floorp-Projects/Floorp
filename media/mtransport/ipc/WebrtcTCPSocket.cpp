@@ -10,7 +10,6 @@
 #include "nsIChannel.h"
 #include "nsIClassOfService.h"
 #include "nsIContentPolicy.h"
-#include "nsIEventTarget.h"
 #include "nsIIOService.h"
 #include "nsILoadInfo.h"
 #include "nsIProtocolProxyService.h"

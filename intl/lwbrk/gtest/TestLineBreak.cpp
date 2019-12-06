@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include "nsXPCOM.h"
-#include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

@@ -9,7 +9,6 @@
 #include "Accessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "TextRange.h"
-#include "xpcAccessibleDocument.h"
 #include "xpcAccessibleTextRange.h"
 
 #include "nsIPersistentProperties2.h"

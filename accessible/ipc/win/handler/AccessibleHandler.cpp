@@ -14,7 +14,6 @@
 #include "HandlerRelation.h"
 
 #include "Factory.h"
-#include "HandlerData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/mscom/Registration.h"

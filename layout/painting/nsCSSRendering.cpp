@@ -37,7 +37,6 @@
 #include "nsIContent.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIScrollableFrame.h"
-#include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "ImageOps.h"
 #include "nsCSSRendering.h"

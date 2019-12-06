@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "Accessible.h"
-#include "Accessible2.h"
 #include "ia2Accessible.h"
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"

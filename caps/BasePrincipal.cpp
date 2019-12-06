@@ -7,9 +7,6 @@
 #include "mozilla/BasePrincipal.h"
 
 #include "nsDocShell.h"
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
-#include "nsIStandardURL.h"
 
 #include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"

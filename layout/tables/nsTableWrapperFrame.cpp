@@ -17,7 +17,6 @@
 #include "prinrval.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrameInlines.h"

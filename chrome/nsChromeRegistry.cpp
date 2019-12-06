@@ -20,15 +20,12 @@
 #include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
-#include "nsIWindowMediator.h"
-#include "nsIPrefService.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Printf.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Location.h"
-#include "nsIURIMutator.h"
 
 #include "unicode/uloc.h"
 

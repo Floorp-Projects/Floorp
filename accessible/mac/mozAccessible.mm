@@ -10,8 +10,6 @@
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
-#include "nsIAccessibleRelation.h"
-#include "nsIAccessibleEditableText.h"
 #include "nsIPersistentProperties2.h"
 #include "DocAccessibleParent.h"
 #include "Relation.h"

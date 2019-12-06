@@ -8,8 +8,6 @@
 #ifndef _ACCESSIBLE_TEXT_H
 #define _ACCESSIBLE_TEXT_H
 
-#include "nsIAccessibleText.h"
-
 #include "AccessibleText.h"
 
 namespace mozilla {

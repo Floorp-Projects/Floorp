@@ -9,8 +9,6 @@
 #include "BaseAccessibles.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
-#include "xpcAccessibleTable.h"
-#include "xpcAccessibleTableCell.h"
 #include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 

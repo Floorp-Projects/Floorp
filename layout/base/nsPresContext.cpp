@@ -70,7 +70,6 @@
 #include "ClientLayerManager.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
 
-#include "nsIDOMChromeWindow.h"
 #include "nsFrameLoader.h"
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"

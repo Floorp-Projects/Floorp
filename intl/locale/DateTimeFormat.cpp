@@ -6,7 +6,6 @@
 
 #include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "mozilla/intl/LocaleService.h"
 #include "OSPreferences.h"
 #include "mozIOSPreferences.h"

@@ -12,9 +12,7 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsIAutoCompleteInput.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
 
 using namespace mozilla::a11y;
 

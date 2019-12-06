@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsIRunnable.h"
-#include "nsIStringStream.h"
 #include "nsIThread.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"

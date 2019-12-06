@@ -10,7 +10,6 @@
 
 #include "mozilla/Likely.h"
 
-#include "nsIHttpChannel.h"
 #include "nsIFileChannel.h"
 #include "nsIFile.h"
 #include "nsMimeTypes.h"
@@ -22,7 +21,6 @@
 #include "Image.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsContentUtils.h"
-#include "nsIScriptSecurityManager.h"
 
 #include "mozilla/StaticPrefs_image.h"
 

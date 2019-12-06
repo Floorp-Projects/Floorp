@@ -17,7 +17,6 @@
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"
 #include "mozAutoDocUpdate.h"
-#include "nsIURI.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIFrame.h"
 #include "ActiveLayerTracker.h"

@@ -11,7 +11,6 @@
 #include "base/basictypes.h"
 #include "base/message_loop.h"
 
-#include "nsIMemoryReporter.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"

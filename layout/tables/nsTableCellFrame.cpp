@@ -23,7 +23,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
-#include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"

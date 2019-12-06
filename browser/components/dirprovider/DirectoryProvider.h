@@ -7,7 +7,6 @@
 
 #include "nsIDirectoryService.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIFile.h"
 #include "nsSimpleEnumerator.h"
 #include "mozilla/Attributes.h"
 

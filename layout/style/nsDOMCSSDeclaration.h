@@ -15,7 +15,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/URLExtraData.h"
 #include "nsAttrValue.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCompatibility.h"
 

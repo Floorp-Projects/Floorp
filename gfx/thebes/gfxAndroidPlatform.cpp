@@ -20,7 +20,6 @@
 #include "gfxTextRun.h"
 #include "nsXULAppAPI.h"
 #include "nsIScreen.h"
-#include "nsIScreenManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicodeProperties.h"
 #include "cairo.h"

@@ -79,11 +79,9 @@
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                // for nsIContent
 #include "mozilla/dom/Document.h"      // for Document
-#include "nsIDOMEventListener.h"       // for nsIDOMEventListener
 #include "nsIDocumentStateListener.h"  // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"     // for nsIEditActionListener
 #include "nsIEditorObserver.h"         // for nsIEditorObserver
-#include "nsIEditorSpellCheck.h"       // for nsIEditorSpellCheck
 #include "nsIFrame.h"                  // for nsIFrame
 #include "nsIInlineSpellChecker.h"     // for nsIInlineSpellChecker, etc.
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc.

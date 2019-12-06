@@ -8,9 +8,9 @@
 #include <shlguid.h>
 
 #include "nsArrayEnumerator.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
-#include "nsIVariant.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsWindowsMigrationUtils.h"

@@ -6,7 +6,6 @@
 
 #include "Common.h"
 #include "imgIContainer.h"
-#include "imgITools.h"
 #include "ImageOps.h"
 #include "mozilla/gfx/2D.h"
 #include "nsComponentManagerUtils.h"

@@ -10,7 +10,6 @@
 #include "gmp-video-frame-encoded.h"
 #include "GMPLog.h"
 #include "MainThreadUtils.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"

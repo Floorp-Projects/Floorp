@@ -24,7 +24,6 @@
 #include "nsHTMLParts.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsBoxLayoutState.h"
-#include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
 #include "nsLayoutUtils.h"

@@ -9,7 +9,9 @@
 #include "WrapperFactory.h"
 
 #include "nsDependentString.h"
+#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIXPConnect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 

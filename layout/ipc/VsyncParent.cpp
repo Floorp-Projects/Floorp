@@ -10,7 +10,6 @@
 #include "BackgroundParentImpl.h"
 #include "gfxPlatform.h"
 #include "mozilla/Unused.h"
-#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "VsyncSource.h"
 

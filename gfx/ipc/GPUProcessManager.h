@@ -18,7 +18,6 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 class nsBaseWidget;
 

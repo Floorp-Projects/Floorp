@@ -27,7 +27,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPersistentProperties.h"
 #include "nsIScrollableFrame.h"
-#include "nsIServiceManager.h"
 #include "nsIMathMLFrame.h"
 #include "nsRange.h"
 #include "nsTextFragment.h"

@@ -21,7 +21,6 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "nsIObserver.h"
 #include "nsRegion.h"  // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"  // for ReentrantMonitor, etc

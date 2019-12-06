@@ -8,7 +8,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
-#include "nsIEditor.h"
 #include "nsEditingSession.h"
 #include "nsIDocShell.h"
 

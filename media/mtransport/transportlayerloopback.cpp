@@ -11,13 +11,7 @@
 #include "prlock.h"
 
 #include "nsNetCID.h"
-#include "nsIComponentManager.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIComponentRegistrar.h"
-#include "nsIEventTarget.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
-#include "nsISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 

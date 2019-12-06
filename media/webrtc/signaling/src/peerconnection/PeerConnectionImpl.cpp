@@ -20,13 +20,7 @@
 
 #include "nsNetCID.h"
 #include "nsILoadContext.h"
-#include "nsIProperty.h"
-#include "nsIPropertyBag2.h"
-#include "nsIServiceManager.h"
-#include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"
-#include "nsISocketTransportService.h"
-#include "nsIConsoleService.h"
 #include "nsThreadUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -37,6 +31,7 @@
 #include "VideoConduit.h"
 #include "MediaTrackGraph.h"
 #include "runnable_utils.h"
+#include "IPeerConnection.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
@@ -73,11 +68,9 @@
 #include "nsXULAppAPI.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
-#include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
-#include "nsIURLParser.h"
 #include "js/ArrayBuffer.h"    // JS::NewArrayBufferWithContents
 #include "js/GCAnnotations.h"  // JS_HAZ_ROOTED
 #include "js/RootingAPI.h"     // JS::{{,Mutable}Handle,Rooted}

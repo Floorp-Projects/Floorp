@@ -16,7 +16,6 @@
 #include "mozilla/dom/StaticRange.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsIEditor.h"
 #include "nsRange.h"
 #include "nscore.h"
 

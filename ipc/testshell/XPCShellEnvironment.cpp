@@ -28,14 +28,9 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/XPCOM.h"
 
-#include "nsIChannel.h"
-#include "nsIClassInfo.h"
-#include "nsIDirectoryService.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIURI.h"
 #include "nsIXPConnect.h"
-#include "nsIXPCScriptable.h"
 
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"

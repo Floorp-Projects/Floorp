@@ -21,7 +21,6 @@
 #include <time.h>
 
 #include "nsCOMPtr.h"
-#include "nsIFile.h"
 
 #ifdef XP_WIN
 #  include "LauncherProcessWin.h"

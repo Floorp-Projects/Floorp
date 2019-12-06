@@ -4,6 +4,7 @@
 
 #include "ImageDecoderSupport.h"
 
+#include "imgINotificationObserver.h"
 #include "imgITools.h"
 #include "gfxUtils.h"
 #include "AndroidGraphics.h"

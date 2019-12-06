@@ -33,7 +33,6 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
-#include "nsICrashReporter.h"
 
 #if defined(ANDROID) && defined(DEBUG)
 #  include <android/log.h>

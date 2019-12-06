@@ -41,7 +41,6 @@
 #include "mozilla/PresShellForwards.h"
 #include "prclist.h"
 #include "nsThreadUtils.h"
-#include "nsIMessageManager.h"
 #include "Units.h"
 #include "prenv.h"
 #include "mozilla/StaticPresData.h"

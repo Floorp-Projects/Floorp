@@ -20,7 +20,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIEditor.h"
 #include "nsINode.h"
 #include "nsISupportsUtils.h"
 #include "nsMemory.h"

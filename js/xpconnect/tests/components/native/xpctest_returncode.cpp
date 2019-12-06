@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpctest_private.h"
-#include "xpctest_interfaces.h"
 #include "nsComponentManagerUtils.h"
 
 NS_IMPL_ISUPPORTS(nsXPCTestReturnCodeParent, nsIXPCTestReturnCodeParent)

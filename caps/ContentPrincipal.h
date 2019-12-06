@@ -9,8 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
-#include "nsIContentSecurityPolicy.h"
-#include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 #include "mozilla/BasePrincipal.h"

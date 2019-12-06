@@ -13,8 +13,6 @@
 #include "WordMovementType.h"
 #include "nsIFrame.h"
 
-#include "nsISelectionController.h"
-
 class nsFrameSelection;
 class nsRange;
 class nsIWidget;

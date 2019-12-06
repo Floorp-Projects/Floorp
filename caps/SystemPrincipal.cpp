@@ -7,15 +7,11 @@
 
 #include "nscore.h"
 #include "SystemPrincipal.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIScriptSecurityManager.h"
 #include "pratom.h"
 
 using namespace mozilla;

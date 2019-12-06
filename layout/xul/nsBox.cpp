@@ -15,7 +15,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsITheme.h"
-#include "nsIServiceManager.h"
 #include "nsBoxLayout.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/dom/Attr.h"

@@ -12,13 +12,13 @@
 
 // Interfaces
 #include "nsDeviceContext.h"
-#include "nsIPrintProgressParams.h"
 #include "nsIPrintSettings.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsPrintObject;
+class nsIPrintProgressParams;
 class nsIWebProgressListener;
 
 namespace mozilla {

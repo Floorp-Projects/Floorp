@@ -16,7 +16,6 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIServiceManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"

@@ -15,7 +15,6 @@
 #include "nsDebug.h"                     // for NS_ENSURE_TRUE, etc
 #include "nsError.h"                     // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsID.h"                        // for NS_GET_IID, etc
-#include "nsIDocShell.h"                 // for nsIDocShell
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
 #include "nsITransactionManager.h"       // for nsITransactionManager
 #include "nsLiteralString.h"             // for NS_LITERAL_STRING

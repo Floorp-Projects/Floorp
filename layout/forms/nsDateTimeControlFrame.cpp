@@ -20,7 +20,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsNodeInfoManager.h"
-#include "nsIObserverService.h"
 #include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"

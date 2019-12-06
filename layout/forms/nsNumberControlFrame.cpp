@@ -13,7 +13,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "HTMLInputElement.h"
 #include "ICUUtils.h"
-#include "nsIFocusManager.h"
 #include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsCheckboxRadioFrame.h"

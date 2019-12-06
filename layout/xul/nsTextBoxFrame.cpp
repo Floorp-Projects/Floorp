@@ -26,7 +26,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsMenuBarListener.h"
 #include "nsString.h"
-#include "nsIServiceManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"

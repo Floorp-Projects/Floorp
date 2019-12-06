@@ -7,7 +7,6 @@
 
 #include "ia2AccessibleTableCell.h"
 
-#include "Accessible2.h"
 #include "AccessibleTable2_i.c"
 #include "AccessibleTableCell_i.c"
 
