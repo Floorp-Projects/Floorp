@@ -33,7 +33,7 @@ add_task(async function() {
       return (
         hasWorker("simple-worker.js") &&
         hasWorker("shared-worker.js") &&
-        hasWorker("service-worker.js")
+        hasWorker("service-worker.sjs")
       );
 
       function hasWorker(workerName) {

@@ -53,6 +53,27 @@ export function updateThreads() {
           .catch(e => console.error(e));
       }
     }
+
+    // Update the status of any service workers.
+    for (const thread of currentThreads) {
+      if (thread.serviceWorkerStatus) {
+        for (const fetchedThread of threads) {
+          if (
+            fetchedThread.actor == thread.actor &&
+            fetchedThread.serviceWorkerStatus != thread.serviceWorkerStatus
+          ) {
+            dispatch(
+              ({
+                type: "UPDATE_SERVICE_WORKER_STATUS",
+                cx,
+                thread: thread.actor,
+                status: fetchedThread.serviceWorkerStatus,
+              }: Action)
+            );
+          }
+        }
+      }
+    }
   };
 }
 
