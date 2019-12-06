@@ -190,15 +190,6 @@ class WindowsError final {
 template <typename T>
 using WindowsErrorResult = Result<T, WindowsError>;
 
-#if defined(MOZILLA_INTERNAL_API)
-
-template <typename T>
-using LauncherResult = WindowsErrorResult<T>;
-
-using WindowsErrorType = WindowsError;
-
-#else
-
 struct LauncherError {
   LauncherError(const char* aFile, int aLine, WindowsError aWin32Error)
       : mFile(aFile), mLine(aLine), mError(aWin32Error) {}
@@ -220,14 +211,31 @@ struct LauncherError {
   bool operator!=(const WindowsError& aOther) const { return mError != aOther; }
 };
 
+#if defined(MOZILLA_INTERNAL_API)
+
+template <typename T>
+using LauncherResult = WindowsErrorResult<T>;
+
+template <typename T>
+using LauncherResultWithLineInfo = Result<T, LauncherError>;
+
+using WindowsErrorType = WindowsError;
+
+#else
+
 template <typename T>
 using LauncherResult = Result<T, LauncherError>;
+
+template <typename T>
+using LauncherResultWithLineInfo = LauncherResult<T>;
 
 using WindowsErrorType = LauncherError;
 
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 using LauncherVoidResult = LauncherResult<Ok>;
+
+using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
 
 #if defined(MOZILLA_INTERNAL_API)
 
