@@ -7,10 +7,15 @@
 #include "UntrustedModules.h"
 
 #include "core/TelemetryCommon.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RDDChild.h"
+#include "mozilla/RDDProcessManager.h"
 #include "mozilla/UntrustedModulesProcessor.h"
 #include "mozilla/WinDllServices.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsISupportsImpl.h"
 #include "nsLocalFile.h"
 #include "nsProxyRelease.h"
 #include "nsUnicharUtils.h"
@@ -271,15 +276,8 @@ static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
     return false;
   }
 
-  nsAutoString resolvedDllPath;
-  const nsCOMPtr<nsIFile>& resolvedDllName = aEvent.mModule->mResolvedDllName;
-  if (!resolvedDllName ||
-      NS_FAILED(resolvedDllName->GetPath(resolvedDllPath))) {
-    return false;
-  }
-
   uint32_t index;
-  if (!aModuleIndices.Get(resolvedDllPath, &index)) {
+  if (!aModuleIndices.Get(aEvent.mModule->mResolvedNtName, &index)) {
     return false;
   }
 
@@ -368,21 +366,16 @@ static nsresult GetPerProcObject(JSContext* aCx, const IndexMap& aModuleIndices,
 /**
  * Converts a UntrustedModulesData to a JS object.
  *
- * @param  aData [in] The source object to convert.
+ * @param  aData [in] The source objects to convert.
  * @param  aCx   [in] The JS context.
  * @param  aRet  [out] This gets assigned to the newly created object.
  * @return nsresult
  */
 static nsresult GetUntrustedModuleLoadEventsJSValue(
-    const UntrustedModulesData& aData, JSContext* aCx,
+    const Vector<UntrustedModulesData>& aData, JSContext* aCx,
     JS::MutableHandleValue aRet) {
-  if (aData.mEvents.empty()) {
-    aRet.setNull();
-    return NS_OK;
-  }
-
-  if (aData.mModules.Count() > kMaxModulesArrayLen) {
-    return NS_ERROR_CANNOT_CONVERT_DATA;
+  if (aData.empty()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   JS::RootedObject mainObj(aCx, JS_NewPlainObject(aCx));
@@ -410,43 +403,49 @@ static nsresult GetUntrustedModuleLoadEventsJSValue(
     return NS_ERROR_FAILURE;
   }
 
-  // Serialize each entry in the modules hashtable out to the "modules" array
-  // and store the indices in |indexMap|
-  for (auto iter = aData.mModules.ConstIter(); !iter.Done(); iter.Next()) {
-    auto addPtr = indexMap.LookupForAdd(iter.Key());
-    if (!addPtr) {
-      addPtr.OrInsert([curModulesArrayIdx]() { return curModulesArrayIdx; });
+  for (auto&& procData : aData) {
+    // Serialize each entry in the modules hashtable out to the "modules" array
+    // and store the indices in |indexMap|
+    for (auto iter = procData.mModules.ConstIter(); !iter.Done(); iter.Next()) {
+      auto addPtr = indexMap.LookupForAdd(iter.Key());
+      if (!addPtr) {
+        addPtr.OrInsert([curModulesArrayIdx]() { return curModulesArrayIdx; });
 
-      JS::RootedValue jsModule(aCx);
-      if (!SerializeModule(aCx, &jsModule, iter.Data()) ||
-          !JS_DefineElement(aCx, modulesArray, curModulesArrayIdx, jsModule,
-                            JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
+        JS::RootedValue jsModule(aCx);
+        if (!SerializeModule(aCx, &jsModule, iter.Data()) ||
+            !JS_DefineElement(aCx, modulesArray, curModulesArrayIdx, jsModule,
+                              JSPROP_ENUMERATE)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        ++curModulesArrayIdx;
       }
-
-      ++curModulesArrayIdx;
     }
-  }
 
-  JS::RootedObject perProcObj(aCx, JS_NewPlainObject(aCx));
-  if (!perProcObj) {
-    return NS_ERROR_FAILURE;
-  }
+    if (curModulesArrayIdx >= kMaxModulesArrayLen) {
+      return NS_ERROR_CANNOT_CONVERT_DATA;
+    }
 
-  nsresult rv = GetPerProcObject(aCx, indexMap, aData, &perProcObj);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+    JS::RootedObject perProcObj(aCx, JS_NewPlainObject(aCx));
+    if (!perProcObj) {
+      return NS_ERROR_FAILURE;
+    }
 
-  nsAutoCString strPid;
-  strPid.AppendLiteral("0x");
-  strPid.AppendInt(static_cast<uint32_t>(aData.mPid), 16);
+    nsresult rv = GetPerProcObject(aCx, indexMap, procData, &perProcObj);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-  JS::RootedValue jsPerProcObjValue(aCx);
-  jsPerProcObjValue.setObject(*perProcObj);
-  if (!JS_DefineProperty(aCx, perProcObjContainer, strPid.get(),
-                         jsPerProcObjValue, JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
+    nsAutoCString strPid;
+    strPid.AppendLiteral("0x");
+    strPid.AppendInt(static_cast<uint32_t>(procData.mPid), 16);
+
+    JS::RootedValue jsPerProcObjValue(aCx);
+    jsPerProcObjValue.setObject(*perProcObj);
+    if (!JS_DefineProperty(aCx, perProcObjContainer, strPid.get(),
+                           jsPerProcObjValue, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   JS::RootedValue jsModulesArrayValue(aCx);
@@ -467,7 +466,7 @@ static nsresult GetUntrustedModuleLoadEventsJSValue(
   return NS_OK;
 }
 
-static void Serialize(Maybe<UntrustedModulesData>&& aData,
+static void Serialize(Vector<UntrustedModulesData>&& aData,
                       RefPtr<dom::Promise>&& aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -477,7 +476,7 @@ static void Serialize(Maybe<UntrustedModulesData>&& aData,
     return;
   }
 
-  if (aData.isNothing()) {
+  if (aData.empty()) {
     aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
     return;
   }
@@ -485,13 +484,125 @@ static void Serialize(Maybe<UntrustedModulesData>&& aData,
   JSContext* cx = jsapi.cx();
   JS::RootedValue jsval(cx);
 
-  nsresult rv = GetUntrustedModuleLoadEventsJSValue(aData.ref(), cx, &jsval);
+  nsresult rv = GetUntrustedModuleLoadEventsJSValue(aData, cx, &jsval);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aPromise->MaybeReject(rv);
     return;
   }
 
   aPromise->MaybeResolve(jsval);
+}
+
+using UntrustedModulesIpcPromise =
+    MozPromise<Maybe<UntrustedModulesData>, ipc::ResponseRejectReason, true>;
+
+using MultiGetUntrustedModulesPromise =
+    MozPromise<Vector<UntrustedModulesData>, nsresult, true>;
+
+class MOZ_HEAP_CLASS MultiGetUntrustedModulesData final {
+ public:
+  MultiGetUntrustedModulesData()
+      : mPromise(new MultiGetUntrustedModulesPromise::Private(__func__)),
+        mNumPending(0) {}
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MultiGetUntrustedModulesData)
+
+  RefPtr<MultiGetUntrustedModulesPromise> GetUntrustedModuleLoadEvents();
+
+  MultiGetUntrustedModulesData(const MultiGetUntrustedModulesData&) = delete;
+  MultiGetUntrustedModulesData(MultiGetUntrustedModulesData&&) = delete;
+  MultiGetUntrustedModulesData& operator=(const MultiGetUntrustedModulesData&) =
+      delete;
+  MultiGetUntrustedModulesData& operator=(MultiGetUntrustedModulesData&&) =
+      delete;
+
+ private:
+  ~MultiGetUntrustedModulesData() = default;
+
+  void AddPending(RefPtr<UntrustedModulesPromise>&& aNewPending) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ++mNumPending;
+
+    RefPtr<MultiGetUntrustedModulesData> self(this);
+    aNewPending->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self](Maybe<UntrustedModulesData>&& aResult) {
+          self->OnCompletion(std::move(aResult));
+        },
+        [self](nsresult aReason) { self->OnCompletion(); });
+  }
+
+  void AddPending(RefPtr<UntrustedModulesIpcPromise>&& aNewPending) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ++mNumPending;
+
+    RefPtr<MultiGetUntrustedModulesData> self(this);
+    aNewPending->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self](Maybe<UntrustedModulesData>&& aResult) {
+          self->OnCompletion(std::move(aResult));
+        },
+        [self](ipc::ResponseRejectReason&& aReason) { self->OnCompletion(); });
+  }
+
+  void OnCompletion() {
+    MOZ_ASSERT(NS_IsMainThread() && mNumPending > 0);
+
+    --mNumPending;
+    if (mNumPending) {
+      return;
+    }
+
+    if (mResults.empty()) {
+      mPromise->Reject(NS_ERROR_NOT_AVAILABLE, __func__);
+      return;
+    }
+
+    mPromise->Resolve(std::move(mResults), __func__);
+  }
+
+  void OnCompletion(Maybe<UntrustedModulesData>&& aResult) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (aResult.isSome()) {
+      Unused << mResults.emplaceBack(std::move(aResult.ref()));
+    }
+
+    OnCompletion();
+  }
+
+ private:
+  RefPtr<MultiGetUntrustedModulesPromise::Private> mPromise;
+  Vector<UntrustedModulesData> mResults;
+  size_t mNumPending;
+};
+
+RefPtr<MultiGetUntrustedModulesPromise>
+MultiGetUntrustedModulesData::GetUntrustedModuleLoadEvents() {
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
+
+  // Parent process
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  AddPending(dllSvc->GetUntrustedModulesData());
+
+  // Child processes
+  nsTArray<dom::ContentParent*> contentParents;
+  dom::ContentParent::GetAll(contentParents);
+  for (auto&& contentParent : contentParents) {
+    AddPending(contentParent->SendGetUntrustedModulesData());
+  }
+
+  if (RDDProcessManager* rddMgr = RDDProcessManager::Get()) {
+    if (RDDChild* rddChild = rddMgr->GetRDDChild()) {
+      AddPending(rddChild->SendGetUntrustedModulesData());
+    }
+  }
+
+  Unused << mResults.reserve(mNumPending);
+
+  return mPromise;
 }
 
 nsresult GetUntrustedModuleLoadEvents(JSContext* cx, dom::Promise** aPromise) {
@@ -507,10 +618,12 @@ nsresult GetUntrustedModuleLoadEvents(JSContext* cx, dom::Promise** aPromise) {
     return result.StealNSResult();
   }
 
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->GetUntrustedModulesData()->Then(
+  RefPtr<MultiGetUntrustedModulesData> multi(
+      new MultiGetUntrustedModulesData());
+
+  multi->GetUntrustedModuleLoadEvents()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [promise](Maybe<UntrustedModulesData>&& aData) mutable {
+      [promise](Vector<UntrustedModulesData>&& aData) mutable {
         Serialize(std::move(aData), std::move(promise));
       },
       [promise](nsresult aRv) { promise->MaybeReject(aRv); });
