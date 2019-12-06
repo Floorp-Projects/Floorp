@@ -112,12 +112,19 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
   return true;
 }
 
-bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op) {
+bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op,
+                              JSTryNoteKind tryNoteKind) {
   JumpList beq;
   if (!bce->emitBackwardJump(op, head_, &beq, &breakTarget_)) {
     return false;
   }
-
+  if (!patchBreaks(bce)) {
+    return false;
+  }
+  if (!bce->addTryNote(tryNoteKind, bce->bytecodeSection().stackDepth(),
+                       headOffset(), breakTargetOffset())) {
+    return false;
+  }
   return true;
 }
 

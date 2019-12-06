@@ -66,17 +66,7 @@ bool DoWhileEmitter::emitCond() {
 bool DoWhileEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Cond);
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE)) {
-    return false;
-  }
-
-  if (!bce_->addTryNote(JSTRY_LOOP, bce_->bytecodeSection().stackDepth(),
-                        loopInfo_->headOffset(),
-                        loopInfo_->breakTargetOffset())) {
-    return false;
-  }
-
-  if (!loopInfo_->patchBreaks(bce_)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE, JSTRY_LOOP)) {
     return false;
   }
 

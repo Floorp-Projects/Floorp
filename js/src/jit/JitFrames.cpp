@@ -200,9 +200,6 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
     switch (tn->kind) {
       case JSTRY_FOR_IN:
       case JSTRY_DESTRUCTURING:
-        MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN,
-                      JSOp(*(script->offsetToPC(tn->start + tn->length))) ==
-                          JSOP_ENDITER);
         CloseLiveIteratorIon(cx, frame, tn);
         break;
 
