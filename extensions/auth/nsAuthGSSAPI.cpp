@@ -18,8 +18,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 
 #include "nsCOMPtr.h"
-#include "nsIPrefService.h"
-#include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Preferences.h"

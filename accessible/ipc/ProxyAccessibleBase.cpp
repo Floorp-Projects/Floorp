@@ -15,7 +15,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Unused.h"
 #include "RelationType.h"
-#include "xpcAccessibleDocument.h"
 
 namespace mozilla {
 namespace a11y {

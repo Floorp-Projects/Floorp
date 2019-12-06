@@ -12,7 +12,6 @@
 #include "mozilla/ServoBindings.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/Document.h"
-#include "nsIURI.h"
 #include "nsStyleUtil.h"
 #include "xpcpublic.h"
 

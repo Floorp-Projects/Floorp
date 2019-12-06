@@ -8,9 +8,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
-#include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/DocumentInlines.h"

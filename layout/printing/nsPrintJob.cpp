@@ -7,7 +7,6 @@
 #include "nsPrintJob.h"
 
 #include "nsDocShell.h"
-#include "nsIStringBundle.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
@@ -32,10 +31,8 @@
 #include "nsIPrintSettingsService.h"
 #include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
 
 static const char sPrintSettingsServiceContractID[] =
     "@mozilla.org/gfx/printsettings-service;1";
@@ -46,16 +43,11 @@ static const char sPrintSettingsServiceContractID[] =
 #include "nsIWebBrowserPrint.h"
 
 // Print Preview
-#include "imgIContainer.h"  // image animation mode constants
 
 // Print Progress
-#include "nsIPrintProgress.h"
-#include "nsIPrintProgressParams.h"
 #include "nsIObserver.h"
 
 // Print error dialog
-#include "nsIPrompt.h"
-#include "nsIWindowWatcher.h"
 
 // Printing Prompts
 #include "nsIPrintingPromptService.h"
@@ -70,7 +62,6 @@ static const char kPrintingPromptService[] =
 #include "mozilla/dom/DocumentInlines.h"
 
 // Focus
-#include "nsISelectionController.h"
 
 // Misc
 #include "gfxContext.h"
@@ -79,7 +70,6 @@ static const char kPrintingPromptService[] =
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIDocumentObserver.h"
-#include "nsISelectionListener.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
@@ -94,14 +84,10 @@ static const char kPrintingPromptService[] =
 #include "nsViewManager.h"
 
 #include "nsPageSequenceFrame.h"
-#include "nsIURL.h"
-#include "nsIContentViewerEdit.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIBaseWindow.h"
-#include "nsILayoutHistoryState.h"
 #include "nsFrameManager.h"
 #include "mozilla/ReflowInput.h"
 #include "nsIContentViewer.h"
@@ -114,7 +100,6 @@ static const char kPrintingPromptService[] =
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "nsContentList.h"
-#include "nsIChannel.h"
 #include "PrintPreviewUserEventSuppressor.h"
 #include "xpcpublic.h"
 #include "nsVariant.h"

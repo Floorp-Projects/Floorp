@@ -8,7 +8,6 @@
 #define mozilla_a11y_XULSelectControlAccessible_h__
 
 #include "AccessibleWrap.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 
 namespace mozilla {
 namespace a11y {

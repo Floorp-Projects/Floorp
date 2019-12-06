@@ -24,7 +24,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
-#include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "ScopedNSSTypes.h"
 #include "m_cpp_utils.h"

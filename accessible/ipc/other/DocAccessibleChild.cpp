@@ -16,7 +16,6 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "nsIPersistentProperties2.h"
-#include "nsISimpleEnumerator.h"
 #include "nsAccUtils.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #  include "AccessibleWrap.h"

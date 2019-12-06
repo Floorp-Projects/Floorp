@@ -7,7 +7,6 @@
 
 #include "Common.h"
 #include "imgIContainer.h"
-#include "imgITools.h"
 #include "ImageFactory.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"

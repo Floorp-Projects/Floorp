@@ -9,8 +9,8 @@
 
 #include "gfxPlatform.h"
 
+#include "imgITools.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIProperties.h"

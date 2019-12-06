@@ -11,7 +11,6 @@
 #include "mozilla/Likely.h"
 #include "nsMai.h"
 #include "nsIAccessibleTypes.h"
-#include "nsIURI.h"
 #include "ProxyAccessible.h"
 
 using namespace mozilla;

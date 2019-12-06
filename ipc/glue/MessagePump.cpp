@@ -6,7 +6,6 @@
 
 #include "MessagePump.h"
 
-#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsICancelableRunnable.h"

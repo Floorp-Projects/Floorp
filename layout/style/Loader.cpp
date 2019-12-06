@@ -29,7 +29,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsIProtocolHandler.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
@@ -64,7 +63,6 @@
 
 #include "nsError.h"
 
-#include "nsIContentSecurityPolicy.h"
 #include "mozilla/dom/SRICheck.h"
 
 #include "mozilla/Encoding.h"

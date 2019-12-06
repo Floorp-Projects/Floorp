@@ -13,8 +13,6 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsIComponentManager.h"
-#include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
 #include "nsGlobalWindow.h"

@@ -13,14 +13,11 @@
 #include "States.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIMutableArray.h"
 #include "nsINodeList.h"
-#include "nsIPersistentProperties2.h"
 
 using namespace mozilla::a11y;
 

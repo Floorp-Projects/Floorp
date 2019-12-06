@@ -22,7 +22,6 @@
 #ifdef XP_MACOSX
 #  include "nsCocoaFeatures.h"
 #endif
-#include "nsIPropertyBag2.h"
 #include "nsIThreadManager.h"
 #include "nsServiceManagerUtils.h"
 #include "prsystem.h"

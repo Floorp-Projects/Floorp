@@ -13,7 +13,6 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "gfxFont.h"
-#include "nsIRunnable.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"

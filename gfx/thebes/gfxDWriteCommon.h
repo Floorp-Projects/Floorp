@@ -10,13 +10,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "nscore.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "cairo-features.h"
 #include "gfxFontConstants.h"
 #include "nsTArray.h"
 #include "gfxWindowsPlatform.h"
-#include "nsIUUIDGenerator.h"
 
 #include <windows.h>
 #include <dwrite.h>

@@ -22,7 +22,6 @@
 #include "nsCoord.h"
 #include "nsIContentInlines.h"
 #include "nsIScriptError.h"
-#include "nsIStringBundle.h"
 #include "nsContentUtils.h"
 #include "ImageLayers.h"
 

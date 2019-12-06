@@ -20,7 +20,6 @@
 #include "nsIFactory.h"
 #include "nsINode.h"
 #include "nsIScriptError.h"
-#include "nsISensitiveInfoHiddenURI.h"
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleUtil.h"

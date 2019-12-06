@@ -24,7 +24,6 @@
 
 #include "mozAutoDocUpdate.h"
 #include "SheetLoadData.h"
-#include "nsIReferrerInfo.h"
 
 namespace mozilla {
 
@@ -390,21 +389,21 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 
 // NOTE(emilio): Composed doc and containing shadow root are set in child sheets
 // too, so no need to do it for each ancestor.
-#define NOTIFY(function_, args_)                           \
-  do {                                                     \
-    if (auto* shadow = GetContainingShadow()) {            \
-      shadow->function_ args_;                             \
-    }                                                      \
-    if (auto* doc = GetComposedDoc()) {                    \
-      doc->function_ args_;                                \
-    }                                                      \
-    StyleSheet* current = this;                            \
-    do {                                                   \
-      for (ServoStyleSet* set : current->mStyleSets) {     \
-        set->function_ args_;                              \
-      }                                                    \
-      current = current->mParent;                          \
-    } while (current);                                     \
+#define NOTIFY(function_, args_)                        \
+  do {                                                  \
+    if (auto* shadow = GetContainingShadow()) {         \
+      shadow->function_ args_;                          \
+    }                                                   \
+    if (auto* doc = GetComposedDoc()) {                 \
+      doc->function_ args_;                             \
+    }                                                   \
+    StyleSheet* current = this;                         \
+    do {                                                \
+      for (ServoStyleSet * set : current->mStyleSets) { \
+        set->function_ args_;                           \
+      }                                                 \
+      current = current->mParent;                       \
+    } while (current);                                  \
   } while (0)
 
 void StyleSheet::EnsureUniqueInner() {

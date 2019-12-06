@@ -5,7 +5,6 @@
 
 #include "nsCollation.h"
 #include "mozilla/intl/LocaleService.h"
-#include "nsIServiceManager.h"
 #include "nsString.h"
 
 NS_IMPL_ISUPPORTS(nsCollation, nsICollation)

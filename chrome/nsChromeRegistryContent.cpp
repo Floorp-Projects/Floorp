@@ -8,7 +8,6 @@
 #include "nsChromeRegistryContent.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
-#include "nsIResProtocolHandler.h"
 
 nsChromeRegistryContent::nsChromeRegistryContent() {}
 

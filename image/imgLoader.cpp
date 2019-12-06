@@ -66,7 +66,6 @@
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"
-#include "nsILoadContext.h"
 #include "nsILoadGroupChild.h"
 #include "nsIDocShell.h"
 

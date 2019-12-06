@@ -5,8 +5,6 @@
 #include "nsICharsetConverterManager.h"
 #include <iostream.h>
 #include "nsISupports.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsCRT.h"

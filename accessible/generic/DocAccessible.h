@@ -19,7 +19,6 @@
 #include "nsIObserver.h"
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
-#include "nsIWeakReference.h"
 
 class nsAccessiblePivot;
 

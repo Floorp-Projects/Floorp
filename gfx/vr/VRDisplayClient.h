@@ -7,7 +7,6 @@
 #ifndef GFX_VR_DISPLAY_CLIENT_H
 #define GFX_VR_DISPLAY_CLIENT_H
 
-#include "nsIScreen.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"

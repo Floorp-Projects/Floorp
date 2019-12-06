@@ -8,7 +8,6 @@
 
 #include "nsIAccessibleEvent.h"
 #include "nsIGSettingsService.h"
-#include "nsIServiceManager.h"
 #include "nsMai.h"
 #include "AtkSocketAccessible.h"
 #include "prenv.h"

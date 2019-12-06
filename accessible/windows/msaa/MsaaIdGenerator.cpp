@@ -14,7 +14,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsDataHashtable.h"
-#include "nsIXULRuntime.h"
 #include "sdnAccessible.h"
 
 // These constants may be adjusted to modify the proportion of the Child ID

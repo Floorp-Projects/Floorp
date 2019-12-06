@@ -9,9 +9,9 @@
 #include "mozilla/Attributes.h"
 #include "nsLeafBoxFrame.h"
 
-#include "imgILoader.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "imgINotificationObserver.h"
 
 class imgRequestProxy;
 class nsImageBoxFrame;

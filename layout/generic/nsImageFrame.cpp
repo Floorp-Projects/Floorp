@@ -48,7 +48,6 @@
 #include "nsTransform2D.h"
 #include "nsImageMap.h"
 #include "nsILoadGroup.h"
-#include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsCSSRendering.h"

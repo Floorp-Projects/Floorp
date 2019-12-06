@@ -45,7 +45,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ViewportFrame.h"
-#include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
 #include "nsDisplayList.h"

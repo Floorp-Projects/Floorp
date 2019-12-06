@@ -10,7 +10,6 @@
 #include "nsIAboutNewTabService.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIProtocolHandler.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"

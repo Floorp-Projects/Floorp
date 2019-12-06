@@ -63,7 +63,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsNetUtil.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsProxyRelease.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"

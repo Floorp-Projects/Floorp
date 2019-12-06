@@ -13,10 +13,6 @@
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
 
-#include "nsIComponentManager.h"
-#include "nsIComponentRegistrar.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
 #include "nsISocketTransportService.h"
 
 #include "nsASocketHandler.h"

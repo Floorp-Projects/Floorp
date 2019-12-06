@@ -10,7 +10,6 @@
 
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 
 /**

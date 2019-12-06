@@ -17,8 +17,6 @@
 #include "nsHashKeys.h"
 #include "nsISHistory.h"
 
-class nsIDocShell;
-
 namespace mozilla {
 namespace dom {
 

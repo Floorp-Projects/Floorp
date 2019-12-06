@@ -7,7 +7,6 @@
 #include "GPUProcessHost.h"
 #include "chrome/common/process_watcher.h"
 #include "mozilla/gfx/Logging.h"
-#include "nsITimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "VRGPUChild.h"

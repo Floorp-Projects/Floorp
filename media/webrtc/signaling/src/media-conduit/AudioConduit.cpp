@@ -15,8 +15,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mtransport/runnable_utils.h"

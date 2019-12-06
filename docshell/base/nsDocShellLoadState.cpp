@@ -10,7 +10,6 @@
 #include "SHEntryChild.h"
 #include "nsISHEntry.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIChildChannel.h"
 #include "ReferrerInfo.h"

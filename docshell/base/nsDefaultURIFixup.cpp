@@ -23,7 +23,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
-#include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_keyword.h"

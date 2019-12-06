@@ -14,12 +14,8 @@
 #include "signaling/src/jsep/JsepTransport.h"
 
 #include "nsContentUtils.h"
-#include "nsIURI.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsICancelable.h"
 #include "nsIIDNService.h"
 #include "nsILoadInfo.h"
-#include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"

@@ -9,7 +9,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "nsICookieService.h"
 #include "nsLayoutUtils.h"
 #include "nsString.h"
 #include "mozilla/AntiTrackingCommon.h"

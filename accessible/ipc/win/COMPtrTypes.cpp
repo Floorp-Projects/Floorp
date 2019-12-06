@@ -6,7 +6,6 @@
 
 #include "mozilla/a11y/COMPtrTypes.h"
 
-#include "Accessible2_3.h"
 #include "MainThreadUtils.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/Platform.h"

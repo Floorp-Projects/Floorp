@@ -8,12 +8,13 @@
 #include "nsArray.h"
 #include "nsString.h"
 #include "plstr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"
-#include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICommandLine.h"
 #include "nsIURI.h"
+#include "nsServiceManagerUtils.h"
 
 nsLayoutDebugCLH::nsLayoutDebugCLH() {}
 
