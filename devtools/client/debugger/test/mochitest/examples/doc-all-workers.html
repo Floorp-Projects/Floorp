@@ -6,7 +6,7 @@ registerServiceWorker();
 
 async function registerServiceWorker() {
   const sw = navigator.serviceWorker;
-  const swr = await sw.register("service-worker.js", { scope: "" });
+  const swr = await sw.register("service-worker.sjs", { scope: "" });
 
   await new Promise(resolve => {
     const worker = swr.installing || swr.waiting || swr.active;
@@ -26,7 +26,7 @@ async function registerServiceWorker() {
 
 async function unregisterServiceWorker() {
   const sw = navigator.serviceWorker;
-  const swr = await sw.register("service-worker.js", { scope: "" });
+  const swr = await sw.register("service-worker.sjs", { scope: "" });
   return swr.unregister();
 }
 </script>

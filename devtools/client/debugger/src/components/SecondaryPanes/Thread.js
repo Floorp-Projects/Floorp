@@ -36,7 +36,10 @@ export class Thread extends Component<Props> {
     const { currentThread, isPaused, thread } = this.props;
 
     const worker = isWorker(thread);
-    const label = thread.name;
+    let label = thread.name;
+    if (thread.serviceWorkerStatus) {
+      label += ` (${thread.serviceWorkerStatus})`;
+    }
 
     return (
       <div

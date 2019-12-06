@@ -73,20 +73,13 @@ async function listWorkerTargets(args: Args) {
 
   const { workers } = await currentTarget.listWorkers();
 
+  let serviceWorkerRegistrations = [];
   if (features.windowlessServiceWorkers && currentTarget.url) {
-    const { service } = await debuggerClient.mainRoot.listAllWorkers();
-    for (const { active, id, url } of service) {
-      // Attach to any service workers that are same-origin with our target.
-      // For now, ignore service workers associated with cross-origin iframes.
-      if (active && sameOrigin(url, currentTarget.url)) {
-        const workerTarget = await debuggerClient.mainRoot.getWorker(id);
-        workers.push(workerTarget);
-      }
-    }
+    const { registrations } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+    serviceWorkerRegistrations = registrations.filter(front => sameOrigin(front.url, currentTarget.url));
   } else if (attachAllTargets(currentTarget)) {
     const {
       other,
-      service,
       shared,
     } = await debuggerClient.mainRoot.listAllWorkers();
 
@@ -98,11 +91,18 @@ async function listWorkerTargets(args: Args) {
       }
     }
 
-    for (const { active, id } of service) {
-      if (active) {
-        const workerTarget = await debuggerClient.mainRoot.getWorker(id);
-        workers.push(workerTarget);
-      }
+    const { registrations } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+    serviceWorkerRegistrations = registrations;
+  }
+
+  for (const front of serviceWorkerRegistrations) {
+    const { activeWorker, waitingWorker, installingWorker } = front;
+    const status = activeWorker ? "active" : waitingWorker ? "waiting" : installingWorker ? "installing" : "";
+
+    if (status) {
+      const workerTarget = await debuggerClient.mainRoot.getWorker(front.id);
+      workers.push(workerTarget);
+      workerTarget.debuggerServiceWorkerStatus = status;
     }
   }
 

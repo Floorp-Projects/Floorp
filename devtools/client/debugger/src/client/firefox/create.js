@@ -86,5 +86,6 @@ export function createThread(actor: string, target: Target): Thread {
     url: target.url,
     type: getTargetType(target),
     name: target.name,
+    serviceWorkerStatus: target.debuggerServiceWorkerStatus,
   };
 }
