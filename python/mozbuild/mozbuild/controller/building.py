@@ -996,7 +996,8 @@ class BuildDriver(MozbuildObject):
         self.mach_context = None
 
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
-              directory=None, verbose=False, keep_going=False, mach_context=None):
+              directory=None, verbose=False, keep_going=False, mach_context=None,
+              append_env=None):
         """Invoke the build backend.
 
         ``what`` defines the thing to build. If not defined, the default
@@ -1065,7 +1066,8 @@ class BuildDriver(MozbuildObject):
                     print(" Config object not found by mach.")
 
                 config_rc = self.configure(buildstatus_messages=True,
-                                           line_handler=output.on_line)
+                                           line_handler=output.on_line,
+                                           append_env=append_env)
 
                 if config_rc != 0:
                     return config_rc
@@ -1158,12 +1160,13 @@ class BuildDriver(MozbuildObject):
                     # could potentially be fixed if the build monitor were more
                     # intelligent about encountering undefined state.
                     no_build_status = b'1' if make_dir is not None else b''
+                    tgt_env = dict(append_env or {})
+                    tgt_env['NO_BUILDSTATUS_MESSAGES'] = no_build_status
                     status = self._run_make(
                         directory=make_dir, target=make_target,
                         line_handler=output.on_line, log=False, print_directory=False,
                         ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                        append_env={
-                            b'NO_BUILDSTATUS_MESSAGES': no_build_status},
+                        append_env=tgt_env,
                         keep_going=keep_going)
 
                     if status != 0:
@@ -1175,7 +1178,8 @@ class BuildDriver(MozbuildObject):
                 status = self._run_client_mk(line_handler=output.on_line,
                                              jobs=jobs,
                                              verbose=verbose,
-                                             keep_going=keep_going)
+                                             keep_going=keep_going,
+                                             append_env=append_env)
 
             self.log(logging.WARNING, 'warning_summary',
                      {'count': len(monitor.warnings_database)},
@@ -1338,7 +1342,7 @@ class BuildDriver(MozbuildObject):
         return status
 
     def configure(self, options=None, buildstatus_messages=False,
-                  line_handler=None):
+                  line_handler=None, append_env=None):
         # Disable indexing in objdir because it is not necessary and can slow
         # down builds.
         mkdir(self.topobjdir, not_indexed=True)
@@ -1350,12 +1354,13 @@ class BuildDriver(MozbuildObject):
         line_handler = line_handler or on_line
 
         options = ' '.join(shell_quote(o) for o in options or ())
-        append_env = {b'CONFIGURE_ARGS': options.encode('utf-8')}
+        append_env = dict(append_env or {})
+        append_env['CONFIGURE_ARGS'] = options
 
         # Only print build status messages when we have an active
         # monitor.
         if not buildstatus_messages:
-            append_env[b'NO_BUILDSTATUS_MESSAGES'] = b'1'
+            append_env['NO_BUILDSTATUS_MESSAGES'] = b'1'
         status = self._run_client_mk(target='configure',
                                      line_handler=line_handler,
                                      append_env=append_env)

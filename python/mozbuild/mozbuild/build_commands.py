@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
+import subprocess
 
 from mach.decorators import (
     CommandArgument,
@@ -14,6 +15,9 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
+from mozbuild.util import ensure_subprocess_env
+from mozbuild.mozconfig import MozconfigLoader
+import mozpack.path as mozpath
 
 from mozbuild.backend import (
     backends,
@@ -73,6 +77,54 @@ class Build(MachCommandBase):
 
         self.log_manager.enable_all_structured_loggers()
 
+        loader = MozconfigLoader(self.topsrcdir)
+        mozconfig = loader.read_mozconfig(loader.AUTODETECT)
+        doing_pgo = 'MOZ_PGO=1' in mozconfig['configure_args']
+        append_env = None
+
+        if doing_pgo:
+            if what:
+                raise Exception('Cannot specify targets (%s) in MOZ_PGO=1 builds' %
+                                what)
+            instr = self._spawn(BuildDriver)
+            orig_topobjdir = instr._topobjdir
+            instr._topobjdir = mozpath.join(instr._topobjdir, 'instrumented')
+
+            append_env = {'MOZ_PROFILE_GENERATE': '1'}
+            status = instr.build(
+                what=what,
+                disable_extra_make_dependencies=disable_extra_make_dependencies,
+                jobs=jobs,
+                directory=directory,
+                verbose=verbose,
+                keep_going=keep_going,
+                mach_context=self._mach_context,
+                append_env=append_env)
+            if status != 0:
+                return status
+
+            # Packaging the instrumented build is required to get the jarlog
+            # data.
+            status = instr._run_make(
+                directory=".", target='package',
+                silent=not verbose, ensure_exit_code=False,
+                append_env=append_env)
+            if status != 0:
+                return status
+
+            pgo_env = os.environ.copy()
+            pgo_env['LLVM_PROFDATA'] = instr.config_environment.substs.get('LLVM_PROFDATA')
+            pgo_env['JARLOG_FILE'] = mozpath.join(orig_topobjdir, 'jarlog/en-US.log')
+            pgo_cmd = [
+                instr.virtualenv_manager.python_path,
+                mozpath.join(self.topsrcdir, 'build/pgo/profileserver.py'),
+            ]
+            subprocess.check_call(pgo_cmd, cwd=instr.topobjdir,
+                                  env=ensure_subprocess_env(pgo_env))
+
+            # Set the default build to MOZ_PROFILE_USE
+            append_env = {'MOZ_PROFILE_USE': '1'}
+
         driver = self._spawn(BuildDriver)
         return driver.build(
             what=what,
@@ -81,7 +133,8 @@ class Build(MachCommandBase):
             directory=directory,
             verbose=verbose,
             keep_going=keep_going,
-            mach_context=self._mach_context)
+            mach_context=self._mach_context,
+            append_env=append_env)
 
     @Command('configure', category='build',
              description='Configure the tree (run configure and config.status).')
