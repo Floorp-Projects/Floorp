@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
-use api::{PipelineId};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
@@ -26,10 +25,9 @@ use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCou
 use crate::render_task_graph::{RenderPassKind, RenderPass};
 use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
-use crate::scene::{BuiltScene, ScenePipeline, SceneProperties};
+use crate::scene::{BuiltScene, SceneProperties};
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
-use std::sync::Arc;
 use crate::util::MaxRect;
 
 
@@ -137,7 +135,6 @@ pub struct FrameVisibilityState<'a> {
 pub struct FrameBuildingContext<'a> {
     pub global_device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
-    pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub global_screen_world_rect: WorldRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub max_local_clip: LayoutRect,
@@ -259,7 +256,6 @@ impl FrameBuilder {
         let frame_context = FrameBuildingContext {
             global_device_pixel_scale,
             scene_properties,
-            pipelines: &scene.src.pipelines,
             global_screen_world_rect,
             clip_scroll_tree: &scene.clip_scroll_tree,
             max_local_clip: LayoutRect::new(
