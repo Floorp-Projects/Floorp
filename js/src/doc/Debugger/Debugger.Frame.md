@@ -209,12 +209,6 @@ frame completes. If there is no older frame, this is `null`.
 
 Accessing this property will throw if `.onStack == false`.
 
-### `depth`
-The depth of this frame, counting from oldest to youngest; the oldest
-frame has a depth of zero.
-
-Accessing this property will throw if `.onStack == false`.
-
 ### `onStack`
 True if the frame this `Debugger.Frame` instance refers to is still on
 the stack; false if it has completed execution or been popped in some other way.
