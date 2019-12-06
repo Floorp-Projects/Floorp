@@ -85,7 +85,7 @@ use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind};
 use crate::resource_cache::ResourceCache;
-use crate::scene_builder_thread::{SceneBuilderThread, LowPrioritySceneBuilderThread};
+use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
@@ -2217,19 +2217,21 @@ impl Renderer {
         let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
-        let (scene_builder, scene_tx, scene_rx) = SceneBuilderThread::new(
-            config,
-            api_tx.clone(),
-            scene_builder_hooks,
-            make_size_of_ops(),
-        );
+        let (scene_builder_channels, scene_tx, scene_rx) =
+            SceneBuilderThreadChannels::new(api_tx.clone());
+
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
                 thread_listener.thread_started(&scene_thread_name);
             }
 
-            let mut scene_builder = scene_builder;
+            let mut scene_builder = SceneBuilderThread::new(
+                config,
+                make_size_of_ops(),
+                scene_builder_hooks,
+                scene_builder_channels,
+            );
             scene_builder.run();
 
             if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
