@@ -11,11 +11,13 @@
 #include "jstypes.h"
 
 #include "ds/InlineTable.h"
+#include "frontend/AbstractScope.h"
 #include "frontend/FunctionCreationData.h"
 #include "frontend/ParseNode.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
+#include "vm/Scope.h"
 
 namespace js {
 namespace frontend {
@@ -313,7 +315,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   //     partially initialized enclosing scopes, so we must avoid storing the
   //     scope in the LazyScript until compilation has completed
   //     successfully.)
-  Scope* enclosingScope_;
+  AbstractScope enclosingScope_;
 
   // Names from the named lambda scope, if a named lambda.
   LexicalScope::Data* namedLambdaBindings_;
@@ -509,7 +511,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
   inline bool isLazyFunctionWithoutEnclosingScope() const {
     return isInterpretedLazy() && !function()->enclosingScope();
   }
-  void setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope);
+  void setEnclosingScopeForInnerLazyFunction(
+      const AbstractScope& enclosingScope);
   void finish();
 
   // Free non-LifoAlloc memory which would otherwise be leaked when
@@ -547,7 +550,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // from the lazy function at the beginning of delazification and should
     // keep pointing the same scope.
     MOZ_ASSERT_IF(isInterpretedLazy() && function()->enclosingScope(),
-                  enclosingScope_ == function()->enclosingScope());
+                  enclosingScope_.maybeScope() == function()->enclosingScope());
 
     // If this FunctionBox is a lazy child of the function we're actually
     // compiling, then it is not the outermost SharedContext, so this
@@ -556,7 +559,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
       return nullptr;
     }
 
-    return enclosingScope_;
+    return enclosingScope_.maybeScope();
   }
 
   bool needsCallObjectRegardlessOfBindings() const {

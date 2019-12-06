@@ -12,6 +12,7 @@
 #include <new>
 
 #include "builtin/ModuleObject.h"
+#include "frontend/AbstractScope.h"
 #include "gc/Allocator.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
@@ -495,7 +496,7 @@ uint32_t LexicalScope::firstFrameSlot() const {
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
       // For intra-frame scopes, find the enclosing scope's next frame slot.
-      return nextFrameSlot(enclosing());
+      return nextFrameSlot(AbstractScope(enclosing()));
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
       // Named lambda scopes cannot have frame slots.
@@ -508,19 +509,28 @@ uint32_t LexicalScope::firstFrameSlot() const {
 }
 
 /* static */
-uint32_t LexicalScope::nextFrameSlot(Scope* scope) {
-  for (ScopeIter si(scope); si; si++) {
+uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
+  for (AbstractScopeIter si(scope); si; si++) {
     switch (si.kind()) {
       case ScopeKind::Function:
-        return si.scope()->as<FunctionScope>().nextFrameSlot();
+        MOZ_ASSERT(si.abstractScope().maybeScope());
+        return si.abstractScope()
+            .maybeScope()
+            ->as<FunctionScope>()
+            .nextFrameSlot();
       case ScopeKind::FunctionBodyVar:
       case ScopeKind::ParameterExpressionVar:
-        return si.scope()->as<VarScope>().nextFrameSlot();
+        MOZ_ASSERT(si.abstractScope().maybeScope());
+        return si.abstractScope().maybeScope()->as<VarScope>().nextFrameSlot();
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::FunctionLexical:
-        return si.scope()->as<LexicalScope>().nextFrameSlot();
+        MOZ_ASSERT(si.abstractScope().maybeScope());
+        return si.abstractScope()
+            .maybeScope()
+            ->as<LexicalScope>()
+            .nextFrameSlot();
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
         // Named lambda scopes cannot have frame slots.
@@ -529,12 +539,17 @@ uint32_t LexicalScope::nextFrameSlot(Scope* scope) {
         continue;
       case ScopeKind::Eval:
       case ScopeKind::StrictEval:
-        return si.scope()->as<EvalScope>().nextFrameSlot();
+        MOZ_ASSERT(si.abstractScope().maybeScope());
+        return si.abstractScope().maybeScope()->as<EvalScope>().nextFrameSlot();
       case ScopeKind::Global:
       case ScopeKind::NonSyntactic:
         return 0;
       case ScopeKind::Module:
-        return si.scope()->as<ModuleScope>().nextFrameSlot();
+        MOZ_ASSERT(si.abstractScope().maybeScope());
+        return si.abstractScope()
+            .maybeScope()
+            ->as<ModuleScope>()
+            .nextFrameSlot();
       case ScopeKind::WasmInstance:
         // TODO return si.scope()->as<WasmInstanceScope>().nextFrameSlot();
         return 0;
@@ -572,7 +587,7 @@ bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
       kind == ScopeKind::NamedLambda || kind == ScopeKind::StrictNamedLambda;
 
   MOZ_ASSERT_IF(!isNamedLambda && firstFrameSlot != 0,
-                firstFrameSlot == nextFrameSlot(enclosing));
+                firstFrameSlot == nextFrameSlot(AbstractScope(enclosing)));
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
   BindingIter bi(*data, firstFrameSlot, isNamedLambda);
