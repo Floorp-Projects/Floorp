@@ -77,7 +77,7 @@ async function waitForWorkerRegistration(swTab) {
   const swBrowser = swTab.linkedBrowser;
   await asyncWaitUntil(async () =>
     SpecialPowers.spawn(swBrowser, [], function() {
-      return content.wrappedJSObject.getRegistration();
+      return !!content.wrappedJSObject.getRegistration();
     })
   );
 }

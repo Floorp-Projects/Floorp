@@ -63,12 +63,7 @@ function API_getAddonByID(browser, id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
 
     // We can't send native objects back so clone its properties.
-    let result = {};
-    for (let prop in addon) {
-      result[prop] = addon[prop];
-    }
-
-    return result;
+    return JSON.parse(JSON.stringify(addon));
   });
 }
 
