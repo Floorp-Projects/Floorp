@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -89,6 +90,7 @@ class DownloadTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun testDownloadNotification() {
         homeScreen { }.dismissOnboarding()
 
