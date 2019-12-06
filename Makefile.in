@@ -115,11 +115,8 @@ install-test-files:
 
 include $(topsrcdir)/build/moz-automation.mk
 
-# dist and _tests should be purged during cleaning. However, we don't want them
-# purged during PGO builds because they contain some auto-generated files.
-ifneq ($(filter-out maybe_clobber_profiledbuild,$(MAKECMDGOALS)),)
+# dist and _tests should be purged during cleaning.
 GARBAGE_DIRS += dist _tests
-endif
 
 # Dummy rule for the cases below where we don't depend on dist/include
 recurse_pre-export::
@@ -185,37 +182,6 @@ endif
 default all::
 	$(call BUILDSTATUS,TIERS $(TIERS) $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
 
-# PGO build target.
-profiledbuild::
-	$(call BUILDSTATUS,TIERS pgo_profile_generate pgo_package pgo_profile pgo_clobber pgo_profile_use)
-	$(call BUILDSTATUS,TIER_START pgo_profile_generate)
-	$(MAKE) default MOZ_PROFILE_GENERATE=1 MOZ_LTO=
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
-	$(call BUILDSTATUS,TIER_START pgo_package)
-	$(MAKE) package
-	rm -f jarlog/en-US.log
-	$(call BUILDSTATUS,TIER_FINISH pgo_package)
-	$(call BUILDSTATUS,TIER_START pgo_profile)
-	JARLOG_FILE=jarlog/en-US.log $(PYTHON) $(topsrcdir)/build/pgo/profileserver.py
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
-	$(call BUILDSTATUS,TIER_START pgo_clobber)
-	$(MAKE) maybe_clobber_profiledbuild
-	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
-	$(call BUILDSTATUS,TIER_START pgo_profile_use)
-	$(MAKE) default MOZ_PROFILE_USE=1 MOZ_1TIER_PGO=1
-	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
-
-# Change default target to PGO build if PGO is enabled.
-ifdef MOZ_PGO
-ifdef COMPILE_ENVIRONMENT
-# If one of these is already set in addition to PGO we are doing a single phase
-# of PGO in isolation, so don't override the default target.
-ifeq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
-OVERRIDE_DEFAULT_GOAL := profiledbuild
-endif
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef SCCACHE_VERBOSE_STATS
@@ -280,19 +246,6 @@ update-packaging:
 .PHONY: package-generated-sources
 package-generated-sources:
 	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
-
-# PGO support, but we can't do this test in client.mk
-# No point in clobbering if PGO has been explicitly disabled.
-ifdef NO_PROFILE_GUIDED_OPTIMIZE
-maybe_clobber_profiledbuild:
-else
-maybe_clobber_profiledbuild: clean
-ifneq (,$(findstring clang,$(CC_TYPE)))
-	$(LLVM_PROFDATA) merge -o $(DEPTH)/merged.profdata $(DEPTH)/*.profraw
-endif
-endif # NO_PROFILE_GUIDED_OPTIMIZE
-
-.PHONY: maybe_clobber_profiledbuild
 
 ifdef JS_STANDALONE
 # Delegate js-specific rules to js
