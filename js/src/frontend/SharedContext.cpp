@@ -6,6 +6,7 @@
 
 #include "frontend/SharedContext.h"
 
+#include "frontend/AbstractScope.h"
 #include "frontend/ModuleSharedContext.h"
 
 #include "frontend/ParseContext-inl.h"
@@ -121,7 +122,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          FunctionFlags flags)
     : ObjectBox(nullptr, traceListHead, TraceListNode::NodeType::Function),
       SharedContext(cx, Kind::FunctionBox, directives, extraWarnings),
-      enclosingScope_(nullptr),
+      enclosingScope_(),
       namedLambdaBindings_(nullptr),
       functionScopeBindings_(nullptr),
       extraVarScopeBindings_(nullptr),
@@ -193,7 +194,7 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
     setNeedsHomeObject();
   }
 
-  enclosingScope_ = fun->enclosingScope();
+  enclosingScope_ = AbstractScope(fun->enclosingScope());
 
   if (lazy->bindingsAccessedDynamically()) {
     setBindingsAccessedDynamically();
@@ -209,14 +210,14 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   startLine = lazy->lineno();
   startColumn = lazy->column();
 
-  initWithEnclosingScope(enclosingScope_, fun);
+  initWithEnclosingScope(enclosingScope_.maybeScope(), fun);
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
   // Standalone functions are Function or Generator constructors and are
   // always scoped to the global.
   MOZ_ASSERT(enclosingScope->is<GlobalScope>());
-  enclosingScope_ = enclosingScope;
+  enclosingScope_ = AbstractScope(enclosingScope);
   allowNewTarget_ = true;
   thisBinding_ = ThisBinding::Function;
 }
@@ -299,7 +300,8 @@ void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
   computeInWith(enclosingScope);
 }
 
-void FunctionBox::setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope) {
+void FunctionBox::setEnclosingScopeForInnerLazyFunction(
+    const AbstractScope& enclosingScope) {
   MOZ_ASSERT(isLazyFunctionWithoutEnclosingScope());
 
   // For lazy functions inside a function which is being compiled, we cache
@@ -314,7 +316,7 @@ void FunctionBox::finish() {
     return;
   }
   MOZ_ASSERT(enclosingScope_);
-  function()->setEnclosingScope(enclosingScope_);
+  function()->setEnclosingScope(enclosingScope_.maybeScope());
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,

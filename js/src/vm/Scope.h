@@ -29,6 +29,7 @@ namespace js {
 class BaseScopeData;
 class ModuleObject;
 class Scope;
+class AbstractScope;
 
 enum class BindingKind : uint8_t {
   Import,
@@ -438,7 +439,7 @@ class LexicalScope : public Scope {
 
   const Data& data() const { return *static_cast<Data*>(data_); }
 
-  static uint32_t nextFrameSlot(Scope* start);
+  static uint32_t nextFrameSlot(const AbstractScope& start);
 
  public:
   uint32_t firstFrameSlot() const;
@@ -481,6 +482,7 @@ class FunctionScope : public Scope {
   friend class BindingIter;
   friend class PositionalFormalParameterIter;
   friend class Scope;
+  friend class AbstractScope;
   static const ScopeKind classScopeKind_ = ScopeKind::Function;
 
  public:
@@ -763,6 +765,7 @@ inline bool Scope::is<GlobalScope>() const {
 // Corresponds to a WithEnvironmentObject on the environment chain.
 class WithScope : public Scope {
   friend class Scope;
+  friend class AbstractScope;
   static const ScopeKind classScopeKind_ = ScopeKind::With;
 
  public:
@@ -876,6 +879,7 @@ class ModuleScope : public Scope {
   friend class GCMarker;
   friend class BindingIter;
   friend class Scope;
+  friend class AbstractScope;
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
  public:
@@ -942,6 +946,7 @@ class WasmInstanceScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class GCMarker;
+  friend class AbstractScope;
   static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
  public:
@@ -988,6 +993,7 @@ class WasmFunctionScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class GCMarker;
+  friend class AbstractScope;
   static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
 
  public:

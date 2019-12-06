@@ -6,6 +6,7 @@
 
 #include "frontend/NameOpEmitter.h"
 
+#include "frontend/AbstractScope.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
 #include "frontend/TDZCheckCache.h"
@@ -167,7 +168,7 @@ bool NameOpEmitter::prepareForRhs() {
       if (loc_.isLexical() && isInitialize()) {
         // INITGLEXICAL always gets the global lexical scope. It doesn't
         // need a BINDGNAME.
-        MOZ_ASSERT(bce_->innermostScope()->is<GlobalScope>());
+        MOZ_ASSERT(bce_->innermostScope().is<GlobalScope>());
       } else {
         if (!bce_->emitIndexOp(JSOP_BINDGNAME, atomIndex_)) {
           //        [stack] ENV

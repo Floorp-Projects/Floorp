@@ -4400,20 +4400,20 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
 
 static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
   // See JSFunction::needsCallObject()
-  js::Scope* bodyScope = bce->bodyScope();
-  if (bodyScope->kind() == js::ScopeKind::Function) {
-    if (bodyScope->hasEnvironment()) {
+  js::AbstractScope bodyScope = bce->bodyScope();
+  if (bodyScope.kind() == js::ScopeKind::Function) {
+    if (bodyScope.hasEnvironment()) {
       return true;
     }
   }
 
   // See JSScript::maybeNamedLambdaScope()
-  js::Scope* outerScope = bce->outermostScope();
-  if (outerScope->kind() == js::ScopeKind::NamedLambda ||
-      outerScope->kind() == js::ScopeKind::StrictNamedLambda) {
+  js::AbstractScope outerScope = bce->outermostScope();
+  if (outerScope.kind() == js::ScopeKind::NamedLambda ||
+      outerScope.kind() == js::ScopeKind::StrictNamedLambda) {
     MOZ_ASSERT(bce->sc->asFunctionBox()->isNamedLambda());
 
-    if (outerScope->hasEnvironment()) {
+    if (outerScope.hasEnvironment()) {
       return true;
     }
   }
@@ -4483,7 +4483,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
   script->setFlag(ImmutableFlags::IsFunction, bce->sc->isFunctionBox());
   script->setFlag(ImmutableFlags::HasNonSyntacticScope,
-                  bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
+                  bce->outermostScope().hasOnChain(ScopeKind::NonSyntactic));
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
 
