@@ -1,6 +1,6 @@
-extern crate tempfile;
+#![deny(rust_2018_idioms)]
 
-use std::io::{Write, Seek, Read, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 
 use tempfile::{spooled_tempfile, SpooledTempFile};
 
@@ -265,7 +265,10 @@ fn test_set_len(t: &mut SpooledTempFile) {
     assert_eq!(t.seek(SeekFrom::Current(0)).unwrap(), 10); // tell()
     assert_eq!(t.seek(SeekFrom::Start(0)).unwrap(), 0);
     assert_eq!(t.read_to_end(&mut buf).unwrap(), 40);
-    assert_eq!(buf.as_slice(), &b"abcdefghij\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"[..]);
+    assert_eq!(
+        buf.as_slice(),
+        &b"abcdefghij\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"[..]
+    );
 }
 
 #[test]

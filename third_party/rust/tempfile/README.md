@@ -15,7 +15,7 @@ patterns and surprisingly difficult to implement securely).
 Usage
 -----
 
-Minimum required Rust version: 1.18.0
+Minimum required Rust version: 1.32.0
 
 Add this to your `Cargo.toml`:
 ```toml
@@ -23,16 +23,10 @@ Add this to your `Cargo.toml`:
 tempfile = "3"
 ```
 
-...and this to your crate root:
-```rust
-extern crate tempfile;
-```
-
 Example
 -------
 
 ```rust
-extern crate tempfile;
 use std::fs::File;
 use std::io::{Write, Read, Seek, SeekFrom};
 

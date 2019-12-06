@@ -1,21 +1,14 @@
-#[cfg(not(target_os = "redox"))]
-use libc::{c_char, c_int, link, rename, unlink, O_CLOEXEC, O_CREAT, O_EXCL, O_RDWR};
-use std::ffi::CString;
+use std::env;
+use std::ffi::{CString, OsStr};
 use std::fs::{self, File, OpenOptions};
 use std::io;
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::Path;
-use util;
+use crate::util;
 
-#[cfg(all(lfs_support, target_os = "linux"))]
-use libc::{fstat64 as fstat, open64 as open, stat64 as stat_t};
-
-#[cfg(not(any(all(lfs_support, target_os = "linux"), target_os = "redox")))]
-use libc::{fstat, open, stat as stat_t};
-
-#[cfg(target_os = "redox")]
-use syscall::{self, fstat, open, Stat as stat_t, O_CLOEXEC, O_CREAT, O_EXCL, O_RDWR};
+#[cfg(not(target_os = "redox"))]
+use libc::{c_char, c_int, link, rename, unlink};
 
 #[cfg(not(target_os = "redox"))]
 #[inline(always)]
@@ -39,32 +32,26 @@ pub fn cstr(path: &Path) -> io::Result<CString> {
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "path contained a null"))
 }
 
-#[cfg(not(target_os = "redox"))]
-pub fn create_named(path: &Path) -> io::Result<File> {
-    unsafe {
-        let path = cstr(path)?;
-        let fd = cvt_err(open(
-            path.as_ptr() as *const c_char,
-            O_CLOEXEC | O_EXCL | O_RDWR | O_CREAT,
-            0o600,
-        ))?;
-        Ok(FromRawFd::from_raw_fd(fd))
-    }
-}
-
-#[cfg(target_os = "redox")]
-pub fn create_named(path: &Path) -> io::Result<File> {
-    unsafe {
-        let fd = cvt_err(open(
-            path.as_os_str().as_bytes(),
-            O_CLOEXEC | O_EXCL | O_RDWR | O_CREAT | 0o600,
-        ))?;
-        Ok(FromRawFd::from_raw_fd(fd))
-    }
+pub fn create_named(path: &Path, open_options: &mut OpenOptions) -> io::Result<File> {
+    open_options
+        .read(true)
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)
 }
 
 fn create_unlinked(path: &Path) -> io::Result<File> {
-    let f = create_named(path)?;
+    let tmp;
+    // shadow this to decrease the lifetime. It can't live longer than `tmp`.
+    let mut path = path;
+    if !path.is_absolute() {
+        let cur_dir = env::current_dir()?;
+        tmp = cur_dir.join(path);
+        path = &tmp;
+    }
+
+    let f = create_named(path, &mut OpenOptions::new())?;
     // don't care whether the path has already been unlinked,
     // but perhaps there are some IO error conditions we should send up?
     let _ = fs::remove_file(path);
@@ -73,18 +60,19 @@ fn create_unlinked(path: &Path) -> io::Result<File> {
 
 #[cfg(target_os = "linux")]
 pub fn create(dir: &Path) -> io::Result<File> {
-    use libc::O_TMPFILE;
-    match unsafe {
-        let path = cstr(dir)?;
-        open(
-            path.as_ptr() as *const c_char,
-            O_CLOEXEC | O_EXCL | O_TMPFILE | O_RDWR,
-            0o600,
-        )
-    } {
-        -1 => create_unix(dir),
-        fd => Ok(unsafe { FromRawFd::from_raw_fd(fd) }),
-    }
+    use libc::{EISDIR, ENOENT, EOPNOTSUPP, O_EXCL, O_TMPFILE};
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(O_TMPFILE | O_EXCL) // do not mix with `create_new(true)`
+        .open(dir)
+        .or_else(|e| {
+            match e.raw_os_error() {
+                // These are the three "not supported" error codes for O_TMPFILE.
+                Some(EOPNOTSUPP) | Some(EISDIR) | Some(ENOENT) => create_unix(dir),
+                _ => Err(e),
+            }
+        })
 }
 
 #[cfg(not(target_os = "linux"))]
@@ -93,30 +81,26 @@ pub fn create(dir: &Path) -> io::Result<File> {
 }
 
 fn create_unix(dir: &Path) -> io::Result<File> {
-    util::create_helper(dir, ".tmp", "", ::NUM_RAND_CHARS, |path| {
-        create_unlinked(&path)
-    })
-}
-
-unsafe fn stat(fd: RawFd) -> io::Result<stat_t> {
-    let mut meta: stat_t = ::std::mem::zeroed();
-    cvt_err(fstat(fd, &mut meta))?;
-    Ok(meta)
+    util::create_helper(
+        dir,
+        OsStr::new(".tmp"),
+        OsStr::new(""),
+        crate::NUM_RAND_CHARS,
+        |path| create_unlinked(&path),
+    )
 }
 
 pub fn reopen(file: &File, path: &Path) -> io::Result<File> {
     let new_file = OpenOptions::new().read(true).write(true).open(path)?;
-    unsafe {
-        let old_meta = stat(file.as_raw_fd())?;
-        let new_meta = stat(new_file.as_raw_fd())?;
-        if old_meta.st_dev != new_meta.st_dev || old_meta.st_ino != new_meta.st_ino {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "original tempfile has been replaced",
-            ));
-        }
-        Ok(new_file)
+    let old_meta = file.metadata()?;
+    let new_meta = new_file.metadata()?;
+    if old_meta.dev() != new_meta.dev() || old_meta.ino() != new_meta.ino() {
+        return Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "original tempfile has been replaced",
+        ));
     }
+    Ok(new_file)
 }
 
 #[cfg(not(target_os = "redox"))]
@@ -146,4 +130,8 @@ pub fn persist(old_path: &Path, new_path: &Path, overwrite: bool) -> io::Result<
 pub fn persist(old_path: &Path, new_path: &Path, overwrite: bool) -> io::Result<()> {
     // XXX implement when possible
     Err(io::Error::from_raw_os_error(syscall::ENOSYS))
+}
+
+pub fn keep(_: &Path) -> io::Result<()> {
+    Ok(())
 }
