@@ -41,7 +41,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -50,7 +52,9 @@ add_task(async function() {
   is(result, true, "plugin is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -74,7 +78,9 @@ add_task(async function() {
   await waitForMs(100);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -84,7 +90,9 @@ add_task(async function() {
 
   // check for good paint count
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();
@@ -109,7 +117,9 @@ add_task(async function() {
 
   // check for no paint count
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();
@@ -118,7 +128,9 @@ add_task(async function() {
   is(result, 0, "no paints, this is correct.");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -140,7 +152,9 @@ add_task(async function() {
 
   // check paint count
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();

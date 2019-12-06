@@ -46,7 +46,9 @@ add_task(async function() {
   await new Promise(resolve => window.requestAnimationFrame(resolve));
 
   let msg = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       // Skip the first animation frame callback as it's the same callback that
       // the browser uses to kick off the scrolling.
       return new Promise(resolve => {

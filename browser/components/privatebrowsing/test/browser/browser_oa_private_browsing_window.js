@@ -27,7 +27,11 @@ add_task(
       );
       let privateWin = await promiseNewWindow;
 
-    await SpecialPowers.spawn(privateWin.gBrowser.selectedBrowser, [{DUMMY_PAGE, TEST_PAGE}], async function({DUMMY_PAGE, TEST_PAGE}) { // eslint-disable-line
+      await SpecialPowers.spawn(
+        privateWin.gBrowser.selectedBrowser,
+        [{ DUMMY_PAGE, TEST_PAGE }],
+        async function({ DUMMY_PAGE, TEST_PAGE }) {
+          // eslint-disable-line
 
           let channel = content.docShell.currentDocumentChannel;
           is(

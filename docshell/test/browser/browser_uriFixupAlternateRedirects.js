@@ -34,7 +34,9 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Enter");
     await errorPageLoaded;
     let [contentURL, originalURL] = await SpecialPowers.spawn(
-      tab.linkedBrowser, [], () => {
+      tab.linkedBrowser,
+      [],
+      () => {
         return [
           content.document.documentURI,
           content.document.mozDocumentURIIfNotForErrorPages.spec,

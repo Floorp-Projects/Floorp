@@ -38,7 +38,8 @@ add_task(async function test() {
 
   await loadedPromise;
 
-  await SpecialPowers.spawn(browser, [], function( {}) { // eslint-disable-line
+  await SpecialPowers.spawn(browser, [], function({}) {
+    // eslint-disable-line
     // the data: URI inherits the CSP and the inline script needs to be blocked
     is(
       content.document.getElementById("test_id2").value,
@@ -55,7 +56,8 @@ add_task(async function test() {
   await promiseTabRestored(tab);
   browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(browser, [], function({}) { // eslint-disable-line
+  await SpecialPowers.spawn(browser, [], function({}) {
+    // eslint-disable-line
     // the data: URI should be restored including the inherited CSP and the
     // inline script should be blocked.
     is(

@@ -49,7 +49,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab1.linkedBrowser, [], async function() {
+    pluginTab1.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -58,7 +60,9 @@ add_task(async function() {
   is(result, true, "plugin1 is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab2.linkedBrowser, [], async function() {
+    pluginTab2.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;

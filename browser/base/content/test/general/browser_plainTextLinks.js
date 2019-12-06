@@ -174,7 +174,9 @@ add_task(async function() {
 
   for (let testid = 0; testid < checks.length; testid++) {
     let menuPosition = await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{ testid }], async function(arg) {
+      gBrowser.selectedBrowser,
+      [{ testid }],
+      async function(arg) {
         let range = content.tests[arg.testid]();
 
         // Get the range of the selection and determine its coordinates. These

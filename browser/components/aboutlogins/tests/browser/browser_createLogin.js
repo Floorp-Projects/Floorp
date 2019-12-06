@@ -52,7 +52,9 @@ add_task(async function test_create_login() {
     );
 
     await SpecialPowers.spawn(
-      browser, [[originTuple, i]], async ([aOriginTuple, index]) => {
+      browser,
+      [[originTuple, i]],
+      async ([aOriginTuple, index]) => {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
@@ -239,14 +241,20 @@ add_task(async function test_create_login() {
     });
   }
 
-  await SpecialPowers.spawn(browser, [testCases.length], async testCasesLength => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    is(
-      loginList._loginGuidsSortedOrder.length,
-      5,
-      "login list should have a login per testcase"
-    );
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [testCases.length],
+    async testCasesLength => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      is(
+        loginList._loginGuidsSortedOrder.length,
+        5,
+        "login list should have a login per testcase"
+      );
+    }
+  );
 });
 
 add_task(async function test_cancel_create_login() {

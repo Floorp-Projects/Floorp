@@ -8,7 +8,9 @@ const TEST_SJS = TEST_DOMAIN + TEST_PATH + "delivering.sjs";
 
 async function storeReportingHeader(browser, extraParams = "") {
   await SpecialPowers.spawn(
-    browser, [{ url: TEST_SJS, extraParams }], async obj => {
+    browser,
+    [{ url: TEST_SJS, extraParams }],
+    async obj => {
       await content
         .fetch(
           obj.url +

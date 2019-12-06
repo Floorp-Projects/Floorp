@@ -131,7 +131,9 @@ add_task(async function test_login_syncing_enabled() {
 
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(
-    browser, [[TEST_EMAIL, TEST_AVATAR_URL]], async ([expectedEmail, expectedAvatarURL]) => {
+    browser,
+    [[TEST_EMAIL, TEST_AVATAR_URL]],
+    async ([expectedEmail, expectedAvatarURL]) => {
       let fxAccountsButton = content.document.querySelector(
         "fxaccounts-button"
       );

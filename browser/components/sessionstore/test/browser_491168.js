@@ -7,7 +7,9 @@ const REFERRER3 = "http://example.org/?" + Math.random();
 add_task(async function() {
   async function checkDocumentReferrer(referrer, msg) {
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{ referrer, msg }], async function(args) {
+      gBrowser.selectedBrowser,
+      [{ referrer, msg }],
+      async function(args) {
         Assert.equal(content.document.referrer, args.referrer, args.msg);
       }
     );
