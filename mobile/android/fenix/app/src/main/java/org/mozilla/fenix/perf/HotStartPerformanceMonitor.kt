@@ -19,11 +19,14 @@ import android.util.Log
  * to add monitoring code (i.e. the first time our application code is called in onRestart). An
  * alternative implementation could measure performance from outside the application.
  *
- * To see logs from this class, the user must enable VERBOSE logging for the appropriate tag:
+ * The logs from this class are not visible to users by default. To see logs from this class, the
+ * user must enable VERBOSE logging for the appropriate tag:
  *   adb shell setprop log.tag.FenixPerf VERBOSE
  */
 class HotStartPerformanceMonitor(
-    private val log: (String) -> Unit = { Log.v(Performance.TAG, it) }, // android log to minimize overhead.
+    // We use VERBOSE logging so that the logs are not visible to users by default. We use the
+    // Android Log methods to minimize overhead introduced in a-c logging.
+    private val log: (String) -> Unit = { Log.v(Performance.TAG, it) },
     private val getElapsedRealtime: () -> Long = { SystemClock.elapsedRealtime() }
 ) {
 
