@@ -63,26 +63,6 @@ impl ZBufferIdGenerator {
     }
 }
 
-/// A shader kind identifier that can be used by a generic-shader to select the behavior at runtime.
-///
-/// Not all brush kinds need to be present in this enum, only those we want to support in the generic
-/// brush shader.
-/// Do not use the 24 lowest bits. This will be packed with other information in the vertex attributes.
-/// The constants must match the corresponding defines in brush_multi.glsl.
-#[repr(i32)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum BrushShaderKind {
-    None            = 0,
-    Solid           = 1,
-    Image           = 2,
-    Text            = 3,
-    LinearGradient  = 4,
-    RadialGradient  = 5,
-    Blend           = 6,
-    MixBlend        = 7,
-    Yuv             = 8,
-}
-
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -362,13 +342,13 @@ impl GlyphInstance {
     // TODO(gw): Some of these fields can be moved to the primitive
     //           header since they are constant, and some can be
     //           compressed to a smaller size.
-    pub fn build(&self, data0: i32, data1: i32, resource_address: i32) -> PrimitiveInstanceData {
+    pub fn build(&self, data0: i32, data1: i32, data2: i32) -> PrimitiveInstanceData {
         PrimitiveInstanceData {
             data: [
                 self.prim_header_index.0 as i32,
                 data0,
                 data1,
-                resource_address | ((BrushShaderKind::Text as i32) << 24),
+                data2,
             ],
         }
     }
@@ -415,7 +395,10 @@ bitflags! {
     }
 }
 
-/// Convenience structure to encode into PrimitiveInstanceData.
+// TODO(gw): Some of these fields can be moved to the primitive
+//           header since they are constant, and some can be
+//           compressed to a smaller size.
+#[repr(C)]
 pub struct BrushInstance {
     pub prim_header_index: PrimitiveHeaderIndex,
     pub render_task_address: RenderTaskAddress,
@@ -423,8 +406,7 @@ pub struct BrushInstance {
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
     pub brush_flags: BrushFlags,
-    pub resource_address: i32,
-    pub brush_kind: BrushShaderKind,
+    pub user_data: i32,
 }
 
 impl From<BrushInstance> for PrimitiveInstanceData {
@@ -432,13 +414,12 @@ impl From<BrushInstance> for PrimitiveInstanceData {
         PrimitiveInstanceData {
             data: [
                 instance.prim_header_index.0,
-                ((instance.render_task_address.0 as i32) << 16)
-                | instance.clip_task_address.0 as i32,
-                instance.segment_index
-                | ((instance.edge_flags.bits() as i32) << 16)
-                | ((instance.brush_flags.bits() as i32) << 24),
-                instance.resource_address
-                | ((instance.brush_kind as i32) << 24),
+                ((instance.render_task_address.0 as i32) << 16) |
+                instance.clip_task_address.0 as i32,
+                instance.segment_index |
+                ((instance.edge_flags.bits() as i32) << 16) |
+                ((instance.brush_flags.bits() as i32) << 24),
+                instance.user_data,
             ]
         }
     }
