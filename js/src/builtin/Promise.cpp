@@ -616,13 +616,32 @@ static bool AbruptRejectPromise(JSContext* cx, CallArgs& args,
 }
 
 enum ReactionRecordSlots {
-  // The promise for which this record provides a reaction handler.
-  // Matches the [[Capability]].[[Promise]] field from the spec.
+  // This is the promise-like object that gets resolved with the result of this
+  // reaction, if any. If this reaction record was created with .then or .catch,
+  // this is the promise that .then or .catch returned.
   //
-  // The slot value is either an object, but not necessarily a built-in
-  // Promise object, or null. The latter case is only possible for async
-  // generator functions, in which case the REACTION_FLAG_ASYNC_GENERATOR
-  // flag must be set.
+  // The spec says that a PromiseReaction record has a [[Capability]] field
+  // whose value is either undefined or a PromiseCapability record, but we just
+  // store the PromiseCapability's fields directly in this object. This is the
+  // capability's [[Promise]] field; its [[Resolve]] and [[Reject]] fields are
+  // stored in ReactionRecordSlot_Resolve and ReactionRecordSlot_Reject.
+  //
+  // This can be 'null' in reaction records created for a few situations:
+  //
+  // - When you resolve one promise to another. When you pass a promise P1 to
+  //   the 'fulfill' function of a promise P2, so that resolving P1 resolves P2
+  //   in the same way, P1 gets a reaction record with the
+  //   REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag set and whose
+  //   ReactionRecordSlot_GeneratorOrPromiseToResolve slot holds P2.
+  //
+  // - When you await a promise. When an async function or generator awaits a
+  //   value V, then the await expression generates an internal promise P,
+  //   resolves it to V, and then gives P a reaction record with the
+  //   REACTION_FLAG_ASYNC_FUNCTION or REACTION_FLAG_ASYNC_GENERATOR flag set
+  //   and whose ReactionRecordSlot_GeneratorOrPromiseToResolve slot holds the
+  //   generator object. (Typically V is a promise, so resolving P to V gives V
+  //   a REACTION_FLAGS_DEFAULT_RESOLVING_HANDLER reaction record as described
+  //   above.)
   ReactionRecordSlot_Promise = 0,
 
   // The [[Handler]] field(s) of a PromiseReaction record. We create a
