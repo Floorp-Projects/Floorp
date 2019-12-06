@@ -2965,13 +2965,14 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
 
   bool gcTypesConfigured = HasGcSupport(cx);
   bool refTypesConfigured = HasReftypesSupport(cx);
+  bool multiValueConfigured = HasMultiValueSupport(cx);
   bool hugeMemory = false;
   bool bigIntConfigured = HasI64BigIntSupport(cx);
 
-  CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
-                                  OptimizedBackend::Ion, DebugEnabled::False,
-                                  refTypesConfigured, gcTypesConfigured,
-                                  hugeMemory, bigIntConfigured);
+  CompilerEnvironment compilerEnv(
+      CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
+      DebugEnabled::False, multiValueConfigured, refTypesConfigured,
+      gcTypesConfigured, hugeMemory, bigIntConfigured);
   ModuleEnvironment env(
       &compilerEnv,
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()

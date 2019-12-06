@@ -446,6 +446,7 @@ CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
 CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
                                          OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
+                                         bool multiValueConfigured,
                                          bool refTypesConfigured,
                                          bool gcTypesConfigured,
                                          bool hugeMemory, bool bigIntConfigured)
@@ -456,7 +457,7 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       debug_(debugEnabled),
       refTypes_(refTypesConfigured),
       gcTypes_(gcTypesConfigured),
-      multiValues_(true),
+      multiValues_(multiValueConfigured),
       hugeMemory_(hugeMemory),
       bigInt_(bigIntConfigured) {}
 
@@ -514,8 +515,16 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
+#ifdef ENABLE_WASM_REFTYPES
   refTypes_ = !craneliftEnabled;
+#else
+  refTypes_ = false;
+#endif
+#ifdef ENABLE_WASM_MULTI_VALUE
   multiValues_ = !craneliftEnabled;
+#else
+  multiValues_ = false;
+#endif
   hugeMemory_ = hugeMemory;
   bigInt_ = bigIntEnabled && !craneliftEnabled;
   state_ = Computed;
@@ -617,16 +626,26 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   Decoder d(bytecode, 0, &error);
 
   bool gcTypesConfigured = false;  // No optimized backend support yet
+#ifdef ENABLE_WASM_REFTYPES
   bool refTypesConfigured = !args.craneliftEnabled;
+#else
+  bool refTypesConfigured = false;
+#endif
+#ifdef ENABLE_WASM_MULTI_VALUE
+  bool multiValueConfigured = !args.craneliftEnabled;
+#else
+  bool multiValueConfigured = false;
+#endif
   bool bigIntConfigured = args.bigIntEnabled && !args.craneliftEnabled;
+
   OptimizedBackend optimizedBackend = args.craneliftEnabled
                                           ? OptimizedBackend::Cranelift
                                           : OptimizedBackend::Ion;
 
-  CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
-                                  optimizedBackend, DebugEnabled::False,
-                                  refTypesConfigured, gcTypesConfigured,
-                                  args.hugeMemory, bigIntConfigured);
+  CompilerEnvironment compilerEnv(
+      CompileMode::Tier2, Tier::Optimized, optimizedBackend,
+      DebugEnabled::False, multiValueConfigured, refTypesConfigured,
+      gcTypesConfigured, args.hugeMemory, bigIntConfigured);
 
   ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
                                           ? Shareable::True
