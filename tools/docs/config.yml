@@ -26,6 +26,7 @@ categories:
         - testing/marionette
         - testing/geckodriver
         - web-platform
+        - tools/fuzzing
     code_quality_doc:
         - tools/lint
         - tools/static-analysis
