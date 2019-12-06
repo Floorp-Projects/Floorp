@@ -1543,6 +1543,14 @@ inline mozilla::Span<const char> ToCharSpan(
 template <typename Unit>
 class TokenStreamCharsBase : public TokenStreamCharsShared {
  protected:
+  using SourceUnits = frontend::SourceUnits<Unit>;
+
+  /** Code units in the source code being tokenized. */
+  SourceUnits sourceUnits;
+
+  // End of fields.
+
+ protected:
   TokenStreamCharsBase(JSContext* cx, const Unit* units, size_t length,
                        size_t startOffset);
 
@@ -1562,8 +1570,6 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
 
   static MOZ_ALWAYS_INLINE JSAtom* atomizeSourceChars(
       JSContext* cx, mozilla::Span<const Unit> units);
-
-  using SourceUnits = frontend::SourceUnits<Unit>;
 
   /**
    * Try to match a non-LineTerminator ASCII code point.  Return true iff it
@@ -1628,10 +1634,6 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
    * of its existing callers instead.
    */
   MOZ_MUST_USE bool addLineOfContext(ErrorMetadata* err, uint32_t offset);
-
- protected:
-  /** Code units in the source code being tokenized. */
-  SourceUnits sourceUnits;
 };
 
 template <>
