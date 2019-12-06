@@ -912,7 +912,7 @@ Function CheckExistingInstall
 
     Banner::show /NOUNLOAD "$(BANNER_CHECK_EXISTING)"
 
-    ${If} "$TmpVal" == "FoundMessageWindow"
+    ${If} "$TmpVal" == "FoundAppWindow"
       Sleep 5000
     ${EndIf}
 
@@ -932,9 +932,13 @@ Function CheckExistingInstall
     GetDlgItem $0 $HWNDPARENT 3 ; Back button
     EnableWindow $0 1
 
+    ; If there are files in use $TmpVal will be "true"
     ${If} "$TmpVal" == "true"
-      StrCpy $TmpVal "FoundMessageWindow"
-      ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
+      ; If it finds a window of the right class, then ManualCloseAppPrompt will
+      ; abort leaving the value of $TmpVal set to "FoundAppWindow".
+      StrCpy $TmpVal "FoundAppWindow"
+      ${ManualCloseAppPrompt} "${MainWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
+      ${ManualCloseAppPrompt} "${DialogWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
       StrCpy $TmpVal "true"
     ${EndIf}
   ${EndIf}
@@ -942,7 +946,8 @@ FunctionEnd
 
 Function LaunchApp
 !ifndef DEV_EDITION
-  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+  ${ManualCloseAppPrompt} "${MainWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+  ${ManualCloseAppPrompt} "${DialogWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
 !endif
 
   ClearErrors
@@ -1536,7 +1541,8 @@ Function leaveSummary
   ClearErrors
   ${DeleteFile} "$INSTDIR\${FileMainEXE}"
   ${If} ${Errors}
-    ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
+    ${ManualCloseAppPrompt} "${MainWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
+    ${ManualCloseAppPrompt} "${DialogWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_INSTALL)"
   ${EndIf}
 FunctionEnd
 

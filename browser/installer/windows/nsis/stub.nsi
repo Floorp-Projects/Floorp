@@ -1767,8 +1767,10 @@ FunctionEnd
 
 Function LaunchApp
 !ifndef DEV_EDITION
-  FindWindow $0 "${WindowClass}"
+  FindWindow $0 "${MainWindowClass}"
+  FindWindow $1 "${DialogWindowClass}"
   ${If} $0 <> 0 ; integer comparison
+  ${OrIf} $1 <> 0
     StrCpy $FirefoxLaunchCode "1"
 
     StrCpy $ProgressCompleted ${PROGRESS_BAR_TOTAL_STEPS}
