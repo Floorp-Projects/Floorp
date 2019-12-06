@@ -25,7 +25,7 @@ add_task(async function() {
 
 async function obtainObjectWithCPOW(hud) {
   info("Add a message listener, it will receive an object with a CPOW");
-  await hud.ui.evaluateJSAsync(`
+  await hud.evaluateJSAsync(`
     Services.ppmm.addMessageListener("cpow", function listener(message) {
       Services.ppmm.removeMessageListener("cpow", listener);
       console.log(message.objects);
@@ -42,11 +42,11 @@ async function obtainObjectWithCPOW(hud) {
 
   info("Obtain the object with CPOW");
   const message = await waitFor(() => findMessage(hud, "cpow"));
-  const result = await hud.ui.evaluateJSAsync("result");
+  const result = await hud.evaluateJSAsync("result");
   const objectFront = result.result;
 
   info("Cleanup");
-  await hud.ui.evaluateJSAsync("delete globalThis.result;");
+  await hud.evaluateJSAsync("delete globalThis.result;");
   const onToolboxDestroyed = toolbox.once("destroyed");
   toolbox.topWindow.close();
   await onToolboxDestroyed;

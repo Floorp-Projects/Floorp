@@ -39,6 +39,7 @@ loader.lazyRequireGetter(
   "devtools/client/shared/redux/middleware/ignore",
   true
 );
+const ConsoleCommands = require("devtools/client/webconsole/commands.js");
 
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
@@ -140,6 +141,14 @@ class WebConsoleUI {
     this._initializer = (async () => {
       this._initUI();
       await this._attachTargets();
+
+      this._commands = new ConsoleCommands({
+        debuggerClient: this.hud.currentTarget.client,
+        proxy: this.getProxy(),
+        threadFront: this.hud.toolbox && this.hud.toolbox.threadFront,
+        currentTarget: this.hud.currentTarget,
+      });
+
       await this.wrapper.init();
 
       const id = WebConsoleUtils.supportsString(this.hudId);
@@ -483,15 +492,6 @@ class WebConsoleUI {
         }
       });
     }
-  }
-
-  /**
-   * @param {String} expression
-   * @param {Object} options
-   * @returns {Promise}
-   */
-  evaluateJSAsync(expression, options) {
-    return this.getProxy().webConsoleFront.evaluateJSAsync(expression, options);
   }
 
   getLongString(grip) {
