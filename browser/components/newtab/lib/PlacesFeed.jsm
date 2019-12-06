@@ -280,6 +280,7 @@ class PlacesFeed {
   openLink(action, where = "", isPrivate = false) {
     const params = {
       private: isPrivate,
+      targetBrowser: action._target.browser,
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
       ),
