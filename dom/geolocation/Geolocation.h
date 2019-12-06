@@ -30,7 +30,6 @@
 #include "mozilla/dom/CallbackObject.h"
 
 #include "nsIGeolocationProvider.h"
-#include "nsIContentPermissionPrompt.h"
 #include "mozilla/Attributes.h"
 
 class nsGeolocationService;

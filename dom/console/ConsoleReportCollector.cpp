@@ -7,7 +7,6 @@
 #include "mozilla/ConsoleReportCollector.h"
 
 #include "ConsoleUtils.h"
-#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 

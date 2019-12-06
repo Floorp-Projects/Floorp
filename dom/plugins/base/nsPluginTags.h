@@ -10,7 +10,6 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIBlocklistService.h"
 #include "nsIPluginTag.h"
 #include "nsITimer.h"
 #include "nsString.h"

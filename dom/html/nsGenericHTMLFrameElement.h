@@ -14,7 +14,6 @@
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMEventListener.h"
 #include "nsIMozBrowserFrame.h"
 
 namespace mozilla {

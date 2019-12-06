@@ -21,7 +21,6 @@
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"
 #include "nsGlobalWindow.h"
-#include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"
 #include "WrapperFactory.h"
 

@@ -19,7 +19,6 @@
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
-#include "nsIRunnable.h"
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentPermissionHelper.h"

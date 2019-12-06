@@ -16,8 +16,6 @@
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIObserver.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsXULAppAPI.h"
@@ -42,6 +40,8 @@
 // Note, these suck in Windows headers, unfortunately.
 #include "base/thread.h"
 #include "base/task.h"
+
+class nsIPrefBranch;
 
 namespace mozilla {
 namespace dom {

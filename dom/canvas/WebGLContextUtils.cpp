@@ -13,8 +13,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIVariant.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include <stdarg.h>

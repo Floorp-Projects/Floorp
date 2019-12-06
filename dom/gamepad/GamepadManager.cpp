@@ -25,7 +25,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
 #include "VRManagerChild.h"
 #include "mozilla/Services.h"

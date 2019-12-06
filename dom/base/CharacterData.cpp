@@ -23,7 +23,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsReadableUtils.h"
 #include "mozilla/InternalMutationEvent.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsChangeHint.h"

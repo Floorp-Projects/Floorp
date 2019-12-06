@@ -10,7 +10,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
 #include "MediaResource.h"
-#include "nsIPrincipal.h"
 #include "ResourceQueue.h"
 
 #define UNIMPLEMENTED()                               \

@@ -9,7 +9,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIXPConnect.h"
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsJSUtils.h"

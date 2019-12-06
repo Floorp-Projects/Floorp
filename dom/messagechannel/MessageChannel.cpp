@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
-#include "nsIPrincipal.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {

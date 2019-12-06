@@ -19,7 +19,9 @@
 #include "js/Modules.h"
 #include "js/SourceText.h"
 #include "nsIInputStreamPump.h"
+#include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsIInputStreamPump.h"
 #include "nsNetUtil.h"
 #include "xpcprivate.h"
 

@@ -5,7 +5,6 @@
 
 #include "gtest/gtest.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "mozilla/dom/DOMParser.h"
 #include "mozilla/dom/Document.h"

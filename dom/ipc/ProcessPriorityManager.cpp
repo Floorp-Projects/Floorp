@@ -24,7 +24,6 @@
 #include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "StaticPtr.h"
-#include "nsIMozBrowserFrame.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsIPropertyBag2.h"

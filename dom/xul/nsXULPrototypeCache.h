@@ -13,7 +13,6 @@
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsXULPrototypeDocument.h"
-#include "nsIInputStream.h"
 #include "nsIStorageStream.h"
 
 #include "mozilla/scache/StartupCache.h"

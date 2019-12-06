@@ -25,7 +25,6 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "Muxer.h"
-#include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
 #include "nsThreadUtils.h"
 #include "OggWriter.h"

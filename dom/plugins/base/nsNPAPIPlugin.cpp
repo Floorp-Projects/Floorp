@@ -19,7 +19,6 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsPluginStreamListenerPeer.h"
-#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "mozilla/Preferences.h"
@@ -42,10 +41,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "nsIXULRuntime.h"
 #include "nsIXPConnect.h"
 
-#include "nsIObserverService.h"
 #include <prinrval.h>
 
 #ifdef MOZ_WIDGET_COCOA
@@ -64,10 +61,6 @@
 
 #include "nsJSUtils.h"
 #include "nsJSNPRuntime.h"
-#include "nsIHttpAuthManager.h"
-#include "nsICookieService.h"
-#include "nsILoadContext.h"
-#include "nsIDocShell.h"
 
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -92,7 +85,6 @@ using mozilla::plugins::PluginModuleContentParent;
 #  endif
 #endif
 
-#include "nsIAudioChannelAgent.h"
 #include "AudioChannelService.h"
 
 using namespace mozilla;

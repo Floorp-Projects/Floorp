@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMEventListener.h"
 #include "nsIEventListenerService.h"
 #include "nsString.h"
 #include "nsTObserverArray.h"

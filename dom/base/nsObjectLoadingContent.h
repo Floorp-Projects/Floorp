@@ -18,10 +18,8 @@
 #include "nsImageLoadingContent.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
-#include "nsIContentPolicy.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
-#include "nsIThreadInternal.h"
 #include "nsIFrame.h"
 #include "nsFrameLoaderOwner.h"
 

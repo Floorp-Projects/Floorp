@@ -10,8 +10,6 @@
 #include "mozilla/dom/MimeTypeBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsPluginArray.h"
-#include "nsIMIMEService.h"
-#include "nsIMIMEInfo.h"
 #include "mozilla/dom/Navigator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"

@@ -13,7 +13,6 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsIScriptError.h"
 #include "nsThreadUtils.h"
-#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
