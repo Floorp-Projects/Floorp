@@ -17,7 +17,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIScreenManager.h"
 
 #ifdef XP_WIN
 #  include "../layers/d3d11/CompositorD3D11.h"

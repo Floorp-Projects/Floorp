@@ -24,6 +24,7 @@
 #include "nsAtom.h"
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
 namespace css {

@@ -11,7 +11,6 @@
 #include "nsAccUtils.h"
 
 #include "nsIClipboard.h"
-#include "nsIPersistentProperties2.h"
 #include "nsFrameSelection.h"
 
 #include "mozilla/TextEditor.h"

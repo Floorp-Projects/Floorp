@@ -14,7 +14,6 @@
 #include "nsAccessibilityService.h"
 #include "Platform.h"
 #include "RootAccessibleWrap.h"
-#include "xpcAccessibleDocument.h"
 
 #ifdef A11Y_LOG
 #  include "Logging.h"

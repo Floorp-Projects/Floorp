@@ -27,7 +27,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsIDocumentEncoder.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPlaintextEditor.h"

@@ -36,7 +36,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
-#include "nsISelectionController.h"
 #include "nsRegion.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"

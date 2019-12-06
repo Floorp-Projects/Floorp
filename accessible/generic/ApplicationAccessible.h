@@ -10,7 +10,6 @@
 
 #include "AccessibleWrap.h"
 
-#include "nsIMutableArray.h"
 #include "nsIXULAppInfo.h"
 
 namespace mozilla {

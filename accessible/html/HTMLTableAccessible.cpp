@@ -21,7 +21,6 @@
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/Document.h"
-#include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"
 #include "nsITableCellLayout.h"
 #include "nsFrameSelection.h"

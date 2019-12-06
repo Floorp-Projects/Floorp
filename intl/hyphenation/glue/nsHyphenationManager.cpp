@@ -10,7 +10,6 @@
 #include "nsIURI.h"
 #include "nsIJARURI.h"
 #include "nsIProperties.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"

@@ -14,7 +14,6 @@
 #include "uiaRawElmProvider.h"
 
 #include "mozilla/Preferences.h"
-#include "nsIDocShell.h"
 
 #include "ISimpleDOM.h"
 

@@ -56,8 +56,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
-#include "nsIEventTarget.h"
-#include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"

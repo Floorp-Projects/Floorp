@@ -14,7 +14,6 @@
 #include "nsCaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIEditor.h"
 #include "nsTextFragment.h"
 #include "nsNameSpaceManager.h"
 #include "nsCheckboxRadioFrame.h"  //for registering accesskeys

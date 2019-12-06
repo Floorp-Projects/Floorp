@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
-#include "nsIMemoryReporter.h"
 
 #include <prio.h>
 

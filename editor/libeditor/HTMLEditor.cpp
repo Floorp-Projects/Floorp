@@ -29,14 +29,12 @@
 #include "nsHTMLDocument.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsISelectionController.h"
-#include "nsIInlineSpellChecker.h"
 #include "nsIPrincipal.h"
 
 #include "mozilla/css/Loader.h"
 
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "nsIDocumentEncoder.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsFocusManager.h"

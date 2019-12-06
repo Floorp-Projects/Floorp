@@ -12,7 +12,6 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 
-#include "nsIServiceManager.h"
 #include "nsAtom.h"
 #include "nsQuickSort.h"
 
@@ -23,7 +22,6 @@
 
 #include "nsLayoutCID.h"
 
-#include "nsISelectionController.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"

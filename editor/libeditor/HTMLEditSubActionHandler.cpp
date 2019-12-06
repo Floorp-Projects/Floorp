@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsID.h"
 #include "nsIFrame.h"
-#include "nsIHTMLAbsPosEditor.h"
 #include "nsINode.h"
 #include "nsLiteralString.h"
 #include "nsRange.h"

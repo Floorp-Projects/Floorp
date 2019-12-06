@@ -29,8 +29,6 @@
 #include "mozilla/Telemetry.h"
 #include "GeckoProfiler.h"
 
-#include "nsIWindowsRegKey.h"
-#include "nsIFile.h"
 #include "plbase64.h"
 #include "nsIXULRuntime.h"
 #include "imgLoader.h"

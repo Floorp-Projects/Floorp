@@ -15,7 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
-#include "nsIXULRuntime.h"
 #include "mozJSComponentLoader.h"
 
 #include "mozilla/dom/BindingUtils.h"

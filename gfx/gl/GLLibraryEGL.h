@@ -12,7 +12,6 @@
 #include "GLLibraryLoader.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
-#include "nsIFile.h"
 #include "GeckoProfiler.h"
 
 #include <bitset>

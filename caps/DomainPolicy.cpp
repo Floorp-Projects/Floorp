@@ -8,8 +8,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
-#include "nsIMessageManager.h"
-#include "nsIURIMutator.h"
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {

@@ -11,7 +11,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "nsIAsyncShutdown.h"
 #include "nsICrashService.h"
 #include "nsXULAppAPI.h"
 

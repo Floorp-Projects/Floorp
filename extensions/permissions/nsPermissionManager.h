@@ -20,7 +20,6 @@
 #include "nsHashKeys.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
-#include "nsIRunnable.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ExpandedPrincipal.h"

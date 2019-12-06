@@ -7,9 +7,6 @@
 
 #include "mozilla/net/PStunAddrsRequestParent.h"
 
-#include "nsICancelable.h"
-#include "nsIDNSServiceDiscovery.h"
-
 struct MDNSService;
 
 namespace mozilla {

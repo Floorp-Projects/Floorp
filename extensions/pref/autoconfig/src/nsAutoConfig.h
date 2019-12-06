@@ -11,10 +11,10 @@
 #include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
+
+class nsIPrefBranch;
 
 class nsAutoConfig final : public nsITimerCallback,
                            public nsIStreamListener,

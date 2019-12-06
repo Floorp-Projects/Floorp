@@ -76,7 +76,6 @@
 #include "nsAnimationManager.h"
 
 // For triple-click pref
-#include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsError.h"
 #include "nsContainerFrame.h"

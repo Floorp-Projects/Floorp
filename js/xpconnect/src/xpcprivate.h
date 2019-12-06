@@ -131,7 +131,6 @@
 #include "nsIConsoleService.h"
 
 #include "nsVariant.h"
-#include "nsIProperty.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsBaseHashtable.h"

@@ -26,7 +26,6 @@
 #include "nsAttrName.h"
 #include "nsDOMTokenList.h"
 #include "nsEventShell.h"
-#include "nsIURI.h"
 #include "nsTextFormatter.h"
 #include "OuterDocAccessible.h"
 #include "Role.h"
@@ -38,7 +37,6 @@
 #include "TextLeafAccessibleWrap.h"
 #include "TreeWalker.h"
 #include "xpcAccessibleApplication.h"
-#include "xpcAccessibleDocument.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #  include "AtkSocketAccessible.h"

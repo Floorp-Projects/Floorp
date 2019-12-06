@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMenuBarFrame.h"
-#include "nsIServiceManager.h"
 #include "nsIContent.h"
 #include "nsAtom.h"
 #include "nsPresContext.h"

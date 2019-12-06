@@ -5,8 +5,8 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsIServiceManager.h"
 #include "nsIPrefService.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsAuthSASL.h"
 

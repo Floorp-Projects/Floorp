@@ -14,7 +14,6 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsPresContext.h"
-#include "nsIAppShellService.h"
 #include "nsIWidget.h"
 #include "nsCRTGlue.h"
 #include "nsCSSProps.h"

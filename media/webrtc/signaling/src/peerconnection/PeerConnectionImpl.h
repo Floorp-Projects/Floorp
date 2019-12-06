@@ -13,7 +13,6 @@
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
-#include "IPeerConnection.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIUUIDGenerator.h"
@@ -40,7 +39,6 @@
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
-#include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
 #include "RTCStatsReport.h"
 

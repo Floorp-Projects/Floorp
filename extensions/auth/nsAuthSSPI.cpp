@@ -14,8 +14,8 @@
 //
 
 #include "nsAuthSSPI.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDNSService2.h"
-#include "nsIServiceManager.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsMemory.h"

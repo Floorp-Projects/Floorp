@@ -9,7 +9,6 @@
 #ifndef _ComputedStyle_h_
 #define _ComputedStyle_h_
 
-#include "nsIMemoryReporter.h"
 #include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/CachedInheritingStyles.h"

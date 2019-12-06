@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIContent.h"
-#include "nsIHTMLObjectResizer.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"

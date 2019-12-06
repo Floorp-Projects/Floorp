@@ -11,7 +11,6 @@
 
 #include "gfxBlur.h"
 #include "gfxContext.h"
-#include "imgIContainer.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/TypedEnumBits.h"

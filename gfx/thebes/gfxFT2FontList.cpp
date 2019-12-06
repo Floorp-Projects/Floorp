@@ -13,7 +13,6 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "nsIInputStream.h"
 #include "nsReadableUtils.h"
 
 #include "nsXULAppAPI.h"
@@ -44,7 +43,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIMemory.h"
 #include "gfxFontConstants.h"
 

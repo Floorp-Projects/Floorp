@@ -15,7 +15,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINode.h"

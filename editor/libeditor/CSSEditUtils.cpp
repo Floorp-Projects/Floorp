@@ -25,7 +25,6 @@
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
 #include "mozilla/dom/Document.h"
-#include "nsIEditor.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"

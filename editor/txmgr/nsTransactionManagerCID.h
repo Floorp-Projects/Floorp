@@ -5,4 +5,3 @@
 
 // XXX Needs to modify mailnews/base/src/nsMsgWindow.cpp before removing this
 //     header file.
-#include "nsITransactionManager.h"

@@ -110,8 +110,6 @@ nrappkit copyright:
 #include "mozilla/SyncRunnable.h"
 #include "nsTArray.h"
 #include "mozilla/SystemGroup.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsISocketFilter.h"
 #include "nsDebug.h"
 #include "nsNetUtil.h"

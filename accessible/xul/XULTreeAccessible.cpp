@@ -20,13 +20,9 @@
 #include "nsQueryObject.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsIAccessibleRelation.h"
-#include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsITreeSelection.h"
-#include "nsIMutableArray.h"
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"

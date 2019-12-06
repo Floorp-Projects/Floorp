@@ -14,15 +14,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Types.h"
 #include "nsAtom.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsMenuFrame.h"
 
 #include "nsBoxFrame.h"
 #include "nsMenuParent.h"
-
-#include "nsITimer.h"
 
 #include "Units.h"
 

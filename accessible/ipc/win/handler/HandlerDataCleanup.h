@@ -8,7 +8,6 @@
 #define mozilla_a11y_HandlerDataCleanup_h
 
 #include <oleauto.h>
-#include "HandlerData.h"
 
 namespace mozilla {
 namespace a11y {

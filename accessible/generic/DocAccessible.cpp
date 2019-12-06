@@ -21,7 +21,6 @@
 
 #include "nsCommandManager.h"
 #include "nsContentUtils.h"
-#include "nsIMutableArray.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
@@ -30,7 +29,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
 #include "nsIPersistentProperties2.h"
-#include "nsIServiceManager.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsUnicharUtils.h"

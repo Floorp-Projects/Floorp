@@ -8,11 +8,8 @@
 
 #include "nsIconChannel.h"
 #include "nsIconURI.h"
-#include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsNetCID.h"
 
 ///////////////////////////////////////////////////////////////////////////////

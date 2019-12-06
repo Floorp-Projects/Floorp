@@ -7,7 +7,6 @@
 #include "BasicLayers.h"
 #include "Common.h"
 #include "imgIContainer.h"
-#include "imgITools.h"
 #include "ImageFactory.h"
 #include "ImageContainer.h"
 #include "mozilla/gfx/2D.h"

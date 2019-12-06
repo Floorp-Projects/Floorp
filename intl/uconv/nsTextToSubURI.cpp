@@ -12,7 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
-#include "nsISupportsPrimitives.h"
 
 using namespace mozilla;
 

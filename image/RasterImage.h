@@ -29,7 +29,6 @@
 #include "ImageMetadata.h"
 #include "ISurfaceProvider.h"
 #include "Orientation.h"
-#include "nsIObserver.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"

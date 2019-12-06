@@ -6,7 +6,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "nsResizerFrame.h"
 #include "nsIContent.h"
 #include "mozilla/PresShell.h"

@@ -16,11 +16,8 @@
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
-#include "nsIEditor.h"
 #include "nsIFormControl.h"
 #include "nsIPersistentProperties2.h"
-#include "nsISelectionController.h"
-#include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 #include "nsNameSpaceManager.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -28,7 +25,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 
 using namespace mozilla;

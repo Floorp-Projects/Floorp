@@ -7,7 +7,6 @@
 #define mozilla_a11y_XULMenuAccessible_h__
 
 #include "AccessibleWrap.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "XULSelectControlAccessible.h"
 
 namespace mozilla {

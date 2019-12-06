@@ -26,8 +26,6 @@
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
-#include "nsIDebug2.h"
-#include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIRunnable.h"
 #include "nsIPlatformInfo.h"
@@ -73,7 +71,6 @@
 #include "GeckoProfiler.h"
 #include "NodeUbiReporting.h"
 #include "nsIInputStream.h"
-#include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 
 #ifdef XP_WIN

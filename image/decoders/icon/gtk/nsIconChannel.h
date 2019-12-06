@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 
 #include "nsIChannel.h"
-#include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"

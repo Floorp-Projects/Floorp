@@ -27,8 +27,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsImageMap.h"
-#include "nsIURL.h"
-#include "nsILoadGroup.h"
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsNameSpaceManager.h"
@@ -36,7 +34,6 @@
 #include "nsTransform2D.h"
 #include "nsITheme.h"
 
-#include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 #include "nsDisplayList.h"

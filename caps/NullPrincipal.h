@@ -14,7 +14,6 @@
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/BasePrincipal.h"

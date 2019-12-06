@@ -24,8 +24,6 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
-#include "nsIDOMEventListener.h"
-#include "nsIHTMLObjectResizer.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"

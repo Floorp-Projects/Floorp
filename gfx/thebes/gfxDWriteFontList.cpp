@@ -19,11 +19,8 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsISimpleEnumerator.h"
 
 #include "gfxGDIFontList.h"
-
-#include "nsIWindowsRegKey.h"
 
 #include "harfbuzz/hb.h"
 

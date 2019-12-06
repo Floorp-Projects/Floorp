@@ -11,8 +11,6 @@
 
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIMutableArray.h"
-#include "nsIServiceManager.h"
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyboardEventBinding.h"

@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozEnglishWordUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
-#include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"

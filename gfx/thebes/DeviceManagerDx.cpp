@@ -23,7 +23,6 @@
 #include "mozilla/layers/MLGDeviceD3D11.h"
 #include "mozilla/layers/PaintThread.h"
 #include "nsExceptionHandler.h"
-#include "nsIGfxInfo.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 

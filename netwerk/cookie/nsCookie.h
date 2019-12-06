@@ -7,6 +7,7 @@
 #define nsCookie_h__
 
 #include "nsICookie.h"
+#include "nsIMemoryReporter.h"
 #include "nsString.h"
 
 #include "mozilla/MemoryReporting.h"

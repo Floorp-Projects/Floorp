@@ -9,8 +9,6 @@
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIWeakReference.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"

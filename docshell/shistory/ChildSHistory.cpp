@@ -11,12 +11,10 @@
 #include "mozilla/dom/SHEntryChild.h"
 #include "mozilla/dom/SHistoryChild.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "nsIMessageManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSHEntry.h"
 #include "nsSHistory.h"
 #include "nsDocShell.h"
-#include "nsISHEntry.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

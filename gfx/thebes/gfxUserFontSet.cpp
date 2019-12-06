@@ -7,7 +7,6 @@
 
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
-#include "nsIProtocolHandler.h"
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"

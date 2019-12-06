@@ -23,8 +23,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIWindowsRegKey.h"
 #include "gfxFontConstants.h"
 #include "GeckoProfiler.h"
 

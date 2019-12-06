@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"

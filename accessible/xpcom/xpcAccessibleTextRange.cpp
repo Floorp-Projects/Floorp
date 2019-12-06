@@ -7,7 +7,6 @@
 #include "xpcAccessibleTextRange.h"
 
 #include "TextRange-inl.h"
-#include "xpcAccessibleDocument.h"
 
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"

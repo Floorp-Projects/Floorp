@@ -54,7 +54,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsASocketHandler.h"
-#include "nsISocketTransportService.h"
 #include "nsXPCOM.h"
 #include "nsIEventTarget.h"
 #include "nsIUDPSocketChild.h"

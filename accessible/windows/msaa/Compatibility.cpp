@@ -9,6 +9,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsExceptionHandler.h"
+#include "nsIXULRuntime.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowsDllInterceptor.h"

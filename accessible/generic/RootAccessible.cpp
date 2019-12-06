@@ -29,7 +29,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/BrowserHost.h"
 
-#include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
@@ -37,7 +36,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPropertyBag2.h"
-#include "nsIServiceManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"

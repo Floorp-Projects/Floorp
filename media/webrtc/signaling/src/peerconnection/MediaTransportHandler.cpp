@@ -12,7 +12,6 @@
 #include "transportlayersrtp.h"
 
 // Config stuff
-#include "nsIPrefService.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 
 // Parsing STUN/TURN URIs

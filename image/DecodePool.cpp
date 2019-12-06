@@ -14,12 +14,10 @@
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
-#include "nsIThreadPool.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
-#include "nsIXULRuntime.h"
 
 #include "Decoder.h"
 #include "IDecodingTask.h"

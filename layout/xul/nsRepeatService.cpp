@@ -14,7 +14,6 @@
 #include "nsRepeatService.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/Document.h"
-#include "nsIServiceManager.h"
 
 using namespace mozilla;
 

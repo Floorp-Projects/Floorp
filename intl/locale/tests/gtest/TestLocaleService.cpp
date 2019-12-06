@@ -7,7 +7,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
-#include "nsIToolkitChromeRegistry.h"
 
 using namespace mozilla::intl;
 

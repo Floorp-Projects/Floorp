@@ -12,7 +12,6 @@
 #include "mozilla/dom/Selection.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIEditor.h"
 #include "nsISupportsImpl.h"
 #include "nsAString.h"
 
