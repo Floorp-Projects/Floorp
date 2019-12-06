@@ -24,6 +24,7 @@ job-defaults:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
+    fission-tier: 2
     variants: ["fission"]
 
 marionette:

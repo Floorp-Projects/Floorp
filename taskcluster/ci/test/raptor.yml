@@ -23,6 +23,7 @@ job-defaults:
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
             default: 1
+    fission-tier: 2
     virtualization:
         by-test-platform:
             windows10-64-ccov/.*: virtual

@@ -158,10 +158,9 @@ TEST_VARIANTS = {
         'suffix': 'fis',
         'replace': {
             'e10s': True,
-            'run-on-projects': ['ash', 'try'],
         },
         'merge': {
-            'tier': 2,
+            'fission-run-on-projects': ['ash', 'try'],
             'mozharness': {
                 'extra-options': ['--setpref=fission.autostart=true',
                                   '--setpref=dom.serviceWorkers.parent_intercept=true',
@@ -261,8 +260,21 @@ test_description_schema = Schema({
         'test-platform',
         Any([basestring], 'built-projects')),
 
+    # Same as `run-on-projects` except it only applies to Fission tasks. Fission
+    # tasks will ignore `run_on_projects` and non-Fission tasks will ignore
+    # `fission-run-on-projects`.
+    Optional('fission-run-on-projects'): optionally_keyed_by(
+        'test-platform',
+        Any([basestring], 'built-projects')),
+
     # the sheriffing tier for this task (default: set based on test platform)
     Optional('tier'): optionally_keyed_by(
+        'test-platform',
+        Any(int, 'default')),
+
+    # Same as `tier` except it only applies to Fission tasks. Fission tasks
+    # will ignore `tier` and non-Fission tasks will ignore `fission-tier`.
+    Optional('fission-tier'): optionally_keyed_by(
         'test-platform',
         Any(int, 'default')),
 
@@ -782,6 +794,9 @@ def set_tier(config, tests):
         if 'tier' in test:
             resolve_keyed_by(test, 'tier', item_name=test['test-name'])
 
+        if 'fission-tier' in test:
+            resolve_keyed_by(test, 'fission-tier', item_name=test['test-name'])
+
         # only override if not set for the test
         if 'tier' not in test or test['tier'] == 'default':
             if test['test-platform'] in ['linux32/opt',
@@ -880,6 +895,7 @@ def handle_keyed_by(config, tests):
         'e10s',
         'suite',
         'run-on-projects',
+        'fission-run-on-projects',
         'os-groups',
         'run-as-administrator',
         'workdir',
@@ -1182,43 +1198,17 @@ def split_variants(config, tests):
 
 
 @transforms.add
-def enable_fission_on_central(config, tests):
-    """Enable select fission tasks on mozilla-central."""
+def handle_fission_attributes(config, tests):
+    """Handle run_on_projects for fission tasks."""
     for test in tests:
-        if test['attributes'].get('unittest_variant') != 'fission':
-            yield test
-            continue
+        for attr in ('run-on-projects', 'tier'):
+            fission_attr = test.pop('fission-{}'.format(attr), None)
 
-        # Mochitest/wpt/awsy only (with exceptions)
-        exceptions = ('gpu', 'remote', 'screenshots')
-        if (test['attributes']['unittest_category'] not in
-                ('mochitest', 'web-platform-tests', 'awsy') or
-                any(s in test['attributes']['unittest_suite'] for s in exceptions)):
-            yield test
-            continue
+            if test['attributes'].get('unittest_variant') != 'fission' or fission_attr is None:
+                continue
 
-        # Linux and Windows (except debug) 64 bit only.
-        platform = test['build-attributes']['build_platform']
-        btype = test['build-attributes']['build_type']
-        if not (platform == 'linux64' or (platform == 'win64' and btype != 'debug')):
-            yield test
-            continue
+            test[attr] = fission_attr
 
-        if not runs_on_central(test):
-            test['run-on-projects'].append('mozilla-central')
-
-        # Promote select fission tests to tier 1 and ensure they run on trunk
-        if (test['attributes']['unittest_category'] == "mochitest" and
-            platform == 'linux64' and btype == 'debug' and (test['webrender'] or
-           'mochitest-browser-chrome' in test['attributes']['unittest_suite'])):
-            test['tier'] = 1
-            test['run-on-projects'] = ['ash', 'try', 'trunk']
-        elif test['attributes']['unittest_category'] == "web-platform-tests":
-            test['tier'] = 3
-            if platform == 'linux64' and btype == 'debug' and test['webrender']:
-                test['run-on-projects'] = ['ash', 'try', 'trunk']
-        elif test['attributes']['unittest_category'] == 'awsy':
-            test['tier'] = 3
         yield test
 
 
@@ -1522,7 +1512,7 @@ def make_job_description(config, tests):
 
         jobdesc['expires-after'] = test['expires-after']
         jobdesc['routes'] = []
-        jobdesc['run-on-projects'] = test['run-on-projects']
+        jobdesc['run-on-projects'] = sorted(test['run-on-projects'])
         jobdesc['scopes'] = []
         jobdesc['tags'] = test.get('tags', {})
         jobdesc['extra'] = {

@@ -14,6 +14,20 @@ job-defaults:
         by-test-platform:
             linux64/debug: ['fission', 'serviceworker']
             default: ['fission']
+    fission-run-on-projects:
+        by-test-platform:
+            linux64-qr/debug: ['trunk']
+            linux64-qr/opt: ['mozilla-central']
+            linux64/.*: ['mozilla-central']
+            windows10-64(-qr)?/opt: ['mozilla-central']
+            default: []
+    fission-tier:
+        by-test-platform:
+            linux64-qr/debug: 3
+            linux64-qr/opt: 3
+            linux64/.*: 3
+            windows10-64(-qr)?/opt: 3
+            default: 2
     mozharness:
         script: web_platform_tests.py
         config:

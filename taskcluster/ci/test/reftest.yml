@@ -14,6 +14,7 @@ job-defaults:
         by-test-platform:
             linux64/debug: ['fission', 'serviceworker']
             default: ['fission']
+    fission-tier: 2
     run-on-projects:
         by-test-platform:
             android-hw-.*-qr/debug: ['try', 'mozilla-central']

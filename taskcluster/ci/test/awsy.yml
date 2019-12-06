@@ -26,11 +26,22 @@ job-defaults:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
+    fission-tier:
+        by-test-platform:
+            linux64(?!-shippable).*: 3
+            windows10-64(-qr)?/opt: 3
+            default: 2
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
             windows10-aarch64/opt: ['try']
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    fission-run-on-projects:
+        by-test-platform:
+            linux64(?!-shippable).*: ['mozilla-central']
+            windows10-64(-qr)?/opt: ['mozilla-central']
+            default: []
+
 
 awsy:
     description: "Are we slim yet"
