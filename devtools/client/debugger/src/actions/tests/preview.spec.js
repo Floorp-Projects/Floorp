@@ -56,18 +56,22 @@ function dispatchSetPreview(dispatch, context, expression, target) {
   );
 }
 
-async function pause({ dispatch, cx }, client) {
+async function pause(store, client) {
+  const { dispatch, cx } = store;
   const base = await dispatch(
     actions.newGeneratedSource(makeSource("base.js"))
   );
 
   await dispatch(actions.selectSource(cx, base.id));
-  const frames = [makeFrame({ id: "frame1", sourceId: base.id })];
+  await waitForState(store, state => selectors.hasSymbols(state, base));
+
+  const thread = cx.thread;
+  const frames = [makeFrame({ id: "frame1", sourceId: base.id, thread })];
   client.getFrames = async () => frames;
 
   await dispatch(
     actions.paused({
-      thread: "FakeThread",
+      thread,
       frame: frames[0],
       loadedObjects: [],
       why: { type: "debuggerStatement" },
@@ -84,11 +88,12 @@ describe("preview", () => {
     );
 
     await dispatch(actions.selectSource(cx, base.id));
+    await waitForState(store, state => selectors.hasSymbols(state, base));
     const frames = [makeFrame({ id: "f1", sourceId: base.id })];
 
     await dispatch(
       actions.paused({
-        thread: "FakeThread",
+        thread: store.cx.thread,
         frame: frames[0],
         frames,
         loadedObjects: [],
@@ -163,17 +168,17 @@ describe("preview", () => {
     const { dispatch, getState } = store;
     await pause(store, client);
 
-    const newCx = selectors.getContext(getState());
+    const cx = selectors.getThreadContext(getState());
     const firstTarget = document.createElement("div");
     const secondTarget = document.createElement("div");
 
     // Start the dispatch of the first setPreview. At this point, it will not
     // finish execution until we resolve the firstSetPreview
-    dispatchSetPreview(dispatch, newCx, "firstSetPreview", firstTarget);
+    dispatchSetPreview(dispatch, cx, "firstSetPreview", firstTarget);
 
     // Start the dispatch of the second setPreview. At this point, it will not
     // finish execution until we resolve the secondSetPreview
-    dispatchSetPreview(dispatch, newCx, "secondSetPreview", secondTarget);
+    dispatchSetPreview(dispatch, cx, "secondSetPreview", secondTarget);
 
     let fail = false;
 

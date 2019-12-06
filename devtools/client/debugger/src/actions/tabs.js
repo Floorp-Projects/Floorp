@@ -15,11 +15,9 @@ import { removeDocument } from "../utils/editor";
 import { selectSource } from "./sources";
 
 import {
-  getSourceTabs,
   getSourceByURL,
+  getSourceTabs,
   getNewSelectedSourceId,
-  removeSourceFromTabList,
-  removeSourcesFromTabList,
 } from "../selectors";
 
 import type { Action, ThunkArgs } from "./types";
@@ -64,13 +62,12 @@ export function moveTab(url: string, tabIndex: number): Action {
  */
 export function closeTab(cx: Context, source: Source) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
-    const { id, url } = source;
+    removeDocument(source.id);
 
-    removeDocument(id);
+    const tabs = getSourceTabs(getState());
+    dispatch(({ type: "CLOSE_TAB", source }: Action));
 
-    const tabs = removeSourceFromTabList(getSourceTabs(getState()), source);
     const sourceId = getNewSelectedSourceId(getState(), tabs);
-    dispatch(({ type: "CLOSE_TAB", url, tabs }: Action));
     dispatch(selectSource(cx, sourceId));
   };
 }
@@ -84,10 +81,10 @@ export function closeTabs(cx: Context, urls: string[]) {
     const sources = urls
       .map(url => getSourceByURL(getState(), url))
       .filter(Boolean);
-    sources.map(source => removeDocument(source.id));
 
-    const tabs = removeSourcesFromTabList(getSourceTabs(getState()), sources);
-    dispatch(({ type: "CLOSE_TABS", sources, tabs }: Action));
+    const tabs = getSourceTabs(getState());
+    sources.map(source => removeDocument(source.id));
+    dispatch(({ type: "CLOSE_TABS", sources }: Action));
 
     const sourceId = getNewSelectedSourceId(getState(), tabs);
     dispatch(selectSource(cx, sourceId));

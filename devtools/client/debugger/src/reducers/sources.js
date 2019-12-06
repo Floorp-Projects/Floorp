@@ -262,7 +262,7 @@ function update(
   return state;
 }
 
-const resourceAsSourceBase = memoizeResourceShallow(
+export const resourceAsSourceBase = memoizeResourceShallow(
   ({ content, ...source }: SourceResource): SourceBase => source
 );
 
