@@ -17,15 +17,10 @@ function continue_test() {
 }
 
 function* do_run_test() {
-  // Set up a profile.
-  let profile = do_get_profile();
-
   let pm = Services.perms;
   let now = Number(Date.now());
   let permType = "test/expiration-perm";
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  let ssm = Services.scriptSecurityManager;
   let uri = NetUtil.newURI("http://example.com");
   let principal = ssm.createContentPrincipal(uri, {});
 

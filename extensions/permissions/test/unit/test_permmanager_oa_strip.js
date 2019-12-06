@@ -28,9 +28,7 @@ function testOAIsolation(permIsolateUserContext, permIsolatePrivateBrowsing) {
     `testOAIsolation: permIsolateUserContext: ${permIsolateUserContext}; permIsolatePrivateBrowsing: ${permIsolatePrivateBrowsing}`
   );
 
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   Services.prefs.setBoolPref(
     "permissions.isolateBy.userContext",

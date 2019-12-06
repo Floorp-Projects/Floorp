@@ -23,6 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 </pre>
 <script>
 
+/* eslint-env mozilla/frame-script */
+
 /** Test for Bug 1272623 **/
 
   async function performCorrection(misspelled, area) {
@@ -38,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
       // decoupled from the content process before doing this work.
       Cu.dispatch(function() {
         let chromeWin = Services.ww.activeWindow;
-        contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
+        let contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
         let suggestion = contextMenu.querySelector(".spell-suggestion");
         suggestion.doCommand();
         contextMenu.hidePopup();
@@ -50,6 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
   }
 
   add_task(async function() {
+    /* global onSpellCheck */
     SpecialPowers.Cu.import(
       "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 

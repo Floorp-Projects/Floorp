@@ -2,23 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function getPrincipalFromURI(aURI) {
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  let ssm = Services.scriptSecurityManager;
   let uri = NetUtil.newURI(aURI);
   return ssm.createContentPrincipal(uri, {});
 }
 
 function getSystemPrincipal() {
-  return Cc["@mozilla.org/scriptsecuritymanager;1"]
-    .getService(Ci.nsIScriptSecurityManager)
-    .getSystemPrincipal();
+  return Services.scriptSecurityManager.getSystemPrincipal();
 }
 
 function run_test() {
-  var pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  var pm = Services.perms;
 
   Assert.equal(
     null,
@@ -40,7 +34,6 @@ function run_test() {
   Assert.equal(rootPerm.capability, pm.ALLOW_ACTION);
   Assert.equal(rootPerm.expireType, pm.EXPIRE_NEVER);
 
-  var rootPerm2 = pm.getPermissionObject(principal, "test/pobject", true);
   Assert.ok(rootPerm != null);
   Assert.equal(rootPerm.principal.origin, "http://example.com");
 

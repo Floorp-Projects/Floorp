@@ -5,8 +5,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "spellCheck",

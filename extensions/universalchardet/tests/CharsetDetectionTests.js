@@ -1,5 +1,7 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /* vim: set ts=8 et sw=4 tw=80: */
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var gExpectedCharset;
 var gOldPref;
 var gDetectorList;
@@ -19,18 +21,9 @@ function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList) {
 }
 
 function InitDetectorTests() {
-  var prefService = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  var str = Cc["@mozilla.org/supports-string;1"].createInstance(
-    Ci.nsISupportsString
-  );
-  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(
-    Ci.mozIJSSubScriptLoader
-  );
-  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
+  var prefService = Services.prefs;
+  var loader = Services.scriptloader;
+  var ioService = Services.io;
   loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
 
   try {
@@ -68,12 +61,9 @@ function SetDetectorPref(aPrefValue) {
   } else if (aPrefValue == "ruprob" || aPrefValue == "ukprob") {
     fallback = "windows-1251";
   }
-  var prefService = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
+  var prefService = Services.prefs;
   prefService.setStringPref("intl.charset.detector", aPrefValue);
   prefService.setStringPref("intl.charset.fallback.override", fallback);
-  gCurrentDetector = aPrefValue;
 }
 
 function DoDetectionTest() {

@@ -8,13 +8,11 @@
 
 "use strict";
 
-let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-  Ci.nsIPermissionManager
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-  Ci.nsIScriptSecurityManager
-);
+let pm = Services.perms;
+
+let secMan = Services.scriptSecurityManager;
 
 const EXPORTED_SYMBOLS = ["PermissionTestUtils"];
 
