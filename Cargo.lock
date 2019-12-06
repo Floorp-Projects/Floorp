@@ -1804,16 +1804,6 @@ dependencies = [
 
 [[package]]
 name = "libloading"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "libloading"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -2604,7 +2594,7 @@ dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkcs11 0.4.1 (git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438)",
+ "pkcs11 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2754,9 +2744,9 @@ dependencies = [
 [[package]]
 name = "pkcs11"
 version = "0.4.1"
-source = "git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438#0810cd5adf4ac8031cc204df3e877d84595c7438"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "libloading 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-bigint 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -4830,7 +4820,6 @@ dependencies = [
 "checksum lazycell 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b294d6fa9ee409a054354afc4352b0b9ef7ca222c69b8812cbea9e7d2bf3783f"
 "checksum libc 0.2.59 (registry+https://github.com/rust-lang/crates.io-index)" = "3262021842bf00fe07dbd6cf34ff25c99d7a7ebef8deea84db72be3ea3bb0aff"
 "checksum libdbus-sys 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "18cb88963258d00f4962205dbb5933d82780d9962c8c8a064b651d2ad7189210"
-"checksum libloading 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "fd38073de8f7965d0c17d30546d4bb6da311ab428d1c7a3fc71dff7f9d4979b9"
 "checksum libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9c3ad660d7cb8c5822cd83d10897b0f1f1526792737a179e73896152f85b88c2"
 "checksum libudev 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ea626d3bdf40a1c5aee3bcd4f40826970cae8d80a8fec934c82a63840094dcfe"
 "checksum libz-sys 1.0.25 (registry+https://github.com/rust-lang/crates.io-index)" = "2eb5e43362e38e2bca2fd5f5134c4d4564a23a5c28e9b95411652021a8675ebe"
@@ -4906,7 +4895,7 @@ dependencies = [
 "checksum phf_generator 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "17367f0cc86f2d25802b2c26ee58a7b23faeccf78a396094c13dced0d0182526"
 "checksum phf_macros 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7f6fde18ff429ffc8fe78e2bf7f8b7a5a5a6e2a8b58bc5a9ac69198bbda9189c"
 "checksum phf_shared 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c00cf8b9eafe68dde5e9eaa2cef8ee84a9336a47d566ec55ca16589633b65af7"
-"checksum pkcs11 0.4.1 (git+https://github.com/mheese/rust-pkcs11?rev=0810cd5adf4ac8031cc204df3e877d84595c7438)" = "<none>"
+"checksum pkcs11 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c20593a99fe08068cbe2b59001527f36021d6ad53ac5f2d8793fcf2fe94015a0"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
 "checksum plain 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 "checksum plane-split 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ffe16a646a08f4b4dd74035b9ff8e378eb1a4012a74f14f5889e7001cdbece33"
