@@ -49,9 +49,15 @@ assertOffsetColumns(
 
 // getColumnOffsets correctly places the various parts of a BreakStatement.
 assertOffsetColumns(
+  "function f(n) { do { print(n); if (n === 3) { break; } } while(false); }",
+  "                ^    ^    ^        ^          ^                ^       ^",
+  "0 1 2 3 4 6"
+);
+
+// If the loop condition is unreachable, we currently don't report its offset.
+assertOffsetColumns(
   "function f(n) { do { print(n); break; } while(false); }",
-  "                ^    ^    ^    ^              ^       ^",
-  "0 1 2 3 5"
+  "                ^    ^    ^    ^                      ^",
 );
 
 // getColumnOffsets correctly places the various parts of a ContinueStatement.

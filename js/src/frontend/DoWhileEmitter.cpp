@@ -76,7 +76,7 @@ bool DoWhileEmitter::emitEnd() {
     return false;
   }
 
-  if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+  if (!loopInfo_->patchBreaks(bce_)) {
     return false;
   }
 
