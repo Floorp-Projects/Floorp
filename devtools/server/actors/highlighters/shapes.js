@@ -2294,7 +2294,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     );
 
     let radii = values[0] ? values[0].trim() : "closest-side closest-side";
-    radii = splitCoords(values[0]).map((radius, i) => {
+    radii = splitCoords(radii).map((radius, i) => {
       if (radius === "closest-side") {
         // radius is the distance from center to closest x/y side of reference box
         return i % 2 === 0
