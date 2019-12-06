@@ -34,6 +34,11 @@ use crate::util::drain_filter;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(feature = "debugger")]
+use crate::debug_server;
+#[cfg(feature = "debugger")]
+use api::{BuiltDisplayListIter, DisplayItem};
+
 
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
@@ -144,6 +149,7 @@ pub enum SceneBuilderRequest {
     SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
     LoadScenes(Vec<LoadScene>),
+    DocumentsForDebugger
 }
 
 // Message from scene builder to render backend.
@@ -153,6 +159,7 @@ pub enum SceneBuilderResult {
     FlushComplete(MsgSender<()>),
     ClearNamespace(IdNamespace),
     Stopped,
+    DocumentsForDebugger(String)
 }
 
 // Message from render backend to scene builder to indicate the
@@ -320,6 +327,11 @@ impl SceneBuilderThread {
                 Ok(SceneBuilderRequest::SaveScene(config)) => {
                     self.save_scene(config);
                 }
+                Ok(SceneBuilderRequest::DocumentsForDebugger) => {
+                    let json = self.get_docs_for_debugger();
+                    self.send(SceneBuilderResult::DocumentsForDebugger(json));
+                }
+
                 Ok(SceneBuilderRequest::ExternalEvent(evt)) => {
                     self.send(SceneBuilderResult::ExternalEvent(evt));
                 }
@@ -357,6 +369,11 @@ impl SceneBuilderThread {
         for (id, doc) in &self.documents {
             let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
             config.serialize(&doc.interners, interners_name);
+
+            if config.bits.contains(api::CaptureBits::SCENE) {
+                let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
+                config.serialize(&doc.scene, file_name);
+            }
         }
     }
 
@@ -413,6 +430,70 @@ impl SceneBuilderThread {
 
             self.forward_built_transactions(txns);
         }
+    }
+
+    #[cfg(feature = "debugger")]
+    fn traverse_items<'a>(
+        &self,
+        traversal: &mut BuiltDisplayListIter<'a>,
+        node: &mut debug_server::TreeNode,
+    ) {
+        loop {
+            let subtraversal = {
+                let item = match traversal.next() {
+                    Some(item) => item,
+                    None => break,
+                };
+
+                match *item.item() {
+                    display_item @ DisplayItem::PushStackingContext(..) => {
+                        let mut subtraversal = item.sub_iter();
+                        let mut child_node =
+                            debug_server::TreeNode::new(&display_item.debug_name().to_string());
+                        self.traverse_items(&mut subtraversal, &mut child_node);
+                        node.add_child(child_node);
+                        Some(subtraversal)
+                    }
+                    DisplayItem::PopStackingContext => {
+                        return;
+                    }
+                    display_item => {
+                        node.add_item(&display_item.debug_name().to_string());
+                        None
+                    }
+                }
+            };
+
+            // If flatten_item created a sub-traversal, we need `traversal` to have the
+            // same state as the completed subtraversal, so we reinitialize it here.
+            if let Some(subtraversal) = subtraversal {
+                *traversal = subtraversal;
+            }
+        }
+    }
+
+    #[cfg(not(feature = "debugger"))]
+    fn get_docs_for_debugger(&self) -> String {
+        String::new()
+    }
+
+    #[cfg(feature = "debugger")]
+    fn get_docs_for_debugger(&self) -> String {
+        let mut docs = debug_server::DocumentList::new();
+
+        for (_, doc) in &self.documents {
+            let mut debug_doc = debug_server::TreeNode::new("document");
+
+            for (_, pipeline) in &doc.scene.pipelines {
+                let mut debug_dl = debug_server::TreeNode::new("display-list");
+                self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
+                debug_doc.add_child(debug_dl);
+            }
+
+            docs.add(debug_doc);
+        }
+
+        serde_json::to_string(&docs).unwrap()
     }
 
     /// Do the bulk of the work of the scene builder thread.
@@ -519,7 +600,7 @@ impl SceneBuilderThread {
                             .filter(|txn| txn.built_scene.is_some())
                             .map(|txn| {
                                 txn.built_scene.as_ref().unwrap()
-                                    .src.pipeline_epochs.iter()
+                                    .pipeline_epochs.iter()
                                     .zip(iter::repeat(txn.document_id))
                                     .map(|((&pipeline_id, &epoch), document_id)| ((pipeline_id, document_id), epoch))
                             }).flatten().collect(),

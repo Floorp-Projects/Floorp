@@ -217,8 +217,8 @@ impl StackingContextHelpers for StackingContext {
 
 /// WebRender's internal representation of the scene.
 pub struct BuiltScene {
-    /// The scene this object was built from.
-    pub src: Scene,
+    pub has_root_pipeline: bool,
+    pub pipeline_epochs: FastHashMap<PipelineId, Epoch>,
     pub output_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
     pub root_pic_index: PictureIndex,
@@ -234,7 +234,8 @@ pub struct BuiltScene {
 impl BuiltScene {
     pub fn empty() -> Self {
         BuiltScene {
-            src: Scene::new(),
+            has_root_pipeline: false,
+            pipeline_epochs: FastHashMap::default(),
             output_rect: DeviceIntRect::zero(),
             background_color: None,
             root_pic_index: PictureIndex(0),
