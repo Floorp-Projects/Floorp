@@ -372,6 +372,10 @@ const TEST_GLOBAL = {
   TelemetryEnvironment: {
     setExperimentActive() {},
   },
+  TelemetryStopwatch: {
+    start: () => {},
+    finish: () => {},
+  },
   Sampling: {
     ratioSample(seed, ratios) {
       return Promise.resolve(0);

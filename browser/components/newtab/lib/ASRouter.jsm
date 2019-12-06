@@ -1802,6 +1802,8 @@ class _ASRouter {
         }));
       }
     } else {
+      const telemetryObject = { port: target.portID };
+      TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
       // On new tab, send cards if they match; othwerise send a snippet
       message = await this.handleMessageRequest({
         template: "extended_triplets",
@@ -1811,6 +1813,7 @@ class _ASRouter {
       if (!message) {
         message = await this.handleMessageRequest({ provider: "snippets" });
       }
+      TelemetryStopwatch.finish("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     }
 
     await this._sendMessageToTarget(message, target);
@@ -1824,11 +1827,14 @@ class _ASRouter {
       await this.setTrailHeadMessageSeen();
     }
 
+    const telemetryObject = { port: target.portID };
+    TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     const message = await this.handleMessageRequest({
       triggerId: trigger.id,
       triggerParam: trigger.param,
       triggerContext: trigger.context,
     });
+    TelemetryStopwatch.finish("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
 
     await this._sendMessageToTarget(message, target, trigger);
   }
