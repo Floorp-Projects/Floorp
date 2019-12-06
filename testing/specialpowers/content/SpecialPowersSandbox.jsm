@@ -18,6 +18,16 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/Assert.jsm"
 );
 
+let expectFail = false;
+function expectingFail(fn) {
+  try {
+    expectFail = true;
+    fn();
+  } finally {
+    expectFail = false;
+  }
+}
+
 class SpecialPowersSandbox {
   constructor(name, reportCallback, opts = {}) {
     this.name = name;
@@ -42,6 +52,27 @@ class SpecialPowersSandbox {
         configurable: true,
       });
     }
+
+    Object.assign(this.sandbox, {
+      ok: (...args) => {
+        this.Assert.ok(...args);
+      },
+      is: (...args) => {
+        this.Assert.equal(...args);
+      },
+      isnot: (...args) => {
+        this.Assert.notEqual(...args);
+      },
+      todo: (...args) => {
+        expectingFail(() => this.Assert.ok(...args));
+      },
+      todo_is: (...args) => {
+        expectingFail(() => this.Assert.equal(...args));
+      },
+      info: info => {
+        this.reportCallback({ info });
+      },
+    });
   }
 
   get Assert() {
@@ -66,6 +97,7 @@ class SpecialPowersSandbox {
       diag,
       passed: !err,
       stack: stack && stack.formattedStack,
+      expectFail,
     });
   }
 
