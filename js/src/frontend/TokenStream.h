@@ -548,6 +548,19 @@ class TokenStreamAnyChars : public TokenStreamShared {
   const char* const filename_;
 
   /**
+   * A map of (line number => sequence of the column numbers at
+   * |ColumnChunkLength|-unit boundaries rewound [if needed] to the nearest code
+   * point boundary).  (|TokenStreamAnyChars::computePartialColumn| is the sole
+   * user of |ColumnChunkLength| and therefore contains its definition.)
+   *
+   * Entries appear in this map only when a column computation of sufficient
+   * distance is performed on a line -- and only when the column is beyond the
+   * first |ColumnChunkLength| units.  Each line's vector is lazily filled as
+   * greater offsets require column computations.
+   */
+  mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
+
+  /**
    * The offset of the first invalid escape in a template literal.  (If there is
    * one -- if not, the value of this field is meaningless.)
    *
@@ -565,19 +578,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
  public:
   SourceCoords srcCoords;
-
-  static constexpr uint32_t ColumnChunkLength = 128;
-
-  /**
-   * Line number (of lines at least |ColumnChunkLength| code units long) to
-   * a sequence of the column numbers at |ColumnChunkLength| boundaries rewound
-   * (if needed) to the nearest code point boundary.
-   *
-   * Entries appear in this map only when a column computation of sufficient
-   * distance is performed on a line, and the vectors are lazily filled as
-   * greater offsets within lines require column computations.
-   */
-  mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
 
  protected:
   Token tokens[ntokens] = {};  // circular token buffer
