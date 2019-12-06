@@ -57,7 +57,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& condPos) {
     // one. If that scope has closed-over bindings inducing an
     // environment, recreate the current environment.
     MOZ_ASSERT(headLexicalEmitterScopeForLet_ == bce_->innermostEmitterScope());
-    MOZ_ASSERT(headLexicalEmitterScopeForLet_->scope(bce_)->kind() ==
+    MOZ_ASSERT(headLexicalEmitterScopeForLet_->scope(bce_).kind() ==
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {
@@ -115,7 +115,7 @@ bool CForEmitter::emitUpdate(Update update, const Maybe<uint32_t>& updatePos) {
   // ES 13.7.4.8 step 3.e. The per-iteration freshening.
   if (headLexicalEmitterScopeForLet_) {
     MOZ_ASSERT(headLexicalEmitterScopeForLet_ == bce_->innermostEmitterScope());
-    MOZ_ASSERT(headLexicalEmitterScopeForLet_->scope(bce_)->kind() ==
+    MOZ_ASSERT(headLexicalEmitterScopeForLet_->scope(bce_).kind() ==
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {

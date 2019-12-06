@@ -443,7 +443,7 @@ void TraceListNode::trace(JSTracer* trc) {
 void FunctionBox::trace(JSTracer* trc) {
   ObjectBox::trace(trc);
   if (enclosingScope_) {
-    TraceRoot(trc, &enclosingScope_, "funbox-enclosingScope");
+    enclosingScope_.trace(trc);
   }
   if (explicitName_) {
     TraceRoot(trc, &explicitName_, "funbox-explicitName");

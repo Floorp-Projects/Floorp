@@ -14,8 +14,10 @@
 #include <stddef.h>  // ptrdiff_t, size_t
 #include <stdint.h>  // uint16_t, int32_t, uint32_t
 
-#include "jstypes.h"                   // JS_PUBLIC_API
-#include "NamespaceImports.h"          // ValueVector
+#include "jstypes.h"           // JS_PUBLIC_API
+#include "NamespaceImports.h"  // ValueVector
+
+#include "frontend/AbstractScope.h"    // AbstractScope
 #include "frontend/BytecodeOffset.h"   // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
@@ -94,11 +96,12 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array);
   void finishInnerFunctions();
 
-  Scope* getScope(size_t index) const {
-    return &vector[index].get().as<StackGCCellPtr>().get().as<Scope>();
+  AbstractScope getScope(size_t index) const {
+    auto& elem = vector[index].get();
+    return AbstractScope(&elem.as<StackGCCellPtr>().get().as<Scope>());
   }
 
-  Scope* firstScope() const {
+  AbstractScope firstScope() const {
     MOZ_ASSERT(firstScopeIndex.isSome());
     return getScope(*firstScopeIndex);
   }

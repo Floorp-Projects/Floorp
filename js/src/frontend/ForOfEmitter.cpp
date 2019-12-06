@@ -88,7 +88,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     // it must be the innermost one. If that scope has closed-over
     // bindings inducing an environment, recreate the current environment.
     MOZ_ASSERT(headLexicalEmitterScope_ == bce_->innermostEmitterScope());
-    MOZ_ASSERT(headLexicalEmitterScope_->scope(bce_)->kind() ==
+    MOZ_ASSERT(headLexicalEmitterScope_->scope(bce_).kind() ==
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScope_->hasEnvironment()) {

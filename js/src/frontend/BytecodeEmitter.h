@@ -20,6 +20,7 @@
 
 #include "jsapi.h"  // CompletionKind
 
+#include "frontend/AbstractScope.h"
 #include "frontend/BCEParserHandle.h"            // BCEParserHandle
 #include "frontend/BytecodeControlStructures.h"  // NestableControl
 #include "frontend/BytecodeOffset.h"             // BytecodeOffset
@@ -255,11 +256,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     varEmitterScope = emitterScope;
   }
 
-  Scope* outermostScope() const {
+  AbstractScope outermostScope() const {
     return perScriptData().gcThingList().firstScope();
   }
-  Scope* innermostScope() const;
-  Scope* bodyScope() const {
+  AbstractScope innermostScope() const;
+  AbstractScope bodyScope() const {
     return perScriptData().gcThingList().getScope(bodyScopeIndex);
   }
 
