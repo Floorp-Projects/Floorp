@@ -14,7 +14,8 @@
         android:dependency="@string/pref_key_delete_browsing_data_on_quit"
         android:key="@string/pref_key_delete_browsing_data_on_quit_categories"
         app:allowDividerAbove="false"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_cat_style">
         <CheckBoxPreference
             android:key="@string/pref_key_delete_open_tabs_on_quit"
             android:layout="@layout/delete_browsing_category_checkbox"

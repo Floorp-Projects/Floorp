@@ -21,4 +21,5 @@
     app:icon="@drawable/ic_tab_collection"
     app:iconGravity="textStart"
     app:iconPadding="8dp"
+    app:fontFamily="@font/metropolis_medium"
     app:iconTint="?attr/contrastText" />

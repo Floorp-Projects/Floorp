@@ -45,7 +45,8 @@
 
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_general"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_cat_style" >
         <androidx.preference.Preference
             android:icon="@drawable/ic_search"
             android:key="@string/pref_key_search_settings"
@@ -79,7 +80,8 @@
 
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_privacy_security"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_cat_style">
 
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
@@ -122,7 +124,8 @@
     <PreferenceCategory
         android:title="@string/preferences_category_advanced"
         app:iconSpaceReserved="false"
-        android:key="@string/pref_key_advanced">
+        android:key="@string/pref_key_advanced"
+        android:layout="@layout/preference_cat_style">
         <androidx.preference.Preference
             android:icon="@drawable/mozac_ic_extensions_black"
             android:key="@string/pref_key_addons"
@@ -133,7 +136,8 @@
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"
-            app:isPreferenceVisible="@bool/IS_DEBUG" />
+            app:isPreferenceVisible="@bool/IS_DEBUG"
+        android:layout="@layout/preference_cat_style" />
 
         <androidx.preference.SwitchPreference
             android:icon="@drawable/ic_energy"
@@ -144,7 +148,8 @@
 
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_about"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_cat_style">
         <androidx.preference.Preference
             android:icon="@drawable/ic_bookmark_outline"
             android:key="@string/pref_key_rate"

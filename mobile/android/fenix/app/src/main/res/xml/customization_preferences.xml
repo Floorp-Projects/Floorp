@@ -7,7 +7,8 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_theme"
         app:iconSpaceReserved="false"
-        app:allowDividerBelow="false">
+        app:allowDividerBelow="false"
+        android:layout="@layout/preference_cat_style">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:defaultValue="@bool/underAPI28"
             android:key="@string/pref_key_light_theme"
@@ -34,7 +35,8 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_toolbar"
         app:iconSpaceReserved="false"
-        app:allowDividerAbove="false">
+        app:allowDividerAbove="false"
+        android:layout="@layout/preference_cat_style">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:key="@string/pref_key_toolbar_top"
             android:title="@string/preference_top_toolbar" />
