@@ -1328,7 +1328,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
   if (!d.readVarU32(&numResults)) {
     return d.fail("bad number of function returns");
   }
-  if (numResults > MaxResults) {
+  if (numResults > env->funcMaxResults()) {
     return d.fail("too many returns in signature");
   }
   ValTypeVector results;
