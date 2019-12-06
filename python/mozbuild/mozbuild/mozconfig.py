@@ -349,6 +349,12 @@ class MozconfigLoader(object):
 
             if name == 'MOZ_OBJDIR':
                 result['topobjdir'] = value
+                if parsed['env_before'].get('MOZ_PROFILE_GENERATE') == '1':
+                    # If MOZ_OBJDIR is specified in the mozconfig, we need to
+                    # make sure that the '/instrumented' directory gets appended
+                    # for the first build to avoid an objdir mismatch when
+                    # running 'mach package' on Windows.
+                    result['topobjdir'] = mozpath.join(result['topobjdir'], 'instrumented')
                 continue
 
             result['make_extra'].append(o)
