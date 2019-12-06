@@ -466,7 +466,8 @@ impl<'a> SceneBuilder<'a> {
         debug_assert!(builder.sc_stack.is_empty());
 
         BuiltScene {
-            src: scene.clone(),
+            has_root_pipeline: scene.has_root_pipeline(),
+            pipeline_epochs: scene.pipeline_epochs.clone(),
             output_rect: view.device_rect.size.into(),
             background_color,
             hit_testing_scene: Arc::new(builder.hit_testing_scene),

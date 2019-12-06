@@ -9,8 +9,6 @@
 //! how these two pieces interact.
 
 use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
-#[cfg(feature = "debugger")]
-use api::{BuiltDisplayListIter, DisplayItem};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
@@ -47,6 +45,8 @@ use crate::resource_cache::ResourceCache;
 use crate::resource_cache::PlainCacheOwn;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::resource_cache::PlainResources;
+#[cfg(feature = "replay")]
+use crate::scene::Scene;
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::scene_builder_thread::*;
 #[cfg(feature = "serialize")]
@@ -378,6 +378,9 @@ struct Document {
     /// Keep track of the size of render task graph to pre-allocate memory up-front
     /// the next frame.
     render_task_counters: RenderTaskGraphCounters,
+
+    #[cfg(feature = "replay")]
+    loaded_scene: Scene,
 }
 
 impl Document {
@@ -411,11 +414,13 @@ impl Document {
             data_stores: DataStores::default(),
             scratch: PrimitiveScratchBuffer::new(),
             render_task_counters: RenderTaskGraphCounters::new(),
+            #[cfg(feature = "replay")]
+            loaded_scene: Scene::new(),
         }
     }
 
     fn can_render(&self) -> bool {
-        self.scene.src.has_root_pipeline()
+        self.scene.has_root_pipeline
     }
 
     fn has_pixels(&self) -> bool {
@@ -428,7 +433,7 @@ impl Document {
     ) -> DocumentOps {
         match message {
             FrameMsg::UpdateEpoch(pipeline_id, epoch) => {
-                self.scene.src.update_epoch(pipeline_id, epoch);
+                self.scene.pipeline_epochs.insert(pipeline_id, epoch);
             }
             FrameMsg::Scroll(delta, cursor) => {
                 profile_scope!("Scroll");
@@ -590,7 +595,7 @@ impl Document {
     pub fn updated_pipeline_info(&mut self) -> PipelineInfo {
         let removed_pipelines = self.removed_pipelines.take_and_preallocate();
         PipelineInfo {
-            epochs: self.scene.src.pipeline_epochs.iter()
+            epochs: self.scene.pipeline_epochs.iter()
                 .map(|(&pipeline_id, &epoch)| ((pipeline_id, self.id), epoch)).collect(),
             removed_pipelines,
         }
@@ -958,6 +963,11 @@ impl RenderBackend {
                     SceneBuilderResult::Stopped => {
                         panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
                     }
+                    SceneBuilderResult::DocumentsForDebugger(json) => {
+                        let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
+                        self.result_tx.send(msg).unwrap();
+                        self.notifier.wake_up();
+                    }
                 }
             }
 
@@ -1121,8 +1131,10 @@ impl RenderBackend {
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::FetchDocuments => {
-                        let json = self.get_docs_for_debugger();
-                        ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json))
+                        // Ask SceneBuilderThread to send JSON presentation of the documents,
+                        // that will be forwarded to Renderer.
+                        self.scene_tx.send(SceneBuilderRequest::DocumentsForDebugger).unwrap();
+                        return RenderBackendStatus::Continue;
                     }
                     DebugCommand::FetchClipScrollTree => {
                         let json = self.get_clip_scroll_tree_for_debugger();
@@ -1143,15 +1155,15 @@ impl RenderBackend {
                         for (id, doc) in &self.documents {
                             let captured = CapturedDocument {
                                 document_id: *id,
-                                root_pipeline_id: doc.scene.src.root_pipeline_id,
+                                root_pipeline_id: doc.loaded_scene.root_pipeline_id,
                             };
                             tx.send(captured).unwrap();
 
                             // notify the active recorder
                             if let Some(ref mut r) = self.recorder {
-                                let pipeline_id = doc.scene.src.root_pipeline_id.unwrap();
-                                let epoch =  doc.scene.src.pipeline_epochs[&pipeline_id];
-                                let pipeline = &doc.scene.src.pipelines[&pipeline_id];
+                                let pipeline_id = doc.loaded_scene.root_pipeline_id.unwrap();
+                                let epoch =  doc.loaded_scene.pipeline_epochs[&pipeline_id];
+                                let pipeline = &doc.loaded_scene.pipelines[&pipeline_id];
                                 let scene_msg = SceneMsg::SetDisplayList {
                                     list_descriptor: pipeline.display_list.descriptor().clone(),
                                     epoch,
@@ -1579,70 +1591,6 @@ impl RenderBackend {
     }
 
     #[cfg(not(feature = "debugger"))]
-    fn get_docs_for_debugger(&self) -> String {
-        String::new()
-    }
-
-    #[cfg(feature = "debugger")]
-    fn traverse_items<'a>(
-        &self,
-        traversal: &mut BuiltDisplayListIter<'a>,
-        node: &mut debug_server::TreeNode,
-    ) {
-        loop {
-            let subtraversal = {
-                let item = match traversal.next() {
-                    Some(item) => item,
-                    None => break,
-                };
-
-                match *item.item() {
-                    display_item @ DisplayItem::PushStackingContext(..) => {
-                        let mut subtraversal = item.sub_iter();
-                        let mut child_node =
-                            debug_server::TreeNode::new(&display_item.debug_name().to_string());
-                        self.traverse_items(&mut subtraversal, &mut child_node);
-                        node.add_child(child_node);
-                        Some(subtraversal)
-                    }
-                    DisplayItem::PopStackingContext => {
-                        return;
-                    }
-                    display_item => {
-                        node.add_item(&display_item.debug_name().to_string());
-                        None
-                    }
-                }
-            };
-
-            // If flatten_item created a sub-traversal, we need `traversal` to have the
-            // same state as the completed subtraversal, so we reinitialize it here.
-            if let Some(subtraversal) = subtraversal {
-                *traversal = subtraversal;
-            }
-        }
-    }
-
-    #[cfg(feature = "debugger")]
-    fn get_docs_for_debugger(&self) -> String {
-        let mut docs = debug_server::DocumentList::new();
-
-        for (_, doc) in &self.documents {
-            let mut debug_doc = debug_server::TreeNode::new("document");
-
-            for (_, pipeline) in &doc.scene.src.pipelines {
-                let mut debug_dl = debug_server::TreeNode::new("display-list");
-                self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
-                debug_doc.add_child(debug_dl);
-            }
-
-            docs.add(debug_doc);
-        }
-
-        serde_json::to_string(&docs).unwrap()
-    }
-
-    #[cfg(not(feature = "debugger"))]
     fn get_clip_scroll_tree_for_debugger(&self) -> String {
         String::new()
     }
@@ -1733,10 +1681,6 @@ impl RenderBackend {
 
         for (&id, doc) in &mut self.documents {
             debug!("\tdocument {:?}", id);
-            if config.bits.contains(CaptureBits::SCENE) {
-                let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
-                config.serialize(&doc.scene.src, file_name);
-            }
             if config.bits.contains(CaptureBits::FRAME) {
                 let rendered_document = doc.build_frame(
                     &mut self.resource_cache,
@@ -1827,7 +1771,6 @@ impl RenderBackend {
         profile_counters: &mut BackendProfileCounters,
     ) {
         use crate::capture::CaptureConfig;
-        use crate::scene::Scene;
 
         debug!("capture: loading {:?}", root);
         let backend = CaptureConfig::deserialize::<PlainRenderBackend, _>(root, "backend")
@@ -1873,12 +1816,9 @@ impl RenderBackend {
             let data_stores = CaptureConfig::deserialize::<DataStores, _>(root, &data_stores_name)
                 .expect(&format!("Unable to open {}.ron", data_stores_name));
 
-            let mut built_scene = BuiltScene::empty();
-            built_scene.src = scene;
-
             let doc = Document {
                 id,
-                scene: built_scene,
+                scene: BuiltScene::empty(),
                 removed_pipelines: Vec::new(),
                 view: view.clone(),
                 stamp: FrameStamp::first(id),
@@ -1893,6 +1833,7 @@ impl RenderBackend {
                 data_stores,
                 scratch: PrimitiveScratchBuffer::new(),
                 render_task_counters: RenderTaskGraphCounters::new(),
+                loaded_scene: scene.clone(),
             };
 
             let frame_name = format!("frame-{}-{}", id.namespace_id.0, id.id);
@@ -1924,7 +1865,7 @@ impl RenderBackend {
 
             scenes_to_build.push(LoadScene {
                 document_id: id,
-                scene: doc.scene.src.clone(),
+                scene: scene,
                 view: view.clone(),
                 config: self.frame_config.clone(),
                 output_pipelines: doc.output_pipelines.clone(),
