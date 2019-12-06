@@ -165,7 +165,7 @@ MiniTransceiver::RecvData(char* aDataBuf, size_t aBufSize, uint32_t* aMsgSize,
     msghdr hdr;
     InitMsgHdr(&hdr, 1, aMaxFds);
 
-    UniquePtr<msghdr, typeof(&DeinitMsgHdr)> uniq(&hdr, &DeinitMsgHdr);
+    UniquePtr<msghdr, decltype(&DeinitMsgHdr)> uniq(&hdr, &DeinitMsgHdr);
 
     // The buffer to collect all fds received from the socket.
     int* all_fds = aFdsBuf;
