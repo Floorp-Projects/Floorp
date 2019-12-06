@@ -17,4 +17,12 @@
 ./gradlew -q \
         ktlint \
         detekt \
-        app:assembleDebug
+        assembleGeckoBetaDebug \
+        testGeckoBetaDebug \
+        assembleGeckoBetaDebugAndroidTest
+
+# Tasks omitted because they take a long time to run:
+# - assembling all variants
+# - unit test on all variants
+# - UI tests
+# - android lint (takes a long time to run)
