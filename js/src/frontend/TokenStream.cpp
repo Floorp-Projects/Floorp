@@ -520,7 +520,6 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
       longLineColumnInfo_(cx),
       srcCoords(cx, options.lineno, options.scriptSourceOffset),
       lineno(options.lineno),
-      flags(),
       mutedErrors(options.mutedErrors()) {
   // |isExprEnding| was initially zeroed: overwrite the true entries here.
   isExprEnding[size_t(TokenKind::Comma)] = true;

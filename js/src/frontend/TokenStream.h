@@ -623,24 +623,42 @@ class TokenStreamAnyChars : public TokenStreamShared {
    */
   InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
- public:
+  // Fields with values relevant across tokens (and therefore potentially across
+  // function boundaries, such that lazy function parsing and stream-seeking
+  // must take care in saving and restoring them).
+
+  /** Line number and offset-to-line mapping information. */
   SourceCoords srcCoords;
 
- protected:
-  Token tokens[ntokens] = {};  // circular token buffer
+  /** Circular token buffer of gotten tokens that have been ungotten. */
+  Token tokens[ntokens] = {};
 
- private:
-  unsigned cursor_ = 0;  // index of last parsed token
- protected:
-  unsigned lookahead = 0;  // count of lookahead tokens
-  unsigned lineno;         // current line number
-  TokenStreamFlags flags;  // flags -- see above
-  size_t linebase = 0;     // start of current line
-  size_t prevLinebase =
-      size_t(-1);  // start of previous line;  size_t(-1) if on the first line
-  UniqueTwoByteChars displayURL_ =
-      nullptr;  // the user's requested source URL or null
-  UniqueTwoByteChars sourceMapURL_ = nullptr;  // source map's filename or null
+  /** The index in |tokens| of the last parsed token. */
+  unsigned cursor_ = 0;
+
+  /** The number of tokens in |tokens| available to be gotten. */
+  unsigned lookahead = 0;
+
+  /** The current line number. */
+  unsigned lineno;
+
+  /** Various flag bits (see above). */
+  TokenStreamFlags flags = {};
+
+  /** The offset of the start of the current line. */
+  size_t linebase = 0;
+
+  /** The start of the previous line, or |size_t(-1)| on the first line. */
+  size_t prevLinebase = size_t(-1);
+
+  /** The user's requested source URL.  Null if none has been set. */
+  UniqueTwoByteChars displayURL_ = nullptr;
+
+  /** The URL of the source map for this script.  Null if none has been set. */
+  UniqueTwoByteChars sourceMapURL_ = nullptr;
+
+  // Assorted boolean fields, none of which require maintenance across tokens,
+  // stored at class end to minimize padding.
 
   /**
    * Whether syntax errors should or should not contain details about the
