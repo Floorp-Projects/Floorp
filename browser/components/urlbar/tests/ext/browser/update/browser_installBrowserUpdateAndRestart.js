@@ -56,10 +56,18 @@ add_task(async function test() {
           browser.test.sendMessage("done");
           break;
         case "install":
-          browser.test.withHandlingUserInput(async () => {
-            await browser.experiments.urlbar.installBrowserUpdateAndRestart();
-            browser.test.sendMessage("done", status);
-          });
+          let done = false;
+          let interval = setInterval(async () => {
+            let status = await browser.experiments.urlbar.getBrowserUpdateStatus();
+            if (status == "downloadAndInstall" && !done) {
+              done = true;
+              clearInterval(interval);
+              browser.test.withHandlingUserInput(async () => {
+                browser.experiments.urlbar.installBrowserUpdateAndRestart();
+                browser.test.sendMessage("done", status);
+              });
+            }
+          }, 100);
           break;
       }
     });
@@ -72,9 +80,9 @@ add_task(async function test() {
   await processUpdateSteps(preSteps);
 
   ext.sendMessage("install");
+  await ext.awaitMessage("done");
 
   await Promise.all([
-    ext.awaitMessage("done"),
     processUpdateSteps(postSteps),
     TestUtils.topicObserved(
       "quit-application-requested",
