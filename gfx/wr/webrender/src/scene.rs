@@ -142,7 +142,7 @@ pub struct ScenePipeline {
 #[derive(Clone)]
 pub struct Scene {
     pub root_pipeline_id: Option<PipelineId>,
-    pub pipelines: FastHashMap<PipelineId, Arc<ScenePipeline>>,
+    pub pipelines: FastHashMap<PipelineId, ScenePipeline>,
     pub pipeline_epochs: FastHashMap<PipelineId, Epoch>,
 }
 
@@ -176,7 +176,7 @@ impl Scene {
             display_list,
         };
 
-        self.pipelines.insert(pipeline_id, Arc::new(new_pipeline));
+        self.pipelines.insert(pipeline_id, new_pipeline);
         self.pipeline_epochs.insert(pipeline_id, epoch);
     }
 
