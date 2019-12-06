@@ -25,7 +25,6 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
 const DataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
-const ConsoleCommands = require("devtools/client/webconsole/commands.js");
 
 const {
   setupServiceContainer,
@@ -69,7 +68,6 @@ class WebConsoleWrapper {
 
   async init() {
     const { webConsoleUI } = this;
-    const debuggerClient = this.hud.currentTarget.client;
 
     const webConsoleFront = await this.hud.currentTarget.getFront("console");
 
@@ -81,13 +79,6 @@ class WebConsoleWrapper {
     });
 
     return new Promise(resolve => {
-      const commands = new ConsoleCommands({
-        debuggerClient,
-        proxy: webConsoleUI.getProxy(),
-        threadFront: this.toolbox && this.toolbox.threadFront,
-        currentTarget: this.hud.currentTarget,
-      });
-
       store = configureStore(this.webConsoleUI, {
         // We may not have access to the toolbox (e.g. in the browser console).
         sessionId: (this.toolbox && this.toolbox.sessionId) || -1,
@@ -95,7 +86,7 @@ class WebConsoleWrapper {
         thunkArgs: {
           webConsoleUI,
           hud: this.hud,
-          client: commands,
+          client: this.webConsoleUI._commands,
         },
       });
 
