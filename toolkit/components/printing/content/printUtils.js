@@ -247,7 +247,6 @@ var PrintUtils = {
     try {
       PPROMPTSVC.showPrintProgressDialog(
         window,
-        null,
         printSettings,
         this._obsPP,
         false,
