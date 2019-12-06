@@ -12,6 +12,8 @@
 #include "nsIBufferedStreams.h"
 #include "nsICloneableInputStream.h"
 #include "nsIPipe.h"
+#include "nsThreadUtils.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace ipc {

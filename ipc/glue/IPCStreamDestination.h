@@ -8,6 +8,8 @@
 #define mozilla_ipc_IPCStreamDestination_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "nsIRunnable.h"
+#include "nsIThread.h"
 
 class nsIInputStream;
 class nsIAsyncInputStream;

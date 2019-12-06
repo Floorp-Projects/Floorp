@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCStreamDestination.h"
+#include "mozilla/ipc/IPCStreamSource.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/Unused.h"
