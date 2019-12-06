@@ -17,7 +17,10 @@ add_task(async function testRemoveSubtree() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     function ignoreNode(node) {
       // Duplicate the walker logic to skip blank nodes...
-      return node.nodeType === Node.TEXT_NODE && !/[^\s]/.test(node.nodeValue);
+      return (
+        node.nodeType === content.Node.TEXT_NODE &&
+        !/[^\s]/.test(node.nodeValue)
+      );
     }
 
     let nextSibling = content.document.querySelector("#longlist").nextSibling;

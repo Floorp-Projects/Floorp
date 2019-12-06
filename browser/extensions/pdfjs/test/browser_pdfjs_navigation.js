@@ -237,7 +237,7 @@ async function contentSetUp() {
 
       var select = document.querySelector("select#scaleSelect");
       select.selectedIndex = 2;
-      select.dispatchEvent(new Event("change"));
+      select.dispatchEvent(new content.Event("change"));
     });
   }
 
@@ -305,7 +305,7 @@ async function runTests(browser) {
         );
         el.dispatchEvent(ev);
       } else {
-        ev = new Event(test.action.event);
+        ev = new content.Event(test.action.event);
       }
       el.dispatchEvent(ev);
 
