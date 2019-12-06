@@ -486,7 +486,7 @@ class PageAction {
   }
 
   async _renderMilestonePopup(message, browser) {
-    let { content } = message;
+    let { content, id } = message;
     let { primary } = content.buttons;
 
     let dateFormat = new Services.intl.DateTimeFormat(
@@ -503,7 +503,7 @@ class PageAction {
     let headerLabel = this.window.document.getElementById(
       "cfr-notification-header-label"
     );
-    let reachedMilestone = null;
+    let reachedMilestone = 0;
     let totalSaved = await TrackingDBService.sumAllEvents();
     for (let milestone of milestones) {
       if (totalSaved >= milestone) {
@@ -541,14 +541,20 @@ class PageAction {
     let primaryBtnString = await this.getStrings(primary.label);
     let primaryActionCallback = () => {
       this.dispatchUserAction(primary.action);
-      RecommendationMap.delete(browser);
+      this._sendTelemetry({
+        message_id: id,
+        bucket_id: content.bucket_id,
+        event: "CLICK_BUTTON",
+      });
 
+      RecommendationMap.delete(browser);
       // Invalidate the pref after the user interacts with the button.
       // We don't need to show the illustration in the privacy panel.
       Services.prefs.clearUserPref(
         "browser.contentblocking.cfr-milestone.milestone-shown-time"
       );
     };
+
     let mainAction = {
       label: primaryBtnString,
       accessKey: primaryBtnString.attributes.accesskey,
@@ -561,11 +567,15 @@ class PageAction {
         fill: #0250BB !important;
       }
     `;
+    style.classList.add("milestone-style");
 
     let arrow;
     let manageClass = event => {
       if (event === "dismissed" || event === "removed") {
-        notification.shadowRoot.removeChild(style);
+        style = notification.shadowRoot.querySelector(".milestone-style");
+        if (style) {
+          notification.shadowRoot.removeChild(style);
+        }
         arrow.classList.remove("cfr-notification-milestone");
       } else if (event === "showing") {
         notification.shadowRoot.appendChild(style);
