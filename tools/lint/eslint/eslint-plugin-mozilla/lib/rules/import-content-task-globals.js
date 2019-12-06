@@ -36,5 +36,38 @@ module.exports = function(context) {
         );
       }
     },
+    "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function(
+      node
+    ) {
+      // The global environment of SpecialPowers.spawn tasks is
+      // controlled by the Sandbox environment created by
+      // SpecialPowersSandbox.jsm. This list should be kept in sync with
+      // that module.
+      let globals = [
+        "Assert",
+        "Blob",
+        "BrowsingContext",
+        "ChromeUtils",
+        "ContentTaskUtils",
+        "EventUtils",
+        "Services",
+        "SpecialPowers",
+        "TextDecoder",
+        "TextEncoder",
+        "URL",
+        "assert",
+        "content",
+        "docShell",
+        "info",
+        "is",
+        "isnot",
+        "ok",
+        "todo",
+        "todo_is",
+      ];
+      for (let global of globals) {
+        helpers.addVarToScope(global, context.getScope(), false);
+      }
+    },
   };
 };
