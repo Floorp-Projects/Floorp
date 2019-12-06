@@ -10,7 +10,6 @@ Debugger(g).onDebuggerStatement = function (frame) {
     assertEq(frame.this instanceof Object, true);
     assertEq(frame.older instanceof Debugger.Frame, true);
     assertEq(frame.callee instanceof Debugger.Object, true);
-    assertEq(frame.generator, false);
     assertEq(frame.constructing, false);
     assertEq(frame.arguments.length, 0);
     f = frame;
@@ -22,6 +21,5 @@ assertThrowsInstanceOf(function () { f.type; }, Error);
 assertThrowsInstanceOf(function () { f.this; }, Error);
 assertThrowsInstanceOf(function () { f.older; }, Error);
 assertThrowsInstanceOf(function () { f.callee; }, Error);
-assertThrowsInstanceOf(function () { f.generator; }, Error);
 assertThrowsInstanceOf(function () { f.constructing; }, Error);
 assertThrowsInstanceOf(function () { f.arguments; }, Error);

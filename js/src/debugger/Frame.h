@@ -163,7 +163,6 @@ class DebuggerFrame : public NativeObject {
   static MOZ_MUST_USE bool getEnvironment(
       JSContext* cx, HandleDebuggerFrame frame,
       MutableHandleDebuggerEnvironment result);
-  static bool getIsGenerator(HandleDebuggerFrame frame);
   static MOZ_MUST_USE bool getOffset(JSContext* cx, HandleDebuggerFrame frame,
                                      size_t& result);
   static MOZ_MUST_USE bool getOlder(JSContext* cx, HandleDebuggerFrame frame,
