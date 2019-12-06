@@ -324,7 +324,34 @@ class SourceUnits;
 
 class TokenStreamAnyChars : public TokenStreamShared {
  private:
+  JSContext* const cx;
+
+  /** Options used for parsing/tokenizing. */
+  const JS::ReadOnlyCompileOptions& options_;
+
+  /**
+   * Pointer used internally to test whether in strict mode.  Use |strictMode()|
+   * instead of this field.
+   */
+  StrictModeGetter* const strictModeGetter_;
+
+  /** Input filename or null. */
+  const char* const filename_;
+
+  /**
+   * The offset of the first invalid escape in a template literal.  (If there is
+   * one -- if not, the value of this field is meaningless.)
+   *
+   * See also |invalidTemplateEscapeType|.
+   */
   uint32_t invalidTemplateEscapeOffset = 0;
+
+  /**
+   * The type of the first invalid escape in a template literal.  (If there
+   * isn't one, this will be |None|.)
+   *
+   * See also |invalidTemplateEscapeOffset|.
+   */
   InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
  public:
@@ -525,23 +552,49 @@ class TokenStreamAnyChars : public TokenStreamShared {
   mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
 
  protected:
-  // Options used for parsing/tokenizing.
-  const JS::ReadOnlyCompileOptions& options_;
-
-  Token tokens[ntokens];  // circular token buffer
+  Token tokens[ntokens] = {};  // circular token buffer
 
  private:
-  unsigned cursor_;  // index of last parsed token
+  unsigned cursor_ = 0;  // index of last parsed token
  protected:
-  unsigned lookahead;      // count of lookahead tokens
+  unsigned lookahead = 0;  // count of lookahead tokens
   unsigned lineno;         // current line number
   TokenStreamFlags flags;  // flags -- see above
-  size_t linebase;         // start of current line
-  size_t
-      prevLinebase;  // start of previous line;  size_t(-1) if on the first line
-  const char* filename_;             // input filename or null
-  UniqueTwoByteChars displayURL_;    // the user's requested source URL or null
-  UniqueTwoByteChars sourceMapURL_;  // source map's filename or null
+  size_t linebase = 0;     // start of current line
+  size_t prevLinebase =
+      size_t(-1);  // start of previous line;  size_t(-1) if on the first line
+  UniqueTwoByteChars displayURL_ =
+      nullptr;  // the user's requested source URL or null
+  UniqueTwoByteChars sourceMapURL_ = nullptr;  // source map's filename or null
+
+  // Computing accurate column numbers requires at *some* point linearly
+  // iterating through prior source units in the line to properly account for
+  // multi-unit code points.  This is quadratic if counting happens repeatedly.
+  //
+  // But usually we need columns for advancing offsets through scripts.  By
+  // caching the last ((line number, offset) => relative column) mapping (in
+  // similar manner to how |SourceUnits::lastIndex_| is used to cache
+  // (offset => line number) mappings) we can usually avoid re-iterating through
+  // the common line prefix.
+  //
+  // Additionally, we avoid hash table lookup costs by caching the
+  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
+  // have to look it up -- or it hasn't been created yet.)  This pointer is
+  // invalidated when a lookup on a new line occurs, but as it's not a pointer
+  // at literal element data, it's *not* invalidated when new entries are added
+  // to such a vector.
+  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
+  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
+  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
+  mutable uint32_t lastComputedColumn_ = 0;
+
+  /**
+   * Whether syntax errors should or should not contain details about the
+   * precise nature of the error.  (This is intended for use in suppressing
+   * content-revealing details about syntax errors in cross-origin scripts on
+   * the web.)
+   */
+  const bool mutedErrors;
 
   /**
    * An array storing whether a TokenKind observed while attempting to extend
@@ -565,31 +618,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
    *       is trivial.  See bug 639420.
    */
   bool isExprEnding[size_t(TokenKind::Limit)] = {};  // all-false initially
-
-  JSContext* const cx;
-  bool mutedErrors;
-  StrictModeGetter* strictModeGetter;  // used to test for strict mode
-
-  // Computing accurate column numbers requires at *some* point linearly
-  // iterating through prior source units in the line to properly account for
-  // multi-unit code points.  This is quadratic if counting happens repeatedly.
-  //
-  // But usually we need columns for advancing offsets through scripts.  By
-  // caching the last ((line number, offset) => relative column) mapping (in
-  // similar manner to how |SourceUnits::lastIndex_| is used to cache
-  // (offset => line number) mappings) we can usually avoid re-iterating through
-  // the common line prefix.
-  //
-  // Additionally, we avoid hash table lookup costs by caching the
-  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
-  // have to look it up -- or it hasn't been created yet.)  This pointer is
-  // invalidated when a lookup on a new line occurs, but as it's not a pointer
-  // at literal element data, it's *not* invalidated when new entries are added
-  // to such a vector.
-  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
-  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
-  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
-  mutable uint32_t lastComputedColumn_ = 0;
 
   // End of fields.
 
@@ -667,7 +695,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // This is private because it should only be called by the tokenizer while
   // tokenizing not by, for example, BytecodeEmitter.
   bool strictMode() const {
-    return strictModeGetter && strictModeGetter->strictMode();
+    return strictModeGetter_ && strictModeGetter_->strictMode();
   }
 
   void setInvalidTemplateEscape(uint32_t offset, InvalidEscapeType type) {
