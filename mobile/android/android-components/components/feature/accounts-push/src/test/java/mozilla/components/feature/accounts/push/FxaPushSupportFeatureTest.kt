@@ -4,7 +4,7 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package mozilla.components.feature.accounts
+package mozilla.components.feature.accounts.push
 
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any

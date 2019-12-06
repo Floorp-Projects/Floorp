@@ -4,7 +4,7 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package mozilla.components.feature.accounts
+package mozilla.components.feature.accounts.push
 
 import android.content.Context
 import androidx.lifecycle.Lifecycle
@@ -27,7 +27,7 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class AccountObserverTest {
+class FxaPushSupportAccountObserverTest {
 
     private val context: Context = mock()
     private val accountManager: FxaAccountManager = mock()
@@ -39,7 +39,13 @@ class AccountObserverTest {
         val lifecycle: Lifecycle = mock()
         val lifecycleOwner: LifecycleOwner = mock()
         val constellation: DeviceConstellation = mock()
-        val observer = AccountObserver(testContext, accountManager, constellationObserver, lifecycleOwner, false)
+        val observer = FxaPushSupportAccountObserver(
+            testContext,
+            accountManager,
+            constellationObserver,
+            lifecycleOwner,
+            false
+        )
 
         `when`(accountManager.authenticatedAccount()).thenReturn(account)
         `when`(account.deviceConstellation()).thenReturn(constellation)
@@ -53,7 +59,13 @@ class AccountObserverTest {
 
     @Test
     fun `onLoggedOut removes cache`() {
-        val observer = AccountObserver(testContext, accountManager, constellationObserver, mock(), false)
+        val observer = FxaPushSupportAccountObserver(
+            testContext,
+            accountManager,
+            constellationObserver,
+            mock(),
+            false
+        )
 
         preference(testContext).edit().putString(LAST_VERIFIED, "{\"timestamp\": 100, \"totalCount\": 0}").apply()
 

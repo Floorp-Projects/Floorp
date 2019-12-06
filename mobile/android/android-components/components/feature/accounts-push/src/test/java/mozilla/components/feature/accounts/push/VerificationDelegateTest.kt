@@ -4,9 +4,9 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package mozilla.components.feature.accounts
+package mozilla.components.feature.accounts.push
 
-import mozilla.components.feature.accounts.VerificationDelegate.Companion.MAX_REQUEST_IN_INTERVAL
+import mozilla.components.feature.accounts.push.VerificationDelegate.Companion.MAX_REQUEST_IN_INTERVAL
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.accounts
+package mozilla.components.feature.accounts.push
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
@@ -45,7 +45,13 @@ class FxaPushSupportFeature(
     init {
         val constellationObserver = ConstellationObserver(context, push)
 
-        val accountObserver = AccountObserver(context, accountManager, constellationObserver, owner, autoPause)
+        val accountObserver = FxaPushSupportAccountObserver(
+            context,
+            accountManager,
+            constellationObserver,
+            owner,
+            autoPause
+        )
 
         accountManager.register(accountObserver)
     }
@@ -55,7 +61,7 @@ class FxaPushSupportFeature(
  * An [FxaAccountManager] observer to know when an account has been added, so we can begin observing the device
  * constellation.
  */
-internal class AccountObserver(
+internal class FxaPushSupportAccountObserver(
     private val context: Context,
     private val accountManager: FxaAccountManager,
     private val observer: DeviceConstellationObserver,
