@@ -22,19 +22,22 @@ import android.util.Log
  * To see logs from this class, the user must enable VERBOSE logging for the appropriate tag:
  *   adb shell setprop log.tag.FenixPerf VERBOSE
  */
-class HotStartPerformanceMonitor {
+class HotStartPerformanceMonitor(
+    private val log: (String) -> Unit = { Log.v(Performance.TAG, it) }, // android log to minimize overhead.
+    private val getElapsedRealtime: () -> Long = { SystemClock.elapsedRealtime() }
+) {
 
     private var onRestartMillis: Long = -1
 
     fun onRestartFirstMethodCall() {
-        onRestartMillis = SystemClock.elapsedRealtime()
+        onRestartMillis = getElapsedRealtime()
     }
 
     fun onPostResumeFinalMethodCall() {
         // If onRestart was never called, this is not a hot start: ignore it.
         if (onRestartMillis >= 0) {
-            val elapsedMillis = SystemClock.elapsedRealtime() - onRestartMillis
-            Log.v(Performance.TAG, "hot start: $elapsedMillis") // android log to minimize overhead.
+            val elapsedMillis = getElapsedRealtime() - onRestartMillis
+            log("hot start: $elapsedMillis")
         }
     }
 }
