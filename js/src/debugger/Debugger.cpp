@@ -1201,6 +1201,16 @@ bool Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp) {
   return true;
 }
 
+bool Debugger::wrapNullableDebuggeeObject(JSContext* cx, HandleObject obj,
+                                          MutableHandleDebuggerObject result) {
+  if (!obj) {
+    result.set(nullptr);
+    return true;
+  }
+
+  return wrapDebuggeeObject(cx, obj, result);
+}
+
 bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
                                   MutableHandleDebuggerObject result) {
   MOZ_ASSERT(obj);

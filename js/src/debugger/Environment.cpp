@@ -488,11 +488,10 @@ bool DebuggerEnvironment::getCallee(JSContext* cx,
 
   RootedObject callee(cx, &scope.as<CallObject>().callee());
   if (IsInternalFunctionObject(*callee)) {
-    result.set(nullptr);
-    return true;
+    callee = nullptr;
   }
 
-  return owner()->wrapDebuggeeObject(cx, callee, result);
+  return owner()->wrapNullableDebuggeeObject(cx, callee, result);
 }
 
 bool DebuggerEnvironment::isDebuggee() const {
