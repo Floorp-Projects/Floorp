@@ -51,6 +51,7 @@ const TESTCASES = [
     selectorValues: {
       "[type=password]": "pass1",
     },
+    expectedFormsCount: 1,
 
     // Expected outputs similar to PasswordManager:onFormSubmit
     origin: DEFAULT_ORIGIN,
@@ -67,6 +68,7 @@ const TESTCASES = [
       "[type=password]": "pass1",
     },
 
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -83,6 +85,7 @@ const TESTCASES = [
       "#p2": "pass2",
     },
 
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -101,6 +104,7 @@ const TESTCASES = [
       "#p3": "pass2",
     },
 
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -126,7 +130,7 @@ const TESTCASES = [
       "#u2": "user3",
       "#p3": "ignore-form-submission",
     },
-
+    expectedFormsCount: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -149,6 +153,7 @@ const TESTCASES = [
       "#p3": "pass2",
     },
 
+    expectedFormsCount: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: null,
@@ -168,6 +173,7 @@ const TESTCASES = [
       "[name='recipepword']": "pass2",
     },
 
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "username from recipe",
@@ -193,10 +199,10 @@ async function testFormlesSubmitNavigation(tc, testDoc, scriptName) {
 
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
 
-  let formProcessed = promiseFormsProcessed();
+  let formsProcessed = promiseFormsProcessed(tc.expectedFormsCount);
   // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = testDoc;
-  await formProcessed;
+  await formsProcessed;
   // We eliminate no user input as a reason for not capturing by modifying the value
   setUserInputValues(frameDoc.documentElement, tc.selectorValues)
 
