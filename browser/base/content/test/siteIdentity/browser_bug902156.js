@@ -53,7 +53,7 @@ add_task(async function test1() {
     gIdentityHandler.disableMixedContentProtection();
     await browserLoaded;
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let expected = "Mixed Content Blocker disabled";
       await ContentTaskUtils.waitForCondition(
         () =>
@@ -83,7 +83,7 @@ add_task(async function test1() {
       activeBlocked: false,
       passiveLoaded: false,
     });
-    await ContentTask.spawn(browser, null, function() {
+    await SpecialPowers.spawn(browser, [], function() {
       let actual = content.document.getElementById("mctestdiv").innerHTML;
       is(
         actual,
@@ -111,7 +111,7 @@ add_task(async function test2() {
     gIdentityHandler.disableMixedContentProtection();
     await browserLoaded;
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let expected = "Mixed Content Blocker disabled";
       await ContentTaskUtils.waitForCondition(
         () =>
@@ -132,7 +132,7 @@ add_task(async function test2() {
     url = HTTPS_TEST_ROOT_2 + "file_bug902156_1.html";
     browserLoaded = BrowserTestUtils.browserLoaded(browser, false, url);
     // reload the page using the provided link in the html file
-    await ContentTask.spawn(browser, null, function() {
+    await SpecialPowers.spawn(browser, [], function() {
       let mctestlink = content.document.getElementById("mctestlink");
       mctestlink.click();
     });
@@ -146,7 +146,7 @@ add_task(async function test2() {
       passiveLoaded: false,
     });
 
-    await ContentTask.spawn(browser, null, function() {
+    await SpecialPowers.spawn(browser, [], function() {
       let actual = content.document.getElementById("mctestdiv").innerHTML;
       is(
         actual,

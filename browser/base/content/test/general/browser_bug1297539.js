@@ -40,10 +40,8 @@ async function cutCurrentSelection(elementQueryString, property, browser) {
   await BrowserTestUtils.synthesizeKey("x", { accelKey: true }, browser);
 
   // The editor should be empty after cut.
-  await ContentTask.spawn(
-    browser,
-    [elementQueryString, property],
-    async function([contentElementQueryString, contentProperty]) {
+  await SpecialPowers.spawn(
+    browser, [[elementQueryString, property]], async function([contentElementQueryString, contentProperty]) {
       let element = content.document.querySelector(contentElementQueryString);
       is(
         element[contentProperty],
@@ -72,7 +70,7 @@ add_task(async function test_paste_transferable_plain_text() {
     let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let textArea = content.document.querySelector("#textarea");
       is(
         textArea.value,
@@ -98,7 +96,7 @@ add_task(async function test_paste_transferable_html() {
   await BrowserTestUtils.withNewTab(testPage, async function(browser) {
     // Select all the content in your editor element.
     await BrowserTestUtils.synthesizeMouse("div", 0, 0, {}, browser);
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let element = content.document.querySelector("div");
       let selection = content.window.getSelection();
       selection.selectAllChildren(element);
@@ -110,7 +108,7 @@ add_task(async function test_paste_transferable_html() {
     let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let textArea = content.document.querySelector("div");
       is(
         textArea.innerHTML,

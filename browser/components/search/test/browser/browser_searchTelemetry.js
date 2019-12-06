@@ -254,7 +254,7 @@ add_task(async function test_track_ad_click() {
   );
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, {}, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
@@ -286,7 +286,7 @@ add_task(async function test_track_ad_click() {
   );
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, {}, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
@@ -325,7 +325,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   await BrowserTestUtils.switchTab(gBrowser, tab);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, {}, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;

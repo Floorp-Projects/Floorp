@@ -20,7 +20,7 @@ add_task(async function test_fill_creditCard_but_cancel_login() {
       await EventUtils.synthesizeMouseAtCenter(ccItem, {});
       await Promise.all([osKeyStoreLoginShown, expectPopupClose(browser)]);
 
-      await ContentTask.spawn(browser, {}, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         is(content.document.querySelector("#cc-name").value, "", "Check name");
         is(
           content.document.querySelector("#cc-number").value,

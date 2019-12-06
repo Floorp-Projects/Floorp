@@ -103,7 +103,7 @@ add_task(async function test_getTopWindow() {
       "Window focused before the private window should be the most recent one."
     );
     let popupWindowPromise = BrowserTestUtils.waitForNewWindow();
-    ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
       let features =
         "location=no, personalbar=no, toolbar=no, scrollbars=no, menubar=no, status=no";
       content.window.open("about:blank", "_blank", features);

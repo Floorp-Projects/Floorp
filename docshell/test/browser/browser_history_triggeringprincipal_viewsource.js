@@ -48,7 +48,7 @@ add_task(async function() {
       false,
       HTML_URI
     );
-    await ContentTask.spawn(tab.linkedBrowser, HTML_URI, HTML_URI => {
+    await SpecialPowers.spawn(tab.linkedBrowser, [HTML_URI], HTML_URI => {
       content.document.location = HTML_URI;
     });
     await loadPromise;

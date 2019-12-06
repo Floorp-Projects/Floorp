@@ -237,7 +237,7 @@ var tests = [
         "data:text/html,<input id='test-input'/>",
         async function(browser) {
           let notifyObj = new BasicNotification(id);
-          await ContentTask.spawn(browser, {}, function() {
+          await SpecialPowers.spawn(browser, [], function() {
             content.document.getElementById("test-input").focus();
           });
 
@@ -258,7 +258,7 @@ var tests = [
           }
 
           // Check that the input field is still focused inside the browser.
-          await ContentTask.spawn(browser, {}, function() {
+          await SpecialPowers.spawn(browser, [], function() {
             is(
               content.document.activeElement,
               content.document.getElementById("test-input")

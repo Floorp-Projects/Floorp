@@ -15,7 +15,7 @@ add_task(async function test() {
 
       faviconPromise = waitForLinkAvailable(tabBrowser);
 
-      await ContentTask.spawn(tabBrowser, null, function() {
+      await SpecialPowers.spawn(tabBrowser, [], function() {
         content.history.pushState("page2", "page2", "page2");
       });
 

@@ -147,17 +147,15 @@ async function testWebAudioWithGUM(testParameters) {
 
   info("- check whether audio context starts running -");
   try {
-    await ContentTask.spawn(
-      tab.linkedBrowser,
-      null,
-      checkingAudioContextRunningState
+    await SpecialPowers.spawn(
+      tab.linkedBrowser, [], checkingAudioContextRunningState
     );
   } catch (error) {
     ok(false, error.toString());
   }
 
   try {
-    await ContentTask.spawn(tab.linkedBrowser, testParameters, callGUM);
+    await SpecialPowers.spawn(tab.linkedBrowser, [testParameters], callGUM);
   } catch (error) {
     ok(false, error.toString());
   }
@@ -167,7 +165,7 @@ async function testWebAudioWithGUM(testParameters) {
     let resumeFunc = testParameters.shouldAllowStartingContext
       ? resumeWithExpectedSuccess
       : resumeWithoutExpectedSuccess;
-    await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
+    await SpecialPowers.spawn(tab.linkedBrowser, [], resumeFunc);
   } catch (error) {
     ok(false, error.toString());
   }

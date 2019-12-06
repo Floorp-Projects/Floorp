@@ -16,7 +16,7 @@ add_task(async function() {
   await addTab(TEST_URI);
 
   info("Evaluate an expression that will throw, so we'll have cached messages");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.document.querySelector("button").click();
   });
 

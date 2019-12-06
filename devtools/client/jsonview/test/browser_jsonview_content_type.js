@@ -75,7 +75,7 @@ function testType(isValid, type, params = "") {
   return addJsonViewTab(TEST_JSON_URL).then(
     async function() {
       ok(isValid, "The JSON Viewer should only load for valid content types.");
-      await ContentTask.spawn(gBrowser.selectedBrowser, type, function(
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [type], function(
         contentType
       ) {
         is(

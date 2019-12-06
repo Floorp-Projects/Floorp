@@ -55,7 +55,7 @@ add_task(async function() {
   );
   ok(popupNotification, "Test 2, Should have a click-to-play notification");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -67,7 +67,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     plugin.style.width = "300px";
   });
@@ -75,7 +75,7 @@ add_task(async function() {
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -87,16 +87,16 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     plugin.style.height = "300px";
   });
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     content.document.getElementById("test").clientTop;
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -108,17 +108,17 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     plugin.style.width = "10px";
     plugin.style.height = "10px";
   });
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     content.document.getElementById("test").clientTop;
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -130,17 +130,17 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     plugin.style.height = "300px";
     plugin.style.width = "300px";
   });
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     content.document.getElementById("test").clientTop;
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");

@@ -62,7 +62,7 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, url_worker.spec, function(spec) {
+  await SpecialPowers.spawn(browser, [url_worker.spec], function(spec) {
     return new content.Promise((resolve, reject) => {
       let w = new content.window.Worker(spec);
       w.onerror = _ => {
@@ -83,7 +83,7 @@ add_task(async function() {
   browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, url_worker.spec, function(spec) {
+  await SpecialPowers.spawn(browser, [url_worker.spec], function(spec) {
     return new content.Promise((resolve, reject) => {
       let w = new content.window.Worker(spec);
       w.onerror = _ => {
@@ -118,7 +118,7 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, "http://example.org" + WORKER_URL, function(
+  await SpecialPowers.spawn(browser, ["http://example.org" + WORKER_URL], function(
     spec
   ) {
     return new content.Promise((resolve, reject) => {
@@ -149,7 +149,7 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, "http://example.org" + WORKER_URL, function(
+  await SpecialPowers.spawn(browser, ["http://example.org" + WORKER_URL], function(
     spec
   ) {
     return new content.Promise((resolve, reject) => {

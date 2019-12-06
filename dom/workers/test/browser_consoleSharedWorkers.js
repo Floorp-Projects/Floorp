@@ -58,7 +58,7 @@ add_task(async function test() {
     var cl = new consoleListener();
   });
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     new content.SharedWorker("sharedWorker_console.js");
   });
 

@@ -109,7 +109,7 @@ async function testDebuggerServerKeepAlive() {
 }
 
 async function assertServerInitialized(browser, expected, message) {
-  const isInitialized = await ContentTask.spawn(browser, null, function() {
+  const isInitialized = await SpecialPowers.spawn(browser, [], function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
@@ -120,7 +120,7 @@ async function assertServerInitialized(browser, expected, message) {
 }
 
 async function setContentServerKeepAlive(browser, keepAlive, message) {
-  await ContentTask.spawn(browser, keepAlive, function(_keepAlive) {
+  await SpecialPowers.spawn(browser, [keepAlive], function(_keepAlive) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );

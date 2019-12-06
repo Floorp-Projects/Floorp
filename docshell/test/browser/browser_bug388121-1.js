@@ -2,7 +2,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function(newBrowser) {
-      await ContentTask.spawn(newBrowser, null, async function() {
+      await SpecialPowers.spawn(newBrowser, [], async function() {
         var prin = content.document.nodePrincipal;
         Assert.notEqual(prin, null, "Loaded principal must not be null");
         Assert.notEqual(

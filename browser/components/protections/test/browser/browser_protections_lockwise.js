@@ -52,7 +52,7 @@ add_task(async function() {
   const { getLoginData } = AboutProtectionsHandler;
 
   info("Check that the correct content is displayed for non-logged in users.");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const noLogins = content.document.querySelector(
         "#lockwise-body-content .no-logins"
@@ -81,7 +81,7 @@ add_task(async function() {
   Services.logins.addLogin(TEST_LOGIN1);
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(
         "#lockwise-body-content .has-logins"
@@ -138,7 +138,7 @@ add_task(async function() {
   Services.logins.addLogin(TEST_LOGIN2);
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(".has-logins");
       return ContentTaskUtils.is_visible(hasLogins);
@@ -157,7 +157,7 @@ add_task(async function() {
   AboutProtectionsHandler.getLoginData = mockGetLoginDataWithSyncedDevices(5);
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(
         "#lockwise-body-content .has-logins"
@@ -188,7 +188,7 @@ add_task(async function() {
     false
   );
   await reloadTab(tab);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const lockwiseCard = content.document.querySelector(".lockwise-card");
       return !lockwiseCard["data-enabled"];

@@ -323,7 +323,7 @@ var tests = [
 
       info("Adding progress listener and performing navigation");
       gBrowser.addProgressListener(progressListener);
-      ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+      SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
         content.document
           .getElementById("iframe")
           .setAttribute("src", "http://example.org/");

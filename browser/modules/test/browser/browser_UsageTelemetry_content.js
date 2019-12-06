@@ -68,7 +68,7 @@ add_task(async function test_context_menu() {
   );
 
   info("Select all the text in the page.");
-  await ContentTask.spawn(tab.linkedBrowser, "", async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
     return new Promise(resolve => {
       content.document.addEventListener("selectionchange", () => resolve(), {
         once: true,
@@ -147,7 +147,7 @@ add_task(async function test_about_newtab() {
     "about:newtab",
     false
   );
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
   });
 

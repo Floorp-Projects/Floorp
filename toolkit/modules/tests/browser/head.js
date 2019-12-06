@@ -91,10 +91,8 @@ function promiseTestHighlighterOutput(
   expectedResult,
   extraTest = () => {}
 ) {
-  return ContentTask.spawn(
-    browser,
-    { word, expectedResult, extraTest: extraTest.toSource() },
-    async function({ word, expectedResult, extraTest }) {
+  return SpecialPowers.spawn(
+    browser, [{ word, expectedResult, extraTest: extraTest.toSource() }], async function({ word, expectedResult, extraTest }) {
       return new Promise((resolve, reject) => {
         let stubbed = {};
         let callCounts = {

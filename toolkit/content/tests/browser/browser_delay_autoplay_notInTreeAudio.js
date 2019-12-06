@@ -44,10 +44,10 @@ add_task(async function block_not_in_tree_media() {
   await waitForTabBlockEvent(tab, false);
 
   info("- check audio's playing state -");
-  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
+  await SpecialPowers.spawn(tab.linkedBrowser, [true], check_audio_pause_state);
 
   info("- playing audio -");
-  await ContentTask.spawn(tab.linkedBrowser, null, play_not_in_tree_audio);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], play_not_in_tree_audio);
 
   info("- tab should be blocked -");
   await waitForTabBlockEvent(tab, true);

@@ -147,7 +147,7 @@ add_task(async function testCtrlShiftArrows(client) {
   );
   const { Input } = client;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const select = content.document.querySelector("select");
     select.selectedIndex = 0;
     select.focus();
@@ -160,7 +160,7 @@ add_task(async function testCtrlShiftArrows(client) {
   await dispatchKeyEvent(Input, "Control", "keyUp", shift);
   await dispatchKeyEvent(Input, "Shift", "keyUp");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const select = content.document.querySelector("select");
     ok(select[0].selected, "First option should be selected");
     ok(select[1].selected, "Second option should be selected");

@@ -44,7 +44,7 @@ add_task(async function test_click_link_within_view_source() {
       false,
       url => url.endsWith("dummy_page.html")
     );
-    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       if (content.document.readyState != "complete") {
         await ContentTaskUtils.waitForEvent(
           content.document,

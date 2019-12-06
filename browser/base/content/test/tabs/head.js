@@ -91,7 +91,7 @@ async function wait_for_tab_media_blocked_event(tab, expectMediaBlocked) {
 
 async function is_audio_playing(tab) {
   let browser = tab.linkedBrowser;
-  let isPlaying = await ContentTask.spawn(browser, {}, async function() {
+  let isPlaying = await SpecialPowers.spawn(browser, [], async function() {
     let audio = content.document.querySelector("audio");
     return !audio.paused;
   });
@@ -100,7 +100,7 @@ async function is_audio_playing(tab) {
 
 async function play(tab, expectPlaying = true) {
   let browser = tab.linkedBrowser;
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let audio = content.document.querySelector("audio");
     audio.play();
   });

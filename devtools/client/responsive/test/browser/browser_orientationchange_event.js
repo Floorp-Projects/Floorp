@@ -26,7 +26,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await pushPref("devtools.responsive.viewport.angle", 0);
   rotateViewport(ui);
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     info("Check the original orientation values before the orientationchange");
     is(
       content.screen.orientation.type,
@@ -63,7 +63,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const browser = ui.getViewportBrowser();
   await browser.reload();
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     info("Check that we still have the previous orientation values.");
     is(content.screen.orientation.angle, 90, "Orientation angle is still 90");
     is(

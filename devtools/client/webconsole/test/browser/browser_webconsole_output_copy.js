@@ -11,7 +11,7 @@ add_task(async function() {
 
   const smokeMessage = "Hello world!";
   const onMessage = waitForMessage(hud, smokeMessage);
-  ContentTask.spawn(gBrowser.selectedBrowser, smokeMessage, function(msg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [smokeMessage], function(msg) {
     content.wrappedJSObject.console.log(msg);
   });
   const { node } = await onMessage;

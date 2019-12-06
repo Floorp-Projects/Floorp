@@ -10,7 +10,7 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     class A {
       constructor() {
         this.myValue = "foo";

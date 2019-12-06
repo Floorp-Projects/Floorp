@@ -24,12 +24,12 @@ add_task(async function() {
 });
 
 async function logMessages(hud) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log("localStorage", content.localStorage);
   });
   const localStorageMsg = await waitFor(() => findMessage(hud, "localStorage"));
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log("sessionStorage", content.sessionStorage);
   });
   const sessionStorageMsg = await waitFor(() =>

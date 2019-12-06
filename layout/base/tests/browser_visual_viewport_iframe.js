@@ -30,10 +30,8 @@ add_task(async () => {
     await BrowserTestUtils.withNewTab(
       { gBrowser: fissionWindow.gBrowser, url },
       async browser => {
-        await ContentTask.spawn(
-          browser,
-          crossOriginIframeUrl,
-          async iframeUrl => {
+        await SpecialPowers.spawn(
+          browser, [crossOriginIframeUrl], async iframeUrl => {
             const iframe = content.document.getElementById("iframe");
             iframe.setAttribute("src", iframeUrl);
 

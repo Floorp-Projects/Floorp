@@ -35,12 +35,10 @@ add_task(async function testWindowOpenHeuristic() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Loading tracking scripts");
-  await ContentTask.spawn(
-    browser,
-    {
+  await SpecialPowers.spawn(
+    browser, [{
       page: TEST_3RD_PARTY_PAGE_WO,
-    },
-    async obj => {
+    }], async obj => {
       let msg = {};
       msg.blockingCallback = (async _ => {
         /* import-globals-from storageAccessAPIHelpers.js */
@@ -110,13 +108,11 @@ add_task(async function testUserInteractionHeuristic() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Loading tracking scripts");
-  await ContentTask.spawn(
-    browser,
-    {
+  await SpecialPowers.spawn(
+    browser, [{
       page: TEST_3RD_PARTY_PAGE_UI,
       popup: TEST_POPUP_PAGE,
-    },
-    async obj => {
+    }], async obj => {
       let msg = {};
       msg.blockingCallback = (async _ => {
         /* import-globals-from storageAccessAPIHelpers.js */
@@ -207,13 +203,11 @@ add_task(async function testUserInteractionHeuristic() {
   await AntiTracking.interactWithTracker();
 
   info("Loading tracking scripts");
-  await ContentTask.spawn(
-    browser,
-    {
+  await SpecialPowers.spawn(
+    browser, [{
       page: TEST_3RD_PARTY_PAGE_UI,
       popup: TEST_POPUP_PAGE,
-    },
-    async obj => {
+    }], async obj => {
       let msg = {};
       msg.blockingCallback = (async _ => {
         await noStorageAccessInitially();

@@ -78,7 +78,7 @@ function waitForLinkedBrowserEvent(tab, event) {
 }
 
 function contentReadyState(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     return content.document.readyState;
   });
 }

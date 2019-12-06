@@ -20,7 +20,7 @@ add_task(async function() {
   ok(isInputFocused(hud), "input node is focused after output is cleared");
 
   info("Focus during message logging");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("console message 2");
   });
   const msg = await waitFor(() => findMessage(hud, "console message 2"));

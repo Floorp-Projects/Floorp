@@ -8,10 +8,8 @@ const TEST_URL =
   "https://example.com/browser/dom/u2f/tests/browser/tab_u2f_result.html";
 
 async function assertStatus(tab, expected) {
-  let actual = await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    async function() {
+  let actual = await SpecialPowers.spawn(
+    tab.linkedBrowser, [], async function() {
       return content.document.getElementById("status").value;
     }
   );
@@ -20,7 +18,7 @@ async function assertStatus(tab, expected) {
 
 async function waitForStatus(tab, expected) {
   /* eslint-disable no-shadow */
-  await ContentTask.spawn(tab.linkedBrowser, [expected], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [[expected]], async function(
     expected
   ) {
     return ContentTaskUtils.waitForCondition(() => {
@@ -37,7 +35,7 @@ function startMakeCredentialRequest(tab) {
   challenge = bytesToBase64UrlSafe(challenge);
 
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(tab.linkedBrowser, [challenge], async function([
+  return SpecialPowers.spawn(tab.linkedBrowser, [[challenge]], async function([
     challenge,
   ]) {
     let appId = content.location.origin;
@@ -62,10 +60,8 @@ function startGetAssertionRequest(tab) {
   keyHandle = bytesToBase64UrlSafe(keyHandle);
 
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    [challenge, keyHandle],
-    async function([challenge, keyHandle]) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser, [[challenge, keyHandle]], async function([challenge, keyHandle]) {
       let appId = content.location.origin;
       let key = { version: "U2F_V2", keyHandle };
 

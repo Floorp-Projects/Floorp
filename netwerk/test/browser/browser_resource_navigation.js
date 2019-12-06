@@ -12,7 +12,7 @@ add_task(async function() {
     { gBrowser, url: "resource://gre/" },
     async function(browser) {
       // Following a directory link shall properly open the directory (bug 1224046)
-      await ContentTask.spawn(browser, {}, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         let link = Array.prototype.filter.call(
           content.document.getElementsByClassName("dir"),
           function(element) {
@@ -38,7 +38,7 @@ add_task(async function() {
       );
 
       // Following the parent link shall properly open the parent (bug 1366180)
-      await ContentTask.spawn(browser, {}, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         let link = content.document
           .getElementById("UI_goUp")
           .getElementsByTagName("a")[0];
@@ -53,7 +53,7 @@ add_task(async function() {
       );
 
       // Following a link to a given file shall properly open the file.
-      await ContentTask.spawn(browser, {}, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         let link = Array.prototype.filter.call(
           content.document.getElementsByClassName("file"),
           function(element) {
