@@ -41,7 +41,7 @@ add_task(async function test_frametree() {
     let frame = content.document.createElement("iframe");
     frame.setAttribute("src", url);
     content.document.body.appendChild(frame);
-    return ContentTaskUtils.waitForEvent(frame, "load");
+    await ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The dynamic frame should be ignored.
@@ -76,7 +76,7 @@ add_task(async function test_frametree_dynamic() {
       frame,
       content.document.getElementsByTagName("iframe")[1]
     );
-    return ContentTaskUtils.waitForEvent(frame, "load");
+    await ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The page still has two iframes.
@@ -88,7 +88,7 @@ add_task(async function test_frametree_dynamic() {
     let frame = content.document.createElement("iframe");
     frame.setAttribute("src", url);
     content.document.body.appendChild(frame);
-    return ContentTaskUtils.waitForEvent(frame, "load");
+    await ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The page still has two iframes.
@@ -113,7 +113,10 @@ add_task(async function test_frametree_dynamic() {
 async function countNonDynamicFrames(browser) {
   return SpecialPowers.spawn(browser, [], async () => {
     let count = 0;
-    SessionStoreUtils.forEachNonDynamicChildFrame(content, () => count++);
+    content.SessionStoreUtils.forEachNonDynamicChildFrame(
+      content,
+      () => count++
+    );
     return count;
   });
 }
@@ -121,7 +124,7 @@ async function countNonDynamicFrames(browser) {
 async function enumerateIndexes(browser) {
   return SpecialPowers.spawn(browser, [], async () => {
     let indexes = [];
-    SessionStoreUtils.forEachNonDynamicChildFrame(content, (frame, i) =>
+    content.SessionStoreUtils.forEachNonDynamicChildFrame(content, (frame, i) =>
       indexes.push(i)
     );
     return indexes.join(",");
