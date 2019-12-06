@@ -1196,7 +1196,12 @@ function getHtmlBrowser() {
       }
     );
     htmlBrowserLoaded = new Promise(resolve =>
-      htmlBrowser.addEventListener("load", resolve, { once: true })
+      htmlBrowser.addEventListener("load", function loadListener() {
+        if (htmlBrowser.contentWindow.location.href != "about:blank") {
+          htmlBrowser.removeEventListener("load", loadListener);
+          resolve();
+        }
+      })
     ).then(() => htmlBrowser.contentWindow.initialize(htmlViewOpts));
   }
   return htmlBrowser;
