@@ -101,7 +101,8 @@ void WaylandDMABUFTextureHostOGL::CreateRenderTexture(
 
 void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(mSurface);
 
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -120,7 +121,8 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
   auto formatTmp = format == gfx::SurfaceFormat::R8G8B8A8
                        ? gfx::SurfaceFormat::B8G8R8A8
                        : gfx::SurfaceFormat::B8G8R8X8;
-  wr::ImageDescriptor descriptor(GetSize(), formatTmp);
+  wr::ImageDescriptor descriptor(GetSize(), formatTmp,
+                                 aPreferCompositorSurface);
   (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
 }
 

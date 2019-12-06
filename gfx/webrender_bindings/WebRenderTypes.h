@@ -197,34 +197,41 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
     height = 0;
     stride = 0;
     opacity = OpacityType::HasAlphaChannel;
+    prefer_compositor_surface = false;
   }
 
-  ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
+  ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+                  bool aPreferCompositorSurface = false) {
     format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = 0;
     opacity = gfx::IsOpaque(aFormat) ? OpacityType::Opaque
                                      : OpacityType::HasAlphaChannel;
+    prefer_compositor_surface = aPreferCompositorSurface;
   }
 
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
-                  gfx::SurfaceFormat aFormat) {
+                  gfx::SurfaceFormat aFormat,
+                  bool aPreferCompositorSurface = false) {
     format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
     opacity = gfx::IsOpaque(aFormat) ? OpacityType::Opaque
                                      : OpacityType::HasAlphaChannel;
+    prefer_compositor_surface = aPreferCompositorSurface;
   }
 
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
-                  gfx::SurfaceFormat aFormat, OpacityType aOpacity) {
+                  gfx::SurfaceFormat aFormat, OpacityType aOpacity,
+                  bool aPreferCompositorSurface = false) {
     format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
     opacity = aOpacity;
+    prefer_compositor_surface = aPreferCompositorSurface;
   }
 };
 

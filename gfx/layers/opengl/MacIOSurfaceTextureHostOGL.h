@@ -71,7 +71,8 @@ class MacIOSurfaceTextureHostOGL : public TextureHost {
   void PushResourceUpdates(wr::TransactionBuilder& aResources,
                            ResourceUpdateOp aOp,
                            const Range<wr::ImageKey>& aImageKeys,
-                           const wr::ExternalImageId& aExtID) override;
+                           const wr::ExternalImageId& aExtID,
+                           const bool aPreferCompositorSurface) override;
 
   void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                         const wr::LayoutRect& aBounds,
