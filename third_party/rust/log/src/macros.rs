@@ -15,8 +15,10 @@
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::{log, Level};
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
+/// use log::Level;
 ///
 /// # fn main() {
 /// let data = (42, "Forty-two");
@@ -46,9 +48,9 @@ macro_rules! log {
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::error;
-///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// # fn main() {
 /// let (err_info, port) = ("No connection", 22);
 ///
@@ -58,11 +60,11 @@ macro_rules! log {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! error {
-    (target: $target:expr, $($arg:tt)+) => (
-        log!(target: $target, $crate::Level::Error, $($arg)+);
+    (target: $target:expr, $($arg:tt)*) => (
+        log!(target: $target, $crate::Level::Error, $($arg)*);
     );
-    ($($arg:tt)+) => (
-        log!($crate::Level::Error, $($arg)+);
+    ($($arg:tt)*) => (
+        log!($crate::Level::Error, $($arg)*);
     )
 }
 
@@ -70,9 +72,9 @@ macro_rules! error {
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::warn;
-///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// # fn main() {
 /// let warn_description = "Invalid Input";
 ///
@@ -82,11 +84,11 @@ macro_rules! error {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! warn {
-    (target: $target:expr, $($arg:tt)+) => (
-        log!(target: $target, $crate::Level::Warn, $($arg)+);
+    (target: $target:expr, $($arg:tt)*) => (
+        log!(target: $target, $crate::Level::Warn, $($arg)*);
     );
-    ($($arg:tt)+) => (
-        log!($crate::Level::Warn, $($arg)+);
+    ($($arg:tt)*) => (
+        log!($crate::Level::Warn, $($arg)*);
     )
 }
 
@@ -94,9 +96,9 @@ macro_rules! warn {
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::info;
-///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// # fn main() {
 /// # struct Connection { port: u32, speed: f32 }
 /// let conn_info = Connection { port: 40, speed: 3.20 };
@@ -108,11 +110,11 @@ macro_rules! warn {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! info {
-    (target: $target:expr, $($arg:tt)+) => (
-        log!(target: $target, $crate::Level::Info, $($arg)+);
+    (target: $target:expr, $($arg:tt)*) => (
+        log!(target: $target, $crate::Level::Info, $($arg)*);
     );
-    ($($arg:tt)+) => (
-        log!($crate::Level::Info, $($arg)+);
+    ($($arg:tt)*) => (
+        log!($crate::Level::Info, $($arg)*);
     )
 }
 
@@ -120,9 +122,9 @@ macro_rules! info {
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::debug;
-///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// # fn main() {
 /// # struct Position { x: f32, y: f32 }
 /// let pos = Position { x: 3.234, y: -1.223 };
@@ -133,11 +135,11 @@ macro_rules! info {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! debug {
-    (target: $target:expr, $($arg:tt)+) => (
-        log!(target: $target, $crate::Level::Debug, $($arg)+);
+    (target: $target:expr, $($arg:tt)*) => (
+        log!(target: $target, $crate::Level::Debug, $($arg)*);
     );
-    ($($arg:tt)+) => (
-        log!($crate::Level::Debug, $($arg)+);
+    ($($arg:tt)*) => (
+        log!($crate::Level::Debug, $($arg)*);
     )
 }
 
@@ -145,9 +147,9 @@ macro_rules! debug {
 ///
 /// # Examples
 ///
-/// ```edition2018
-/// use log::trace;
-///
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// # fn main() {
 /// # struct Position { x: f32, y: f32 }
 /// let pos = Position { x: 3.234, y: -1.223 };
@@ -160,11 +162,11 @@ macro_rules! debug {
 /// ```
 #[macro_export(local_inner_macros)]
 macro_rules! trace {
-    (target: $target:expr, $($arg:tt)+) => (
-        log!(target: $target, $crate::Level::Trace, $($arg)+);
+    (target: $target:expr, $($arg:tt)*) => (
+        log!(target: $target, $crate::Level::Trace, $($arg)*);
     );
-    ($($arg:tt)+) => (
-        log!($crate::Level::Trace, $($arg)+);
+    ($($arg:tt)*) => (
+        log!($crate::Level::Trace, $($arg)*);
     )
 }
 
@@ -176,9 +178,10 @@ macro_rules! trace {
 ///
 /// # Examples
 ///
-/// ```edition2018
+/// ```rust
+/// # #[macro_use]
+/// # extern crate log;
 /// use log::Level::Debug;
-/// use log::{debug, log_enabled};
 ///
 /// # fn foo() {
 /// if log_enabled!(Debug) {

@@ -1,13 +1,11 @@
 use std::fmt;
 use std::time::SystemTime;
 
-use humantime::{
-    format_rfc3339_micros, format_rfc3339_millis, format_rfc3339_nanos, format_rfc3339_seconds,
-};
+use humantime::{format_rfc3339_nanos, format_rfc3339_seconds};
 
-use crate::fmt::{Formatter, TimestampPrecision};
+use ::fmt::Formatter;
 
-pub(in crate::fmt) mod glob {
+pub(in ::fmt) mod glob {
     pub use super::*;
 }
 
@@ -32,46 +30,12 @@ impl Formatter {
     ///
     /// [`Timestamp`]: struct.Timestamp.html
     pub fn timestamp(&self) -> Timestamp {
-        Timestamp {
-            time: SystemTime::now(),
-            precision: TimestampPrecision::Seconds,
-        }
+        Timestamp(SystemTime::now())
     }
 
-    /// Get a [`Timestamp`] for the current date and time in UTC with full
-    /// second precision.
-    pub fn timestamp_seconds(&self) -> Timestamp {
-        Timestamp {
-            time: SystemTime::now(),
-            precision: TimestampPrecision::Seconds,
-        }
-    }
-
-    /// Get a [`Timestamp`] for the current date and time in UTC with
-    /// millisecond precision.
-    pub fn timestamp_millis(&self) -> Timestamp {
-        Timestamp {
-            time: SystemTime::now(),
-            precision: TimestampPrecision::Millis,
-        }
-    }
-
-    /// Get a [`Timestamp`] for the current date and time in UTC with
-    /// microsecond precision.
-    pub fn timestamp_micros(&self) -> Timestamp {
-        Timestamp {
-            time: SystemTime::now(),
-            precision: TimestampPrecision::Micros,
-        }
-    }
-
-    /// Get a [`Timestamp`] for the current date and time in UTC with
-    /// nanosecond precision.
-    pub fn timestamp_nanos(&self) -> Timestamp {
-        Timestamp {
-            time: SystemTime::now(),
-            precision: TimestampPrecision::Nanos,
-        }
+    /// Get a [`PreciseTimestamp`] for the current date and time in UTC with nanos.
+    pub fn precise_timestamp(&self) -> PreciseTimestamp {
+        PreciseTimestamp(SystemTime::now())
     }
 }
 
@@ -82,10 +46,13 @@ impl Formatter {
 /// [RFC3339]: https://www.ietf.org/rfc/rfc3339.txt
 /// [`Display`]: https://doc.rust-lang.org/stable/std/fmt/trait.Display.html
 /// [`Formatter`]: struct.Formatter.html
-pub struct Timestamp {
-    time: SystemTime,
-    precision: TimestampPrecision,
-}
+pub struct Timestamp(SystemTime);
+
+/// An [RFC3339] formatted timestamp with nanos.
+///
+/// [RFC3339]: https://www.ietf.org/rfc/rfc3339.txt
+#[derive(Debug)]
+pub struct PreciseTimestamp(SystemTime);
 
 impl fmt::Debug for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -99,20 +66,19 @@ impl fmt::Debug for Timestamp {
         }
 
         f.debug_tuple("Timestamp")
-            .field(&TimestampValue(&self))
-            .finish()
+        .field(&TimestampValue(&self))
+        .finish()
     }
 }
 
 impl fmt::Display for Timestamp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let formatter = match self.precision {
-            TimestampPrecision::Seconds => format_rfc3339_seconds,
-            TimestampPrecision::Millis => format_rfc3339_millis,
-            TimestampPrecision::Micros => format_rfc3339_micros,
-            TimestampPrecision::Nanos => format_rfc3339_nanos,
-        };
+    fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+        format_rfc3339_seconds(self.0).fmt(f)
+    }
+}
 
-        formatter(self.time).fmt(f)
+impl fmt::Display for PreciseTimestamp {
+    fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+        format_rfc3339_nanos(self.0).fmt(f)
     }
 }

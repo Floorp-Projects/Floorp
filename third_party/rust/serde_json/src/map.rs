@@ -1,3 +1,11 @@
+// Copyright 2017 Serde Developers
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 //! A map of String to serde_json::Value.
 //!
 //! By default the map is backed by a [`BTreeMap`]. Enable the `preserve_order`
@@ -126,10 +134,7 @@ impl Map<String, Value> {
         String: Borrow<Q>,
         Q: Ord + Eq + Hash,
     {
-        #[cfg(feature = "preserve_order")]
-        return self.map.swap_remove(key);
-        #[cfg(not(feature = "preserve_order"))]
-        return self.map.remove(key);
+        self.map.remove(key)
     }
 
     /// Gets the given key's corresponding entry in the map for in-place
@@ -239,7 +244,7 @@ impl PartialEq for Map<String, Value> {
 /// Access an element of this map. Panics if the given key is not present in the
 /// map.
 ///
-/// ```edition2018
+/// ```rust
 /// # use serde_json::Value;
 /// #
 /// # let val = &Value::String("".to_owned());
@@ -267,13 +272,16 @@ where
 /// Mutably access an element of this map. Panics if the given key is not
 /// present in the map.
 ///
-/// ```edition2018
-/// # use serde_json::json;
+/// ```rust
+/// # #[macro_use]
+/// # extern crate serde_json;
 /// #
-/// # let mut map = serde_json::Map::new();
-/// # map.insert("key".to_owned(), serde_json::Value::Null);
+/// # fn main() {
+/// #     let mut map = serde_json::Map::new();
+/// #     map.insert("key".to_owned(), serde_json::Value::Null);
 /// #
 /// map["key"] = json!("value");
+/// # }
 /// ```
 impl<'a, Q: ?Sized> ops::IndexMut<&'a Q> for Map<String, Value>
 where
@@ -443,7 +451,7 @@ impl<'a> Entry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```rust
     /// let mut map = serde_json::Map::new();
     /// assert_eq!(map.entry("serde").key(), &"serde");
     /// ```
@@ -459,13 +467,16 @@ impl<'a> Entry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// let mut map = serde_json::Map::new();
     /// map.entry("serde").or_insert(json!(12));
     ///
     /// assert_eq!(map["serde"], 12);
+    /// # }
     /// ```
     pub fn or_insert(self, default: Value) -> &'a mut Value {
         match self {
@@ -480,13 +491,16 @@ impl<'a> Entry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// let mut map = serde_json::Map::new();
     /// map.entry("serde").or_insert_with(|| json!("hoho"));
     ///
     /// assert_eq!(map["serde"], "hoho".to_owned());
+    /// # }
     /// ```
     pub fn or_insert_with<F>(self, default: F) -> &'a mut Value
     where
@@ -505,7 +519,7 @@ impl<'a> VacantEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```rust
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -527,9 +541,11 @@ impl<'a> VacantEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -540,6 +556,7 @@ impl<'a> VacantEntry<'a> {
     ///     }
     ///     Entry::Occupied(_) => unimplemented!(),
     /// }
+    /// # }
     /// ```
     #[inline]
     pub fn insert(self, value: Value) -> &'a mut Value {
@@ -552,9 +569,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -566,6 +585,7 @@ impl<'a> OccupiedEntry<'a> {
     ///     }
     ///     Entry::Vacant(_) => unimplemented!(),
     /// }
+    /// # }
     /// ```
     #[inline]
     pub fn key(&self) -> &String {
@@ -576,9 +596,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -590,6 +612,7 @@ impl<'a> OccupiedEntry<'a> {
     ///     }
     ///     Entry::Vacant(_) => unimplemented!(),
     /// }
+    /// # }
     /// ```
     #[inline]
     pub fn get(&self) -> &Value {
@@ -600,9 +623,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -616,6 +641,7 @@ impl<'a> OccupiedEntry<'a> {
     /// }
     ///
     /// assert_eq!(map["serde"].as_array().unwrap().len(), 4);
+    /// # }
     /// ```
     #[inline]
     pub fn get_mut(&mut self) -> &mut Value {
@@ -626,9 +652,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -642,6 +670,7 @@ impl<'a> OccupiedEntry<'a> {
     /// }
     ///
     /// assert_eq!(map["serde"].as_array().unwrap().len(), 4);
+    /// # }
     /// ```
     #[inline]
     pub fn into_mut(self) -> &'a mut Value {
@@ -653,9 +682,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -668,6 +699,7 @@ impl<'a> OccupiedEntry<'a> {
     ///     }
     ///     Entry::Vacant(_) => unimplemented!(),
     /// }
+    /// # }
     /// ```
     #[inline]
     pub fn insert(&mut self, value: Value) -> Value {
@@ -678,9 +710,11 @@ impl<'a> OccupiedEntry<'a> {
     ///
     /// # Examples
     ///
-    /// ```edition2018
-    /// # use serde_json::json;
+    /// ```rust
+    /// # #[macro_use]
+    /// # extern crate serde_json;
     /// #
+    /// # fn main() {
     /// use serde_json::map::Entry;
     ///
     /// let mut map = serde_json::Map::new();
@@ -692,13 +726,11 @@ impl<'a> OccupiedEntry<'a> {
     ///     }
     ///     Entry::Vacant(_) => unimplemented!(),
     /// }
+    /// # }
     /// ```
     #[inline]
     pub fn remove(self) -> Value {
-        #[cfg(feature = "preserve_order")]
-        return self.occupied.swap_remove();
-        #[cfg(not(feature = "preserve_order"))]
-        return self.occupied.remove();
+        self.occupied.remove()
     }
 }
 
