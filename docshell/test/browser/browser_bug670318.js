@@ -16,7 +16,7 @@ add_task(async function test() {
     { gBrowser, url: "about:blank" },
     async function(browser) {
       if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
-        await SpecialPowers.spawn(browser, [URL], async function(URL) {
+        await ContentTask.spawn(browser, URL, async function(URL) {
           let history = docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory;
           let count = 0;
@@ -29,22 +29,16 @@ add_task(async function test() {
           let listener = {
             OnHistoryNewEntry(aNewURI) {
               if (aNewURI.spec == URL && 5 == ++count) {
-                docShell.chromeEventHandler.addEventListener(
+                addEventListener(
                   "load",
                   function onLoad() {
-                    docShell.chromeEventHandler.removeEventListener(
-                      "load",
-                      onLoad,
-                      true
-                    );
-
                     Assert.ok(
                       history.index < history.count,
                       "history.index is valid"
                     );
                     testDone.resolve();
                   },
-                  true
+                  { capture: true, once: true }
                 );
 
                 history.legacySHistory.removeSHistoryListener(listener);
@@ -98,9 +92,9 @@ add_task(async function test() {
         async OnHistoryNewEntry(aNewURI) {
           if (aNewURI.spec == URL && 5 == ++count) {
             history.removeSHistoryListener(listener);
-            await SpecialPowers.spawn(browser, [], async () => {
-              let promise = new Promise(resolve => {
-                docShell.chromeEventHandler.addEventListener(
+            await ContentTask.spawn(browser, null, () => {
+              return new Promise(resolve => {
+                addEventListener(
                   "load",
                   evt => {
                     let history = docShell.QueryInterface(Ci.nsIWebNavigation)
@@ -113,10 +107,9 @@ add_task(async function test() {
                   },
                   { capture: true, once: true }
                 );
-              });
 
-              content.location.reload();
-              await promise;
+                content.location.reload();
+              });
             });
             testDone.resolve();
           }
