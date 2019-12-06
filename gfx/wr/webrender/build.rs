@@ -36,7 +36,7 @@ fn write_shaders(glsl_files: Vec<PathBuf>, shader_file_path: &Path) {
         let mut hasher = Sha256::new();
         let base = glsl.parent().unwrap();
         assert!(base.is_dir());
-        ShaderSourceParser::new().parse(
+        parse_shader_source(
             Cow::Owned(shader_source_from_file(&glsl)),
             &|f| Cow::Owned(shader_source_from_file(&base.join(&format!("{}.glsl", f)))),
             &mut |s| hasher.input(s.as_bytes()),
