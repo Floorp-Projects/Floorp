@@ -271,6 +271,10 @@ void AndroidDataEncoder::ProcessOutput(Sample::GlobalRef&& aSample,
   }
   AssertOnTaskQueue();
 
+  if (!mJavaEncoder) {
+    return;
+  }
+
   AutoRelease releaseSample(mJavaEncoder, aSample);
 
   BufferInfo::LocalRef info = aSample->Info();
