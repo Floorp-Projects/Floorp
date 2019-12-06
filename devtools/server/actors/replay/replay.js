@@ -1350,7 +1350,6 @@ function getFrameData(index) {
     type: frame.type,
     callee: getObjectId(frame.callee),
     environment: getObjectId(frame.environment),
-    generator: frame.generator,
     constructing: frame.constructing,
     this: convertValue(frame.this),
     script,

@@ -543,12 +543,6 @@ bool DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
 }
 
 /* static */
-bool DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame) {
-  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-  return referent.hasScript() && referent.script()->isGenerator();
-}
-
-/* static */
 bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
                               size_t& result) {
   if (frame->isOnStack()) {
@@ -1408,12 +1402,10 @@ bool DebuggerFrame::CallData::calleeGetter() {
 }
 
 bool DebuggerFrame::CallData::generatorGetter() {
-  if (!ensureOnStack()) {
-    return false;
-  }
-
-  args.rval().setBoolean(DebuggerFrame::getIsGenerator(frame));
-  return true;
+  JS_ReportErrorASCII(cx,
+                      "Debugger.Frame.prototype.generator has been removed. "
+                      "Use frame.script.isGeneratorFunction instead.");
+  return false;
 }
 
 bool DebuggerFrame::CallData::constructingGetter() {
