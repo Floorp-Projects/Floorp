@@ -1755,30 +1755,21 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
 
-  // Use a ScopeExit to ensure the data is released on eager or error paths.
-  // The funbox is in a LifoAlloc and will not have it's destructor called so
-  // we need to be careful about ownership.
-  auto cleanupGuard =
-      mozilla::MakeScopeExit([funbox]() { funbox->lazyScriptData().reset(); });
-
-  // Emplace the data required for the lazy script here. It will
-  // be emitted before the rest of script emission.
-  funbox->lazyScriptData().emplace(cx_);
-  if (!funbox->lazyScriptData()->init(cx_, pc_->closedOverBindingsForLazy(),
-                                      pc_->innerFunctionBoxesForLazy,
-                                      pc_->sc()->strict())) {
+  LazyScriptCreationData data(cx_);
+  if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
+                pc_->innerFunctionBoxesForLazy, pc_->sc()->strict())) {
     return false;
   }
 
   // If we can defer the LazyScript creation, we are now done.
   if (parseInfo_.isDeferred()) {
-    cleanupGuard.release();
+    // Move data into funbox
+    funbox->lazyScriptData() = mozilla::Some(std::move(data));
     return true;
   }
 
   // Eager Function tree mode, emit the lazy script now.
-  return funbox->lazyScriptData()->create(cx_, funbox, sourceObject_,
-                                          parseGoal());
+  return data.create(cx_, funbox, sourceObject_, parseGoal());
 }
 
 bool ParserBase::publishLazyScripts(FunctionTree* root) {
