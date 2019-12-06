@@ -233,22 +233,12 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     }
   }
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_FOR_OF)) {
     //              [stack] NEXT ITER UNDEF
     return false;
   }
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_);
-
-  if (!loopInfo_->patchBreaks(bce_)) {
-    return false;
-  }
-
-  if (!bce_->addTryNote(JSTRY_FOR_OF, bce_->bytecodeSection().stackDepth(),
-                        loopInfo_->headOffset(),
-                        loopInfo_->breakTargetOffset())) {
-    return false;
-  }
 
   if (!bce_->emitPopN(3)) {
     //              [stack]
