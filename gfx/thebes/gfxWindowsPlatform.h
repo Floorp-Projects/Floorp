@@ -209,6 +209,7 @@ class gfxWindowsPlatform : public gfxPlatform {
   static mozilla::Atomic<size_t> sD3D9SharedTextures;
 
   bool SupportsPluginDirectBitmapDrawing() override { return true; }
+  bool SupportsPluginDirectDXGIDrawing();
 
   static void RecordContentDeviceFailure(
       mozilla::gfx::TelemetryDeviceCode aDevice);

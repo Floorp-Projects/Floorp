@@ -7,7 +7,6 @@
 #include "GPUVideoTextureHost.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "ImageContainer.h"
-#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 
 namespace mozilla {
@@ -37,9 +36,8 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
   // then there might be two VideoBridgeParents (one within the GPU process,
   // one from RDD). We'll need to flag which one to use to lookup our
   // descriptor, or just try both.
-  auto& sd = static_cast<SurfaceDescriptorRemoteDecoder&>(mDescriptor);
   mWrappedTextureHost =
-      VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
+      VideoBridgeParent::GetSingleton(mDescriptor.source())->LookupTexture(mDescriptor.handle());
   return mWrappedTextureHost;
 }
 

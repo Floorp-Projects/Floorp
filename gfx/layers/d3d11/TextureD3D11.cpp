@@ -396,8 +396,7 @@ bool D3D11TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   return true;
 }
 
-void D3D11TextureData::GetSubDescriptor(
-    RemoteDecoderVideoSubDescriptor* const aOutDesc) {
+void D3D11TextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
   SurfaceDescriptorD3D10 ret;
   if (!SerializeSpecific(&ret)) return;
 
@@ -685,7 +684,7 @@ bool DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
 }
 
 void DXGIYCbCrTextureData::GetSubDescriptor(
-    RemoteDecoderVideoSubDescriptor* const aOutDesc) {
+    GPUVideoSubDescriptor* const aOutDesc) {
   SurfaceDescriptorDXGIYCbCr desc;
   SerializeSpecific(&desc);
 

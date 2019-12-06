@@ -34,8 +34,8 @@ StaticRefPtr<TaskQueue> sRemoteDecoderManagerTaskQueue;
 
 SurfaceDescriptorGPUVideo RemoteDecoderManagerParent::StoreImage(
     Image* aImage, TextureClient* aTexture) {
-  SurfaceDescriptorRemoteDecoder ret;
-  aTexture->GetSurfaceDescriptorRemoteDecoder(&ret);
+  SurfaceDescriptorGPUVideo ret;
+  aTexture->GPUVideoDesc(&ret);
 
   mImageMap[ret.handle()] = aImage;
   mTextureMap[ret.handle()] = aTexture;
@@ -256,8 +256,7 @@ void RemoteDecoderManagerParent::ActorDealloc() { Release(); }
 
 mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
     const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) {
-  const SurfaceDescriptorRemoteDecoder& sd = aSD;
-  RefPtr<Image> image = mImageMap[sd.handle()];
+  RefPtr<Image> image = mImageMap[aSD.handle()];
   if (!image) {
     *aResult = null_t();
     return IPC_OK();
@@ -300,9 +299,8 @@ mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
 mozilla::ipc::IPCResult
 RemoteDecoderManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(
     const SurfaceDescriptorGPUVideo& aSD) {
-  const SurfaceDescriptorRemoteDecoder& sd = aSD;
-  mImageMap.erase(sd.handle());
-  mTextureMap.erase(sd.handle());
+  mImageMap.erase(aSD.handle());
+  mTextureMap.erase(aSD.handle());
   return IPC_OK();
 }
 
