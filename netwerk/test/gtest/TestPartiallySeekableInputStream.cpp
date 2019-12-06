@@ -2,7 +2,6 @@
 
 #include "Helpers.h"
 #include "nsCOMPtr.h"
-#include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"

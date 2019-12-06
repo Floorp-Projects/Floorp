@@ -7,7 +7,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
-#include "nsIServiceManager.h"
 #include "nsPrintSettingsX.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsCocoaUtils.h"

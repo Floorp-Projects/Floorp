@@ -18,7 +18,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIPrintingPromptService.h"
-#include "nsPIPromptService.h"
 #include "nsIWindowWatcher.h"
 
 // Printing Progress Includes

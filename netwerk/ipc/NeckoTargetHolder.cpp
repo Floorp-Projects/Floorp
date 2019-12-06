@@ -8,7 +8,6 @@
 #include "NeckoTargetHolder.h"
 
 #include "nsContentUtils.h"
-#include "nsILoadInfo.h"
 
 namespace mozilla {
 namespace net {

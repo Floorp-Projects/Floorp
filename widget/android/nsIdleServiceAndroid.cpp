@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIdleServiceAndroid.h"
-#include "nsIServiceManager.h"
 
 bool nsIdleServiceAndroid::PollIdleTime(uint32_t* aIdleTime) { return false; }
 

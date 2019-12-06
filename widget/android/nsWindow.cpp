@@ -43,11 +43,6 @@ using mozilla::dom::ContentParent;
 #include "AndroidGraphics.h"
 #include "JavaExceptions.h"
 
-#include "nsIBaseWindow.h"
-#include "nsIBrowserDOMWindow.h"
-#include "nsIDOMChromeWindow.h"
-#include "nsIObserverService.h"
-#include "nsISupportsPrimitives.h"
 #include "nsIWidgetListener.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAppWindow.h"
@@ -91,10 +86,7 @@ using mozilla::dom::ContentParent;
 #include "MotionEvent.h"
 #include "ScreenHelperAndroid.h"
 
-#include "imgIEncoder.h"
-
 #include "GeckoProfiler.h"  // For AUTO_PROFILER_LABEL
-#include "nsIXULRuntime.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 

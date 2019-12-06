@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsILoadContextInfo.h"
 #include "nsIApplicationCache.h"
-#include "nsICacheEntryDoomCallback.h"
 
 class nsIURI;
 class nsIApplicationCache;

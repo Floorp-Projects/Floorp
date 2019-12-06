@@ -23,7 +23,6 @@
 #include "nsCURILoader.h"
 #include "nsCertOverrideService.h"
 #include "nsCryptoHash.h"
-#include "nsICategoryManager.h"
 #include "nsKeyModule.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"

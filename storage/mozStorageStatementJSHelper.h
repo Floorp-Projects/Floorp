@@ -8,7 +8,6 @@
 #define MOZSTORAGESTATEMENTJSHELPER_H
 
 #include "nsIXPCScriptable.h"
-#include "nsIXPConnect.h"
 
 class Statement;
 

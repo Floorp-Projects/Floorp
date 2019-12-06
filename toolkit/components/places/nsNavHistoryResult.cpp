@@ -8,7 +8,6 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
-#include "nsITaggingService.h"
 #include "nsAnnotationService.h"
 #include "Helpers.h"
 #include "mozilla/DebugOnly.h"

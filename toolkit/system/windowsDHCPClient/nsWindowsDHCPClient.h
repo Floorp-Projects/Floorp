@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDHCPClient.h"
-#include "nsIServiceManager.h"
 #include "nsNetCID.h"
 #include "WindowsNetworkFunctionsWrapper.h"
 

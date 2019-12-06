@@ -19,7 +19,6 @@
 #include "nsInputStreamPump.h"
 #include "CacheFileUtils.h"
 #include <algorithm>
-#include "nsIPipe.h"
 
 using namespace mozilla::net;
 

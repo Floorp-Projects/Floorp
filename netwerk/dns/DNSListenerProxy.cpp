@@ -6,7 +6,6 @@
 
 #include "mozilla/net/DNSListenerProxy.h"
 #include "nsICancelable.h"
-#include "nsIEventTarget.h"
 
 namespace mozilla {
 namespace net {

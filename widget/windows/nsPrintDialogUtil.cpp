@@ -30,16 +30,12 @@ WIN_LIBS=                                       \
 #include "mozilla/BackgroundHangMonitor.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsString.h"
-#include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsWin.h"
 #include "nsIPrinterEnumerator.h"
 
 #include "nsRect.h"
-
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #include "nsCRT.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -48,7 +44,6 @@ WIN_LIBS=                                       \
 #include <winspool.h>
 
 // For Localization
-#include "nsIStringBundle.h"
 
 // For NS_CopyUnicodeToNative
 #include "nsNativeCharsetUtils.h"

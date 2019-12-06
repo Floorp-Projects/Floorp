@@ -33,7 +33,6 @@
 #include "nsContentUtils.h"
 #include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsITimer.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"

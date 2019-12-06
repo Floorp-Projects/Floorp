@@ -8,7 +8,6 @@
 
 #include "mozilla/StaticPtr.h"
 #include "nsIProtocolHandler.h"
-#include "nsIJARURI.h"
 #include "nsIZipReader.h"
 #include "nsIMIMEService.h"
 #include "nsWeakReference.h"

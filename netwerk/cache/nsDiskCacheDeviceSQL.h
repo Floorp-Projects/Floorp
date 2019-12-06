@@ -8,8 +8,6 @@
 
 #include "nsCacheDevice.h"
 #include "nsIApplicationCache.h"
-#include "nsIApplicationCacheService.h"
-#include "nsIObserver.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageFunction.h"
 #include "nsIFile.h"

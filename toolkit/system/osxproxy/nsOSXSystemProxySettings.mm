@@ -9,11 +9,8 @@
 
 #include "nsISystemProxySettings.h"
 #include "mozilla/Components.h"
-#include "nsIServiceManager.h"
 #include "nsPrintfCString.h"
 #include "nsNetCID.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIURI.h"
 #include "nsObjCExceptions.h"
 #include "mozilla/Attributes.h"
 #include "ProxyUtils.h"

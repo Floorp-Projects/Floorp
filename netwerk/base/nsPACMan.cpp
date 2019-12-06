@@ -12,7 +12,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIDHCPClient.h"
 #include "nsIHttpChannel.h"
-#include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPromptFactory.h"
 #include "nsIProtocolProxyService.h"

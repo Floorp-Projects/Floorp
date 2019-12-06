@@ -43,7 +43,6 @@
 
 #include "nsIParser.h"
 #include "nsDeque.h"
-#include "nsIURL.h"
 #include "CParserContext.h"
 #include "nsParserCIID.h"
 #include "nsITokenizer.h"

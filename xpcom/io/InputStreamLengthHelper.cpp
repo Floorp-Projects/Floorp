@@ -8,7 +8,6 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStream.h"
-#include "nsIStreamTransportService.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 

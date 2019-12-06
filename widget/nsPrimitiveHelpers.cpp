@@ -21,11 +21,11 @@
 #include "nsPrimitiveHelpers.h"
 
 #include "mozilla/UniquePtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
-#include "nsIComponentManager.h"
 #include "nsLinebreakConverter.h"
 #include "nsReadableUtils.h"
 

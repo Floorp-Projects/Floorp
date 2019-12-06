@@ -16,13 +16,9 @@
 #include "nsServiceManagerUtils.h"
 
 #include "nsArray.h"
-#include "nsIDialogParamBlock.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIWindowWatcher.h"
 
 #include "nsIStringEnumerator.h"
-#include "nsISupportsPrimitives.h"
 #include "stdlib.h"
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"

@@ -16,7 +16,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "nsHttpRequestHead.h"
-#include "nsILoadGroup.h"
 #include "nsIRequestContext.h"
 #include "nsString.h"
 #include "PSpdyPush.h"

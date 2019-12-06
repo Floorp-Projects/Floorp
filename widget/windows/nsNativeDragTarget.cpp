@@ -8,7 +8,6 @@
 #include "nsWidgetsCID.h"
 #include "nsNativeDragTarget.h"
 #include "nsDragService.h"
-#include "nsIServiceManager.h"
 #include "nsINode.h"
 #include "nsCOMPtr.h"
 

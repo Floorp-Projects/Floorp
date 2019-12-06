@@ -26,8 +26,6 @@
 #include "nsIFile.h"
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIPrompt.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertTrust.h"

@@ -11,6 +11,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMArray.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDependentSubstring.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIFile.h"

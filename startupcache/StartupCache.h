@@ -15,7 +15,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIObjectOutputStream.h"
-#include "nsIOutputStream.h"
 #include "nsIFile.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoMemMap.h"

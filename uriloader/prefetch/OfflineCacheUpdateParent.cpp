@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla::ipc;

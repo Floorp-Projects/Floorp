@@ -23,7 +23,6 @@
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
-#include "nsITimer.h"
 #include "nsRegion.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"

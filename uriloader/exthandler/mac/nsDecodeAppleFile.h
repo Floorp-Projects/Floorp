@@ -9,7 +9,6 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
-#include "nsILocalFileMac.h"
 #include "nsIOutputStream.h"
 
 /*

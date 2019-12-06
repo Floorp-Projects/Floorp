@@ -12,7 +12,6 @@
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIFormAutoComplete.h"
-#include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"

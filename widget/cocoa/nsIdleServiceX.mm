@@ -4,7 +4,6 @@
 
 #include "nsIdleServiceX.h"
 #include "nsObjCExceptions.h"
-#include "nsIServiceManager.h"
 #import <Foundation/Foundation.h>
 
 bool nsIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {

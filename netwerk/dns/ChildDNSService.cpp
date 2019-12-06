@@ -4,11 +4,8 @@
 
 #include "mozilla/net/ChildDNSService.h"
 #include "nsIDNSListener.h"
-#include "nsIIOService.h"
-#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsIXPConnect.h"
-#include "nsIPrefService.h"
 #include "nsIProtocolProxyService.h"
 #include "nsNetCID.h"
 #include "mozilla/ClearOnShutdown.h"

@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "RemoteSandboxBrokerProcessParent.h"
-#include "nsIRunnable.h"
 #include <windows.h>
 
 using mozilla::ipc::GeckoChildProcessHost;

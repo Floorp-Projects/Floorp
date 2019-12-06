@@ -11,7 +11,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIMutableArray.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "p12.h"

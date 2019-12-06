@@ -28,6 +28,7 @@
 #include <iprtrmib.h>
 #include "plstr.h"
 #include "mozilla/Logging.h"
+#include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsIWindowsRegKey.h"

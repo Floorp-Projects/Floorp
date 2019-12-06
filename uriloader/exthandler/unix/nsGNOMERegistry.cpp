@@ -5,7 +5,6 @@
 
 #include "nsGNOMERegistry.h"
 #include "nsString.h"
-#include "nsIComponentManager.h"
 #include "nsMIMEInfoUnix.h"
 #include "nsAutoPtr.h"
 #include "nsIGIOService.h"

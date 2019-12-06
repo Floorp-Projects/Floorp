@@ -8,7 +8,6 @@
 #define nsThread_h__
 
 #include "mozilla/Mutex.h"
-#include "nsIIdlePeriod.h"
 #include "nsIThreadInternal.h"
 #include "nsISupportsPriority.h"
 #include "nsThreadUtils.h"

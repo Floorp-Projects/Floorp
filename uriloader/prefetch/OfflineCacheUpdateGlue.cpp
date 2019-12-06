@@ -9,7 +9,6 @@
 
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"

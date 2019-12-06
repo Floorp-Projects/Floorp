@@ -9,7 +9,6 @@
 #include "nsUpdateDriver.h"
 #include "nsXULAppAPI.h"
 #include "nsAppRunner.h"
-#include "nsIWritablePropertyBag.h"
 #include "nsIFile.h"
 #include "nsVariant.h"
 #include "nsCOMPtr.h"

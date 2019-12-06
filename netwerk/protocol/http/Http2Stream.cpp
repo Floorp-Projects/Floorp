@@ -28,8 +28,6 @@
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
 #include "nsIClassOfService.h"
-#include "nsIPipe.h"
-#include "nsISocketTransport.h"
 #include "nsStandardURL.h"
 #include "prnetdb.h"
 

@@ -12,7 +12,6 @@
 #include "LoadContextInfo.h"
 #include "nsThreadUtils.h"
 #include "nsString.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
 #include "mozilla/Base64.h"
 #include "mozilla/IntegerPrintfMacros.h"

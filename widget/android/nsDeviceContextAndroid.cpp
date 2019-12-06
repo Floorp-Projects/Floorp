@@ -6,6 +6,7 @@
 
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/RefPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"

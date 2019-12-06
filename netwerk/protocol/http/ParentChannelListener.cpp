@@ -17,7 +17,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsIRemoteTab.h"
 #include "nsIPrompt.h"
 #include "nsIPromptFactory.h"
 #include "nsISecureBrowserUI.h"

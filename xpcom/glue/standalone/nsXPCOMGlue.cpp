@@ -8,7 +8,6 @@
 
 #include "nspr.h"
 #include "nsDebug.h"
-#include "nsIServiceManager.h"
 #include "nsXPCOMPrivate.h"
 #include "nsCOMPtr.h"
 #include <stdlib.h>

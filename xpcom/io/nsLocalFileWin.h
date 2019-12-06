@@ -12,7 +12,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsIFactory.h"
 #include "nsILocalFileWin.h"
 #include "nsIClassInfoImpl.h"
 #include "prio.h"

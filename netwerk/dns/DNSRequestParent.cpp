@@ -8,7 +8,6 @@
 #include "nsIDNSService.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
-#include "nsIServiceManager.h"
 #include "nsICancelable.h"
 #include "nsIDNSRecord.h"
 #include "nsHostResolver.h"

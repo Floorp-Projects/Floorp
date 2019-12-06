@@ -9,7 +9,6 @@
 #include "nsTouchBarUpdater.h"
 #include "nsTouchBarNativeAPIDefines.h"
 
-#include "nsIArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 

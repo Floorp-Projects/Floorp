@@ -7,13 +7,9 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayUtils.h"
 #include "nsCRT.h"
-#include "nsIDirectoryService.h"
-#include "nsIKeyModule.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIProperties.h"
 #include "nsIXULRuntime.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierDBService.h"
@@ -44,6 +40,7 @@
 #include "ProtocolParser.h"
 #include "mozilla/Attributes.h"
 #include "nsIPrincipal.h"
+#include "nsIUrlListManager.h"
 #include "Classifier.h"
 #include "ProtocolParser.h"
 #include "nsContentUtils.h"
@@ -60,7 +57,6 @@
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 #include "nsToolkitCompsCID.h"
-#include "nsIClassifiedChannel.h"
 
 namespace mozilla {
 namespace safebrowsing {

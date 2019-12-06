@@ -8,7 +8,6 @@
 #include "nsISocketTransport.h"
 #include "nsIServerSocket.h"
 #include "nsIAsyncInputStream.h"
-#include "nsINetAddr.h"
 #include "mozilla/net/DNS.h"
 #include "prerror.h"
 #include "nsComponentManagerUtils.h"

@@ -15,6 +15,8 @@
 #include "nsIStringBundle.h"
 #include "prerror.h"
 
+class nsIStringBundle;
+
 namespace mozilla {
 namespace psm {
 

@@ -16,7 +16,6 @@
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsIFile.h"
-#include "nsIStringBundle.h"
 
 #include "nsArrayEnumerator.h"
 #include "nsMemory.h"

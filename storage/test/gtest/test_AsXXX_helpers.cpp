@@ -6,6 +6,7 @@
 #include "storage_test_harness.h"
 #include "mozIStorageRow.h"
 #include "mozIStorageResultSet.h"
+#include "nsComponentManagerUtils.h"
 
 /**
  * This file tests AsXXX (AsInt32, AsInt64, ...) helpers.

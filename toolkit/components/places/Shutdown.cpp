@@ -4,6 +4,7 @@
 
 #include "Shutdown.h"
 #include "mozilla/Unused.h"
+#include "nsIWritablePropertyBag2.h"
 
 namespace mozilla {
 namespace places {

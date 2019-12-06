@@ -5,7 +5,6 @@
 
 #include "TestCommon.h"
 #include "gtest/gtest.h"
-#include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
 #include "nsICookie.h"
@@ -18,7 +17,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/CookieSettings.h"
 #include "nsIURI.h"

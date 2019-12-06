@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIByteRangeRequest.h"
-#include "nsILoadInfo.h"
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"

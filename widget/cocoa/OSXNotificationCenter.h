@@ -8,8 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #include "nsIAlertsService.h"
-#include "imgINotificationObserver.h"
-#include "nsITimer.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 

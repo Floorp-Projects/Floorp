@@ -16,6 +16,7 @@
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsClassHashtable.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDataHashtable.h"
 #include "plbase64.h"
 

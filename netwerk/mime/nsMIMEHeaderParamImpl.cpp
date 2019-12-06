@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
-#include "nsIServiceManager.h"
 #include "nsMIMEHeaderParamImpl.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"

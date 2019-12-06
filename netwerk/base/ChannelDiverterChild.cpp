@@ -10,7 +10,6 @@
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/PHttpChannelChild.h"
 #include "mozilla/net/PFTPChannelChild.h"
-#include "nsIDivertableChannel.h"
 
 namespace mozilla {
 namespace net {}  // namespace net

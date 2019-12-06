@@ -8,7 +8,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIMutableArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWifiAccessPoint.h"
 #include "win_wifiScanner.h"

@@ -19,7 +19,6 @@
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "nsCOMPtr.h"
-#include "nsISelectionController.h"
 #include "nsISelectionListener.h"
 #include "nsITransferable.h"
 #include "nsRect.h"

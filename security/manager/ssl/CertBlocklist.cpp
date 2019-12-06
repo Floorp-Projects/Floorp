@@ -20,7 +20,6 @@
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
 #include "nsISafeOutputStream.h"
-#include "nsIX509Cert.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"

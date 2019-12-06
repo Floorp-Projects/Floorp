@@ -12,7 +12,6 @@
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsISeekableStream.h"
 #include "nsIPipe.h"
 #include "nsITransport.h"
 #include "nsIObserverService.h"

@@ -8,7 +8,6 @@
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIContentViewer.h"
 #include "nsNetUtil.h"
 
 nsWebBrowserContentPolicy::nsWebBrowserContentPolicy() {}

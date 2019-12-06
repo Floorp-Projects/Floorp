@@ -7,10 +7,7 @@
 #include "HttpLog.h"
 
 #include "InterceptedChannel.h"
-#include "nsICancelable.h"
 #include "nsInputStreamPump.h"
-#include "nsIPipe.h"
-#include "nsIStreamListener.h"
 #include "nsITimedChannel.h"
 #include "nsHttpChannel.h"
 #include "HttpChannelChild.h"
@@ -18,7 +15,6 @@
 #include "nsNetUtil.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/ChannelInfo.h"
-#include "nsIChannelEventSink.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

@@ -6,7 +6,6 @@
 #include "mozilla/Services.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
-#include "nsIThread.h"
 #include "nsNamedPipeService.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"

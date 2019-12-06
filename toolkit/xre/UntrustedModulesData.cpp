@@ -17,8 +17,6 @@
 #include "mozilla/WinDllServices.h"
 #include "ModuleEvaluator.h"
 #include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "WinUtils.h"
 

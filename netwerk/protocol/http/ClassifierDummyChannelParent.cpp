@@ -7,7 +7,6 @@
 #include "ClassifierDummyChannelParent.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/Unused.h"
-#include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 

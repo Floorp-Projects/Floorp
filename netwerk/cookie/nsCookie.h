@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "nsIMemoryReporter.h"
 
 using mozilla::OriginAttributes;
 

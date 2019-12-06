@@ -19,8 +19,6 @@
 #include "nsICancelable.h"
 #include "nsIDNSService.h"
 #include "nsPIDNSService.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"

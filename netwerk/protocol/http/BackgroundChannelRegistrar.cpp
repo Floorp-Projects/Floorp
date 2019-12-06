@@ -8,7 +8,6 @@
 
 #include "HttpBackgroundChannelParent.h"
 #include "HttpChannelParent.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/StaticPtr.h"
 

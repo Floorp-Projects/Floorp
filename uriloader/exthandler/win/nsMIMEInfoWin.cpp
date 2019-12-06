@@ -17,7 +17,6 @@
 #include "shlobj.h"
 #include "windows.h"
 #include "nsIWindowsRegKey.h"
-#include "nsIProcess.h"
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsVariant.h"
