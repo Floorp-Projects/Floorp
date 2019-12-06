@@ -862,12 +862,15 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
 
+    if (this.prevColor != this.color) {
+      this.clearCache();
+    }
     this.renderFlexContainer();
     this.renderFlexLines();
     this.renderJustifyContent();
     this.renderFlexItems();
-
     this._showFlexbox();
+    this.prevColor = this.color;
 
     root.setAttribute(
       "style",
