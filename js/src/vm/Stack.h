@@ -959,10 +959,14 @@ class InvokeArgsMaybeIgnoresReturnValue
   using Base = detail::GenericArgsBase<NO_CONSTRUCT>;
 
  public:
-  explicit InvokeArgsMaybeIgnoresReturnValue(JSContext* cx,
-                                             bool ignoresReturnValue)
-      : Base(cx) {
+  explicit InvokeArgsMaybeIgnoresReturnValue(JSContext* cx) : Base(cx) {}
+
+  bool init(JSContext* cx, unsigned argc, bool ignoresReturnValue) {
+    if (!Base::init(cx, argc)) {
+      return false;
+    }
     this->ignoresReturnValue_ = ignoresReturnValue;
+    return true;
   }
 };
 
