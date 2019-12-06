@@ -17,5 +17,5 @@ from a previously cached response, defaults to true.
 
 ### Exceptions
 
-`IOException` - if the request could not be executed due to cancellation,
+`IOException` - if the request failed, or could not be executed due to cancellation,
 a connectivity problem or a timeout.

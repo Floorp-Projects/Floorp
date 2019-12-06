@@ -1,4 +1,4 @@
-[android-components](../../../index.md) / [mozilla.components.browser.state.action](../../index.md) / [WebExtensionAction](../index.md) / [InstallWebExtension](index.md) / [extension](./extension.md)
+[android-components](../../../index.md) / [mozilla.components.browser.state.action](../../index.md) / [WebExtensionAction](../index.md) / [InstallWebExtensionAction](index.md) / [extension](./extension.md)
 
 # extension
 
