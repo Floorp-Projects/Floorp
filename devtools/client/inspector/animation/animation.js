@@ -73,7 +73,7 @@ class AnimationInspector {
     this.onSidebarSelectionChanged = this.onSidebarSelectionChanged.bind(this);
 
     EventEmitter.decorate(this);
-    this.emit = this.emit.bind(this);
+    this.emitForTests = this.emitForTests.bind(this);
 
     this.init();
   }
@@ -89,7 +89,7 @@ class AnimationInspector {
 
     const {
       addAnimationsCurrentTimeListener,
-      emit: emitEventForTest,
+      emitForTests: emitEventForTest,
       getAnimatedPropertyMap,
       getAnimationsCurrentTime,
       getComputedStyle,
