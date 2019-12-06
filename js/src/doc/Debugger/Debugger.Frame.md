@@ -181,7 +181,7 @@ A string describing what sort of frame this is:
 * `"debugger"`: a frame for a call to user code invoked by the debugger
   (see the `eval` method below).
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `implementation`
 A string describing which tier of the JavaScript engine this frame is
