@@ -322,6 +322,20 @@ class MOZ_STACK_CLASS TokenStreamPosition final {
 template <typename Unit>
 class SourceUnits;
 
+enum class InvalidEscapeType {
+  // No invalid character escapes.
+  None,
+  // A malformed \x escape.
+  Hexadecimal,
+  // A malformed \u escape.
+  Unicode,
+  // An otherwise well-formed \u escape which represents a
+  // codepoint > 10FFFF.
+  UnicodeOverflow,
+  // An octal escape in a template token.
+  Octal
+};
+
 class TokenStreamAnyChars : public TokenStreamShared {
  private:
   JSContext* const cx;
