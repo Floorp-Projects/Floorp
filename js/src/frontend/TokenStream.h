@@ -533,6 +533,8 @@ enum class InvalidEscapeType {
 
 class TokenStreamAnyChars : public TokenStreamShared {
  private:
+  // Constant-at-construction fields.
+
   JSContext* const cx;
 
   /** Options used for parsing/tokenizing. */
@@ -547,6 +549,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
   /** Input filename or null. */
   const char* const filename_;
 
+  // Column number computation fields.
+
   /**
    * A map of (line number => sequence of the column numbers at
    * |ColumnChunkLength|-unit boundaries rewound [if needed] to the nearest code
@@ -559,6 +563,49 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * greater offsets require column computations.
    */
   mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
+
+  // Computing accurate column numbers requires at *some* point linearly
+  // iterating through prior source units in the line, to properly account for
+  // multi-unit code points.  This is quadratic if counting happens repeatedly.
+  //
+  // But usually we need columns for advancing offsets through scripts.  By
+  // caching the last ((line number, offset) => relative column) mapping (in
+  // similar manner to how |SourceCoords::lastIndex_| is used to cache
+  // (offset => line number) mappings) we can usually avoid re-iterating through
+  // the common line prefix.
+  //
+  // Additionally, we avoid hash table lookup costs by caching the
+  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
+  // must look it up -- or it hasn't been created yet.)  This pointer is nulled
+  // when a lookup on a new line occurs, but as it's not a pointer at literal,
+  // reallocatable element data, it's *not* invalidated when new entries are
+  // added to such a vector.
+
+  /**
+   * The line in which the last column computation occurred, or UINT32_MAX if
+   * no prior computation has yet happened.
+   */
+  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
+
+  /**
+   * The chunk vector of the line for that last column computation.  This is
+   * null if the chunk vector needs to be recalculated or initially created.
+   */
+  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
+
+  /**
+   * The offset (in code units) of the last column computation performed,
+   * relative to source start.
+   */
+  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
+
+  /**
+   * The column number for the offset (in code units) of the last column
+   * computation performed, relative to source start.
+   */
+  mutable uint32_t lastComputedColumn_ = 0;
+
+  // Intra-token fields.
 
   /**
    * The offset of the first invalid escape in a template literal.  (If there is
@@ -594,27 +641,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   UniqueTwoByteChars displayURL_ =
       nullptr;  // the user's requested source URL or null
   UniqueTwoByteChars sourceMapURL_ = nullptr;  // source map's filename or null
-
-  // Computing accurate column numbers requires at *some* point linearly
-  // iterating through prior source units in the line to properly account for
-  // multi-unit code points.  This is quadratic if counting happens repeatedly.
-  //
-  // But usually we need columns for advancing offsets through scripts.  By
-  // caching the last ((line number, offset) => relative column) mapping (in
-  // similar manner to how |SourceUnits::lastIndex_| is used to cache
-  // (offset => line number) mappings) we can usually avoid re-iterating through
-  // the common line prefix.
-  //
-  // Additionally, we avoid hash table lookup costs by caching the
-  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
-  // have to look it up -- or it hasn't been created yet.)  This pointer is
-  // invalidated when a lookup on a new line occurs, but as it's not a pointer
-  // at literal element data, it's *not* invalidated when new entries are added
-  // to such a vector.
-  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
-  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
-  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
-  mutable uint32_t lastComputedColumn_ = 0;
 
   /**
    * Whether syntax errors should or should not contain details about the
