@@ -6,6 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "nsAutoPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"

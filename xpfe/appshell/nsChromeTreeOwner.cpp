@@ -11,18 +11,13 @@
 // Helper Classes
 #include "nsString.h"
 #include "nsIEmbeddingSiteWindow.h"
-#include "nsIServiceManager.h"
 #include "nsIDocShellTreeItem.h"
 
 // Interfaces needed to include
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
-#include "nsIBrowserDOMWindow.h"
 #include "nsIWebProgress.h"
 #include "nsIWidget.h"
-#include "nsIWindowMediator.h"
-#include "nsIDOMChromeWindow.h"
-#include "nsIXULBrowserWindow.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;

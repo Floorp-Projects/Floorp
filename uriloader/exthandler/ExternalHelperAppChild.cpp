@@ -9,7 +9,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "nsIDivertableChannel.h"
 #include "nsIInputStream.h"
-#include "nsIFTPChannel.h"
 #include "nsIRequest.h"
 #include "nsIResumableChannel.h"
 #include "nsIPropertyBag2.h"

@@ -12,8 +12,6 @@
 #include <nsError.h>
 #include <nsCOMPtr.h>
 #include <nsIWidget.h>
-#include <nsIBaseWindow.h>
-#include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
 
 #include "nsUXThemeData.h"

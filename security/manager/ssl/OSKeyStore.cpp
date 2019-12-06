@@ -8,7 +8,6 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/dom/Promise.h"
-#include "nsIRandomGenerator.h"
 #include "nsXPCOM.h"
 #include "pk11pub.h"
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Windows-specific local file uri parsing */
+#include "nsComponentManagerUtils.h"
 #include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsIFile.h"

@@ -13,8 +13,6 @@
 #include "mozIPlacesPendingOperation.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
-#include "imgITools.h"
-#include "imgIContainer.h"
 #include "imgLoader.h"
 
 class nsIPrincipal;

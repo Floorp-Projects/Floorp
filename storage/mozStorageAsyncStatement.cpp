@@ -14,8 +14,6 @@
 #include "nsIClassInfoImpl.h"
 #include "Variant.h"
 
-#include "mozIStorageError.h"
-
 #include "mozStorageBindingParams.h"
 #include "mozStorageConnection.h"
 #include "mozStorageAsyncStatementJSHelper.h"

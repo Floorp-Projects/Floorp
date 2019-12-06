@@ -14,7 +14,6 @@
 #include "mozilla/Unused.h"
 #include "nsNamedPipeService.h"
 #include "nsISupportsImpl.h"
-#include "nsIThread.h"
 #include "nsNamedPipeIOLayer.h"
 #include "nsNetCID.h"
 #include "nspr.h"

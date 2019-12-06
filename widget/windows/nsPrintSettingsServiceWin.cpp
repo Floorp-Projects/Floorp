@@ -10,7 +10,6 @@
 #include "nsPrintDialogUtil.h"
 
 #include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsWindowsHelpers.h"
 #include "ipc/IPCMessageUtils.h"

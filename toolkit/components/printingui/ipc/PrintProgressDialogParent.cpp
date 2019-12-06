@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Unused.h"
-#include "nsIPrintProgressParams.h"
 #include "nsIWebProgressListener.h"
 #include "PrintProgressDialogParent.h"
 

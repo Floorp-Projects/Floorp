@@ -7,6 +7,8 @@
 #ifndef mozilla_net_WebSocketFrame_h
 #define mozilla_net_WebSocketFrame_h
 
+#include "nsIWebSocketEventService.h"
+
 #include "nsAutoPtr.h"
 #include "nsIWebSocketEventService.h"
 #include "nsString.h"

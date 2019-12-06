@@ -9,6 +9,7 @@
 #define mozilla_net_ClassifierDummyChannel_h
 
 #include "nsIChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include <functional>
 
 #define CLASSIFIER_DUMMY_CHANNEL_IID                 \

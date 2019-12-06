@@ -17,7 +17,6 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 
 using namespace mozilla;
 

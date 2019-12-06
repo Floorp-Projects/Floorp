@@ -4,6 +4,7 @@
 
 #include "mozilla/Unused.h"
 #include "nsIObserver.h"
+#include "nsIPrintProgressParams.h"
 #include "PrintProgressDialogChild.h"
 
 class nsIWebProgress;

@@ -7,7 +7,6 @@
 #include "ClassifierDummyChannelChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "nsIChannel.h"
 #include "nsIURI.h"
 
 namespace mozilla {

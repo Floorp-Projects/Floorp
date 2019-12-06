@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsIStringBundle.h"
 #include "nsIUUIDGenerator.h"
-#include "nsIXULAppInfo.h"
 
 //#include "AudioSession.h"
 #include "nsCOMPtr.h"

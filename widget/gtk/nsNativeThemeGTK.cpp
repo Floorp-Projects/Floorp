@@ -11,7 +11,6 @@
 
 #include "gfx2DGlue.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsViewManager.h"

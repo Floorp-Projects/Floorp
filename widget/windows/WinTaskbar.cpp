@@ -14,7 +14,6 @@
 #include <nsCOMPtr.h>
 #include <nsIWidget.h>
 #include <nsIBaseWindow.h>
-#include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
 #include "nsIXULAppInfo.h"
 #include "nsIJumpListBuilder.h"

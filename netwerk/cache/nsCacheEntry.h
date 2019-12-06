@@ -9,7 +9,6 @@
 
 #include "nsICache.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsIThread.h"
 #include "nsCacheMetaData.h"
 
 #include "nspr.h"
@@ -24,6 +23,7 @@ class nsCacheDevice;
 class nsCacheMetaData;
 class nsCacheRequest;
 class nsCacheEntryDescriptor;
+class nsIEventTarget;
 
 /******************************************************************************
  * nsCacheEntry

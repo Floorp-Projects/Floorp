@@ -3,7 +3,6 @@
 
 #include "storage_test_harness.h"
 
-#include "nsIEventTarget.h"
 #include "mozStorageConnection.h"
 
 #include "sqlite3.h"

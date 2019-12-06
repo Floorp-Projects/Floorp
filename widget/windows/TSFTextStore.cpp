@@ -22,7 +22,6 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
-#include "nsIXULRuntime.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
 

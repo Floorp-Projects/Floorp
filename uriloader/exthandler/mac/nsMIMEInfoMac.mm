@@ -6,10 +6,10 @@
 
 #import <ApplicationServices/ApplicationServices.h>
 
+#include "nsComponentManagerUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
-#include "nsIFileURL.h"
 
 // We override this to make sure app bundles display their pretty name (without .app suffix)
 NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescription) {

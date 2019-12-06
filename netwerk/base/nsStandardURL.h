@@ -11,7 +11,6 @@
 #include "nsIFileURL.h"
 #include "nsIStandardURL.h"
 #include "mozilla/Encoding.h"
-#include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsIClassInfo.h"

@@ -10,8 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsICertBlocklist.h"
-#include "nsIOutputStream.h"
-#include "nsIX509CertDB.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "mozpkix/Input.h"

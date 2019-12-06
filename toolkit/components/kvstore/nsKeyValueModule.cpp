@@ -4,7 +4,6 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIKeyValue.h"
 #include "nsToolkitCompsCID.h"
 
 extern "C" {

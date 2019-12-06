@@ -9,7 +9,6 @@
 #include "dns_sd.h"
 #include "MDNSResponderOperator.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIThread.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"

@@ -7,7 +7,6 @@
 #ifndef nsDirectoryServiceUtils_h___
 #define nsDirectoryServiceUtils_h___
 
-#include "nsIServiceManager.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"

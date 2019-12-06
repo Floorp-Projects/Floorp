@@ -15,7 +15,6 @@
 #include "mozilla/Mutex.h"
 #include "nsIProcess.h"
 #include "nsIFile.h"
-#include "nsIThread.h"
 #include "nsIObserver.h"
 #include "nsIObserver.h"
 #include "nsMaybeWeakPtr.h"

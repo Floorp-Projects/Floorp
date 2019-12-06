@@ -42,12 +42,8 @@
 #ifdef MOZ_PLACES
 #  include "nsIFaviconService.h"
 #endif
-#include "nsIIconURI.h"
 #include "nsIDownloader.h"
-#include "nsINetUtil.h"
 #include "nsIChannel.h"
-#include "nsIObserver.h"
-#include "imgIEncoder.h"
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
 #include "nsLookAndFeel.h"

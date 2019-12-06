@@ -16,7 +16,6 @@
 #include "nsHostResolver.h"
 #include "nsTArray.h"
 #include "nsNetAddr.h"
-#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;

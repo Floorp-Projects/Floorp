@@ -18,9 +18,7 @@
 #include "mozilla/Logging.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
-#include "nsITimer.h"
 #include "mozilla/Attributes.h"
-#include "nsIInterfaceRequestor.h"
 
 #ifdef XP_WIN
 #  include "win_wifiScanner.h"

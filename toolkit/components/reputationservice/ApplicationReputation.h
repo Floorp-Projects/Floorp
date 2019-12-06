@@ -8,8 +8,6 @@
 #define ApplicationReputation_h__
 
 #include "nsIApplicationReputation.h"
-#include "nsIRequestObserver.h"
-#include "nsIStreamListener.h"
 #include "nsISupports.h"
 
 #include "nsCOMPtr.h"

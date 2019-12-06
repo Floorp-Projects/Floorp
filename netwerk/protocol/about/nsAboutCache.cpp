@@ -5,7 +5,6 @@
 
 #include "nsAboutCache.h"
 #include "nsIInputStream.h"
-#include "nsIStorageStream.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"

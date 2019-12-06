@@ -6,14 +6,12 @@
 
 #include "nsClientAuthRemember.h"
 
-#include "nsIX509Cert.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNSSCertHelper.h"
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"
-#include "nsISupportsPrimitives.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
 #include "nsStringBuffer.h"

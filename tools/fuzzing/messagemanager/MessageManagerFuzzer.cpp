@@ -13,6 +13,7 @@
 #include "prenv.h"
 #include "MessageManagerFuzzer.h"
 #include "mozilla/ErrorResult.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsFrameMessageManager.h"

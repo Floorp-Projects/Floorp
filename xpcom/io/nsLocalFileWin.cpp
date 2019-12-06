@@ -20,7 +20,6 @@
 #include "nsNativeCharsetUtils.h"
 
 #include "nsSimpleEnumerator.h"
-#include "nsIComponentManager.h"
 #include "prio.h"
 #include "private/pprio.h"  // To get PR_ImportFile
 #include "nsHashKeys.h"
@@ -52,8 +51,8 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-
 #include "nsIWindowMediator.h"
+
 #include "mozIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWidget.h"

@@ -21,7 +21,6 @@
 #include "nsTouchBarNativeAPIDefines.h"
 
 #include "nsIContent.h"
-#include "nsITouchBarUpdater.h"
 #include "nsIWidget.h"
 #include "mozilla/dom/Document.h"
 #include "nsIAppStartup.h"

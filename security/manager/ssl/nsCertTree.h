@@ -6,15 +6,12 @@
 #define _NS_CERTTREE_H_
 
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "nsICertTree.h"
-#include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "nsIMutableArray.h"
 #include "nsNSSComponent.h"
 #include "nsTArray.h"
 #include "PLDHashTable.h"
-#include "nsIX509CertDB.h"
 #include "nsCertOverrideService.h"
 #include "mozilla/Attributes.h"
 

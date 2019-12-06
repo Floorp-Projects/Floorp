@@ -12,17 +12,12 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoCommon.h"
 
-#include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIApplicationCacheService.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/net/CookieSettings.h"
 #include "nsIObserverService.h"
-#include "nsIURL.h"
 #include "nsIBrowserChild.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -31,7 +26,6 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Logging.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsApplicationCache.h"
 
 using namespace mozilla::ipc;

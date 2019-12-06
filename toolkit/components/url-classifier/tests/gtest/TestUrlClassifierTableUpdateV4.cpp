@@ -9,7 +9,6 @@
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
-#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "string.h"
 

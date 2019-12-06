@@ -18,7 +18,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsIPrintSession.h"
 #include "nsIPrintSettings.h"
-#include "nsIUUIDGenerator.h"
 #include "private/pprio.h"
 
 using mozilla::Unused;

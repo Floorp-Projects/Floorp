@@ -8,7 +8,6 @@
 #include "nsIdleService.h"
 #include "nsString.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "nsCOMArray.h"
 #include "nsXULAppAPI.h"

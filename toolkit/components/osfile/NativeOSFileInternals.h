@@ -8,6 +8,7 @@
 #define mozilla_nativeosfileinternalservice_h__
 
 #include "nsINativeOSFileInternals.h"
+
 #include "mozilla/Attributes.h"
 
 namespace mozilla {

@@ -7,7 +7,6 @@
 #ifndef nsServiceManagerUtils_h__
 #define nsServiceManagerUtils_h__
 
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 

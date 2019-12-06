@@ -9,7 +9,6 @@
 #include "nsStreamUtils.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIPipe.h"
 #include "nsICloneableInputStream.h"
 #include "nsIEventTarget.h"
 #include "nsICancelableRunnable.h"

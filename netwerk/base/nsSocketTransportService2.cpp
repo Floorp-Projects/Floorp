@@ -13,8 +13,6 @@
 #include "nsError.h"
 #include "prnetdb.h"
 #include "prerror.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/Atomics.h"

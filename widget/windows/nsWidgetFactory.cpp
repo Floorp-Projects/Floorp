@@ -6,7 +6,6 @@
 #include "nsWidgetFactory.h"
 
 #include "mozilla/Components.h"
-#include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsdefs.h"
 #include "nsWidgetsCID.h"
@@ -14,7 +13,6 @@
 #include "nsAppShellSingleton.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/widget/ScreenManager.h"
-#include "nsIServiceManager.h"
 #include "nsLookAndFeel.h"
 #include "WinMouseScrollHandler.h"
 #include "KeyboardLayout.h"

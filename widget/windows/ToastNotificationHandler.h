@@ -9,7 +9,6 @@
 #include <windows.ui.notifications.h>
 #include <windows.data.xml.dom.h>
 #include <wrl.h>
-#include "imgIContainer.h"
 #include "nsCOMPtr.h"
 #include "nsIAlertsService.h"
 #include "nsICancelable.h"

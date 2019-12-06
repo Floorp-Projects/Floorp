@@ -19,10 +19,8 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgressListener2.h"
 
-#include "nsIServiceManager.h"
 #include "nsString.h"
 
-#include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIWeakReferenceUtils.h"
@@ -33,10 +31,7 @@
 #include "nsGlobalWindow.h"
 
 #include "nsIStringBundle.h"
-#include "nsIScriptSecurityManager.h"
 
-#include "nsITransport.h"
-#include "nsISocketTransport.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocGroup.h"

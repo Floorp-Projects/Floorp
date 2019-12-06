@@ -31,7 +31,6 @@
 #include "nsHttpNegotiateAuth.h"
 #include "nsHttpNTLMAuth.h"
 #include "nsServiceManagerUtils.h"
-#include "nsILoadContext.h"
 #include "nsIURL.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"

@@ -11,7 +11,7 @@
 #include "mp3sniff.h"
 #include "nestegg/nestegg.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIHttpChannel.h"
+#include "nsIChannel.h"
 #include "nsMediaSniffer.h"
 #include "nsMimeTypes.h"
 #include "nsString.h"

@@ -7,7 +7,6 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIMutableArray.h"
 
 #include <glib.h>
 

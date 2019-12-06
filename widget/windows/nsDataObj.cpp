@@ -32,11 +32,11 @@
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsMimeTypes.h"
+#include "imgIEncoder.h"
 #include "imgITools.h"
 
 #include "WinUtils.h"

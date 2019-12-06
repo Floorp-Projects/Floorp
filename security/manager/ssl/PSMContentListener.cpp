@@ -20,7 +20,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIX509CertDB.h"
-#include "nsIXULAppInfo.h"
 #include "nsNSSHelper.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"

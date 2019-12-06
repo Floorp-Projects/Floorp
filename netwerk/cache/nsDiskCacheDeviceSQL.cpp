@@ -24,7 +24,6 @@
 #include "nsAutoPtr.h"
 #include "nsEscape.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsCRT.h"

@@ -17,7 +17,6 @@
 //-----------------------------------------------------------------------------
 
 #include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 #ifdef XP_WIN

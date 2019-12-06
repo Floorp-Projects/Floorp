@@ -5,7 +5,6 @@
 #include "nsString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsIPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
@@ -13,7 +12,6 @@
 #include "nsCycleCollector.h"
 
 #include "nsFtpProtocolHandler.h"
-#include "nsIFTPChannel.h"
 
 #include "FuzzingInterface.h"
 #include "FuzzingStreamListener.h"

@@ -24,7 +24,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIChannel.h"
-#include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsDependentSubstring.h"
@@ -73,7 +72,6 @@
 #  include "nsILocalFileMac.h"
 #endif
 
-#include "nsIPluginHost.h"  // XXX needed for ext->type mapping (bug 233289)
 #include "nsPluginHost.h"
 #include "nsEscape.h"
 
@@ -81,9 +79,6 @@
 #include "nsIPrompt.h"
 
 #include "nsITextToSubURI.h"  // to unescape the filename
-#include "nsIMIMEHeaderParam.h"
-
-#include "nsIWindowWatcher.h"
 
 #include "nsDocShellCID.h"
 
@@ -95,8 +90,6 @@
 #include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellTreeItem.h"
 #include "ExternalHelperAppChild.h"
 
 #ifdef XP_WIN

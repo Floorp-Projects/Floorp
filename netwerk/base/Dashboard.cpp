@@ -14,7 +14,6 @@
 #include "nsIInputStream.h"
 #include "nsINamed.h"
 #include "nsISocketTransport.h"
-#include "nsIThread.h"
 #include "nsProxyRelease.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"

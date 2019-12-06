@@ -5,7 +5,6 @@
 
 #include "nsISystemProxySettings.h"
 #include "mozilla/Components.h"
-#include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsReadableUtils.h"
 #include "nsArrayUtils.h"

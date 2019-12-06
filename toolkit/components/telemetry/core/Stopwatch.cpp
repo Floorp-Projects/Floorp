@@ -13,8 +13,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsHashKeys.h"
 #include "nsContentUtils.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 #include "nsQueryObject.h"
 #include "nsRefPtrHashtable.h"

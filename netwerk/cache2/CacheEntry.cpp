@@ -16,7 +16,6 @@
 #include "nsICacheEntryOpenCallback.h"
 #include "nsICacheStorage.h"
 #include "nsISerializable.h"
-#include "nsIStreamTransportService.h"
 #include "nsISizeOf.h"
 
 #include "nsComponentManagerUtils.h"

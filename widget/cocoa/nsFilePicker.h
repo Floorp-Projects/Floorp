@@ -9,7 +9,6 @@
 
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
-#include "nsIFileChannel.h"
 #include "nsIFile.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"

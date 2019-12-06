@@ -9,7 +9,6 @@
 
 #include "mozpkix/pkixtypes.h"
 #include "nsDebug.h"
-#include "nsIX509CertDB.h"
 #include "ScopedNSSTypes.h"
 
 namespace mozilla {

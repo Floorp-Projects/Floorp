@@ -8,8 +8,6 @@
 #ifdef MOZ_USE_WIFI_TICKLER
 #  include "nsComponentManagerUtils.h"
 #  include "nsINamed.h"
-#  include "nsIPrefBranch.h"
-#  include "nsIPrefService.h"
 #  include "nsServiceManagerUtils.h"
 #  include "nsThreadUtils.h"
 #  include "prnetdb.h"

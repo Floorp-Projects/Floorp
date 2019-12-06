@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
-#include "nsIFileStreams.h"
 #include "mozilla/RefPtr.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "VariableLengthPrefixSet.h"

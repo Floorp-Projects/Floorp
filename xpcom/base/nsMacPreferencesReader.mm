@@ -6,7 +6,6 @@
 
 #include "js/JSON.h"
 #include "JSONWriter.h"
-#include "nsISupportsPrimitives.h"
 
 NS_IMPL_ISUPPORTS(nsMacPreferencesReader, nsIMacPreferencesReader)
 

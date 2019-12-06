@@ -7,6 +7,7 @@
 #include "FileSystemModule.h"
 
 #include "sqlite3.h"
+#include "nsComponentManagerUtils.h"
 #include "nsString.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"

@@ -10,23 +10,17 @@
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
 #include "nsClipboardWayland.h"
-#include "nsIStorageStream.h"
-#include "nsIBinaryOutputStream.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsIServiceManager.h"
 #include "nsImageToPixbuf.h"
 #include "nsStringStream.h"
-#include "nsIObserverService.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDragService.h"
 #include "mozwayland/mozwayland.h"
 #include "nsWaylandDisplay.h"
-
-#include "imgIContainer.h"
 
 #include <gtk/gtk.h>
 #include <poll.h>

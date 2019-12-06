@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "nsISupportsImpl.h"
 #include "nsString.h"
-#include "nsIServiceManager.h"
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"

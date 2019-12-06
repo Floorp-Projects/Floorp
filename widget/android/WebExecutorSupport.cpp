@@ -13,7 +13,6 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIStreamLoader.h"
 #include "nsINSSErrorsService.h"
 #include "nsIUploadChannel2.h"
 

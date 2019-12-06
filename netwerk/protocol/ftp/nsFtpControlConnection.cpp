@@ -11,7 +11,6 @@
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsThreadUtils.h"
-#include "nsIOutputStream.h"
 #include "nsNetCID.h"
 #include "nsTArray.h"
 #include <algorithm>

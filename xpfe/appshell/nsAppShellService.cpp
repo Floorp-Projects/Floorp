@@ -4,17 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIAppShellService.h"
-#include "nsIComponentManager.h"
-#include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "nsIXPConnect.h"
 #include "nsIXULRuntime.h"
 
 #include "nsIWindowMediator.h"
-#include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
 #include "AppWindow.h"
@@ -22,7 +17,6 @@
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
-#include "nsIRequestObserver.h"
 #include "nsIEmbeddingSiteWindow.h"
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -30,7 +24,6 @@
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"
-#include "nsISupportsPrimitives.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowlessBrowser.h"

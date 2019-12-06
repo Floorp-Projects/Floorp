@@ -11,7 +11,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsAppShellWindowEnumerator.h"
 #include "nsWindowMediator.h"

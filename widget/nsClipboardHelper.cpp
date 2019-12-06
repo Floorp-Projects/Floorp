@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIServiceManager.h"
 
 // helpers
 #include "nsIClipboard.h"

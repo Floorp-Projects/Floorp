@@ -12,7 +12,6 @@
 #include "nsAlertsService.h"
 
 #include "nsXPCOM.h"
-#include "nsIServiceManager.h"
 #include "nsPromiseFlatString.h"
 #include "nsToolkitCompsCID.h"
 

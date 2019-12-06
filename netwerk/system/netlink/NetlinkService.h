@@ -9,13 +9,11 @@
 #include <netinet/in.h>
 #include <linux/netlink.h>
 
-#include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
-#include "nsITimer.h"
 #include "nsClassHashtable.h"
 #include "mozilla/SHA1.h"
 

@@ -8,7 +8,6 @@
 
 #include "JavaBuiltins.h"
 #include "nsAppShell.h"
-#include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "js/Warnings.h"  // JS::WarnUTF8
 #include "xpcpublic.h"

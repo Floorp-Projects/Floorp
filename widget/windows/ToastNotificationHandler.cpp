@@ -6,6 +6,7 @@
 
 #include "ToastNotificationHandler.h"
 
+#include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/WindowsVersion.h"

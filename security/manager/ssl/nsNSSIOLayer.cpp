@@ -30,8 +30,6 @@
 #include "nsClientAuthRemember.h"
 #include "nsContentUtils.h"
 #include "nsIClientAuthDialogs.h"
-#include "nsIConsoleService.h"
-#include "nsIPrefService.h"
 #include "nsISocketProvider.h"
 #include "nsIWebProgressListener.h"
 #include "nsNSSCertHelper.h"

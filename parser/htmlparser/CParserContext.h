@@ -13,9 +13,7 @@
 #define __CParserContext
 
 #include "nsIParser.h"
-#include "nsIURL.h"
 #include "nsIDTD.h"
-#include "nsIStreamListener.h"
 #include "nsIRequest.h"
 #include "nsScanner.h"
 #include "nsString.h"
