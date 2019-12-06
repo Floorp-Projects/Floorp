@@ -62,20 +62,6 @@ struct TokenPos {
 
 enum DecimalPoint { NoDecimal = false, HasDecimal = true };
 
-enum class InvalidEscapeType {
-  // No invalid character escapes.
-  None,
-  // A malformed \x escape.
-  Hexadecimal,
-  // A malformed \u escape.
-  Unicode,
-  // An otherwise well-formed \u escape which represents a
-  // codepoint > 10FFFF.
-  UnicodeOverflow,
-  // An octal escape in a template token.
-  Octal
-};
-
 // The only escapes found in IdentifierName are of the Unicode flavor.
 enum class IdentifierEscapes { None, SawUnicodeEscape };
 
