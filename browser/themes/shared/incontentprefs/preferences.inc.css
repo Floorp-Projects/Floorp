@@ -841,6 +841,13 @@ image.update-throbber {
   margin-top: calc((32px - 16px) / 2);
 }
 
+.info-icon-telemetry {
+  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  width: 16px;
+  height: 16px;
+  margin-inline: 2px 8px;
+}
+
 .sticky-container {
   position: sticky;
   background-color: var(--in-content-page-background);

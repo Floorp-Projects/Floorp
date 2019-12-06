@@ -853,6 +853,21 @@
            class="learnMore" is="text-link"
            data-l10n-id="collection-privacy-notice"/>
   </description>
+  <description>
+    <hbox id="telemetry-container" align="stretch" flex="1" hidden="true">
+      <hbox align="top">
+        <image class="info-icon-telemetry" flex="1"></image>
+      </hbox>
+      <hbox align="center" id="dataDescriptionBox" flex="1">
+        <html:span id="telemetryDisabledDescription" class="tail-with-learn-more" data-l10n-id="collection-health-report-telemetry-disabled"/>
+      </hbox>
+      <hbox>
+          <button id="telemetryDataDeletionLearnMoree"
+                 class="learnMore" is="text-link"
+                 data-l10n-id="collection-health-report-telemetry-disabled-link"/>
+      </hbox>
+    </hbox>
+  </description>
   <vbox data-subcategory="reports">
     <description flex="1">
       <checkbox id="submitHealthReportBox"
