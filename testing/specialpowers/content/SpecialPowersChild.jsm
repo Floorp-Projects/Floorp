@@ -172,6 +172,7 @@ class SpecialPowersChild extends JSWindowActorChild {
     this._messageListeners = new ExtensionUtils.DefaultMap(() => new Set());
 
     this._consoleListeners = [];
+    this._spawnTaskImports = {};
     this._encounteredCrashDumpFiles = [];
     this._unexpectedCrashDumpFiles = {};
     this._crashDumpDir = null;
@@ -281,8 +282,8 @@ class SpecialPowersChild extends JSWindowActorChild {
         break;
 
       case "Spawn":
-        let { task, args, caller, taskId } = message.data;
-        return this._spawnTask(task, args, caller, taskId);
+        let { task, args, caller, taskId, imports } = message.data;
+        return this._spawnTask(task, args, caller, taskId, imports);
 
       case "Assert":
         {
@@ -1681,6 +1682,7 @@ class SpecialPowersChild extends JSWindowActorChild {
       task: String(task),
       caller: Cu.getFunctionSourceLocation(task),
       hasHarness: typeof this.SimpleTest === "object",
+      imports: this._spawnTaskImports,
     });
   }
 
@@ -1696,10 +1698,14 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
-  _spawnTask(task, args, caller, taskId) {
-    let sb = new SpecialPowersSandbox(null, data => {
-      this.sendAsyncMessage("ProxiedAssert", { taskId, data });
-    });
+  _spawnTask(task, args, caller, taskId, imports) {
+    let sb = new SpecialPowersSandbox(
+      null,
+      data => {
+        this.sendAsyncMessage("ProxiedAssert", { taskId, data });
+      },
+      { imports }
+    );
 
     sb.sandbox.SpecialPowers = this;
     sb.sandbox.ContentTaskUtils = ContentTaskUtils;
@@ -1711,6 +1717,14 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
 
     return sb.execute(task, args, caller);
+  }
+
+  /**
+   * Automatically imports the given symbol from the given JSM for any
+   * task spawned by this SpecialPowers instance.
+   */
+  addTaskImport(symbol, url) {
+    this._spawnTaskImports[symbol] = url;
   }
 
   get SimpleTest() {

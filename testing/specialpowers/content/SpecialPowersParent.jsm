@@ -1033,7 +1033,14 @@ class SpecialPowersParent extends JSWindowActorParent {
       }
 
       case "Spawn": {
-        let { browsingContext, task, args, caller, hasHarness } = aMessage.data;
+        let {
+          browsingContext,
+          task,
+          args,
+          caller,
+          hasHarness,
+          imports,
+        } = aMessage.data;
 
         let spParent = browsingContext.currentWindowGlobal.getActor(
           "SpecialPowers"
@@ -1045,10 +1052,8 @@ class SpecialPowersParent extends JSWindowActorParent {
         }
 
         return spParent
-          .sendQuery("Spawn", { task, args, caller, taskId })
-          .finally(() => {
-            spParent._taskActors.delete(taskId);
-          });
+          .sendQuery("Spawn", { task, args, caller, taskId, imports })
+          .finally(() => spParent._taskActors.delete(taskId));
       }
 
       case "Snapshot": {
