@@ -30,9 +30,11 @@ jobs:
             max-run-time: 9000
             artifacts:
                 - type: file
-                  name: public/visual-metrics.tar.xz
-                  path: /builds/worker/artifacts/visual-metrics.tar.xz
-
+                  name: public/perfherder-data.json
+                  path: /builds/worker/artifacts/perfherder-data.json
+                - type: file
+                  name: public/summary.json
+                  path: /builds/worker/artifacts/summary.json
         fetches:
             fetch:
                 - visual-metrics

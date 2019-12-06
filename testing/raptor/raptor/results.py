@@ -442,7 +442,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
-    def _extract_vmetrics(self, browsertime_json, browsertime_results):
+    def _extract_vmetrics(self, test_name, browsertime_json, browsertime_results):
         # The visual metrics task expects posix paths.
         def _normalized_join(*args):
             path = os.path.join(*args)
@@ -456,7 +456,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             # mapping expected by the visual metrics task
             vfiles = res.get("files", {}).get("video", [])
             return [{"json_location": _normalized_join(reldir, "browsertime.json"),
-                     "video_location": _normalized_join(reldir, vfile)}
+                     "video_location": _normalized_join(reldir, vfile),
+                     "test_name": test_name}
                     for vfile in vfiles]
 
         vmetrics = []
@@ -497,6 +498,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         run_local = test_config.get('run_local', False)
 
         for test in tests:
+            test_name = test['name']
             bt_res_json = os.path.join(self.result_dir_for_test(test), 'browsertime.json')
             if os.path.exists(bt_res_json):
                 LOG.info("found browsertime results at %s" % bt_res_json)
@@ -514,7 +516,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise
 
             if not run_local:
-                video_files = self._extract_vmetrics(bt_res_json, raw_btresults)
+                video_files = self._extract_vmetrics(test_name, bt_res_json, raw_btresults)
                 if video_files:
                     video_jobs.extend(video_files)
 
