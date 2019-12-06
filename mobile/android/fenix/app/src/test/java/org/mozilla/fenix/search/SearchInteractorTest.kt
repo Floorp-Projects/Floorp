@@ -38,11 +38,11 @@ import org.robolectric.annotation.Config
 class SearchInteractorTest {
     @Test
     fun onUrlCommitted() {
-        val context: HomeActivity = mockk()
+        val context: HomeActivity = mockk(relaxed = true)
         val store: SearchFragmentStore = mockk()
         val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
-        val searchEngine = SearchEngineSource.Default(mockk())
+        val searchEngine = SearchEngineSource.Default(mockk(relaxed = true))
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.searchEngineManager } returns searchEngineManager
@@ -148,11 +148,11 @@ class SearchInteractorTest {
 
     @Test
     fun onSearchTermsTapped() {
-        val context: HomeActivity = mockk()
+        val context: HomeActivity = mockk(relaxed = true)
         val store: SearchFragmentStore = mockk()
         val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
-        val searchEngine = SearchEngineSource.Default(mockk())
+        val searchEngine = SearchEngineSource.Default(mockk(relaxed = true))
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.searchEngineManager } returns searchEngineManager

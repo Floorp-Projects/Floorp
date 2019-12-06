@@ -244,8 +244,16 @@ sealed class Event {
 
     data class PerformedSearch(val eventSource: EventSource) : Event() {
         sealed class EngineSource {
-            data class Default(val engine: SearchEngine) : EngineSource()
-            data class Shortcut(val engine: SearchEngine) : EngineSource()
+            abstract val engine: SearchEngine
+            abstract val isCustom: Boolean
+
+            data class Default(override val engine: SearchEngine, override val isCustom: Boolean) : EngineSource()
+            data class Shortcut(override val engine: SearchEngine, override val isCustom: Boolean) : EngineSource()
+
+            // https://github.com/mozilla-mobile/fenix/issues/1607
+            // Sanitize identifiers for custom search engines.
+            val identifier: String
+                get() = if (isCustom) "custom" else engine.identifier
 
             val searchEngine: SearchEngine
                 get() = when (this) {
@@ -277,7 +285,7 @@ sealed class Event {
                 }
 
             val countLabel: String
-                get() = "${source.searchEngine.identifier.toLowerCase(Locale.ROOT)}.$label"
+                get() = "${source.identifier.toLowerCase(Locale.getDefault())}.$label"
 
             val sourceLabel: String
                 get() = "${source.descriptor}.$label"

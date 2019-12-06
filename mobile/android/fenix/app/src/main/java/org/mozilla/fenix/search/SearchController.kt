@@ -14,6 +14,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -126,10 +127,11 @@ class DefaultSearchController(
         isSuggestion: Boolean
     ): Event.PerformedSearch {
         val isShortcut = engine != context.searchEngineManager.defaultSearchEngine
+        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)
 
         val engineSource =
-            if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine)
-            else Event.PerformedSearch.EngineSource.Default(engine)
+            if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)
+            else Event.PerformedSearch.EngineSource.Default(engine, isCustom)
 
         val source =
             if (isSuggestion) Event.PerformedSearch.EventSource.Suggestion(engineSource)

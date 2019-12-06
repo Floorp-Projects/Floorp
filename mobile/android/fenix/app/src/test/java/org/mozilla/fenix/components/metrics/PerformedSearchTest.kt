@@ -38,7 +38,7 @@ class PerformedSearchTest {
     @Test
     fun testThatCountLabelIsValid() {
         val labels = searchEngines.map {
-            PerformedSearch(EventSource.Action(EngineSource.Shortcut(it))).eventSource.countLabel
+            PerformedSearch(EventSource.Action(EngineSource.Shortcut(it, false))).eventSource.countLabel
         }
 
         labels.forEach {
