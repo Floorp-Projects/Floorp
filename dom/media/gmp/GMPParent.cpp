@@ -668,10 +668,13 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::dom::WidevineCDMManifest m;
   if (!m.Init(aJSON)) {
+    GMP_PARENT_LOG_DEBUG("%s: Failed to initialize json parser, failing.",
+                         __FUNCTION__);
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   if (!IsCDMAPISupported(m)) {
+    GMP_PARENT_LOG_DEBUG("%s: CDM API not supported, failing.", __FUNCTION__);
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -717,6 +720,8 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     mLibs = NS_LITERAL_CSTRING("dxva2.dll");
 #endif
   } else {
+    GMP_PARENT_LOG_DEBUG("%s: Unrecognized key system: %s, failing.",
+                         __FUNCTION__, mDisplayName.get());
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -746,6 +751,8 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     } else if (chromiumCodec.EqualsASCII("av01")) {
       codec = NS_LITERAL_CSTRING("av1");
     } else {
+      GMP_PARENT_LOG_DEBUG("%s: Unrecognized codec: %s, failing.", __FUNCTION__,
+                           chromiumCodec.get());
       return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     }
 
@@ -759,6 +766,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
 
   mCapabilities.AppendElement(std::move(video));
 
+  GMP_PARENT_LOG_DEBUG("%s: Successfully parsed manifest.", __FUNCTION__);
   return GenericPromise::CreateAndResolve(true, __func__);
 }
 
