@@ -70,6 +70,9 @@ class RendererOGL {
   RenderedFrameId GetLastCompletedFrameId();
 
   /// This can be called on the render thread only.
+  RenderedFrameId UpdateFrameId();
+
+  /// This can be called on the render thread only.
   void SetProfilerEnabled(bool aEnabled);
 
   /// This can be called on the render thread only.
