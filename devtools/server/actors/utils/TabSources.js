@@ -342,7 +342,7 @@ TabSources.prototype = {
             // `source.element` property, so do a blunt check here if
             // it's an xml page.
             spec.isInlineSource = true;
-          } else if (extension === "js") {
+          } else if (extension === "js" || extension == "sjs") {
             spec.contentType = "text/javascript";
           }
         } catch (e) {

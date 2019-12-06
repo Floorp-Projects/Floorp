@@ -296,7 +296,10 @@ class SourceTreeItem extends Component<Props, State> {
     if (depth === 0) {
       const thread = threads.find(({ actor }) => actor == item.name);
       if (thread) {
-        return thread.name;
+        return (
+          thread.name +
+          (thread.serviceWorkerStatus ? ` (${thread.serviceWorkerStatus})` : "")
+        );
       }
     }
 

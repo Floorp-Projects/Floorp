@@ -218,6 +218,10 @@ export type Target = {
   chrome: Boolean,
   url: string,
   isAddon: Boolean,
+  isServiceWorker: boolean,
+
+  // Property installed by the debugger itself.
+  debuggerServiceWorkerStatus: string,
 };
 
 /**
@@ -240,7 +244,8 @@ export type DebuggerClient = {
     traits: any,
     getFront: string => Promise<*>,
     listProcesses: () => Promise<{ processes: ProcessDescriptor }>,
-    listAllWorkers: () => Promise<*>,
+    listAllWorkerTargets: () => Promise<*>,
+    listServiceWorkerRegistrations: () => Promise<*>,
     getWorker: any => Promise<*>,
     on: (string, Function) => void,
   },
@@ -359,6 +364,7 @@ export type ExpressionResult =
  */
 export type ThreadFront = {
   actorID: string,
+  parentFront: Target,
   getFrames: (number, number) => Promise<{| frames: FrameFront[] |}>,
   resume: Function => Promise<*>,
   stepIn: Function => Promise<*>,

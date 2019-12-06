@@ -94,20 +94,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       // List service worker registrations
       ({ registrations } = await this.listServiceWorkerRegistrations());
 
-      // List workers from the Parent process
-      ({ workers } = await this.listWorkers());
-
-      // And then from the Child processes
-      const { processes } = await this.listProcesses();
-      for (const processDescriptorFront of processes) {
-        // Ignore parent process
-        if (processDescriptorFront.isParent) {
-          continue;
-        }
-        const front = await processDescriptorFront.getTarget();
-        const response = await front.listWorkers();
-        workers = workers.concat(response.workers);
-      }
+      workers = await this.listAllWorkerTargets();
     } catch (e) {
       // Something went wrong, maybe our client is disconnected?
     }
@@ -212,6 +199,28 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     });
 
     return result;
+  }
+
+  /** Get the target fronts for all worker threads running in any process. */
+  async listAllWorkerTargets() {
+    // List workers from the Parent process
+    let { workers } = await this.listWorkers();
+
+    // And then from the Child processes
+    const { processes } = await this.listProcesses();
+    for (const processDescriptorFront of processes) {
+      // Ignore parent process
+      if (processDescriptorFront.isParent) {
+        continue;
+      }
+      const front = await processDescriptorFront.getTarget();
+      if (front) {
+        const response = await front.listWorkers();
+        workers = workers.concat(response.workers);
+      }
+    }
+
+    return workers;
   }
 
   async listProcesses() {
