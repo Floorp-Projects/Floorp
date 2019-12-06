@@ -6,8 +6,6 @@
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
-startupAddonsManager();
-
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
     const listener = {
@@ -49,6 +47,8 @@ function getSupportFile(path) {
 }
 
 add_task(async function testReloadExitedAddon() {
+  await startupAddonsManager();
+
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
