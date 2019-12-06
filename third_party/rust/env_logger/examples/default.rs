@@ -17,6 +17,7 @@ $ export MY_LOG_STYLE=never
 
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 
 use env_logger::Env;
 
