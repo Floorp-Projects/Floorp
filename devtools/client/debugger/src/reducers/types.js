@@ -20,7 +20,7 @@ import type { PendingBreakpointsState } from "../selectors";
 import type { ProjectTextSearchState } from "./project-text-search";
 import type { SourcesState } from "./sources";
 import type { SourceActorsState } from "./source-actors";
-import type { TabList } from "./tabs";
+import type { TabsState } from "./tabs";
 import type { UIState } from "./ui";
 import type { QuickOpenState } from "./quick-open";
 import type { EventListenersState } from "./event-listeners";
@@ -38,7 +38,7 @@ export type State = {
   projectTextSearch: ProjectTextSearchState,
   sources: SourcesState,
   sourceActors: SourceActorsState,
-  tabs: TabList,
+  tabs: TabsState,
   ui: UIState,
   quickOpen: QuickOpenState,
 };
@@ -61,3 +61,4 @@ export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
 export type { Command } from "./pause";
 export type { LoadedSymbols, Symbols } from "./ast";
 export type { Preview } from "./preview";
+export type { Tab, TabList, TabsSources } from "./tabs";

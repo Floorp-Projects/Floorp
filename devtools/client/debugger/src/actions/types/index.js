@@ -69,7 +69,7 @@ type AddTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string,
+  +sourceId: string,
 |};
 
 type UpdateTabAction = {|
@@ -77,7 +77,7 @@ type UpdateTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string,
+  +sourceId: string,
 |};
 
 type NavigateAction =

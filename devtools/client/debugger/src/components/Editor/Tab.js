@@ -14,6 +14,7 @@ import { CloseButton } from "../shared/Button";
 import { copyToTheClipboard } from "../../utils/clipboard";
 
 import type { Source, Context } from "../../types";
+import type { TabsSources } from "../../reducers/types";
 
 import actions from "../../actions";
 
@@ -44,7 +45,7 @@ type OwnProps = {|
 |};
 type Props = {
   cx: Context,
-  tabSources: Source[],
+  tabSources: TabsSources,
   selectedSource: ?Source,
   source: Source,
   activeSearch: ?ActiveSearchType,

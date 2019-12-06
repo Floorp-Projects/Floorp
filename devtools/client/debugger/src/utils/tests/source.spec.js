@@ -26,6 +26,8 @@ import {
 } from "../test-mockup";
 import { isFulfilled } from "../async-value.js";
 
+import type { Source } from "../../types";
+
 const defaultSymbolDeclarations = {
   classes: [],
   functions: [],
@@ -114,92 +116,91 @@ describe("sources", () => {
 
   describe("getDisplayPath", () => {
     it("should give us the path for files with same name", () => {
+      const sources: Source[] = [
+        makeMockSource("http://localhost.com:7999/increment/xyz/hello.html"),
+        makeMockSource("http://localhost.com:7999/increment/abc/hello.html"),
+        makeMockSource("http://localhost.com:7999/increment/hello.html"),
+      ];
       expect(
         getDisplayPath(
           makeMockSource("http://localhost.com:7999/increment/abc/hello.html"),
-          [
-            makeMockSource(
-              "http://localhost.com:7999/increment/xyz/hello.html"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/abc/hello.html"
-            ),
-            makeMockSource("http://localhost.com:7999/increment/hello.html"),
-          ]
+          sources
         )
       ).toBe("abc");
     });
 
     it(`should give us the path for files with same name
       in directories with same name`, () => {
+      const sources: Source[] = [
+        makeMockSource(
+          "http://localhost.com:7999/increment/xyz/web/hello.html"
+        ),
+        makeMockSource(
+          "http://localhost.com:7999/increment/abc/web/hello.html"
+        ),
+        makeMockSource("http://localhost.com:7999/increment/hello.html"),
+      ];
       expect(
         getDisplayPath(
           makeMockSource(
             "http://localhost.com:7999/increment/abc/web/hello.html"
           ),
-          [
-            makeMockSource(
-              "http://localhost.com:7999/increment/xyz/web/hello.html"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/abc/web/hello.html"
-            ),
-            makeMockSource("http://localhost.com:7999/increment/hello.html"),
-          ]
+          sources
         )
       ).toBe("abc/web");
     });
 
     it("should give no path for files with unique name", () => {
+      const sources: Source[] = [
+        makeMockSource("http://localhost.com:7999/increment/xyz.html"),
+        makeMockSource("http://localhost.com:7999/increment/abc.html"),
+        makeMockSource("http://localhost.com:7999/increment/hello.html"),
+      ];
       expect(
         getDisplayPath(
           makeMockSource("http://localhost.com:7999/increment/abc/web.html"),
-          [
-            makeMockSource("http://localhost.com:7999/increment/xyz.html"),
-            makeMockSource("http://localhost.com:7999/increment/abc.html"),
-            makeMockSource("http://localhost.com:7999/increment/hello.html"),
-          ]
+          sources
         )
       ).toBe(undefined);
     });
     it("should not show display path for pretty file", () => {
+      const sources: Source[] = [
+        makeMockSource("http://localhost.com:7999/increment/abc/web/hell.html"),
+        makeMockSource(
+          "http://localhost.com:7999/increment/abc/web/hello.html"
+        ),
+        makeMockSource(
+          "http://localhost.com:7999/increment/xyz.html:formatted"
+        ),
+      ];
       expect(
         getDisplayPath(
           makeMockSource(
             "http://localhost.com:7999/increment/abc/web/hello.html:formatted"
           ),
-          [
-            makeMockSource(
-              "http://localhost.com:7999/increment/abc/web/hell.html"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/abc/web/hello.html"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/xyz.html:formatted"
-            ),
-          ]
+          sources
         )
       ).toBe(undefined);
     });
     it(`should give us the path for files with same name when both
       are pretty and different path`, () => {
+      const sources: Source[] = [
+        makeMockSource(
+          "http://localhost.com:7999/increment/xyz/web/hello.html:formatted"
+        ),
+        makeMockSource(
+          "http://localhost.com:7999/increment/abc/web/hello.html:formatted"
+        ),
+        makeMockSource(
+          "http://localhost.com:7999/increment/hello.html:formatted"
+        ),
+      ];
       expect(
         getDisplayPath(
           makeMockSource(
             "http://localhost.com:7999/increment/abc/web/hello.html:formatted"
           ),
-          [
-            makeMockSource(
-              "http://localhost.com:7999/increment/xyz/web/hello.html:formatted"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/abc/web/hello.html:formatted"
-            ),
-            makeMockSource(
-              "http://localhost.com:7999/increment/hello.html:formatted"
-            ),
-          ]
+          sources
         )
       ).toBe("abc/web");
     });

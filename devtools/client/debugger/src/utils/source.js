@@ -30,8 +30,9 @@ import type {
   SourceLocation,
   ThreadId,
 } from "../types";
+
 import { isFulfilled, type AsyncValue } from "./async-value";
-import type { Symbols } from "../reducers/types";
+import type { Symbols, TabsSources } from "../reducers/types";
 
 type transformUrlCallback = string => string;
 
@@ -199,7 +200,10 @@ export function getTruncatedFileName(
  * @static
  */
 
-export function getDisplayPath(mySource: Source, sources: Source[]) {
+export function getDisplayPath(
+  mySource: Source,
+  sources: Source[] | TabsSources
+) {
   const rawSourceURL = getRawSourceURL(mySource.url);
   const filename = getFilename(mySource, rawSourceURL);
 

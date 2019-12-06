@@ -6,11 +6,16 @@
 
 import type { ThunkArgs } from "../actions/types";
 import { asSettled, type AsyncValue } from "./async-value";
+import { validateContext } from "./context";
+import type { Context } from "./context";
+
+type ArgsWithContext = { cx: Context };
 
 export type MemoizedAction<
   Args,
   Result
 > = Args => ThunkArgs => Promise<Result | null>;
+
 type MemoizableActionParams<Args, Result> = {
   getValue: (args: Args, thunkArgs: ThunkArgs) => AsyncValue<Result> | null,
   createKey: (args: Args, thunkArgs: ThunkArgs) => string,
@@ -39,7 +44,7 @@ type MemoizableActionParams<Args, Result> = {
  * );
  *
  */
-export function memoizeableAction<Args, Result>(
+export function memoizeableAction<Args: ArgsWithContext, Result>(
   name: string,
   { getValue, createKey, action }: MemoizableActionParams<Args, Result>
 ): MemoizedAction<Args, Result> {
@@ -65,8 +70,11 @@ export function memoizeableAction<Args, Result>(
 
       await requests.get(key);
 
-      result = asSettled(getValue(args, thunkArgs));
+      if (args.cx) {
+        validateContext(thunkArgs.getState(), args.cx);
+      }
 
+      result = asSettled(getValue(args, thunkArgs));
       if (!result) {
         // Returning null here is not ideal. This means that the action
         // resolved but 'getValue' didn't return a loaded value, for instance

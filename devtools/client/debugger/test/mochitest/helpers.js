@@ -1942,3 +1942,4 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
 PromiseTestUtils.whitelistRejectionsGlobally(
   /Current thread has paused or resumed/
 );
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);

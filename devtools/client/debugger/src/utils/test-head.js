@@ -71,12 +71,12 @@ function commonLog(msg: string, data: any = {}) {
   console.log(`[INFO] ${msg} ${JSON.stringify(data)}`);
 }
 
-function makeFrame({ id, sourceId }: Object, opts: Object = {}) {
+function makeFrame({ id, sourceId, thread }: Object, opts: Object = {}) {
   return {
     id,
     scope: { bindings: { variables: {}, arguments: [] } },
     location: { sourceId, line: 4 },
-    thread: "FakeThread",
+    thread: thread || "FakeThread",
     ...opts,
   };
 }
@@ -215,7 +215,8 @@ function waitForState(store: any, predicate: any): Promise<void> {
       ret = predicate(store.getState());
       if (ret) {
         unsubscribe();
-        resolve(ret);
+        // NOTE: memoizableAction adds an additional tick for validating context
+        setTimeout(() => resolve(ret));
       }
     });
   });

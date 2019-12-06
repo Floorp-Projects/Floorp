@@ -4,7 +4,6 @@
 
 // @flow
 
-import type { ThunkArgs } from "./types";
 import {
   getSourceActor,
   getSourceActorBreakableLines,
@@ -17,6 +16,9 @@ import {
   type MemoizedAction,
 } from "../utils/memoizableAction";
 import { PROMISE } from "./utils/middleware/promise";
+
+import type { ThunkArgs } from "./types";
+import type { Context } from "../utils/context";
 
 export function insertSourceActor(item: SourceActor) {
   return insertSourceActors([item]);
@@ -43,7 +45,7 @@ export function removeSourceActors(items: Array<SourceActor>) {
 }
 
 export const loadSourceActorBreakpointColumns: MemoizedAction<
-  { id: SourceActorId, line: number },
+  {| id: SourceActorId, line: number, cx: Context |},
   Array<number>
 > = memoizeableAction("loadSourceActorBreakpointColumns", {
   createKey: ({ id, line }) => `${id}:${line}`,
@@ -70,7 +72,7 @@ export const loadSourceActorBreakpointColumns: MemoizedAction<
 });
 
 export const loadSourceActorBreakableLines: MemoizedAction<
-  { id: SourceActorId },
+  {| id: SourceActorId, cx: Context |},
   Array<number>
 > = memoizeableAction("loadSourceActorBreakableLines", {
   createKey: args => args.id,

@@ -207,6 +207,7 @@ function checkPendingBreakpoints(cx: Context, sourceId: string) {
 
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText({ cx, source }));
+
     await dispatch(setBreakableLines(cx, source.id));
 
     await Promise.all(
