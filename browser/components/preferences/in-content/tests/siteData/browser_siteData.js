@@ -385,7 +385,7 @@ add_task(async function() {
 
   await openSiteDataSettingsDialog();
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
     let siteItems = frameDoc.getElementsByTagName("richlistitem");
