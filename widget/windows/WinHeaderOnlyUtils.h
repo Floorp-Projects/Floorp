@@ -526,6 +526,8 @@ inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
 
 class ModuleVersion final {
  public:
+  constexpr ModuleVersion() : mVersion(0ULL) {}
+
   explicit ModuleVersion(const VS_FIXEDFILEINFO& aFixedInfo)
       : mVersion((static_cast<uint64_t>(aFixedInfo.dwFileVersionMS) << 32) |
                  static_cast<uint64_t>(aFixedInfo.dwFileVersionLS)) {}
@@ -554,6 +556,11 @@ class ModuleVersion final {
   }
 
   bool operator<(const uint64_t& aOther) const { return mVersion < aOther; }
+
+  ModuleVersion& operator=(const uint64_t aIntVersion) {
+    mVersion = aIntVersion;
+    return *this;
+  }
 
  private:
   uint64_t mVersion;
