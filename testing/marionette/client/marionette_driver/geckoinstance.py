@@ -70,9 +70,7 @@ class GeckoInstance(object):
         "extensions.getAddons.cache.enabled": False,
         # Disable intalling any distribution add-ons
         "extensions.installDistroAddons": False,
-        # Disable extensions compatibility dialogue.
-        # Removed in Firefox 61.
-        "extensions.showMismatchUI": False,
+
         # Turn off extension updates so they don't bother tests
         "extensions.update.enabled": False,
         "extensions.update.notifyUser": False,
