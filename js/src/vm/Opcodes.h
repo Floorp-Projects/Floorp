@@ -765,15 +765,15 @@
      */ \
     MACRO(JSOP_ISNOITER, 77, "isnoiter", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Exits a for-in loop by popping the iterator object from the stack and
-     * closing it.
+     * Exits a for-in loop by popping the iteration value and the iterator
+     * object from the stack and closing the iterator object.
      *
      *   Category: Statements
      *   Type: For-In Statement
      *   Operands:
-     *   Stack: iter =>
+     *   Stack: iter, iterval =>
      */ \
-    MACRO(JSOP_ENDITER, 78, "enditer", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(JSOP_ENDITER, 78, "enditer", NULL, 1, 2, 0, JOF_BYTE) \
     /*
      * Invokes 'callee' with 'this' and 'args', pushes return value onto the
      * stack.

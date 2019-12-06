@@ -806,10 +806,6 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
         }
 
         // The iterator and the current value are on the stack.
-        if (!bce_->emit1(JSOP_POP)) {
-          //        [stack] ... ITER
-          return false;
-        }
         if (!bce_->emit1(JSOP_ENDITER)) {
           //        [stack] ...
           return false;
