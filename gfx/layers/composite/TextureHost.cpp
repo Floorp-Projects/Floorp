@@ -605,7 +605,8 @@ uint32_t BufferTextureHost::NumSubTextures() {
 
 void BufferTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
@@ -617,7 +618,7 @@ void BufferTextureHost::PushResourceUpdates(
     wr::ImageDescriptor descriptor(
         GetSize(),
         ImageDataSerializer::ComputeRGBStride(GetFormat(), GetSize().width),
-        GetFormat());
+        GetFormat(), aPreferCompositorSurface);
     (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
@@ -625,10 +626,12 @@ void BufferTextureHost::PushResourceUpdates(
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     wr::ImageDescriptor yDescriptor(
         desc.ySize(), desc.yStride(),
-        SurfaceFormatForColorDepth(desc.colorDepth()));
+        SurfaceFormatForColorDepth(desc.colorDepth()),
+        aPreferCompositorSurface);
     wr::ImageDescriptor cbcrDescriptor(
         desc.cbCrSize(), desc.cbCrStride(),
-        SurfaceFormatForColorDepth(desc.colorDepth()));
+        SurfaceFormatForColorDepth(desc.colorDepth()),
+        aPreferCompositorSurface);
     (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, imageType, 0);
     (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, imageType, 1);
     (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, imageType, 2);

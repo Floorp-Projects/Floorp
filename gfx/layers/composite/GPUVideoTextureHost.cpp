@@ -137,13 +137,14 @@ uint32_t GPUVideoTextureHost::NumSubTextures() {
 
 void GPUVideoTextureHost::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(EnsureWrappedTextureHost());
   if (!EnsureWrappedTextureHost()) {
     return;
   }
-  EnsureWrappedTextureHost()->PushResourceUpdates(aResources, aOp, aImageKeys,
-                                                  aExtID);
+  EnsureWrappedTextureHost()->PushResourceUpdates(
+      aResources, aOp, aImageKeys, aExtID, aPreferCompositorSurface);
 }
 
 void GPUVideoTextureHost::PushDisplayItems(
