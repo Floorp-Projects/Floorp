@@ -16,6 +16,10 @@
 #  include "mozilla/SandboxBrokerPolicyFactory.h"
 #endif
 
+#if defined(XP_WIN)
+#  include "mozilla/WinDllServices.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerParent.h"
 #endif
@@ -101,6 +105,24 @@ mozilla::ipc::IPCResult RDDChild::RecvFinishMemoryReport(
     mMemoryReportRequest = nullptr;
   }
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvGetModulesTrust(
+    ModulePaths&& aModPaths, bool aRunAtNormalPriority,
+    GetModulesTrustResolver&& aResolver) {
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->GetModulesTrust(std::move(aModPaths), aRunAtNormalPriority)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [aResolver](ModulesMapResult&& aResult) {
+            aResolver(Some(ModulesMapResult(std::move(aResult))));
+          },
+          [aResolver](nsresult aRv) { aResolver(Nothing()); });
+  return IPC_OK();
+#else
+  return IPC_FAIL(this, "Unsupported on this platform");
+#endif  // defined(XP_WIN)
 }
 
 void RDDChild::ActorDestroy(ActorDestroyReason aWhy) {
