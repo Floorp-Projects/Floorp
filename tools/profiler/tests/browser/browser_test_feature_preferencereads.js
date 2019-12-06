@@ -72,16 +72,12 @@ add_task(async function test_profile_feature_preferencereads() {
 
     startProfiler({ features: ["threads", "leaf"] });
     // Now reload the tab with a clean run.
-    await SpecialPowers.spawn(contentBrowser, [], () => {
+    await ContentTask.spawn(contentBrowser, null, () => {
       return new Promise(resolve => {
-        docShell.chromeEventHandler.addEventListener(
-          "pageshow",
-          () => resolve(),
-          {
-            capturing: true,
-            once: true,
-          }
-        );
+        addEventListener("pageshow", () => resolve(), {
+          capturing: true,
+          once: true,
+        });
         content.location.reload();
       });
     });

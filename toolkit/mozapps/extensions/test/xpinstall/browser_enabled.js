@@ -5,9 +5,9 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
-  SpecialPowers.spawn(
+  ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [TESTROOT + "enabled.html"],
+    TESTROOT + "enabled.html",
     function(url) {
       return new Promise(resolve => {
         function page_loaded() {
@@ -16,19 +16,11 @@ function test() {
         }
 
         function load_listener() {
-          docShell.chromeEventHandler.removeEventListener(
-            "load",
-            load_listener,
-            true
-          );
+          removeEventListener("load", load_listener, true);
           content.addEventListener("PageLoaded", page_loaded);
         }
 
-        docShell.chromeEventHandler.addEventListener(
-          "load",
-          load_listener,
-          true
-        );
+        addEventListener("load", load_listener, true);
 
         content.location.href = url;
       });

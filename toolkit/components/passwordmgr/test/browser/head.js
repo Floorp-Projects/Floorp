@@ -168,15 +168,13 @@ async function getFormSubmitResponseResult(
   { username = "#user", password = "#pass" } = {}
 ) {
   // default selectors are for the response page produced by formsubmit.sjs
-  let fieldValues = await SpecialPowers.spawn(
+  let fieldValues = await ContentTask.spawn(
     browser,
-    [
-      {
-        resultURL,
-        usernameSelector: username,
-        passwordSelector: password,
-      },
-    ],
+    {
+      resultURL,
+      usernameSelector: username,
+      passwordSelector: password,
+    },
     async function({ resultURL, usernameSelector, passwordSelector }) {
       await ContentTaskUtils.waitForCondition(() => {
         return (
