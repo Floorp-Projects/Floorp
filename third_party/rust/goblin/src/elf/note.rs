@@ -179,8 +179,7 @@ if_alloc! {
 
     impl<'a> ctx::TryFromCtx<'a, (usize, container::Ctx)> for Note<'a> {
         type Error = error::Error;
-        type Size = usize;
-        fn try_from_ctx(bytes: &'a [u8], (alignment, ctx): (usize, container::Ctx)) -> Result<(Self, Self::Size), Self::Error> {
+        fn try_from_ctx(bytes: &'a [u8], (alignment, ctx): (usize, container::Ctx)) -> Result<(Self, usize), Self::Error> {
             let offset = &mut 0;
             let mut alignment = alignment;
             if alignment < 4 {

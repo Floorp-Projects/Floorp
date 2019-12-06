@@ -1,9 +1,9 @@
 use core::u8;
 use core::convert::{From, AsRef};
 use core::result;
-use Pread;
-use ctx::TryFromCtx;
-use error;
+use crate::Pread;
+use crate::ctx::TryFromCtx;
+use crate::error;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// An unsigned leb128 integer
@@ -22,7 +22,7 @@ impl Uleb128 {
     /// Read a variable length u64 from `bytes` at `offset`
     pub fn read(bytes: &[u8], offset: &mut usize) -> error::Result<u64> {
         let tmp = bytes.pread::<Uleb128>(*offset)?;
-        *offset = *offset + tmp.size();
+        *offset += tmp.size();
         Ok(tmp.into())
     }
 }
@@ -56,9 +56,8 @@ impl Sleb128 {
     #[inline]
     /// Read a variable length i64 from `bytes` at `offset`
     pub fn read(bytes: &[u8], offset: &mut usize) -> error::Result<i64> {
-        use Pread;
         let tmp = bytes.pread::<Sleb128>(*offset)?;
-        *offset = *offset + tmp.size();
+        *offset += tmp.size();
         Ok(tmp.into())
     }
 }
@@ -93,10 +92,8 @@ fn mask_continuation(byte: u8) -> u8 {
 
 impl<'a> TryFromCtx<'a> for Uleb128 {
     type Error = error::Error;
-    type Size = usize;
     #[inline]
-    fn try_from_ctx(src: &'a [u8], _ctx: ()) -> result::Result<(Self, Self::Size), Self::Error> {
-        use pread::Pread;
+    fn try_from_ctx(src: &'a [u8], _ctx: ()) -> result::Result<(Self, usize), Self::Error> {
         let mut result = 0;
         let mut shift = 0;
         let mut count = 0;
@@ -107,14 +104,14 @@ impl<'a> TryFromCtx<'a> for Uleb128 {
                 return Err(error::Error::BadInput{ size: src.len(), msg: "failed to parse"})
             }
 
-            let low_bits = mask_continuation(byte) as u64;
+            let low_bits = u64::from(mask_continuation(byte));
             result |= low_bits << shift;
 
             count += 1;
             shift += 7;
 
             if byte & CONTINUATION_BIT == 0 {
-                return Ok((Uleb128 { value: result, count: count }, count));
+                return Ok((Uleb128 { value: result, count }, count));
             }
         }
     }
@@ -122,9 +119,8 @@ impl<'a> TryFromCtx<'a> for Uleb128 {
 
 impl<'a> TryFromCtx<'a> for Sleb128 {
     type Error = error::Error;
-    type Size = usize;
     #[inline]
-    fn try_from_ctx(src: &'a [u8], _ctx: ()) -> result::Result<(Self, Self::Size), Self::Error> {
+    fn try_from_ctx(src: &'a [u8], _ctx: ()) -> result::Result<(Self, usize), Self::Error> {
         let o = 0;
         let offset = &mut 0;
         let mut result = 0;
@@ -138,7 +134,7 @@ impl<'a> TryFromCtx<'a> for Sleb128 {
                 return Err(error::Error::BadInput{size: src.len(), msg: "failed to parse"})
             }
 
-            let low_bits = mask_continuation(byte) as i64;
+            let low_bits = i64::from(mask_continuation(byte));
             result |= low_bits << shift;
             shift += 7;
 
@@ -152,7 +148,7 @@ impl<'a> TryFromCtx<'a> for Sleb128 {
             result |= !0 << shift;
         }
         let count = *offset - o;
-        Ok((Sleb128{ value: result, count: count }, count))
+        Ok((Sleb128{ value: result, count }, count))
     }
 }
 

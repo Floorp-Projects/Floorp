@@ -497,8 +497,7 @@ impl ThreadCommand {
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for ThreadCommand {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], le: Endian) -> error::Result<(Self, Self::Size)> {
+    fn try_from_ctx(bytes: &'a [u8], le: Endian) -> error::Result<(Self, usize)> {
         let lc = bytes.pread_with::<LoadCommandHeader>(0, le)?;
 
         // read the thread state flavor and length of the thread state
@@ -1324,8 +1323,7 @@ pub enum CommandVariant {
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for CommandVariant {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], le: Endian) -> error::Result<(Self, Self::Size)> {
+    fn try_from_ctx(bytes: &'a [u8], le: Endian) -> error::Result<(Self, usize)> {
         use self::CommandVariant::*;
         let lc = bytes.pread_with::<LoadCommandHeader>(0, le)?;
         let size = lc.cmdsize as usize;

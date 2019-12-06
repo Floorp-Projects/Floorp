@@ -1,4 +1,4 @@
-use crate::rust::vec::Vec;
+use alloc::vec::Vec;
 use crate::elements;
 use super::{
 	import,

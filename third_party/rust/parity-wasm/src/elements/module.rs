@@ -1,4 +1,4 @@
-use crate::rust::{vec::Vec, borrow::ToOwned, string::String, cmp};
+use alloc::{borrow::ToOwned, vec::Vec, string::String};
 use crate::io;
 
 use super::{deserialize_buffer, serialize, Deserialize, Serialize, Error, Uint32, External};
@@ -9,6 +9,8 @@ use super::section::{
 };
 use super::name_section::NameSection;
 use super::reloc_section::RelocSection;
+
+use core::cmp;
 
 const WASM_MAGIC_NUMBER: [u8; 4] = [0x00, 0x61, 0x73, 0x6d];
 

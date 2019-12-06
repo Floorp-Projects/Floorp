@@ -59,7 +59,7 @@ fn parse_self() {
         path = Path::new("target").join("release").join("libgoblin.rlib");
     }
     let buffer = {
-        let mut fd = File::open(path).expect("open file");
+        let mut fd = File::open(path).expect("can open file; did you run cargo build first?");
         let mut v = Vec::new();
         fd.read_to_end(&mut v).expect("read file");
         v

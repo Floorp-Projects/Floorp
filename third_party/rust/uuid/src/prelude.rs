@@ -19,12 +19,6 @@
 //! extern crate uuid;
 //! ```
 //!
-//! and the following in every module:
-//!
-//! ```rust
-//! use uuid::prelude::*;
-//! ```
-//!
 //! # Prelude Contents
 //!
 //! Currently the prelude reexports the following:
@@ -50,4 +44,4 @@ handling uuid version 1. Requires feature `v1`.
 
 pub use super::{Builder, Bytes, Error, Uuid, Variant, Version};
 #[cfg(feature = "v1")]
-pub use v1::{ClockSequence, Context};
+pub use crate::v1::{ClockSequence, Context};

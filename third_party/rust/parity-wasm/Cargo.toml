@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "parity-wasm"
-version = "0.40.3"
+version = "0.41.0"
 authors = ["Nikolay Volf <nikvolf@gmail.com>", "Svyatoslav Nikolsky <svyatonik@yandex.ru>", "Sergey Shulepov <s.pepyakin@gmail.com>"]
 exclude = ["res/*", "spec/*"]
 description = "WebAssembly low-level format library"

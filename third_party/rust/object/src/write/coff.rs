@@ -45,6 +45,15 @@ impl Object {
             StandardSection::UninitializedData => {
                 (&[], &b".bss"[..], SectionKind::UninitializedData)
             }
+            StandardSection::Tls => (&[], &b".tls$"[..], SectionKind::Tls),
+            StandardSection::UninitializedTls => {
+                // Unsupported section.
+                (&[], &[], SectionKind::UninitializedTls)
+            }
+            StandardSection::TlsVariables => {
+                // Unsupported section.
+                (&[], &[], SectionKind::TlsVariables)
+            }
         }
     }
 
@@ -116,7 +125,7 @@ impl Object {
 
         let mut name = b".refptr.".to_vec();
         name.extend(&self.symbol(symbol_id).name);
-        let stub_id = self.add_symbol(Symbol {
+        let stub_id = self.add_raw_symbol(Symbol {
             name,
             value: 0,
             size: u64::from(stub_size),
@@ -337,7 +346,7 @@ impl Object {
                             (RelocationKind::SectionOffset, 32, 0) => coff::IMAGE_REL_I386_SECREL,
                             (RelocationKind::SectionOffset, 7, 0) => coff::IMAGE_REL_I386_SECREL7,
                             (RelocationKind::Relative, 32, -4) => coff::IMAGE_REL_I386_REL32,
-                            (RelocationKind::Other(x), _, _) => x as u16,
+                            (RelocationKind::Coff(x), _, _) => x,
                             _ => return Err(format!("unimplemented relocation {:?}", reloc)),
                         },
                         Architecture::X86_64 => match (reloc.kind, reloc.size, reloc.addend) {
@@ -352,7 +361,7 @@ impl Object {
                             (RelocationKind::Relative, 32, -9) => coff::IMAGE_REL_AMD64_REL32_5,
                             (RelocationKind::SectionOffset, 32, 0) => coff::IMAGE_REL_AMD64_SECREL,
                             (RelocationKind::SectionOffset, 7, 0) => coff::IMAGE_REL_AMD64_SECREL7,
-                            (RelocationKind::Other(x), _, _) => x as u16,
+                            (RelocationKind::Coff(x), _, _) => x,
                             _ => return Err(format!("unimplemented relocation {:?}", reloc)),
                         },
                         _ => {

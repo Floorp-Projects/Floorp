@@ -79,7 +79,7 @@ pub fn try_name<'a>(bytes: &'a [u8], rva: usize, sections: &[section_table::Sect
 }
 
 pub fn get_data<'a, T>(bytes: &'a [u8], sections: &[section_table::SectionTable], directory: DataDirectory, file_alignment: u32) -> error::Result<T>
-    where T: scroll::ctx::TryFromCtx<'a, scroll::Endian, Size = usize, Error = scroll::Error>  {
+    where T: scroll::ctx::TryFromCtx<'a, scroll::Endian, Error = scroll::Error>  {
     let rva = directory.virtual_address as usize;
     let offset = find_offset(rva, sections, file_alignment)
         .ok_or_else(||error::Error::Malformed(directory.virtual_address.to_string()))?;

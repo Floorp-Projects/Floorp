@@ -276,7 +276,6 @@ if_alloc! {
     }
 
     impl ctx::SizeWith<crate::container::Ctx> for Header {
-        type Units = usize;
         fn size_with(ctx: &crate::container::Ctx) -> usize {
             match ctx.container {
                 Container::Little => {
@@ -291,8 +290,7 @@ if_alloc! {
 
     impl<'a> ctx::TryFromCtx<'a, scroll::Endian> for Header {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_from_ctx(bytes: &'a [u8], _ctx: scroll::Endian) -> error::Result<(Self, Self::Size)> {
+        fn try_from_ctx(bytes: &'a [u8], _ctx: scroll::Endian) -> error::Result<(Self, usize)> {
             use scroll::Pread;
             if bytes.len() < SIZEOF_IDENT {
                 return Err(error::Error::Malformed("Too small".to_string()));
@@ -317,11 +315,9 @@ if_alloc! {
         }
     }
 
-    // TODO: i think we should remove this forcing of the information in the header, it causes too many conflicts
     impl ctx::TryIntoCtx<scroll::Endian> for Header {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_into_ctx(self, bytes: &mut [u8], _ctx: scroll::Endian) -> Result<Self::Size, Self::Error> {
+        fn try_into_ctx(self, bytes: &mut [u8], _ctx: scroll::Endian) -> Result<usize, Self::Error> {
             use scroll::Pwrite;
             match self.container()? {
                 Container::Little => {
@@ -410,8 +406,7 @@ macro_rules! elf_header_std_impl {
 
             impl<'a> ctx::TryFromCtx<'a, scroll::Endian> for Header {
                 type Error = crate::error::Error;
-                type Size = usize;
-                fn try_from_ctx(bytes: &'a [u8], _: scroll::Endian) -> result::Result<(Self, Self::Size), Self::Error> {
+                fn try_from_ctx(bytes: &'a [u8], _: scroll::Endian) -> result::Result<(Self, usize), Self::Error> {
                     let mut elf_header = Header::default();
                     let offset = &mut 0;
                     bytes.gread_inout(offset, &mut elf_header.e_ident)?;
@@ -440,9 +435,8 @@ macro_rules! elf_header_std_impl {
 
             impl ctx::TryIntoCtx<scroll::Endian> for Header {
                 type Error = crate::error::Error;
-                type Size = usize;
                 /// a Pwrite impl for Header: **note** we use the endianness value in the header, and not a parameter
-                fn try_into_ctx(self, bytes: &mut [u8], _endianness: scroll::Endian) -> result::Result<Self::Size, Self::Error> {
+                fn try_into_ctx(self, bytes: &mut [u8], _endianness: scroll::Endian) -> result::Result<usize, Self::Error> {
                     use scroll::{Pwrite};
                     let offset = &mut 0;
                     let endianness =

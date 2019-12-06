@@ -1,14 +1,9 @@
 #![feature(test)]
-#[cfg(feature = "slog")]
-#[macro_use]
-extern crate slog;
-extern crate test;
-extern crate uuid;
 
-#[cfg(feature = "slog")]
-use slog::Drain;
+extern crate test;
+
 use test::Bencher;
-use uuid::prelude::*;
+use uuid::Uuid;
 
 #[bench]
 fn bench_parse_valid_strings(b: &mut Bencher) {

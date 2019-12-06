@@ -234,6 +234,14 @@ impl<'data, 'file> ObjectSegment<'data> for CoffSegment<'data, 'file> {
         section_alignment(self.section.characteristics)
     }
 
+    #[inline]
+    fn file_range(&self) -> (u64, u64) {
+        (
+            self.section.pointer_to_raw_data as u64,
+            self.section.size_of_raw_data as u64,
+        )
+    }
+
     fn data(&self) -> &'data [u8] {
         let offset = self.section.pointer_to_raw_data as usize;
         let size = self.section.size_of_raw_data as usize;
@@ -291,6 +299,14 @@ impl<'data, 'file> ObjectSection<'data> for CoffSection<'data, 'file> {
     #[inline]
     fn align(&self) -> u64 {
         section_alignment(self.section.characteristics)
+    }
+
+    #[inline]
+    fn file_range(&self) -> Option<(u64, u64)> {
+        Some((
+            self.section.pointer_to_raw_data as u64,
+            self.section.size_of_raw_data as u64,
+        ))
     }
 
     fn data(&self) -> Cow<'data, [u8]> {
@@ -460,7 +476,7 @@ impl<'data, 'file> Iterator for CoffRelocationIterator<'data, 'file> {
                     pe::relocation::IMAGE_REL_I386_SECREL => (RelocationKind::SectionOffset, 32, 0),
                     pe::relocation::IMAGE_REL_I386_SECREL7 => (RelocationKind::SectionOffset, 7, 0),
                     pe::relocation::IMAGE_REL_I386_REL32 => (RelocationKind::Relative, 32, -4),
-                    _ => (RelocationKind::Other(u32::from(relocation.typ)), 0, 0),
+                    _ => (RelocationKind::Coff(relocation.typ), 0, 0),
                 },
                 pe::header::COFF_MACHINE_X86_64 => match relocation.typ {
                     pe::relocation::IMAGE_REL_AMD64_ADDR64 => (RelocationKind::Absolute, 64, 0),
@@ -483,9 +499,9 @@ impl<'data, 'file> Iterator for CoffRelocationIterator<'data, 'file> {
                     pe::relocation::IMAGE_REL_AMD64_SECREL7 => {
                         (RelocationKind::SectionOffset, 7, 0)
                     }
-                    _ => (RelocationKind::Other(u32::from(relocation.typ)), 0, 0),
+                    _ => (RelocationKind::Coff(relocation.typ), 0, 0),
                 },
-                _ => (RelocationKind::Other(u32::from(relocation.typ)), 0, 0),
+                _ => (RelocationKind::Coff(relocation.typ), 0, 0),
             };
             let target =
                 RelocationTarget::Symbol(SymbolIndex(relocation.symbol_table_index as usize));
