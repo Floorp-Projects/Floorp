@@ -322,12 +322,6 @@ class MOZ_STACK_CLASS TokenStreamPosition final {
 template <typename Unit>
 class SourceUnits;
 
-// Column numbers *ought* be in terms of counts of code points, but in the past
-// we counted code units.  Set this to 0 to keep returning counts of code units
-// (even for UTF-8, which is clearly wrong, but we don't ship UTF-8 yet so this
-// is fine until we can fix users that depend on code-unit counting).
-#define JS_COLUMN_DIMENSION_IS_CODE_POINTS() 1
-
 class TokenStreamAnyChars : public TokenStreamShared {
  public:
   TokenStreamAnyChars(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
@@ -645,7 +639,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   MOZ_ALWAYS_INLINE void updateFlagsForEOL() { flags.isDirtyLine = false; }
 
  private:
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
   /**
    * Compute the "partial" column number in Unicode code points of the absolute
    * |offset| within source text on the line of |lineToken| (which must have
@@ -697,7 +690,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   uint32_t computePartialColumn(const LineToken lineToken,
                                 const uint32_t offset,
                                 const SourceUnits<Unit>& sourceUnits) const;
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
 
   /**
    * Update line/column information for the start of a new line at
@@ -751,7 +743,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   const char* getFilename() const { return filename_; }
 
  private:
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
   static constexpr uint32_t ColumnChunkLength = 128;
 
   enum class UnitsType : unsigned char{
@@ -800,7 +791,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * greater offsets within lines require column computations.
    */
   mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
 
  protected:
   // Options used for parsing/tokenizing.
@@ -847,7 +837,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   bool mutedErrors;
   StrictModeGetter* strictModeGetter;  // used to test for strict mode
 
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
   // Computing accurate column numbers requires at *some* point linearly
   // iterating through prior source units in the line to properly account for
   // multi-unit code points.  This is quadratic if counting happens repeatedly.
@@ -868,7 +857,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
   mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
   mutable uint32_t lastComputedColumn_ = 0;
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
 };
 
 constexpr char16_t CodeUnitValue(char16_t unit) { return unit; }

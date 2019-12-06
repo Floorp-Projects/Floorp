@@ -271,11 +271,7 @@ static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
 }
 
 static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS
   return unicode::CountCodePoints(begin, end);
-#else
-  return PointerRangeSize(begin, end);
-#endif
 }
 
 template <typename CharT>
