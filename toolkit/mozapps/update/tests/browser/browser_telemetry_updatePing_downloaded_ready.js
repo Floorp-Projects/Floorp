@@ -9,6 +9,9 @@ ChromeUtils.import(
 );
 
 /**
+ * Test that UpdatePing telemetry with a payload reason of ready is sent for a
+ * staged update.
+ *
  * Please note that this is really a Telemetry test, not an
  * "update UI" test like the rest of the tests in this directory.
  * This test does not live in toolkit/components/telemetry/tests to prevent
