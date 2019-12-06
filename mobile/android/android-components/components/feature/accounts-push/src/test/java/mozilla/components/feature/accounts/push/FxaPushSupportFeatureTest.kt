@@ -6,12 +6,14 @@
 
 package mozilla.components.feature.accounts.push
 
+import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -21,8 +23,13 @@ class FxaPushSupportFeatureTest {
     @Test
     fun `account observer registered`() {
         val accountManager: FxaAccountManager = mock()
-        FxaPushSupportFeature(testContext, accountManager, mock())
+        val pushFeature: AutoPushFeature = mock()
+
+        FxaPushSupportFeature(testContext, accountManager, pushFeature)
 
         verify(accountManager).register(any())
+
+        verify(pushFeature).registerForPushMessages(any(), any(), any(), anyBoolean())
+        verify(pushFeature).registerForSubscriptions(any(), any(), anyBoolean())
     }
 }

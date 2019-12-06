@@ -8,11 +8,19 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
+import mozilla.components.concept.sync.Device
+import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
+import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.feature.push.AutoPushFeature
+import mozilla.components.feature.push.AutoPushSubscription
+import mozilla.components.feature.push.PushSubscriptionObserver
+import mozilla.components.feature.push.PushType
 import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
@@ -30,7 +38,7 @@ internal const val LAST_VERIFIED = "last_verified_push_subscription"
  *
  * @param context The application Android context.
  * @param accountManager The FxaAccountManager.
- * @param push The push processor instance that needs to be notified.
+ * @param pushFeature The [AutoPushFeature] if that is setup for observing push events.
  * @param owner the lifecycle owner for the observer. Defaults to [ProcessLifecycleOwner].
  * @param autoPause whether to stop notifying the observer during onPause lifecycle events.
  * Defaults to false so that observers are always notified.
@@ -38,22 +46,27 @@ internal const val LAST_VERIFIED = "last_verified_push_subscription"
 class FxaPushSupportFeature(
     context: Context,
     accountManager: FxaAccountManager,
-    push: PushProcessor,
+    pushFeature: AutoPushFeature,
     owner: LifecycleOwner = ProcessLifecycleOwner.get(),
     autoPause: Boolean = false
 ) {
     init {
-        val constellationObserver = ConstellationObserver(context, push)
+        val pushObserver = PushObserver(accountManager)
 
-        val accountObserver = FxaPushSupportAccountObserver(
+        val accountObserver = AccountObserver(
             context,
             accountManager,
-            constellationObserver,
+            pushFeature,
             owner,
             autoPause
         )
 
         accountManager.register(accountObserver)
+
+        pushFeature.apply {
+            registerForPushMessages(PushType.Services, pushObserver, owner, autoPause)
+            registerForSubscriptions(pushObserver, owner, autoPause)
+        }
     }
 }
 
@@ -61,29 +74,44 @@ class FxaPushSupportFeature(
  * An [FxaAccountManager] observer to know when an account has been added, so we can begin observing the device
  * constellation.
  */
-internal class FxaPushSupportAccountObserver(
+internal class AccountObserver(
     private val context: Context,
     private val accountManager: FxaAccountManager,
-    private val observer: DeviceConstellationObserver,
+    private val push: AutoPushFeature,
     private val lifecycleOwner: LifecycleOwner,
     private val autoPause: Boolean
 ) : SyncAccountObserver {
+
     private val logger = Logger("AccountObserver")
+    private val constellationObserver = ConstellationObserver(context, push)
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        // We need a new subscription only when we have a new account.
+        // The subscription is removed when an account logs out.
+        if (authType != AuthType.Existing && authType != AuthType.Recovered) {
+            logger.debug("Subscribing for ${PushType.Services} events.")
+
+            push.subscribeForType(PushType.Services)
+        }
+
         accountManager.withConstellation { constellation ->
-            constellation.registerDeviceObserver(observer, lifecycleOwner, autoPause)
+            constellation.registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
         }
     }
 
     override fun onLoggedOut() {
-        // Delete renewal pref.
+        logger.debug("Un-subscribing for ${PushType.Services} events.")
+
+        push.unsubscribeForType(PushType.Services)
+
+        // Delete cached value of last verified timestamp when we log out.
         preference(context).edit().remove(LAST_VERIFIED).apply()
     }
 }
 
 /**
- * A DeviceConstellation observer to know when we should notify the push feature to begin the registration renewal.
+ * A [DeviceConstellation] observer to know when we should notify the push feature to begin the registration renewal
+ * when notified by the FxA server. See [Device.subscriptionExpired].
  */
 internal class ConstellationObserver(
     context: Context,
@@ -107,6 +135,40 @@ internal class ConstellationObserver(
         push.renewRegistration()
 
         verifier.increment()
+    }
+}
+
+/**
+ * An [AutoPushFeature] observer to handle [FxaAccountManager] subscriptions and push events.
+ */
+internal class PushObserver(
+    private val accountManager: FxaAccountManager
+) : Bus.Observer<PushType, String>, PushSubscriptionObserver {
+
+    private val logger = Logger("PushObserver")
+
+    override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
+        logger.debug("Received new push subscription from $subscription.type")
+
+        if (subscription.type == PushType.Services) {
+            accountManager.withConstellation {
+                it.setDevicePushSubscriptionAsync(
+                    DevicePushSubscription(
+                        endpoint = subscription.endpoint,
+                        publicKey = subscription.publicKey,
+                        authKey = subscription.authKey
+                    )
+                )
+            }
+        }
+    }
+
+    override fun onEvent(type: PushType, message: String) {
+        logger.debug("Received new push message for $type")
+
+        accountManager.withConstellation {
+            it.processRawEventAsync(message)
+        }
     }
 }
 

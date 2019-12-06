@@ -24,6 +24,8 @@ import kotlin.coroutines.CoroutineContext
 /**
  * Contains use cases for sending tabs to devices related to the firefox-accounts.
  *
+ * See [SendTabFeature] for the ability to receive tabs from other devices.
+ *
  * @param accountManager The AccountManager on which we want to retrieve our devices.
  * @param coroutineContext The Coroutine Context on which we want to do the actual sending.
  * By default, we want to do this on the IO dispatcher since it involves making network requests to
