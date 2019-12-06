@@ -71,38 +71,57 @@ async function listWorkerTargets(args: Args) {
     return [];
   }
 
-  const { workers } = await currentTarget.listWorkers();
-
+  let workers = [];
+  let allWorkers;
   let serviceWorkerRegistrations = [];
-  if (features.windowlessServiceWorkers && currentTarget.url) {
-    const { registrations } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
-    serviceWorkerRegistrations = registrations.filter(front => sameOrigin(front.url, currentTarget.url));
-  } else if (attachAllTargets(currentTarget)) {
+  if (attachAllTargets(currentTarget)) {
+    workers = await debuggerClient.mainRoot.listAllWorkerTargets();
+
+    // subprocess workers are ignored because they take several seconds to
+    // attach to when opening the browser toolbox. See bug 1594597.
+    workers = workers.filter(({ url }) => !url.includes("subprocess_worker"));
+
+    allWorkers = workers;
+
     const {
-      other,
-      shared,
-    } = await debuggerClient.mainRoot.listAllWorkers();
-
-    for (const { workerTargetFront, url } of [...other, ...shared]) {
-      // subprocess workers are ignored because they take several seconds to
-      // attach to when opening the browser toolbox. See bug 1594597.
-      if (!url.includes("subprocess_worker")) {
-        workers.push(workerTargetFront);
-      }
-    }
-
-    const { registrations } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+      registrations,
+    } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
     serviceWorkerRegistrations = registrations;
+  } else {
+    workers = (await currentTarget.listWorkers()).workers;
+    if (currentTarget.url && features.windowlessServiceWorkers) {
+      const {
+        registrations,
+      } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+      serviceWorkerRegistrations = registrations.filter(front =>
+        sameOrigin(front.url, currentTarget.url)
+      );
+    }
   }
 
   for (const front of serviceWorkerRegistrations) {
     const { activeWorker, waitingWorker, installingWorker } = front;
-    const status = activeWorker ? "active" : waitingWorker ? "waiting" : installingWorker ? "installing" : "";
+    await maybeMarkServiceWorker(activeWorker, "active");
+    await maybeMarkServiceWorker(waitingWorker, "waiting");
+    await maybeMarkServiceWorker(installingWorker, "installing");
+  }
 
-    if (status) {
-      const workerTarget = await debuggerClient.mainRoot.getWorker(front.id);
-      workers.push(workerTarget);
-      workerTarget.debuggerServiceWorkerStatus = status;
+  async function maybeMarkServiceWorker(info, status) {
+    if (!info) {
+      return;
+    }
+
+    if (!allWorkers) {
+      allWorkers = await debuggerClient.mainRoot.listAllWorkerTargets();
+    }
+    const worker = allWorkers.find(front => front && front.id == info.id);
+    if (!worker) {
+      return;
+    }
+
+    worker.debuggerServiceWorkerStatus = status;
+    if (!workers.includes(worker)) {
+      workers.push(worker);
     }
   }
 

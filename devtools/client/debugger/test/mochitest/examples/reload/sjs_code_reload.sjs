@@ -10,7 +10,7 @@ function _getUrl(request, counter) {
   const { scheme, host, path } = request;
 
   const newPath = path.substr(0, path.lastIndexOf("/") + 1);
-  const index = counter <= 2 ? 1 : 2;
+  const index = counter == 1 ? 1 : 2;
   const url = `${scheme}://${host}${newPath}/code_reload_${index}.js`;
   return url
 }
