@@ -7,7 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
-import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
@@ -46,7 +46,7 @@ class SwipeToDeleteCallback(
         isCurrentlyActive: Boolean
     ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-        val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.ic_delete)
+        val icon = AppCompatResources.getDrawable(recyclerView.context, R.drawable.ic_delete)
         icon?.setTint(recyclerView.context.getColorFromAttr(R.attr.destructive))
 
         val backgroundDrawable = when {
@@ -59,7 +59,7 @@ class SwipeToDeleteCallback(
             else -> R.drawable.session_background
         }
 
-        val background = ContextCompat.getDrawable(recyclerView.context, backgroundDrawable)
+        val background = AppCompatResources.getDrawable(recyclerView.context, backgroundDrawable)
         background?.let {
             icon?.let {
                 val itemView = viewHolder.itemView

@@ -23,7 +23,7 @@
         android:layout_marginTop="23dp"
         android:layout_marginBottom="24dp"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_tab_collection"
+        app:srcCompat="@drawable/ic_tab_collection"
         android:tint="@null"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -64,7 +64,7 @@
         android:alpha="0.8"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/close_tab"
-        android:src="@drawable/ic_close"
+        app:srcCompat="@drawable/ic_close"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

@@ -9,8 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
@@ -32,9 +32,9 @@ class FenixSnackbar private constructor(
         view.background = null
 
         view.snackbar_layout.background = if (isError) {
-            ContextCompat.getDrawable(context, R.drawable.fenix_snackbar_error_background)
+            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_error_background)
         } else {
-            ContextCompat.getDrawable(context, R.drawable.fenix_snackbar_background)
+            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_background)
         }
 
         content.snackbar_btn.increaseTapArea(actionButtonIncreaseDps)

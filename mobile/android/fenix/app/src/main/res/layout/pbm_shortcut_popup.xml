@@ -14,7 +14,7 @@
             android:layout_marginEnd="16dp"
             android:layout_gravity="end"
             android:importantForAccessibility="no"
-            android:src="@drawable/ic_pbm_triangle" />
+            app:srcCompat="@drawable/ic_pbm_triangle" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

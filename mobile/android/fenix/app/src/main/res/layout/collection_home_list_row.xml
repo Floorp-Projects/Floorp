@@ -24,7 +24,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:importantForAccessibility="no"
-        android:src="@drawable/ic_tab_collection"
+        app:srcCompat="@drawable/ic_tab_collection"
         android:tint="@null"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -83,7 +83,7 @@
         android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/share_button_content_description"
-        android:src="@drawable/ic_hollow_share"
+        app:srcCompat="@drawable/ic_hollow_share"
         app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
         app:layout_constraintTop_toTopOf="@id/collection_icon" />
@@ -94,7 +94,7 @@
         android:layout_height="48dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/collection_menu_button_content_description"
-        android:src="@drawable/ic_menu"
+        app:srcCompat="@drawable/ic_menu"
         app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/collection_icon" />

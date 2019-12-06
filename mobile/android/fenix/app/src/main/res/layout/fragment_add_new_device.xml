@@ -43,7 +43,7 @@
 
             <TextView
                 android:id="@+id/errorSummary"
-                android:drawableStart="@drawable/ic_info"
+                app:drawableStartCompat="@drawable/ic_info"
                 android:text="@string/sync_add_new_device_message"
                 android:drawablePadding="8dp"
                 app:drawableTint="@color/sync_error_text_color"

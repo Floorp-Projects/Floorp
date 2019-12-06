@@ -20,7 +20,7 @@
                 android:layout_width="0dp"
                 android:layout_height="80dp"
                 android:contentDescription="@string/app_name"
-                android:src="?fenixLogo"
+                app:srcCompat="?fenixLogo"
                 app:layout_constraintWidth_percent="0.75"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

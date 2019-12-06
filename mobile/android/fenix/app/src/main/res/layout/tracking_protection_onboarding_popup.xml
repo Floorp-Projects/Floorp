@@ -23,7 +23,7 @@
             android:layout_marginEnd="8dp"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_close"
+            app:srcCompat="@drawable/ic_close"
             android:tint="@color/primary_text_dark_theme"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -51,6 +51,6 @@
         android:layout_marginStart="16dp"
         android:importantForAccessibility="no"
         android:rotation="180"
-        android:src="@drawable/ic_triangle"
+        app:srcCompat="@drawable/ic_triangle"
         android:layout_gravity="start" />
 </LinearLayout>

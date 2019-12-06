@@ -15,7 +15,7 @@
             android:layout_width="0dp"
             android:layout_height="120dp"
             android:layout_marginTop="40dp"
-            android:src="@drawable/fenix_error_1"
+            app:srcCompat="@drawable/fenix_error_1"
             android:importantForAccessibility="no"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintWidth_percent="0.8"

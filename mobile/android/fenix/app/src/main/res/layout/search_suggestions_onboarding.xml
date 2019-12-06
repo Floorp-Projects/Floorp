@@ -15,7 +15,7 @@
         android:id="@+id/info_button"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_info"
+        app:srcCompat="@drawable/ic_info"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:tint="@color/contrast_text_private_theme"/>

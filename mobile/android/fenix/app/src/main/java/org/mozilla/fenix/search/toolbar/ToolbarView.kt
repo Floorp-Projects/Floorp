@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.appbar.AppBarLayout
@@ -109,7 +110,7 @@ class ToolbarView(
             )
 
             edit.setUrlBackground(
-                ContextCompat.getDrawable(container.context, R.drawable.search_url_background))
+                AppCompatResources.getDrawable(container.context, R.drawable.search_url_background))
 
             private = isPrivate
 

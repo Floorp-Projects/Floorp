@@ -47,7 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
         android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
-        android:drawableStart="@drawable/ic_tracking_protection"
+        app:drawableStartCompat="@drawable/ic_tracking_protection"
         app:layout_constraintBottom_toBottomOf="@id/switchItemDescription"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/switchItemTitle" />

@@ -76,7 +76,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tint="?primaryText"
-            android:src="@drawable/ic_link"
+            app:srcCompat="@drawable/ic_link"
             android:importantForAccessibility="no"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -164,14 +164,14 @@
             android:id="@+id/searchScanButton"
             style="@style/search_pill"
             android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
-            android:drawableStart="@drawable/ic_qr"
+            app:drawableStartCompat="@drawable/ic_qr"
             android:textOff="@string/search_scan_button"
             android:textOn="@string/search_scan_button" />
 
         <ToggleButton
             android:id="@+id/searchShortcutsButton"
             style="@style/search_pill"
-            android:drawableStart="@drawable/ic_search"
+            app:drawableStartCompat="@drawable/ic_search"
             android:textOff="@string/search_shortcuts_button"
             android:textOn="@string/search_shortcuts_button" />
     </LinearLayout>

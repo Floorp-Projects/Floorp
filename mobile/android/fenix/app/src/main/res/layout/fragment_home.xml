@@ -24,7 +24,7 @@
             android:layout_marginEnd="12dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_private_browsing_button"
-            android:src="@drawable/private_browsing_button"
+            app:srcCompat="@drawable/private_browsing_button"
             app:layout_constraintBottom_toTopOf="@+id/wordmark"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -41,7 +41,7 @@
             android:contentDescription="@string/app_name"
             android:focusable="false"
             android:importantForAccessibility="no"
-            android:src="?fenixLogo"
+            app:srcCompat="?fenixLogo"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -120,7 +120,7 @@
                 android:layout_height="48dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/add_tab"
-                android:src="@drawable/ic_new"
+                app:srcCompat="@drawable/ic_new"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/menuButton"
                 app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"
@@ -132,7 +132,7 @@
                 android:layout_height="48dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/content_description_menu"
-                android:src="@drawable/ic_menu"
+                app:srcCompat="@drawable/ic_menu"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
