@@ -181,7 +181,7 @@ bool CForEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+  if (!loopInfo_->patchBreaks(bce_)) {
     //              [stack]
     return false;
   }

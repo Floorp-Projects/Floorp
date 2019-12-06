@@ -73,10 +73,9 @@ LoopControl::LoopControl(BytecodeEmitter* bce, StatementKind loopKind)
 }
 
 bool LoopControl::emitContinueTarget(BytecodeEmitter* bce) {
-  if (!bce->emitJumpTarget(&continueTarget_)) {
-    return false;
-  }
-  return true;
+  // Note: this is always called after emitting the loop body so we must have
+  // emitted all 'continues' by now.
+  return bce->emitJumpTargetAndPatch(continues);
 }
 
 bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
@@ -121,15 +120,6 @@ bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op) {
 
   loopEndOffset_ = beq.offset;
 
-  return true;
-}
-
-bool LoopControl::patchBreaksAndContinues(BytecodeEmitter* bce) {
-  MOZ_ASSERT(continueTarget_.offset.valid());
-  if (!patchBreaks(bce)) {
-    return false;
-  }
-  bce->patchJumpsToTarget(continues, continueTarget_);
   return true;
 }
 

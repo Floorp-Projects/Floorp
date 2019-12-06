@@ -149,7 +149,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   MOZ_ASSERT(stackDepth == loopDepth_);
   bce_->bytecodeSection().setStackDepth(stackDepth);
 
-  if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+  if (!loopInfo_->patchBreaks(bce_)) {
     //              [stack] ITER ITERVAL
     return false;
   }

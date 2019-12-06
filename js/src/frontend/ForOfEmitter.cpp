@@ -240,7 +240,7 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_);
 
-  if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+  if (!loopInfo_->patchBreaks(bce_)) {
     return false;
   }
 
