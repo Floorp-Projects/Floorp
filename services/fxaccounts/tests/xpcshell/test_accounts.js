@@ -17,6 +17,7 @@ const {
   ERRNO_NETWORK,
   ERROR_INVALID_FXA_ASSERTION,
   ERROR_NETWORK,
+  ERROR_NO_ACCOUNT,
   KEY_LIFETIME,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
@@ -1240,10 +1241,7 @@ add_task(async function test_resend_email_not_signed_in() {
   try {
     await fxa.resendVerificationEmail();
   } catch (err) {
-    Assert.equal(
-      err.message,
-      "Cannot resend verification email; no signed-in user"
-    );
+    Assert.equal(err.message, ERROR_NO_ACCOUNT);
     return;
   }
   do_throw("Should not be able to resend email when nobody is signed in");
