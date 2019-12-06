@@ -334,7 +334,7 @@ class ManifestParser(object):
                 return not tags.intersection(test.keys())
 
             def dict_query(test):
-                for key, value in kwargs.items():
+                for key, value in list(kwargs.items()):
                     if test.get(key) == value:
                         return False
                 return True
@@ -343,7 +343,7 @@ class ManifestParser(object):
                 return tags.issubset(test.keys())
 
             def dict_query(test):
-                for key, value in kwargs.items():
+                for key, value in list(kwargs.items()):
                     if test.get(key) != value:
                         return False
                 return True
@@ -367,7 +367,7 @@ class ManifestParser(object):
         if tests is None:
             manifests = []
             # Make sure to return all the manifests, even ones without tests.
-            for manifest in self.manifest_defaults.keys():
+            for manifest in list(self.manifest_defaults.keys()):
                 if isinstance(manifest, tuple):
                     parentmanifest, manifest = manifest
                 if manifest not in manifests:
@@ -484,7 +484,7 @@ class ManifestParser(object):
             print('[DEFAULT]', file=fp)
             for tag in global_tags:
                 print('%s =' % tag, file=fp)
-            for key, value in global_kwargs.items():
+            for key, value in list(global_kwargs.items()):
                 print('%s = %s' % (key, value), file=fp)
             print(file=fp)
 

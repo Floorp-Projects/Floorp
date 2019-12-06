@@ -14,6 +14,7 @@ import itertools
 import os
 from collections import defaultdict, MutableSequence
 
+import six
 from six import string_types
 
 from .expression import (
@@ -105,10 +106,12 @@ class InstanceFilter(object):
     """
     unique = True
 
+    __hash__ = super.__hash__
+
     def __init__(self, *args, **kwargs):
         self.fmt_args = ', '.join(itertools.chain(
             [str(a) for a in args],
-            ['{}={}'.format(k, v) for k, v in kwargs.iteritems()]))
+            ['{}={}'.format(k, v) for k, v in six.iteritems(kwargs)]))
 
     def __eq__(self, other):
         if self.unique:
@@ -265,7 +268,7 @@ class chunk_by_dir(InstanceFilter):
         # be yielded for reporting purposes. Put them all in chunk 1 for
         # simplicity.
         if self.this_chunk == 1:
-            disabled_dirs = [v for k, v in tests_by_dir.iteritems()
+            disabled_dirs = [v for k, v in six.iteritems(tests_by_dir)
                              if k not in ordered_dirs]
             for disabled_test in itertools.chain(*disabled_dirs):
                 yield disabled_test

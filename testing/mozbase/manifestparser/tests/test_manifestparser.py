@@ -10,7 +10,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from StringIO import StringIO
+from six import StringIO
 
 import mozunit
 
