@@ -118,8 +118,6 @@ bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op) {
     return false;
   }
 
-  loopEndOffset_ = beq.offset;
-
   return true;
 }
 
