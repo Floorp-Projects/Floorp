@@ -34,7 +34,7 @@ add_task(async function() {
   );
   // When reloading, the javascript: uri we're using will throw an exception.
   // That's deliberate, so we need to tell mochitest to ignore it:
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     // This is sync, so by the time we return we should have changed the URL bar.
     content.location.reload();
   }).catch(e => {
