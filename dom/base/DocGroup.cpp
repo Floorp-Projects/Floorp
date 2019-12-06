@@ -12,7 +12,6 @@
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
-#include "nsIDocShell.h"
 #include "nsDOMMutationObserver.h"
 #include "nsProxyRelease.h"
 #if defined(XP_WIN)

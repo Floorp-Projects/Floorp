@@ -26,8 +26,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIInputStream.h"
-#include "nsIPrincipal.h"
 #include "ReportInternalError.h"
 
 namespace mozilla {

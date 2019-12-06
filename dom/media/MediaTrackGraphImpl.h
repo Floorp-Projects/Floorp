@@ -19,7 +19,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsINamed.h"
 #include "nsIRunnable.h"
-#include "nsIThread.h"
 #include "nsITimer.h"
 #include "AsyncLogger.h"
 

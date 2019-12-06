@@ -18,7 +18,6 @@
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
 
-class nsIDocShell;
 class nsIEventListenerInfo;
 class nsPIDOMWindowInner;
 class JSTracer;

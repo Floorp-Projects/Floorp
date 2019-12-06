@@ -9,7 +9,6 @@
 #include "txExpr.h"
 #include "txCore.h"
 #include "nsCollationCID.h"
-#include "nsIServiceManager.h"
 
 using namespace mozilla;
 

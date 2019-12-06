@@ -23,7 +23,6 @@
 class nsPIDOMWindowInner;
 class nsGlobalWindowInner;
 class nsIScriptContext;
-class nsIDocShell;
 
 namespace mozilla {
 namespace dom {

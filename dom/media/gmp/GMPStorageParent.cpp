@@ -7,7 +7,6 @@
 #include "GMPParent.h"
 #include "gmp-storage.h"
 #include "mozilla/Unused.h"
-#include "mozIGeckoMediaPluginService.h"
 
 namespace mozilla {
 

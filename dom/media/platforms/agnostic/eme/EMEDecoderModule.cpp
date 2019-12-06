@@ -13,7 +13,6 @@
 #include "GMPService.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"

@@ -19,7 +19,6 @@
 #include "nsDOMJSUtils.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/Document.h"
-#include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsIContent.h"
 #include "nsPluginInstanceOwner.h"

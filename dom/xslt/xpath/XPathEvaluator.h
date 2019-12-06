@@ -7,7 +7,6 @@
 #define mozilla_dom_XPathEvaluator_h
 
 #include "mozilla/dom/NonRefcountedDOMObject.h"
-#include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"

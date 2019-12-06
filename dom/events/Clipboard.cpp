@@ -13,7 +13,6 @@
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransferItem.h"
 #include "nsIClipboard.h"
-#include "nsISupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITransferable.h"
 #include "nsArrayUtils.h"

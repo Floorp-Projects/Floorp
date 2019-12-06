@@ -15,7 +15,6 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/RandomNum.h"
 #include "nsIRandomGenerator.h"
-#include "nsIURI.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla {

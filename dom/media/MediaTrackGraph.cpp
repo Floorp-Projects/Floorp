@@ -10,7 +10,6 @@
 #include "AudioSegment.h"
 #include "VideoSegment.h"
 #include "nsContentUtils.h"
-#include "nsIObserver.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "prerror.h"

@@ -12,8 +12,6 @@
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 
-#include "nsISpeechService.h"
-
 namespace mozilla {
 namespace dom {
 

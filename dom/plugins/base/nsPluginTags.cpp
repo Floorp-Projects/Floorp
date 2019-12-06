@@ -7,7 +7,6 @@
 
 #include "prlink.h"
 #include "plstr.h"
-#include "nsIPluginInstanceOwner.h"
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"

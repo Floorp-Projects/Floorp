@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "nsIServiceManager.h"
-
-#include "nsIConsoleService.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -35,7 +32,6 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
-#include "nsIConsoleService.h"
 #include "jsapi.h"
 
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"

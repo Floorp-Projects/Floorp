@@ -19,7 +19,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIIdleService.h"
 #include "nsIObserverService.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsXULAppAPI.h"
 #include "QuotaManager.h"
 #include "QuotaRequests.h"

@@ -18,7 +18,6 @@
 #include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"

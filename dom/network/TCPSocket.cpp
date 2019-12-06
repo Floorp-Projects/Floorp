@@ -24,7 +24,6 @@
 #include "nsIInputStream.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIScriptableInputStream.h"
-#include "nsIInputStreamPump.h"
 #include "nsIAsyncInputStream.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransport.h"

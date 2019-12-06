@@ -19,6 +19,7 @@
 #include "nsError.h"
 #include "nsIDragService.h"
 #include "nsIClipboard.h"
+#include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIObjectInputStream.h"
