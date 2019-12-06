@@ -130,6 +130,14 @@ reftest:
             windows10-aarch64.*: 2
             android-hw-.*-qr/.*: 2
             default: default
+    fission-tier:
+        by-test-platform:
+            linux64-qr/debug: 1
+            default: 2
+    fission-run-on-projects:
+        by-test-platform:
+            linux64-qr/debug: ['trunk']
+            default: []
 
 reftest-gpu:
     description: "Reftest GPU run"
