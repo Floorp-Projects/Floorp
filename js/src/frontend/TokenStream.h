@@ -323,141 +323,11 @@ template <typename Unit>
 class SourceUnits;
 
 class TokenStreamAnyChars : public TokenStreamShared {
- public:
-  TokenStreamAnyChars(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                      StrictModeGetter* smg);
-
-  template <typename Unit, class AnyCharsAccess>
-  friend class GeneralTokenStreamChars;
-  template <typename Unit, class AnyCharsAccess>
-  friend class TokenStreamChars;
-  template <typename Unit, class AnyCharsAccess>
-  friend class TokenStreamSpecific;
-
-  template <typename Unit>
-  friend class TokenStreamPosition;
-
-  // Accessors.
-  unsigned cursor() const { return cursor_; }
-  unsigned nextCursor() const { return (cursor_ + 1) & ntokensMask; }
-  unsigned aheadCursor(unsigned steps) const {
-    return (cursor_ + steps) & ntokensMask;
-  }
-
-  const Token& currentToken() const { return tokens[cursor()]; }
-  bool isCurrentTokenType(TokenKind type) const {
-    return currentToken().type == type;
-  }
-
-  MOZ_MUST_USE bool checkOptions();
-
  private:
-  PropertyName* reservedWordToPropertyName(TokenKind tt) const;
-
- public:
-  PropertyName* currentName() const {
-    if (isCurrentTokenType(TokenKind::Name) ||
-        isCurrentTokenType(TokenKind::PrivateName)) {
-      return currentToken().name();
-    }
-
-    MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
-    return reservedWordToPropertyName(currentToken().type);
-  }
-
-  bool currentNameHasEscapes() const {
-    if (isCurrentTokenType(TokenKind::Name) ||
-        isCurrentTokenType(TokenKind::PrivateName)) {
-      TokenPos pos = currentToken().pos;
-      return (pos.end - pos.begin) != currentToken().name()->length();
-    }
-
-    MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
-    return false;
-  }
-
-  bool isCurrentTokenAssignment() const {
-    return TokenKindIsAssignment(currentToken().type);
-  }
-
-  // Flag methods.
-  bool isEOF() const { return flags.isEOF; }
-  bool sawOctalEscape() const { return flags.sawOctalEscape; }
-  bool hadError() const { return flags.hadError; }
-  void clearSawOctalEscape() { flags.sawOctalEscape = false; }
-
-  bool hasInvalidTemplateEscape() const {
-    return invalidTemplateEscapeType != InvalidEscapeType::None;
-  }
-  void clearInvalidTemplateEscape() {
-    invalidTemplateEscapeType = InvalidEscapeType::None;
-  }
-
- private:
-  // This is private because it should only be called by the tokenizer while
-  // tokenizing not by, for example, BytecodeEmitter.
-  bool strictMode() const {
-    return strictModeGetter && strictModeGetter->strictMode();
-  }
-
-  void setInvalidTemplateEscape(uint32_t offset, InvalidEscapeType type) {
-    MOZ_ASSERT(type != InvalidEscapeType::None);
-    if (invalidTemplateEscapeType != InvalidEscapeType::None) {
-      return;
-    }
-    invalidTemplateEscapeOffset = offset;
-    invalidTemplateEscapeType = type;
-  }
-
   uint32_t invalidTemplateEscapeOffset = 0;
   InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
  public:
-  // Call this immediately after parsing an OrExpression to allow scanning the
-  // next token with SlashIsRegExp without asserting (even though we just
-  // peeked at it in SlashIsDiv mode).
-  //
-  // It's OK to disable the assertion because the places where this is called
-  // have peeked at the next token in SlashIsDiv mode, and checked that it is
-  // *not* a Div token.
-  //
-  // To see why it is necessary to disable the assertion, consider these two
-  // programs:
-  //
-  //     x = arg => q       // per spec, this is all one statement, and the
-  //     /a/g;              // slashes are division operators
-  //
-  //     x = arg => {}      // per spec, ASI at the end of this line
-  //     /a/g;              // and that's a regexp literal
-  //
-  // The first program shows why orExpr() has use SlashIsDiv mode when peeking
-  // ahead for the next operator after parsing `q`. The second program shows
-  // why matchOrInsertSemicolon() must use SlashIsRegExp mode when scanning
-  // ahead for a semicolon.
-  void allowGettingNextTokenWithSlashIsRegExp() {
-#ifdef DEBUG
-    // Check the precondition: Caller already peeked ahead at the next token,
-    // in SlashIsDiv mode, and it is *not* a Div token.
-    MOZ_ASSERT(hasLookahead());
-    const Token& next = nextToken();
-    MOZ_ASSERT(next.modifier == SlashIsDiv);
-    MOZ_ASSERT(next.type != TokenKind::Div);
-    tokens[nextCursor()].modifier = SlashIsRegExp;
-#endif
-  }
-
-#ifdef DEBUG
-  inline bool debugHasNoLookahead() const { return lookahead == 0; }
-#endif
-
-  bool hasDisplayURL() const { return displayURL_ != nullptr; }
-
-  char16_t* displayURL() { return displayURL_.get(); }
-
-  bool hasSourceMapURL() const { return sourceMapURL_ != nullptr; }
-
-  char16_t* sourceMapURL() { return sourceMapURL_.get(); }
-
   // This class maps a sourceUnits offset (which is 0-indexed) to a line
   // number (which is 1-indexed) and an offset (which is 0-indexed) in
   // code *units* (not code points, not bytes) into the line.
@@ -603,9 +473,257 @@ class TokenStreamAnyChars : public TokenStreamShared {
                  "recorded line-start information must be available");
       return lineStartOffsets_[lineToken.index];
     }
+  } srcCoords;
+
+  static constexpr uint32_t ColumnChunkLength = 128;
+
+  enum class UnitsType : unsigned char {
+    PossiblyMultiUnit = 0,
+    GuaranteedSingleUnit = 1,
   };
 
-  SourceCoords srcCoords;
+  class ChunkInfo {
+   private:
+    // Store everything in |unsigned char|s so everything packs.
+    unsigned char column_[sizeof(uint32_t)];
+    unsigned char unitsType_;
+
+   public:
+    ChunkInfo(uint32_t col, UnitsType type)
+        : unitsType_(static_cast<unsigned char>(type)) {
+      memcpy(column_, &col, sizeof(col));
+    }
+
+    uint32_t column() const {
+      uint32_t col;
+      memcpy(&col, column_, sizeof(uint32_t));
+      return col;
+    }
+
+    UnitsType unitsType() const {
+      MOZ_ASSERT(unitsType_ <= 1, "unitsType_ must be 0 or 1");
+      return static_cast<UnitsType>(unitsType_);
+    }
+
+    void guaranteeSingleUnits() {
+      MOZ_ASSERT(unitsType() == UnitsType::PossiblyMultiUnit,
+                 "should only be setting to possibly optimize from the "
+                 "pessimistic case");
+      unitsType_ = static_cast<unsigned char>(UnitsType::GuaranteedSingleUnit);
+    }
+  };
+
+  /**
+   * Line number (of lines at least |ColumnChunkLength| code units long) to
+   * a sequence of the column numbers at |ColumnChunkLength| boundaries rewound
+   * (if needed) to the nearest code point boundary.
+   *
+   * Entries appear in this map only when a column computation of sufficient
+   * distance is performed on a line, and the vectors are lazily filled as
+   * greater offsets within lines require column computations.
+   */
+  mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
+
+ protected:
+  // Options used for parsing/tokenizing.
+  const JS::ReadOnlyCompileOptions& options_;
+
+  Token tokens[ntokens];  // circular token buffer
+
+ private:
+  unsigned cursor_;  // index of last parsed token
+ protected:
+  unsigned lookahead;      // count of lookahead tokens
+  unsigned lineno;         // current line number
+  TokenStreamFlags flags;  // flags -- see above
+  size_t linebase;         // start of current line
+  size_t
+      prevLinebase;  // start of previous line;  size_t(-1) if on the first line
+  const char* filename_;             // input filename or null
+  UniqueTwoByteChars displayURL_;    // the user's requested source URL or null
+  UniqueTwoByteChars sourceMapURL_;  // source map's filename or null
+
+  /**
+   * An array storing whether a TokenKind observed while attempting to extend
+   * a valid AssignmentExpression into an even longer AssignmentExpression
+   * (e.g., extending '3' to '3 + 5') will terminate it without error.
+   *
+   * For example, ';' always ends an AssignmentExpression because it ends a
+   * Statement or declaration.  '}' always ends an AssignmentExpression
+   * because it terminates BlockStatement, FunctionBody, and embedded
+   * expressions in TemplateLiterals.  Therefore both entries are set to true
+   * in TokenStreamAnyChars construction.
+   *
+   * But e.g. '+' *could* extend an AssignmentExpression, so its entry here
+   * is false.  Meanwhile 'this' can't extend an AssignmentExpression, but
+   * it's only valid after a line break, so its entry here must be false.
+   *
+   * NOTE: This array could be static, but without C99's designated
+   *       initializers it's easier zeroing here and setting the true entries
+   *       in the constructor body.  (Having this per-instance might also aid
+   *       locality.)  Don't worry!  Initialization time for each TokenStream
+   *       is trivial.  See bug 639420.
+   */
+  bool isExprEnding[size_t(TokenKind::Limit)] = {};  // all-false initially
+
+  JSContext* const cx;
+  bool mutedErrors;
+  StrictModeGetter* strictModeGetter;  // used to test for strict mode
+
+  // Computing accurate column numbers requires at *some* point linearly
+  // iterating through prior source units in the line to properly account for
+  // multi-unit code points.  This is quadratic if counting happens repeatedly.
+  //
+  // But usually we need columns for advancing offsets through scripts.  By
+  // caching the last ((line number, offset) => relative column) mapping (in
+  // similar manner to how |SourceUnits::lastIndex_| is used to cache
+  // (offset => line number) mappings) we can usually avoid re-iterating through
+  // the common line prefix.
+  //
+  // Additionally, we avoid hash table lookup costs by caching the
+  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
+  // have to look it up -- or it hasn't been created yet.)  This pointer is
+  // invalidated when a lookup on a new line occurs, but as it's not a pointer
+  // at literal element data, it's *not* invalidated when new entries are added
+  // to such a vector.
+  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
+  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
+  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
+  mutable uint32_t lastComputedColumn_ = 0;
+
+  // End of fields.
+
+ public:
+  TokenStreamAnyChars(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                      StrictModeGetter* smg);
+
+  template <typename Unit, class AnyCharsAccess>
+  friend class GeneralTokenStreamChars;
+  template <typename Unit, class AnyCharsAccess>
+  friend class TokenStreamChars;
+  template <typename Unit, class AnyCharsAccess>
+  friend class TokenStreamSpecific;
+
+  template <typename Unit>
+  friend class TokenStreamPosition;
+
+  // Accessors.
+  unsigned cursor() const { return cursor_; }
+  unsigned nextCursor() const { return (cursor_ + 1) & ntokensMask; }
+  unsigned aheadCursor(unsigned steps) const {
+    return (cursor_ + steps) & ntokensMask;
+  }
+
+  const Token& currentToken() const { return tokens[cursor()]; }
+  bool isCurrentTokenType(TokenKind type) const {
+    return currentToken().type == type;
+  }
+
+  MOZ_MUST_USE bool checkOptions();
+
+ private:
+  PropertyName* reservedWordToPropertyName(TokenKind tt) const;
+
+ public:
+  PropertyName* currentName() const {
+    if (isCurrentTokenType(TokenKind::Name) ||
+        isCurrentTokenType(TokenKind::PrivateName)) {
+      return currentToken().name();
+    }
+
+    MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
+    return reservedWordToPropertyName(currentToken().type);
+  }
+
+  bool currentNameHasEscapes() const {
+    if (isCurrentTokenType(TokenKind::Name) ||
+        isCurrentTokenType(TokenKind::PrivateName)) {
+      TokenPos pos = currentToken().pos;
+      return (pos.end - pos.begin) != currentToken().name()->length();
+    }
+
+    MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
+    return false;
+  }
+
+  bool isCurrentTokenAssignment() const {
+    return TokenKindIsAssignment(currentToken().type);
+  }
+
+  // Flag methods.
+  bool isEOF() const { return flags.isEOF; }
+  bool sawOctalEscape() const { return flags.sawOctalEscape; }
+  bool hadError() const { return flags.hadError; }
+  void clearSawOctalEscape() { flags.sawOctalEscape = false; }
+
+  bool hasInvalidTemplateEscape() const {
+    return invalidTemplateEscapeType != InvalidEscapeType::None;
+  }
+  void clearInvalidTemplateEscape() {
+    invalidTemplateEscapeType = InvalidEscapeType::None;
+  }
+
+ private:
+  // This is private because it should only be called by the tokenizer while
+  // tokenizing not by, for example, BytecodeEmitter.
+  bool strictMode() const {
+    return strictModeGetter && strictModeGetter->strictMode();
+  }
+
+  void setInvalidTemplateEscape(uint32_t offset, InvalidEscapeType type) {
+    MOZ_ASSERT(type != InvalidEscapeType::None);
+    if (invalidTemplateEscapeType != InvalidEscapeType::None) {
+      return;
+    }
+    invalidTemplateEscapeOffset = offset;
+    invalidTemplateEscapeType = type;
+  }
+
+ public:
+  // Call this immediately after parsing an OrExpression to allow scanning the
+  // next token with SlashIsRegExp without asserting (even though we just
+  // peeked at it in SlashIsDiv mode).
+  //
+  // It's OK to disable the assertion because the places where this is called
+  // have peeked at the next token in SlashIsDiv mode, and checked that it is
+  // *not* a Div token.
+  //
+  // To see why it is necessary to disable the assertion, consider these two
+  // programs:
+  //
+  //     x = arg => q       // per spec, this is all one statement, and the
+  //     /a/g;              // slashes are division operators
+  //
+  //     x = arg => {}      // per spec, ASI at the end of this line
+  //     /a/g;              // and that's a regexp literal
+  //
+  // The first program shows why orExpr() has use SlashIsDiv mode when peeking
+  // ahead for the next operator after parsing `q`. The second program shows
+  // why matchOrInsertSemicolon() must use SlashIsRegExp mode when scanning
+  // ahead for a semicolon.
+  void allowGettingNextTokenWithSlashIsRegExp() {
+#ifdef DEBUG
+    // Check the precondition: Caller already peeked ahead at the next token,
+    // in SlashIsDiv mode, and it is *not* a Div token.
+    MOZ_ASSERT(hasLookahead());
+    const Token& next = nextToken();
+    MOZ_ASSERT(next.modifier == SlashIsDiv);
+    MOZ_ASSERT(next.type != TokenKind::Div);
+    tokens[nextCursor()].modifier = SlashIsRegExp;
+#endif
+  }
+
+#ifdef DEBUG
+  inline bool debugHasNoLookahead() const { return lookahead == 0; }
+#endif
+
+  bool hasDisplayURL() const { return displayURL_ != nullptr; }
+
+  char16_t* displayURL() { return displayURL_.get(); }
+
+  bool hasSourceMapURL() const { return sourceMapURL_ != nullptr; }
+
+  char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
   JSContext* context() const { return cx; }
 
@@ -741,122 +859,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   const JS::ReadOnlyCompileOptions& options() const { return options_; }
 
   const char* getFilename() const { return filename_; }
-
- private:
-  static constexpr uint32_t ColumnChunkLength = 128;
-
-  enum class UnitsType : unsigned char{
-      PossiblyMultiUnit = 0,
-      GuaranteedSingleUnit = 1,
-  };
-
-  class ChunkInfo {
-   public:
-    ChunkInfo(uint32_t col, UnitsType type)
-        : unitsType_(static_cast<unsigned char>(type)) {
-      memcpy(column_, &col, sizeof(col));
-    }
-
-    uint32_t column() const {
-      uint32_t col;
-      memcpy(&col, column_, sizeof(uint32_t));
-      return col;
-    }
-
-    UnitsType unitsType() const {
-      MOZ_ASSERT(unitsType_ <= 1, "unitsType_ must be 0 or 1");
-      return static_cast<UnitsType>(unitsType_);
-    }
-
-    void guaranteeSingleUnits() {
-      MOZ_ASSERT(unitsType() == UnitsType::PossiblyMultiUnit,
-                 "should only be setting to possibly optimize from the "
-                 "pessimistic case");
-      unitsType_ = static_cast<unsigned char>(UnitsType::GuaranteedSingleUnit);
-    }
-
-   private:
-    // Store everything in |unsigned char|s so everything packs.
-    unsigned char column_[sizeof(uint32_t)];
-    unsigned char unitsType_;
-  };
-
-  /**
-   * Line number (of lines at least |ColumnChunkLength| code units long) to
-   * a sequence of the column numbers at |ColumnChunkLength| boundaries rewound
-   * (if needed) to the nearest code point boundary.
-   *
-   * Entries appear in this map only when a column computation of sufficient
-   * distance is performed on a line, and the vectors are lazily filled as
-   * greater offsets within lines require column computations.
-   */
-  mutable HashMap<uint32_t, Vector<ChunkInfo>> longLineColumnInfo_;
-
- protected:
-  // Options used for parsing/tokenizing.
-  const JS::ReadOnlyCompileOptions& options_;
-
-  Token tokens[ntokens];  // circular token buffer
- private:
-  unsigned cursor_;  // index of last parsed token
- protected:
-  unsigned lookahead;      // count of lookahead tokens
-  unsigned lineno;         // current line number
-  TokenStreamFlags flags;  // flags -- see above
-  size_t linebase;         // start of current line
-  size_t
-      prevLinebase;  // start of previous line;  size_t(-1) if on the first line
-  const char* filename_;             // input filename or null
-  UniqueTwoByteChars displayURL_;    // the user's requested source URL or null
-  UniqueTwoByteChars sourceMapURL_;  // source map's filename or null
-
-  /**
-   * An array storing whether a TokenKind observed while attempting to extend
-   * a valid AssignmentExpression into an even longer AssignmentExpression
-   * (e.g., extending '3' to '3 + 5') will terminate it without error.
-   *
-   * For example, ';' always ends an AssignmentExpression because it ends a
-   * Statement or declaration.  '}' always ends an AssignmentExpression
-   * because it terminates BlockStatement, FunctionBody, and embedded
-   * expressions in TemplateLiterals.  Therefore both entries are set to true
-   * in TokenStreamAnyChars construction.
-   *
-   * But e.g. '+' *could* extend an AssignmentExpression, so its entry here
-   * is false.  Meanwhile 'this' can't extend an AssignmentExpression, but
-   * it's only valid after a line break, so its entry here must be false.
-   *
-   * NOTE: This array could be static, but without C99's designated
-   *       initializers it's easier zeroing here and setting the true entries
-   *       in the constructor body.  (Having this per-instance might also aid
-   *       locality.)  Don't worry!  Initialization time for each TokenStream
-   *       is trivial.  See bug 639420.
-   */
-  bool isExprEnding[size_t(TokenKind::Limit)] = {};  // all-false initially
-
-  JSContext* const cx;
-  bool mutedErrors;
-  StrictModeGetter* strictModeGetter;  // used to test for strict mode
-
-  // Computing accurate column numbers requires at *some* point linearly
-  // iterating through prior source units in the line to properly account for
-  // multi-unit code points.  This is quadratic if counting happens repeatedly.
-  //
-  // But usually we need columns for advancing offsets through scripts.  By
-  // caching the last ((line number, offset) => relative column) mapping (in
-  // similar manner to how |SourceUnits::lastIndex_| is used to cache
-  // (offset => line number) mappings) we can usually avoid re-iterating through
-  // the common line prefix.
-  //
-  // Additionally, we avoid hash table lookup costs by caching the
-  // |Vector<ChunkInfo>*| for the line of the last lookup.  (|nullptr| means we
-  // have to look it up -- or it hasn't been created yet.)  This pointer is
-  // invalidated when a lookup on a new line occurs, but as it's not a pointer
-  // at literal element data, it's *not* invalidated when new entries are added
-  // to such a vector.
-  mutable uint32_t lineOfLastColumnComputation_ = UINT32_MAX;
-  mutable Vector<ChunkInfo>* lastChunkVectorForLine_ = nullptr;
-  mutable uint32_t lastOffsetOfComputedColumn_ = UINT32_MAX;
-  mutable uint32_t lastComputedColumn_ = 0;
 };
 
 constexpr char16_t CodeUnitValue(char16_t unit) { return unit; }
