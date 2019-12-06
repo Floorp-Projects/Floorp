@@ -4430,7 +4430,10 @@ class DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent 
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.pos
+        action_position: this.props.pos,
+        value: {
+          card_type: this.props.flightId ? "spoc" : "organic"
+        }
       }));
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
         source: this.props.type.toUpperCase(),
@@ -7214,7 +7217,10 @@ class ListItem extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureComponen
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.pos
+        action_position: this.props.pos,
+        value: {
+          card_type: this.props.flightId ? "spoc" : "organic"
+        }
       }));
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
         source: this.props.type.toUpperCase(),

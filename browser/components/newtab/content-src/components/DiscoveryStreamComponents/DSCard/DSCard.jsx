@@ -95,6 +95,7 @@ export class DSCard extends React.PureComponent {
           event: "CLICK",
           source: this.props.type.toUpperCase(),
           action_position: this.props.pos,
+          value: { card_type: this.props.flightId ? "spoc" : "organic" },
         })
       );
 
