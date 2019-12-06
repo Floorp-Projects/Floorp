@@ -10929,7 +10929,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                             aStylePosition->mZIndex.IsInteger())) ||
          (aStyleDisplay->mWillChange.bits &
           StyleWillChangeBits_STACKING_CONTEXT) ||
-         aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO ||
+         aStyleDisplay->mIsolation != StyleIsolation::Auto ||
          aStyleEffects->HasBackdropFilters();
 }
 
