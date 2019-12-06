@@ -449,9 +449,7 @@ async function assertContextMenuFill(
     formId,
     unchangedSelector,
   };
-  let continuePromise = SpecialPowers.spawn(browser, [data], async function(
-    data
-  ) {
+  let continuePromise = ContentTask.spawn(browser, data, async function(data) {
     let {
       username,
       password,
