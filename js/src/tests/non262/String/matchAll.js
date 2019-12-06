@@ -62,7 +62,7 @@ function* matchResults(string, regexp, lastIndex = 0) {
     }
 }
 
-assertEqMatchResults("ababcca".matchAll(/a/), matchResults("ababcca", /a/));
+assertEqMatchResults(/a/[Symbol.matchAll]("ababcca"), matchResults("ababcca", /a/));
 assertEqMatchResults("ababcca".matchAll(/a/g), matchResults("ababcca", /a/g));
 assertEqMatchResults("ababcca".matchAll("a"), matchResults("ababcca", /a/g));
 
@@ -72,8 +72,8 @@ assertEqMatchResults("ababcca".matchAll("a"), matchResults("ababcca", /a/g));
 {
     let otherGlobal = newGlobal();
 
-    let iterator = otherGlobal.eval(`"ababcca".matchAll(/a/)`);
-    let expected = matchResults("ababcca", /a/);
+    let iterator = otherGlobal.eval(`"ababcca".matchAll(/a/g)`);
+    let expected = matchResults("ababcca", /a/g);
 
     assertEqIterMatchResult(RegExpStringIteratorPrototype.next.call(iterator),
                             expected.next());
@@ -93,20 +93,20 @@ assertEqMatchResults("ababcca".matchAll("a"), matchResults("ababcca", /a/g));
 
 // Recompile RegExp (source) before first match.
 {
-    let regexp = /a+/;
+    let regexp = /a+/g;
     let iterator = "aabb".matchAll(regexp);
 
-    regexp.compile("b+");
-    assertEqMatchResults(iterator, matchResults("aabb", /a+/));
+    regexp.compile("b+", "g");
+    assertEqMatchResults(iterator, matchResults("aabb", /a+/g));
 }
 
 // Recompile RegExp (flags) before first match.
 {
-    let regexp = /a+/i;
+    let regexp = /a+/gi;
     let iterator = "aAbb".matchAll(regexp);
 
     regexp.compile("a+", "");
-    assertEqMatchResults(iterator, matchResults("aAbb", /a+/i));
+    assertEqMatchResults(iterator, matchResults("aAbb", /a+/gi));
 }
 
 // Recompile RegExp (source) after first match.
@@ -116,7 +116,7 @@ assertEqMatchResults("ababcca".matchAll("a"), matchResults("ababcca", /a/g));
     let expected = matchResults("aabbaa", /a+/g);
 
     assertEqIterMatchResult(iterator.next(), expected.next());
-    regexp.compile("b+");
+    regexp.compile("b+", "g");
     assertEqIterMatchResult(iterator.next(), expected.next());
 }
 
@@ -160,7 +160,7 @@ assertEqMatchResults("ababcca".matchAll("a"), matchResults("ababcca", /a/g));
 }
 
 // RegExp.prototype[Symbol.match] is modified to a getter, ensure this getter
-// is called exactly once.
+// is called exactly twice.
 try {
     let regexp = /a+/g;
 
@@ -173,7 +173,7 @@ try {
         }
     });
     let iterator = "aabbaa".matchAll(regexp);
-    assertEq(callCount, 1);
+    assertEq(callCount, 2);
 } finally {
     // Restore optimizable RegExp.prototype shape.
     Object.defineProperty(RegExp.prototype, Symbol.match, {
