@@ -62,14 +62,11 @@ add_task(async function() {
 });
 
 async function generateConsoleApiStubs() {
-  const { PREFS } = require("devtools/client/webconsole/constants");
-  // Hiding log messages so we don't get unwanted client/server communication.
-  const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
-  getPrefsService({}).setBoolPref(PREFS.FILTER.LOG, false);
-
   const stubs = new Map();
 
-  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const hud = await openNewTabAndConsole(TEST_URI);
+
+  const target = hud.currentTarget;
 
   for (const { keys, code } of getCommands()) {
     const received = new Promise(resolve => {
@@ -80,11 +77,11 @@ async function generateConsoleApiStubs() {
         stubs.set(callKey, getCleanedPacket(callKey, res));
 
         if (++i === keys.length) {
-          toolbox.target.activeConsole.off("consoleAPICall", listener);
+          target.activeConsole.off("consoleAPICall", listener);
           resolve();
         }
       };
-      toolbox.target.activeConsole.on("consoleAPICall", listener);
+      target.activeConsole.on("consoleAPICall", listener);
     });
 
     await ContentTask.spawn(gBrowser.selectedBrowser, code, function(subCode) {
@@ -100,7 +97,13 @@ async function generateConsoleApiStubs() {
     await received;
   }
 
-  Services.prefs.clearUserPref(PREFS.FILTER.LOG);
+  // We have everything we want, we can freeze the console to avoid communication
+  // with the server.
+  const {
+    START_IGNORE_ACTION,
+  } = require("devtools/client/shared/redux/middleware/ignore");
+  await hud.ui.wrapper.getStore().dispatch(START_IGNORE_ACTION);
+
   return stubs;
 }
 

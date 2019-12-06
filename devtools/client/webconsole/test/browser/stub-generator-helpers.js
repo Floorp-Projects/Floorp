@@ -13,17 +13,11 @@ const {
 const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";
 const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 
-const cachedPackets = {};
-
 // eslint-disable-next-line complexity
 function getCleanedPacket(key, packet) {
   const {
     stubPackets,
   } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-
-  if (Object.keys(cachedPackets).includes(key)) {
-    return cachedPackets[key];
-  }
 
   // Strip escaped characters.
   const safeKey = key
@@ -303,7 +297,6 @@ function getCleanedPacket(key, packet) {
     res = packet;
   }
 
-  cachedPackets[key] = res;
   return res;
 }
 
