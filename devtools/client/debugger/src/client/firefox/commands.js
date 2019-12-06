@@ -543,23 +543,6 @@ function fetchAncestorFramePositions(index: number) {
   currentThreadFront.fetchAncestorFramePositions(index);
 }
 
-function waitForSourceActor(
-  thread: string,
-  sourceActor: string
-): Promise<void> {
-  return new Promise(resolve => {
-    const listener = ({ source }) => {
-      if (source.actor == sourceActor) {
-        threadFront.off("newSource", listener);
-        resolve();
-      }
-    };
-
-    const threadFront = lookupThreadFront(thread);
-    threadFront.on("newSource", listener);
-  });
-}
-
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -610,7 +593,6 @@ const clientCommands = {
   getFrontByID,
   timeWarp,
   fetchAncestorFramePositions,
-  waitForSourceActor,
 };
 
 export { setupCommands, clientCommands };
