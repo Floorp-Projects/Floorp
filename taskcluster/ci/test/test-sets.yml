@@ -857,9 +857,11 @@ android-hw-arm7-raptor-power:
     - raptor-speedometer-fenix-power
     - raptor-speedometer-fennec68-power
     - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec68
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
     - raptor-scn-power-idle-bg-fenix
+    - raptor-scn-power-idle-bg-fennec68
     - raptor-scn-power-idle-bg-geckoview
     - raptor-scn-power-idle-bg-refbrow
 
@@ -886,9 +888,11 @@ android-hw-aarch64-raptor-power:
     - raptor-speedometer-fenix-power
     - raptor-speedometer-fennec68-power
     - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec68
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
     - raptor-scn-power-idle-bg-fenix
+    - raptor-scn-power-idle-bg-fennec68
     - raptor-scn-power-idle-bg-geckoview
     - raptor-scn-power-idle-bg-refbrow
 
