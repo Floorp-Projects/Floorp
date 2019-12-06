@@ -515,22 +515,15 @@ TokenStreamAnyChars::SourceCoords::lineToken(uint32_t offset) const {
 TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
-    : srcCoords(cx, options.lineno, options.scriptSourceOffset),
-      longLineColumnInfo_(cx),
+    : cx(cx),
       options_(options),
-      tokens(),
-      cursor_(0),
-      lookahead(),
+      strictModeGetter_(smg),
+      filename_(options.filename()),
+      srcCoords(cx, options.lineno, options.scriptSourceOffset),
+      longLineColumnInfo_(cx),
       lineno(options.lineno),
       flags(),
-      linebase(0),
-      prevLinebase(size_t(-1)),
-      filename_(options.filename()),
-      displayURL_(nullptr),
-      sourceMapURL_(nullptr),
-      cx(cx),
-      mutedErrors(options.mutedErrors()),
-      strictModeGetter(smg) {
+      mutedErrors(options.mutedErrors()) {
   // |isExprEnding| was initially zeroed: overwrite the true entries here.
   isExprEnding[size_t(TokenKind::Comma)] = true;
   isExprEnding[size_t(TokenKind::Semi)] = true;
