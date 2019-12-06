@@ -179,6 +179,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Žiadne pripojenie k internetu</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Skontrolujte pripojenie k sieti alebo skúste načítať stránku o chvíľu.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Obnoviť</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Neplatná adresa</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Adresa (URL) nie je platná a nemožno ju načítať. Prosím, skontrolujte text v paneli s adresou a skúste to znova.</p>
