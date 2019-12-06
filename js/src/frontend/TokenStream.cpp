@@ -516,9 +516,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
     : srcCoords(cx, options.lineno, options.scriptSourceOffset),
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
       longLineColumnInfo_(cx),
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
       options_(options),
       tokens(),
       cursor_(0),
@@ -712,8 +710,6 @@ inline void SourceUnits<Utf8Unit>::assertNextCodePoint(
 }
 
 #endif  // DEBUG
-
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
 
 static MOZ_ALWAYS_INLINE void RetractPointerToCodePointBoundary(
     const Utf8Unit** ptr, const Utf8Unit* limit) {
@@ -972,8 +968,6 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
   return ColumnFromPartial(partialOffset, partialColumn, unitsType);
 }
 
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
-
 template <typename Unit, class AnyCharsAccess>
 uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
     LineToken lineToken, uint32_t offset) const {
@@ -982,12 +976,7 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
   uint32_t partialCols =
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
-      anyChars.computePartialColumn(lineToken, offset, this->sourceUnits)
-#else
-      offset - anyChars.lineStart(lineToken)
-#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
-      ;
+      anyChars.computePartialColumn(lineToken, offset, this->sourceUnits);
 
   return (lineToken.isFirstLine() ? anyChars.options_.column : 0) + partialCols;
 }
