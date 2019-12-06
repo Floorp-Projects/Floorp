@@ -287,7 +287,6 @@
 #ifdef XP_WIN
 #  include "mozilla/audio/AudioNotificationSender.h"
 #  include "mozilla/widget/AudioSession.h"
-#  include "mozilla/WinDllServices.h"
 #endif
 
 #ifdef ACCESSIBILITY
@@ -5799,24 +5798,6 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
     controller->NotifyMediaAudibleChanged(aAudible);
   }
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
-    ModulePaths&& aModPaths, bool aRunAtNormalPriority,
-    GetModulesTrustResolver&& aResolver) {
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->GetModulesTrust(std::move(aModPaths), aRunAtNormalPriority)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [aResolver](ModulesMapResult&& aResult) {
-            aResolver(Some(ModulesMapResult(std::move(aResult))));
-          },
-          [aResolver](nsresult aRv) { aResolver(Nothing()); });
-  return IPC_OK();
-#else
-  return IPC_FAIL(this, "Unsupported on this platform");
-#endif  // defined(XP_WIN)
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
