@@ -90,7 +90,7 @@ class DllServicesBase : public Authenticode {
     return mAuthenticode->GetBinaryOrgName(aFilePath, aFlags);
   }
 
-  void DisableFull() { DllBlocklist_SetFullDllServices(nullptr); }
+  virtual void DisableFull() { DllBlocklist_SetFullDllServices(nullptr); }
 
   DllServicesBase(const DllServicesBase&) = delete;
   DllServicesBase(DllServicesBase&&) = delete;
