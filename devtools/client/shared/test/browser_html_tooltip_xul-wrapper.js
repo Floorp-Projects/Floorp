@@ -35,12 +35,12 @@ add_task(async function() {
 
   const originalTop = win.screenTop;
   const originalLeft = win.screenLeft;
-  win.moveTo(100, 100);
+  await moveWindowTo(win, 100, 100);
 
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     info("Restore original window dimensions and position.");
     win.resizeTo(originalWidth, originalHeight);
-    win.moveTo(originalLeft, originalTop);
+    await moveWindowTo(win, originalLeft, originalTop);
   });
 
   info("Create HTML tooltip");

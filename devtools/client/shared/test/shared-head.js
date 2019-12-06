@@ -782,3 +782,23 @@ async function registerActorInContentProcess(url, options) {
     ActorRegistry.registerModule(args.url, args.options);
   });
 }
+
+/**
+ * Move the provided Window to the provided left, top coordinates and wait for
+ * the window position to be updated.
+ */
+async function moveWindowTo(win, left, top) {
+  // Check that the expected coordinates are within the window available area.
+  left = Math.max(win.screen.availLeft, left);
+  left = Math.min(win.screen.width, left);
+  top = Math.max(win.screen.availTop, top);
+  top = Math.min(win.screen.height, top);
+
+  info(`Moving window to {${left}, ${top}}`);
+  win.moveTo(left, top);
+
+  // Bug 1600809: window move/resize can be async on Linux sometimes.
+  // Wait so that the anchor's position is correctly measured.
+  info("Wait for window screenLeft and screenTop to be updated");
+  return waitUntil(() => win.screenLeft === left && win.screenTop === top);
+}
