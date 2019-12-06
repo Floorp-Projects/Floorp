@@ -215,11 +215,37 @@ describe("ToolbarBadgeHub", () => {
         fxaMessage
       );
     });
-    it("shouldn't do anything if no message is provided", () => {
-      handleMessageRequestStub.returns(null);
-      instance.messageRequest("trigger");
+    it("shouldn't do anything if no message is provided", async () => {
+      handleMessageRequestStub.resolves(null);
+      await instance.messageRequest({ triggerId: "trigger" });
 
       assert.notCalled(instance.registerBadgeNotificationListener);
+    });
+    it("should record telemetry events", async () => {
+      const startTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "start"
+      );
+      const finishTelemetryStopwatch = sandbox.stub(
+        global.TelemetryStopwatch,
+        "finish"
+      );
+      handleMessageRequestStub.returns(null);
+
+      await instance.messageRequest({ triggerId: "trigger" });
+
+      assert.calledOnce(startTelemetryStopwatch);
+      assert.calledWithExactly(
+        startTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { triggerId: "trigger" }
+      );
+      assert.calledOnce(finishTelemetryStopwatch);
+      assert.calledWithExactly(
+        finishTelemetryStopwatch,
+        "MS_MESSAGE_REQUEST_TIME_MS",
+        { triggerId: "trigger" }
+      );
     });
   });
   describe("addToolbarNotification", () => {

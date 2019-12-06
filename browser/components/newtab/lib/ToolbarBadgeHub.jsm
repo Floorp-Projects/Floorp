@@ -323,10 +323,13 @@ class _ToolbarBadgeHub {
   }
 
   async messageRequest({ triggerId, template }) {
+    const telemetryObject = { triggerId };
+    TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     const message = await this._handleMessageRequest({
       triggerId,
       template,
     });
+    TelemetryStopwatch.finish("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     if (message) {
       this.registerBadgeNotificationListener(message);
     }
