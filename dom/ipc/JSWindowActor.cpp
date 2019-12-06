@@ -238,7 +238,13 @@ void JSWindowActor::ReceiveMessageOrQuery(
   // If we have a promise, resolve or reject it respectively.
   if (promise) {
     if (aRv.Failed()) {
-      promise->MaybeReject(aRv);
+      if (aRv.IsUncatchableException()) {
+        aRv.SuppressException();
+        promise->MaybeRejectWithDOMException(
+            NS_ERROR_FAILURE, "Message handler threw uncatchable exception");
+      } else {
+        promise->MaybeReject(aRv);
+      }
     } else {
       promise->MaybeResolve(retval);
     }
