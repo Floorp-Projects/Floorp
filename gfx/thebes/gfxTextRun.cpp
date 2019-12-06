@@ -374,9 +374,12 @@ static void GetAdjustedSpacing(
 bool gfxTextRun::GetAdjustedSpacingArray(
     Range aRange, PropertyProvider* aProvider, Range aSpacingRange,
     nsTArray<PropertyProvider::Spacing>* aSpacing) const {
-  if (!aProvider || !(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING))
+  if (!aProvider || !(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
     return false;
-  if (!aSpacing->AppendElements(aRange.Length())) return false;
+  }
+  if (!aSpacing->AppendElements(aRange.Length(), fallible)) {
+    return false;
+  }
   auto spacingOffset = aSpacingRange.start - aRange.start;
   memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing) * spacingOffset);
   GetAdjustedSpacing(this, aSpacingRange, aProvider,
@@ -1160,7 +1163,7 @@ gfxFloat gfxTextRun::GetAdvanceWidth(
   if (aProvider && (mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
     uint32_t i;
     AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
-    if (spacingBuffer.AppendElements(aRange.Length())) {
+    if (spacingBuffer.AppendElements(aRange.Length(), fallible)) {
       GetAdjustedSpacing(this, ligatureRange, aProvider,
                          spacingBuffer.Elements());
       for (i = 0; i < ligatureRange.Length(); ++i) {
