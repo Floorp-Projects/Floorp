@@ -1328,7 +1328,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
   if (!d.readVarU32(&numResults)) {
     return d.fail("bad number of function returns");
   }
-  if (numResults > env->funcMaxResults()) {
+  if (numResults > MaxResults) {
     return d.fail("too many returns in signature");
   }
   ValTypeVector results;
@@ -2965,14 +2965,13 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
 
   bool gcTypesConfigured = HasGcSupport(cx);
   bool refTypesConfigured = HasReftypesSupport(cx);
-  bool multiValueConfigured = HasMultiValueSupport(cx);
   bool hugeMemory = false;
   bool bigIntConfigured = HasI64BigIntSupport(cx);
 
-  CompilerEnvironment compilerEnv(
-      CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
-      DebugEnabled::False, multiValueConfigured, refTypesConfigured,
-      gcTypesConfigured, hugeMemory, bigIntConfigured);
+  CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
+                                  OptimizedBackend::Ion, DebugEnabled::False,
+                                  refTypesConfigured, gcTypesConfigured,
+                                  hugeMemory, bigIntConfigured);
   ModuleEnvironment env(
       &compilerEnv,
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()

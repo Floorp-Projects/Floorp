@@ -87,9 +87,9 @@ struct CompilerEnvironment {
   // final value of gcTypes/refTypes.
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
-                      DebugEnabled debugEnabled, bool multiValueConfigured,
-                      bool refTypesConfigured, bool gcTypesConfigured,
-                      bool hugeMemory, bool bigIntConfigured);
+                      DebugEnabled debugEnabled, bool refTypesConfigured,
+                      bool gcTypesConfigured, bool hugeMemory,
+                      bool bigIntConfigured);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d, bool gcFeatureOptIn);
@@ -230,9 +230,6 @@ struct ModuleEnvironment {
   }
   bool hugeMemoryEnabled() const {
     return !isAsmJS() && compilerEnv->hugeMemory();
-  }
-  uint32_t funcMaxResults() const {
-    return multiValuesEnabled() ? MaxResults : 1;
   }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
