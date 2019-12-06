@@ -275,3 +275,27 @@ raptor-tp6m-14-fennec68-cold:
             - --test=raptor-tp6m-14-fennec68-cold
             - --app=fennec
             - --binary=org.mozilla.firefox
+
+raptor-speedometer-fennec68:
+    description: "Raptor Speedometer on Fennec68"
+    try-name: raptor-speedometer-fennec68
+    treeherder-symbol: Rap(sp-f68)
+    max-run-time: 2000
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-speedometer-fennec68-power:
+    description: "Raptor Speedometer power on Fennec68"
+    try-name: raptor-speedometer-fennec68-power
+    treeherder-symbol: Rap(sp-p-f68)
+    max-run-time: 2000
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+            - --power-test
+            - --host HOST_IP
