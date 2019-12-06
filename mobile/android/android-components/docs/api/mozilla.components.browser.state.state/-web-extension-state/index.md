@@ -2,7 +2,7 @@
 
 # WebExtensionState
 
-`data class WebExtensionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L19)
+`data class WebExtensionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L20)
 
 Value type that represents the state of a web extension.
 
@@ -10,7 +10,7 @@ Value type that represents the state of a web extension.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebExtensionState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`? = null, browserActionPopupSession: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Value type that represents the state of a web extension. |
+| [&lt;init&gt;](-init-.md) | `WebExtensionState(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`? = null, browserActionPopupSession: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Value type that represents the state of a web extension. |
 
 ### Properties
 
@@ -18,6 +18,7 @@ Value type that represents the state of a web extension.
 |---|---|
 | [browserAction](browser-action.md) | `val browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`?`<br>A list browser action that this web extension has. |
 | [browserActionPopupSession](browser-action-popup-session.md) | `val browserActionPopupSession: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The ID of the session displaying the browser action popup. |
+| [enabled](enabled.md) | `val enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether or not this web extension is enabled, defaults to true. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The unique identifier for this web extension. |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The url pointing to a resources path for locating the extension within the APK file e.g. resource://android/assets/extensions/my_web_ext. |
 
