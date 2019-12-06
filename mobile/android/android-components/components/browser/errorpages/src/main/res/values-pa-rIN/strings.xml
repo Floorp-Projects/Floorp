@@ -112,8 +112,22 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">ਸੁਰੱਖਿਆ ਕਾਰਨਾਂ ਕਰਕੇ ਪੋਰਟ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>ਮੰਗ ਕੀਤੇ ਸਿਰਨਾਵੇਂ ਨੇ ਪੋਰਟ ਦਿੱਤੀ ਹੈ, (ਜਿਵੇਂ ਕਿ <q>mozilla.org:80</q> mozilla.org ਲਈ 809) ਜੋ ਕਿ ਆਮ ਕਰਕੇ ਵਰਤੀ ਜਾਂਦੀ ਹੈ, <em>ਹੋਰ</em> ਵੈਬ ਝਲਕੀ ਤੋਂ ਬਿਨਾਂ। ਬਰਾਊਜ਼ਰ ਨੇ ਤੁਹਾਡੀ ਬਚਾਅ ਅਤੇ ਸੁਰੱਖਿਆ ਲਈ ਬੇਨਤੀ ਨੂੰ ਰੱਦ ਕਰ ਦਿੱਤਾ ਹੈ।</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ਕਨੈਕਸ਼ਨ ਮੁੜ-ਸੈੱਟ ਕੀਤਾ ਗਿਆ ਸੀ</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>ਕਨੈਕਸ਼ਨ ਸਮਝੌਤੇ ਦੇ ਦੌਰਾਨ ਨੈੱਟਵਰਕ ਲਿੰਕ ਵਿੱਚ ਰੁਕਾਵਟ ਆਈ ਸੀ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜੀ।</p>
+      <ul>
+        <li>ਸਾਈਟ ਆਰਜ਼ੀ ਤੌਰ ‘ਤੇ ਉਪਲਬਧ ਨਹੀਂ ਹੋ ਸਕਦੀ ਜਾਂ ਬਹੁਤ ਬਿਜ਼ੀ ਹੋ ਸਕਦੀ ਹੈ। ਕੁਝ ਪਲ਼ਾਂ ਵਿੱਚ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</li>
+        <li>ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੀ ਸਫ਼ਾ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹੋ ਤਾਂ ਆਪਣੇ ਡਿਵਾਈਸ ਦੇ ਡਾਟੇ ਜਾਂ Wi-Fi ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ਅਸੁਰੱਖਿਅਤ ਫਾਈਲ ਕਿਸਮ</string>
@@ -127,31 +141,113 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">ਨਿਕਾਰਾ ਹੋਈ ਦੀ ਸਮੱਗਰੀ ਗਲਤੀ</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>ਸਫ਼ਾ, ਜੋ ਤੁਸੀਂ ਵੇਖਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਨੂੰ ਵੇਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ, ਕਿਉਂਕਿ ਡਾਟਾ ਲੈਣ-ਦੇਣ ਵਿੱਚ ਗਲਤੀ ਖੋਜੀ ਗਈ ਹੈ।</p>
+      <ul>
+        <li>ਇਹ ਸਮੱਸਿਆ ਬਾਰੇ ਜਾਣਕਾਰੀ ਦੇਣ ਲਈ ਵੈੱਬਸਾਈਟ ਮਾਲਕਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ਸਮੱਗਰੀ ਕਰੈਸ਼ ਹੋਈ</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>ਸਫ਼ਾ, ਜੋ ਤੁਸੀਂ ਵੇਖਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਨੂੰ ਵੇਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ, ਕਿਉਂਕਿ ਡਾਟਾ ਲੈਣ-ਦੇਣ ਵਿੱਚ ਗਲਤੀ ਖੋਜੀ ਗਈ ਹੈ।</p>
+      <ul>
+        <li>ਇਹ ਸਮੱਸਿਆ ਬਾਰੇ ਜਾਣਕਾਰੀ ਦੇਣ ਲਈ ਵੈੱਬਸਾਈਟ ਮਾਲਕਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">ਸਮੱਗਰੀ ਇੰਕੋਡਿੰਗ ਗਲਤੀ</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>ਸਫ਼ਾ, ਜਿਸ ਨੂੰ ਤੁਸੀਂ ਵੇਖਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਹੋ, ਵੇਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ, ਕਿਉਂਕਿ ਇਹ ਗਲਤ ਜਾਂ ਗ਼ੈਰ-ਸਹਾਇਕ ਕੰਪਰੈਸ਼ਨ ਫਾਰਮ ਵਰਤਦਾ ਹੈ।</p>
+      <ul>
+        <li>ਇਹ ਸਮੱਸਿਆ ਬਾਰੇ ਵੈੱਬ ਸਾਇਟ ਦੇ ਓਨਰ (ਮਾਲਕ) ਨਾਲ ਸੰਪਰਕ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ਸਿਰਨਾਵਾਂ ਨਹੀਂ ਲੱਭਿਆ</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ਬਰਾਊਜ਼ਰ ਦਿੱਤੇ ਸਿਰਨਾਵਾਂ ਲਈ ਹੋਸਟ ਸਰਵਰ ਲੱਭ ਨਹੀਂ ਸਕਿਆ ਸੀ।</p>
+      <ul>
+        <li>ਲਿਖਣ ਦੀਆਂ ਗਲਤੀਆਂ ਲਈ ਸਿਰਨਾਵੇਂ ਦੀ ਜਾਂਚ ਕਰੋ ਜਿਵੇਂ ਕਿ
+          <strong>www</strong>.example.com ਦੀ ਬਜਾਏ
+          <strong>ww</strong>.example.com ਲਿਖਣਾ</li>
+        <li>ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੀ ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਲਈ ਅਸਮਰੱਥ ਹੋ ਤਾਂ ਆਪਣੇ ਡਿਵਾਈਸ ਦੇ ਡਾਟੇ ਜਾਂ Wi-Fi ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ।</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">ਕੋਈ ਇੰਟਰਨੈੱਟ ਕਨੈਕਸ਼ਨ ਨਹੀਂ ਹੈ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ਆਪਣੇ ਨੈੱਟਵਰਕ ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ ਜਾਂ ਕੁਝ ਪਲ਼ਾਂ ਵਿੱਚ ਸਫ਼ੇ ਨੂੰ ਮੁੜ-ਲੋਡ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">ਮੁੜ-ਲੋਡ ਕਰੋ</string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ਅਢੁੱਕਵਾਂ ਸਿਰਨਾਵਾਂ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>ਦਿੱਤੇ ਐਡਰੈੱਸ ਦਾ ਫਾਰਮੈਟ ਪਛਾਣਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ। ਗਲਤੀਆਂ ਲਈ ਟਿਕਾਣਾ ਪੱਟੀ ਦੀ ਜਾਂਚ ਕਰੋ ਤੇ ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜੀ।</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ਸਿਰਨਾਵਾਂ ਢੁੱਕਵਾਂ ਨਹੀਂ ਹੈ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>ਵੈੱਬ ਸਿਰਨਾਵੇਂ ਨੂੰ ਆਮ ਤੌਰ <strong>http://www.example.com/</strong> ਵਜੋਂ ਲਿਖਿਆ ਜਾਂਦਾ ਹੈ</li>
+        <li>ਧਿਆਨ ਦਿਓ ਕਿ ਤੁਸੀਂ ਫਾਰਵਰਡ ਸਲੈਸ਼ (ਜਿਵੇਂ <strong>/</strong>) ਹੀ ਵਰਤ ਰਹੇ ਹੋ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ਅਣਪਛਾਤਾ ਪਰੋਟੋਕਾਲ</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>ਸਿਰਨਾਵਾਂ ਪਰੋਟੋਕਾਲ  (ਜਿਵੇਂ ਕਿ <q>wxyz://</q>) ਦਿੰਦਾ ਹੈ, ਜਿਸ ਦੀ ਪਛਾਣ ਬਰਾਊਜ਼ਰ ਨਹੀਂ ਕਰ ਸਕਦਾ ਹੈ, ਇਸਕਰਕੇ ਬਰਾਊਜ਼ਰ ਸਾਈਟ ਨਾਲ ਠੀਕ ਤਰ੍ਹਾਂ ਕਨੈਕਟ ਨਹੀਂ ਹੋ ਸਕਦਾ ਹੈ।</p>
+      <ul>
+        <li>ਕੀ ਤੁਸੀਂ ਮਲਟੀਮੀਡਿਆ ਜਾਂ ਹੋਰ ਗ਼ੈਰ-ਲਿਖਤ ਸੇਵਾ ਨੂੰ ਵਰਤਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਹੋ? ਸਾਈਟਾਂ ਦੀ ਵਾਧੂ ਲੋੜਾਂ ਨੂੰ ਚੈੱਕ ਕਰੋ</li>
+        <li>ਕੁਝ ਪਰੋਟੋਕਾਲ ਲਈ ਸੁਤੰਤਰ ਧਿਰ ਸਾਫਟਵੇਅਰ ਜਾਂ ਪਲੱਗਇਨ ਚਾਹੀਦੇ ਹੋ ਸਕਦੇ ਹਨ ਤਾਂ ਕਿ ਬਰਾਊਜ਼ਰ ਉਹਨਾਂ ਦੀ ਪਛਾਣ ਕਰ ਸਕੇ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ਫਾਈਲ ਨਹੀਂ ਲੱਭੀ</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>ਆਈਟਮ ਦਾ ਨਾਂ ਬਦਲਿਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ, ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੋਰ ਥਾਂ ਭੇਜੀ ਗਈ ਹੋ ਸਕਦੀ ਹੈ?</li>
+        <li>ਕੋਈ ਸ਼ਬਦ ਗਲਤ ਲਿਖੇ ਗਏ ਹਨ, ਅੱਖਰ ਵੱਡੇ ਛੋਟੋ ਹੋ ਗਏ ਹਨ ਜਾਂ ਸਿਰਨਾਵੇਂ ਵਿੱਚ ਕੋਈ ਅੱਖਰ ਦੀ ਗਲਤੀ ਹੈ?</li>
+        <li>ਕੀ ਤੁਹਾਡੇ ਕੋਲ ਮੰਗੀ ਗਈ ਆਈਟਮ ਦੀ ਵਰਤੋਂ ਲਈ ਢੁੱਕਵੇਂ ਅਧਿਕਾਰ ਹਨ?</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ਫਾਈਲ ਲਈ ਪਹੁੰਚ ਤੋਂ ਨਾਂਹ ਕੀਤੀ</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>ਇਸ ਨੂੰ ਹਟਾਇਆ, ਕਿਤੇ ਹੋਰ ਭੇਜਿਆ ਗਿਆ ਜਾਂ ਫਾਈਲ ਇਜਾਜ਼ਤਾਂ ਰਾਹੀਂ ਪਹੁੰਚ ਤੋਂ ਰੋਕ ਹੋ ਸਕਦੀ ਹੈ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">ਪਰਾਕਸੀ ਸਰਵਰ ਨੇ ਕਨੈਕਸ਼ਨ ਤੋਂ ਇਨਕਾਰ ਕੀਤਾ</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>ਬਰਾਊਜ਼ਰ ਨੂੰ ਪਰਾਕਸੀ ਸਰਵਰ ਵਰਤਣ ਲਈ ਸੰਰਚਿਤ ਕੀਤਾ ਗਿਆ ਹੈ, ਪਰ ਪਰਾਕਸੀ ਸਰਵਰ ਨੇ ਕਨੈਕਸ਼ਨ ਤੋਂ ਇਨਕਾਰ ਕਰ ਦਿੱਤਾ ਹੈ।</p>
+      <ul>
+        <li>ਕੀ ਬਰਾਊਜ਼ਰ ਦੀ ਪਰਾਕਸੀ ਸੰਰਚਨਾ ਠੀਕ ਹੈ? ਸੈਟਿੰਗਾਂ ਚੈੱਕ ਕਰਕੇ ਮੁੜ-ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜੀ।</li>
+        <li>ਕੀ ਪਰਾਕਸੀ ਸੇਵਾ ਇਸ ਨੈੱਟਵਰਕ ਤੋਂ ਕੁਨੈਕਸ਼ਨ ਮਨਜ਼ੂਰ ਕਰਦੀ ਹੈ?</li>
+        <li>ਹਾਲੇ ਵੀ ਸਮੱਸਿਆ ਹੈ? ਮੱਦਦ ਲਈ ਆਪਣੇ ਨੈੱਟਵਰਕ ਪਰਸ਼ਾਸ਼ਕ ਜਾਂ ਇੰਟਰਨੈੱਟ ਪਰੋਵਾਇਡਰ ਨਾਲ ਸੰਪਰਕ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ਪਰਾਕਸੀ ਸਰਵਰ ਨਹੀਂ ਲੱਭਿਆ</string>
@@ -175,6 +271,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ਬੇਲੋੜੀ ਸਾਈਟ ਮਸਲਾ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>%1$s ਤੋਂ ਸਾਈਟ ਨੂੰ ਬੇਲੋੜੇ ਸਾਫਟਵੇਅਰ ਵੰਡਣ ਵਾਲੇ ਵਜੋਂ ਗਰਦਾਨਿਆ ਗਿਆ ਹੈ ਅਤੇ ਤੁਹਾਡੀਆਂ ਸੁਰੱਖਿਆ ਪਸੰਦਾਂ ਦੇ ਮੁਤਾਬਕ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ।</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">ਨੁਕਸਾਨਦੇਹ ਸਾਈਟ ਮਸਲਾ</string>
