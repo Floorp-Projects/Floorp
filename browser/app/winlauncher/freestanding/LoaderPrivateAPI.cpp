@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 #include "mozilla/Unused.h"
+#include "../DllBlocklistInit.h"
 
 using GlobalInitializerFn = void(__cdecl*)(void);
 
@@ -84,7 +85,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderPrivateAPIImp final
   void NotifyEndDllLoad(void* aContext, NTSTATUS aLoadNtStatus,
                         ModuleLoadInfo&& aModuleLoadInfo) final;
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
-  nt::MemorySectionNameBuf GetSectionNameBuffer(void* aSectionAddr) final;
+  nt::LoaderAPI::InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() final;
 
   // LoaderPrivateAPI
   void NotifyBeginDllLoad(void** aContext,
@@ -93,6 +94,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderPrivateAPIImp final
                           PCUNICODE_STRING aRequestedDllName) final;
   void SetObserver(nt::LoaderObserver* aNewObserver) final;
   bool IsDefaultObserver() const final;
+  nt::MemorySectionNameBuf GetSectionNameBuffer(void* aSectionAddr) final;
 };
 
 static void Init() {
@@ -206,6 +208,11 @@ nt::AllocatedUnicodeString LoaderPrivateAPIImp::GetSectionName(
   }
 
   return nt::AllocatedUnicodeString(&buf.mSectionFileName);
+}
+
+nt::LoaderAPI::InitDllBlocklistOOPFnPtr
+LoaderPrivateAPIImp::GetDllBlocklistInitFn() {
+  return &InitializeDllBlocklistOOP;
 }
 
 nt::MemorySectionNameBuf LoaderPrivateAPIImp::GetSectionNameBuffer(
