@@ -2,6 +2,10 @@
 Full Installer Configuration
 ============================
 
+.. note::
+
+  This page applies to the ``.exe`` full installer. If you want to run or deploy the :doc:`MSI package <MSI>`, refer to the instructions on `the support web page for it <https://support.mozilla.org/kb/deploy-firefox-msi-installers>`_ instead; the command-line options documented here won't work.
+
 Command-line Options
 --------------------
 
