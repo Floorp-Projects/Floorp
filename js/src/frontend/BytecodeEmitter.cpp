@@ -5703,7 +5703,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     RootedScript innerScript(
         cx, JSScript::Create(cx, fun, options, sourceObject,
                              funbox->sourceStart, funbox->sourceEnd,
-                             funbox->toStringStart, funbox->toStringEnd));
+                             funbox->toStringStart, funbox->toStringEnd,
+                             funbox->startLine, funbox->startColumn));
     if (!innerScript) {
       return false;
     }
