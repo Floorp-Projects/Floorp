@@ -22,6 +22,8 @@ import attr
 import requests
 import structlog
 import subprocess
+
+from jsonschema import validate
 from voluptuous import Required, Schema
 
 #: The workspace directory where files will be downloaded, etc.
@@ -36,6 +38,9 @@ OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
 #: A job to process through visualmetrics.py
 @attr.s
 class Job:
+    #: The name of the test.
+    test_name = attr.ib(type=str)
+
     #: The directory for all the files pertaining to the job.
     job_dir = attr.ib(type=Path)
 
@@ -58,10 +63,18 @@ class Job:
 JOB_SCHEMA = Schema(
     {
         Required("jobs"): [
-            {Required("json_location"): str, Required("video_location"): str}
+            {
+                Required("test_name"): str,
+                Required("json_location"): str,
+                Required("video_location"): str,
+            }
         ]
     }
 )
+
+PERFHERDER_SCHEMA = Path("/", "builds", "worker", "performance-artifact-schema.json")
+with PERFHERDER_SCHEMA.open() as f:
+    PERFHERDER_SCHEMA = json.loads(f.read())
 
 
 def run_command(log, cmd):
@@ -82,6 +95,71 @@ def run_command(log, cmd):
     except subprocess.CalledProcessError as e:
         log.info("Command failed", cmd=cmd, status=e.returncode, output=e.output)
         return e.returncode, e.output
+
+
+def append_result(log, suites, test_name, name, result):
+    """Appends a ``name`` metrics result in the ``test_name`` suite.
+
+    Args:
+        log: The structlog logger instance.
+        suites: A mapping containing the suites.
+        test_name: The name of the test.
+        name: The name of the metrics.
+        result: The value to append.
+    """
+    if name.endswith("Progress"):
+        return
+    try:
+        result = int(result)
+    except ValueError:
+        log.error("Could not convert value", name=name)
+        log.error("%s" % result)
+        result = 0
+    if test_name not in suites:
+        suites[test_name] = {"name": test_name, "subtests": {}}
+
+    subtests = suites[test_name]["subtests"]
+    if name not in subtests:
+        subtests[name] = {
+            "name": name,
+            "replicates": [result],
+            "lowerIsBetter": True,
+            "unit": "ms",
+        }
+    else:
+        subtests[name]["replicates"].append(result)
+
+
+def compute_median(subtest):
+    """Adds in the subtest the ``value`` field, which is the average of all
+    replicates.
+
+    Args:
+        subtest: The subtest containing all replicates.
+
+    Returns:
+        The subtest.
+    """
+    if "replicates" not in subtest:
+        return subtest
+    series = subtest["replicates"][1:]
+    subtest["value"] = float(sum(series)) / float(len(series))
+    return subtest
+
+
+def get_suite(suite):
+    """Returns the suite with computed medians in its subtests.
+
+    Args:
+        suite: The suite to convert.
+
+    Returns:
+        The suite.
+    """
+    suite["subtests"] = [
+        compute_median(subtest) for subtest in suite["subtests"].values()
+    ]
+    return suite
 
 
 def main(log, args):
@@ -136,12 +214,13 @@ def main(log, args):
         return 1
 
     try:
-        downloaded_jobs, failed_jobs = download_inputs(log, jobs_json["jobs"])
+        downloaded_jobs, failed_downloads = download_inputs(log, jobs_json["jobs"])
     except Exception as e:
         log.error("Failed to download jobs: %s" % e, exc_info=True)
         return 1
 
-    runs_failed = 0
+    failed_runs = 0
+    suites = {}
 
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         for job, result in zip(
@@ -162,48 +241,52 @@ def main(log, args):
                     video_location=job.video_location,
                     error=res,
                 )
-                runs_failed += 1
+                failed_runs += 1
             else:
-                path = job.job_dir / "visual-metrics.json"
-                with path.open("wb") as f:
-                    log.info("Writing job result", path=path)
-                    f.write(res)
+                # Python 3.5 requires a str object (not 3.6+)
+                res = json.loads(res.decode("utf8"))
+                for name, value in res.items():
+                    append_result(log, suites, job.test_name, name, value)
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    suites = [get_suite(suite) for suite in suites.values()]
+    perf_data = {
+        "framework": {"name": "browsertime"},
+        "type": "vismet",
+        "suites": suites,
+    }
 
-    with Path(WORKSPACE_DIR, "jobs.json").open("w") as f:
+    # Validates the perf data complies with perfherder schema.
+    # The perfherder schema uses jsonschema so we can't use voluptuous here.
+    validate(perf_data, PERFHERDER_SCHEMA)
+
+    raw_perf_data = json.dumps(perf_data)
+    with Path(OUTPUT_DIR, "perfherder-data.json").open("w") as f:
+        f.write(raw_perf_data)
+    # Prints the data in logs for Perfherder to pick it up.
+    log.info("PERFHERDER_DATA: %s" % raw_perf_data)
+
+    # Lists the number of processed jobs, failures, and successes.
+    with Path(OUTPUT_DIR, "summary.json").open("w") as f:
         json.dump(
             {
-                "successful_jobs": [
+                "total_jobs": len(downloaded_jobs) + len(failed_downloads),
+                "successful_runs": len(downloaded_jobs) - failed_runs,
+                "failed_runs": failed_runs,
+                "failed_downloads": [
                     {
                         "video_location": job.video_location,
                         "json_location": job.json_location,
-                        "path": (str(job.job_dir.relative_to(WORKSPACE_DIR)) + "/"),
+                        "test_name": job.test_name,
                     }
-                    for job in downloaded_jobs
-                ],
-                "failed_jobs": [
-                    {
-                        "video_location": job.video_location,
-                        "json_location": job.json_location,
-                    }
-                    for job in failed_jobs
+                    for job in failed_downloads
                 ],
             },
             f,
         )
 
-    archive = OUTPUT_DIR / "visual-metrics.tar.xz"
-    log.info("Creating the tarfile", tarfile=archive)
-    returncode, res = run_command(
-        log, ["tar", "cJf", str(archive), "-C", str(WORKSPACE_DIR), "."]
-    )
-    if returncode != 0:
-        raise Exception("Could not tar the results")
-
     # If there's one failure along the way, we want to return > 0
     # to trigger a red job in TC.
-    return len(failed_jobs) + runs_failed
+    return len(failed_downloads) + failed_runs
 
 
 def download_inputs(log, raw_jobs):
@@ -224,6 +307,7 @@ def download_inputs(log, raw_jobs):
         job_dir.mkdir(parents=True, exist_ok=True)
         pending_jobs.append(
             Job(
+                job["test_name"],
                 job_dir,
                 job_dir / "browsertime.json",
                 job["json_location"],
@@ -315,6 +399,11 @@ def download_or_copy(url_or_location, path):
     if os.path.exists(url_or_location):
         shutil.copyfile(url_or_location, str(path))
         return
+    elif not url_or_location.startswith("http"):
+        raise IOError(
+            "%s does not seem to be an URL or an existing file" % url_or_location
+        )
+
     download(url_or_location, path)
 
 
