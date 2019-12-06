@@ -102,7 +102,8 @@ struct GamepadRemappingData {
 };
 
 already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
-                                                     const uint16_t aProductId);
+                                                     const uint16_t aProductId,
+                                                     bool& aUsingDefault);
 
 }  // namespace dom
 }  // namespace mozilla

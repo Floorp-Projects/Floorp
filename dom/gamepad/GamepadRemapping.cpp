@@ -1548,8 +1548,9 @@ class OUYARemapper final : public GamepadRemapper {
   }
 };
 
-already_AddRefed<GamepadRemapper> GetGamepadRemapper(
-    const uint16_t aVendorId, const uint16_t aProductId) {
+already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
+                                                     const uint16_t aProductId,
+                                                     bool& aUsingDefault) {
   const std::vector<GamepadRemappingData> remappingRules = {
       {GamepadId::kAsusTekProduct4500, new ADT1Remapper()},
       {GamepadId::kDragonRiseProduct0011, new TwoAxesEightKeysRemapper()},
@@ -1580,11 +1581,13 @@ already_AddRefed<GamepadRemapper> GetGamepadRemapper(
 
   for (uint32_t i = 0; i < remappingRules.size(); ++i) {
     if (id == remappingRules[i].id) {
+      aUsingDefault = false;
       return do_AddRef(remappingRules[i].remapping.get());
     }
   }
 
   static RefPtr<GamepadRemapper> defaultRemapper = new DefaultRemapper();
+  aUsingDefault = true;
   return do_AddRef(defaultRemapper.get());
 }
 
