@@ -442,18 +442,16 @@ bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
   RootedObject callee(cx);
   if (frame->isOnStack()) {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-    if (!referent.isFunctionFrame()) {
-      result.set(nullptr);
-      return true;
+    if (referent.isFunctionFrame()) {
+      callee = referent.callee();
     }
-    callee = referent.callee();
   } else {
     MOZ_ASSERT(frame->hasGenerator());
 
     callee = &frame->generatorInfo()->unwrappedGenerator().callee();
   }
 
-  return frame->owner()->wrapDebuggeeObject(cx, callee, result);
+  return frame->owner()->wrapNullableDebuggeeObject(cx, callee, result);
 }
 
 /* static */
@@ -630,12 +628,7 @@ bool DebuggerFrame::getAsyncPromise(JSContext* cx, HandleDebuggerFrame frame,
     MOZ_CRASH("Unknown async generator type");
   }
 
-  if (!resultObject) {
-    result.set(nullptr);
-    return true;
-  }
-
-  return frame->owner()->wrapDebuggeeObject(cx, resultObject, result);
+  return frame->owner()->wrapNullableDebuggeeObject(cx, resultObject, result);
 }
 
 /* static */

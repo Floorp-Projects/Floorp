@@ -1070,6 +1070,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   MOZ_MUST_USE bool wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
   MOZ_MUST_USE bool wrapDebuggeeObject(JSContext* cx, HandleObject obj,
                                        MutableHandleDebuggerObject result);
+  MOZ_MUST_USE bool wrapNullableDebuggeeObject(
+      JSContext* cx, HandleObject obj, MutableHandleDebuggerObject result);
 
   /*
    * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
