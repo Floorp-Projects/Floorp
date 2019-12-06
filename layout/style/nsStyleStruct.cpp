@@ -2678,7 +2678,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverflowClipBoxInline(StyleOverflowClipBox::PaddingBox),
       mResize(StyleResize::None),
       mOrient(StyleOrient::Inline),
-      mIsolation(NS_STYLE_ISOLATION_AUTO),
+      mIsolation(StyleIsolation::Auto),
       mTopLayer(StyleTopLayer::None),
       mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),

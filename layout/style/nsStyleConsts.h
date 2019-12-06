@@ -579,9 +579,10 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_POINTER_EVENTS_ALL 8
 #define NS_STYLE_POINTER_EVENTS_AUTO 9
 
-// See nsStyleDisplay
-#define NS_STYLE_ISOLATION_AUTO 0
-#define NS_STYLE_ISOLATION_ISOLATE 1
+enum class StyleIsolation : uint8_t {
+  Auto,
+  Isolate,
+};
 
 // See nsStylePosition.mObjectFit
 enum class StyleObjectFit : uint8_t {
