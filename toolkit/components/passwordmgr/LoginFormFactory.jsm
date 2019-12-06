@@ -105,6 +105,11 @@ this.LoginFormFactory = {
 
     if (aField.form) {
       return this.createFromForm(aField.form);
+    } else if (aField.hasAttribute("form")) {
+      log.debug(
+        "createFromField: field has form attribute but no form: ",
+        aField.getAttribute("form")
+      );
     }
 
     let formLike = FormLikeFactory.createFromField(aField);

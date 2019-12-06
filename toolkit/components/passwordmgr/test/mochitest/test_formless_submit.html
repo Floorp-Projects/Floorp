@@ -51,6 +51,7 @@ const TESTCASES = [
       "[type=password]": "pass1",
     },
     inputIndexForFormLike: 0,
+    expectedFormsCount: 1,
 
     // Expected outputs similar to PasswordManager:onFormSubmit
     origin: DEFAULT_ORIGIN,
@@ -67,6 +68,7 @@ const TESTCASES = [
       "[type=password]": "pass1",
     },
     inputIndexForFormLike: 0,
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -81,6 +83,7 @@ const TESTCASES = [
       "[type=password]": "pass1",
     },
     inputIndexForFormLike: 1,
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -97,6 +100,7 @@ const TESTCASES = [
       "#p2": "pass2",
     },
     inputIndexForFormLike: 2,
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -115,6 +119,7 @@ const TESTCASES = [
       "#p3": "pass2",
     },
     inputIndexForFormLike: 3,
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -137,6 +142,7 @@ const TESTCASES = [
       "#p3": "pass2",
     },
     inputIndexForFormLike: 2,
+    expectedFormsCount: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
@@ -156,6 +162,7 @@ const TESTCASES = [
       "[name='recipepword']": "pass2",
     },
     inputIndexForFormLike: 2,
+    expectedFormsCount: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "username from recipe",
@@ -171,10 +178,10 @@ async function testFormlessSubmit(tc) {
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
   info("Starting testcase: " + JSON.stringify(tc));
 
-  let formProcessed = promiseFormsProcessed();
+  let formsProcessed = promiseFormsProcessed(tc.expectedFormsCount);
   // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = tc.document;
-  await formProcessed;
+  await formsProcessed;
   // We eliminate no user input as a reason for not capturing by modifying the value
   setUserInputValues(frameDoc.documentElement, tc.selectorValues);
 
