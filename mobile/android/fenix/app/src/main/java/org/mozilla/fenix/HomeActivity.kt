@@ -52,6 +52,7 @@ import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
+import org.mozilla.fenix.perf.HotStartPerformanceMonitor
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.AboutFragmentDirections
 import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
@@ -68,6 +69,8 @@ open class HomeActivity : AppCompatActivity() {
     lateinit var browsingModeManager: BrowsingModeManager
 
     private var sessionObserver: SessionManager.Observer? = null
+
+    private val hotStartMonitor = HotStartPerformanceMonitor()
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
@@ -123,6 +126,16 @@ open class HomeActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    final override fun onRestart() {
+        hotStartMonitor.onRestartFirstMethodCall()
+        super.onRestart()
+    }
+
+    final override fun onPostResume() {
+        super.onPostResume()
+        hotStartMonitor.onPostResumeFinalMethodCall()
     }
 
     private fun unsetOpenLinksInAPrivateTabIfNecessary() {
