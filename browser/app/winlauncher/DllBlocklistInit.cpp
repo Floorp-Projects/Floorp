@@ -17,25 +17,16 @@
 #include "DllBlocklistInit.h"
 #include "freestanding/DllBlocklist.h"
 
+extern uint32_t gBlocklistInitFlags;
+
 #if defined(_MSC_VER)
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #endif
 
 namespace mozilla {
 
-#if defined(MOZ_ASAN)
-
-// This DLL blocking code is incompatible with ASAN because
-// it is able to execute before ASAN itself has even initialized.
-LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
-  return mozilla::Ok();
-}
-
-#else
-
-LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
+LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
+                                             HANDLE aChildProcess) {
   CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
 
@@ -110,13 +101,6 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
 
   // Tell the mozglue blocklist that we have bootstrapped
   uint32_t newFlags = eDllBlocklistInitFlagWasBootstrapped;
-
-  if (gBlocklistInitFlags & eDllBlocklistInitFlagWasBootstrapped) {
-    // If we ourselves were bootstrapped, then we are starting a child process
-    // and need to set the appropriate flag.
-    newFlags |= eDllBlocklistInitFlagIsChildProcess;
-  }
-
   ok = !!::WriteProcessMemory(aChildProcess, &gBlocklistInitFlags, &newFlags,
                               sizeof(newFlags), &bytesWritten);
   if (!ok || bytesWritten != sizeof(newFlags)) {
@@ -125,7 +109,5 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
 
   return Ok();
 }
-
-#endif  // defined(MOZ_ASAN)
 
 }  // namespace mozilla

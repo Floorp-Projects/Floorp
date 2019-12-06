@@ -9,7 +9,6 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/Types.h"
-#include "mozilla/WindowsDllBlocklist.h"
 
 #include "DllBlocklist.h"
 #include "LoaderPrivateAPI.h"
@@ -181,8 +180,9 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
     }
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
-      !(gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
+  // We're not bootstrapping child processes at this time, so this case is
+  // always true.
+  if (aInfo->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) {
     return BlockAction::Allow;
   }
 

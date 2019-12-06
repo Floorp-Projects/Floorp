@@ -17,7 +17,6 @@
 #include "mozilla/WinDllServices.h"
 #include "ModuleEvaluator.h"
 #include "nsCOMPtr.h"
-#include "nsDebug.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
@@ -74,39 +73,23 @@ static Maybe<double> QPCLoadDurationToMilliseconds(
 
 namespace mozilla {
 
-ModuleRecord::ModuleRecord() : mTrustFlags(ModuleTrustFlags::None) {}
-
-ModuleRecord::ModuleRecord(const nsAString& aResolvedNtPath)
-    : mResolvedNtName(aResolvedNtPath), mTrustFlags(ModuleTrustFlags::None) {
-  if (aResolvedNtPath.IsEmpty()) {
-    return;
-  }
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  nsAutoString resolvedDosPath;
-  if (!NtPathToDosPath(aResolvedNtPath, resolvedDosPath)) {
-#if defined(DEBUG)
-    nsAutoCString msg;
-    msg.AppendLiteral("NtPathToDosPath failed for path \"");
-    msg.Append(NS_ConvertUTF16toUTF8(aResolvedNtPath));
-    msg.AppendLiteral("\"");
-    NS_WARNING(msg.get());
-#endif  // defined(DEBUG)
+ModuleRecord::ModuleRecord(const nsAString& aResolvedPath)
+    : mTrustFlags(ModuleTrustFlags::None) {
+  if (aResolvedPath.IsEmpty()) {
     return;
   }
 
   nsresult rv =
-      NS_NewLocalFile(resolvedDosPath, false, getter_AddRefs(mResolvedDosName));
-  if (NS_FAILED(rv) || !mResolvedDosName) {
+      NS_NewLocalFile(aResolvedPath, false, getter_AddRefs(mResolvedDllName));
+  if (NS_FAILED(rv) || !mResolvedDllName) {
     return;
   }
 
-  GetVersionAndVendorInfo(resolvedDosPath);
+  GetVersionAndVendorInfo(aResolvedPath);
 
   // Now sanitize the resolved DLL name. If we cannot sanitize this then this
   // record must not be considered valid.
-  nsAutoString strSanitizedPath(resolvedDosPath);
+  nsAutoString strSanitizedPath(aResolvedPath);
   if (!widget::WinUtils::PreparePathForTelemetry(strSanitizedPath)) {
     return;
   }
@@ -143,12 +126,12 @@ void ModuleRecord::GetVersionAndVendorInfo(const nsAString& aPath) {
 }
 
 bool ModuleRecord::IsXUL() const {
-  if (!mResolvedDosName) {
+  if (!mResolvedDllName) {
     return false;
   }
 
   nsAutoString leafName;
-  nsresult rv = mResolvedDosName->GetLeafName(leafName);
+  nsresult rv = mResolvedDllName->GetLeafName(leafName);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -161,7 +144,7 @@ int32_t ModuleRecord::GetScoreThreshold() const {
   // Check whether we are running as an xpcshell test.
   if (MOZ_UNLIKELY(mozilla::EnvHasValue("XPCSHELL_TEST_PROFILE_DIR"))) {
     nsAutoString dllLeaf;
-    if (NS_SUCCEEDED(mResolvedDosName->GetLeafName(dllLeaf))) {
+    if (NS_SUCCEEDED(mResolvedDllName->GetLeafName(dllLeaf))) {
       // During xpcshell tests, this DLL is hard-coded to pass through all
       // criteria checks and still result in "untrusted" status, so it shows up
       // in the untrusted modules ping for the test to examine.
@@ -196,9 +179,6 @@ bool ModuleRecord::IsTrusted() const {
                   50;
   return score >= GetScoreThreshold();
 }
-
-ProcessedModuleLoadEvent::ProcessedModuleLoadEvent()
-    : mProcessUptimeMS(0ULL), mThreadId(0UL), mBaseAddress(0U) {}
 
 ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
     glue::EnhancedModuleLoadInfo&& aModLoadInfo,
@@ -284,7 +264,7 @@ uint64_t ProcessedModuleLoadEvent::QPCTimeStampToProcessUptimeMilliseconds(
 }
 
 bool ProcessedModuleLoadEvent::IsXULLoad() const {
-  if (!mModule || !mLoadDurationMS) {
+  if (!mModule || !mLoadDurationMS || !IsTrusted()) {
     return false;
   }
 

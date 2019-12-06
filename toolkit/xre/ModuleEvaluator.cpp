@@ -91,8 +91,6 @@ bool ModuleEvaluator::ResolveKnownFolder(REFKNOWNFOLDERID aFolderId,
 
 ModuleEvaluator::ModuleEvaluator()
     : mKeyboardLayoutDlls(GetKeyboardLayoutDlls()) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
 #if defined(_M_IX86)
   // We want to resolve to SYSWOW64 when applicable
   REFKNOWNFOLDERID systemFolderId = FOLDERID_SystemX86;
@@ -157,8 +155,6 @@ ModuleEvaluator::operator bool() const {
 
 Maybe<ModuleTrustFlags> ModuleEvaluator::GetTrust(
     const ModuleRecord& aModuleRecord) const {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
   // We start by checking authenticode signatures, as the presence of any
   // signature will produce an immediate pass/fail.
   if (aModuleRecord.mVendorInfo.isSome() &&
@@ -179,11 +175,7 @@ Maybe<ModuleTrustFlags> ModuleEvaluator::GetTrust(
     }
   }
 
-  const nsCOMPtr<nsIFile>& dllFile = aModuleRecord.mResolvedDosName;
-  MOZ_ASSERT(!!dllFile);
-  if (!dllFile) {
-    return Nothing();
-  }
+  const nsCOMPtr<nsIFile>& dllFile = aModuleRecord.mResolvedDllName;
 
   nsAutoString dllLeafLower;
   if (NS_FAILED(dllFile->GetLeafName(dllLeafLower))) {

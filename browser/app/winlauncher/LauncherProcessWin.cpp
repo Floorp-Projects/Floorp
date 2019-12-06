@@ -43,12 +43,14 @@
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     HANDLE aChildMainThread, const bool aIsSafeMode) {
-  // The AArch64 build has not yet been tested with this.
-#if defined(_M_ARM64)
+  // The launcher process's DLL blocking code is incompatible with ASAN because
+  // it is able to execute before ASAN itself has even initialized.
+  // Also, the AArch64 build doesn't yet have a working interceptor.
+#if defined(MOZ_ASAN) || defined(_M_ARM64)
   return mozilla::Ok();
 #else
   return mozilla::InitializeDllBlocklistOOP(aFullImagePath, aChildProcess);
-#endif  // defined(_M_ARM64)
+#endif  // defined(MOZ_ASAN) || defined(_M_ARM64)
 }
 
 #if !defined( \
