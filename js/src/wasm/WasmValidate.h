@@ -87,9 +87,9 @@ struct CompilerEnvironment {
   // final value of gcTypes/refTypes.
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
-                      DebugEnabled debugEnabled, bool refTypesConfigured,
-                      bool gcTypesConfigured, bool hugeMemory,
-                      bool bigIntConfigured);
+                      DebugEnabled debugEnabled, bool multiValueConfigured,
+                      bool refTypesConfigured, bool gcTypesConfigured,
+                      bool hugeMemory, bool bigIntConfigured);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d, bool gcFeatureOptIn);
