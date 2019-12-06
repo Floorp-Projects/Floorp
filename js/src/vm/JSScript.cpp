@@ -4261,16 +4261,6 @@ void PrivateScriptData::trace(JSTracer* trc) {
   }
 }
 
-JSScript::JSScript(HandleObject functionOrGlobal, uint8_t* stubEntry,
-                   HandleScriptSourceObject sourceObject, uint32_t sourceStart,
-                   uint32_t sourceEnd, uint32_t toStringStart,
-                   uint32_t toStringEnd, uint32_t lineno, uint32_t column)
-    : js::BaseScript(stubEntry, functionOrGlobal, sourceObject, sourceStart,
-                     sourceEnd, toStringStart, toStringEnd) {
-  lineno_ = lineno;
-  column_ = column;
-}
-
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         HandleScriptSourceObject sourceObject,
@@ -4289,7 +4279,7 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
 #endif
 
   return new (script)
-      JSScript(functionOrGlobal, stubEntry, sourceObject, sourceStart,
+      JSScript(stubEntry, functionOrGlobal, sourceObject, sourceStart,
                sourceEnd, toStringStart, toStringEnd, lineno, column);
 }
 
@@ -5562,26 +5552,6 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
   return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
 
-LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
-                       ScriptSourceObject& sourceObject,
-                       PrivateScriptData* data, uint32_t immutableFlags,
-                       uint32_t sourceStart, uint32_t sourceEnd,
-                       uint32_t toStringStart, uint32_t toStringEnd,
-                       uint32_t lineno, uint32_t column)
-    : BaseScript(stubEntry, fun, &sourceObject, sourceStart, sourceEnd,
-                 toStringStart, toStringEnd),
-      script_(nullptr) {
-  lineno_ = lineno;
-  column_ = column;
-
-  immutableFlags_ = immutableFlags;
-
-  if (data) {
-    data_ = data;
-    AddCellMemory(this, data->allocationSize(), MemoryUse::ScriptPrivateData);
-  }
-}
-
 void LazyScript::initScript(JSScript* script) {
   MOZ_ASSERT(script);
   MOZ_ASSERT(!script_.unbarrieredGet());
@@ -5616,30 +5586,15 @@ void LazyScript::setEnclosingScope(Scope* enclosingScope) {
 LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
                                   HandleFunction fun,
                                   HandleScriptSourceObject sourceObject,
-                                  uint32_t immutableFlags, uint32_t sourceStart,
-                                  uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t toStringEnd, uint32_t lineno,
-                                  uint32_t column) {
+                                  uint32_t sourceStart, uint32_t sourceEnd,
+                                  uint32_t toStringStart, uint32_t toStringEnd,
+                                  uint32_t lineno, uint32_t column) {
   cx->check(fun);
 
-  MOZ_ASSERT(sourceObject);
-
-  // Allocate a PrivateScriptData if it will not be empty. Lazy class
-  // constructors also need PrivateScriptData for field lists.
-  Rooted<UniquePtr<PrivateScriptData>> data(cx);
-  if (ngcthings || fun->isClassConstructor()) {
-    data.reset(PrivateScriptData::new_(cx, ngcthings));
-    if (!data) {
-      return nullptr;
-    }
-  }
-
-  LazyScript* res = Allocate<LazyScript>(cx);
+  void* res = Allocate<LazyScript>(cx);
   if (!res) {
     return nullptr;
   }
-
-  cx->realm()->scheduleDelazificationForDebugger();
 
 #ifndef JS_CODEGEN_NONE
   uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
@@ -5647,9 +5602,27 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  return new (res) LazyScript(fun, stubEntry, *sourceObject, data.release(),
-                              immutableFlags, sourceStart, sourceEnd,
-                              toStringStart, toStringEnd, lineno, column);
+  LazyScript* lazy =
+      new (res) LazyScript(stubEntry, fun, sourceObject, sourceStart, sourceEnd,
+                           toStringStart, toStringEnd, lineno, column);
+  if (!lazy) {
+    return nullptr;
+  }
+
+  // Allocate a PrivateScriptData if it will not be empty. Lazy class
+  // constructors also need PrivateScriptData for field lists.
+  if (ngcthings || fun->isClassConstructor()) {
+    lazy->data_ = PrivateScriptData::new_(cx, ngcthings);
+    if (!lazy->data_) {
+      return nullptr;
+    }
+    AddCellMemory(lazy, lazy->data_->allocationSize(),
+                  MemoryUse::ScriptPrivateData);
+  }
+
+  cx->realm()->scheduleDelazificationForDebugger();
+
+  return lazy;
 }
 
 /* static */
@@ -5659,27 +5632,23 @@ LazyScript* LazyScript::Create(
     const frontend::FunctionBoxVector& innerFunctionBoxes, uint32_t sourceStart,
     uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
     uint32_t lineno, uint32_t column, frontend::ParseGoal parseGoal) {
-  uint32_t immutableFlags = 0;
-  if (parseGoal == frontend::ParseGoal::Module) {
-    immutableFlags |= uint32_t(ImmutableFlags::IsModule);
-  }
-  if (!innerFunctionBoxes.empty()) {
-    immutableFlags |= uint32_t(ImmutableFlags::HasInnerFunctions);
-  }
-
   uint32_t ngcthings =
       innerFunctionBoxes.length() + closedOverBindings.length();
 
-  LazyScript* res = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, immutableFlags, sourceStart, sourceEnd,
-      toStringStart, toStringEnd, lineno, column);
-  if (!res) {
+  LazyScript* lazy = LazyScript::CreateRaw(
+      cx, ngcthings, fun, sourceObject, sourceStart, sourceEnd, toStringStart,
+      toStringEnd, lineno, column);
+  if (!lazy) {
     return nullptr;
   }
 
+  lazy->setFlag(ImmutableFlags::IsModule,
+                (parseGoal == frontend::ParseGoal::Module));
+  lazy->setFlag(ImmutableFlags::HasInnerFunctions, !innerFunctionBoxes.empty());
+
   // Fill in gcthing data with inner functions followed by binding data.
   mozilla::Span<JS::GCCellPtr> gcThings =
-      res->data_ ? res->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
+      lazy->data_ ? lazy->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   auto iter = gcThings.begin();
 
   for (const frontend::FunctionBox* funbox : innerFunctionBoxes) {
@@ -5687,7 +5656,7 @@ LazyScript* LazyScript::Create(
     *iter++ = JS::GCCellPtr(fun);
 
     MOZ_ASSERT(fun->isInterpretedLazy());
-    fun->setEnclosingLazyScript(res);
+    fun->setEnclosingLazyScript(lazy);
   }
 
   for (JSAtom* binding : closedOverBindings) {
@@ -5700,7 +5669,7 @@ LazyScript* LazyScript::Create(
 
   MOZ_ASSERT(iter == gcThings.end());
 
-  return res;
+  return lazy;
 }
 
 /* static */
@@ -5710,29 +5679,31 @@ LazyScript* LazyScript::CreateForXDR(
     uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
     uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
     uint32_t column) {
-  LazyScript* res = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, immutableFlags, sourceStart, sourceEnd,
-      toStringStart, toStringEnd, lineno, column);
-  if (!res) {
+  LazyScript* lazy = LazyScript::CreateRaw(
+      cx, ngcthings, fun, sourceObject, sourceStart, sourceEnd, toStringStart,
+      toStringEnd, lineno, column);
+  if (!lazy) {
     return nullptr;
   }
+
+  lazy->immutableFlags_ = immutableFlags;
 
   // Set the enclosing scope of the lazy function. This value should only be
   // set if we have a non-lazy enclosing script at this point.
   // LazyScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
   // scope being non-null if we have ever been nested inside non-lazy
   // function.
-  MOZ_ASSERT(!res->hasEnclosingScope());
+  MOZ_ASSERT(!lazy->hasEnclosingScope());
   if (enclosingScope) {
-    res->setEnclosingScope(enclosingScope);
+    lazy->setEnclosingScope(enclosingScope);
   }
 
-  MOZ_ASSERT(!res->hasScript());
+  MOZ_ASSERT(!lazy->hasScript());
   if (script) {
-    res->initScript(script);
+    lazy->initScript(script);
   }
 
-  return res;
+  return lazy;
 }
 
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
