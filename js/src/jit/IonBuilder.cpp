@@ -1620,6 +1620,9 @@ class MOZ_RAII PoppedValueUseChecker {
 
         default:
           MOZ_ASSERT(popped_[i]->isImplicitlyUsed() ||
+                     // First value popped by JSOP_ENDITER is not used at all,
+                     // it's similar to JSOP_POP above.
+                     (op == JSOP_ENDITER && i == 0) ||
                      // MNewDerivedTypedObject instances are
                      // often dead unless they escape from the
                      // fn. See IonBuilder::loadTypedObjectData()
@@ -13182,9 +13185,10 @@ AbortReasonOr<Ok> IonBuilder::jsop_isnoiter() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_iterend() {
+  current->pop();  // Iterator value is not used.
   MDefinition* iter = current->pop();
-  MInstruction* ins = MIteratorEnd::New(alloc(), iter);
 
+  MInstruction* ins = MIteratorEnd::New(alloc(), iter);
   current->add(ins);
 
   return resumeAfter(ins);
