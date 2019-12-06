@@ -10,7 +10,6 @@
 #include "AppWindow.h"
 
 // Helper Classes
-#include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
 
 // Interfaces needed to be included
@@ -20,7 +19,6 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
-#include "nsIWindowMediator.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIPrincipal.h"
 #include "nsIURIFixup.h"

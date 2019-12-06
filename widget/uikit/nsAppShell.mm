@@ -10,17 +10,13 @@
 
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
-#include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
-#include "nsIWindowMediator.h"
 #include "nsMemoryPressure.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIWebBrowserChrome.h"
 
 nsAppShell* nsAppShell::gAppShell = NULL;
 UIWindow* nsAppShell::gWindow = nil;

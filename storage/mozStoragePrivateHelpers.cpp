@@ -19,9 +19,7 @@
 
 #include "Variant.h"
 #include "mozStoragePrivateHelpers.h"
-#include "mozIStorageStatement.h"
 #include "mozIStorageCompletionCallback.h"
-#include "mozIStorageBindingParams.h"
 
 #include "mozilla/Logging.h"
 extern mozilla::LazyLogModule gStorageLog;

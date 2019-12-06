@@ -9,7 +9,6 @@
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserver.h"
-#include "nsIAsyncShutdown.h"
 #include "mozilla/storage.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/Attributes.h"
@@ -39,6 +38,8 @@
 // calling `observe` directly on the database. Used for testing only.
 #define TOPIC_SIMULATE_PLACES_SHUTDOWN "test-simulate-places-shutdown"
 
+class mozIStorageService;
+class nsIAsyncShutdownClient;
 class nsIRunnable;
 
 namespace mozilla {

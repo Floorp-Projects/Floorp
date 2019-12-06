@@ -8,7 +8,6 @@
 
 #include "nsdefs.h"
 
-#include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include <windows.h>
 

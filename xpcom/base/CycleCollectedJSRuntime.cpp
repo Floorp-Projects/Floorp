@@ -96,7 +96,6 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
-#include "nsIException.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"

@@ -15,7 +15,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
-#include "nsIFile.h"
 #include "prinrval.h"
 #include "nsThreadUtils.h"
 #include "mozilla/UniquePtr.h"

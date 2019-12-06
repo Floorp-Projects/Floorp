@@ -12,7 +12,6 @@
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsIPrintingPromptService.h"
 #include "nsIPrintSession.h"
 #include "nsPIDOMWindow.h"

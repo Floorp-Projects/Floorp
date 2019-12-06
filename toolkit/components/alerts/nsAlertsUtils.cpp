@@ -6,7 +6,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsIStringBundle.h"
 #include "nsIURI.h"
 #include "nsString.h"
 

@@ -11,7 +11,6 @@
 #include "nsIPageThumbsStorageService.h"
 #include "PageThumbsProtocol.h"
 #include "nsIURI.h"
-#include "nsIFileURL.h"
 #include "nsIFile.h"
 #include "nsIChannel.h"
 #include "nsComponentManagerUtils.h"

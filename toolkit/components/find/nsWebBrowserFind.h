@@ -12,8 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsIWeakReferenceUtils.h"
 
-#include "nsIFind.h"
-
 #include "nsString.h"
 
 class nsIDOMWindow;

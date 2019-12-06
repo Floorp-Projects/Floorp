@@ -10,8 +10,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
-#include "nsIObserverService.h"
-#include "nsISupportsPrimitives.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"

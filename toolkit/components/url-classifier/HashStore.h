@@ -11,7 +11,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
-#include "nsIFileStreams.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"

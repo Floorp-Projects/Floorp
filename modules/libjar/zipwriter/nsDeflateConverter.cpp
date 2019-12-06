@@ -6,7 +6,6 @@
 #include "StreamFunctions.h"
 #include "nsDeflateConverter.h"
 #include "nsStringStream.h"
-#include "nsIInputStreamPump.h"
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h"
 #include "plstr.h"

@@ -5,12 +5,6 @@
 
 #include "Classifier.h"
 #include "LookupCacheV4.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIRandomGenerator.h"
-#include "nsIInputStream.h"
-#include "nsISeekableStream.h"
 #include "nsIFile.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"

@@ -5,7 +5,6 @@
 
 #include "nsArray.h"
 #include "nsArrayUtils.h"
-#include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
 #include "nsXPCOMCID.h"
 #include "secasn1.h"

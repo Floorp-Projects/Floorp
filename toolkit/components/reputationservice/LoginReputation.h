@@ -11,7 +11,6 @@
 #include "nsILoginReputation.h"
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
-#include "nsIURIClassifier.h"
 
 class LoginWhitelist;
 

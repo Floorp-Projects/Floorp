@@ -20,14 +20,12 @@
 #include "nsIPrintSettingsWin.h"
 
 #include "nsString.h"
-#include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
 
 #include "gfxWindowsSurface.h"
 
 #include "nsIFileStreams.h"
-#include "nsIWindowWatcher.h"
 #include "nsWindowsHelpers.h"
 
 #include "mozilla/gfx/Logging.h"

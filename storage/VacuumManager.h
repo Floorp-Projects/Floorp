@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "mozIStorageStatementCallback.h"
 #include "mozIStorageVacuumParticipant.h"
 #include "nsCategoryCache.h"
 #include "mozilla/Attributes.h"

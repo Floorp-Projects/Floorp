@@ -9,7 +9,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 
-#include "nsIServiceManager.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsISOCKSSocketInfo.h"

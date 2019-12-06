@@ -12,7 +12,6 @@
 #include "nsCacheRequest.h"
 #include "nsThreadUtils.h"
 #include "nsError.h"
-#include "nsICacheService.h"
 #include "nsCacheService.h"
 #include "nsCacheDevice.h"
 #include "nsHashKeys.h"

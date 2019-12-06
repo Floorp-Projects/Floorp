@@ -13,7 +13,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsIClientAuthDialogs.h"
 #include "nsIProxyInfo.h"
 #include "nsISSLSocketControl.h"
 #include "nsNSSCertificate.h"

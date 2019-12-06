@@ -6,6 +6,7 @@
 
 #include "imgINotificationObserver.h"
 #include "imgITools.h"
+#include "imgINotificationObserver.h"
 #include "gfxUtils.h"
 #include "AndroidGraphics.h"
 #include "JavaExceptions.h"

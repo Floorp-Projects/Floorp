@@ -11,7 +11,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
-#include "nsIHttpChannel.h"
 
 namespace mozilla {
 

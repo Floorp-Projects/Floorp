@@ -20,7 +20,6 @@
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
-#include "nsIThread.h"
 #include "nsString.h"
 
 namespace mozilla {

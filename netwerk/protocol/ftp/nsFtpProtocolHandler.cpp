@@ -10,9 +10,7 @@ using namespace mozilla::net;
 
 #include "nsFtpProtocolHandler.h"
 #include "nsFTPChannel.h"
-#include "nsIStandardURL.h"
 #include "mozilla/Logging.h"
-#include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserverService.h"
 #include "nsEscape.h"

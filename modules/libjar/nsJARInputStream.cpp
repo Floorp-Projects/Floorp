@@ -14,7 +14,6 @@
 #include "MmapFaultHandler.h"
 
 #include "nsEscape.h"
-#include "nsIFile.h"
 #include "nsDebug.h"
 #include <algorithm>
 #if defined(XP_WIN)

@@ -15,7 +15,6 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIMutableArray.h"
 
 using namespace mozilla;
 

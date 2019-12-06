@@ -9,7 +9,6 @@
 #include "nsAtom.h"
 #include "nsString.h"
 #include "UTFStrings.h"
-#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
 
 #include "gtest/gtest.h"

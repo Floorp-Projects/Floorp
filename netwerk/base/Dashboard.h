@@ -9,10 +9,6 @@
 #include "mozilla/net/DashboardTypes.h"
 #include "nsIDashboard.h"
 #include "nsIDashboardEventNotifier.h"
-#include "nsIDNSListener.h"
-#include "nsIServiceManager.h"
-#include "nsITimer.h"
-#include "nsITransport.h"
 
 class nsIDNSService;
 

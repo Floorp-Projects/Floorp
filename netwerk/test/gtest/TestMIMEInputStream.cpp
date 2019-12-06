@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
 #include "Helpers.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"

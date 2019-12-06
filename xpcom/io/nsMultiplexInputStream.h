@@ -12,8 +12,6 @@
 #ifndef _nsMultiplexInputStream_h_
 #define _nsMultiplexInputStream_h_
 
-#include "nsIMultiplexInputStream.h"
-
 #define NS_MULTIPLEXINPUTSTREAM_CONTRACTID \
   "@mozilla.org/io/multiplex-input-stream;1"
 #define NS_MULTIPLEXINPUTSTREAM_CID                  \

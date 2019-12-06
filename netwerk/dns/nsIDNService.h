@@ -8,7 +8,6 @@
 
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsWeakReference.h"
 

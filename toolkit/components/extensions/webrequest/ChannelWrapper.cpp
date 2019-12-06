@@ -31,7 +31,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
-#include "nsILoadGroup.h"
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsITraceableChannel.h"

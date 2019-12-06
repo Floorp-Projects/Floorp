@@ -7,14 +7,10 @@
 
 #include "nsDBusRemoteServer.h"
 
-#include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Base64.h"
-#include "nsIServiceManager.h"
 #include "nsIWidget.h"
-#include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 #include "nsPrintfCString.h"
 

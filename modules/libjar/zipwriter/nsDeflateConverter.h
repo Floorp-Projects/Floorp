@@ -8,7 +8,6 @@
 
 #include "nsIStreamConverter.h"
 #include "nsCOMPtr.h"
-#include "nsIPipe.h"
 #include "zlib.h"
 #include "mozilla/Attributes.h"
 

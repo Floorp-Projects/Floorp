@@ -7,10 +7,10 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsArray.h"
-#include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPrintSettings.h"
 #include "nsIAppWindow.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

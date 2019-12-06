@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VariableLengthPrefixSet.h"
+#include "nsIInputStream.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"

@@ -32,7 +32,6 @@ extern "C" {
 #include "nsBaseWidget.h"
 
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"

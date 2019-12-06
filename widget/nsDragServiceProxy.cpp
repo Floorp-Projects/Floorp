@@ -6,7 +6,6 @@
 
 #include "nsDragServiceProxy.h"
 #include "mozilla/dom/Document.h"
-#include "nsISupportsPrimitives.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/UniquePtr.h"

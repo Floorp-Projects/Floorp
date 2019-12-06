@@ -12,7 +12,6 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "nsHttpChannel.h"
 #include "nsIChannel.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
 #include "nsITraceableChannel.h"
 #include "nsProxyRelease.h"

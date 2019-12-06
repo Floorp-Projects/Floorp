@@ -10,7 +10,6 @@
 #include "nsWidgetsCID.h"
 #include "nsWindow.h"
 #include "nsSystemInfo.h"
-#include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIIOService.h"

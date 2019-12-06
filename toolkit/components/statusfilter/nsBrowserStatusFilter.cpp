@@ -5,9 +5,7 @@
 
 #include "nsBrowserStatusFilter.h"
 #include "mozilla/SystemGroup.h"
-#include "nsIChannel.h"
 #include "nsITimer.h"
-#include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 

@@ -83,7 +83,6 @@
 #include "nsIOutputStream.h"
 #include "nsIProcess.h"
 #include "nsIProperties.h"
-#include "nsIPropertyBag2.h"
 #include "nsIRunnable.h"
 #include "nsISeekableStream.h"
 #include "nsISerializable.h"

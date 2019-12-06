@@ -8,7 +8,6 @@
 #include "nsIClipboardOwner.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
 
 nsBaseClipboard::nsBaseClipboard()
     : mEmptyingForSetData(false), mIgnoreEmptyNotification(false) {}

@@ -8,7 +8,6 @@
 #define mozilla_net_DNSRequestParent_h
 
 #include "mozilla/net/PDNSRequestParent.h"
-#include "nsIDNSService.h"
 #include "nsIDNSListener.h"
 
 namespace mozilla {

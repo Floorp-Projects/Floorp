@@ -15,7 +15,6 @@
 
 #include "HeadlessSound.h"
 #include "nsIURL.h"
-#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"

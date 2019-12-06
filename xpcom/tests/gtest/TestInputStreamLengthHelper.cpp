@@ -3,8 +3,6 @@
 #include "mozilla/InputStreamLengthHelper.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
-#include "nsIRunnable.h"
-#include "nsIThreadManager.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"

@@ -10,7 +10,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
-#include "nsIPrincipal.h"
 #include "mozilla/LoadContextInfo.h"
 
 using namespace mozilla;

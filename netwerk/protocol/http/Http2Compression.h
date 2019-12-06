@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "nsDeque.h"
 #include "nsString.h"
-#include "nsIMemoryReporter.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {

@@ -54,7 +54,6 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
-#include "nsICategoryManager.h"
 #include "nsMultiplexInputStream.h"
 
 #include "nsAtomTable.h"

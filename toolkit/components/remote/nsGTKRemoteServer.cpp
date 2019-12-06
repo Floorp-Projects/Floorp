@@ -11,11 +11,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
-#include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 
 #include "nsCOMPtr.h"

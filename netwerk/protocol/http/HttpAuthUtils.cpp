@@ -4,7 +4,6 @@
 
 #include "mozilla/net/HttpAuthUtils.h"
 #include "mozilla/Tokenizer.h"
-#include "nsIPrefService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"

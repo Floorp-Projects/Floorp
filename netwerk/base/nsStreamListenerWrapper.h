@@ -7,7 +7,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
-#include "nsIRequestObserver.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/Attributes.h"
 

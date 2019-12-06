@@ -10,8 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsIFile.h"
-#include "nsIFileURL.h"
-#include "nsIURI.h"
 #include "private/pprio.h"
 
 namespace mozilla {

@@ -24,7 +24,6 @@
 #include "IOActivityMonitor.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
-#include "nsIPipe.h"
 #include "prerror.h"
 #include "nsThreadUtils.h"
 #include "nsIDNSRecord.h"

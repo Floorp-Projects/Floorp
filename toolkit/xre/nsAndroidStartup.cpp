@@ -14,7 +14,6 @@
 #include "mozilla/jni/Utils.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsIFile.h"
 #include "nsAppRunner.h"
 #include "APKOpen.h"
 #include "nsExceptionHandler.h"

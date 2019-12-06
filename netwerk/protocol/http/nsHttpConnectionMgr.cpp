@@ -21,7 +21,6 @@
 #include "nsNetUtil.h"
 #include "mozilla/net/DNS.h"
 #include "nsISocketTransport.h"
-#include "nsISSLSocketControl.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DashboardTypes.h"
@@ -34,7 +33,6 @@
 #include <algorithm>
 #include "mozilla/ChaosMode.h"
 #include "mozilla/Unused.h"
-#include "nsIURI.h"
 #include "nsIXPConnect.h"
 
 #include "mozilla/Move.h"

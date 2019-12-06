@@ -15,7 +15,6 @@
 #include "nsICacheListener.h"
 
 #include "prthread.h"
-#include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"

@@ -13,9 +13,6 @@
 #include "nsArrayUtils.h"
 #include "nsCookieService.h"
 #include "nsIChannel.h"
-#include "nsIEffectiveTLDService.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIPrivateBrowsingChannel.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 

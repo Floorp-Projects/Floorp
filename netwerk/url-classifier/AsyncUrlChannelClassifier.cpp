@@ -14,8 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsIURIClassifier.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"

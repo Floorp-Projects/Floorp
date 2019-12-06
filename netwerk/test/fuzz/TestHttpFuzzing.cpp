@@ -7,7 +7,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsILoadInfo.h"
-#include "nsIPrincipal.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIOService.h"
 #include "nsProtocolProxyService.h"

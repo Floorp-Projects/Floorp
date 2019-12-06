@@ -7,8 +7,6 @@
 #define _nsZipWriter_h_
 
 #include "nsIZipWriter.h"
-#include "nsIFileStreams.h"
-#include "nsIBufferedStreams.h"
 #include "nsIRequestObserver.h"
 #include "nsZipHeader.h"
 #include "nsCOMPtr.h"

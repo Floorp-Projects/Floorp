@@ -4,6 +4,7 @@
 
 #include "nsCommandLine.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsICategoryManager.h"
 #include "nsICommandLineHandler.h"
 #include "nsICommandLineValidator.h"

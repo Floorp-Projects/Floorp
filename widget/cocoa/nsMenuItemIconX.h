@@ -10,7 +10,6 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
-#include "nsIContentPolicy.h"
 #include "nsIconLoaderService.h"
 
 class nsIconLoaderService;

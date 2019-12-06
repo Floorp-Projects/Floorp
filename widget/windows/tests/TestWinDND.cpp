@@ -12,7 +12,6 @@
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIFileURL.h"
 #include "nsITransferable.h"
 #include "nsClipboard.h"
 #include "nsDataObjCollection.h"

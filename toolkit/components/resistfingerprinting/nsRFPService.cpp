@@ -29,11 +29,8 @@
 
 #include "nsICryptoHash.h"
 #include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIRandomGenerator.h"
 #include "nsIXULAppInfo.h"
-#include "nsIXULRuntime.h"
 #include "nsJSUtils.h"
 
 #include "prenv.h"

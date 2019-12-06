@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include "nspr.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "mozilla/Monitor.h"
 #include "gtest/gtest.h"

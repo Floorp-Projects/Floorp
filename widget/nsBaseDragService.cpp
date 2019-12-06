@@ -7,11 +7,9 @@
 #include "nsITransferable.h"
 
 #include "nsArrayUtils.h"
-#include "nsIServiceManager.h"
 #include "nsITransferable.h"
 #include "nsSize.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"

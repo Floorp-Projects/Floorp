@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsLocalFile.h"
-#include "nsIComponentManager.h"
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsSimpleEnumerator.h"

@@ -13,7 +13,6 @@
 #include "nsExceptionHandler.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
-#include "nsICrashReporter.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
 

@@ -15,6 +15,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsIURIClassifier.h"
 #include "nsIUrlClassifierFeature.h"
 
 using namespace mozilla;

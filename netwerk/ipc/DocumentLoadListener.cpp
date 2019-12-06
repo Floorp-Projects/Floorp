@@ -20,7 +20,6 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsHttpChannel.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsISecureBrowserUI.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSerializationHelper.h"

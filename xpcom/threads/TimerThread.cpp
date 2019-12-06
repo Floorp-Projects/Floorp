@@ -11,7 +11,6 @@
 #include "pratom.h"
 
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/ArenaAllocator.h"

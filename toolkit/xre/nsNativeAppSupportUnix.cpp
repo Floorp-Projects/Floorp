@@ -17,14 +17,8 @@
 
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsICommandLineRunner.h"
-#include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocShell.h"
-#include "nsIBaseWindow.h"
 #include "nsIWidget.h"
-#include "nsIWritablePropertyBag2.h"
-#include "nsIPrefService.h"
 #include "mozilla/Services.h"
 
 #include <stdlib.h>

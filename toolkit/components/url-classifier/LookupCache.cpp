@@ -5,6 +5,7 @@
 
 #include "LookupCache.h"
 #include "HashStore.h"
+#include "nsIFileStreams.h"
 #include "nsISeekableStream.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Telemetry.h"

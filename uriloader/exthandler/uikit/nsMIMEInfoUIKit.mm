@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMIMEInfoUIKit.h"
-#include "nsIFileURL.h"
 
 NS_IMETHODIMP
 nsMIMEInfoUIKit::LaunchWithFile(nsIFile* aFile) { return NS_ERROR_NOT_IMPLEMENTED; }

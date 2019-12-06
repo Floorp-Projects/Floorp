@@ -8,7 +8,6 @@
 #define mozilla_LoadInfo_h
 
 #include "nsIContentSecurityPolicy.h"
-#include "nsIContentPolicy.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr

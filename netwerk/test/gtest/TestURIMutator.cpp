@@ -2,7 +2,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsIURL.h"
-#include "nsIURIMutator.h"
 #include "nsThreadPool.h"
 #include "nsNetUtil.h"
 

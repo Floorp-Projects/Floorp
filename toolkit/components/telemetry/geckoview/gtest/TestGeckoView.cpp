@@ -9,7 +9,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
-#include "nsITelemetry.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"

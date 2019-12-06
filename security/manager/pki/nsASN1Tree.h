@@ -5,11 +5,9 @@
 #define _NSSASNTREE_H_
 
 #include "nscore.h"
-#include "nsIX509Cert.h"
 #include "nsIASN1Tree.h"
 #include "nsIASN1Object.h"
 #include "nsIASN1Sequence.h"
-#include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "nsCOMPtr.h"
 

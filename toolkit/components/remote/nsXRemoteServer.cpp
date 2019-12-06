@@ -8,18 +8,10 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsXRemoteServer.h"
-#include "nsIObserverService.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsICommandLineRunner.h"
 #include "nsICommandLine.h"
 
-#include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
-#include "nsIFile.h"
-#include "nsIServiceManager.h"
 #include "nsIWidget.h"
-#include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/X11Util.h"

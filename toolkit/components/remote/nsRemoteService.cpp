@@ -24,6 +24,7 @@
 #include "nsRemoteService.h"
 
 #include "nsAutoPtr.h"
+#include "nsIObserverService.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ModuleUtils.h"

@@ -21,8 +21,6 @@
 #include "nsIInputStream.h"
 
 #include "nsDirectoryServiceDefs.h"
-#include "nsIDirectoryService.h"
-#include "nsIFile.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 

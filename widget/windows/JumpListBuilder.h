@@ -15,7 +15,6 @@
 #undef LogSeverity  // SetupAPI.h #defines this as DWORD
 
 #include "nsString.h"
-#include "nsIMutableArray.h"
 
 #include "nsIJumpListBuilder.h"
 #include "nsIJumpListItem.h"

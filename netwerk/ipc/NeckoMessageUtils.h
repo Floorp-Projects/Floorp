@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "prio.h"
 #include "mozilla/net/DNS.h"
-#include "nsILoadInfo.h"
 
 namespace IPC {
 

@@ -18,7 +18,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsProxyRelease.h"
 
-#include "nsINativeOSFileInternals.h"
 #include "mozilla/dom/NativeOSFileInternalsBinding.h"
 
 #include "mozilla/Encoding.h"

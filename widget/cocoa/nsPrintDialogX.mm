@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsCRT.h"
