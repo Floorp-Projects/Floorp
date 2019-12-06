@@ -19,8 +19,9 @@ If you want to control the logging output completely, see the `custom_logger` ex
 
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 
-use env_logger::{Builder, Env};
+use env_logger::{Env, Builder};
 
 fn init_logger() {
     let env = Env::default()
@@ -29,7 +30,9 @@ fn init_logger() {
 
     let mut builder = Builder::from_env(env);
 
-    builder.format_level(false).format_timestamp_nanos();
+    builder
+        .default_format_level(false)
+        .default_format_timestamp_nanos(true);
 
     builder.init();
 }

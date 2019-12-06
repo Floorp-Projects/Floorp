@@ -16,11 +16,7 @@ use std::io::{self, Read};
 use std::sync::Arc;
 use std::thread;
 
-macro_rules! regex {
-    ($re:expr) => {
-        ::regex::Regex::new($re).unwrap()
-    };
-}
+macro_rules! regex { ($re:expr) => { ::regex::Regex::new($re).unwrap() } }
 
 fn main() {
     let mut seq = String::with_capacity(50 * (1 << 20));

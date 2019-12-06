@@ -1,3 +1,11 @@
+// Copyright 2017 Serde Developers
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 use std::borrow::Cow;
 use std::fmt;
 use std::slice;
@@ -15,10 +23,11 @@ use map::Map;
 use number::Number;
 use value::Value;
 
+#[cfg(feature = "arbitrary_precision")]
 use serde::de;
 
 #[cfg(feature = "arbitrary_precision")]
-use number::NumberFromString;
+use number::{NumberFromString, SERDE_STRUCT_FIELD_NAME};
 
 impl<'de> Deserialize<'de> for Value {
     #[inline]
@@ -100,33 +109,44 @@ impl<'de> Deserialize<'de> for Value {
                 Ok(Value::Array(vec))
             }
 
+            #[cfg(not(feature = "arbitrary_precision"))]
             fn visit_map<V>(self, mut visitor: V) -> Result<Value, V::Error>
             where
                 V: MapAccess<'de>,
             {
-                match visitor.next_key_seed(KeyClassifier)? {
-                    #[cfg(feature = "arbitrary_precision")]
-                    Some(KeyClass::Number) => {
-                        let number: NumberFromString = visitor.next_value()?;
-                        Ok(Value::Number(number.value))
-                    }
-                    #[cfg(feature = "raw_value")]
-                    Some(KeyClass::RawValue) => {
-                        let value = visitor.next_value_seed(::raw::BoxedFromString)?;
-                        ::from_str(value.get()).map_err(de::Error::custom)
-                    }
-                    Some(KeyClass::Map(first_key)) => {
-                        let mut values = Map::new();
+                let mut values = Map::new();
 
-                        values.insert(first_key, try!(visitor.next_value()));
-                        while let Some((key, value)) = try!(visitor.next_entry()) {
-                            values.insert(key, value);
-                        }
-
-                        Ok(Value::Object(values))
-                    }
-                    None => Ok(Value::Object(Map::new())),
+                while let Some((key, value)) = try!(visitor.next_entry()) {
+                    values.insert(key, value);
                 }
+
+                Ok(Value::Object(values))
+            }
+
+            #[cfg(feature = "arbitrary_precision")]
+            fn visit_map<V>(self, mut visitor: V) -> Result<Value, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut key = String::new();
+                let number = visitor.next_key_seed(NumberOrObject { key: &mut key })?;
+                match number {
+                    Some(true) => {
+                        let number: NumberFromString = visitor.next_value()?;
+                        return Ok(Value::Number(number.value));
+                    }
+                    None => return Ok(Value::Object(Map::new())),
+                    Some(false) => {}
+                }
+
+                let mut values = Map::new();
+
+                values.insert(key, try!(visitor.next_value()));
+                while let Some((key, value)) = try!(visitor.next_entry()) {
+                    values.insert(key, value);
+                }
+
+                Ok(Value::Object(values))
             }
         }
 
@@ -297,22 +317,12 @@ impl<'de> serde::Deserializer<'de> for Value {
     #[inline]
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        #[cfg(feature = "raw_value")]
-        {
-            if name == ::raw::TOKEN {
-                return visitor.visit_map(::raw::OwnedRawDeserializer {
-                    raw_value: Some(self.to_string()),
-                });
-            }
-        }
-
-        let _ = name;
         visitor.visit_newtype_struct(self)
     }
 
@@ -476,14 +486,6 @@ impl<'de> EnumAccess<'de> for EnumDeserializer {
         let variant = self.variant.into_deserializer();
         let visitor = VariantDeserializer { value: self.value };
         seed.deserialize(variant).map(|v| (v, visitor))
-    }
-}
-
-impl<'de> IntoDeserializer<'de, Error> for Value {
-    type Deserializer = Self;
-
-    fn into_deserializer(self) -> Self::Deserializer {
-        self
     }
 }
 
@@ -844,22 +846,12 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     #[inline]
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        #[cfg(feature = "raw_value")]
-        {
-            if name == ::raw::TOKEN {
-                return visitor.visit_map(::raw::OwnedRawDeserializer {
-                    raw_value: Some(self.to_string()),
-                });
-            }
-        }
-
-        let _ = name;
         visitor.visit_newtype_struct(self)
     }
 
@@ -1253,7 +1245,7 @@ impl<'de> serde::Deserializer<'de> for MapKeyDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        BorrowedCowStrDeserializer::new(self.key).deserialize_any(visitor)
+        self.key.into_deserializer().deserialize_any(visitor)
     }
 
     deserialize_integer_key!(deserialize_i8 => visit_i8);
@@ -1311,57 +1303,52 @@ impl<'de> serde::Deserializer<'de> for MapKeyDeserializer<'de> {
     }
 }
 
-struct KeyClassifier;
-
-enum KeyClass {
-    Map(String),
-    #[cfg(feature = "arbitrary_precision")]
-    Number,
-    #[cfg(feature = "raw_value")]
-    RawValue,
+#[cfg(feature = "arbitrary_precision")]
+struct NumberOrObject<'a> {
+    key: &'a mut String,
 }
 
-impl<'de> DeserializeSeed<'de> for KeyClassifier {
-    type Value = KeyClass;
+#[cfg(feature = "arbitrary_precision")]
+impl<'a, 'de> DeserializeSeed<'de> for NumberOrObject<'a> {
+    type Value = bool;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        deserializer.deserialize_str(self)
+        deserializer.deserialize_any(self)
     }
 }
 
-impl<'de> Visitor<'de> for KeyClassifier {
-    type Value = KeyClass;
+#[cfg(feature = "arbitrary_precision")]
+impl<'a, 'de> Visitor<'de> for NumberOrObject<'a> {
+    type Value = bool;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a string key")
     }
 
-    fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+    fn visit_str<E>(self, s: &str) -> Result<bool, E>
     where
         E: de::Error,
     {
-        match s {
-            #[cfg(feature = "arbitrary_precision")]
-            ::number::TOKEN => Ok(KeyClass::Number),
-            #[cfg(feature = "raw_value")]
-            ::raw::TOKEN => Ok(KeyClass::RawValue),
-            _ => Ok(KeyClass::Map(s.to_owned())),
+        if s == SERDE_STRUCT_FIELD_NAME {
+            Ok(true)
+        } else {
+            self.key.push_str(s);
+            Ok(false)
         }
     }
 
-    fn visit_string<E>(self, s: String) -> Result<Self::Value, E>
+    fn visit_string<E>(self, s: String) -> Result<bool, E>
     where
         E: de::Error,
     {
-        match s.as_str() {
-            #[cfg(feature = "arbitrary_precision")]
-            ::number::TOKEN => Ok(KeyClass::Number),
-            #[cfg(feature = "raw_value")]
-            ::raw::TOKEN => Ok(KeyClass::RawValue),
-            _ => Ok(KeyClass::Map(s)),
+        if s == SERDE_STRUCT_FIELD_NAME {
+            Ok(true)
+        } else {
+            *self.key = s;
+            Ok(false)
         }
     }
 }
@@ -1385,104 +1372,5 @@ impl Value {
             Value::Array(_) => Unexpected::Seq,
             Value::Object(_) => Unexpected::Map,
         }
-    }
-}
-
-struct BorrowedCowStrDeserializer<'de> {
-    value: Cow<'de, str>,
-}
-
-impl<'de> BorrowedCowStrDeserializer<'de> {
-    fn new(value: Cow<'de, str>) -> Self {
-        BorrowedCowStrDeserializer { value: value }
-    }
-}
-
-impl<'de> de::Deserializer<'de> for BorrowedCowStrDeserializer<'de> {
-    type Error = Error;
-
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        match self.value {
-            Cow::Borrowed(string) => visitor.visit_borrowed_str(string),
-            Cow::Owned(string) => visitor.visit_string(string),
-        }
-    }
-
-    fn deserialize_enum<V>(
-        self,
-        _name: &str,
-        _variants: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        visitor.visit_enum(self)
-    }
-
-    forward_to_deserialize_any! {
-        bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
-        bytes byte_buf option unit unit_struct newtype_struct seq tuple
-        tuple_struct map struct identifier ignored_any
-    }
-}
-
-impl<'de> de::EnumAccess<'de> for BorrowedCowStrDeserializer<'de> {
-    type Error = Error;
-    type Variant = UnitOnly;
-
-    fn variant_seed<T>(self, seed: T) -> Result<(T::Value, Self::Variant), Self::Error>
-    where
-        T: de::DeserializeSeed<'de>,
-    {
-        let value = seed.deserialize(self)?;
-        Ok((value, UnitOnly))
-    }
-}
-
-struct UnitOnly;
-
-impl<'de> de::VariantAccess<'de> for UnitOnly {
-    type Error = Error;
-
-    fn unit_variant(self) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    fn newtype_variant_seed<T>(self, _seed: T) -> Result<T::Value, Self::Error>
-    where
-        T: de::DeserializeSeed<'de>,
-    {
-        Err(de::Error::invalid_type(
-            Unexpected::UnitVariant,
-            &"newtype variant",
-        ))
-    }
-
-    fn tuple_variant<V>(self, _len: usize, _visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        Err(de::Error::invalid_type(
-            Unexpected::UnitVariant,
-            &"tuple variant",
-        ))
-    }
-
-    fn struct_variant<V>(
-        self,
-        _fields: &'static [&'static str],
-        _visitor: V,
-    ) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        Err(de::Error::invalid_type(
-            Unexpected::UnitVariant,
-            &"struct variant",
-        ))
     }
 }

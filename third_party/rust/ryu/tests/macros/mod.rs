@@ -1,8 +1,12 @@
 macro_rules! check {
-    ($f:tt) => {
-        assert_eq!(pretty($f), stringify!($f));
+    ($ryu:tt, $pretty:tt) => {
+        assert_eq!($ryu, $pretty);
+        assert_eq!(print($ryu), stringify!($ryu));
+        assert_eq!(pretty($pretty), stringify!($pretty));
     };
-    (-$f:tt) => {
-        assert_eq!(pretty(-$f), concat!("-", stringify!($f)));
+    (-$ryu:tt, -$pretty:tt) => {
+        assert_eq!(-$ryu, -$pretty);
+        assert_eq!(print(-$ryu), concat!("-", stringify!($ryu)));
+        assert_eq!(pretty(-$pretty), concat!("-", stringify!($pretty)));
     };
 }

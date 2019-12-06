@@ -17,37 +17,38 @@ $ export MY_LOG_STYLE=never
 If you want to control the logging output completely, see the `custom_logger` example.
 */
 
-#[cfg(all(feature = "termcolor", feature = "humantime"))]
-fn main() {
-    use env_logger::{fmt, Builder, Env};
-    use std::io::Write;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
-    fn init_logger() {
-        let env = Env::default()
-            .filter("MY_LOG_LEVEL")
-            .write_style("MY_LOG_STYLE");
+use std::io::Write;
 
-        Builder::from_env(env)
-            .format(|buf, record| {
-                let mut style = buf.style();
-                style.set_bg(fmt::Color::Yellow).set_bold(true);
+use env_logger::{Env, Builder, fmt};
 
-                let timestamp = buf.timestamp();
+fn init_logger() {
+    let env = Env::default()
+        .filter("MY_LOG_LEVEL")
+        .write_style("MY_LOG_STYLE");
 
-                writeln!(
-                    buf,
-                    "My formatted log ({}): {}",
-                    timestamp,
-                    style.value(record.args())
-                )
-            })
-            .init();
-    }
+    let mut builder = Builder::from_env(env);
 
-    init_logger();
+    // Use a different format for writing log records
+    // The colors are only available when the `termcolor` dependency is (which it is by default)
+    #[cfg(feature = "termcolor")]
+    builder.format(|buf, record| {
+        let mut style = buf.style();
+        style.set_bg(fmt::Color::Yellow).set_bold(true);
 
-    log::info!("a log from `MyLogger`");
+        let timestamp = buf.timestamp();
+
+        writeln!(buf, "My formatted log ({}): {}", timestamp, style.value(record.args()))
+    });
+
+    builder.init();
 }
 
-#[cfg(not(all(feature = "termcolor", feature = "humantime")))]
-fn main() {}
+fn main() {
+    init_logger();
+
+    info!("a log from `MyLogger`");
+}
