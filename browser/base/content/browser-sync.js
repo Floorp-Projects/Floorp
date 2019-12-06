@@ -387,7 +387,6 @@ var gSync = {
 
     if (!gFxaToolbarAccessed) {
       Services.prefs.setBoolPref("identity.fxaccounts.toolbar.accessed", true);
-      document.documentElement.removeAttribute("fxa_avatar_badged");
     }
 
     this.enableSendTabIfValidTab();

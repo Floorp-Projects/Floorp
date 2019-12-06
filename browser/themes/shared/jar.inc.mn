@@ -149,7 +149,6 @@
   skin/classic/browser/fxa/avatar-color.svg                    (../shared/fxa/avatar-color.svg)
   skin/classic/browser/fxa/avatar-confirm.svg                  (../shared/fxa/avatar-confirm.svg)
   skin/classic/browser/fxa/avatar-empty.svg                    (../shared/fxa/avatar-empty.svg)
-  skin/classic/browser/fxa/avatar-empty-badged.svg             (../shared/fxa/avatar-empty-badged.svg)
   skin/classic/browser/fxa/sync-devices.svg                    (../shared/fxa/sync-devices.svg)
   skin/classic/browser/fxa/send.svg                            (../shared/fxa/send.svg)
   skin/classic/browser/fxa/monitor.svg                         (../shared/fxa/monitor.svg)
