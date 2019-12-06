@@ -1,4 +1,4 @@
-use crate::rust::{string::String, borrow::ToOwned};
+use alloc::{borrow::ToOwned, string::String};
 use super::invoke::{Invoke, Identity};
 use crate::elements;
 

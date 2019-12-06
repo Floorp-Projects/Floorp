@@ -225,7 +225,7 @@ if_sylvan! {
                 if ph.p_type == program_header::PT_INTERP && ph.p_filesz != 0 {
                     let count = (ph.p_filesz - 1) as usize;
                     let offset = ph.p_offset as usize;
-                    interpreter = Some(bytes.pread_with::<&str>(offset, ::scroll::ctx::StrCtx::Length(count))?);
+                    interpreter = bytes.pread_with::<&str>(offset, ::scroll::ctx::StrCtx::Length(count)).ok();
                 }
             }
 
@@ -339,8 +339,7 @@ if_sylvan! {
 
     impl<'a> ctx::TryFromCtx<'a, (usize, Endian)> for Elf<'a> {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_from_ctx(src: &'a [u8], (_, _): (usize, Endian)) -> Result<(Elf<'a>, Self::Size), Self::Error> {
+        fn try_from_ctx(src: &'a [u8], (_, _): (usize, Endian)) -> Result<(Elf<'a>, usize), Self::Error> {
             let elf = Elf::parse(src)?;
             Ok((elf, src.len()))
         }

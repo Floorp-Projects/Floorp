@@ -31,6 +31,8 @@ pub struct Object {
     subsection_via_symbols: bool,
     /// The symbol name mangling scheme.
     pub mangling: Mangling,
+    /// Mach-O "_tlv_bootstrap" symbol.
+    tlv_bootstrap: Option<SymbolId>,
 }
 
 impl Object {
@@ -46,6 +48,7 @@ impl Object {
             stub_symbols: HashMap::new(),
             subsection_via_symbols: false,
             mangling: Mangling::default(format, architecture),
+            tlv_bootstrap: None,
         }
     }
 
@@ -231,22 +234,37 @@ impl Object {
         if symbol.kind == SymbolKind::Section {
             return self.section_symbol(symbol.section.unwrap());
         }
-        let symbol_id = SymbolId(self.symbols.len());
         if !symbol.name.is_empty()
-            && (symbol.kind == SymbolKind::Text || symbol.kind == SymbolKind::Data)
+            && (symbol.kind == SymbolKind::Text
+                || symbol.kind == SymbolKind::Data
+                || symbol.kind == SymbolKind::Tls)
         {
-            self.symbol_map.insert(symbol.name.clone(), symbol_id);
+            let unmangled_name = symbol.name.clone();
             if let Some(prefix) = self.mangling.global_prefix() {
                 symbol.name.insert(0, prefix);
             }
+            let symbol_id = self.add_raw_symbol(symbol);
+            self.symbol_map.insert(unmangled_name, symbol_id);
+            symbol_id
+        } else {
+            self.add_raw_symbol(symbol)
         }
+    }
+
+    fn add_raw_symbol(&mut self, symbol: Symbol) -> SymbolId {
+        let symbol_id = SymbolId(self.symbols.len());
         self.symbols.push(symbol);
         symbol_id
     }
 
+    /// Return true if the file format supports `StandardSection::UninitializedTls`.
+    pub fn has_uninitialized_tls(&self) -> bool {
+        self.format != BinaryFormat::Coff
+    }
+
     /// Add a new file symbol and return its `SymbolId`.
     pub fn add_file_symbol(&mut self, name: Vec<u8>) -> SymbolId {
-        self.add_symbol(Symbol {
+        self.add_raw_symbol(Symbol {
             name,
             value: 0,
             size: 0,
@@ -284,20 +302,77 @@ impl Object {
 
     /// Append data to an existing section, and update a symbol to refer to it.
     ///
+    /// For Mach-O, this also creates a `__thread_vars` entry for TLS symbols, and the
+    /// symbol will indirectly point to the added data via the `__thread_vars` entry.
+    ///
     /// Returns the section offset of the data.
     pub fn add_symbol_data(
         &mut self,
-        symbol: SymbolId,
+        symbol_id: SymbolId,
         section: SectionId,
         data: &[u8],
         align: u64,
     ) -> u64 {
         let offset = self.append_section_data(section, data, align);
-        let symbol = self.symbol_mut(symbol);
-        symbol.value = offset;
-        symbol.size = data.len() as u64;
-        symbol.section = Some(section);
+        self.set_symbol_data(symbol_id, section, offset, data.len() as u64);
         offset
+    }
+
+    /// Append zero-initialized data to an existing section, and update a symbol to refer to it.
+    ///
+    /// For Mach-O, this also creates a `__thread_vars` entry for TLS symbols, and the
+    /// symbol will indirectly point to the added data via the `__thread_vars` entry.
+    ///
+    /// Returns the section offset of the data.
+    pub fn add_symbol_bss(
+        &mut self,
+        symbol_id: SymbolId,
+        section: SectionId,
+        size: u64,
+        align: u64,
+    ) -> u64 {
+        let offset = self.append_section_bss(section, size, align);
+        self.set_symbol_data(symbol_id, section, offset, size);
+        offset
+    }
+
+    /// Update a symbol to refer to the given data within a section.
+    ///
+    /// For Mach-O, this also creates a `__thread_vars` entry for TLS symbols, and the
+    /// symbol will indirectly point to the data via the `__thread_vars` entry.
+    pub fn set_symbol_data(
+        &mut self,
+        mut symbol_id: SymbolId,
+        section: SectionId,
+        offset: u64,
+        size: u64,
+    ) {
+        // Defined symbols must have a scope.
+        debug_assert!(self.symbol(symbol_id).scope != SymbolScope::Unknown);
+        if self.format == BinaryFormat::Macho {
+            symbol_id = self.macho_add_thread_var(symbol_id);
+        }
+        let symbol = self.symbol_mut(symbol_id);
+        symbol.value = offset;
+        symbol.size = size;
+        symbol.section = Some(section);
+    }
+
+    /// Convert a symbol to a section symbol and offset.
+    ///
+    /// Returns an error if the symbol is not defined.
+    pub fn symbol_section_and_offset(
+        &mut self,
+        symbol_id: SymbolId,
+    ) -> Result<(SymbolId, u64), ()> {
+        let symbol = self.symbol(symbol_id);
+        if symbol.kind == SymbolKind::Section {
+            return Ok((symbol_id, 0));
+        }
+        let symbol_offset = symbol.value;
+        let section = symbol.section.ok_or(())?;
+        let section_symbol = self.section_symbol(section);
+        Ok((section_symbol, symbol_offset))
     }
 
     /// Add a relocation to a section.
@@ -386,6 +461,11 @@ pub enum StandardSection {
     ReadOnlyDataWithRel,
     ReadOnlyString,
     UninitializedData,
+    Tls,
+    /// Zero-fill TLS initializers. Unsupported for COFF.
+    UninitializedTls,
+    /// TLS variable structures. Only supported for Mach-O.
+    TlsVariables,
 }
 
 impl StandardSection {
@@ -399,6 +479,9 @@ impl StandardSection {
             }
             StandardSection::ReadOnlyString => SectionKind::ReadOnlyString,
             StandardSection::UninitializedData => SectionKind::UninitializedData,
+            StandardSection::Tls => SectionKind::Tls,
+            StandardSection::UninitializedTls => SectionKind::UninitializedTls,
+            StandardSection::TlsVariables => SectionKind::TlsVariables,
         }
     }
 
@@ -410,6 +493,9 @@ impl StandardSection {
             StandardSection::ReadOnlyDataWithRel,
             StandardSection::ReadOnlyString,
             StandardSection::UninitializedData,
+            StandardSection::Tls,
+            StandardSection::UninitializedTls,
+            StandardSection::TlsVariables,
         ]
     }
 }
@@ -558,6 +644,8 @@ pub enum Mangling {
     None,
     /// Windows COFF symbol mangling.
     Coff,
+    /// Windows COFF i386 symbol mangling.
+    CoffI386,
     /// ELF symbol mangling.
     Elf,
     /// Mach-O symbol mangling.
@@ -566,11 +654,12 @@ pub enum Mangling {
 
 impl Mangling {
     /// Return the default symboling mangling for the given format and architecture.
-    pub fn default(format: BinaryFormat, _architecture: Architecture) -> Self {
-        match format {
-            BinaryFormat::Coff => Mangling::Coff,
-            BinaryFormat::Elf => Mangling::Elf,
-            BinaryFormat::Macho => Mangling::Macho,
+    pub fn default(format: BinaryFormat, architecture: Architecture) -> Self {
+        match (format, architecture) {
+            (BinaryFormat::Coff, Architecture::I386) => Mangling::CoffI386,
+            (BinaryFormat::Coff, _) => Mangling::Coff,
+            (BinaryFormat::Elf, _) => Mangling::Elf,
+            (BinaryFormat::Macho, _) => Mangling::Macho,
             _ => Mangling::None,
         }
     }
@@ -578,8 +667,8 @@ impl Mangling {
     /// Return the prefix to use for global symbols.
     pub fn global_prefix(self) -> Option<u8> {
         match self {
-            Mangling::None | Mangling::Elf => None,
-            Mangling::Coff | Mangling::Macho => Some(b'_'),
+            Mangling::None | Mangling::Elf | Mangling::Coff => None,
+            Mangling::CoffI386 | Mangling::Macho => Some(b'_'),
         }
     }
 }

@@ -46,6 +46,14 @@ impl Object {
             StandardSection::UninitializedData => {
                 (&[], &b".bss"[..], SectionKind::UninitializedData)
             }
+            StandardSection::Tls => (&[], &b".tdata"[..], SectionKind::Tls),
+            StandardSection::UninitializedTls => {
+                (&[], &b".tbss"[..], SectionKind::UninitializedTls)
+            }
+            StandardSection::TlsVariables => {
+                // Unsupported section.
+                (&[], &[], SectionKind::TlsVariables)
+            }
         }
     }
 
@@ -92,7 +100,7 @@ impl Object {
                 | RelocationKind::GotRelative
                 | RelocationKind::GotBaseRelative
                 | RelocationKind::PltRelative
-                | RelocationKind::Other(_) => return false,
+                | RelocationKind::Elf(_) => return false,
                 // Absolute relocations are preemptible for non-local data.
                 // TODO: not sure if this rule is exactly correct
                 // This rule was added to handle global data references in debuginfo.
@@ -490,7 +498,7 @@ impl Object {
                             (RelocationKind::Relative, 16) => elf::R_386_PC16,
                             (RelocationKind::Absolute, 8) => elf::R_386_8,
                             (RelocationKind::Relative, 8) => elf::R_386_PC8,
-                            (RelocationKind::Other(x), _) => x,
+                            (RelocationKind::Elf(x), _) => x,
                             _ => return Err(format!("unimplemented relocation {:?}", reloc)),
                         },
                         Architecture::X86_64 => match (reloc.kind, reloc.encoding, reloc.size) {
@@ -511,7 +519,7 @@ impl Object {
                             (RelocationKind::Relative, _, 16) => elf::R_X86_64_PC16,
                             (RelocationKind::Absolute, _, 8) => elf::R_X86_64_8,
                             (RelocationKind::Relative, _, 8) => elf::R_X86_64_PC8,
-                            (RelocationKind::Other(x), _, _) => x,
+                            (RelocationKind::Elf(x), _, _) => x,
                             _ => return Err(format!("unimplemented relocation {:?}", reloc)),
                         },
                         _ => {

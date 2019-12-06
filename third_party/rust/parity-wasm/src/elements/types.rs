@@ -1,9 +1,10 @@
-use crate::rust::{fmt, vec::Vec};
+use alloc::vec::Vec;
 use crate::io;
 use super::{
 	Deserialize, Serialize, Error, VarUint7, VarInt7, VarUint1, CountedList,
 	CountedListWriter, VarUint32,
 };
+use core::fmt;
 
 /// Type definition in types section. Currently can be only of the function type.
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]

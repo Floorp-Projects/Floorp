@@ -263,8 +263,7 @@ impl OptionalHeader {
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for OptionalHeader {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], _: Endian) -> error::Result<(Self, Self::Size)> {
+    fn try_from_ctx(bytes: &'a [u8], _: Endian) -> error::Result<(Self, usize)> {
         let magic = bytes.pread_with::<u16>(0, LE)?;
         let offset = &mut 0;
         let (standard_fields, windows_fields): (StandardFields, WindowsFields) = match magic {

@@ -1,14 +1,14 @@
-use crate::rust::{
-	cmp::min,
-	iter::{FromIterator, IntoIterator},
-	mem,
-	slice,
-	vec::{self, Vec},
-};
-
+use alloc::vec::Vec;
 use crate::io;
 
 use super::{Deserialize, Error, Serialize, VarUint32};
+
+use alloc::vec;
+use core::{
+	cmp::min,
+	iter::{FromIterator, IntoIterator},
+	mem, slice
+};
 
 /// A map from non-contiguous `u32` keys to values of type `T`, which is
 /// serialized and deserialized ascending order of the keys. Normally used for

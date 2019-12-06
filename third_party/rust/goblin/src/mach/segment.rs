@@ -13,6 +13,7 @@ use crate::error;
 
 use crate::mach::relocation::RelocationInfo;
 use crate::mach::load_command::{Section32, Section64, SegmentCommand32, SegmentCommand64, SIZEOF_SECTION_32, SIZEOF_SECTION_64, SIZEOF_SEGMENT_COMMAND_32, SIZEOF_SEGMENT_COMMAND_64, LC_SEGMENT, LC_SEGMENT_64};
+use crate::mach::constants::{SECTION_TYPE, S_ZEROFILL};
 
 pub struct RelocationIterator<'a> {
     data: &'a [u8],
@@ -170,8 +171,7 @@ impl From<Section64> for Section {
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Section {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], ctx: container::Ctx) -> Result<(Self, Self::Size), Self::Error> {
+    fn try_from_ctx(bytes: &'a [u8], ctx: container::Ctx) -> Result<(Self, usize), Self::Error> {
         match ctx.container {
             container::Container::Little => {
                 let section = Section::from(bytes.pread_with::<Section32>(0, ctx.le)?);
@@ -186,7 +186,6 @@ impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Section {
 }
 
 impl ctx::SizeWith<container::Ctx> for Section {
-    type Units = usize;
     fn size_with(ctx: &container::Ctx) -> usize {
         match ctx.container {
             container::Container::Little => SIZEOF_SECTION_32,
@@ -197,8 +196,7 @@ impl ctx::SizeWith<container::Ctx> for Section {
 
 impl ctx::TryIntoCtx<container::Ctx> for Section {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_into_ctx(self, bytes: &mut [u8], ctx: container::Ctx) -> Result<Self::Size, Self::Error> {
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: container::Ctx) -> Result<usize, Self::Error> {
         if ctx.is_big () {
             bytes.pwrite_with::<Section64>(self.into(), 0, ctx.le)?;
         } else {
@@ -239,22 +237,26 @@ impl<'a> Iterator for SectionIterator<'a> {
             self.idx += 1;
             match self.data.gread_with::<Section>(&mut self.offset, self.ctx) {
                 Ok(section) => {
-                    // it's not uncommon to encounter macho files where files are
-                    // truncated but the sections are still remaining in the header.
-                    // Because of this we want to not panic here but instead just
-                    // slice down to a empty data slice.  This way only if code
-                    // actually needs to access those sections it will fall over.
-                    let data = self.data
-                        .get(section.offset as usize..)
-                        .unwrap_or_else(|| {
-                            warn!("section #{} offset {} out of bounds", self.idx, section.offset);
-                            &[]
-                        })
-                        .get(..section.size as usize)
-                        .unwrap_or_else(|| {
-                            warn!("section #{} size {} out of bounds", self.idx, section.size);
-                            &[]
-                        });
+                    let data = if section.flags & SECTION_TYPE == S_ZEROFILL {
+                        &[]
+                    } else {
+                        // it's not uncommon to encounter macho files where files are
+                        // truncated but the sections are still remaining in the header.
+                        // Because of this we want to not panic here but instead just
+                        // slice down to a empty data slice.  This way only if code
+                        // actually needs to access those sections it will fall over.
+                        self.data
+                            .get(section.offset as usize..)
+                            .unwrap_or_else(|| {
+                                warn!("section #{} offset {} out of bounds", self.idx, section.offset);
+                                &[]
+                            })
+                            .get(..section.size as usize)
+                            .unwrap_or_else(|| {
+                                warn!("section #{} size {} out of bounds", self.idx, section.size);
+                                &[]
+                            })
+                    };
                     Some(Ok((section, data)))
                 },
                 Err(e) => Some(Err(e))
@@ -355,7 +357,6 @@ impl<'a> fmt::Debug for Segment<'a> {
 }
 
 impl<'a> ctx::SizeWith<container::Ctx> for Segment<'a> {
-    type Units = usize;
     fn size_with(ctx: &container::Ctx) -> usize {
         match ctx.container {
             container::Container::Little => SIZEOF_SEGMENT_COMMAND_32,
@@ -366,8 +367,7 @@ impl<'a> ctx::SizeWith<container::Ctx> for Segment<'a> {
 
 impl<'a> ctx::TryIntoCtx<container::Ctx> for Segment<'a> {
     type Error = crate::error::Error;
-    type Size = usize;
-    fn try_into_ctx(self, bytes: &mut [u8], ctx: container::Ctx) -> Result<Self::Size, Self::Error> {
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: container::Ctx) -> Result<usize, Self::Error> {
         let segment_size = Self::size_with(&ctx);
         // should be able to write the section data inline after this, but not working at the moment
         //let section_size = bytes.pwrite(data, segment_size)?;
@@ -446,7 +446,7 @@ impl<'a> Segment<'a> {
             initprot: segment.initprot,
             nsects:   segment.nsects,
             flags:    segment.flags,
-            data: segment_data(bytes, segment.fileoff as u64, segment.filesize as u64)?,
+            data: segment_data(bytes, u64::from(segment.fileoff), u64::from(segment.filesize))?,
             offset,
             raw_data: bytes,
             ctx,
@@ -512,7 +512,7 @@ impl<'a> Segments<'a> {
     }
     /// Get every section from every segment
     // thanks to SpaceManic for figuring out the 'b lifetimes here :)
-    pub fn sections<'b>(&'b self) -> Box<Iterator<Item=SectionIterator<'a>> + 'b> {
+    pub fn sections<'b>(&'b self) -> Box<dyn Iterator<Item=SectionIterator<'a>> + 'b> {
         Box::new(self.segments.iter().map(|segment| segment.into_iter()))
     }
 }

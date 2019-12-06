@@ -31,9 +31,7 @@ struct MetadataRoot<'a> {
 
 impl<'a> TryFromCtx<'a, Endian> for MetadataRoot<'a> {
     type Error = scroll::Error;
-    type Size = usize;
-
-    fn try_from_ctx(src: &'a [u8], endian: Endian) -> Result<(Self, Self::Size), Self::Error> {
+    fn try_from_ctx(src: &'a [u8], endian: Endian) -> Result<(Self, usize), Self::Error> {
         let offset = &mut 0;
         let signature = src.gread_with(offset, endian)?;
         let major_version = src.gread_with(offset, endian)?;

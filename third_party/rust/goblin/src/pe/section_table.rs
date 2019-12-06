@@ -88,6 +88,7 @@ impl SectionTable {
         }
     }
 
+    #[allow(clippy::useless_let_if_seq)]
     pub fn set_name_offset(&mut self, mut idx: usize) -> error::Result<()> {
         if idx <= 9_999_999 { // 10^7 - 1
             // write!(&mut self.name[1..], "{}", idx) without using io::Write.
@@ -146,7 +147,6 @@ impl SectionTable {
 }
 
 impl ctx::SizeWith<scroll::Endian> for SectionTable {
-    type Units = usize;
     fn size_with(_ctx: &scroll::Endian) -> usize {
         SIZEOF_SECTION_TABLE
     }
@@ -154,8 +154,7 @@ impl ctx::SizeWith<scroll::Endian> for SectionTable {
 
 impl ctx::TryIntoCtx<scroll::Endian> for SectionTable {
     type Error = error::Error;
-    type Size = usize;
-    fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<Self::Size, Self::Error> {
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<usize, Self::Error> {
         let offset = &mut 0;
         bytes.gwrite(&self.name[..], offset)?;
         bytes.gwrite_with(self.virtual_size, offset, ctx)?;

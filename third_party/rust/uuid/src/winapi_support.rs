@@ -1,7 +1,4 @@
-use prelude::*;
-
-use BytesError;
-
+use crate::prelude::*;
 use winapi::shared::guiddef;
 
 #[cfg(feature = "guid")]
@@ -9,7 +6,7 @@ impl Uuid {
     /// Attempts to create a [`Uuid`] from a little endian winapi `GUID`
     ///
     /// [`Uuid`]: ../struct.Uuid.html
-    pub fn from_guid(guid: guiddef::GUID) -> Result<Uuid, BytesError> {
+    pub fn from_guid(guid: guiddef::GUID) -> Result<Uuid, crate::Error> {
         Uuid::from_fields_le(
             guid.Data1 as u32,
             guid.Data2 as u16,
@@ -36,8 +33,9 @@ impl Uuid {
 #[cfg(feature = "guid")]
 #[cfg(test)]
 mod tests {
-    use prelude::*;
-    use std::str::FromStr;
+    use super::*;
+
+    use crate::std::string::ToString;
     use winapi::shared::guiddef;
 
     #[test]

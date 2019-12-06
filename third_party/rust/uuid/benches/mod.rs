@@ -1,8 +1,4 @@
 #![feature(test)]
-#[cfg(feature = "slog")]
-#[macro_use]
-extern crate slog;
-extern crate test;
-extern crate uuid;
 
+#[cfg(feature = "slog")]
 pub mod slog_support;

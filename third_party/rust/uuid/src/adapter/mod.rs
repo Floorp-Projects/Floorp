@@ -9,14 +9,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Adapters for various formats for [`Uuid`]s
-//!
-//! [`Uuid`]: ../struct.Uuid.html
+//! Adapters for various formats for UUIDs
 
-use core::str;
-use prelude::*;
-
-mod core_support;
+use crate::prelude::*;
+use crate::std::{fmt, str};
 
 #[cfg(feature = "serde")]
 pub mod compact;
@@ -70,123 +66,53 @@ pub struct Urn(Uuid);
 pub struct UrnRef<'a>(&'a Uuid);
 
 impl Uuid {
-    /// Creates a [`Hyphenated`] instance from a [`Uuid`].
+    /// Get a [`Hyphenated`] formatter.
     ///
-    /// [`Uuid`]: ../struct.Uuid.html
     /// [`Hyphenated`]: adapter/struct.Hyphenated.html
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn to_hyphenated(self) -> Hyphenated {
-        Hyphenated::from_uuid(self)
-    }
-
-    /// Creates a [`Hyphenated`] instance from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Hyphenated`]: adapter/struct.Hyphenated.html
-    #[cfg(feature = "const_fn")]
     #[inline]
     pub const fn to_hyphenated(self) -> Hyphenated {
         Hyphenated::from_uuid(self)
     }
 
-    /// Creates a [`HyphenatedRef`] instance from a [`Uuid`] reference.
+    /// Get a borrowed [`HyphenatedRef`] formatter.
     ///
-    /// [`Uuid`]: ../struct.Uuid.html
     /// [`HyphenatedRef`]: adapter/struct.HyphenatedRef.html
-    #[cfg(not(feature = "const_fn"))]
     #[inline]
-    pub fn to_hyphenated_ref(&self) -> HyphenatedRef {
+    pub const fn to_hyphenated_ref(&self) -> HyphenatedRef<'_> {
         HyphenatedRef::from_uuid_ref(self)
     }
 
-    /// Creates a [`HyphenatedRef`] instance from a [`Uuid`] reference.
+    /// Get a [`Simple`] formatter.
     ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`HyphenatedRef`]: adapter/struct.HyphenatedRef.html
-    #[cfg(feature = "const_fn")]
-    #[inline]
-    pub const fn to_hyphenated_ref(&self) -> HyphenatedRef {
-        HyphenatedRef::from_uuid_ref(self)
-    }
-
-    /// Creates a [`Simple`] instance from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
     /// [`Simple`]: adapter/struct.Simple.html
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn to_simple(self) -> Simple {
-        Simple::from_uuid(self)
-    }
-
-    /// Creates a [`Simple`] instance from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Simple`]: adapter/struct.Simple.html
-    #[cfg(feature = "const_fn")]
     #[inline]
     pub const fn to_simple(self) -> Simple {
         Simple::from_uuid(self)
     }
 
-    /// Creates a [`SimpleRef`] instance from a [`Uuid`] reference.
+    /// Get a borrowed [`SimpleRef`] formatter.
     ///
-    /// [`Uuid`]: ../struct.Uuid.html
     /// [`SimpleRef`]: adapter/struct.SimpleRef.html
-    #[cfg(not(feature = "const_fn"))]
     #[inline]
-    pub fn to_simple_ref(&self) -> SimpleRef {
+    pub const fn to_simple_ref(&self) -> SimpleRef<'_> {
         SimpleRef::from_uuid_ref(self)
     }
 
-    /// Creates a [`SimpleRef`] instance from a [`Uuid`] reference.
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`SimpleRef`]: adapter/struct.SimpleRef.html
-    #[cfg(feature = "const_fn")]
-    #[inline]
-    pub const fn to_simple_ref(&self) -> SimpleRef {
-        SimpleRef::from_uuid_ref(self)
-    }
-
-    /// Creates a [`Urn`] instance from a [`Uuid`].
+    /// Get a [`Urn`] formatter.
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`Urn`]: adapter/struct.Urn.html
-    #[cfg(not(feature = "const_fn"))]
-    #[inline]
-    pub fn to_urn(self) -> Urn {
-        Urn::from_uuid(self)
-    }
-
-    /// Creates a [`Urn`] instance from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Urn`]: adapter/struct.Urn.html
-    #[cfg(feature = "const_fn")]
     #[inline]
     pub const fn to_urn(self) -> Urn {
         Urn::from_uuid(self)
     }
 
-    /// Creates a [`UrnRef`] instance from a [`Uuid`] reference.
+    /// Get a borrowed [`UrnRef`] formatter.
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`UrnRef`]: adapter/struct.UrnRef.html
-    #[cfg(not(feature = "const_fn"))]
     #[inline]
-    pub fn to_urn_ref(&self) -> UrnRef {
-        UrnRef::from_uuid_ref(self)
-    }
-
-    /// Creates a [`UrnRef`] instance from a [`Uuid`] reference.
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`UrnRef`]: adapter/struct.UrnRef.html
-    #[cfg(feature = "const_fn")]
-    #[inline]
-    pub const fn to_urn_ref(&self) -> UrnRef {
+    pub const fn to_urn_ref(&self) -> UrnRef<'_> {
         UrnRef::from_uuid_ref(self)
     }
 }
@@ -261,16 +187,6 @@ impl Hyphenated {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`Hyphenated`]: struct.Hyphenated.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid(uuid: Uuid) -> Self {
-        Hyphenated(uuid)
-    }
-
-    /// Creates a [`Hyphenated`] from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Hyphenated`]: struct.Hyphenated.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid(uuid: Uuid) -> Self {
         Hyphenated(uuid)
     }
@@ -378,16 +294,6 @@ impl<'a> HyphenatedRef<'a> {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`HyphenatedRef`]: struct.HyphenatedRef.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid_ref(uuid: &'a Uuid) -> Self {
-        HyphenatedRef(uuid)
-    }
-
-    /// Creates a [`HyphenatedRef`] from a [`Uuid`] reference.
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`HyphenatedRef`]: struct.HyphenatedRef.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid_ref(uuid: &'a Uuid) -> Self {
         HyphenatedRef(uuid)
     }
@@ -502,16 +408,6 @@ impl Simple {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`Simple`]: struct.Simple.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid(uuid: Uuid) -> Self {
-        Simple(uuid)
-    }
-
-    /// Creates a [`Simple`] from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Simple`]: struct.Simple.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid(uuid: Uuid) -> Self {
         Simple(uuid)
     }
@@ -617,16 +513,6 @@ impl<'a> SimpleRef<'a> {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`SimpleRef`]: struct.SimpleRef.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid_ref(uuid: &'a Uuid) -> Self {
-        SimpleRef(uuid)
-    }
-
-    /// Creates a [`SimpleRef`] from a [`Uuid`] reference.
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`SimpleRef`]: struct.SimpleRef.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid_ref(uuid: &'a Uuid) -> Self {
         SimpleRef(uuid)
     }
@@ -732,16 +618,6 @@ impl Urn {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`Urn`]: struct.Urn.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid(uuid: Uuid) -> Self {
-        Urn(uuid)
-    }
-
-    /// Creates a [`Urn`] from a [`Uuid`].
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`Urn`]: struct.Urn.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid(uuid: Uuid) -> Self {
         Urn(uuid)
     }
@@ -856,16 +732,6 @@ impl<'a> UrnRef<'a> {
     ///
     /// [`Uuid`]: ../struct.Uuid.html
     /// [`UrnRef`]: struct.UrnRef.html
-    #[cfg(not(feature = "const_fn"))]
-    pub fn from_uuid_ref(uuid: &'a Uuid) -> Self {
-        UrnRef(uuid)
-    }
-
-    /// Creates a [`UrnRef`] from a [`Uuid`] reference.
-    ///
-    /// [`Uuid`]: ../struct.Uuid.html
-    /// [`UrnRef`]: struct.UrnRef.html
-    #[cfg(feature = "const_fn")]
     pub const fn from_uuid_ref(uuid: &'a Uuid) -> Self {
         UrnRef(&uuid)
     }
@@ -970,85 +836,143 @@ impl<'a> UrnRef<'a> {
     }
 }
 
-// TODO: uncomment when we undo the pub(crate) change
-// #[cfg(test)]
-// mod tests {
-// use Uuid;
-//
-// #[test]
-// fn hyphenated_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_hyphenated().encode_lower(&mut buf).len();
-// assert_eq!(len, super::Hyphenated::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-// #[test]
-// fn hyphenated_ref_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_hyphenated().encode_lower(&mut buf).len();
-// assert_eq!(len, super::HyphenatedRef::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-//
-// #[test]
-// fn simple_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_simple().encode_lower(&mut buf).len();
-// assert_eq!(len, super::Simple::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-// #[test]
-// fn simple_ref_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_simple().encode_lower(&mut buf).len();
-// assert_eq!(len, super::SimpleRef::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-//
-// #[test]
-// fn urn_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_urn().encode_lower(&mut buf).len();
-// assert_eq!(len, super::Urn::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-// #[test]
-// fn urn_ref_trailing() {
-// let mut buf = [b'x'; 100];
-// let len = Uuid::nil().to_urn().encode_lower(&mut buf).len();
-// assert_eq!(len, super::UrnRef::LENGTH);
-// assert!(buf[len..].iter().all(|x| *x == b'x'));
-// }
-//
-// #[test]
-// #[should_panic]
-// fn hyphenated_too_small() {
-// Uuid::nil().to_hyphenated().encode_lower(&mut [0; 35]);
-// }
-// #[test]
-// #[should_panic]
-// fn hyphenated_ref_too_small() {
-// Uuid::nil().to_hyphenated_ref().encode_lower(&mut [0; 35]);
-// }
-//
-// #[test]
-// #[should_panic]
-// fn simple_too_small() {
-// Uuid::nil().to_simple().encode_lower(&mut [0; 31]);
-// }
-// #[test]
-// #[should_panic]
-// fn simple_ref_too_small() {
-// Uuid::nil().to_simple_ref().encode_lower(&mut [0; 31]);
-// }
-// #[test]
-// #[should_panic]
-// fn urn_too_small() {
-// Uuid::nil().to_urn().encode_lower(&mut [0; 44]);
-// }
-// #[test]
-// #[should_panic]
-// fn urn_ref_too_small() {
-// Uuid::nil().to_urn_ref().encode_lower(&mut [0; 44]);
-// }
-// }
+macro_rules! impl_adapter_traits {
+    ($($T:ident<$($a:lifetime),*>),+) => {$(
+        impl<$($a),*> fmt::Display for $T<$($a),*> {
+            #[inline]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                fmt::LowerHex::fmt(self, f)
+            }
+        }
+
+        impl<$($a),*> fmt::LowerHex for $T<$($a),*> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                // TODO: Self doesn't work https://github.com/rust-lang/rust/issues/52808
+                f.write_str(self.encode_lower(&mut [0; $T::LENGTH]))
+            }
+        }
+
+        impl<$($a),*> fmt::UpperHex for $T<$($a),*> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                // TODO: Self doesn't work https://github.com/rust-lang/rust/issues/52808
+                f.write_str(self.encode_upper(&mut [0; $T::LENGTH]))
+            }
+        }
+
+        impl_adapter_from!($T<$($a),*>);
+    )+}
+}
+
+macro_rules! impl_adapter_from {
+    ($T:ident<>) => {
+        impl From<Uuid> for $T {
+            #[inline]
+            fn from(f: Uuid) -> Self {
+                $T::from_uuid(f)
+            }
+        }
+    };
+    ($T:ident<$a:lifetime>) => {
+        impl<$a> From<&$a Uuid> for $T<$a> {
+            #[inline]
+            fn from(f: &$a Uuid) -> Self {
+                $T::from_uuid_ref(f)
+            }
+        }
+    };
+}
+
+impl_adapter_traits! {
+    Hyphenated<>,
+    HyphenatedRef<'a>,
+    Simple<>,
+    SimpleRef<'a>,
+    Urn<>,
+    UrnRef<'a>
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn hyphenated_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_hyphenated().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Hyphenated::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn hyphenated_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_hyphenated().encode_lower(&mut buf).len();
+        assert_eq!(len, super::HyphenatedRef::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn simple_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_simple().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Simple::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn simple_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_simple().encode_lower(&mut buf).len();
+        assert_eq!(len, super::SimpleRef::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn urn_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_urn().encode_lower(&mut buf).len();
+        assert_eq!(len, super::Urn::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    fn urn_ref_trailing() {
+        let mut buf = [b'x'; 100];
+        let len = Uuid::nil().to_urn().encode_lower(&mut buf).len();
+        assert_eq!(len, super::UrnRef::LENGTH);
+        assert!(buf[len..].iter().all(|x| *x == b'x'));
+    }
+
+    #[test]
+    #[should_panic]
+    fn hyphenated_too_small() {
+        Uuid::nil().to_hyphenated().encode_lower(&mut [0; 35]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn hyphenated_ref_too_small() {
+        Uuid::nil().to_hyphenated_ref().encode_lower(&mut [0; 35]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn simple_too_small() {
+        Uuid::nil().to_simple().encode_lower(&mut [0; 31]);
+    }
+    #[test]
+    #[should_panic]
+    fn simple_ref_too_small() {
+        Uuid::nil().to_simple_ref().encode_lower(&mut [0; 31]);
+    }
+    #[test]
+    #[should_panic]
+    fn urn_too_small() {
+        Uuid::nil().to_urn().encode_lower(&mut [0; 44]);
+    }
+    #[test]
+    #[should_panic]
+    fn urn_ref_too_small() {
+        Uuid::nil().to_urn_ref().encode_lower(&mut [0; 44]);
+    }
+}

@@ -1,13 +1,12 @@
 #![cfg(feature = "serde")]
 #![feature(test)]
 
-extern crate bincode;
-extern crate serde_json;
+use bincode;
+use serde_json;
 extern crate test;
-extern crate uuid;
 
 use test::Bencher;
-use uuid::prelude::*;
+use uuid::Uuid;
 
 #[bench]
 fn bench_json_encode(b: &mut Bencher) {

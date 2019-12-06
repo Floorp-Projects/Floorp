@@ -17,7 +17,7 @@ pub const IMPORT_BY_ORDINAL_64: u64 = 0x8000_0000_0000_0000;
 pub const IMPORT_RVA_MASK_32: u32 = 0x7fff_ffff;
 pub const IMPORT_RVA_MASK_64: u64 = 0x0000_0000_7fff_ffff;
 
-pub trait Bitfield<'a>: Into<u64> + PartialEq + Eq + LowerHex + Debug + TryFromCtx<'a, scroll::Endian, Error=scroll::Error, Size=usize> {
+pub trait Bitfield<'a>: Into<u64> + PartialEq + Eq + LowerHex + Debug + TryFromCtx<'a, scroll::Endian, Error=scroll::Error> {
     fn is_ordinal(&self) -> bool;
     fn to_ordinal(&self) -> u16;
     fn to_rva(&self) -> u32;
@@ -189,7 +189,7 @@ impl<'a> ImportData<'a> {
     pub fn parse<T: Bitfield<'a>>(bytes: &'a[u8], dd: data_directories::DataDirectory, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<ImportData<'a>> {
         let import_directory_table_rva = dd.virtual_address as usize;
         debug!("import_directory_table_rva {:#x}", import_directory_table_rva);
-        let offset = &mut utils::find_offset(import_directory_table_rva, sections, file_alignment).ok_or_else(|| error::Error::Malformed(format!("Cannot create ImportData; cannot map import_directory_table_rva {:#x} into offset", import_directory_table_rva)))?;;
+        let offset = &mut utils::find_offset(import_directory_table_rva, sections, file_alignment).ok_or_else(|| error::Error::Malformed(format!("Cannot create ImportData; cannot map import_directory_table_rva {:#x} into offset", import_directory_table_rva)))?;
         debug!("import data offset {:#x}", offset);
         let mut import_data = Vec::new();
         loop {

@@ -144,6 +144,11 @@ impl<'file> ObjectSegment<'static> for WasmSegment<'file> {
         unreachable!()
     }
 
+    #[inline]
+    fn file_range(&self) -> (u64, u64) {
+        unreachable!()
+    }
+
     fn data(&self) -> &'static [u8] {
         unreachable!()
     }
@@ -203,6 +208,11 @@ impl<'file> ObjectSection<'static> for WasmSection<'file> {
     #[inline]
     fn align(&self) -> u64 {
         1
+    }
+
+    #[inline]
+    fn file_range(&self) -> Option<(u64, u64)> {
+        None
     }
 
     fn data(&self) -> Cow<'static, [u8]> {

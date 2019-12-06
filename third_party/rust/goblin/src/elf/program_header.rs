@@ -179,7 +179,6 @@ if_alloc! {
     }
 
     impl ctx::SizeWith<Ctx> for ProgramHeader {
-        type Units = usize;
         fn size_with(ctx: &Ctx) -> usize {
             match ctx.container {
                 Container::Little => {
@@ -194,8 +193,7 @@ if_alloc! {
 
     impl<'a> ctx::TryFromCtx<'a, Ctx> for ProgramHeader {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, Self::Size), Self::Error> {
+        fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, usize), Self::Error> {
             use scroll::Pread;
             let res = match container {
                 Container::Little => {
@@ -211,8 +209,7 @@ if_alloc! {
 
     impl ctx::TryIntoCtx<Ctx> for ProgramHeader {
         type Error = crate::error::Error;
-        type Size = usize;
-        fn try_into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) -> result::Result<Self::Size, Self::Error> {
+        fn try_into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) -> result::Result<usize, Self::Error> {
             use scroll::Pwrite;
             match container {
                 Container::Little => {

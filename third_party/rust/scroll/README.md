@@ -21,9 +21,9 @@ https://docs.rs/scroll
 
 Add to your `Cargo.toml`
 
-```toml
+```toml, no_test
 [dependencies]
-scroll = "0.9"
+scroll = "0.10"
 ```
 
 ### Overview
@@ -35,8 +35,6 @@ Because self is immutable, _**all** reads can be performed in parallel_ and henc
 A simple example demonstrates its flexibility:
 
 ```rust
-extern crate scroll;
-
 use scroll::{ctx, Pread, LE};
 
 fn parse() -> Result<(), scroll::Error> {
@@ -81,11 +79,11 @@ fn main() {
 
 ### Deriving `Pread` and `Pwrite`
 
-Scroll implements a custom derive that can provide `Pread` and `Pwrite` implementations for your types.
+Scroll implements a custom derive that can provide `Pread` and `Pwrite` implementations for your structs.
 
-``` rust
+```no_test
 #[macro_use]
-extern crate scroll;
+extern crate scroll_derive;
 
 use scroll::{Pread, Pwrite, BE};
 
@@ -118,9 +116,9 @@ fn main() {
 
 This feature is **not** enabled by default, you must enable the `derive` feature in Cargo.toml to use it:
 
-```toml
+```toml, no_test
 [dependencies]
-scroll = { version = "0.9", features = ["derive"] }
+scroll = { version = "0.10", features = ["derive"] }
 ```
 
 # `std::io` API
@@ -128,8 +126,6 @@ scroll = { version = "0.9", features = ["derive"] }
 Scroll can also read/write simple types from a `std::io::Read` or `std::io::Write` implementor. The  built-in numeric types are taken care of for you.  If you want to read a custom type, you need to implement the `FromCtx` (_how_ to parse) and `SizeWith` (_how_ big the parsed thing will be) traits.  You must compile with default features. For example:
 
 ```rust
-extern crate scroll;
-
 use std::io::Cursor;
 use scroll::IOread;
 
@@ -152,8 +148,6 @@ fn main() {
 Similarly, we can write to anything that implements `std::io::Write` quite naturally:
 
 ```rust
-extern crate scroll;
-
 use scroll::{IOwrite, LE, BE};
 use std::io::{Write, Cursor};
 
@@ -182,8 +176,6 @@ In particular, if we do this for the `[u8]` target, using the convention `(usize
 calling `pread_with::<YourDatatype>` on arrays of bytes.
 
 ```rust
-extern crate scroll;
-
 use scroll::{ctx, Pread, BE, Endian};
 
 struct Data<'a> {
@@ -194,10 +186,9 @@ struct Data<'a> {
 // note the lifetime specified here
 impl<'a> ctx::TryFromCtx<'a, Endian> for Data<'a> {
   type Error = scroll::Error;
-  type Size = usize;
   // and the lifetime annotation on `&'a [u8]` here
   fn try_from_ctx (src: &'a [u8], endian: Endian)
-    -> Result<(Self, Self::Size), Self::Error> {
+    -> Result<(Self, usize), Self::Error> {
     let offset = &mut 0;
     let name = src.gread::<&str>(offset)?;
     let id = src.gread_with(offset, endian)?;
