@@ -506,9 +506,8 @@ this.AntiTracking = {
         typeof options.accessRemoval == "string" &&
         options.cookieBehavior == BEHAVIOR_REJECT_TRACKER &&
         !options.allowList;
-      let id = await ContentTask.spawn(
-        browser,
-        {
+      let id = await SpecialPowers.spawn(
+        browser, [{
           page: thirdPartyPage,
           nextPage: TEST_4TH_PARTY_PAGE,
           callback: options.callback.toString(),
@@ -519,8 +518,7 @@ this.AntiTracking = {
           iframeSandbox: options.iframeSandbox,
           allowList: options.allowList,
           doAccessRemovalChecks,
-        },
-        async function(obj) {
+        }], async function(obj) {
           let id = "id" + Math.random();
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
@@ -626,15 +624,13 @@ this.AntiTracking = {
         gBrowser.goBack();
         await pageshow;
 
-        await ContentTask.spawn(
-          browser,
-          {
+        await SpecialPowers.spawn(
+          browser, [{
             id,
             callbackAfterRemoval: options.callbackAfterRemoval
               ? options.callbackAfterRemoval.toString()
               : null,
-          },
-          async function(obj) {
+          }], async function(obj) {
             let ifr = content.document.getElementById(obj.id);
             ifr.contentWindow.postMessage(obj.callbackAfterRemoval, "*");
 
@@ -771,15 +767,13 @@ this.AntiTracking = {
       }
 
       info("Creating a 3rd party content");
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           page: pageURL,
           blockingCallback: blockingCallback.toString(),
           nonBlockingCallback: nonBlockingCallback.toString(),
           iframeSandbox,
-        },
-        async function(obj) {
+        }], async function(obj) {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
             ifr.onload = function() {
@@ -852,15 +846,13 @@ this.AntiTracking = {
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           page: TEST_3RD_PARTY_PAGE_UI,
           popup: TEST_POPUP_PAGE,
           blockingCallback: blockingCallback.toString(),
           iframeSandbox,
-        },
-        async function(obj) {
+        }], async function(obj) {
           let ifr = content.document.createElement("iframe");
           let loading = new content.Promise(resolve => {
             ifr.onload = resolve;
@@ -954,15 +946,13 @@ this.AntiTracking = {
 
       await AntiTracking.interactWithTracker();
 
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           page: TEST_3RD_PARTY_PAGE_UI,
           popup: TEST_POPUP_PAGE,
           nonBlockingCallback: nonBlockingCallback.toString(),
           iframeSandbox,
-        },
-        async function(obj) {
+        }], async function(obj) {
           let ifr = content.document.createElement("iframe");
           let loading = new content.Promise(resolve => {
             ifr.onload = resolve;

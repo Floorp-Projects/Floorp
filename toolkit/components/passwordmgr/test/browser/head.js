@@ -141,10 +141,8 @@ async function submitFormAndGetResults(
     }
     form.submit();
   }
-  await ContentTask.spawn(
-    browser,
-    [formAction, selectorValues],
-    contentSubmitForm
+  await SpecialPowers.spawn(
+    browser, [[formAction, selectorValues]], contentSubmitForm
   );
   let result = await getFormSubmitResponseResult(
     browser,
@@ -168,14 +166,12 @@ async function getFormSubmitResponseResult(
   { username = "#user", password = "#pass" } = {}
 ) {
   // default selectors are for the response page produced by formsubmit.sjs
-  let fieldValues = await ContentTask.spawn(
-    browser,
-    {
+  let fieldValues = await SpecialPowers.spawn(
+    browser, [{
       resultURL,
       usernameSelector: username,
       passwordSelector: password,
-    },
-    async function({ resultURL, usernameSelector, passwordSelector }) {
+    }], async function({ resultURL, usernameSelector, passwordSelector }) {
       await ContentTaskUtils.waitForCondition(() => {
         return (
           content.location.pathname.endsWith(resultURL) &&
@@ -499,7 +495,7 @@ async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
   ok(tab, "got password management tab");
   let filterValue;
   if (waitForFilter) {
-    filterValue = await ContentTask.spawn(tab.linkedBrowser, null, async () => {
+    filterValue = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
       let loginFilter = Cu.waiveXrays(
         content.document.querySelector("login-filter")
       );
@@ -533,7 +529,7 @@ async function openACPopup(popup, browser, inputSelector) {
   info("content window focused");
 
   // Focus the username field to open the popup.
-  await ContentTask.spawn(browser, [inputSelector], function openAutocomplete(
+  await SpecialPowers.spawn(browser, [[inputSelector]], function openAutocomplete(
     sel
   ) {
     content.document.querySelector(sel).focus();

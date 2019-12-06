@@ -31,7 +31,7 @@ add_task(async function test_update() {
   let sw = BASE_URI + "server_multie10s_update.sjs";
 
   info("Let's make sure there are no existing registrations...");
-  let existingCount = await ContentTask.spawn(browser1, null, async function() {
+  let existingCount = await SpecialPowers.spawn(browser1, [], async function() {
     const regs = await content.navigator.serviceWorker.getRegistrations();
     return regs.length;
   });
@@ -39,7 +39,7 @@ add_task(async function test_update() {
 
   info("Let's start the test...");
   /* eslint-disable no-shadow */
-  let status = await ContentTask.spawn(browser1, sw, function(url) {
+  let status = await SpecialPowers.spawn(browser1, [sw], function(url) {
     // Let the SW be served immediately once by triggering a relase immediately.
     // We don't need to await this.  We do this from a frame script because
     // it has fetch.
@@ -126,7 +126,7 @@ add_task(async function test_update() {
   // let's clean up the registration and get the fetch count.  The count
   // should be 1 for the initial fetch and 1 for the update.
   /* eslint-disable no-shadow */
-  const count = await ContentTask.spawn(browser1, sw, async function(url) {
+  const count = await SpecialPowers.spawn(browser1, [sw], async function(url) {
     // We stored the registration on the frame script's wrapper, hence directly
     // accesss content without using wrappedJSObject.
     await content.registration.unregister();

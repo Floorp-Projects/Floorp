@@ -55,7 +55,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
     CANONICAL_URL
   );
 
-  await ContentTask.spawn(browser, null, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     ok(
       doc.body.classList.contains("captiveportal"),
@@ -84,7 +84,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
   // Passing an empty function to BrowserTestUtils.switchTab lets us wait for an arbitrary
   // tab switch.
   portalTabPromise = BrowserTestUtils.switchTab(gBrowser, () => {});
-  await ContentTask.spawn(browser, null, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     info("Clicking the Open Login Page button.");
     content.document.getElementById("openPortalLoginPageButton").click();
   });
@@ -102,7 +102,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
     "Waiting for error tab to be reloaded after the captive portal was freed."
   );
   await errorTabReloaded;
-  await ContentTask.spawn(browser, null, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     ok(
       !doc.body.classList.contains("captiveportal"),

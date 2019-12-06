@@ -11,7 +11,7 @@ add_task(async function test_certificateTabLink() {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, validCert);
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let certificateTabs;
     await ContentTaskUtils.waitForCondition(() => {
       certificateTabs = content.document

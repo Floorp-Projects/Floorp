@@ -2,7 +2,7 @@
 var name = "pb-window-cache";
 
 function testMatch(browser) {
-  return ContentTask.spawn(browser, name, function(name) {
+  return SpecialPowers.spawn(browser, [name], function(name) {
     return new Promise((resolve, reject) => {
       content.caches
         .match("http://foo.com")
@@ -23,7 +23,7 @@ function testMatch(browser) {
 }
 
 function testHas(browser) {
-  return ContentTask.spawn(browser, name, function(name) {
+  return SpecialPowers.spawn(browser, [name], function(name) {
     return new Promise(function(resolve, reject) {
       content.caches
         .has(name)
@@ -44,7 +44,7 @@ function testHas(browser) {
 }
 
 function testOpen(browser) {
-  return ContentTask.spawn(browser, name, function(name) {
+  return SpecialPowers.spawn(browser, [name], function(name) {
     return new Promise(function(resolve, reject) {
       content.caches
         .open(name)
@@ -65,7 +65,7 @@ function testOpen(browser) {
 }
 
 function testDelete(browser) {
-  return ContentTask.spawn(browser, name, function(name) {
+  return SpecialPowers.spawn(browser, [name], function(name) {
     return new Promise(function(resolve, reject) {
       content.caches
         .delete(name)
@@ -86,7 +86,7 @@ function testDelete(browser) {
 }
 
 function testKeys(browser) {
-  return ContentTask.spawn(browser, name, function(name) {
+  return SpecialPowers.spawn(browser, [name], function(name) {
     return new Promise(function(resolve, reject) {
       content.caches
         .keys()
@@ -107,7 +107,7 @@ function testKeys(browser) {
 }
 
 function testOpen_worker(browser) {
-  return ContentTask.spawn(browser, {}, function() {
+  return SpecialPowers.spawn(browser, [], function() {
     let workerFunctionString = function() {
       caches.open("pb-worker-cache").then(
         function(cacheObject) {

@@ -107,7 +107,7 @@ add_task(async function test_URIAndDomainCounts() {
 
   // We should not count AJAX requests.
   const XHR_URL = "http://example.com/r";
-  await ContentTask.spawn(newWin.gBrowser.selectedBrowser, XHR_URL, function(
+  await SpecialPowers.spawn(newWin.gBrowser.selectedBrowser, [XHR_URL], function(
     url
   ) {
     return new Promise(resolve => {
@@ -146,10 +146,8 @@ add_task(async function test_URIAndDomainCounts() {
 
   // Check that we only account for top level loads (e.g. we don't count URIs from
   // embedded iframes).
-  await ContentTask.spawn(
-    newWin.gBrowser.selectedBrowser,
-    null,
-    async function() {
+  await SpecialPowers.spawn(
+    newWin.gBrowser.selectedBrowser, [], async function() {
       let doc = content.document;
       let iframe = doc.createElement("iframe");
       let promiseIframeLoaded = ContentTaskUtils.waitForEvent(

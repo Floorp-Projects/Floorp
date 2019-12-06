@@ -100,7 +100,7 @@ async function waitForWidgetReady(widget = null) {
 }
 
 function spawnPaymentDialogTask(paymentDialogFrame, taskFn, args = null) {
-  return ContentTask.spawn(paymentDialogFrame.frameLoader, args, taskFn);
+  return SpecialPowers.spawn(paymentDialogFrame.frameLoader, [args], taskFn);
 }
 
 async function withMerchantTab(
@@ -316,14 +316,12 @@ async function setupPaymentDialog(
   { methodData, details, options, merchantTaskFn }
 ) {
   let dialogReadyPromise = waitForWidgetReady();
-  let { requestId } = await ContentTask.spawn(
-    browser,
-    {
+  let { requestId } = await SpecialPowers.spawn(
+    browser, [{
       methodData,
       details,
       options,
-    },
-    merchantTaskFn
+    }], merchantTaskFn
   );
   ok(requestId, "requestId should be defined");
 

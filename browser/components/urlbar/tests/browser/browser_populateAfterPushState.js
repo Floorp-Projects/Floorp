@@ -18,7 +18,7 @@ add_task(async function() {
         gBrowser,
         TEST_BASE_URL + "dummy_page2.html"
       );
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         content.history.pushState({}, "Page 2", "dummy_page2.html");
       });
       await locationChangePromise;

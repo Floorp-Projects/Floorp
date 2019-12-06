@@ -19,7 +19,7 @@ add_task(async function(client, _, tab) {
   await Page.enable();
 
   info("Attach a valid onbeforeunload handler");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.onbeforeunload = () => true;
   });
 

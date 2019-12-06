@@ -133,7 +133,7 @@ function testViewportDevicePixelRatioSelect(ui, expected) {
 }
 
 function waitForDevicePixelRatio(ui, expected) {
-  return ContentTask.spawn(ui.getViewportBrowser(), { expected }, function(
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [{ expected }], function(
     args
   ) {
     const initial = content.devicePixelRatio;

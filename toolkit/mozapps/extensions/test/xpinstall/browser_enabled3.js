@@ -15,10 +15,8 @@ function test() {
   );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
-  ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    TESTROOT + "installtrigger.html?" + triggers,
-    url => {
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [TESTROOT + "installtrigger.html?" + triggers], url => {
       return new Promise(resolve => {
         function page_loaded() {
           content.removeEventListener("PageLoaded", page_loaded);
@@ -26,11 +24,11 @@ function test() {
         }
 
         function load_listener() {
-          removeEventListener("load", load_listener, true);
+          docShell.chromeEventHandler.removeEventListener("load", load_listener, true);
           content.addEventListener("InstallTriggered", page_loaded);
         }
 
-        addEventListener("load", load_listener, true);
+        docShell.chromeEventHandler.addEventListener("load", load_listener, true);
 
         content.location.href = url;
       });

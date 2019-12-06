@@ -12,7 +12,7 @@ const youtube_url =
 
 async function checValiditySection(url) {
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");

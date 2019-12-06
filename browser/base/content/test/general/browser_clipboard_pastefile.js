@@ -31,13 +31,13 @@ add_task(async function() {
   );
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, {}, async function(arg) {
+  await SpecialPowers.spawn(browser, [], async function(arg) {
     content.document.getElementById("input").focus();
   });
 
   await BrowserTestUtils.synthesizeKey("v", { accelKey: true }, browser);
 
-  let output = await ContentTask.spawn(browser, {}, async function(arg) {
+  let output = await SpecialPowers.spawn(browser, [], async function(arg) {
     return content.document.getElementById("output").textContent;
   });
   is(output, "Passed", "Paste file");

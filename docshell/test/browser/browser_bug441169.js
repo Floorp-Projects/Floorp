@@ -37,7 +37,7 @@ function test() {
   gBrowser.selectedTab = newTab;
   newBrowser = gBrowser.getBrowserForTab(newTab);
 
-  ContentTask.spawn(newBrowser, null, task).then(() => {
+  SpecialPowers.spawn(newBrowser, [], task).then(() => {
     gBrowser.removeCurrentTab();
     finish();
   });

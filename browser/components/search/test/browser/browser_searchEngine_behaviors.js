@@ -70,7 +70,7 @@ const SEARCH_ENGINE_DETAILS = [
 ];
 
 function promiseContentSearchReady(browser) {
-  return ContentTask.spawn(browser, {}, async function(args) {
+  return SpecialPowers.spawn(browser, [], async function(args) {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.wrappedJSObject.gContentSearchController &&
@@ -170,7 +170,7 @@ async function testSearchEngine(engineDetails) {
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await ContentTask.spawn(tab.linkedBrowser, {}, async function(args) {
+        await SpecialPowers.spawn(tab.linkedBrowser, [], async function(args) {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";

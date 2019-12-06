@@ -8,7 +8,7 @@ add_task(async function() {
         "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
     },
     async function(browser) {
-      await ContentTask.spawn(browser, "", function() {
+      await SpecialPowers.spawn(browser, [""], function() {
         let tttp = Cc[
           "@mozilla.org/embedcomp/default-tooltiptextprovider;1"
         ].getService(Ci.nsITooltipTextProvider);

@@ -48,7 +48,7 @@ add_task(async function test_opened_page() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await ContentTask.spawn(tab2.linkedBrowser, { TEST_PAGE }, async function(
+  await SpecialPowers.spawn(tab2.linkedBrowser, [{ TEST_PAGE }], async function(
     args
   ) {
     async function isGreen(dataUrl) {
@@ -239,7 +239,7 @@ add_task(async function test_framework_detection() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function(args) {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
@@ -263,7 +263,7 @@ add_task(async function test_fastclick_detection() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function(args) {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
@@ -285,7 +285,7 @@ add_task(async function test_framework_label() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function(args) {
     let doc = content.document;
     let labelParam = doc.getElementById("label").innerText;
     const label = JSON.parse(labelParam);

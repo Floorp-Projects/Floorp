@@ -388,11 +388,11 @@ async function noCertErrorFromNavigationTest(secureCheck) {
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.getElementById("no-cert").click();
   });
   await promise;
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     is(
       content.window.location.href,
       "https://nocert.example.com/",

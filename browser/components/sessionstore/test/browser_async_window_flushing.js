@@ -34,7 +34,7 @@ add_task(async function test_add_interesting_window() {
   // Send a message that will cause the content to change its location
   // to someplace more interesting. We've disabled auto updates from
   // the browser, so the parent won't know about this
-  await ContentTask.spawn(browser, PAGE, async function(newPage) {
+  await SpecialPowers.spawn(browser, [PAGE], async function(newPage) {
     content.location = newPage;
   });
 
@@ -113,7 +113,7 @@ add_task(async function test_remove_uninteresting_window() {
 
   // Send a message that will cause the content to purge its
   // history entries and make itself seem uninteresting.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // Epic hackery to make this browser seem suddenly boring.
     docShell.setCurrentURI(Services.io.newURI("about:blank"));
 

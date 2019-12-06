@@ -166,7 +166,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Create a sub-frame");
 
   let subframeURL = `${BASE}#subframe-url-1`;
-  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [subframeURL], async url => {
     const iframe = this.content.document.createElement("iframe");
     iframe.setAttribute("id", "test-subframe");
     iframe.setAttribute("src", url);
@@ -186,7 +186,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Navigating the sub-frame");
 
   subframeURL = `${BASE}/file_dummy.html#subframe-url-2`;
-  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [subframeURL], async url => {
     const iframe = this.content.document.querySelector("iframe#test-subframe");
 
     // Await the subframe navigation.

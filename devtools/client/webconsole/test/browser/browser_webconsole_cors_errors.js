@@ -185,10 +185,8 @@ async function checkCorsMessage(message, category) {
 }
 
 function makeFaultyCorsCall(errorCategory, corsUrl) {
-  ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [errorCategory, corsUrl],
-    ([category, url]) => {
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[errorCategory, corsUrl]], ([category, url]) => {
       if (!url) {
         const baseUrl =
           "http://mochi.test:8888/browser/devtools/client/webconsole/test/browser";

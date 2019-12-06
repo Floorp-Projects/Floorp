@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 async function testWithNoTouch(ui) {
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const div = content.document.querySelector("div");
     let x = 0,
       y = 0;
@@ -114,7 +114,7 @@ async function testWithNoTouch(ui) {
 }
 
 async function testWithTouch(ui) {
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const div = content.document.querySelector("div");
     let x = 0,
       y = 0;
@@ -206,7 +206,7 @@ async function testWithTouch(ui) {
   // "changedTouches" field to be undefined when using deprecated TouchEvent APIs.
   // See Bug 1549220 and Bug 1588438 for more information on this issue.
   info("Test that changed touches captured on the content window are defined.");
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const div = content.document.querySelector("div");
 
     content.addEventListener(
@@ -231,7 +231,7 @@ async function testWithMetaViewportEnabled(ui) {
     set: [[PREF_DOM_META_VIEWPORT_ENABLED, true]],
   });
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const { synthesizeClick } = EventUtils;
 
     const meta = content.document.querySelector("meta[name=viewport]");
@@ -296,7 +296,7 @@ async function testWithMetaViewportDisabled(ui) {
     set: [[PREF_DOM_META_VIEWPORT_ENABLED, false]],
   });
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const { synthesizeClick } = EventUtils;
 
     const meta = content.document.querySelector("meta[name=viewport]");

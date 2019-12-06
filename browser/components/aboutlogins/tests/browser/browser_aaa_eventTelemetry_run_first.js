@@ -43,7 +43,7 @@ add_task(async function test_telemetry_events() {
     return !events || !events.length;
   }, "Waiting for telemetry events to get cleared");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
       ".login-list-item:nth-child(2)"
@@ -52,7 +52,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(2);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-username-button"
@@ -61,7 +61,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(3);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -74,7 +74,7 @@ add_task(async function test_telemetry_events() {
     gBrowser,
     TEST_LOGIN3.origin + "/"
   );
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let originInput = loginItem.shadowRoot.querySelector(".origin-input");
     originInput.click();
@@ -85,7 +85,7 @@ add_task(async function test_telemetry_events() {
   await LoginTestUtils.telemetry.waitForEventCount(5);
 
   // Show the password
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -95,7 +95,7 @@ add_task(async function test_telemetry_events() {
   await LoginTestUtils.telemetry.waitForEventCount(6);
 
   // Hide the password
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -104,14 +104,14 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(7);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
   await LoginTestUtils.telemetry.waitForEventCount(8);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let usernameField = loginItem.shadowRoot.querySelector(
       'input[name="username"]'
@@ -123,7 +123,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(9);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let newLoginButton = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector(".create-login-button");
@@ -131,14 +131,14 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(10);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
   });
   await LoginTestUtils.telemetry.waitForEventCount(11);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
       ".login-list-item[data-guid]"
@@ -147,7 +147,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(12);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
@@ -161,7 +161,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(13);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginSort = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector("#login-sort");
@@ -173,7 +173,7 @@ add_task(async function test_telemetry_events() {
     Services.prefs.clearUserPref("signon.management.page.sort");
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginFilter = content.document.querySelector("login-filter");
     let input = loginFilter.shadowRoot.querySelector("input");
     input.setUserInput("test");
