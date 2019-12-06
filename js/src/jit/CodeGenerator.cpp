@@ -5263,7 +5263,7 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
 
   pushArg(objreg);                            // argv.
   pushArg(ToRegister(apply->getArgc()));      // argc.
-  pushArg(Imm32(false));                      // ignoresReturnValue.
+  pushArg(Imm32(apply->mir()->ignoresReturnValue()));  // ignoresReturnValue.
   pushArg(Imm32(false));                      // isConstrucing.
   pushArg(ToRegister(apply->getFunction()));  // JSFunction*.
 
