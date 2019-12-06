@@ -22,6 +22,11 @@ enum DllBlocklistInitFlags {
   eDllBlocklistInitFlagWasBootstrapped = 2
 };
 
+// Only available from within firefox.exe
+#  if !defined(IMPL_MFBT) && !defined(MOZILLA_INTERNAL_API)
+extern uint32_t gBlocklistInitFlags;
+#  endif  // !defined(IMPL_MFBT) && !defined(MOZILLA_INTERNAL_API)
+
 MFBT_API void DllBlocklist_Initialize(
     uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
 MFBT_API void DllBlocklist_WriteNotes(CrashReporter::AnnotationWriter& aWriter);
