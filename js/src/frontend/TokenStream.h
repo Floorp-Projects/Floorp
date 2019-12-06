@@ -322,6 +322,165 @@ class MOZ_STACK_CLASS TokenStreamPosition final {
 template <typename Unit>
 class SourceUnits;
 
+/**
+ * This class maps:
+ *
+ *   * a sourceUnits offset (a 0-indexed count of code units)
+ *
+ * to
+ *
+ *   * a (1-indexed) line number and
+ *   * a (0-indexed) offset in code *units* (not code points, not bytes) into
+ *     that line,
+ *
+ * for either |Unit = Utf8Unit| or |Unit = char16_t|.
+ *
+ * Note that the latter quantity is *not* the same as a column number, which is
+ * a count of code *points*.  Computing a column number requires the offset
+ * within the line and the source units of that line (including what type |Unit|
+ * is, to know how to decode them).  If you need a column number, functions in
+ * |GeneralTokenStreamChars<Unit>| will consult this and source units to compute
+ * it.
+ */
+class SourceCoords {
+  // For a given buffer holding source code, |lineStartOffsets_| has one
+  // element per line of source code, plus one sentinel element.  Each
+  // non-sentinel element holds the buffer offset for the start of the
+  // corresponding line of source code.  For this example script,
+  // assuming an initialLineOffset of 0:
+  //
+  // 1  // xyz            [line starts at offset 0]
+  // 2  var x;            [line starts at offset 7]
+  // 3                    [line starts at offset 14]
+  // 4  var y;            [line starts at offset 15]
+  //
+  // |lineStartOffsets_| is:
+  //
+  //   [0, 7, 14, 15, MAX_PTR]
+  //
+  // To convert a "line number" to an "index" into |lineStartOffsets_|,
+  // subtract |initialLineNum_|.  E.g. line 3's index is
+  // (3 - initialLineNum_), which is 2.  Therefore lineStartOffsets_[2]
+  // holds the buffer offset for the start of line 3, which is 14.  (Note
+  // that |initialLineNum_| is often 1, but not always.
+  //
+  // The first element is always initialLineOffset, passed to the
+  // constructor, and the last element is always the MAX_PTR sentinel.
+  //
+  // Offset-to-{line,offset-into-line} lookups are O(log n) in the worst
+  // case (binary search), but in practice they're heavily clustered and
+  // we do better than that by using the previous lookup's result
+  // (lastIndex_) as a starting point.
+  //
+  // Checking if an offset lies within a particular line number
+  // (isOnThisLine()) is O(1).
+  //
+  Vector<uint32_t, 128> lineStartOffsets_;
+
+  /** The line number on which the source text begins. */
+  uint32_t initialLineNum_;
+
+  /**
+   * The index corresponding to the last offset lookup -- used so that if
+   * offset lookups proceed in increasing order, and and the offset appears
+   * in the next couple lines from the last offset, we can avoid a full
+   * binary-search.
+   *
+   * This is mutable because it's modified on every search, but that fact
+   * isn't visible outside this class.
+   */
+  mutable uint32_t lastIndex_;
+
+  uint32_t indexFromOffset(uint32_t offset) const;
+
+  static const uint32_t MAX_PTR = UINT32_MAX;
+
+  uint32_t lineNumberFromIndex(uint32_t index) const {
+    return index + initialLineNum_;
+  }
+
+  uint32_t indexFromLineNumber(uint32_t lineNum) const {
+    return lineNum - initialLineNum_;
+  }
+
+ public:
+  SourceCoords(JSContext* cx, uint32_t initialLineNumber,
+               uint32_t initialOffset);
+
+  MOZ_MUST_USE bool add(uint32_t lineNum, uint32_t lineStartOffset);
+  MOZ_MUST_USE bool fill(const SourceCoords& other);
+
+  bool isOnThisLine(uint32_t offset, uint32_t lineNum, bool* onThisLine) const {
+    uint32_t index = indexFromLineNumber(lineNum);
+    if (index + 1 >= lineStartOffsets_.length()) {  // +1 due to sentinel
+      return false;
+    }
+    *onThisLine = lineStartOffsets_[index] <= offset &&
+                  offset < lineStartOffsets_[index + 1];
+    return true;
+  }
+
+  /**
+   * A token, computed for an offset in source text, that can be used to
+   * access line number and line-offset information for that offset.
+   *
+   * LineToken *alone* exposes whether the corresponding offset is in the
+   * the first line of source (which may not be 1, depending on
+   * |initialLineNumber|), and whether it's in the same line as
+   * another LineToken.
+   */
+  class LineToken {
+    uint32_t index;
+#ifdef DEBUG
+    uint32_t offset_;  // stored for consistency-of-use assertions
+#endif
+
+    friend class SourceCoords;
+
+   public:
+    LineToken(uint32_t index, uint32_t offset)
+        : index(index)
+#ifdef DEBUG
+          ,
+          offset_(offset)
+#endif
+    {
+    }
+
+    bool isFirstLine() const { return index == 0; }
+
+    bool isSameLine(LineToken other) const { return index == other.index; }
+
+    void assertConsistentOffset(uint32_t offset) const {
+      MOZ_ASSERT(offset_ == offset);
+    }
+  };
+
+  /**
+   * Compute a token usable to access information about the line at the
+   * given offset.
+   *
+   * The only information directly accessible in a token is whether it
+   * corresponds to the first line of source text (which may not be line
+   * 1, depending on the |initialLineNumber| value used to construct
+   * this).  Use |lineNumber(LineToken)| to compute the actual line
+   * number (incorporating the contribution of |initialLineNumber|).
+   */
+  LineToken lineToken(uint32_t offset) const;
+
+  /** Compute the line number for the given token. */
+  uint32_t lineNumber(LineToken lineToken) const {
+    return lineNumberFromIndex(lineToken.index);
+  }
+
+  /** Return the offset of the start of the line for |lineToken|. */
+  uint32_t lineStart(LineToken lineToken) const {
+    MOZ_ASSERT(lineToken.index + 1 < lineStartOffsets_.length(),
+               "recorded line-start information must be available");
+    return lineStartOffsets_[lineToken.index];
+  }
+};
+
 enum class InvalidEscapeType {
   // No invalid character escapes.
   None,
@@ -369,152 +528,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
  public:
-  // This class maps a sourceUnits offset (which is 0-indexed) to a line
-  // number (which is 1-indexed) and an offset (which is 0-indexed) in
-  // code *units* (not code points, not bytes) into the line.
-  //
-  // If you need a column number (i.e. an offset in code *points*),
-  // GeneralTokenStreamChars<Unit> contains functions that consult this and
-  // use Unit-specific source text to determine the correct column.
-  class SourceCoords {
-    // For a given buffer holding source code, |lineStartOffsets_| has one
-    // element per line of source code, plus one sentinel element.  Each
-    // non-sentinel element holds the buffer offset for the start of the
-    // corresponding line of source code.  For this example script,
-    // assuming an initialLineOffset of 0:
-    //
-    // 1  // xyz            [line starts at offset 0]
-    // 2  var x;            [line starts at offset 7]
-    // 3                    [line starts at offset 14]
-    // 4  var y;            [line starts at offset 15]
-    //
-    // |lineStartOffsets_| is:
-    //
-    //   [0, 7, 14, 15, MAX_PTR]
-    //
-    // To convert a "line number" to an "index" into |lineStartOffsets_|,
-    // subtract |initialLineNum_|.  E.g. line 3's index is
-    // (3 - initialLineNum_), which is 2.  Therefore lineStartOffsets_[2]
-    // holds the buffer offset for the start of line 3, which is 14.  (Note
-    // that |initialLineNum_| is often 1, but not always.
-    //
-    // The first element is always initialLineOffset, passed to the
-    // constructor, and the last element is always the MAX_PTR sentinel.
-    //
-    // Offset-to-{line,offset-into-line} lookups are O(log n) in the worst
-    // case (binary search), but in practice they're heavily clustered and
-    // we do better than that by using the previous lookup's result
-    // (lastIndex_) as a starting point.
-    //
-    // Checking if an offset lies within a particular line number
-    // (isOnThisLine()) is O(1).
-    //
-    Vector<uint32_t, 128> lineStartOffsets_;
-
-    /** The line number on which the source text begins. */
-    uint32_t initialLineNum_;
-
-    /**
-     * The index corresponding to the last offset lookup -- used so that if
-     * offset lookups proceed in increasing order, and and the offset appears
-     * in the next couple lines from the last offset, we can avoid a full
-     * binary-search.
-     *
-     * This is mutable because it's modified on every search, but that fact
-     * isn't visible outside this class.
-     */
-    mutable uint32_t lastIndex_;
-
-    uint32_t indexFromOffset(uint32_t offset) const;
-
-    static const uint32_t MAX_PTR = UINT32_MAX;
-
-    uint32_t lineNumberFromIndex(uint32_t index) const {
-      return index + initialLineNum_;
-    }
-
-    uint32_t indexFromLineNumber(uint32_t lineNum) const {
-      return lineNum - initialLineNum_;
-    }
-
-   public:
-    SourceCoords(JSContext* cx, uint32_t initialLineNumber,
-                 uint32_t initialOffset);
-
-    MOZ_MUST_USE bool add(uint32_t lineNum, uint32_t lineStartOffset);
-    MOZ_MUST_USE bool fill(const SourceCoords& other);
-
-    bool isOnThisLine(uint32_t offset, uint32_t lineNum,
-                      bool* onThisLine) const {
-      uint32_t index = indexFromLineNumber(lineNum);
-      if (index + 1 >= lineStartOffsets_.length()) {  // +1 due to sentinel
-        return false;
-      }
-      *onThisLine = lineStartOffsets_[index] <= offset &&
-                    offset < lineStartOffsets_[index + 1];
-      return true;
-    }
-
-    /**
-     * A token, computed for an offset in source text, that can be used to
-     * access line number and line-offset information for that offset.
-     *
-     * LineToken *alone* exposes whether the corresponding offset is in the
-     * the first line of source (which may not be 1, depending on
-     * |initialLineNumber|), and whether it's in the same line as
-     * another LineToken.
-     */
-    class LineToken {
-      uint32_t index;
-#ifdef DEBUG
-      uint32_t offset_;  // stored for consistency-of-use assertions
-#endif
-
-      friend class SourceCoords;
-
-     public:
-      explicit LineToken(uint32_t index, uint32_t offset)
-          : index(index)
-#ifdef DEBUG
-            ,
-            offset_(offset)
-#endif
-      {
-      }
-
-      bool isFirstLine() const { return index == 0; }
-
-      bool isSameLine(LineToken other) const { return index == other.index; }
-
-      void assertConsistentOffset(uint32_t offset) const {
-        MOZ_ASSERT(offset_ == offset);
-      }
-    };
-
-    /**
-     * Compute a token usable to access information about the line at the
-     * given offset.
-     *
-     * The only information directly accessible in a token is whether it
-     * corresponds to the first line of source text (which may not be line
-     * 1, depending on the |initialLineNumber| value used to construct
-     * this).  Use |lineNumber(LineToken)| to compute the actual line
-     * number (incorporating the contribution of |initialLineNumber|).
-     */
-    LineToken lineToken(uint32_t offset) const;
-
-    /** Compute the line number for the given token. */
-    uint32_t lineNumber(LineToken lineToken) const {
-      return lineNumberFromIndex(lineToken.index);
-    }
-
-    /** Return the offset of the start of the line for |lineToken|. */
-    uint32_t lineStart(LineToken lineToken) const {
-      MOZ_ASSERT(lineToken.index + 1 < lineStartOffsets_.length(),
-                 "recorded line-start information must be available");
-      return lineStartOffsets_[lineToken.index];
-    }
-  } srcCoords;
+  SourceCoords srcCoords;
 
   static constexpr uint32_t ColumnChunkLength = 128;
 
