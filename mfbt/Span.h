@@ -358,7 +358,7 @@ class extent_type<dynamic_extent> {
  * AsBytes(). Any Span<T> can be viewed as Span<uint8_t> using the function
  * AsWritableBytes().
  */
-template <class ElementType, size_t Extent>
+template <class ElementType, size_t Extent /* = dynamic_extent */>
 class Span {
  public:
   // constants and types
