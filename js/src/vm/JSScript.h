@@ -2594,19 +2594,22 @@ class JSScript : public js::BaseScript {
  private:
   JSScript(js::HandleObject functionOrGlobal, uint8_t* stubEntry,
            js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
-           uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
+           uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend,
+           uint32_t lineno, uint32_t column);
 
   static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
                        js::HandleScriptSourceObject sourceObject,
                        uint32_t sourceStart, uint32_t sourceEnd,
-                       uint32_t toStringStart, uint32_t toStringEnd);
+                       uint32_t toStringStart, uint32_t toStringEnd,
+                       uint32_t lineno, uint32_t column);
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           const JS::ReadOnlyCompileOptions& options,
                           js::HandleScriptSourceObject sourceObject,
                           uint32_t sourceStart, uint32_t sourceEnd,
-                          uint32_t toStringStart, uint32_t toStringEnd);
+                          uint32_t toStringStart, uint32_t toStringEnd,
+                          uint32_t lineno, uint32_t column);
 
   static JSScript* CreateFromLazy(JSContext* cx,
                                   js::Handle<js::LazyScript*> lazy);
