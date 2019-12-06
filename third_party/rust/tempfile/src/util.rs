@@ -1,45 +1,39 @@
-use rand;
-use rand::RngCore;
-use std::ffi::OsString;
+use rand::distributions::Alphanumeric;
+use rand::{self, Rng};
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
-use std::{io, iter};
+use std::{io, str};
 
-use error::IoResultExt;
+use crate::error::IoResultExt;
 
-fn tmpname(prefix: &str, suffix: &str, rand_len: usize) -> OsString {
-    let mut buf = String::with_capacity(prefix.len() + suffix.len() + rand_len);
-    buf.push_str(prefix);
-    buf.extend(iter::repeat('X').take(rand_len));
-    buf.push_str(suffix);
+fn tmpname(prefix: &OsStr, suffix: &OsStr, rand_len: usize) -> OsString {
+    let mut buf = OsString::with_capacity(prefix.len() + suffix.len() + rand_len);
+    buf.push(prefix);
 
-    // Randomize.
+    // Push each character in one-by-one. Unfortunately, this is the only
+    // safe(ish) simple way to do this without allocating a temporary
+    // String/Vec.
     unsafe {
-        // We guarantee utf8.
-        let bytes = &mut buf.as_mut_vec()[prefix.len()..prefix.len() + rand_len];
-        rand::thread_rng().fill_bytes(bytes);
-        for byte in bytes.iter_mut() {
-            *byte = match *byte % 62 {
-                v @ 0...9 => (v + b'0'),
-                v @ 10...35 => (v - 10 + b'a'),
-                v @ 36...61 => (v - 36 + b'A'),
-                _ => unreachable!(),
-            }
-        }
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(rand_len)
+            .for_each(|b| buf.push(str::from_utf8_unchecked(&[b as u8])))
     }
-    OsString::from(buf)
+    buf.push(suffix);
+    buf
 }
 
 pub fn create_helper<F, R>(
     base: &Path,
-    prefix: &str,
-    suffix: &str,
+    prefix: &OsStr,
+    suffix: &OsStr,
     random_len: usize,
     f: F,
 ) -> io::Result<R>
 where
     F: Fn(PathBuf) -> io::Result<R>,
 {
-    let num_retries = if random_len != 0 { ::NUM_RETRIES } else { 1 };
+    let num_retries = if random_len != 0 { crate::NUM_RETRIES } else { 1 };
 
     for _ in 0..num_retries {
         let path = base.join(tmpname(prefix, suffix, random_len));
@@ -50,7 +44,8 @@ where
     }
 
     Err(io::Error::new(
-        io::ErrorKind::AlreadyExists, 
-        "too many temporary files exist"))
-        .with_err_path(|| base)
+        io::ErrorKind::AlreadyExists,
+        "too many temporary files exist",
+    ))
+    .with_err_path(|| base)
 }

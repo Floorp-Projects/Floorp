@@ -1,89 +1,76 @@
-use std::fs::File;
-use std::io;
+use std::ffi::OsStr;
+use std::fs::{File, OpenOptions};
 use std::os::windows::ffi::OsStrExt;
+use std::os::windows::fs::OpenOptionsExt;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, RawHandle};
 use std::path::Path;
-use std::ptr;
+use std::{io, iter};
 
-use winapi::shared::minwindef::DWORD;
-use winapi::um::fileapi::{CreateFileW, SetFileAttributesW, CREATE_NEW};
+use winapi::um::fileapi::SetFileAttributesW;
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
-use winapi::um::winbase::{FILE_FLAG_DELETE_ON_CLOSE, MOVEFILE_REPLACE_EXISTING};
 use winapi::um::winbase::{MoveFileExW, ReOpenFile};
-use winapi::um::winnt::{FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_TEMPORARY};
+use winapi::um::winbase::{FILE_FLAG_DELETE_ON_CLOSE, MOVEFILE_REPLACE_EXISTING};
+use winapi::um::winnt::{FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_TEMPORARY};
 use winapi::um::winnt::{FILE_GENERIC_READ, FILE_GENERIC_WRITE, HANDLE};
 use winapi::um::winnt::{FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE};
 
-use util;
-
-#[cfg_attr(irustfmt, rustfmt_skip)]
-const ACCESS: DWORD     = FILE_GENERIC_READ
-                        | FILE_GENERIC_WRITE;
-#[cfg_attr(irustfmt, rustfmt_skip)]
-const SHARE_MODE: DWORD = FILE_SHARE_DELETE
-                        | FILE_SHARE_READ
-                        | FILE_SHARE_WRITE;
-#[cfg_attr(irustfmt, rustfmt_skip)]
-const FLAGS: DWORD      = FILE_ATTRIBUTE_HIDDEN
-                        | FILE_ATTRIBUTE_TEMPORARY;
+use crate::util;
 
 fn to_utf16(s: &Path) -> Vec<u16> {
-    s.as_os_str()
-        .encode_wide()
-        .chain(Some(0).into_iter())
-        .collect()
+    s.as_os_str().encode_wide().chain(iter::once(0)).collect()
 }
 
-fn win_create(
-    path: &Path,
-    access: DWORD,
-    share_mode: DWORD,
-    disp: DWORD,
-    flags: DWORD,
-) -> io::Result<File> {
-    let path = to_utf16(path);
-    let handle = unsafe {
-        CreateFileW(
-            path.as_ptr(),
-            access,
-            share_mode,
-            0 as *mut _,
-            disp,
-            flags,
-            ptr::null_mut(),
-        )
-    };
-    if handle == INVALID_HANDLE_VALUE {
-        Err(io::Error::last_os_error())
-    } else {
-        Ok(unsafe { File::from_raw_handle(handle as RawHandle) })
-    }
-}
-
-pub fn create_named(path: &Path) -> io::Result<File> {
-    win_create(path, ACCESS, SHARE_MODE, CREATE_NEW, FLAGS)
+pub fn create_named(path: &Path, open_options: &mut OpenOptions) -> io::Result<File> {
+    open_options
+        .create_new(true)
+        .read(true)
+        .write(true)
+        .custom_flags(FILE_ATTRIBUTE_TEMPORARY)
+        .open(path)
 }
 
 pub fn create(dir: &Path) -> io::Result<File> {
-    util::create_helper(dir, ".tmp", "", ::NUM_RAND_CHARS, |path| {
-        win_create(
-            &path,
-            ACCESS,
-            0, // Exclusive
-            CREATE_NEW,
-            FLAGS | FILE_FLAG_DELETE_ON_CLOSE,
-        )
-    })
+    util::create_helper(
+        dir,
+        OsStr::new(".tmp"),
+        OsStr::new(""),
+        crate::NUM_RAND_CHARS,
+        |path| {
+            OpenOptions::new()
+                .create_new(true)
+                .read(true)
+                .write(true)
+                .share_mode(0)
+                .custom_flags(FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE)
+                .open(path)
+        },
+    )
 }
 
 pub fn reopen(file: &File, _path: &Path) -> io::Result<File> {
     let handle = file.as_raw_handle();
     unsafe {
-        let handle = ReOpenFile(handle as HANDLE, ACCESS, SHARE_MODE, 0);
+        let handle = ReOpenFile(
+            handle as HANDLE,
+            FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+            FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+            0,
+        );
         if handle == INVALID_HANDLE_VALUE {
             Err(io::Error::last_os_error())
         } else {
             Ok(FromRawHandle::from_raw_handle(handle as RawHandle))
+        }
+    }
+}
+
+pub fn keep(path: &Path) -> io::Result<()> {
+    unsafe {
+        let path_w = to_utf16(path);
+        if SetFileAttributesW(path_w.as_ptr(), FILE_ATTRIBUTE_NORMAL) == 0 {
+            Err(io::Error::last_os_error())
+        } else {
+            Ok(())
         }
     }
 }
@@ -112,7 +99,7 @@ pub fn persist(old_path: &Path, new_path: &Path, overwrite: bool) -> io::Result<
             let e = io::Error::last_os_error();
             // If this fails, the temporary file is now un-hidden and no longer marked temporary
             // (slightly less efficient) but it will still work.
-            let _ = SetFileAttributesW(old_path_w.as_ptr(), FLAGS);
+            let _ = SetFileAttributesW(old_path_w.as_ptr(), FILE_ATTRIBUTE_TEMPORARY);
             Err(e)
         } else {
             Ok(())

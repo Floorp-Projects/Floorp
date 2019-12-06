@@ -24,14 +24,14 @@
 //! a temporary file cleaner could delete the temporary file which an attacker could then replace.
 //!
 //! `tempfile` doesn't rely on file paths so this isn't an issue. However, `NamedTempFile` does
-//! rely on file paths.
+//! rely on file paths for _some_ operations. See the security documentation on
+//! the `NamedTempFile` type for more information.
 //!
 //! ## Examples
 //!
 //! Create a temporary file and write some data into it:
 //!
 //! ```
-//! # extern crate tempfile;
 //! use tempfile::tempfile;
 //! use std::io::{self, Write};
 //!
@@ -49,10 +49,40 @@
 //! # }
 //! ```
 //!
+//! Create a named temporary file and open an independent file handle:
+//!
+//! ```
+//! use tempfile::NamedTempFile;
+//! use std::io::{self, Write, Read};
+//!
+//! # fn main() {
+//! #     if let Err(_) = run() {
+//! #         ::std::process::exit(1);
+//! #     }
+//! # }
+//! # fn run() -> Result<(), io::Error> {
+//! let text = "Brian was here. Briefly.";
+//!
+//! // Create a file inside of `std::env::temp_dir()`.
+//! let mut file1 = NamedTempFile::new()?;
+//!
+//! // Re-open it.
+//! let mut file2 = file1.reopen()?;
+//!
+//! // Write some test data to the first handle.
+//! file1.write_all(text.as_bytes())?;
+//!
+//! // Read the test data using the second handle.
+//! let mut buf = String::new();
+//! file2.read_to_string(&mut buf)?;
+//! assert_eq!(buf, text);
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! Create a temporary directory and add a file to it:
 //!
 //! ```
-//! # extern crate tempfile;
 //! use tempfile::tempdir;
 //! use std::fs::File;
 //! use std::io::{self, Write};
@@ -87,55 +117,51 @@
 //! [`NamedTempFile`]: struct.NamedTempFile.html
 //! [`std::env::temp_dir()`]: https://doc.rust-lang.org/std/env/fn.temp_dir.html
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/tempfile/2.2.0")]
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://docs.rs/tempfile/3.1.0"
+)]
 #![cfg_attr(test, deny(warnings))]
+#![deny(rust_2018_idioms)]
 
 #[macro_use]
 extern crate cfg_if;
-extern crate rand;
-extern crate remove_dir_all;
-
-#[cfg(unix)]
-extern crate libc;
-
-#[cfg(windows)]
-extern crate winapi;
-
-#[cfg(target_os = "redox")]
-extern crate syscall;
 
 const NUM_RETRIES: u32 = 1 << 31;
 const NUM_RAND_CHARS: usize = 6;
 
+use std::ffi::OsStr;
+use std::fs::OpenOptions;
 use std::path::Path;
 use std::{env, io};
 
-mod error;
 mod dir;
+mod error;
 mod file;
-mod util;
 mod spooled;
+mod util;
 
-pub use dir::{tempdir, tempdir_in, TempDir};
-pub use file::{tempfile, tempfile_in, NamedTempFile, PersistError, TempPath};
-pub use spooled::{spooled_tempfile, SpooledTempFile};
+pub use crate::dir::{tempdir, tempdir_in, TempDir};
+pub use crate::file::{tempfile, tempfile_in, NamedTempFile, PathPersistError, PersistError, TempPath};
+pub use crate::spooled::{spooled_tempfile, SpooledTempFile};
 
 /// Create a new temporary file or directory with custom parameters.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Builder<'a, 'b> {
     random_len: usize,
-    prefix: &'a str,
-    suffix: &'b str,
+    prefix: &'a OsStr,
+    suffix: &'b OsStr,
+    append: bool,
 }
 
 impl<'a, 'b> Default for Builder<'a, 'b> {
     fn default() -> Self {
         Builder {
-            random_len: ::NUM_RAND_CHARS,
-            prefix: ".tmp",
-            suffix: "",
+            random_len: crate::NUM_RAND_CHARS,
+            prefix: OsStr::new(".tmp"),
+            suffix: OsStr::new(""),
+            append: false,
         }
     }
 }
@@ -148,7 +174,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// Create a named temporary file and write some data into it:
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # use std::ffi::OsStr;
     /// # fn main() {
@@ -181,7 +206,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// Create a temporary directory and add a file to it:
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io::{self, Write};
     /// # use std::fs::File;
     /// # use std::ffi::OsStr;
@@ -224,7 +248,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # fn main() {
     /// #     if let Err(_) = run() {
@@ -239,8 +262,8 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn prefix(&mut self, prefix: &'a str) -> &mut Self {
-        self.prefix = prefix;
+    pub fn prefix<S: AsRef<OsStr> + ?Sized>(&mut self, prefix: &'a S) -> &mut Self {
+        self.prefix = prefix.as_ref();
         self
     }
 
@@ -252,7 +275,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # fn main() {
     /// #     if let Err(_) = run() {
@@ -267,8 +289,8 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn suffix(&mut self, suffix: &'b str) -> &mut Self {
-        self.suffix = suffix;
+    pub fn suffix<S: AsRef<OsStr> + ?Sized>(&mut self, suffix: &'b S) -> &mut Self {
+        self.suffix = suffix.as_ref();
         self
     }
 
@@ -279,7 +301,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # fn main() {
     /// #     if let Err(_) = run() {
@@ -296,6 +317,32 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// ```
     pub fn rand_bytes(&mut self, rand: usize) -> &mut Self {
         self.random_len = rand;
+        self
+    }
+
+    /// Set the file to be opened in append mode.
+    ///
+    /// Default: `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::io;
+    /// # fn main() {
+    /// #     if let Err(_) = run() {
+    /// #         ::std::process::exit(1);
+    /// #     }
+    /// # }
+    /// # fn run() -> Result<(), io::Error> {
+    /// # use tempfile::Builder;
+    /// let named_tempfile = Builder::new()
+    ///     .append(true)
+    ///     .tempfile()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn append(&mut self, append: bool) -> &mut Self {
+        self.append = append;
         self
     }
 
@@ -316,7 +363,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # fn main() {
     /// #     if let Err(_) = run() {
@@ -353,7 +399,6 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate tempfile;
     /// # use std::io;
     /// # fn main() {
     /// #     if let Err(_) = run() {
@@ -375,7 +420,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             self.prefix,
             self.suffix,
             self.random_len,
-            file::create_named,
+            |path| file::create_named(path, OpenOptions::new().append(self.append)),
         )
     }
 

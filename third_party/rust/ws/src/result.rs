@@ -61,7 +61,7 @@ pub enum Kind {
     /// A custom error kind for use by applications. This error kind involves extra overhead
     /// because it will allocate the memory on the heap. The WebSocket ignores such errors by
     /// default, simply passing them to the Connection Handler.
-    Custom(Box<StdError + Send + Sync>),
+    Custom(Box<dyn StdError + Send + Sync>),
 }
 
 /// A struct indicating the kind of error that has occurred and any precise details of that error.
@@ -81,7 +81,7 @@ impl Error {
         }
     }
 
-    pub fn into_box(self) -> Box<StdError> {
+    pub fn into_box(self) -> Box<dyn StdError> {
         match self.kind {
             Kind::Custom(err) => err,
             _ => Box::new(self),
@@ -127,7 +127,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match self.kind {
             Kind::Encoding(ref err) => Some(err),
             Kind::Io(ref err) => Some(err),

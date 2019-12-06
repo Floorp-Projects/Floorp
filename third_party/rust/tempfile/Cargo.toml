@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,21 +11,22 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "tempfile"
-version = "3.0.5"
+version = "3.1.0"
 authors = ["Steven Allen <steven@stebalien.com>", "The Rust Project Developers", "Ashley Mannix <ashleymannix@live.com.au>", "Jason White <jasonaw0@gmail.com>"]
 exclude = ["/.travis.yml", "/appveyor.yml"]
-description = "A library for managing temporary files and directories.\n"
+description = "A library for managing temporary files and directories."
 homepage = "http://stebalien.com/projects/tempfile-rs"
 documentation = "https://docs.rs/tempfile"
 keywords = ["tempfile", "tmpfile", "filesystem"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/Stebalien/tempfile"
 [dependencies.cfg-if]
 version = "0.1"
 
 [dependencies.rand]
-version = "0.6"
+version = "0.7"
 
 [dependencies.remove_dir_all]
 version = "0.5"
@@ -35,4 +36,4 @@ version = "0.1"
 version = "0.2.27"
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3"
-features = ["fileapi", "winbase", "handleapi"]
+features = ["fileapi", "handleapi", "winbase"]

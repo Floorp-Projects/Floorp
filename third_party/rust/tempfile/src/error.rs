@@ -1,5 +1,5 @@
-use std::{error, io, fmt};
 use std::path::PathBuf;
+use std::{error, fmt, io};
 
 #[derive(Debug)]
 struct PathError {
@@ -8,18 +8,14 @@ struct PathError {
 }
 
 impl fmt::Display for PathError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} at path {:?}", self.err, self.path)
     }
 }
 
 impl error::Error for PathError {
-    fn description(&self) -> &str {
-        self.err.description()
-    }
-    
-    fn cause(&self) -> Option<&error::Error> {
-        self.err.cause()
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        self.err.source()
     }
 }
 
@@ -37,10 +33,13 @@ impl<T> IoResultExt<T> for Result<T, io::Error> {
         P: Into<PathBuf>,
     {
         self.map_err(|e| {
-            io::Error::new(e.kind(), PathError {
-                path: path().into(),
-                err: e,
-            })
+            io::Error::new(
+                e.kind(),
+                PathError {
+                    path: path().into(),
+                    err: e,
+                },
+            )
         })
     }
 }
