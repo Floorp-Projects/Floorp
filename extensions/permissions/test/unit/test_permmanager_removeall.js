@@ -6,9 +6,7 @@ function run_test() {
   var dir = do_get_profile();
 
   // initialize the permission manager service
-  var pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  var pm = Services.perms;
 
   // get the db file
   var file = dir.clone();

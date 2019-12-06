@@ -2,15 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function getPrincipalFromDomain(aDomain) {
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  let ssm = Services.scriptSecurityManager;
   let uri = NetUtil.newURI("http://" + aDomain);
   return ssm.createContentPrincipal(uri, {});
 }
 
 function run_test() {
-  let profile = do_get_profile();
   let pm = Services.perms;
   let perm = "test-idn";
 

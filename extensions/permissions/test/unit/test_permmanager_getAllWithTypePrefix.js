@@ -2,9 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function check_enumerator(prefix, permissions) {
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   let array = pm.getAllWithTypePrefix(prefix);
   for (let [principal, type, capability] of permissions) {
@@ -19,9 +17,7 @@ function check_enumerator(prefix, permissions) {
 }
 
 function run_test() {
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://example.com"

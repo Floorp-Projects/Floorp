@@ -2,25 +2,19 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function check_enumerator(principal, permissions) {
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
-
-  let perms = pm.getAllForPrincipal(principal);
-  for ([type, capability] of permissions) {
+  let perms = Services.perms.getAllForPrincipal(principal);
+  for (let [type, capability] of permissions) {
     let perm = perms.shift();
     Assert.ok(perm != null);
     Assert.equal(perm.type, type);
     Assert.equal(perm.capability, capability);
-    Assert.equal(perm.expireType, pm.EXPIRE_NEVER);
+    Assert.equal(perm.expireType, Services.perms.EXPIRE_NEVER);
   }
   Assert.ok(!perms.length);
 }
 
 function run_test() {
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     "http://example.com"

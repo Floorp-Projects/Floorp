@@ -151,9 +151,10 @@ const tests = [
   ["warn", "iso-8859-1"],
 ];
 
+// eslint-disable-next-line no-shadow
 function* do_get_file_by_line(file, charset) {
   dump("getting file by line for file " + file.path + "\n");
-  dump("using charset " + charset + "\n");
+  dump("using charset1" + charset + "\n");
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
   );
@@ -165,7 +166,7 @@ function* do_get_file_by_line(file, charset) {
   lis.init(fis, charset, 1024, 0);
   lis.QueryInterface(Ci.nsIUnicharLineInputStream);
 
-  var val = {};
+  let val = {};
   while (lis.readLine(val)) {
     yield val.value;
     val = {};
@@ -191,7 +192,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
 
   if (good.exists()) {
     var good_counter = 0;
-    for (val of do_get_file_by_line(good, charset)) {
+    for (const val of do_get_file_by_line(good, charset)) {
       let todo = false;
       good_counter++;
       if (todo_good && todo_good[good_counter]) {
@@ -210,7 +211,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
 
   if (bad.exists()) {
     var bad_counter = 0;
-    for (val of do_get_file_by_line(bad, charset)) {
+    for (const val of do_get_file_by_line(bad, charset)) {
       let todo = false;
       bad_counter++;
       if (todo_bad && todo_bad[bad_counter]) {
@@ -241,7 +242,7 @@ function run_test() {
   spellChecker.loadDictionariesFromDir(testdir);
 
   function do_run_test_closure(test) {
-    [name, charset, todo_good, todo_bad] = test;
+    let [name, charset, todo_good, todo_bad] = test;
     do_run_test(spellChecker, name, charset, todo_good, todo_bad);
   }
 

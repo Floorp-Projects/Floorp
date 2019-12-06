@@ -15,9 +15,6 @@ function continue_test() {
 }
 
 function* do_run_test() {
-  // Set up a profile.
-  let profile = do_get_profile();
-
   let pm = Services.perms;
 
   // to help with testing edge-cases, we will arrange for .removeAllSince to

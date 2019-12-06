@@ -22,11 +22,11 @@ function getData(aPattern) {
 function test(aEntries, aData, aResults) {
   let principals = [];
 
-  for (entry of aEntries) {
+  for (const entry of aEntries) {
     principals.push(createPrincipal(entry.origin, entry.originAttributes));
   }
 
-  for (principal of principals) {
+  for (const principal of principals) {
     Assert.equal(
       pm.testPermissionFromPrincipal(principal, "test/clear-origin"),
       pm.UNKNOWN_ACTION
@@ -63,9 +63,7 @@ function test(aEntries, aData, aResults) {
 function run_test() {
   do_get_profile();
 
-  pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  pm = Services.perms;
 
   let entries = [
     { origin: "http://example.com", originAttributes: {} },

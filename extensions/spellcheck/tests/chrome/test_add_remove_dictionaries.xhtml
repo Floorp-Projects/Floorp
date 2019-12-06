@@ -40,6 +40,7 @@ function RunTest() {
   textbox.focus();
   var editor = textbox.editor;
 
+  // eslint-disable-next-line mozilla/use-services
   var dir = Cc["@mozilla.org/file/directory_service;1"].
             getService(Ci.nsIProperties).
             get("CurWorkD", Ci.nsIFile);
@@ -76,6 +77,7 @@ function RunTest() {
     // select base dictionary
     setCurrentDictionary(editor, "base-utf");
 
+    /* eslint-disable no-useless-concat */
     onSpellCheck(textbox, function () {
       // test that base dictionary is in use
       is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");

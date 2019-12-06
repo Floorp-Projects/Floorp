@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+var attrs;
+
 function matches_always(perm, principals) {
   principals.forEach(principal => {
     Assert.ok(
@@ -42,13 +44,9 @@ function matches_never(perm, principals) {
 
 function run_test() {
   // initialize the permission manager service
-  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  let pm = Services.perms;
 
-  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  let secMan = Services.scriptSecurityManager;
 
   // Add some permissions
   let uri0 = NetUtil.newURI("http://google.com/search?q=foo#hashtag");
