@@ -9783,18 +9783,27 @@ void Document::FlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   }
 
   // If we have a parent we must flush the parent too to ensure that our
-  // container is reflowed if its size was changed.  But if it's not safe to
-  // flush ourselves, then don't flush the parent, since that can cause things
-  // like resizes of our frame's widget, which we can't handle while flushing
-  // is unsafe.
-  // Since media queries mean that a size change of our container can
-  // affect style, we need to promote a style flush on ourself to a
-  // layout flush on our parent, since we need our container to be the
-  // correct size to determine the correct style.
+  // container is reflowed if its size was changed.
+  //
+  // We do it only if the subdocument and the parent can observe each other
+  // synchronously (that is, if we're not cross-origin), to avoid work that is
+  // not observable, and if the parent document has finished loading all its
+  // render-blocking stylesheets and may start laying out the document, to avoid
+  // unnecessary flashes of unstyled content on the parent document. Note that
+  // this last bit means that size-dependent media queries in this document may
+  // produce incorrect results temporarily.
+  //
+  // But if it's not safe to flush ourselves, then don't flush the parent, since
+  // that can cause things like resizes of our frame's widget, which we can't
+  // handle while flushing is unsafe.
   if (StyleOrLayoutObservablyDependsOnParentDocumentLayout() &&
       mParentDocument->MayStartLayout() && IsSafeToFlush()) {
-    mozilla::ChangesToFlush parentFlush = aFlush;
+    ChangesToFlush parentFlush = aFlush;
     if (flushType >= FlushType::Style) {
+      // Since media queries mean that a size change of our container can affect
+      // style, we need to promote a style flush on ourself to a layout flush on
+      // our parent, since we need our container to be the correct size to
+      // determine the correct style.
       parentFlush.mFlushType = std::max(FlushType::Layout, flushType);
     }
     mParentDocument->FlushPendingNotifications(parentFlush);
