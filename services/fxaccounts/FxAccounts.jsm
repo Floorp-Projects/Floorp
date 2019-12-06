@@ -434,6 +434,10 @@ class FxAccounts {
     return this._internal.withVerifiedAccountState(func);
   }
 
+  _withSessionToken(func, mustBeVerified = true) {
+    return this._internal.withSessionToken(func, mustBeVerified);
+  }
+
   /**
    * Returns an array listing all the OAuth clients connected to the
    * authenticated user's account. This includes browsers and web sessions - no
@@ -450,8 +454,7 @@ class FxAccounts {
     // We expose last accessed times in 'days ago'
     const ONE_DAY = 24 * 60 * 60 * 1000;
 
-    return this._withVerifiedAccountState(async state => {
-      const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
+    return this._withSessionToken(async sessionToken => {
       const attachedClients = await this._internal.fxAccountsClient.attachedClients(
         sessionToken
       );
@@ -692,31 +695,10 @@ class FxAccounts {
    *
    */
   resendVerificationEmail() {
-    return this._withCurrentAccountState(currentState => {
-      return currentState.getUserAccountData().then(data => {
-        // If the caller is asking for verification to be re-sent, and there is
-        // no signed-in user to begin with, this is probably best regarded as an
-        // error.
-        if (data) {
-          if (!data.sessionToken) {
-            return Promise.reject(
-              new Error(
-                "resendVerificationEmail called without a session token"
-              )
-            );
-          }
-          this._internal.startPollEmailStatus(
-            currentState,
-            data.sessionToken,
-            "start"
-          );
-          return this._internal.fxAccountsClient
-            .resendVerificationEmail(data.sessionToken)
-            .catch(err => this._internal._handleTokenError(err));
-        }
-        throw new Error("Cannot resend verification email; no signed-in user");
-      });
-    });
+    return this._withSessionToken((token, currentState) => {
+      this._internal.startPollEmailStatus(currentState, token, "start");
+      return this._internal.fxAccountsClient.resendVerificationEmail(token);
+    }, false);
   }
 
   async signOut(localOnly) {
@@ -824,6 +806,33 @@ FxAccountsInternal.prototype = {
     });
   },
 
+  async withSessionToken(func, mustBeVerified = true) {
+    const state = this.currentAccountState;
+    let data = await state.getUserAccountData();
+    if (!data) {
+      // No signed-in user
+      throw this._error(ERROR_NO_ACCOUNT);
+    }
+
+    if (mustBeVerified && !this.isUserEmailVerified(data)) {
+      // Signed-in user has not verified email
+      throw this._error(ERROR_UNVERIFIED_ACCOUNT);
+    }
+
+    if (!data.sessionToken) {
+      throw this._error(ERROR_AUTH_ERROR, "no session token");
+    }
+    try {
+      // Anyone who needs the session token is going to send it to the server,
+      // so there's a chance we'll see an auth related error - so handle that
+      // here rather than requiring each caller to remember to.
+      let result = await func(data.sessionToken, state);
+      return state.resolve(result);
+    } catch (err) {
+      return this._handleTokenError(err);
+    }
+  },
+
   get fxAccountsClient() {
     if (!this._fxAccountsClient) {
       this._fxAccountsClient = new FxAccountsClient();
@@ -890,18 +899,9 @@ FxAccountsInternal.prototype = {
     if (typeof deviceIds == "string") {
       deviceIds = [deviceIds];
     }
-    return this.currentAccountState.getUserAccountData().then(data => {
-      if (!data) {
-        throw this._error(ERROR_NO_ACCOUNT);
-      }
-      if (!data.sessionToken) {
-        throw this._error(
-          ERROR_AUTH_ERROR,
-          "notifyDevices called without a session token"
-        );
-      }
+    return this.withSessionToken(sessionToken => {
       return this.fxAccountsClient.notifyDevices(
-        data.sessionToken,
+        sessionToken,
         deviceIds,
         excludedIds,
         payload,
@@ -1044,8 +1044,8 @@ FxAccountsInternal.prototype = {
   },
 
   /**
-   * returns a promise that fires with the assertion.  If there is no verified
-   * signed-in user, fires with null.
+   * returns a promise that fires with the assertion.  Throws if there is no
+   * verified signed-in user or no local sessionToken.
    */
   getAssertion: function getAssertion(audience) {
     return this._getAssertion(audience);
@@ -1053,42 +1053,19 @@ FxAccountsInternal.prototype = {
 
   // getAssertion() is "public" so screws with our mock story. This
   // implementation method *can* be (and is) mocked by tests.
-  _getAssertion: function _getAssertion(audience) {
+  _getAssertion(audience) {
     log.debug("enter getAssertion()");
-    let currentState = this.currentAccountState;
-    return currentState
-      .getUserAccountData()
-      .then(data => {
-        if (!data) {
-          // No signed-in user
-          return null;
-        }
-        if (!this.isUserEmailVerified(data)) {
-          // Signed-in user has not verified email
-          return null;
-        }
-        if (!data.sessionToken) {
-          // can't get a signed certificate without a session token. This
-          // can happen if we request an assertion after clearing an invalid
-          // session token from storage.
-          throw this._error(
-            ERROR_AUTH_ERROR,
-            "getAssertion called without a session token"
-          );
-        }
-        return this.getKeypairAndCertificate(currentState).then(
-          ({ keyPair, certificate }) => {
-            return this.getAssertionFromCert(
-              data,
-              keyPair,
-              certificate,
-              audience
-            );
-          }
-        );
-      })
-      .catch(err => this._handleTokenError(err))
-      .then(result => currentState.resolve(result));
+    return this.withSessionToken(async (_, currentState) => {
+      let { keyPair, certificate } = await this.getKeypairAndCertificate(
+        currentState
+      );
+      return this.getAssertionFromCert(
+        await currentState.getUserAccountData(),
+        keyPair,
+        certificate,
+        audience
+      );
+    });
   },
 
   /*
