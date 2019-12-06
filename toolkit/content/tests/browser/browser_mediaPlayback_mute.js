@@ -41,7 +41,7 @@ async function test_on_browser(url, browser) {
   BrowserTestUtils.loadURI(browser, url);
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
-  var result = await ContentTask.spawn(browser, null, test_audio_in_browser);
+  var result = await SpecialPowers.spawn(browser, [], test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
@@ -51,7 +51,7 @@ async function test_on_browser(url, browser) {
 
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
 
-  result = await ContentTask.spawn(browser, null, test_audio_in_browser);
+  result = await SpecialPowers.spawn(browser, [], test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
   is(result.computedMuted, true, "Audio is muted");
 }
@@ -60,7 +60,7 @@ async function test_visibility(url, browser) {
   BrowserTestUtils.loadURI(browser, url);
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
-  var result = await ContentTask.spawn(browser, null, test_audio_in_browser);
+  var result = await SpecialPowers.spawn(browser, [], test_audio_in_browser);
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
@@ -78,7 +78,7 @@ async function test_visibility(url, browser) {
 
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
 
-  result = await ContentTask.spawn(browser, null, test_audio_in_browser);
+  result = await SpecialPowers.spawn(browser, [], test_audio_in_browser);
   is(result.computedVolume, 0, "Audio volume is 0 when muted");
   is(result.computedMuted, true, "Audio is muted");
 }

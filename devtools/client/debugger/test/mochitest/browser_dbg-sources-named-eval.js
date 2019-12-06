@@ -25,7 +25,7 @@ add_task(async function() {
   } = dbg;
 
   info(`>>> contentTask: evaluate evaled.js\n`)
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });
 

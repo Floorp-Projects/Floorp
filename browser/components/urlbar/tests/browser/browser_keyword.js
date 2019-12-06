@@ -187,10 +187,8 @@ add_task(async function test_keyword_using_post() {
     "Tab should have loaded from clicking on result"
   );
 
-  let postData = await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    async function() {
+  let postData = await SpecialPowers.spawn(
+    tab.linkedBrowser, [], async function() {
       return content.document.body.textContent;
     }
   );

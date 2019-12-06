@@ -75,7 +75,7 @@ add_task(async function test_new_remote_window_flags_window_open() {
  */
 add_task(async function test_new_remote_window_flags_content_open() {
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.open("about:blank", "_blank");
   });
 

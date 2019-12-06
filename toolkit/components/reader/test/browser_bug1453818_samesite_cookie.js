@@ -18,7 +18,7 @@ async function clickLink(browser) {
     browser,
     "DOMContentLoaded"
   );
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let link = content.document.getElementById("link");
     ok(link, "The link element was found.");
     link.click();
@@ -27,7 +27,7 @@ async function clickLink(browser) {
 }
 
 async function checkCookiePresent(browser) {
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let cookieSpan = content.document.getElementById("cookieSpan");
     ok(cookieSpan, "cookieSpan element should be in document");
     is(
@@ -40,7 +40,7 @@ async function checkCookiePresent(browser) {
 
 async function checkCookie(browser) {
   info("Check that the SameSite cookie was not sent.");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let cookieSpan = content.document.getElementById("cookieSpan");
     ok(cookieSpan, "cookieSpan element should be in document");
     is(

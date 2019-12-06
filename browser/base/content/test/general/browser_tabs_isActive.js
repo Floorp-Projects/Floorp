@@ -24,7 +24,7 @@ function getParentTabState(aTab) {
 }
 
 function getChildTabState(aTab) {
-  return ContentTask.spawn(aTab.linkedBrowser, {}, async function() {
+  return SpecialPowers.spawn(aTab.linkedBrowser, [], async function() {
     return docShell.isActive;
   });
 }

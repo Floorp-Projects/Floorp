@@ -294,10 +294,8 @@ async function test_storage_cleared() {
     );
 
     // Check that the storages has been set correctly.
-    await ContentTask.spawn(
-      tabInfo.browser,
-      { userContext: USER_CONTEXTS[userContextId] },
-      async function(arg) {
+    await SpecialPowers.spawn(
+      tabInfo.browser, [{ userContext: USER_CONTEXTS[userContextId] }], async function(arg) {
         // Check that the local storage has been set correctly.
         Assert.equal(
           content.localStorage.getItem("userContext"),
@@ -356,7 +354,7 @@ async function test_storage_cleared() {
     );
 
     // Check that do storages be cleared or not.
-    await ContentTask.spawn(tabInfo.browser, null, async function() {
+    await SpecialPowers.spawn(tabInfo.browser, [], async function() {
       // Check that does the local storage be cleared or not.
       Assert.ok(
         !content.localStorage.getItem("userContext"),

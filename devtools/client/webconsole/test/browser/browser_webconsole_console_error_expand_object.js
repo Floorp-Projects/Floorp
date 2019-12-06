@@ -11,7 +11,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessagesLogged = waitForMessage(hud, "myError");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.error("myError", { a: "a", b: "b" });
   });
   const { node } = await onMessagesLogged;

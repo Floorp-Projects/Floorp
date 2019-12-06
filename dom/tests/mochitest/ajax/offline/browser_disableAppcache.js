@@ -6,7 +6,7 @@ const PREF_NETWORK_PROXY = "network.proxy.type";
 
 add_task(async function test_pref_removes_api() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     // Have to use in page checking as IsSecureContextOrObjectIsFromSecureContext is true for spawn()
     is(content.document.getElementById("hasAppcache").textContent, "no", "Appcache is disabled");
     is(content.document.getElementById("hasOfflineResourceList").textContent, "no", "OfflineResourceList is disabled");

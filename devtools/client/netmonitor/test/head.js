@@ -984,7 +984,7 @@ async function selectIndexAndWaitForSourceEditor(monitor, index) {
  */
 async function performRequests(monitor, tab, count) {
   const wait = waitForNetworkEvents(monitor, count);
-  await ContentTask.spawn(tab.linkedBrowser, count, requestCount => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [count], requestCount => {
     content.wrappedJSObject.performRequests(requestCount);
   });
   await wait;

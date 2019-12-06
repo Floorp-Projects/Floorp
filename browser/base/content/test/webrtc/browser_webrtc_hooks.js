@@ -7,7 +7,7 @@ const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
 const ORIGIN = "https://example.com";
 
 async function tryPeerConnection(browser, expectedError = null) {
-  let errtype = await ContentTask.spawn(browser, null, async function() {
+  let errtype = await SpecialPowers.spawn(browser, [], async function() {
     let pc = new content.RTCPeerConnection();
     try {
       await pc.createOffer({ offerToReceiveAudio: true });
@@ -323,7 +323,7 @@ var gTests = [
         });
       webrtcUI.addPeerConnectionBlocker(blocker);
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         new content.RTCPeerConnection().createOffer({
           offerToReceiveAudio: true,
         });
@@ -338,7 +338,7 @@ var gTests = [
         });
       });
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         content.location.reload();
       });
 

@@ -23,9 +23,9 @@ function test() {
   let taskFinished;
 
   let tab = BrowserTestUtils.addTab(gBrowser, doc, {}, tab => {
-    taskFinished = ContentTask.spawn(tab.linkedBrowser, null, () => {
+    taskFinished = SpecialPowers.spawn(tab.linkedBrowser, [], () => {
       return new Promise(resolve => {
-        addEventListener(
+        docShell.chromeEventHandler.addEventListener(
           "load",
           function() {
             // The main page has loaded.  Now wait for the iframe to load.

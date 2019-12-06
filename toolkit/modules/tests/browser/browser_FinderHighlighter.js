@@ -174,7 +174,7 @@ add_task(async function testDarkPageDetection() {
       removeCalls: [0, 1],
     };
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let dwu = content.windowUtils;
       let uri =
         "data:text/css;charset=utf-8," +
@@ -384,7 +384,7 @@ add_task(async function testTooLargeToggle() {
     let findbar = await gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let dwu = content.windowUtils;
       let uri =
         "data:text/css;charset=utf-8," +

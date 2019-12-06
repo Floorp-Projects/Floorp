@@ -315,10 +315,8 @@ async function newTabTest(location) {
   await BrowserTestUtils.withNewTab({ gBrowser, url: location }, async function(
     browser
   ) {
-    await ContentTask.spawn(
-      browser,
-      { location, testInDocument_: testInDocument.toSource() },
-      async function({ location, testInDocument_ }) {
+    await SpecialPowers.spawn(
+      browser, [{ location, testInDocument_: testInDocument.toSource() }], async function({ location, testInDocument_ }) {
         // eslint-disable-next-line no-eval
         let testInDocument = eval(`(() => (${testInDocument_}))()`);
         testInDocument(content.document, location);

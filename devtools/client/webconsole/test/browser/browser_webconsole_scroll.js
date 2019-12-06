@@ -63,7 +63,7 @@ add_task(async function() {
 
   info("Add a console.trace message to check that the scroll isn't impacted");
   let onMessage = waitForMessage(hud, "trace in C");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.c();
   });
   let message = await onMessage;
@@ -86,7 +86,7 @@ add_task(async function() {
     "Add a message to check that the console do scroll since we're at the bottom"
   );
   onMessage = waitForMessage(hud, "scroll");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("scroll");
   });
   await onMessage;
@@ -128,7 +128,7 @@ add_task(async function() {
     "Add a console.trace message to check that the console stays scrolled to bottom"
   );
   onMessage = waitForMessage(hud, "trace in C");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.c();
   });
   message = await onMessage;
@@ -148,7 +148,7 @@ add_task(async function() {
   info("Check that repeated messages don't prevent scroll to bottom");
   // We log a first message.
   onMessage = waitForMessage(hud, "repeat");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("repeat");
   });
   message = await onMessage;
@@ -156,7 +156,7 @@ add_task(async function() {
   // And a second one. We can't log them at the same time since we batch redux actions,
   // and the message would already appear with the repeat badge, and the bug is
   // only triggered when the badge is rendered after the initial message rendering.
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("repeat");
   });
   await waitFor(() => message.node.querySelector(".message-repeats"));
@@ -169,7 +169,7 @@ add_task(async function() {
     "Check that adding a message after a repeated message scrolls to bottom"
   );
   onMessage = waitForMessage(hud, "after repeat");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("after repeat");
   });
   message = await onMessage;

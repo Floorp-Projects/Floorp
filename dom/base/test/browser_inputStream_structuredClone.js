@@ -28,7 +28,7 @@ async function runTest(input, url) {
   );
 
   /* eslint-disable no-shadow */
-  let dataBack = await ContentTask.spawn(browser, data, function(data) {
+  let dataBack = await SpecialPowers.spawn(browser, [data], function(data) {
     let dataBack = {
       inputStream: data.inputStream,
       check: true,

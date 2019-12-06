@@ -17,7 +17,7 @@ add_task(async function() {
     /* waitForStateStop */ false,
     /* forceNewProcess */ true
   );
-  await ContentTask.spawn(tab.linkedBrowser, principal, async function(p) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [principal], async function(p) {
     is(
       Services.perms.testPermissionFromPrincipal(p, "viewsourceTestingPerm"),
       Services.perms.ALLOW_ACTION

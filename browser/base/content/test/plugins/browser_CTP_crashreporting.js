@@ -88,7 +88,7 @@ add_task(async function() {
       crashReportChecker
     );
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let plugin = content.document.getElementById("test");
 
       await ContentTaskUtils.waitForCondition(() => {
@@ -204,7 +204,7 @@ add_task(async function() {
         crashReportChecker
       );
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let plugin = content.document.getElementById("test");
 
         await ContentTaskUtils.waitForCondition(() => {

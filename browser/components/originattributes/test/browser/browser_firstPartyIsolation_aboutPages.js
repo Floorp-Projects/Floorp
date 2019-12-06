@@ -59,7 +59,7 @@ add_task(async function test_nonremote_window_open_aboutBlank() {
 
   Assert.ok(!browser.isRemoteBrowser, "shouldn't be a remote browser");
 
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(

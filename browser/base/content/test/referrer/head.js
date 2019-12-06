@@ -145,7 +145,7 @@ function clickTheLink(aWindow, aLinkId, aOptions) {
  * @resolves When extacted, with the text of the (trimmed) referrer.
  */
 function referrerResultExtracted(aWindow) {
-  return ContentTask.spawn(aWindow.gBrowser.selectedBrowser, {}, function() {
+  return SpecialPowers.spawn(aWindow.gBrowser.selectedBrowser, [], function() {
     return content.document.getElementById("testdiv").textContent;
   });
 }

@@ -23,7 +23,7 @@ add_task(async function() {
   await assertRowSelected(null);
 
   // Focus the tree and select first row.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const tree = content.document.querySelector(".treeTable");
     tree.focus();
     is(tree, content.document.activeElement, "Tree should be focused");
@@ -31,7 +31,7 @@ add_task(async function() {
   });
   await assertRowSelected(1);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -43,7 +43,7 @@ add_task(async function() {
   await BrowserTestUtils.synthesizeKey("VK_END", {}, tab.linkedBrowser);
   await assertRowSelected(numRows);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -57,7 +57,7 @@ add_task(async function() {
   });
   await assertRowSelected(2);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -67,7 +67,7 @@ add_task(async function() {
   });
   await BrowserTestUtils.synthesizeKey("VK_UP", {}, tab.linkedBrowser);
   await assertRowSelected(1);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -120,7 +120,7 @@ add_task(async function() {
 
   is(await getElementCount(".treeRow"), 3, "Got the expected number of rows.");
   await assertRowSelected(null);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -136,7 +136,7 @@ add_task(async function() {
     row.click();
   });
   await assertRowSelected(2);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -150,7 +150,7 @@ add_task(async function() {
   // Select the last row.
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, tab.linkedBrowser);
   await assertRowSelected(3);
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -166,10 +166,8 @@ add_task(async function() {
   });
 
   await assertRowSelected(2);
-  const scroll = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    function() {
+  const scroll = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], function() {
       const scroller = content.document.querySelector(
         ".jsonPanelBox .panelContent"
       );
@@ -201,7 +199,7 @@ add_task(async function() {
   );
 
   await assertRowSelected(2);
-  await ContentTask.spawn(gBrowser.selectedBrowser, scroll, function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [scroll], function(
     scrollPos
   ) {
     const scroller = content.document.querySelector(
@@ -212,10 +210,8 @@ add_task(async function() {
 });
 
 async function assertRowSelected(rowNum) {
-  const idx = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    function() {
+  const idx = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], function() {
       return [].indexOf.call(
         content.document.querySelectorAll(".treeRow"),
         content.document.querySelector(".treeRow.selected")

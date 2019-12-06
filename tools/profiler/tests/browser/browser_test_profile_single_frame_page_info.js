@@ -27,7 +27,7 @@ add_task(async function test_profile_single_frame_page_info() {
   info("Open a tab with single_frame.html in it.");
   const url = BASE_URL + "single_frame.html";
   await BrowserTestUtils.withNewTab(url, async function(contentBrowser) {
-    const contentPid = await ContentTask.spawn(contentBrowser, null, () => {
+    const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
     });
 

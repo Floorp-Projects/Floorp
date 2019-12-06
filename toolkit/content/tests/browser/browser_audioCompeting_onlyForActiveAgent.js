@@ -150,10 +150,8 @@ async function audio_competing_for_active_agent(url, browser) {
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the default suspended state of all audio should be non-suspened -");
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.NONE_SUSPENDED,
-    check_all_audio_suspended
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.NONE_SUSPENDED], check_all_audio_suspended
   );
 
   info("- only pause playing audio in the page -");
@@ -161,55 +159,39 @@ async function audio_competing_for_active_agent(url, browser) {
 
   info("- page shouldn't have any playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
-  await ContentTask.spawn(
-    browser,
-    true /* expect for pause */,
-    check_all_audio_pause_state
+  await SpecialPowers.spawn(
+    browser, [true], check_all_audio_pause_state
   );
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
-    check_all_audio_suspended
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_all_audio_suspended
   );
 
   info("- resume audio1 from page -");
-  await ContentTask.spawn(browser, null, play_audio1_from_page);
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.NONE_SUSPENDED,
-    check_audio1_suspended
+  await SpecialPowers.spawn(browser, [], play_audio1_from_page);
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.NONE_SUSPENDED], check_audio1_suspended
   );
 
   info("- audio2 should still be suspended -");
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
-    check_audio2_suspended
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_audio2_suspended
   );
-  await ContentTask.spawn(
-    browser,
-    true /* expect for pause */,
-    check_audio2_pause_state
+  await SpecialPowers.spawn(
+    browser, [true], check_audio2_pause_state
   );
 
   info("- stop audio1 from page -");
-  await ContentTask.spawn(browser, null, stop_audio1_from_page);
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.NONE_SUSPENDED,
-    check_audio1_suspended
+  await SpecialPowers.spawn(browser, [], stop_audio1_from_page);
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.NONE_SUSPENDED], check_audio1_suspended
   );
 
   info("- audio2 should still be suspended -");
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
-    check_audio2_suspended
+  await SpecialPowers.spawn(
+    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_audio2_suspended
   );
-  await ContentTask.spawn(
-    browser,
-    true /* expect for pause */,
-    check_audio2_pause_state
+  await SpecialPowers.spawn(
+    browser, [true], check_audio2_pause_state
   );
 }
 

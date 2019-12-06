@@ -26,7 +26,7 @@ add_task(async function test() {
 
   info("Opening a new window from this tab...");
   let newWinPromise = BrowserTestUtils.waitForNewWindow({ url: BASE_URI });
-  ContentTask.spawn(browser, BASE_URI, function(url) {
+  SpecialPowers.spawn(browser, [BASE_URI], function(url) {
     content.window.newWindow = content.window.open(url, "_blank");
   });
 

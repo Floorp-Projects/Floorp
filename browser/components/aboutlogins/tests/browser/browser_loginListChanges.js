@@ -21,7 +21,7 @@ add_task(async function test_login_added() {
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.sendAsyncMessage("AboutLogins:LoginAdded", login);
 
-  await ContentTask.spawn(browser, login, async addedLogin => {
+  await SpecialPowers.spawn(browser, [login], async addedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
@@ -43,7 +43,7 @@ add_task(async function test_login_modified() {
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.sendAsyncMessage("AboutLogins:LoginModified", login);
 
-  await ContentTask.spawn(browser, login, async modifiedLogin => {
+  await SpecialPowers.spawn(browser, [login], async modifiedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
@@ -67,7 +67,7 @@ add_task(async function test_login_removed() {
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.sendAsyncMessage("AboutLogins:LoginRemoved", login);
 
-  await ContentTask.spawn(browser, login, async removedLogin => {
+  await SpecialPowers.spawn(browser, [login], async removedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginRemoved = await ContentTaskUtils.waitForCondition(() => {
       return !loginList._loginGuidsSortedOrder.length;
@@ -96,7 +96,7 @@ add_task(async function test_all_logins_removed() {
   let browser = gBrowser.selectedBrowser;
   browser.messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
 
-  await ContentTask.spawn(browser, logins, async addedLogins => {
+  await SpecialPowers.spawn(browser, [logins], async addedLogins => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
@@ -118,7 +118,7 @@ add_task(async function test_all_logins_removed() {
 
   Services.logins.removeAllLogins();
 
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return !loginList._loginGuidsSortedOrder.length;

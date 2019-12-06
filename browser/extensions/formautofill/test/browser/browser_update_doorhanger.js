@@ -17,14 +17,14 @@ add_task(async function test_update_address() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let org = form.querySelector("#organization");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       org.setUserInput("Mozilla");
 
       // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       form.querySelector("input[type=submit]").click();
     });
 
@@ -52,14 +52,14 @@ add_task(async function test_create_new_address() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let tel = form.querySelector("#tel");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       tel.setUserInput("+1234567890");
 
       // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       form.querySelector("input[type=submit]").click();
     });
 
@@ -88,13 +88,13 @@ add_task(async function test_create_new_address_merge() {
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
     // Choose the latest address and revert to the original phone number
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let tel = form.querySelector("#tel");
       tel.setUserInput("+16172535702");
 
       // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       form.querySelector("input[type=submit]").click();
     });
 
@@ -124,18 +124,18 @@ add_task(async function test_submit_untouched_fields() {
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
     info("after return");
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let org = form.querySelector("#organization");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       org.setUserInput("Organization");
 
       let tel = form.querySelector("#tel");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       tel.value = "12345"; // ".value" won't change the highlight status.
 
       // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       info("before submit");
       form.querySelector("input[type=submit]").click();
       info("after submit");
@@ -165,14 +165,14 @@ add_task(async function test_submit_reduced_fields() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.querySelector("form#simple");
       let tel = form.querySelector("input[name=tel]");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       tel.setUserInput("123456789");
 
       // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => content.setTimeout(resolve, 1000));
       form.querySelector("input[type=submit]").click();
     });
 

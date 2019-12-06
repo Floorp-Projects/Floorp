@@ -26,7 +26,7 @@ add_task(async function() {
 
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, null, async _ => {
+  await SpecialPowers.spawn(browser, [], async _ => {
     is(content.document.cookie, "", "No cookie set");
     content.document.cookie = "a=b";
     is(content.document.cookie, "a=b", "Cookie set");
@@ -42,7 +42,7 @@ add_task(async function() {
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
 
-  await ContentTask.spawn(browser2, null, async _ => {
+  await SpecialPowers.spawn(browser2, [], async _ => {
     is(content.document.cookie, "a=b", "Cookie set");
   });
 

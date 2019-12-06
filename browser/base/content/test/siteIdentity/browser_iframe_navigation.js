@@ -22,7 +22,7 @@ add_task(async function() {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "verifiedDomain", "identity should be secure before");
 
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
       await ContentTaskUtils.waitForCondition(() => {
         return !content.document.body.classList.contains("running");
@@ -43,7 +43,7 @@ add_task(async function() {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "verifiedDomain", "identity should be secure before");
 
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
       await ContentTaskUtils.waitForCondition(() => {
         return !content.document.body.classList.contains("running");
@@ -72,7 +72,7 @@ add_task(async function() {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "notSecure", "identity should be 'not secure' before");
 
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
       await ContentTaskUtils.waitForCondition(() => {
         return !content.document.body.classList.contains("running");
@@ -93,7 +93,7 @@ add_task(async function() {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "notSecure", "identity should be 'not secure' before");
 
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
       await ContentTaskUtils.waitForCondition(() => {
         return !content.document.body.classList.contains("running");

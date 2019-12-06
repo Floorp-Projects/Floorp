@@ -50,10 +50,8 @@ var tests = [
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished");
 
-    await ContentTask.spawn(
-      gBrowser.selectedBrowser,
-      myDocIdentifier,
-      contentMyDocIdentifier => {
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser, [myDocIdentifier], contentMyDocIdentifier => {
         let onPageShow = () => {
           if (!content.document.hidden) {
             let win = Cu.waiveXrays(content);
@@ -80,10 +78,8 @@ var tests = [
     await elementVisiblePromise(newWindowHighlight, "new window highlight");
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    await ContentTask.spawn(
-      selectedTab.linkedBrowser,
-      myDocIdentifier,
-      contentMyDocIdentifier => {
+    await SpecialPowers.spawn(
+      selectedTab.linkedBrowser, [myDocIdentifier], contentMyDocIdentifier => {
         is(
           content.document.myExpando,
           contentMyDocIdentifier,

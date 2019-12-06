@@ -46,10 +46,8 @@ async function finish_test(count) {
 
   PermissionTestUtils.remove(exampleURI, "install");
 
-  const results = await ContentTask.spawn(
-    win.gBrowser.selectedBrowser,
-    null,
-    () => {
+  const results = await SpecialPowers.spawn(
+    win.gBrowser.selectedBrowser, [], () => {
       return {
         return: content.document.getElementById("return").textContent,
         status: content.document.getElementById("status").textContent,

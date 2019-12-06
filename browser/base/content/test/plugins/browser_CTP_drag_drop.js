@@ -124,10 +124,8 @@ add_task(async function() {
   );
   ok(!pluginInfo.activated, "plugin should not be activated");
 
-  await ContentTask.spawn(
-    gNewWindow.gBrowser.selectedBrowser,
-    {},
-    async function() {
+  await SpecialPowers.spawn(
+    gNewWindow.gBrowser.selectedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("test");
       let bounds = plugin.getBoundingClientRect();

@@ -1,8 +1,6 @@
 function check(aBrowser, aElementName, aBarred, aType) {
-  return ContentTask.spawn(
-    aBrowser,
-    [aElementName, aBarred, aType],
-    async function([aElementName, aBarred, aType]) {
+  return SpecialPowers.spawn(
+    aBrowser, [[aElementName, aBarred, aType]], async function([aElementName, aBarred, aType]) {
       let e = content.document.createElement(aElementName);
       let contentElement = content.document.getElementById("content");
       contentElement.appendChild(e);
@@ -52,7 +50,7 @@ function check(aBrowser, aElementName, aBarred, aType) {
 }
 
 function todo_check(aBrowser, aElementName, aBarred) {
-  return ContentTask.spawn(aBrowser, [aElementName, aBarred], async function([
+  return SpecialPowers.spawn(aBrowser, [[aElementName, aBarred]], async function([
     aElementName,
     aBarred,
   ]) {
