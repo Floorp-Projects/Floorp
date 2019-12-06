@@ -146,7 +146,7 @@ private fun assertScanButton() =
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchWithText() =
-    onView(allOf(withText("SEARCH WITH")))
+    onView(allOf(withText("THIS TIME, SEARCH WITH:")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchSettings() =

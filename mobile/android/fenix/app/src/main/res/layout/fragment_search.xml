@@ -125,10 +125,10 @@
         android:layout_marginStart="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
         android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
-        android:text="@string/search_shortcuts_search_with"
+        android:text="@string/search_shortcuts_search_with_2"
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
-        tools:text="Search with" />
+        tools:text="This time, search with:" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/awesomeBar_barrier"
