@@ -134,6 +134,8 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD IsThirdPartyURI(nsIURI* uri, bool* aRes) override;
   NS_IMETHOD IsThirdPartyPrincipal(nsIPrincipal* uri, bool* aRes) override;
   NS_IMETHOD GetIsOriginPotentiallyTrustworthy(bool* aResult) override;
+  NS_IMETHOD IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin,
+                          bool* aRes) override;
 
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
@@ -259,10 +261,10 @@ class BasePrincipal : public nsJSPrincipals {
 
   // KeyValT holds a principal subtype-specific key value and the associated
   // parsed value after JSON parsing.
-  template<typename SerializedKey>
-  struct KeyValT
-  {
-    static_assert(sizeof(SerializedKey) == 1, "SerializedKey should be a uint8_t");
+  template <typename SerializedKey>
+  struct KeyValT {
+    static_assert(sizeof(SerializedKey) == 1,
+                  "SerializedKey should be a uint8_t");
     SerializedKey key;
     bool valueWasSerialized;
     nsCString value;

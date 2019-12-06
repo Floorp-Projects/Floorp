@@ -237,6 +237,12 @@ interface nsIPrincipal : nsISerializable
     */
     bool IsURIInPrefList(in string pref);
 
+    /*
+    * Uses NS_Security Compare to determine if the
+    * other URI is same-origin as the uri of the Principal
+    */
+    bool IsSameOrigin(in nsIURI otherURI, in bool aIsPrivateWin);
+
     /**
      * Implementation of
      * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
