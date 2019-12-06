@@ -665,28 +665,34 @@ bool DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame,
 
 /* static */
 DebuggerFrameType DebuggerFrame::getType(HandleDebuggerFrame frame) {
-  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+  if (frame->isOnStack()) {
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
 
-  // Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
-  // order of checks here is significant.
-  if (referent.isEvalFrame()) {
-    return DebuggerFrameType::Eval;
-  }
+    // Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
+    // order of checks here is significant.
+    if (referent.isEvalFrame()) {
+      return DebuggerFrameType::Eval;
+    }
 
-  if (referent.isGlobalFrame()) {
-    return DebuggerFrameType::Global;
-  }
+    if (referent.isGlobalFrame()) {
+      return DebuggerFrameType::Global;
+    }
 
-  if (referent.isFunctionFrame()) {
+    if (referent.isFunctionFrame()) {
+      return DebuggerFrameType::Call;
+    }
+
+    if (referent.isModuleFrame()) {
+      return DebuggerFrameType::Module;
+    }
+
+    if (referent.isWasmDebugFrame()) {
+      return DebuggerFrameType::WasmCall;
+    }
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+
     return DebuggerFrameType::Call;
-  }
-
-  if (referent.isModuleFrame()) {
-    return DebuggerFrameType::Module;
-  }
-
-  if (referent.isWasmDebugFrame()) {
-    return DebuggerFrameType::WasmCall;
   }
 
   MOZ_CRASH("Unknown frame type");
@@ -1307,7 +1313,7 @@ bool DebuggerFrame::CallData::ensureOnStackOrSuspended() const {
 }
 
 bool DebuggerFrame::CallData::typeGetter() {
-  if (!ensureOnStack()) {
+  if (!ensureOnStackOrSuspended()) {
     return false;
   }
 
