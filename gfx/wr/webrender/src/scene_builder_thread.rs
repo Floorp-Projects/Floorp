@@ -252,34 +252,54 @@ pub struct SceneBuilderThread {
     tx: Sender<SceneBuilderResult>,
     api_tx: MsgSender<ApiMsg>,
     config: FrameBuilderConfig,
+    size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
-    size_of_ops: Option<MallocSizeOfOps>,
+}
+
+pub struct SceneBuilderThreadChannels {
+    rx: Receiver<SceneBuilderRequest>,
+    tx: Sender<SceneBuilderResult>,
+    api_tx: MsgSender<ApiMsg>,
+}
+
+impl SceneBuilderThreadChannels {
+    pub fn new(
+        api_tx: MsgSender<ApiMsg>
+    ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
+        let (in_tx, in_rx) = channel();
+        let (out_tx, out_rx) = channel();
+        (
+            Self {
+                rx: in_rx,
+                tx: out_tx,
+                api_tx,
+            },
+            in_tx,
+            out_rx,
+        )
+    }
 }
 
 impl SceneBuilderThread {
     pub fn new(
         config: FrameBuilderConfig,
-        api_tx: MsgSender<ApiMsg>,
-        hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         size_of_ops: Option<MallocSizeOfOps>,
-    ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
-        let (in_tx, in_rx) = channel();
-        let (out_tx, out_rx) = channel();
-        (
-            SceneBuilderThread {
-                documents: FastHashMap::default(),
-                rx: in_rx,
-                tx: out_tx,
-                api_tx,
-                config,
-                hooks,
-                size_of_ops,
-                simulate_slow_ms: 0,
-            },
-            in_tx,
-            out_rx,
-        )
+        hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
+        channels: SceneBuilderThreadChannels,
+    ) -> Self {
+        let SceneBuilderThreadChannels { rx, tx, api_tx } = channels;
+
+        Self {
+            documents: Default::default(),
+            rx,
+            tx,
+            api_tx,
+            config,
+            size_of_ops,
+            hooks,
+            simulate_slow_ms: 0,
+        }
     }
 
     /// Send a message to the render backend thread.
