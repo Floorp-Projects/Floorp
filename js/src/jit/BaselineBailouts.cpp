@@ -501,33 +501,22 @@ class TryNoteIterAll : public TryNoteIter<NoOpTryNoteFilter> {
 };
 
 static bool HasLiveStackValueAtDepth(JSContext* cx, HandleScript script,
-                                     jsbytecode* pc, uint32_t stackDepth) {
+                                     jsbytecode* pc, uint32_t stackSlotIndex,
+                                     uint32_t stackDepth) {
+  // Return true iff stackSlotIndex is a stack value that's part of an active
+  // iterator loop instead of a normal expression stack slot.
+
+  MOZ_ASSERT(stackSlotIndex < stackDepth);
+
   for (TryNoteIterAll tni(cx, script, pc); !tni.done(); ++tni) {
     const JSTryNote& tn = **tni;
 
     switch (tn.kind) {
       case JSTRY_FOR_IN:
-        // For-in loops have only the iterator on stack.
-        if (stackDepth == tn.stackDepth) {
-          return true;
-        }
-        break;
-
       case JSTRY_FOR_OF:
-        // For-of loops have the iterator, its next method and the
-        // result.value on stack.
-        // The iterator is below the result.value, the next method below
-        // the iterator.
-        if (stackDepth == tn.stackDepth - 1 ||
-            stackDepth == tn.stackDepth - 2) {
-          return true;
-        }
-        break;
-
       case JSTRY_DESTRUCTURING:
-        // Destructuring code that need to call IteratorClose have both
-        // the iterator and the "done" value on the stack.
-        if (stackDepth == tn.stackDepth || stackDepth == tn.stackDepth - 1) {
+        MOZ_ASSERT(tn.stackDepth <= stackDepth);
+        if (stackSlotIndex < tn.stackDepth) {
           return true;
         }
         break;
@@ -1035,7 +1024,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       // HandleExceptionBaseline.
       MOZ_ASSERT(cx->realm()->isDebuggee());
       if (iter.moreFrames() ||
-          HasLiveStackValueAtDepth(cx, script, pc, i + 1)) {
+          HasLiveStackValueAtDepth(cx, script, pc, i, exprStackSlots)) {
         v = iter.read();
       } else {
         iter.skip();
