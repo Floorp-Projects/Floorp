@@ -195,7 +195,7 @@ class AppLinksUseCasesTest {
         val redirect = AppLinkRedirect(appIntent, appUrl, null)
         val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
-        subject.openAppLink(redirect)
+        subject.openAppLink(redirect.appIntent)
 
         verify(context).startActivity(any())
     }

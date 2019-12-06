@@ -186,7 +186,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 sessionManager = components.sessionManager,
                 sessionId = sessionId,
                 fragmentManager = requireFragmentManager(),
-                interceptLinkClicks = true,
                 launchInApp = { components.preferences.getBoolean(DefaultComponents.PREF_LAUNCH_EXTERNAL_APP, false) }
             ),
             owner = this,

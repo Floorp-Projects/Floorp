@@ -48,23 +48,11 @@ class AddonSettingsActivity : AppCompatActivity() {
      */
     class AddonSettingsFragment : Fragment() {
         private lateinit var addon: Addon
-        private lateinit var engineObserver: EngineSession.Observer
         private lateinit var engineSession: EngineSession
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
             addon = requireNotNull(arguments?.getParcelable("add_on"))
             engineSession = components.engine.createSession()
-            engineObserver = object : EngineSession.Observer {
-                override fun onLoadRequest(
-                    url: String,
-                    triggeredByRedirect: Boolean,
-                    triggeredByWebContent: Boolean,
-                    shouldLoadUri: (Boolean, String) -> Unit
-                ) {
-                    shouldLoadUri(true, "")
-                }
-            }
-            engineSession.register(engineObserver)
 
             return inflater.inflate(R.layout.fragment_add_on_settings, container, false)
         }
@@ -77,7 +65,6 @@ class AddonSettingsActivity : AppCompatActivity() {
         }
 
         override fun onDestroyView() {
-            engineSession.unregister(engineObserver)
             engineSession.close()
             super.onDestroyView()
         }

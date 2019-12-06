@@ -4,8 +4,10 @@
 
 package mozilla.components.browser.session
 
+import android.content.Intent
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
+import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
@@ -85,7 +87,7 @@ class Session(
             url: String,
             triggeredByRedirect: Boolean,
             triggeredByWebContent: Boolean
-        ): Boolean = false
+        ) = Unit
         fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
@@ -107,6 +109,7 @@ class Session(
         fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
         fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
+        fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?) = Unit
     }
 
     /**
@@ -239,29 +242,28 @@ class Session(
     /**
      * Set when a load request is received, indicating if the request came from web content, or via a redirect.
      */
-    var loadRequestMetadata: Consumable<LoadRequestMetadata>
-        by Delegates.vetoable(Consumable.empty()) { _, _, request ->
-            if (request.peek() == null) {
-                false
-            } else {
-                val new = request.peek() as LoadRequestMetadata
-                val consumers = wrapConsumers<LoadRequestMetadata> {
-                    onLoadRequest(
-                        this@Session,
-                        new.url,
-                        new.isSet(LoadRequestOption.REDIRECT),
-                        new.isSet(LoadRequestOption.WEB_CONTENT)
-                    )
-                }
+    var loadRequestMetadata: LoadRequestMetadata by Delegates.observable(LoadRequestMetadata.blank) { _, _, new ->
+        notifyObservers {
+            onLoadRequest(
+                this@Session,
+                new.url,
+                new.isSet(LoadRequestOption.REDIRECT),
+                new.isSet(LoadRequestOption.WEB_CONTENT)
+            )
+        }
+    }
 
-                val consumed = request.consumeBy(consumers)
-                when (consumed) {
-                    true -> new.allowOrDeny(false)
-                    false -> new.allowOrDeny(true)
-                }
-
-                !consumed
-            }
+    /**
+     * Set when a launch intent is received.
+     */
+    var launchIntentMetadata: LaunchIntentMetadata by Delegates.observable(LaunchIntentMetadata.blank) { _, _, new ->
+        notifyObservers {
+            onLaunchIntentRequest(
+                this@Session,
+                new.url,
+                new.appIntent
+            )
+        }
     }
 
     /**

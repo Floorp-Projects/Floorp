@@ -28,7 +28,6 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
-    private val allowOrDeny: (Boolean, String) -> Unit = { _, _ -> }
 
     @Test
     fun `registered observers will be notified`() {
@@ -66,7 +65,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onCrash() }
-        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny) }
+        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
+        session.notifyInternalObservers { onLaunchIntentRequest("https://www.mozilla.org", null) }
         session.notifyInternalObservers { onProcessKilled() }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
@@ -91,7 +91,8 @@ class EngineSessionTest {
         verify(observer).onMediaAdded(mediaAdded)
         verify(observer).onMediaRemoved(mediaRemoved)
         verify(observer).onCrash()
-        verify(observer).onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny)
+        verify(observer).onLoadRequest("https://www.mozilla.org", true, true)
+        verify(observer).onLaunchIntentRequest("https://www.mozilla.org", null)
         verify(observer).onProcessKilled()
         verifyNoMoreInteractions(observer)
     }
@@ -127,7 +128,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCrash() }
-        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny) }
+        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
+        session.notifyInternalObservers { onLaunchIntentRequest("https://www.mozilla.org", null) }
         session.unregister(observer)
 
         val mediaAdded: Media = mock()
@@ -152,7 +154,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onCrash() }
-        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", false, true, allowOrDeny) }
+        session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
+        session.notifyInternalObservers { onLaunchIntentRequest("https://www.firefox.com", null) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -171,7 +174,8 @@ class EngineSessionTest {
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer).onWindowRequest(windowRequest)
         verify(observer).onCrash()
-        verify(observer).onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny)
+        verify(observer).onLoadRequest("https://www.mozilla.org", true, true)
+        verify(observer).onLaunchIntentRequest("https://www.mozilla.org", null)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -190,7 +194,8 @@ class EngineSessionTest {
         verify(observer, never()).onWindowRequest(otherWindowRequest)
         verify(observer, never()).onMediaAdded(mediaAdded)
         verify(observer, never()).onMediaRemoved(mediaRemoved)
-        verify(observer, never()).onLoadRequest("https://www.mozilla.org", false, true, allowOrDeny)
+        verify(observer, never()).onLoadRequest("https://www.mozilla.org", false, true)
+        verify(observer, never()).onLaunchIntentRequest("https://www.firefox.com", null)
         verifyNoMoreInteractions(observer)
     }
 

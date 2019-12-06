@@ -4,11 +4,13 @@
 
 package mozilla.components.feature.app.links
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import java.util.UUID
 
@@ -39,14 +41,15 @@ class AppLinksUseCases(
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net"
 ) {
-    @VisibleForTesting
-    val browserPackageNames: Set<String>
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val browserPackageNames: Set<String>
 
     init {
         this.browserPackageNames = browserPackageNames ?: findExcludedPackages(unguessableWebUrl)
     }
 
-    private fun findActivities(intent: Intent): List<ResolveInfo> {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun findActivities(intent: Intent): List<ResolveInfo> {
         return context.packageManager
             .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: emptyList()
     }
@@ -170,26 +173,18 @@ class AppLinksUseCases(
     class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
-        operator fun invoke(redirect: AppLinkRedirect) {
-            val intent = redirect.appIntent ?: return
-            context.startActivity(intent)
-        }
-    }
-
-    /**
-     * Open market intent created by the [GetAppLinkRedirect].
-     */
-    class OpenMarketplaceIntent internal constructor(
-        private val context: Context
-    ) {
-        operator fun invoke(redirect: AppLinkRedirect) {
-            val intent = redirect.marketplaceIntent ?: return
-            context.startActivity(intent)
+        operator fun invoke(appIntent: Intent?) {
+            appIntent?.let {
+                try {
+                    context.startActivity(it)
+                } catch (e: ActivityNotFoundException) {
+                    Logger.error("failed to start third party app activity", e)
+                }
+            }
         }
     }
 
     val openAppLink: OpenAppLinkRedirect by lazy { OpenAppLinkRedirect(context) }
-    val openMarketplaceIntent: OpenMarketplaceIntent by lazy { OpenMarketplaceIntent(context) }
     val interceptedAppLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = false,

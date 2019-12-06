@@ -8,7 +8,7 @@ import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 
 /**
- * This is a general representation of a dialog meant to be used in collaboration with [AppLinksFeature]
+ * This is a general representation of a dialog meant to be used in collaboration with [AppLinksInterceptor]
  * to show a dialog before an external link is opened.
  * If [SimpleRedirectDialogFragment] is not flexible enough for your use case you should inherit for this class.
  * Be mindful to call [onConfirmRedirect] when you want to open the linked app.
@@ -25,10 +25,10 @@ abstract class RedirectDialogFragment : DialogFragment() {
     /**
      * add the metadata of this download object to the arguments of this fragment.
      */
-    fun setAppLinkRedirect(redirect: AppLinkRedirect) {
+    fun setAppLinkRedirectUrl(url: String) {
         val args = arguments ?: Bundle()
         with(args) {
-            putString(KEY_INTENT_URL, redirect.appIntent?.dataString)
+            putString(KEY_INTENT_URL, url)
         }
         arguments = args
     }

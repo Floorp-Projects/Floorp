@@ -6,8 +6,7 @@ package mozilla.components.browser.session.engine.request
 
 class LoadRequestMetadata(
     val url: String,
-    options: Array<LoadRequestOption> = emptyArray(),
-    val allowOrDeny: (Boolean) -> Unit = {}
+    options: Array<LoadRequestOption> = emptyArray()
 ) {
     private val optionMask: Long
     init {
@@ -17,6 +16,10 @@ class LoadRequestMetadata(
     }
 
     fun isSet(option: LoadRequestOption) = optionMask and option.mask > 0
+
+    companion object {
+        val blank = LoadRequestMetadata("about:blank")
+    }
 }
 
 /**

@@ -37,6 +37,7 @@ import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
+import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
@@ -58,6 +59,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import org.mozilla.samples.browser.addons.AddonsActivity
+import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
@@ -157,6 +159,16 @@ open class DefaultComponents(private val applicationContext: Context) {
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
     val appLinksUseCases by lazy { AppLinksUseCases(applicationContext) }
 
+    val appLinksInterceptor by lazy {
+        AppLinksInterceptor(
+            applicationContext,
+            interceptLinkClicks = true,
+            launchInApp = {
+                applicationContext.components.preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
+            }
+        )
+    }
+
     val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
     val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
     val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, webAppShortcutManager) }
@@ -227,7 +239,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 sessionManager.selectedSession?.let {
                     val redirect = getRedirect.invoke(it.url)
                     redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    appLinksUseCases.openAppLink.invoke(redirect)
+                    appLinksUseCases.openAppLink.invoke(redirect.appIntent)
                 }
             }.apply {
                 visible = {

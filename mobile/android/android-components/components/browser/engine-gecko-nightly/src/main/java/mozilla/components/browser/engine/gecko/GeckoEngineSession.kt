@@ -33,6 +33,7 @@ import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
@@ -353,50 +354,37 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
+            val isSameDomain = this@GeckoEngineSession.currentUrl?.tryGetHostFromUrl() ==
+                request.uri.tryGetHostFromUrl()
             val response = settings.requestInterceptor?.onLoadRequest(
                 this@GeckoEngineSession,
-                request.uri
+                request.uri,
+                request.hasUserGesture,
+                isSameDomain
             )?.apply {
                 when (this) {
                     is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
                     is InterceptionResponse.Url -> loadUrl(url)
+                    is InterceptionResponse.AppIntent -> {
+                        notifyObservers {
+                            onLaunchIntentRequest(url = url, appIntent = appIntent)
+                        }
+                    }
                 }
             }
 
             return if (response != null) {
                 GeckoResult.fromValue(AllowOrDeny.DENY)
-            } else if (!isObserved()) {
-                GeckoResult.fromValue(AllowOrDeny.ALLOW)
             } else {
-                val geckoResult: GeckoResult<AllowOrDeny> = GeckoResult()
-                var completedBy: String? = null
-                val allowOrDeny: (Boolean, String) -> Unit = { shouldAllow, newCaller ->
-
-                    /* Debugging code for Android-components/issues/5127, will remove */
-                    if (completedBy != null) {
-                        throw IllegalStateException("GeckoResult already completed by $completedBy, " +
-                            "new caller is $newCaller")
-                    }
-
-                    val result = if (shouldAllow) AllowOrDeny.ALLOW else AllowOrDeny.DENY
-                    geckoResult.complete(result)
-                    /* Debugging code for Android-components/issues/5127, will remove */
-                    completedBy = newCaller
-                }
-
                 notifyObservers {
-                    // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
-                    // is "True if and only if the request was triggered by an HTTP redirect."
-                    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
                     onLoadRequest(
                         url = request.uri,
                         triggeredByRedirect = request.isRedirect,
-                        triggeredByWebContent = request.hasUserGesture,
-                        shouldLoadUri = allowOrDeny
+                        triggeredByWebContent = request.hasUserGesture
                     )
                 }
 
-                geckoResult
+                GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
         }
 
