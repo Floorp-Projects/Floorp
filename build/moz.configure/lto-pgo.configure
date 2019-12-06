@@ -160,15 +160,19 @@ js_option(env='MOZ_LD64_KNOWN_GOOD',
 
 imply_option('MOZ_LD64_KNOWN_GOOD', depends_if('MOZ_AUTOMATION')(lambda _: True))
 
-@depends('--enable-lto', c_compiler, 'MOZ_LD64_KNOWN_GOOD', target)
+@depends('--enable-lto', c_compiler, 'MOZ_LD64_KNOWN_GOOD', target, '--enable-profile-generate')
 @imports('multiprocessing')
-def lto(value, c_compiler, ld64_known_good, target):
+def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
     cflags = []
     ldflags = []
     enabled = None
     rust_lto = False
 
     if value:
+        if instrumented_build:
+            log.warning('Disabling LTO because --enable-profile-generate is specified')
+            return
+
         enabled = True
         # `cross` implies `thin`, but with Rust code participating in LTO
         # as well.  Make that a little more explicit.
