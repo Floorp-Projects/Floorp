@@ -60,7 +60,7 @@ interface PushProcessor {
         }
         val requireInstance: PushProcessor
             get() = instance ?: throw IllegalStateException(
-                "You need to call initialize() on your Push instance from Application.onCreate()."
+                "You need to call PushProcessor.install() on your Push instance from Application.onCreate()."
             )
     }
 }
