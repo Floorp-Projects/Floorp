@@ -16,6 +16,34 @@
 namespace js {
 namespace frontend {
 
+// Data used to instantiate the lazy script before script emission.
+struct LazyScriptCreationData {
+  frontend::AtomVector closedOverBindings;
+
+  // This is traced by the functionbox which owns this LazyScriptCreationData
+  FunctionBoxVector innerFunctionBoxes;
+  bool strict = false;
+
+  mozilla::Maybe<FieldInitializers> fieldInitializers;
+
+  explicit LazyScriptCreationData(JSContext* cx) : innerFunctionBoxes(cx) {}
+
+  bool init(JSContext* cx, const frontend::AtomVector& COB,
+            FunctionBoxVector& innerBoxes, bool isStrict) {
+    strict = isStrict;
+    // Copy out of the stack allocated vectors.
+    if (!innerFunctionBoxes.appendAll(innerBoxes)) {
+      return false;
+    }
+
+    if (!closedOverBindings.appendAll(COB)) {
+      ReportOutOfMemory(cx);  // closedOverBindings uses SystemAllocPolicy.
+      return false;
+    }
+    return true;
+  }
+};
+
 // Metadata that can be used to allocate a JSFunction object.
 //
 // Keeping metadata separate allows the parser to generate
