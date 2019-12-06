@@ -79,7 +79,8 @@ class Build(MachCommandBase):
 
         loader = MozconfigLoader(self.topsrcdir)
         mozconfig = loader.read_mozconfig(loader.AUTODETECT)
-        doing_pgo = 'MOZ_PGO=1' in mozconfig['configure_args']
+        configure_args = mozconfig['configure_args']
+        doing_pgo = configure_args and 'MOZ_PGO=1' in configure_args
         append_env = None
 
         if doing_pgo:
