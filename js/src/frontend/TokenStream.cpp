@@ -16,6 +16,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Span.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
@@ -516,8 +517,8 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
       options_(options),
       strictModeGetter_(smg),
       filename_(options.filename()),
-      srcCoords(cx, options.lineno, options.scriptSourceOffset),
       longLineColumnInfo_(cx),
+      srcCoords(cx, options.lineno, options.scriptSourceOffset),
       lineno(options.lineno),
       flags(),
       mutedErrors(options.mutedErrors()) {
@@ -801,6 +802,12 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
 
   const uint32_t offsetInLine = offset - start;
 
+  // We won't add an entry to |longLineColumnInfo_| for lines where the maximum
+  // column has offset less than this value.  The most common (non-minified)
+  // long line length is likely 80ch, maybe 100ch, so we use that, rounded up to
+  // the next power of two for efficient division/multiplication below.
+  constexpr uint32_t ColumnChunkLength = mozilla::tl::RoundUpPow2<100>::value;
+
   // The index within any associated |Vector<ChunkInfo>| of |offset|'s chunk.
   const uint32_t chunkIndex = offsetInLine / ColumnChunkLength;
   if (chunkIndex == 0) {
@@ -922,10 +929,10 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       MOZ_ASSERT(begin < chunkLimit);
       MOZ_ASSERT(chunkLimit <= limit);
 
-      static_assert(ColumnChunkLength > SourceUnitTraits<Unit>::maxUnitsLength,
-                    "chunk length in code units must be able to contain the "
-                    "largest encoding of a code point, for retracting below to "
-                    "never underflow");
+      static_assert(ColumnChunkLength >
+                        SourceUnitTraits<Unit>::maxUnitsLength - 1,
+                    "any retraction below is assumed to never underflow to the "
+                    "preceding chunk, even for the longest code point");
 
       // Prior tokenizing ensured that [begin, limit) is validly encoded, and
       // |begin < chunkLimit|, so any retraction here can't underflow.
