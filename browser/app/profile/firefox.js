@@ -1322,8 +1322,6 @@ pref("trailhead.firstrun.branches", "");
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);
-// Whether to use Messaging System to add a badge to the FxA toolbar button
-pref("browser.messaging-system.fxatoolbarbadge.enabled", true);
 // Used for CFR messages with scores. See Bug 1594422.
 pref("browser.messaging-system.personalized-cfr.scores", "{}");
 pref("browser.messaging-system.personalized-cfr.score-threshold", 5000);

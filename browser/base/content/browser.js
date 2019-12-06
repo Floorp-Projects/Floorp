@@ -495,16 +495,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gMsgingSystemFxABadge",
-  "browser.messaging-system.fxatoolbarbadge.enabled",
-  true,
-  (aPref, aOldVal, aNewVal) => {
-    updateFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gAddonAbuseReportEnabled",
   "extensions.abuseReport.enabled",
   false
@@ -637,16 +627,6 @@ function updateFxaToolbarMenu(enable, isInitialUpdate = false) {
     }
 
     Services.telemetry.setEventRecordingEnabled("fxa_avatar_menu", true);
-
-    // We set an attribute here so that we can toggle the custom
-    // badge depending on whether the FxA menu was ever accessed.
-    // If badging is handled by Messaging System we shouldn't set
-    // the attribute.
-    if (!gFxaToolbarAccessed && !gMsgingSystemFxABadge) {
-      mainWindowEl.setAttribute("fxa_avatar_badged", "badged");
-    } else {
-      mainWindowEl.removeAttribute("fxa_avatar_badged");
-    }
 
     // When the pref for a FxA service is removed, we remove it from
     // the FxA toolbar menu as well. This is useful when the service
