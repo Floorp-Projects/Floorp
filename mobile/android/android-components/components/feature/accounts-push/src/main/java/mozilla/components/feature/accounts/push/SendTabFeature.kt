@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sendtab
+package mozilla.components.feature.accounts.push
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -10,7 +10,6 @@ import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.PushService
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.DevicePushSubscription
@@ -21,6 +20,7 @@ import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushSubscriptionObserver
 import mozilla.components.feature.push.PushType
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 
@@ -129,11 +129,5 @@ internal class AccountObserver(
         logger.debug("Unsubscribing for ${PushType.Services} events.")
 
         feature?.unsubscribeForType(PushType.Services)
-    }
-}
-
-internal inline fun FxaAccountManager.withConstellation(block: (DeviceConstellation) -> Unit) {
-    authenticatedAccount()?.let {
-        block(it.deviceConstellation())
     }
 }
