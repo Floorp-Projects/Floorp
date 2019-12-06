@@ -1729,9 +1729,6 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   return true;
 }
 
-static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
-                           HandleScriptSourceObject, ParseGoal parseGoal);
-
 template <>
 bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     bool isStandaloneFunction /* = false */,
@@ -1780,7 +1777,8 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   // Eager Function tree mode, emit the lazy script now.
-  return EmitLazyScript(cx_, funbox, sourceObject_, parseGoal());
+  return funbox->lazyScriptData()->create(cx_, funbox, sourceObject_,
+                                          parseGoal());
 }
 
 bool ParserBase::publishLazyScripts(FunctionTree* root) {
@@ -1795,9 +1793,10 @@ bool ParserBase::publishLazyScripts(FunctionTree* root) {
       if (!funbox->lazyScriptData().isSome()) {
         return true;
       }
-
-      return EmitLazyScript(parser->cx_, funbox, parser->sourceObject_,
-                            parser->parseGoal());
+      mozilla::Maybe<LazyScriptCreationData> data =
+          std::move(funbox->lazyScriptData());
+      return data->create(parser->cx_, funbox, parser->sourceObject_,
+                          parser->parseGoal());
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
@@ -1831,25 +1830,22 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
   return true;
 }
 
-static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
-                           HandleScriptSourceObject sourceObject,
-                           ParseGoal parseGoal) {
-  LazyScriptCreationData& data = *funbox->lazyScriptData();
-
+bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
+                                    HandleScriptSourceObject sourceObject,
+                                    ParseGoal parseGoal) {
   Rooted<JSFunction*> function(cx, funbox->function());
   MOZ_ASSERT(function);
   LazyScript* lazy = LazyScript::Create(
-      cx, function, sourceObject, data.closedOverBindings,
-      data.innerFunctionBoxes, funbox->sourceStart, funbox->sourceEnd,
-      funbox->toStringStart, funbox->toStringEnd, funbox->startLine,
-      funbox->startColumn, parseGoal);
+      cx, function, sourceObject, closedOverBindings, innerFunctionBoxes,
+      funbox->sourceStart, funbox->sourceEnd, funbox->toStringStart,
+      funbox->toStringEnd, funbox->startLine, funbox->startColumn, parseGoal);
   if (!lazy) {
     return false;
   }
 
   // Flags that need to be copied into the JSScript when we do the full
   // parse.
-  if (data.strict) {
+  if (strict) {
     lazy->setStrict();
   }
   lazy->setGeneratorKind(funbox->generatorKind());
@@ -1880,13 +1876,10 @@ static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
   function->initLazyScript(lazy);
   funbox->setIsInterpretedLazy(true);
 
-  if (data.fieldInitializers) {
-    lazy->setFieldInitializers(*data.fieldInitializers);
+  if (fieldInitializers) {
+    lazy->setFieldInitializers(*fieldInitializers);
   }
 
-  // In order to allow asserting that we published all lazy script data,
-  // reset the lazyScriptData here, now that it's no longer needed.
-  funbox->lazyScriptData().reset();
   return true;
 }
 
