@@ -23,8 +23,8 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace mozilla {
 
-LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
-                                             HANDLE aChildProcess) {
+LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
+    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
   CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
 
