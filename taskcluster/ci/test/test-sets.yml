@@ -573,6 +573,8 @@ android-hw-arm7-qr:
 android-hw-arm7-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
+    - raptor-speedometer-fenix
+    - raptor-speedometer-fennec68
     - raptor-youtube-playback-fenix
     - raptor-youtube-playback-geckoview
     - raptor-tp6m-1-geckoview
@@ -717,6 +719,8 @@ android-hw-arm7-raptor:
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
+    - raptor-speedometer-fenix
+    - raptor-speedometer-fennec68
     - raptor-youtube-playback-fenix
     - raptor-youtube-playback-geckoview
     - raptor-tp6m-1-geckoview
@@ -850,6 +854,8 @@ android-hw-aarch64-raptor:
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-speedometer-fenix-power
+    - raptor-speedometer-fennec68-power
     - raptor-scn-power-idle-fenix
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
@@ -877,6 +883,8 @@ android-hw-arm7-raptor-cpu-memory-power:
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-speedometer-fenix-power
+    - raptor-speedometer-fennec68-power
     - raptor-scn-power-idle-fenix
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow

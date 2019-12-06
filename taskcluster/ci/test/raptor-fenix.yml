@@ -683,3 +683,35 @@ raptor-youtube-playback-fenix:
             # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
             # - --test-url-params is dynamically added from setup_raptor transform depending
             # on platform and project
+
+raptor-speedometer-fenix:
+    description: "Raptor Speedometer on Fenix"
+    try-name: raptor-speedometer-fenix
+    treeherder-symbol: Rap-fenix(sp)
+    run-on-projects: []
+    tier: 2
+    e10s: true
+    max-run-time: 2000
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-speedometer-fenix-power:
+    description: "Raptor Speedometer power on Fenix"
+    try-name: raptor-speedometer-fenix-power
+    treeherder-symbol: Rap-fenix(sp-p)
+    run-on-projects: []
+    tier: 2
+    e10s: true
+    max-run-time: 2000
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.fenix.IntentReceiverActivity

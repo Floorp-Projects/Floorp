@@ -320,7 +320,7 @@ def test_get_raptor_test_list_fenix(create_args):
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     # we don't have any actual fenix tests yet
-    assert len(test_list) == 0
+    assert len(test_list) == 1
 
 
 def test_add_test_url_params_with_single_extra_param():
