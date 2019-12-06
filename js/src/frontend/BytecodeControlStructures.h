@@ -142,7 +142,8 @@ class LoopControl : public BreakableControl {
   MOZ_MUST_USE bool emitLoopHead(BytecodeEmitter* bce,
                                  const mozilla::Maybe<uint32_t>& nextPos);
 
-  MOZ_MUST_USE bool emitLoopEnd(BytecodeEmitter* bce, JSOp op);
+  MOZ_MUST_USE bool emitLoopEnd(BytecodeEmitter* bce, JSOp op,
+                                JSTryNoteKind tryNoteKind);
 };
 template <>
 inline bool NestableControl::is<LoopControl>() const {
