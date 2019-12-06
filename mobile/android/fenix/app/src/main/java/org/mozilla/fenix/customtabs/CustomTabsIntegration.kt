@@ -8,8 +8,6 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.content.res.AppCompatResources
-import com.airbnb.lottie.LottieCompositionFactory
-import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -19,7 +17,6 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.theme.ThemeManager
 
 class CustomTabsIntegration(
     sessionManager: SessionManager,
@@ -43,37 +40,30 @@ class CustomTabsIntegration(
             }
         }
 
-        val task = LottieCompositionFactory
-            .fromRawRes(
+        val uncoloredEtpShield = AppCompatResources.getDrawable(
+            activity,
+            R.drawable.ic_tracking_protection_enabled
+        )!!
+
+        toolbar.display.icons = toolbar.display.icons.copy(
+            // Custom private tab backgrounds have bad contrast against the colored shield
+            trackingProtectionTrackersBlocked = uncoloredEtpShield,
+            trackingProtectionNothingBlocked = uncoloredEtpShield,
+            trackingProtectionException = AppCompatResources.getDrawable(
                 activity,
-                ThemeManager.resolveAttribute(R.attr.shieldLottieFile, activity)
+                R.drawable.ic_tracking_protection_disabled
+            )!!
+        )
+
+        toolbar.display.displayIndicatorSeparator = false
+        if (activity.settings().shouldUseTrackingProtection) {
+            toolbar.display.indicators = listOf(
+                DisplayToolbar.Indicators.SECURITY,
+                DisplayToolbar.Indicators.TRACKING_PROTECTION
             )
-        task.addListener { result ->
-            val lottieDrawable = LottieDrawable()
-            lottieDrawable.composition = result
-
-            toolbar.display.displayIndicatorSeparator = false
-            if (activity.settings().shouldUseTrackingProtection) {
-                toolbar.display.indicators = listOf(
-                    DisplayToolbar.Indicators.SECURITY,
-                    DisplayToolbar.Indicators.TRACKING_PROTECTION
-                )
-            } else {
-                toolbar.display.indicators = listOf(
-                    DisplayToolbar.Indicators.SECURITY
-                )
-            }
-
-            toolbar.display.icons = toolbar.display.icons.copy(
-                trackingProtectionTrackersBlocked = lottieDrawable,
-                trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
-                    activity,
-                    R.drawable.ic_tracking_protection_enabled
-                )!!,
-                trackingProtectionException = AppCompatResources.getDrawable(
-                    activity,
-                    R.drawable.ic_tracking_protection_disabled
-                )!!
+        } else {
+            toolbar.display.indicators = listOf(
+                DisplayToolbar.Indicators.SECURITY
             )
         }
 
