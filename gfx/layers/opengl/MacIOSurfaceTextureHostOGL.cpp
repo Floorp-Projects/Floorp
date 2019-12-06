@@ -160,7 +160,8 @@ uint32_t MacIOSurfaceTextureHostOGL::NumSubTextures() {
 
 void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
-    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID,
+    const bool aPreferCompositorSurface) {
   MOZ_ASSERT(mSurface);
 
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -179,7 +180,8 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       auto format = GetFormat() == gfx::SurfaceFormat::R8G8B8A8
                         ? gfx::SurfaceFormat::B8G8R8A8
                         : gfx::SurfaceFormat::B8G8R8X8;
-      wr::ImageDescriptor descriptor(GetSize(), format);
+      wr::ImageDescriptor descriptor(GetSize(), format,
+                                     aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -190,7 +192,8 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       // and YCbCr at OpenGL 3.1)
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
-      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::B8G8R8X8);
+      wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::B8G8R8X8,
+                                     aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
       break;
     }
@@ -200,11 +203,11 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetDevicePixelWidth(0),
                        mSurface->GetDevicePixelHeight(0)),
-          gfx::SurfaceFormat::A8);
+          gfx::SurfaceFormat::A8, aPreferCompositorSurface);
       wr::ImageDescriptor descriptor1(
           gfx::IntSize(mSurface->GetDevicePixelWidth(1),
                        mSurface->GetDevicePixelHeight(1)),
-          gfx::SurfaceFormat::R8G8);
+          gfx::SurfaceFormat::R8G8, aPreferCompositorSurface);
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;

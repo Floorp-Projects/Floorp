@@ -352,6 +352,7 @@ pub struct WrImageDescriptor {
     pub height: i32,
     pub stride: i32,
     pub opacity: OpacityType,
+    pub prefer_compositor_surface: bool,
 }
 
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
@@ -360,6 +361,10 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
 
         if self.opacity == OpacityType::Opaque {
             flags |= ImageDescriptorFlags::IS_OPAQUE;
+        }
+
+        if self.prefer_compositor_surface {
+            flags |= ImageDescriptorFlags::PREFER_COMPOSITOR_SURFACE;
         }
 
         ImageDescriptor {

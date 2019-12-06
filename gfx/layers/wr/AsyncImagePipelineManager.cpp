@@ -266,7 +266,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
 
   Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
   auto externalImageKey = wrTexture->GetExternalImageKey();
-  wrTexture->PushResourceUpdates(aMaybeFastTxn, op, keys, externalImageKey);
+  wrTexture->PushResourceUpdates(aMaybeFastTxn, op, keys, externalImageKey,
+                                 /* aPreferCompositorSurface */ true);
 
   return Some(op);
 }
