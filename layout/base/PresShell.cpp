@@ -1868,10 +1868,6 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
 nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                                ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
-  nsSize oldSize = mPresContext->GetVisibleArea().Size();
-  if (oldSize == nsSize(aWidth, aHeight)) {
-    return NS_OK;
-  }
 
   // Historically we never fired resize events if there was no root frame by the
   // time this function got called.
@@ -1888,6 +1884,11 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   };
 
   if (!(aOptions & ResizeReflowOptions::BSizeLimit)) {
+    nsSize oldSize = mPresContext->GetVisibleArea().Size();
+    if (oldSize == nsSize(aWidth, aHeight)) {
+      return NS_OK;
+    }
+
     SimpleResizeReflow(aWidth, aHeight, aOptions);
     postResizeEventIfNeeded();
     return NS_OK;
