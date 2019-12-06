@@ -528,40 +528,29 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
     wr::RenderedFrameId aLastCompletedFrameId) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
   MOZ_ASSERT(mLastCompletedFrameId <= aLastCompletedFrameId.mId);
+  MOZ_ASSERT(aLatestFrameId.IsValid());
 
   // This is called on the render thread, so we just stash the data into
   // mPendingUpdates and process it later on the compositor thread.
   mPendingUpdates.push_back(aInfo);
+  mLastCompletedFrameId = aLastCompletedFrameId.mId;
 
-  // If aLatestFrameId is valid then a render has been submitted.
-  if (aLatestFrameId.IsValid()) {
-    mLastCompletedFrameId = aLastCompletedFrameId.mId;
+  {
+    // We need to lock for mRenderSubmittedUpdates because it can be accessed
+    // on the compositor thread.
+    MutexAutoLock lock(mRenderSubmittedUpdatesLock);
 
-    {
-      // We need to lock for mRenderSubmittedUpdates because it can be accessed
-      // on the compositor thread.
-      MutexAutoLock lock(mRenderSubmittedUpdatesLock);
-
-      // Move the pending updates into the submitted ones. Note that this clears
-      // mPendingUpdates.
-      mRenderSubmittedUpdates.emplace_back(aLatestFrameId,
-                                           std::move(mPendingUpdates));
-    }
-
-    // Queue a runnable on the compositor thread to process the updates.
-    // This will also call CheckForTextureHostsNotUsedByGPU.
-    layers::CompositorThreadHolder::Loop()->PostTask(
-        NewRunnableMethod("ProcessPipelineUpdates", this,
-                          &AsyncImagePipelineManager::ProcessPipelineUpdates));
-  } else if (mLastCompletedFrameId < aLastCompletedFrameId.mId) {
-    // We're not running ProcessPipelineUpdates but a later frame has completed,
-    // so queue a runnable on the compositor thread to check if any TextureHosts
-    // can be released.
-    mLastCompletedFrameId = aLastCompletedFrameId.mId;
-    layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(
-        "CheckForTextureHostsNotUsedByGPU", this,
-        &AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU));
+    // Move the pending updates into the submitted ones. Note that this clears
+    // mPendingUpdates.
+    mRenderSubmittedUpdates.emplace_back(aLatestFrameId,
+                                         std::move(mPendingUpdates));
   }
+
+  // Queue a runnable on the compositor thread to process the updates.
+  // This will also call CheckForTextureHostsNotUsedByGPU.
+  layers::CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableMethod("ProcessPipelineUpdates", this,
+                        &AsyncImagePipelineManager::ProcessPipelineUpdates));
 }
 
 void AsyncImagePipelineManager::ProcessPipelineUpdates() {
