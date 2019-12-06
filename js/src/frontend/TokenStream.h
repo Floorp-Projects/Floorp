@@ -481,6 +481,42 @@ class SourceCoords {
   }
 };
 
+enum class UnitsType : unsigned char {
+  PossiblyMultiUnit = 0,
+  GuaranteedSingleUnit = 1,
+};
+
+class ChunkInfo {
+ private:
+  // Store everything in |unsigned char|s so everything packs.
+  unsigned char column_[sizeof(uint32_t)];
+  unsigned char unitsType_;
+
+ public:
+  ChunkInfo(uint32_t col, UnitsType type)
+      : unitsType_(static_cast<unsigned char>(type)) {
+    memcpy(column_, &col, sizeof(col));
+  }
+
+  uint32_t column() const {
+    uint32_t col;
+    memcpy(&col, column_, sizeof(uint32_t));
+    return col;
+  }
+
+  UnitsType unitsType() const {
+    MOZ_ASSERT(unitsType_ <= 1, "unitsType_ must be 0 or 1");
+    return static_cast<UnitsType>(unitsType_);
+  }
+
+  void guaranteeSingleUnits() {
+    MOZ_ASSERT(unitsType() == UnitsType::PossiblyMultiUnit,
+               "should only be setting to possibly optimize from the "
+               "pessimistic case");
+    unitsType_ = static_cast<unsigned char>(UnitsType::GuaranteedSingleUnit);
+  }
+};
+
 enum class InvalidEscapeType {
   // No invalid character escapes.
   None,
@@ -531,42 +567,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   SourceCoords srcCoords;
 
   static constexpr uint32_t ColumnChunkLength = 128;
-
-  enum class UnitsType : unsigned char {
-    PossiblyMultiUnit = 0,
-    GuaranteedSingleUnit = 1,
-  };
-
-  class ChunkInfo {
-   private:
-    // Store everything in |unsigned char|s so everything packs.
-    unsigned char column_[sizeof(uint32_t)];
-    unsigned char unitsType_;
-
-   public:
-    ChunkInfo(uint32_t col, UnitsType type)
-        : unitsType_(static_cast<unsigned char>(type)) {
-      memcpy(column_, &col, sizeof(col));
-    }
-
-    uint32_t column() const {
-      uint32_t col;
-      memcpy(&col, column_, sizeof(uint32_t));
-      return col;
-    }
-
-    UnitsType unitsType() const {
-      MOZ_ASSERT(unitsType_ <= 1, "unitsType_ must be 0 or 1");
-      return static_cast<UnitsType>(unitsType_);
-    }
-
-    void guaranteeSingleUnits() {
-      MOZ_ASSERT(unitsType() == UnitsType::PossiblyMultiUnit,
-                 "should only be setting to possibly optimize from the "
-                 "pessimistic case");
-      unitsType_ = static_cast<unsigned char>(UnitsType::GuaranteedSingleUnit);
-    }
-  };
 
   /**
    * Line number (of lines at least |ColumnChunkLength| code units long) to
