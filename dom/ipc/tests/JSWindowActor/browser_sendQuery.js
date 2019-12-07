@@ -2,6 +2,51 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+declTest("sendQuery Error", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+
+    let error = await actorParent
+      .sendQuery("error", { message: "foo" })
+      .catch(e => e);
+
+    is(error.message, "foo", "Error should have the correct message");
+    is(error.name, "SyntaxError", "Error should have the correct name");
+    is(
+      error.stack,
+      "receiveMessage@resource://testing-common/TestChild.jsm:28:31\n",
+      "Error should have the correct stack"
+    );
+  },
+});
+
+declTest("sendQuery Exception", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+
+    let error = await actorParent
+      .sendQuery("exception", {
+        message: "foo",
+        result: Cr.NS_ERROR_INVALID_ARG,
+      })
+      .catch(e => e);
+
+    is(error.message, "foo", "Error should have the correct message");
+    is(
+      error.result,
+      Cr.NS_ERROR_INVALID_ARG,
+      "Error should have the correct result code"
+    );
+    is(
+      error.stack,
+      "receiveMessage@resource://testing-common/TestChild.jsm:31:22\n",
+      "Error should have the correct stack"
+    );
+  },
+});
+
 declTest("sendQuery testing", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;

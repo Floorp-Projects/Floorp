@@ -6,6 +6,10 @@
 
 #include "mozilla/dom/JSWindowActor.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/ClonedErrorHolder.h"
+#include "mozilla/dom/ClonedErrorHolderBinding.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
@@ -271,7 +275,7 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
   if (aMetadata.kind() == JSWindowActorMessageKind::QueryResolve) {
     promise->MaybeResolve(data);
   } else {
-    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    promise->MaybeReject(data);
   }
 }
 
@@ -286,18 +290,46 @@ JSWindowActor::QueryHandler::QueryHandler(
 void JSWindowActor::QueryHandler::RejectedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue) {
   if (!mActor) {
+    // Make sure that this rejection is reported. See comment below.
+    Unused << JS::CallOriginalPromiseReject(aCx, aValue);
     return;
   }
 
-  // Make sure that this rejection is reported, despite being "handled". This
-  // is done by creating a new promise in the rejected state, and throwing it
-  // away. This will be reported as an unhandled rejected promise.
-  Unused << JS::CallOriginalPromiseReject(aCx, aValue);
+  JS::Rooted<JS::Value> value(aCx, aValue);
+  if (value.isObject()) {
+    JS::Rooted<JSObject*> error(aCx, &value.toObject());
+    if (RefPtr<ClonedErrorHolder> ceh =
+            ClonedErrorHolder::Create(aCx, error, IgnoreErrors())) {
+      JS::RootedObject obj(aCx);
+      // Note: We can't use `ToJSValue` here because ClonedErrorHolder isn't
+      // wrapper cached.
+      if (ceh->WrapObject(aCx, nullptr, &obj)) {
+        value.setObject(*obj);
+      } else {
+        JS_ClearPendingException(aCx);
+      }
+    } else {
+      JS_ClearPendingException(aCx);
+    }
+  }
 
-  // The exception probably isn't cloneable, so just send down undefined.
-  ipc::StructuredCloneData data;
-  data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
-  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
+  Maybe<ipc::StructuredCloneData> data;
+  data.emplace();
+  IgnoredErrorResult rv;
+  data->Write(aCx, value, rv);
+  if (rv.Failed()) {
+    // Failed to clone the rejection value. Make sure that this rejection is
+    // reported, despite being "handled". This is done by creating a new
+    // promise in the rejected state, and throwing it away. This will be
+    // reported as an unhandled rejected promise.
+    Unused << JS::CallOriginalPromiseReject(aCx, aValue);
+
+    data.reset();
+    data.emplace();
+    data->Write(aCx, JS::UndefinedHandleValue, rv);
+  }
+
+  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(*data));
 }
 
 void JSWindowActor::QueryHandler::ResolvedCallback(
@@ -318,14 +350,16 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
     msg.Append(mActor->Name());
     msg.Append(':');
     msg.Append(mMessageName);
-    msg.Append(NS_LITERAL_STRING(": message reply cannot be cloned."));
-    nsContentUtils::LogSimpleConsoleError(msg, "chrome", false, true);
+    msg.AppendLiteral(": message reply cannot be cloned.");
 
-    JS_ClearPendingException(aCx);
+    auto exc = MakeRefPtr<Exception>(
+        NS_ConvertUTF16toUTF8(msg), NS_ERROR_FAILURE,
+        NS_LITERAL_CSTRING("DataCloneError"), nullptr, nullptr);
 
-    ipc::StructuredCloneData data;
-    data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
-    SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
+    JS::Rooted<JS::Value> val(aCx);
+    if (ToJSValue(aCx, exc, &val)) {
+      RejectedCallback(aCx, val);
+    }
     return;
   }
 
