@@ -1428,6 +1428,7 @@ name = "gkrust"
 version = "0.1.0"
 dependencies = [
  "gkrust-shared 0.1.0",
+ "mozglue-static 0.1.0",
  "mozilla-central-workspace-hack 0.1.0",
  "stylo_tests 0.0.1",
 ]
@@ -1439,6 +1440,7 @@ dependencies = [
  "bench-collections-gtest 0.1.0",
  "gecko-fuzz-targets 0.1.0",
  "gkrust-shared 0.1.0",
+ "mozglue-static 0.1.0",
  "mp4parse-gtest 0.1.0",
  "nsstring-gtest 0.1.0",
  "xpcom-gtest 0.1.0",
