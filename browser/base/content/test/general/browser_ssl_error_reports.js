@@ -108,7 +108,7 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
   let statusPromise = createReportResponseStatusPromise(URL_REPORTS + suffix);
 
   // Click the checkbox, enable automatic error reports.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     content.document.getElementById("automaticallyReportInFuture").click();
   });
 
@@ -122,7 +122,7 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
   ok(isAutomaticReportingEnabled(), "automatic SSL report submission enabled");
 
   // Disable automatic error reports.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     content.document.getElementById("automaticallyReportInFuture").click();
   });
 
@@ -153,7 +153,7 @@ async function testSendReportDisabled(testURL, errorURISuffix) {
   await checkErrorPage(browser, errorURISuffix);
 
   // Check that the error reporting section is hidden.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let section = content.document.getElementById("certificateErrorReporting");
     Assert.equal(
       content.getComputedStyle(section).display,
@@ -189,7 +189,7 @@ function createReportResponseStatusPromise(expectedURI) {
 }
 
 function checkErrorPage(browser, suffix) {
-  return ContentTask.spawn(browser, { suffix }, async function(args) {
+  return SpecialPowers.spawn(browser, [{ suffix }], async function(args) {
     let uri = content.document.documentURI;
     Assert.ok(
       uri.startsWith(`about:${args.suffix}`),

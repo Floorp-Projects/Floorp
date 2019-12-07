@@ -32,7 +32,7 @@ add_task(async function() {
     "Should have PAGE_2 as the browser currentURI"
   );
 
-  await ContentTask.spawn(browser, PAGE_2, async function(expectedURL) {
+  await SpecialPowers.spawn(browser, [PAGE_2], async function(expectedURL) {
     docShell.QueryInterface(Ci.nsIWebNavigation);
     Assert.equal(
       docShell.currentURI.spec,

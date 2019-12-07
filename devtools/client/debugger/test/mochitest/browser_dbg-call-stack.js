@@ -108,7 +108,7 @@ add_task(async function() {
   const found = findElement(dbg, "callStackBody");
   is(found, null, "Call stack is hidden");
 
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("button.pause").click();
   });
 

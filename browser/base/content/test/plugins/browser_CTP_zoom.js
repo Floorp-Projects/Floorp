@@ -64,7 +64,7 @@ add_task(async function() {
       gTestRoot + "plugin_zoom.html"
     );
     await promiseUpdatePluginBindings(gTestBrowser);
-    await ContentTask.spawn(gTestBrowser, { count }, async function(args) {
+    await SpecialPowers.spawn(gTestBrowser, [{ count }], async function(args) {
       let doc = content.document;
       let plugin = doc.getElementById("test");
       let overlay = plugin.openOrClosedShadowRoot.getElementById("main");

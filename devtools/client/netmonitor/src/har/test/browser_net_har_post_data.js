@@ -26,7 +26,7 @@ add_task(async function() {
 
   // Execute one POST request on the page and wait till its done.
   const wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     content.wrappedJSObject.executeTest();
   });
   await wait;

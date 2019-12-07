@@ -8,10 +8,8 @@ const TEST_URL =
   "https://example.com/browser/dom/webauthn/tests/browser/tab_webauthn_result.html";
 
 async function assertStatus(tab, expected) {
-  let actual = await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    async function() {
+  let actual = await SpecialPowers.spawn(
+    tab.linkedBrowser, [], async function() {
       info("visbility state: " + content.document.visibilityState);
       info("docshell active: " + docShell.isActive);
       return content.document.getElementById("status").value;
@@ -22,7 +20,7 @@ async function assertStatus(tab, expected) {
 
 async function waitForStatus(tab, expected) {
   /* eslint-disable no-shadow */
-  await ContentTask.spawn(tab.linkedBrowser, [expected], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [[expected]], async function(
     expected
   ) {
     return ContentTaskUtils.waitForCondition(() => {
@@ -42,7 +40,7 @@ async function waitForStatus(tab, expected) {
 }
 
 function startMakeCredentialRequest(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
@@ -78,7 +76,7 @@ function startMakeCredentialRequest(tab) {
 }
 
 function startGetAssertionRequest(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let newCredential = {
       type: "public-key",
       id: content.crypto.getRandomValues(new Uint8Array(16)),

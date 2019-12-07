@@ -29,7 +29,7 @@ add_task(async function() {
   disappearingPage.remove(false);
   document.getElementById("reload-button").doCommand();
   await BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     ok(
       content.document.documentURI.startsWith("about:neterror"),
       "Check that a neterror page was loaded."

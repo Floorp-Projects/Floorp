@@ -13,7 +13,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let icon = await iconPromise;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, ROOT, root => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [ROOT], root => {
     let doc = content.document;
     let head = doc.head;
     let link = doc.createElement("link");

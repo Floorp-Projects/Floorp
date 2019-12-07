@@ -10,7 +10,7 @@ add_task(async function testMultiFrameRestore() {
   ) {
     // Navigate 2 subframes and load about:blank.
     let browserLoaded = BrowserTestUtils.browserLoaded(browser);
-    await ContentTask.spawn(browser, FRAME_URL, async function(FRAME_URL) {
+    await SpecialPowers.spawn(browser, [FRAME_URL], async function(FRAME_URL) {
       function frameLoaded(frame) {
         frame.contentWindow.location = FRAME_URL;
         return new Promise(r => (frame.onload = r));
@@ -39,7 +39,7 @@ add_task(async function testMultiFrameRestore() {
     await framesLoaded;
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(r => setTimeout(r, 1000));
-    await ContentTask.spawn(browser, FRAME_URL, FRAME_URL => {
+    await SpecialPowers.spawn(browser, [FRAME_URL], FRAME_URL => {
       is(
         content.document.querySelector("#testFrame1").contentWindow.location
           .href,

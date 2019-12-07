@@ -107,28 +107,24 @@ async function workerCheckDeployer({ srcBlob, workerType }) {
 }
 
 function checkTabWindowIDB(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, idbCheckFunc);
+  return SpecialPowers.spawn(tab.linkedBrowser, [], idbCheckFunc);
 }
 
 async function checkTabDedicatedWorkerIDB(tab) {
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser, [{
       srcBlob: workerScriptBlob,
       workerType: "dedicated",
-    },
-    workerCheckDeployer
+    }], workerCheckDeployer
   );
 }
 
 async function checkTabSharedWorkerIDB(tab) {
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser, [{
       srcBlob: workerScriptBlob,
       workerType: "shared",
-    },
-    workerCheckDeployer
+    }], workerCheckDeployer
   );
 }
 

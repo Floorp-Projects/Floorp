@@ -46,7 +46,7 @@ async function testResumeRunningAudioContext() {
   await waitForTabPlayingEvent(tab, true);
 
   info(`- resume AudioContext -`);
-  await ContentTask.spawn(browser, null, resumeAudioContext);
+  await SpecialPowers.spawn(browser, [], resumeAudioContext);
 
   info(`- 'sound-playing' icon should still exist -`);
   await waitForTabPlayingEvent(tab, true);

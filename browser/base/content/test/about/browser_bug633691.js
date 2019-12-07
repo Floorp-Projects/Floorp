@@ -7,7 +7,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
     browser
   ) {
-    let context = await ContentTask.spawn(browser, null, function() {
+    let context = await SpecialPowers.spawn(browser, [], function() {
       let iframe = content.document.querySelector("iframe");
       iframe.src = "https://expired.example.com/";
       return BrowsingContext.getFromWindow(iframe.contentWindow);

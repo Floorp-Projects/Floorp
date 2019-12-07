@@ -33,7 +33,7 @@ add_task(async function allowOnionMixedContent() {
   ).catch(Cu.reportError);
   const browser = gBrowser.getBrowserForTab(tab);
 
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     is(
       docShell.hasMixedDisplayContentBlocked,
       false,

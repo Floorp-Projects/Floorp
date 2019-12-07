@@ -103,7 +103,7 @@ add_task(async function test_edit_password() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        await ContentTask.spawn(browser, testCase, async function(
+        await SpecialPowers.spawn(browser, [testCase], async function(
           contentTestCase
         ) {
           let doc = content.document;

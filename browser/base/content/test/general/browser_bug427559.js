@@ -13,7 +13,7 @@ const URL =
   "<script>document.body.firstElementChild.focus()</script></body>";
 
 function getFocusedLocalName(browser) {
-  return ContentTask.spawn(browser, null, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     return content.document.activeElement.localName;
   });
 }

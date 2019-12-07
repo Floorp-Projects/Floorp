@@ -16,7 +16,7 @@ add_task(async function checkExceptionDialogButton() {
   let browser = tab.linkedBrowser;
   let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
   info("Clicking the exceptionDialogButton in advanced panel");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
     let exceptionButton = doc.getElementById("exceptionDialogButton");
     exceptionButton.click();
@@ -25,7 +25,7 @@ add_task(async function checkExceptionDialogButton() {
   info("Loading the url after adding exception");
   await loaded;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
     ok(
       !doc.documentURI.startsWith("about:certerror"),
@@ -52,10 +52,8 @@ add_task(async function checkPermanentExceptionPref() {
     let browser = tab.linkedBrowser;
     let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
     info("Clicking the exceptionDialogButton in advanced panel");
-    let securityInfoAsString = await ContentTask.spawn(
-      browser,
-      null,
-      async function() {
+    let securityInfoAsString = await SpecialPowers.spawn(
+      browser, [], async function() {
         let doc = content.document;
         let exceptionButton = doc.getElementById("exceptionDialogButton");
         exceptionButton.click();
@@ -72,7 +70,7 @@ add_task(async function checkPermanentExceptionPref() {
     info("Loading the url after adding exception");
     await loaded;
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let doc = content.document;
       ok(
         !doc.documentURI.startsWith("about:certerror"),
@@ -116,7 +114,7 @@ add_task(async function checkBadStsCert() {
     let tab = await openErrorPage(BAD_STS_CERT, useFrame);
     let browser = tab.linkedBrowser;
 
-    await ContentTask.spawn(browser, { frame: useFrame }, async function({
+    await SpecialPowers.spawn(browser, [{ frame: useFrame }], async function({
       frame,
     }) {
       let doc = frame
@@ -129,10 +127,8 @@ add_task(async function checkBadStsCert() {
       );
     });
 
-    let message = await ContentTask.spawn(
-      browser,
-      { frame: useFrame },
-      async function({ frame }) {
+    let message = await SpecialPowers.spawn(
+      browser, [{ frame: useFrame }], async function({ frame }) {
         let doc = frame
           ? content.document.querySelector("iframe").contentDocument
           : content.document;
@@ -172,7 +168,7 @@ add_task(async function checkhideAddExceptionButtonViaPref() {
     let tab = await openErrorPage(BAD_CERT, useFrame);
     let browser = tab.linkedBrowser;
 
-    await ContentTask.spawn(browser, { frame: useFrame }, async function({
+    await SpecialPowers.spawn(browser, [{ frame: useFrame }], async function({
       frame,
     }) {
       let doc = frame
@@ -199,7 +195,7 @@ add_task(async function checkhideAddExceptionButtonInFrames() {
   let tab = await openErrorPage(BAD_CERT, true);
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document.querySelector("iframe").contentDocument;
     let exceptionButton = doc.getElementById("exceptionDialogButton");
     ok(

@@ -110,7 +110,7 @@ async function do_test(loadFn) {
 }
 
 function getPrincipalURI(browser) {
-  return ContentTask.spawn(browser, null, function() {
+  return SpecialPowers.spawn(browser, [], function() {
     return content.document.nodePrincipal.URI.spec;
   });
 }

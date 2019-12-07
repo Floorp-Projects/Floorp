@@ -17,7 +17,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: gTestRoot + "plugin_data_url_test.html" },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         ok(
           content.window.navigator.plugins.length > 0,
           "plugins should be available to HTTP-loaded pages"

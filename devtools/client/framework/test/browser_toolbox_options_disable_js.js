@@ -39,7 +39,7 @@ async function testJSEnabled() {
   // takes a while to become live.
   await waitForTick();
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const doc = content.document;
     const output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
@@ -54,7 +54,7 @@ async function testJSEnabled() {
 async function testJSEnabledIframe() {
   info("Testing that JS is enabled in the iframe");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const doc = content.document;
     const iframe = doc.querySelector("iframe");
     const iframeDoc = iframe.contentDocument;
@@ -102,7 +102,7 @@ async function toggleJS(toolbox) {
 async function testJSDisabled() {
   info("Testing that JS is disabled");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const doc = content.document;
     const output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
@@ -117,7 +117,7 @@ async function testJSDisabled() {
 async function testJSDisabledIframe() {
   info("Testing that JS is disabled in the iframe");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const doc = content.document;
     const iframe = doc.querySelector("iframe");
     const iframeDoc = iframe.contentDocument;

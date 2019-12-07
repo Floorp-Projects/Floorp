@@ -14,7 +14,7 @@ async function showPermissionPrompt(browser) {
     "popupshown"
   );
 
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     E10SUtils.wrapHandlingUserInput(content, true, () => {
       // We need to synthesize the click instead of calling .click(),
       // otherwise the document will not correctly register the user gesture.

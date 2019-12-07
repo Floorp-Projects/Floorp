@@ -24,11 +24,11 @@ function test() {
         "Make sure we start at the correct URL"
       );
 
-      ContentTask.spawn(aBrowser, null, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         // test_btn calls document.write() then reloads the document
         let test_btn = content.document.getElementById("test_btn");
 
-        addEventListener(
+        docShell.chromeEventHandler.addEventListener(
           "load",
           () => {
             test_btn.click();
@@ -42,7 +42,7 @@ function test() {
       return BrowserTestUtils.browserLoaded(aBrowser);
     })
     .then(() => {
-      return ContentTask.spawn(aBrowser, null, () => content.document.URL);
+      return SpecialPowers.spawn(aBrowser, [], () => content.document.URL);
     })
     .then(url => {
       is(url, testURL, "Document URL should be identical after reload");

@@ -39,7 +39,7 @@ async function testWarningMessageVisibility(uri, visible) {
   const sentinel = SENTINEL_MSG + Date.now();
   const onSentinelMessage = waitForMessage(hud, sentinel);
 
-  ContentTask.spawn(gBrowser.selectedBrowser, sentinel, function(msg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [sentinel], function(msg) {
     content.console.log(msg);
   });
   await onSentinelMessage;

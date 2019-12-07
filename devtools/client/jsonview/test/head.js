@@ -62,7 +62,7 @@ async function addJsonViewTab(
 
   // Catch RequireJS errors (usually timeouts)
   const error = tabLoaded.then(() =>
-    ContentTask.spawn(browser, null, function() {
+    SpecialPowers.spawn(browser, [], function() {
       return new Promise((resolve, reject) => {
         const { requirejs } = content.wrappedJSObject;
         if (requirejs) {
@@ -80,7 +80,7 @@ async function addJsonViewTab(
   await Promise.race([
     error,
     // eslint-disable-next-line no-shadow
-    ContentTask.spawn(browser, data, async function(data) {
+    SpecialPowers.spawn(browser, [data], async function(data) {
       // Check if there is a JSONView object.
       const { JSONView } = content.wrappedJSObject;
       if (!JSONView) {

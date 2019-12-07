@@ -11,13 +11,13 @@ const TEST_URL = "http://example.com/";
 addRDMTask(
   TEST_URL,
   async function({ browser }) {
-    const contentURL = await ContentTask.spawn(browser, {}, function() {
+    const contentURL = await SpecialPowers.spawn(browser, [], function() {
       return content.document.URL;
     });
     info("content URL is " + contentURL);
 
-    const contentInRDMPane = await ContentTask.spawn(browser, {}, function() {
-      return content.docShell.browsingContext.inRDMPane;
+    const contentInRDMPane = await SpecialPowers.spawn(browser, [], function() {
+      return docShell.browsingContext.inRDMPane;
     });
 
     ok(

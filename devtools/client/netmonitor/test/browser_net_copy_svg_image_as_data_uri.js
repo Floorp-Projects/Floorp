@@ -16,7 +16,7 @@ add_task(async function() {
   const { document } = monitor.panelWin;
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, SVG_URL, async function(url) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [SVG_URL], async function(url) {
     content.wrappedJSObject.performRequest(url);
   });
   await wait;

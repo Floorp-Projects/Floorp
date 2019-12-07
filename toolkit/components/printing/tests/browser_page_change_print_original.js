@@ -41,7 +41,7 @@ add_task(async function pp_after_orientation_change() {
   await printPreviewEntered;
 
   // Assert that we are showing the original page
-  await ContentTask.spawn(ppBrowser, null, async function() {
+  await SpecialPowers.spawn(ppBrowser, [], async function() {
     is(
       content.document.body.textContent.trim(),
       "INITIAL PAGE",
@@ -67,7 +67,7 @@ add_task(async function pp_after_orientation_change() {
   await printPreviewEntered;
 
   // Check that we're still showing the original page.
-  await ContentTask.spawn(ppBrowser, null, async function() {
+  await SpecialPowers.spawn(ppBrowser, [], async function() {
     is(
       content.document.body.textContent.trim(),
       "INITIAL PAGE",
@@ -76,7 +76,7 @@ add_task(async function pp_after_orientation_change() {
   });
 
   // Check that the other tab is definitely showing the new page:
-  await ContentTask.spawn(browserToPrint, null, async function() {
+  await SpecialPowers.spawn(browserToPrint, [], async function() {
     is(
       content.document.body.textContent.trim(),
       "REPLACED PAGE!",

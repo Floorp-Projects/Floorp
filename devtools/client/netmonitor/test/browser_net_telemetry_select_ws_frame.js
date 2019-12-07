@@ -27,7 +27,7 @@ add_task(async function() {
   TelemetryTestUtils.assertNumberOfEvents(0);
 
   // Wait for WS connection to be established + send messages.
-  await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection(1);
   });
 

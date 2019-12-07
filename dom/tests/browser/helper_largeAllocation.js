@@ -41,13 +41,13 @@ function expectNoProcess() {
 }
 
 function getPID(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return SpecialPowers.spawn(aBrowser, [], () => {
     return Services.appinfo.processID;
   });
 }
 
 function getInLAProc(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return SpecialPowers.spawn(aBrowser, [], () => {
     return Services.appinfo.remoteType == "webLargeAllocation";
   });
 }
@@ -80,7 +80,7 @@ async function largeAllocSuccessTests() {
     is(false, await getInLAProc(aBrowser));
 
     let epc = expectProcessCreated();
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -107,7 +107,7 @@ async function largeAllocSuccessTests() {
     // Fail the test if we create a process
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       // eslint-disable-next-line no-unsanitized/property
       content.document.body.innerHTML = `<iframe src='${TEST_URI}'></iframe>`;
 
@@ -138,7 +138,7 @@ async function largeAllocSuccessTests() {
     // Fail the test if we create a process
     let stopExpectNoProcess = expectNoProcess();
 
-    let loaded = ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    let loaded = SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.body.innerHTML = "<button>CLICK ME</button>";
 
       return new Promise(resolve => {
@@ -173,7 +173,7 @@ async function largeAllocSuccessTests() {
 
     let epc = expectProcessCreated();
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -186,10 +186,8 @@ async function largeAllocSuccessTests() {
 
     await BrowserTestUtils.browserLoaded(aBrowser);
 
-    await ContentTask.spawn(
-      aBrowser,
-      null,
-      () => (content.document.location = "about:blank")
+    await SpecialPowers.spawn(
+      aBrowser, [], () => (content.document.location = "about:blank")
     );
 
     await BrowserTestUtils.browserLoaded(aBrowser);
@@ -200,7 +198,7 @@ async function largeAllocSuccessTests() {
 
     epc = expectProcessCreated();
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -221,7 +219,7 @@ async function largeAllocSuccessTests() {
 
     let epc = expectProcessCreated();
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -235,7 +233,7 @@ async function largeAllocSuccessTests() {
     await BrowserTestUtils.browserLoaded(aBrowser);
 
     // Switch to about:blank, so we can navigate back
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       content.document.location = "about:blank";
     });
 
@@ -251,7 +249,7 @@ async function largeAllocSuccessTests() {
 
     // Navigate back to the previous page. As the large alloation process was
     // left, it won't be in bfcache and will have to be loaded fresh.
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.window.history.back();
     });
 
@@ -276,7 +274,7 @@ async function largeAllocSuccessTests() {
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -289,7 +287,7 @@ async function largeAllocSuccessTests() {
 
     let epc = expectProcessCreated();
 
-    await ContentTask.spawn(aBrowser, TEST_URI_2, TEST_URI_2 => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI_2], TEST_URI_2 => {
       content.document.location = TEST_URI_2;
     });
 
@@ -327,7 +325,7 @@ async function largeAllocSuccessTests() {
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -340,7 +338,7 @@ async function largeAllocSuccessTests() {
 
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       this.__newWindow = content.window.open("about:blank");
       content.document.location = "about:blank";
     });
@@ -354,7 +352,7 @@ async function largeAllocSuccessTests() {
 
     stopExpectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       ok(this.__newWindow, "The window should have been stored");
       this.__newWindow.close();
     });
@@ -372,7 +370,7 @@ async function largeAllocSuccessTests() {
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -390,7 +388,7 @@ async function largeAllocSuccessTests() {
       gBrowser,
       "about:blank"
     );
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       this.__newWindow = content.window.open("about:blank");
     });
     await promiseTabOpened;
@@ -410,7 +408,7 @@ async function largeAllocSuccessTests() {
 
     stopExpectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       ok(this.__newWindow, "The window should have been stored");
       this.__newWindow.close();
     });
@@ -428,7 +426,7 @@ async function largeAllocSuccessTests() {
       expectProcessCreated(),
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -476,7 +474,7 @@ async function largeAllocSuccessTests() {
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -493,7 +491,7 @@ async function largeAllocSuccessTests() {
       is(false, await getInLAProc(aBrowser));
 
       let ready = Promise.all([BrowserTestUtils.browserLoaded(aBrowser)]);
-      await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
         content.document.location = TEST_URI;
       });
       await ready;
@@ -517,7 +515,7 @@ async function largeAllocSuccessTests() {
     // Fail the test if we create a process
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       content.document.location = "view-source:http://example.com";
     });
 
@@ -546,7 +544,7 @@ async function largeAllocSuccessTests() {
       expectProcessCreated(),
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -588,7 +586,7 @@ async function largeAllocSuccessTests() {
       expectProcessCreated(),
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -600,13 +598,13 @@ async function largeAllocSuccessTests() {
     is(true, await getInLAProc(aBrowser));
 
     await Promise.all([
-      ContentTask.spawn(aBrowser, null, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         content.document.querySelector("#submit").click();
       }),
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    let innerText = await ContentTask.spawn(aBrowser, null, () => {
+    let innerText = await SpecialPowers.spawn(aBrowser, [], () => {
       return content.document.body.innerText;
     });
     isnot(innerText, "FAIL", "We should not have sent a get request!");
@@ -632,7 +630,7 @@ async function largeAllocFailTests() {
     // Fail the test if we create a process
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 

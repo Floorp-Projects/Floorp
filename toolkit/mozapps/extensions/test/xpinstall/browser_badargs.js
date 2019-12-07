@@ -7,9 +7,9 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "amosigned.xpi"));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return new Promise(resolve => {
-      addEventListener(
+      docShell.chromeEventHandler.addEventListener(
         "load",
         () => {
           content.addEventListener("InstallTriggered", () => {

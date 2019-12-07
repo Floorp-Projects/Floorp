@@ -111,7 +111,7 @@ async function waitForAboutProtectionsTab() {
 
   // When the graph is built it means the messaging has finished,
   // we can close the tab.
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let bars = content.document.querySelectorAll(".graph-bar");
       return bars.length;

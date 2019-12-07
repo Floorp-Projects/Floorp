@@ -178,10 +178,8 @@ async function sleep(ms = 500) {
 async function focusAndWaitForFieldsIdentified(browser, selector) {
   info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
-  const { previouslyFocused, previouslyIdentified } = await ContentTask.spawn(
-    browser,
-    { selector },
-    async function({ selector }) {
+  const { previouslyFocused, previouslyIdentified } = await SpecialPowers.spawn(
+    browser, [{ selector }], async function({ selector }) {
       const { FormLikeFactory } = ChromeUtils.import(
         "resource://gre/modules/FormLikeFactory.jsm"
       );
@@ -223,7 +221,7 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   }
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
   await sleep();
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     const { FormLikeFactory } = ChromeUtils.import(
       "resource://gre/modules/FormLikeFactory.jsm"
     );
@@ -272,7 +270,7 @@ async function expectPopupClose(browser) {
 }
 
 async function closePopup(browser) {
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     content.document.activeElement.blur();
   });
 

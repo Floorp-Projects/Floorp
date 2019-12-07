@@ -18,7 +18,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   function click() {
-    return ContentTask.spawn(browser, null, () => {
+    return SpecialPowers.spawn(browser, [], () => {
       let anchor = content.document.querySelector("a");
       anchor.click();
     });

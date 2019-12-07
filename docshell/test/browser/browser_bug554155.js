@@ -13,7 +13,7 @@ add_task(async function test() {
 
       gBrowser.addTabsProgressListener(listener);
 
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         // pushState to a new URL (http://example.com/foo").  This should trigger
         // exactly one LocationChange event.
         content.history.pushState(null, null, "foo");

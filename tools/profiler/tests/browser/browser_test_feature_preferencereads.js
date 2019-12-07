@@ -15,11 +15,11 @@ function countDpiPrefReadsInThread(thread) {
 }
 
 async function waitForPaintAfterLoad() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(function(resolve) {
       function listener() {
         if (content.document.readyState == "complete") {
-          content.requestAnimationFrame(() => setTimeout(resolve, 0));
+          content.requestAnimationFrame(() => content.setTimeout(resolve, 0));
         }
       }
       if (content.document.readyState != "complete") {
@@ -47,10 +47,8 @@ add_task(async function test_profile_feature_preferencereads() {
 
   const url = BASE_URL + "fixed_height.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
-      contentBrowser,
-      null,
-      () => Services.appinfo.processID
+    const contentPid = await SpecialPowers.spawn(
+      contentBrowser, [], () => Services.appinfo.processID
     );
 
     await waitForPaintAfterLoad();
@@ -72,9 +70,9 @@ add_task(async function test_profile_feature_preferencereads() {
 
     startProfiler({ features: ["threads", "leaf"] });
     // Now reload the tab with a clean run.
-    await ContentTask.spawn(contentBrowser, null, () => {
+    await SpecialPowers.spawn(contentBrowser, [], () => {
       return new Promise(resolve => {
-        addEventListener("pageshow", () => resolve(), {
+        docShell.chromeEventHandler.addEventListener("pageshow", () => resolve(), {
           capturing: true,
           once: true,
         });

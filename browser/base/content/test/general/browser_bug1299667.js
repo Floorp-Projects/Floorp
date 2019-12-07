@@ -4,7 +4,7 @@
 add_task(async function() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.history.pushState({}, "2", "2.html");
   });
 
