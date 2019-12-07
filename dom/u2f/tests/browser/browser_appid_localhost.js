@@ -49,7 +49,7 @@ add_task(async function() {
 
   // Check that we have the right origin, and U2F is available.
   let ready = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    return content.location.origin == "https://localhost" && content.u2f;
+    return content.location.origin == "https://localhost" && !!content.u2f;
   });
   ok(ready, "Origin is https://localhost. U2F is available.");
 
