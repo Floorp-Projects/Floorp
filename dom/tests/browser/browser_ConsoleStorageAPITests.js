@@ -24,7 +24,7 @@ add_task(async function() {
   gBrowser.selectedTab = tab;
   var browser = gBrowser.selectedBrowser;
 
-  let observerPromise = SpecialPowers.spawn(browser, [], async function(opt) {
+  let observerPromise = ContentTask.spawn(browser, null, async function(opt) {
     const TEST_URI =
       "http://example.com/browser/dom/tests/browser/test-console-api.html";
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
@@ -93,9 +93,7 @@ add_task(async function() {
   browser = gBrowser.selectedBrowser;
 
   // Spin the event loop to make sure everything is cleared.
-  await SpecialPowers.spawn(browser, [], function() {
-    return Promise.resolve();
-  });
+  await SpecialPowers.spawn(browser, [], () => {});
 
   await SpecialPowers.spawn(browser, [windowId], function(windowId) {
     var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(

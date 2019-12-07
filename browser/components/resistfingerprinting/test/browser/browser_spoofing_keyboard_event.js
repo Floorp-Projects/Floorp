@@ -1986,9 +1986,9 @@ async function testKeyEvent(aTab, aTestCase) {
   let allKeyEventPromises = [];
 
   for (let testEvent of testEvents) {
-    let keyEventPromise = SpecialPowers.spawn(
+    let keyEventPromise = ContentTask.spawn(
       aTab.linkedBrowser,
-      [{ testEvent, result: aTestCase.result, kSameKeyCodeAndCharCodeValue }],
+      { testEvent, result: aTestCase.result, kSameKeyCodeAndCharCodeValue },
       async aInput => {
         function verifyKeyboardEvent(
           aEvent,
@@ -2217,9 +2217,9 @@ add_task(async function runTestForSuppressModifierKeys() {
 
   for (let eventType of ["keydown", "keyup"]) {
     for (let modifierKey of ["Alt", "Shift", "Control"]) {
-      let testPromise = SpecialPowers.spawn(
+      let testPromise = ContentTask.spawn(
         tab.linkedBrowser,
-        [eventType],
+        eventType,
         async aEventType => {
           let inputBox = content.document.getElementById("test");
 

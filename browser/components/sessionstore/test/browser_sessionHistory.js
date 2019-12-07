@@ -82,8 +82,8 @@ add_task(async function test_pageshow() {
   await promiseBrowserLoaded(browser);
 
   // Wait until shistory changes.
-  let pageShowPromise = SpecialPowers.spawn(browser, [], async () => {
-    return ContentTaskUtils.waitForEvent(this, "pageshow", true);
+  let pageShowPromise = ContentTask.spawn(browser, null, async () => {
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
 
   // Go back to the previous url which is loaded from the bfcache.
