@@ -35,6 +35,7 @@ PREPROCESSED_WEBIDL_FILES = [
 WEBIDL_FILES = [
     'BrowsingContext.webidl',
     'ChannelWrapper.webidl',
+    'ClonedErrorHolder.webidl',
     'DebuggerNotification.webidl',
     'DebuggerNotificationObserver.webidl',
     'DebuggerUtils.webidl',

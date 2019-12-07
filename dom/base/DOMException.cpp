@@ -328,8 +328,9 @@ void Exception::Stringify(JSContext* aCx, nsString& retval) {
 }
 
 DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
-                           const nsACString& aName, uint16_t aCode)
-    : Exception(aMessage, aRv, aName, nullptr, nullptr), mCode(aCode) {}
+                           const nsACString& aName, uint16_t aCode,
+                           nsIStackFrame* aLocation)
+    : Exception(aMessage, aRv, aName, aLocation, nullptr), mCode(aCode) {}
 
 void DOMException::ToString(JSContext* aCx, nsACString& aReturn) {
   aReturn.Truncate();
