@@ -107,15 +107,6 @@ host_fetches = {
             # An extension to `fetch` syntax.
             'path': 'ffmpeg-4.1.1-macos64-static',
         },
-        'ImageMagick': {
-            'type': 'static-url',
-            # It's sad that the macOS URLs don't include version numbers.  If
-            # ImageMagick is released frequently, we'll need to be more
-            # accommodating of multiple versions here.
-            'url': 'https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-x86_64-apple-darwin17.7.0.tar.gz',  # noqa
-            # An extension to `fetch` syntax.
-            'path': 'ImageMagick-7.0.8',
-        },
     },
     'linux64': {
         'ffmpeg': {
@@ -318,6 +309,20 @@ class MachBrowsertime(MachCommandBase):
         # method will be used instead of the ImageMagick one.
         if 'win64' in host_platform() and path_to_imagemagick:
             path.insert(0, path_to_imagemagick)
+
+        # On macOs, we can't install our own ImageMagick because the
+        # System Integrity Protection (SIP) won't let us set DYLD_LIBRARY_PATH
+        # unless we deactivate SIP with "csrutil disable".
+        # So we're asking the user to install it.
+        #
+        # if ImageMagick was installed via brew, we want to make sure we
+        # include the PATH
+        if host_platform() == "darwin":
+            for p in os.environ["PATH"].split(os.pathsep):
+                p = p.strip()
+                if not p or p in path:
+                    continue
+                path.append(p)
 
         append_env = {
             'PATH': os.pathsep.join(path),
