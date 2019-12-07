@@ -87,10 +87,9 @@ add_task(async function test_crash_in_previous_frameloader() {
         const { ctypes } = ChromeUtils.import(
           "resource://gre/modules/ctypes.jsm"
         );
-        ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
         let dies = function() {
-          privateNoteIntentionalCrash();
+          ChromeUtils.privateNoteIntentionalCrash();
           let zero = new ctypes.intptr_t(8);
           let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
           badptr.contents;

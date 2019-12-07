@@ -1,11 +1,13 @@
 async function idbCheckFunc() {
-  let factory;
+  let factory, console;
   try {
     // in a worker, this resolves directly.
     factory = indexedDB;
+    console = self.console;
   } catch (ex) {
     // in a frame-script, we need to pierce "content"
     factory = content.indexedDB;
+    console = content.console;
   }
   try {
     console.log("opening db");
@@ -75,6 +77,7 @@ const workerScriptBlob = new Blob([workerScript]);
  * idbCheckFunc and return the result to us.
  */
 async function workerCheckDeployer({ srcBlob, workerType }) {
+  const { console } = content;
   let worker, port;
   const url = content.URL.createObjectURL(srcBlob);
   if (workerType === "dedicated") {
