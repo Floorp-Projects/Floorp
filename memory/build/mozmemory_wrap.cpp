@@ -121,20 +121,25 @@ wchar_t* wcsdup(const wchar_t* src)
 wchar_t* _wcsdup(const wchar_t* src)
     __attribute__((alias(MOZ_STRINGIFY(wcsdup_impl))));
 
-// libc++.a contains references to __imp__aligned_malloc (because it
-// is declared dllimport in the headers.)
+// jemalloc has _aligned_malloc, and friends. libc++.a contains
+// references to __imp__aligned_malloc (and friends) because it
+// is declared dllimport in the headers.
 //
-// The linker sees jemalloc's _aligned_malloc symbol in your objects,
-// then libc++.a comes along and needs __imp__aligned_malloc, which
+// The linker sees jemalloc's _aligned_malloc symbol in our objects,
+// but then libc++.a comes along and needs __imp__aligned_malloc, which
 // pulls in those parts of libucrt.a (or libmsvcrt.a in practice),
 // which define both __imp__aligned_malloc and _aligned_malloc, and
-// this causes a conflict.
+// this causes a conflict.  (And repeat for each of the symbols defined
+// here.)
 //
 // The fix is to define not only an _aligned_malloc symbol (via an
 // alias), but also define the __imp__aligned_malloc pointer to it.
+// This prevents those parts of libucrt from being pulled in and causing
+// conflicts.
 // This is done with __MINGW_IMP_SYMBOL to handle x86/x64 differences.
 void (*__MINGW_IMP_SYMBOL(_aligned_free))(void*) = _aligned_free;
 void* (*__MINGW_IMP_SYMBOL(_aligned_malloc))(size_t, size_t) = _aligned_malloc;
+char* (*__MINGW_IMP_SYMBOL(_strdup))(const char* src) = _strdup;
 MOZ_END_EXTERN_C
 #  endif
 #endif  // XP_WIN
