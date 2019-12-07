@@ -315,7 +315,6 @@ if test "$GNU_CC"; then
     SSE_FLAGS="-msse"
     SSE2_FLAGS="-msse2"
     SSSE3_FLAGS="-mssse3"
-    # FIXME: Let us build with strict aliasing. bug 414641.
     CFLAGS="$CFLAGS -fno-strict-aliasing"
     DSO_CFLAGS=''
 
@@ -455,7 +454,6 @@ if test "$GNU_CC"; then
 fi
 
 if test "$GNU_CXX"; then
-    # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
 
     _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $_objdir/mozilla-config.h"
