@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **feature-remotetabs**
   * Add new `RemoteTabsFeature` to view tabs from other synced devices and upload our own.
+  * Add `RemoteTabsStorageSuggestionProvider` class to match remote tabs in awesomebar suggestions.
 
 * **support-migration**
   * Added Fennec login migration logic.
