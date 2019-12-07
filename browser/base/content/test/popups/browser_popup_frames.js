@@ -41,7 +41,7 @@ add_task(async function test_opening_blocked_popups() {
 
   ok(notification, "Should have notification.");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [baseURL], async function(uri) {
+  await ContentTask.spawn(tab.linkedBrowser, baseURL, async function(uri) {
     let iframe = content.document.createElement("iframe");
     let pageHideHappened = ContentTaskUtils.waitForEvent(
       this,
@@ -59,7 +59,7 @@ add_task(async function test_opening_blocked_popups() {
   ok(notification, "Should still have notification");
 
   // Now navigate the subframe.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let pageHideHappened = ContentTaskUtils.waitForEvent(
       this,
       "pagehide",

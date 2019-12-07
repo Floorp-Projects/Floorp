@@ -15,9 +15,9 @@ async function checkNewtabLoads(selector, message) {
   await waitForPreloaded(browser);
 
   // check what the content task thinks has been loaded.
-  let found = await SpecialPowers.spawn(
+  let found = await ContentTask.spawn(
     browser,
-    [selector],
+    selector,
     arg => content.document.querySelector(arg) !== null
   );
   ok(found, message);

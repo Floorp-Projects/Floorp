@@ -11,9 +11,9 @@ add_task(async function test() {
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
   let innerWindowId = browser.innerWindowID;
-  let contentDocDead = await SpecialPowers.spawn(
+  let contentDocDead = await ContentTask.spawn(
     browser,
-    [{ innerWindowId }],
+    { innerWindowId },
     async function(args) {
       let doc = content.document;
       let { TestUtils } = ChromeUtils.import(
