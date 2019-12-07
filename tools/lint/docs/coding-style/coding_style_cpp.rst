@@ -100,6 +100,15 @@ Examples:
 ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
 control keywords are not allowed and should be placed inside braces.
 
+``mach static-analysis`` provides a convenient way to ensure that braces
+are used properly within control structures.
+
+.. code-block:: shell
+
+   ./mach static-analysis check --checks="-*, google-readability-braces-around-statements" --fix <file>
+
+See :ref:`Formatting C++ Code With clang-format` to reformat these changes.
+
 
 C++ namespaces
 ~~~~~~~~~~~~~~
