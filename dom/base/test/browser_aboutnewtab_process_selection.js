@@ -63,7 +63,7 @@ add_task(async function() {
   // one when Fission is enabled.
   expectedChildCount += gFissionBrowser ? 0 : 1;
   await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
-  await ContentTask.spawn(tabs[1].linkedBrowser, TEST_URL, url => {
+  await SpecialPowers.spawn(tabs[1].linkedBrowser, [TEST_URL], url => {
     content.location.href = url;
   });
   await BrowserTestUtils.browserLoaded(tabs[1].linkedBrowser, false, TEST_URL);

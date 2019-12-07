@@ -22,7 +22,7 @@ add_task(async () => {
         sawMessage = true;
       };
       browser.messageManager.addMessageListener(MESSAGE, listener);
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.wrappedJSObject.fireEvents();
       });
       browser.messageManager.removeMessageListener(MESSAGE, listener);

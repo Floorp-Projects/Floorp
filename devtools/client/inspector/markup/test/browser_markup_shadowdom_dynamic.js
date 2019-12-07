@@ -73,7 +73,7 @@ add_task(async function() {
 
   info("Attach a shadow root to test-component");
   let mutated = waitForMutation(inspector, "shadowRootAttached");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.attachTestComponent();
   });
   await mutated;
@@ -95,7 +95,7 @@ add_task(async function() {
 
   info("Attach a shadow root to other-component, nested in test-component");
   mutated = waitForMutation(inspector, "shadowRootAttached");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.attachOtherComponent();
   });
   await mutated;
@@ -124,7 +124,7 @@ add_task(async function() {
     "Attach a shadow root to inline-component, check the inline text child."
   );
   mutated = waitForMutation(inspector, "shadowRootAttached");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.attachInlineComponent();
   });
   await mutated;

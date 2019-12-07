@@ -28,7 +28,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   info("Verify the number of script nodes found");
-  await ContentTask.spawn(browser, {}, async function(obj) {
+  await SpecialPowers.spawn(browser, [], async function(obj) {
     let doc = content.document.querySelector("iframe").contentDocument;
     doc = doc.querySelector("iframe").contentDocument;
     let scripts = doc.querySelectorAll("script");

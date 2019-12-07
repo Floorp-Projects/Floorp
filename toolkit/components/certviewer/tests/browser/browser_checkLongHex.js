@@ -3,7 +3,7 @@
 
 async function checkLongHex(url, itemClass) {
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await ContentTask.spawn(browser, itemClass, async function(itemClass) {
+    await SpecialPowers.spawn(browser, [itemClass], async function(itemClass) {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");

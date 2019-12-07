@@ -14,7 +14,7 @@ add_task(async function() {
   is(isInputFocused(hud), true, "JsTerm is focused when opening the console");
 
   info("Put the focus on the content page");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => content.focus());
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => content.focus());
   await waitFor(() => isInputFocused(hud) === false);
 
   info(

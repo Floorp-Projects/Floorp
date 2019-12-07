@@ -12,7 +12,7 @@ add_task(async function test_add_address() {
   await BrowserTestUtils.withNewTab(
     { gBrowser: privateWin.gBrowser, url: FORM_URL },
     async function(privateBrowser) {
-      await ContentTask.spawn(privateBrowser, null, async function() {
+      await SpecialPowers.spawn(privateBrowser, [], async function() {
         content.document.getElementById("organization").focus();
         content.document.getElementById("organization").value = "Mozilla";
         content.document.getElementById("street-address").value =

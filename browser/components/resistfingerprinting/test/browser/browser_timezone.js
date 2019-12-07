@@ -20,7 +20,7 @@ add_task(async function test_timezone() {
     TEST_PATH + "file_dummy.html"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let dateObj = new Date();
     let dateString = dateObj.toString();
 

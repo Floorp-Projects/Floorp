@@ -22,7 +22,7 @@ add_task(async function() {
 
   info("Performing a CORS request");
   const requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
-  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function(url) {
     content.wrappedJSObject.performRequests(
       url,
       "triggering/preflight",

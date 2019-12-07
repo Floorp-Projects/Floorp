@@ -15,7 +15,7 @@ add_task(async function test() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  await ContentTask.spawn(browser2, null, function() {
+  await SpecialPowers.spawn(browser2, [], function() {
     content.window.testPromise = new content.window.Promise(resolve => {
       let bc = new content.window.BroadcastChannel("foobar");
       bc.onmessage = e => {
@@ -52,7 +52,7 @@ add_task(async function test() {
     });
   });
 
-  let status = await ContentTask.spawn(browser1, null, function() {
+  let status = await SpecialPowers.spawn(browser1, [], function() {
     let p = new content.window.Promise(resolve => {
       let xhr = new content.window.XMLHttpRequest();
       xhr.open("GET", "temporary.sjs", true);
@@ -101,7 +101,7 @@ add_task(async function test() {
 
   ok(status, "All good for tab1!");
 
-  status = await ContentTask.spawn(browser2, null, function() {
+  status = await SpecialPowers.spawn(browser2, [], function() {
     return content.window.testPromise;
   });
 

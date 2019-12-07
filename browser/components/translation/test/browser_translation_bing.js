@@ -41,7 +41,7 @@ add_task(async function test_bing_translation() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // eslint-disable-next-line no-shadow
     const { BingTranslator } = ChromeUtils.import(
       "resource:///modules/translation/BingTranslator.jsm"
@@ -84,7 +84,7 @@ add_task(async function test_handling_out_of_valid_key_error() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // eslint-disable-next-line no-shadow
     const { BingTranslator } = ChromeUtils.import(
       "resource:///modules/translation/BingTranslator.jsm"

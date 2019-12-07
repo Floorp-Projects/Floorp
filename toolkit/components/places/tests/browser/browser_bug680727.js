@@ -41,7 +41,7 @@ function errorListener() {
   ok(Services.io.offline, "Services.io.offline is true.");
 
   // This is an error page.
-  ContentTask.spawn(ourTab.linkedBrowser, kUniqueURI.spec, function(uri) {
+  SpecialPowers.spawn(ourTab.linkedBrowser, [kUniqueURI.spec], function(uri) {
     Assert.equal(
       content.document.documentURI.substring(0, 27),
       "about:neterror?e=netOffline",
@@ -79,7 +79,7 @@ function errorAsyncListener(aURI, aIsVisited) {
     reloadListener
   );
 
-  ContentTask.spawn(ourTab.linkedBrowser, null, function() {
+  SpecialPowers.spawn(ourTab.linkedBrowser, [], function() {
     Assert.ok(
       content.document.querySelector("#netErrorButtonContainer > .try-again"),
       "The error page has got a .try-again element"
@@ -98,7 +98,7 @@ function reloadListener() {
   // IHistory::VisitURI(...) is called.
   ok(!Services.io.offline, "Services.io.offline is false.");
 
-  ContentTask.spawn(ourTab.linkedBrowser, kUniqueURI.spec, function(uri) {
+  SpecialPowers.spawn(ourTab.linkedBrowser, [kUniqueURI.spec], function(uri) {
     // This is not an error page.
     Assert.equal(
       content.document.documentURI,

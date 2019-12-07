@@ -9,10 +9,8 @@
 */
 
 function serverOwnershipTree(walkerArg) {
-  return ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [walkerArg.actorID],
-    function(actorID) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[walkerArg.actorID]], function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );

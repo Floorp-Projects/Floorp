@@ -47,7 +47,7 @@ add_task(async function() {
     gBrowser,
     "http://example.org/"
   );
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let link = content.document.createElement("a");
     link.href = "http://example.org/";
     content.document.body.appendChild(link);
@@ -56,7 +56,7 @@ add_task(async function() {
   info("Created & clicked link");
   let extraTab = await newTabPromise;
   info("Got a new tab");
-  await ContentTask.spawn(extraTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(extraTab.linkedBrowser, [], async function() {
     is(content.opener, null, "No opener should be available");
   });
   BrowserTestUtils.removeTab(extraTab);

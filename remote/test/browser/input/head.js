@@ -42,7 +42,7 @@ const KEYCODES = {
 async function setupForInput(url) {
   await loadURL(url);
   info("Focus the input on the page");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const input = content.document.querySelector("input");
     input.focus();
     is(input, content.document.activeElement, "Input should be focused");
@@ -69,7 +69,7 @@ function dispatchKeyEvent(Input, key, type, modifiers = 0) {
 }
 
 function getInputContent() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const input = content.document.querySelector("input");
     return { value: input.value, caret: input.selectionStart };
   });
@@ -115,7 +115,7 @@ async function checkBackspace(Input, expected, modifiers = 0) {
 }
 
 function resetInput(value = "") {
-  return ContentTask.spawn(gBrowser.selectedBrowser, value, function(arg) {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [value], function(arg) {
     const input = content.document.querySelector("input");
     input.value = arg;
     input.focus();

@@ -13,7 +13,7 @@ const { UrlbarTestUtils } = ChromeUtils.import(
  */
 async function testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
   let loadedPromise = BrowserTestUtils.browserLoaded(tab);
-  await ContentTask.spawn(tab, elementId, async function(elemId) {
+  await SpecialPowers.spawn(tab, [elementId], async function(elemId) {
     content.document.getElementById(elemId).click();
   });
   await loadedPromise;
@@ -79,7 +79,7 @@ function urlBarHasNormalFocus(win) {
 add_task(async function test_search_icon() {
   let { win, tab } = await openAboutPrivateBrowsing();
 
-  await ContentTask.spawn(tab, expectedIconURL, async function(iconURL) {
+  await SpecialPowers.spawn(tab, [expectedIconURL], async function(iconURL) {
     is(
       content.document.body.getAttribute("style"),
       `--newtab-search-icon:url(${iconURL});`,
@@ -96,14 +96,14 @@ add_task(async function test_search_icon() {
 add_task(async function test_search_handoff_on_keydown() {
   let { win, tab } = await openAboutPrivateBrowsing();
 
-  await ContentTask.spawn(tab, null, async function() {
+  await SpecialPowers.spawn(tab, [], async function() {
     let btn = content.document.getElementById("search-handoff-button");
     btn.click();
     ok(btn.classList.contains("focused"), "in-content search has focus styles");
   });
   ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
   await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
-  await ContentTask.spawn(tab, null, async function() {
+  await SpecialPowers.spawn(tab, [], async function() {
     ok(
       content.document
         .getElementById("search-handoff-button")
@@ -119,7 +119,7 @@ add_task(async function test_search_handoff_on_keydown() {
 
   // Hitting ESC should reshow the in-content search
   await new Promise(r => EventUtils.synthesizeKey("KEY_Escape", {}, win, r));
-  await ContentTask.spawn(tab, null, async function() {
+  await SpecialPowers.spawn(tab, [], async function() {
     ok(
       !content.document
         .getElementById("search-handoff-button")
@@ -137,7 +137,7 @@ add_task(async function test_search_handoff_on_keydown() {
 add_task(async function test_search_handoff_on_composition_start() {
   let { win, tab } = await openAboutPrivateBrowsing();
 
-  await ContentTask.spawn(tab, null, async function() {
+  await SpecialPowers.spawn(tab, [], async function() {
     content.document.getElementById("search-handoff-button").click();
   });
   ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
@@ -155,7 +155,7 @@ add_task(async function test_search_handoff_on_composition_start() {
 add_task(async function test_search_handoff_on_paste() {
   let { win, tab } = await openAboutPrivateBrowsing();
 
-  await ContentTask.spawn(tab, null, async function() {
+  await SpecialPowers.spawn(tab, [], async function() {
     content.document.getElementById("search-handoff-button").click();
   });
   ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");

@@ -130,7 +130,7 @@ add_task(async function() {
       unregisterFont(privateFontPath, /* waitForUnreg = */ false);
 
       // Get the original width, using the fallback monospaced font
-      let origWidth = await ContentTask.spawn(aBrowser, {}, async function() {
+      let origWidth = await SpecialPowers.spawn(aBrowser, [], async function() {
         let window = content.window.wrappedJSObject;
         let contentDiv = window.document.getElementById("content");
         return contentDiv.offsetWidth;
@@ -140,7 +140,7 @@ add_task(async function() {
       await registerFont(privateFontPath);
 
       // Assign the new font to the content.
-      await ContentTask.spawn(aBrowser, {}, async function() {
+      await SpecialPowers.spawn(aBrowser, [], async function() {
         let window = content.window.wrappedJSObject;
         let contentDiv = window.document.getElementById("content");
         contentDiv.style.fontFamily = "'Fira Sans', monospace";
@@ -149,7 +149,7 @@ add_task(async function() {
       // Wait until the width has changed, indicating the content process
       // has recognized the newly-activated font.
       while (true) {
-        let width = await ContentTask.spawn(aBrowser, {}, async function() {
+        let width = await SpecialPowers.spawn(aBrowser, [], async function() {
           let window = content.window.wrappedJSObject;
           let contentDiv = window.document.getElementById("content");
           return contentDiv.offsetWidth;
@@ -163,7 +163,7 @@ add_task(async function() {
       }
 
       // Get a list of fonts now being used to display the web content.
-      let fontList = await ContentTask.spawn(aBrowser, {}, async function() {
+      let fontList = await SpecialPowers.spawn(aBrowser, [], async function() {
         let window = content.window.wrappedJSObject;
         let range = window.document.createRange();
         let contentDiv = window.document.getElementById("content");

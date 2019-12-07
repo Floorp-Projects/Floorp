@@ -62,7 +62,7 @@ function runPass(getterFile, finishedCallback) {
   }
 
   function fetchResult() {
-    return ContentTask.spawn(testBrowser, null, function() {
+    return SpecialPowers.spawn(testBrowser, [], function() {
       return content.document.getElementById("result").textContent;
     });
   }

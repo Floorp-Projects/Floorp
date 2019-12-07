@@ -39,7 +39,7 @@ async function runTest() {
 
       count++;
       index++;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
+      await SpecialPowers.spawn(aBrowser, [{ count, index, url }], async function({
         count,
         index,
         url,
@@ -65,7 +65,7 @@ async function runTest() {
 
     // Go back to the first entry.
     for (let { url } of reversed(HISTORY).slice(1)) {
-      ContentTask.spawn(aBrowser, {}, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         content.history.back();
       });
       await BrowserTestUtils.browserLoaded(aBrowser, false, loaded => {
@@ -75,7 +75,7 @@ async function runTest() {
       });
 
       index--;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
+      await SpecialPowers.spawn(aBrowser, [{ count, index, url }], async function({
         count,
         index,
         url,
@@ -93,7 +93,7 @@ async function runTest() {
 
     // Go forward to the last entry.
     for (let { url } of HISTORY.slice(1)) {
-      ContentTask.spawn(aBrowser, {}, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         content.history.forward();
       });
       await BrowserTestUtils.browserLoaded(aBrowser, false, loaded => {
@@ -103,7 +103,7 @@ async function runTest() {
       });
 
       index++;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
+      await SpecialPowers.spawn(aBrowser, [{ count, index, url }], async function({
         count,
         index,
         url,

@@ -51,7 +51,7 @@ add_task(async function() {
 
   // Display a context menu on the test plugin so we can test
   // activation menu options.
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;

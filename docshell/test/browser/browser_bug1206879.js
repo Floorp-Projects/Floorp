@@ -22,7 +22,7 @@ add_task(async function() {
     listener.resolve = resolve;
     gBrowser.addTabsProgressListener(listener);
   });
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.frames[0].history.pushState(null, null, "foo");
   });
 

@@ -23,7 +23,7 @@ add_task(async function() {
   // The previous function reloads the browser, so wait for it to load again!
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, {}, async function(obj) {
+  await SpecialPowers.spawn(browser, [], async function(obj) {
     await new content.Promise(async resolve => {
       let document = content.document;
       let window = document.defaultView;

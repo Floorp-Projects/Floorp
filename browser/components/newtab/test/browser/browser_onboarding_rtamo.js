@@ -77,7 +77,7 @@ add_task(async () => {
   );
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, {}, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     // Wait for Activity Stream to load
     await ContentTaskUtils.waitForCondition(
       () => content.document.querySelector(".activity-stream"),

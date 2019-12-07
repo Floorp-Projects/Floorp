@@ -46,11 +46,11 @@ add_task(async function() {
       url: TEST_URL,
     },
     async function(browser) {
-      await ContentTask.spawn(browser, "", function() {
+      await SpecialPowers.spawn(browser, [""], function() {
         content.wrappedJSObject.dos_hash();
       });
       await checkURLBarValueStays(browser);
-      await ContentTask.spawn(browser, "", function() {
+      await SpecialPowers.spawn(browser, [""], function() {
         content.clearTimeout(content.wrappedJSObject.dos_timeout);
         content.wrappedJSObject.dos_pushState();
       });

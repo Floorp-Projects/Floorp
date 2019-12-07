@@ -38,7 +38,7 @@ add_task(async function testContentBlockingMessage() {
   info("Log a console.group");
   const onGroupMessage = waitForMessage(hud, "myGroup");
   let onInGroupMessage = waitForMessage(hud, "log in group");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.group("myGroup");
     content.wrappedJSObject.console.log("log in group");
   });
@@ -129,7 +129,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Log a simple message to check if it goes into the console.group");
   onInGroupMessage = waitForMessage(hud, "log in group");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.console.log("second log in group");
   });
   await onInGroupMessage;
@@ -206,7 +206,7 @@ let cpt = 0;
  */
 function emitContentBlockedMessage(prefix) {
   const url = `${BLOCKED_URL}?${prefix}-${++cpt}`;
-  ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }

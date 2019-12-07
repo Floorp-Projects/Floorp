@@ -58,7 +58,7 @@ const expectErrorPage = async function(url) {
     async browser => {
       BrowserTestUtils.loadURI(browser, url);
       await BrowserTestUtils.browserLoaded(browser, false, url, true);
-      await ContentTask.spawn(browser, url, async function() {
+      await SpecialPowers.spawn(browser, [url], async function() {
         ok(
           content.document.documentURI.startsWith(
             "about:neterror?e=blockedByPolicy"

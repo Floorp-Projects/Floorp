@@ -164,7 +164,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-  ContentTask.spawn(gBrowser.selectedBrowser, { TEST_OFFLINE_HOST }, args => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [{ TEST_OFFLINE_HOST }], args => {
     let host = args.TEST_OFFLINE_HOST;
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
     let sitesList = frameDoc.getElementById("sitesList");
@@ -267,13 +267,11 @@ add_task(async function() {
     "accept",
     REMOVE_DIALOG_URL
   );
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [{
       creationDate1Formatted,
       creationDate2Formatted,
-    },
-    function(args) {
+    }], function(args) {
       let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
       let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -336,10 +334,8 @@ add_task(async function() {
   // Open the site data manager and remove another site.
   await openSiteDataSettingsDialog();
   let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { creationDate1Formatted },
-    function(args) {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [{ creationDate1Formatted }], function(args) {
       let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
       let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -379,7 +375,7 @@ add_task(async function() {
 
   await openSiteDataSettingsDialog();
 
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
     let siteItems = frameDoc.getElementsByTagName("richlistitem");

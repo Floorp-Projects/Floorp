@@ -12,7 +12,7 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -22,7 +22,7 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         number.setUserInput("5038146897157463");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -60,7 +60,7 @@ add_task(async function test_submit_creditCard_saved() {
         "popupshown"
       );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -72,7 +72,7 @@ add_task(async function test_submit_creditCard_saved() {
         form.querySelector("#cc-type").value = "mastercard";
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -123,11 +123,11 @@ add_task(async function test_submit_untouched_creditCard_form() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -168,12 +168,12 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
 
         name.focus();
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         name.setUserInput("");
 
         form.querySelector("#cc-number").setUserInput("4111111111111111");
@@ -182,7 +182,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
           .querySelector("#cc-exp-year")
           .setUserInput(new Date().getFullYear());
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -218,7 +218,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -232,7 +232,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
         form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -265,7 +265,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -283,7 +283,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
         form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -313,18 +313,18 @@ add_task(async function test_submit_creditCard_never_save() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         name.setUserInput("User 0");
 
         let number = form.querySelector("#cc-number");
         number.setUserInput("6387060366272981");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -364,7 +364,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -374,7 +374,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
         number.setUserInput("6387060366272981");
 
         // Wait 500ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => content.setTimeout(resolve, 500));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -460,7 +460,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -470,7 +470,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
         number.setUserInput("6387060366272981");
 
         // Wait 500ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => content.setTimeout(resolve, 500));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -500,7 +500,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -511,7 +511,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
         form.querySelector("#cc-exp-year").setUserInput("2000");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
       await promiseShown;
@@ -563,7 +563,7 @@ add_task(async function test_update_autofill_form_name() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -574,7 +574,7 @@ add_task(async function test_update_autofill_form_name() {
         name.setUserInput("User 1");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
       await promiseShown;
@@ -630,7 +630,7 @@ add_task(async function test_update_autofill_form_exp_date() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -641,7 +641,7 @@ add_task(async function test_update_autofill_form_exp_date() {
         year.setUserInput("2020");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -696,7 +696,7 @@ add_task(async function test_create_new_autofill_form() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -707,7 +707,7 @@ add_task(async function test_create_new_autofill_form() {
         name.setUserInput("User 1");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -766,7 +766,7 @@ add_task(async function test_update_duplicate_autofill_form() {
       await openPopupOn(browser, "form #cc-number");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let number = form.querySelector("#cc-number");
@@ -779,7 +779,7 @@ add_task(async function test_update_duplicate_autofill_form() {
         number.setUserInput("5038146897157463");
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -810,7 +810,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
         "popupshown"
       );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -822,7 +822,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
         form.querySelector("#cc-type").value = "gringotts";
 
         // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
