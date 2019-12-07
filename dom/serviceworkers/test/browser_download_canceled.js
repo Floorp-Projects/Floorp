@@ -89,7 +89,9 @@ async function performCanceledDownload(tab, path) {
   // Wait for confirmation that the stream stopped.
   info(`wait for the ${path} stream to close.`);
   /* eslint-disable no-shadow */
-  const why = await SpecialPowers.spawn(tab.linkedBrowser, [path], function(path) {
+  const why = await SpecialPowers.spawn(tab.linkedBrowser, [path], function(
+    path
+  ) {
     return content.wrappedJSObject.streamClosed[path].promise;
   });
   /* eslint-enable no-shadow */
@@ -127,7 +129,9 @@ add_task(async function interruptedDownloads() {
   // Wait for it to become controlled.  Check that it was a promise that
   // resolved as expected rather than undefined by checking the return value.
   const controlled = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], function() {
+    tab.linkedBrowser,
+    [],
+    function() {
       // This is a promise set up by the page during load, and we are post-load.
       return content.wrappedJSObject.controlled;
     }

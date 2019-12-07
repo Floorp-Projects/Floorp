@@ -344,7 +344,9 @@ add_task(async function test_datepicker_clicked() {
   });
 
   let value = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async () => {
+    gBrowser.selectedBrowser,
+    [],
+    async () => {
       return content.document.querySelector("input").value;
     }
   );

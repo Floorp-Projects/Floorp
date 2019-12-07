@@ -59,7 +59,9 @@ add_task(async function test_open_feedback() {
     // when trying to call element.ownerGlobal on the targeted shadow DOM node. This is
     // on file as bug 1557489. As a workaround, this manually calculates the position to click.
     let { x, y } = await SpecialPowers.spawn(
-      browser, [selector], async menuItemSelector => {
+      browser,
+      [selector],
+      async menuItemSelector => {
         let menuButton = Cu.waiveXrays(
           content.document.querySelector("menu-button")
         );

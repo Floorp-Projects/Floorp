@@ -157,7 +157,9 @@ add_task(async function() {
 async function performRequest(monitor, tab, method, contentType, payload) {
   const wait = waitForNetworkEvents(monitor, 1);
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [[method, contentType, payload]], async function([method_, contentType_, payload_]) {
+    tab.linkedBrowser,
+    [[method, contentType, payload]],
+    async function([method_, contentType_, payload_]) {
       content.wrappedJSObject.performRequest(method_, contentType_, payload_);
     }
   );
@@ -167,7 +169,9 @@ async function performRequest(monitor, tab, method, contentType, payload) {
 
 async function checkTabResponse(checkedTab, method, contentType, payload) {
   await SpecialPowers.spawn(
-    checkedTab.linkedBrowser, [[method, contentType, payload]], async function([method_, contentType_, payload_]) {
+    checkedTab.linkedBrowser,
+    [[method, contentType, payload]],
+    async function([method_, contentType_, payload_]) {
       const { body } = content.wrappedJSObject.document;
       const expected = [method_, contentType_, payload_].join("\n");
       info("Response from the server:" + body.innerHTML.replace(/\n/g, "\\n"));

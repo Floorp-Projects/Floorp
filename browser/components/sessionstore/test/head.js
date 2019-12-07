@@ -606,7 +606,9 @@ function promiseRemoveTabAndSessionState(tab) {
 // Write DOMSessionStorage data to the given browser.
 function modifySessionStorage(browser, storageData, storageOptions = {}) {
   return SpecialPowers.spawn(
-    browser, [[storageData, storageOptions]], async function([data, options]) {
+    browser,
+    [[storageData, storageOptions]],
+    async function([data, options]) {
       let frame = content;
       if (options && "frameIndex" in options) {
         frame = content.frames[options.frameIndex];

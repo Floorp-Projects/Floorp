@@ -24,7 +24,9 @@ add_task(async function() {
       element: "body",
       go() {
         return SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
+          gBrowser.selectedBrowser,
+          [{ writeDomainURL }],
+          async function(arg) {
             let contentBody = content.document.body;
             contentBody.style.backgroundImage =
               "url('" + arg.writeDomainURL + "')";
@@ -50,7 +52,9 @@ add_task(async function() {
       element: "img",
       go() {
         return SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
+          gBrowser.selectedBrowser,
+          [{ writeDomainURL }],
+          async function(arg) {
             let doc = content.document;
             let img = doc.createElement("img");
             img.height = 100;
@@ -80,7 +84,9 @@ add_task(async function() {
       frameIndex: 0,
       go() {
         return SpecialPowers.spawn(
-          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
+          gBrowser.selectedBrowser,
+          [{ writeDomainURL }],
+          async function(arg) {
             let doc = content.document;
             let iframe = doc.createElement("iframe");
             iframe.setAttribute("src", arg.writeDomainURL);

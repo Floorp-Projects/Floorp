@@ -51,7 +51,9 @@ async function testSimulate(simulator, matrix, type = null) {
   ok(matrixApplied, "Simulation color matrix is successfully applied.");
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[type, matrix]], ([simulationType, simulationMatrix]) => {
+    gBrowser.selectedBrowser,
+    [[type, matrix]],
+    ([simulationType, simulationMatrix]) => {
       const { window } = content;
       info(
         `Test that color matrix is set to ${simulationType ||

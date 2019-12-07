@@ -15,7 +15,9 @@ add_task(async function() {
   });
 
   let viewSourceContentPromise = SpecialPowers.spawn(
-    viewSourceTab.linkedBrowser, [], async function() {
+    viewSourceTab.linkedBrowser,
+    [],
+    async function() {
       return content.document.body.textContent;
     }
   );

@@ -31,7 +31,9 @@ add_task(async () => {
       { gBrowser: fissionWindow.gBrowser, url },
       async browser => {
         await SpecialPowers.spawn(
-          browser, [crossOriginIframeUrl], async iframeUrl => {
+          browser,
+          [crossOriginIframeUrl],
+          async iframeUrl => {
             const iframe = content.document.getElementById("iframe");
             iframe.setAttribute("src", iframeUrl);
 

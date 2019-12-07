@@ -108,7 +108,9 @@ function clearOriginStorageEnsuringNoPreload() {
 
 async function verifyTabPreload(knownTab, expectStorageExists) {
   let storageExists = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [HELPER_PAGE_ORIGIN], function(origin) {
+    knownTab.tab.linkedBrowser,
+    [HELPER_PAGE_ORIGIN],
+    function(origin) {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
@@ -131,7 +133,9 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
  */
 async function mutateTabStorage(knownTab, mutations, sentinelValue) {
   await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [{ mutations, sentinelValue }], function(args) {
+    knownTab.tab.linkedBrowser,
+    [{ mutations, sentinelValue }],
+    function(args) {
       return content.wrappedJSObject.mutateStorage(Cu.cloneInto(args, content));
     }
   );
@@ -143,11 +147,13 @@ async function mutateTabStorage(knownTab, mutations, sentinelValue) {
  * check and assert the recorded events.
  */
 async function recordTabStorageEvents(knownTab, sentinelValue) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [sentinelValue], function(
-    sentinelValue
-  ) {
-    return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
-  });
+  await SpecialPowers.spawn(
+    knownTab.tab.linkedBrowser,
+    [sentinelValue],
+    function(sentinelValue) {
+      return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
+    }
+  );
 }
 
 /**
@@ -164,7 +170,9 @@ async function recordTabStorageEvents(knownTab, sentinelValue) {
  */
 async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
   let actualState = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [maybeSentinel], function(maybeSentinel) {
+    knownTab.tab.linkedBrowser,
+    [maybeSentinel],
+    function(maybeSentinel) {
       return content.wrappedJSObject.getStorageState(maybeSentinel);
     }
   );
@@ -190,7 +198,9 @@ async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
  */
 async function verifyTabStorageEvents(knownTab, expectedEvents) {
   let actualEvents = await SpecialPowers.spawn(
-    knownTab.tab.linkedBrowser, [], function() {
+    knownTab.tab.linkedBrowser,
+    [],
+    function() {
       return content.wrappedJSObject.returnAndClearStorageEvents();
     }
   );

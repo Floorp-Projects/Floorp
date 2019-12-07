@@ -1987,7 +1987,9 @@ async function testKeyEvent(aTab, aTestCase) {
 
   for (let testEvent of testEvents) {
     let keyEventPromise = SpecialPowers.spawn(
-      aTab.linkedBrowser, [{ testEvent, result: aTestCase.result, kSameKeyCodeAndCharCodeValue }], async aInput => {
+      aTab.linkedBrowser,
+      [{ testEvent, result: aTestCase.result, kSameKeyCodeAndCharCodeValue }],
+      async aInput => {
         function verifyKeyboardEvent(
           aEvent,
           aResult,
@@ -2216,7 +2218,9 @@ add_task(async function runTestForSuppressModifierKeys() {
   for (let eventType of ["keydown", "keyup"]) {
     for (let modifierKey of ["Alt", "Shift", "Control"]) {
       let testPromise = SpecialPowers.spawn(
-        tab.linkedBrowser, [eventType], async aEventType => {
+        tab.linkedBrowser,
+        [eventType],
+        async aEventType => {
           let inputBox = content.document.getElementById("test");
 
           // First, try to focus on the input box.

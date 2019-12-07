@@ -9,7 +9,9 @@ const TEST_URL =
 
 async function assertStatus(tab, expected) {
   let actual = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], async function() {
+    tab.linkedBrowser,
+    [],
+    async function() {
       return content.document.getElementById("status").value;
     }
   );
@@ -61,7 +63,9 @@ function startGetAssertionRequest(tab) {
 
   /* eslint-disable no-shadow */
   return SpecialPowers.spawn(
-    tab.linkedBrowser, [[challenge, keyHandle]], async function([challenge, keyHandle]) {
+    tab.linkedBrowser,
+    [[challenge, keyHandle]],
+    async function([challenge, keyHandle]) {
       let appId = content.location.origin;
       let key = { version: "U2F_V2", keyHandle };
 

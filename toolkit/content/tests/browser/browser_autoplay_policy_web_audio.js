@@ -133,7 +133,9 @@ async function testAutoplayExistingPermission({ name, permission }) {
   info(`- check AudioContext status -`);
   const isAllowedToStart = permission === Services.perms.ALLOW_ACTION;
   await SpecialPowers.spawn(
-    browser, [isAllowedToStart], checkIfAudioContextIsAllowedToStart
+    browser,
+    [isAllowedToStart],
+    checkIfAudioContextIsAllowedToStart
   );
   await SpecialPowers.spawn(browser, [isAllowedToStart], resumeAudioContext);
 
@@ -162,7 +164,11 @@ async function testAutoplayUnknownPermission({ name, method }) {
 
   info(`- create AudioContext which should not start -`);
   loadFrameScript(browser, createAudioContext);
-  await SpecialPowers.spawn(browser, [false], checkIfAudioContextIsAllowedToStart);
+  await SpecialPowers.spawn(
+    browser,
+    [false],
+    checkIfAudioContextIsAllowedToStart
+  );
 
   info(`- simulate user activate the page -`);
   await SpecialPowers.spawn(browser, [], () => {
@@ -174,11 +180,11 @@ async function testAutoplayUnknownPermission({ name, method }) {
 
   info(`- check AudioContext status -`);
   await SpecialPowers.spawn(
-    browser, [true], checkIfAudioContextIsAllowedToStart
+    browser,
+    [true],
+    checkIfAudioContextIsAllowedToStart
   );
-  await SpecialPowers.spawn(
-    browser, [true], resumeAudioContext
-  );
+  await SpecialPowers.spawn(browser, [true], resumeAudioContext);
 
   info(`- remove tab -`);
   PermissionTestUtils.remove(browser.currentURI, "autoplay-media");

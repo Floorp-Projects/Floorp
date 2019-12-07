@@ -58,7 +58,9 @@ add_task(async function checkUntrustedCertError() {
   let browser = tab.linkedBrowser;
   info("Clicking the exceptionDialogButton in advanced panel");
   let badCertTechnicalInfoText = await SpecialPowers.spawn(
-    browser, [], checkAdvancedAndGetTechnicalInfoText
+    browser,
+    [],
+    checkAdvancedAndGetTechnicalInfoText
   );
   checkCorrectMessages(badCertTechnicalInfoText, browser);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

@@ -129,7 +129,9 @@ add_task(async function() {
 
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    await SpecialPowers.spawn(browser, [{ expectedId: i }], async function(args) {
+    await SpecialPowers.spawn(browser, [{ expectedId: i }], async function(
+      args
+    ) {
       Assert.equal(
         docShell.getOriginAttributes().userContextId,
         args.expectedId,

@@ -133,7 +133,9 @@ decorate_task(
   withAboutStudies,
   async function testStudyListing(addonStudies, prefStudies, browser) {
     await SpecialPowers.spawn(
-      browser, [{ addonStudies, prefStudies }], async ({ addonStudies, prefStudies }) => {
+      browser,
+      [{ addonStudies, prefStudies }],
+      async ({ addonStudies, prefStudies }) => {
         const doc = content.document;
 
         function getStudyRow(docElem, slug) {
@@ -400,7 +402,9 @@ decorate_task(
     });
 
     await SpecialPowers.spawn(
-      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
+      browser,
+      [{ addonStudy, prefStudy }],
+      async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
 
         function getStudyRow(docElem, slug) {
@@ -487,7 +491,9 @@ decorate_task(
   async function testOtherTabsUpdated([addonStudy], [prefStudy], browser) {
     // Ensure that both our studies are active in the current tab.
     await SpecialPowers.spawn(
-      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
+      browser,
+      [{ addonStudy, prefStudy }],
+      async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
         await ContentTaskUtils.waitForCondition(
           () => doc.querySelectorAll(".remove-button").length == 2,
@@ -517,7 +523,9 @@ decorate_task(
     await BrowserTestUtils.withNewTab("about:studies", async browser => {
       // Delete both studies in this tab; this should pass if previous tests have passed.
       await SpecialPowers.spawn(
-        browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
+        browser,
+        [{ addonStudy, prefStudy }],
+        async ({ addonStudy, prefStudy }) => {
           const doc = content.document;
 
           function getStudyRow(docElem, slug) {
@@ -582,7 +590,9 @@ decorate_task(
 
     // Ensure that the original tab has updated correctly.
     await SpecialPowers.spawn(
-      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
+      browser,
+      [{ addonStudy, prefStudy }],
+      async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
         await ContentTaskUtils.waitForCondition(
           () => doc.querySelectorAll(".inactive-study-list .study").length == 2,

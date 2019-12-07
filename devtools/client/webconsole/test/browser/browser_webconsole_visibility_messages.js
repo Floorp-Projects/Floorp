@@ -51,11 +51,15 @@ add_task(async function() {
     });
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [[MESSAGES_COUNT]], count => {
-    for (let i = 1; i <= count; i++) {
-      content.wrappedJSObject.log("in-inspector log " + i);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [[MESSAGES_COUNT]],
+    count => {
+      for (let i = 1; i <= count; i++) {
+        content.wrappedJSObject.log("in-inspector log " + i);
+      }
     }
-  });
+  );
 
   info("Waiting for all messages to be logged into the store");
   await onAllMessagesInStore;
@@ -102,11 +106,15 @@ add_task(async function() {
 
   await toolbox.openSplitConsole();
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [[MESSAGES_COUNT]], count => {
-    for (let i = 1; i <= count; i++) {
-      content.wrappedJSObject.log("in-inspector log " + i);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [[MESSAGES_COUNT]],
+    count => {
+      for (let i = 1; i <= count; i++) {
+        content.wrappedJSObject.log("in-inspector log " + i);
+      }
     }
-  });
+  );
 
   info("Wait for all messages to be visible in the split console");
   const waitForMessagePromises = [];
