@@ -36,6 +36,8 @@ fogotype = ["gkrust-shared/fogotype"]
 [dependencies]
 gkrust-shared = { path = "shared" }
 mozilla-central-workspace-hack = { path = "../../../build/workspace-hack" }
+# Workaround for https://github.com/rust-lang/rust/issues/58393
+mozglue-static = { path = "../../../mozglue/static/rust" }
 
 [dev-dependencies]
 stylo_tests = { path = "../../../servo/ports/geckolib/tests/" }
