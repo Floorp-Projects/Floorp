@@ -1680,17 +1680,14 @@ class BaseScript : public gc::TenuredCell {
 
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
              ScriptSourceObject* sourceObject, uint32_t sourceStart,
-             uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
-             uint32_t lineno, uint32_t column)
+             uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd)
       : jitCodeRaw_(stubEntry),
         functionOrGlobal_(functionOrGlobal),
         sourceObject_(sourceObject),
         sourceStart_(sourceStart),
         sourceEnd_(sourceEnd),
         toStringStart_(toStringStart),
-        toStringEnd_(toStringEnd),
-        lineno_(lineno),
-        column_(column) {
+        toStringEnd_(toStringEnd) {
     MOZ_ASSERT(functionOrGlobal->compartment() == sourceObject->compartment());
     MOZ_ASSERT(toStringStart <= sourceStart);
     MOZ_ASSERT(sourceStart <= sourceEnd);
@@ -2595,21 +2592,21 @@ class JSScript : public js::BaseScript {
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
-  using js::BaseScript::BaseScript;
+  JSScript(js::HandleObject functionOrGlobal, uint8_t* stubEntry,
+           js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
+           uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
 
   static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
                        js::HandleScriptSourceObject sourceObject,
                        uint32_t sourceStart, uint32_t sourceEnd,
-                       uint32_t toStringStart, uint32_t toStringEnd,
-                       uint32_t lineno, uint32_t column);
+                       uint32_t toStringStart, uint32_t toStringEnd);
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           const JS::ReadOnlyCompileOptions& options,
                           js::HandleScriptSourceObject sourceObject,
                           uint32_t sourceStart, uint32_t sourceEnd,
-                          uint32_t toStringStart, uint32_t toStringEnd,
-                          uint32_t lineno, uint32_t column);
+                          uint32_t toStringStart, uint32_t toStringEnd);
 
   static JSScript* CreateFromLazy(JSContext* cx,
                                   js::Handle<js::LazyScript*> lazy);
@@ -3241,7 +3238,7 @@ class LazyScript : public BaseScript {
   // If non-nullptr, the script has been compiled and this is a forwarding
   // pointer to the result. This is a weak pointer: after relazification, we
   // can collect the script if there are no other pointers to it.
-  WeakHeapPtrScript script_ = nullptr;
+  WeakHeapPtrScript script_;
   friend void js::gc::SweepLazyScripts(GCParallelTask* task);
 
   // The BaseScript::warmUpData_ field is used as follows:
@@ -3325,7 +3322,11 @@ class LazyScript : public BaseScript {
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
 
-  using BaseScript::BaseScript;
+  LazyScript(JSFunction* fun, uint8_t* stubEntry,
+             ScriptSourceObject& sourceObject, PrivateScriptData* data,
+             uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
+             uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
+             uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
@@ -3333,9 +3334,10 @@ class LazyScript : public BaseScript {
   static LazyScript* CreateRaw(JSContext* cx, uint32_t ngcthings,
                                HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
-                               uint32_t sourceStart, uint32_t sourceEnd,
-                               uint32_t toStringStart, uint32_t toStringEnd,
-                               uint32_t lineno, uint32_t column);
+                               uint32_t immutableFlags, uint32_t sourceStart,
+                               uint32_t sourceEnd, uint32_t toStringStart,
+                               uint32_t toStringEnd, uint32_t lineno,
+                               uint32_t column);
 
  public:
   static const uint32_t NumClosedOverBindingsLimit =
