@@ -1265,6 +1265,9 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::CallImport_AnyRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:
     case SymbolicAddress::CoerceInPlace_ToNumber:
+#ifdef ENABLE_WASM_BIGINT
+    case SymbolicAddress::CoerceInPlace_ToBigInt:
+#endif
     case SymbolicAddress::BoxValue_Anyref:
       MOZ_ASSERT(!NeedsBuiltinThunk(func),
                  "not in sync with NeedsBuiltinThunk");
@@ -1300,6 +1303,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native i32.div_s (in wasm)";
     case SymbolicAddress::aeabi_uidivmod:
       return "call to native i32.div_u (in wasm)";
+#endif
+#ifdef ENABLE_WASM_BIGINT
+    case SymbolicAddress::AllocateBigInt:
+      return "call to native Allocate<BigInt, NoGC> (in wasm)";
 #endif
     case SymbolicAddress::ModD:
       return "call to asm.js native f64 % (mod)";

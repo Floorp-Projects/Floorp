@@ -30,6 +30,7 @@
 #include "threading/Mutex.h"
 #include "util/Memory.h"
 #include "util/Poison.h"
+#include "vm/BigIntType.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTypes.h"
@@ -529,6 +530,22 @@ static int32_t CoerceInPlace_ToInt32(Value* rawVal) {
   return true;
 }
 
+#ifdef ENABLE_WASM_BIGINT
+static int32_t CoerceInPlace_ToBigInt(Value* rawVal) {
+  JSContext* cx = TlsContext.get();
+
+  RootedValue val(cx, *rawVal);
+  BigInt* bi = ToBigInt(cx, val);
+  if (!bi) {
+    *rawVal = PoisonedObjectValue(0x43);
+    return false;
+  }
+
+  *rawVal = BigIntValue(bi);
+  return true;
+}
+#endif
+
 static int32_t CoerceInPlace_ToNumber(Value* rawVal) {
   JSContext* cx = TlsContext.get();
 
@@ -595,6 +612,19 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
         }
         break;
       }
+#ifdef ENABLE_WASM_BIGINT
+      case ValType::I64: {
+        // In this case we store a BigInt value as there is no value type
+        // corresponding directly to an I64. The conversion to I64 happens
+        // in the JIT entry stub.
+        BigInt* bigint = ToBigInt(cx, arg);
+        if (!bigint) {
+          return false;
+        }
+        argv[i] = BigIntValue(bigint);
+        break;
+      }
+#endif
       default: {
         MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
       }
@@ -603,6 +633,15 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
 
   return true;
 }
+
+#ifdef ENABLE_WASM_BIGINT
+// Allocate a BigInt without GC, corresponds to the similar VMFunction.
+static BigInt* AllocateBigInt() {
+  JSContext* cx = TlsContext.get();
+
+  return js::Allocate<BigInt, NoGC>(cx);
+}
+#endif
 
 static int64_t DivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi,
                       uint32_t y_lo) {
@@ -774,6 +813,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::CoerceInPlace_ToInt32:
       *abiType = Args_General1;
       return FuncCast(CoerceInPlace_ToInt32, *abiType);
+#ifdef ENABLE_WASM_BIGINT
+    case SymbolicAddress::CoerceInPlace_ToBigInt:
+      *abiType = Args_General1;
+      return FuncCast(CoerceInPlace_ToBigInt, *abiType);
+#endif
     case SymbolicAddress::CoerceInPlace_ToNumber:
       *abiType = Args_General1;
       return FuncCast(CoerceInPlace_ToNumber, *abiType);
@@ -786,6 +830,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::BoxValue_Anyref:
       *abiType = Args_General1;
       return FuncCast(BoxValue_Anyref, *abiType);
+#ifdef ENABLE_WASM_BIGINT
+    case SymbolicAddress::AllocateBigInt:
+      *abiType = Args_General0;
+      return FuncCast(AllocateBigInt, *abiType);
+#endif
     case SymbolicAddress::DivI64:
       *abiType = Args_General4;
       return FuncCast(DivI64, *abiType);
@@ -1064,6 +1113,9 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CallImport_AnyRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:  // GenerateImportJitExit
     case SymbolicAddress::CoerceInPlace_ToNumber:
+#if defined(ENABLE_WASM_BIGINT)
+    case SymbolicAddress::CoerceInPlace_ToBigInt:
+#endif
     case SymbolicAddress::BoxValue_Anyref:
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
@@ -1092,6 +1144,9 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 #if defined(JS_CODEGEN_ARM)
     case SymbolicAddress::aeabi_idivmod:
     case SymbolicAddress::aeabi_uidivmod:
+#endif
+#if defined(ENABLE_WASM_BIGINT)
+    case SymbolicAddress::AllocateBigInt:
 #endif
     case SymbolicAddress::ModD:
     case SymbolicAddress::SinD:
