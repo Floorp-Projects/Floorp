@@ -23,7 +23,7 @@ add_task(async function() {
 });
 
 async function startMutation(tab) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await content.wrappedJSObject.startMutation();
   });
 }

@@ -20,7 +20,7 @@ function play_not_in_tree_audio() {
   content.document.body.removeChild(audio);
 
   // Add timeout to ensure the audio is removed from DOM tree.
-  content.setTimeout(function() {
+  setTimeout(function() {
     info("Prepare to start playing audio.");
     audio.play();
   }, 1000);
@@ -44,10 +44,10 @@ add_task(async function block_not_in_tree_media() {
   await waitForTabBlockEvent(tab, false);
 
   info("- check audio's playing state -");
-  await SpecialPowers.spawn(tab.linkedBrowser, [true], check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
   info("- playing audio -");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], play_not_in_tree_audio);
+  await ContentTask.spawn(tab.linkedBrowser, null, play_not_in_tree_audio);
 
   info("- tab should be blocked -");
   await waitForTabBlockEvent(tab, true);

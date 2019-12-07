@@ -20,7 +20,7 @@ async function pause(tab, options) {
       "DOMAudioPlaybackStopped",
       "DOMAudioPlaybackStopped event should get fired after pause"
     );
-    await SpecialPowers.spawn(browser, [], async function() {
+    await ContentTask.spawn(browser, {}, async function() {
       let audio = content.document.querySelector("audio");
       audio.pause();
     });

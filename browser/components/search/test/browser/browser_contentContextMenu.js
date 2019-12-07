@@ -141,9 +141,9 @@ add_task(async function() {
       await Services.search.setDefaultPrivate(otherPrivateDefault);
     }
 
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
-      [{ selectElement: test.isSelected ? test.id : null }],
+      { selectElement: test.isSelected ? test.id : null },
       async function(arg) {
         let selection = content.getSelection();
         selection.removeAllRanges();

@@ -20,7 +20,6 @@ FINAL_TARGET_FILES.content += [
     'content/MockFilePicker.jsm',
     'content/MockPermissionPrompt.jsm',
     'content/SpecialPowersChild.jsm',
-    'content/SpecialPowersEventUtils.jsm',
     'content/SpecialPowersParent.jsm',
     'content/SpecialPowersSandbox.jsm',
     'content/WrapPrivileged.jsm',

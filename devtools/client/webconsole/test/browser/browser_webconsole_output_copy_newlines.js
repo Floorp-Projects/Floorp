@@ -18,7 +18,7 @@ add_task(async function() {
   );
   const lastMessage = [...messages].pop();
   const onMessage = waitForMessage(hud, lastMessage);
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [messages], msgs => {
+  ContentTask.spawn(gBrowser.selectedBrowser, messages, msgs => {
     msgs.forEach(msg => content.wrappedJSObject.console.log(msg));
   });
   const { node } = await onMessage;

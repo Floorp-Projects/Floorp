@@ -68,7 +68,7 @@ add_task(async function() {
       checkA11yFront(parent, {}, a11yDoc);
     },
     () =>
-      SpecialPowers.spawn(browser, [], () =>
+      ContentTask.spawn(browser, null, () =>
         content.document
           .getElementById("button")
           .setAttribute("aria-label", "Renamed")
@@ -84,7 +84,7 @@ add_task(async function() {
     "reorder",
     front => checkA11yFront(front, {}, a11yDoc),
     () =>
-      SpecialPowers.spawn(browser, [], () => {
+      ContentTask.spawn(browser, null, () => {
         const input = content.document.createElement("input");
         input.type = "text";
         input.title = "This is a tooltip";

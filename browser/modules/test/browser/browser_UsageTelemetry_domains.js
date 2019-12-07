@@ -107,18 +107,16 @@ add_task(async function test_URIAndDomainCounts() {
 
   // We should not count AJAX requests.
   const XHR_URL = "http://example.com/r";
-  await SpecialPowers.spawn(
-    newWin.gBrowser.selectedBrowser,
-    [XHR_URL],
-    function(url) {
-      return new Promise(resolve => {
-        var xhr = new content.window.XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.onload = () => resolve();
-        xhr.send();
-      });
-    }
-  );
+  await ContentTask.spawn(newWin.gBrowser.selectedBrowser, XHR_URL, function(
+    url
+  ) {
+    return new Promise(resolve => {
+      var xhr = new content.window.XMLHttpRequest();
+      xhr.open("GET", url);
+      xhr.onload = () => resolve();
+      xhr.send();
+    });
+  });
   checkCounts({ totalURIs: 2, domainCount: 1, totalUnfilteredURIs: 2 });
 
   // Check that we're counting page fragments.
@@ -148,9 +146,9 @@ add_task(async function test_URIAndDomainCounts() {
 
   // Check that we only account for top level loads (e.g. we don't count URIs from
   // embedded iframes).
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     newWin.gBrowser.selectedBrowser,
-    [],
+    null,
     async function() {
       let doc = content.document;
       let iframe = doc.createElement("iframe");

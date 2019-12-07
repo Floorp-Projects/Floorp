@@ -21,6 +21,8 @@
   <script type="application/javascript"><![CDATA[
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.arguments[0]);
 
     var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
@@ -164,7 +166,7 @@
       }
 
       // Test normal selected text.
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let cH2 = document.getElementById("h2");
         let cSelection = content.getSelection();
@@ -178,7 +180,7 @@
       checkFindbarState("plain text", SEARCH_TEXT);
 
       // Test editable element with selection.
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let textInput = content.document.getElementById("text");
         textInput.focus();
         textInput.select();
@@ -187,7 +189,7 @@
       checkFindbarState("text input", SAMPLE_TEXT);
 
       // Test non-editable input element (type="button").
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         content.document.getElementById("button").focus();
       });
       await openFindbar();
@@ -289,10 +291,10 @@
     };
 
     function promiseExpectRangeCount(rangeCount) {
-      return SpecialPowers.spawn(gBrowser, [{ rangeCount }], async function(args) {
+      return ContentTask.spawn(gBrowser, { rangeCount }, async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsISelectionDisplay)
-                                   .QueryInterface(Ci.nsISelectionController);
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
         let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
         Assert.equal(sel.rangeCount, args.rangeCount,
           "Expected the correct amount of ranges inside the Find selection");
@@ -318,7 +320,7 @@
       var searchStr = "text tes";
       await enterStringIntoFindField(searchStr);
 
-      let sel = await SpecialPowers.spawn(gBrowser, [{ searchStr }], async function(args) {
+      let sel = await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         let sel = content.getSelection().toString();
         Assert.equal(sel.toLowerCase(), args.searchStr,
           "testNormalFind: failed to find '" + args.searchStr + "'");
@@ -331,7 +333,7 @@
         matchCaseCheckbox.click();
         await promise;
         enterStringIntoFindField("t");
-        await SpecialPowers.spawn(gBrowser, [{ searchStr }], async function(args) {
+        await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
           Assert.notEqual(content.getSelection().toString(), args.searchStr,
             "testNormalFind: Case-sensitivy is broken '" + args.searchStr + "'");
         });
@@ -373,14 +375,14 @@
           "caret": { "start": searchStr.length, "length": 0 }
         });
 
-      await SpecialPowers.spawn(gBrowser, [{ searchStr }], async function(args) {
+      await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         Assert.notEqual(content.getSelection().toString().toLowerCase(), args.searchStr,
           "testNormalFindWithComposition: text shouldn't be found during composition");
       });
 
       synthesizeComposition({ type: "compositioncommitasis" });
 
-      let sel = await SpecialPowers.spawn(gBrowser, [{ searchStr }], async function(args) {
+      let sel = await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         let sel = content.getSelection().toString();
         Assert.equal(sel.toLowerCase(), args.searchStr,
           "testNormalFindWithComposition: text should be found after committing composition");
@@ -424,7 +426,7 @@
     async function clearFocus() {
       document.commandDispatcher.focusedElement = null;
       document.commandDispatcher.focusedWindow = null;
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         content.focus();
       });
     }
@@ -432,7 +434,7 @@
     async function testQuickFindLink() {
       await clearFocus();
 
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
@@ -446,7 +448,7 @@
 
       var searchStr = "Link Test";
       await enterStringIntoFindField(searchStr);
-      await SpecialPowers.spawn(gBrowser, [{ searchStr }], async function(args) {
+      await ContentTask.spawn(gBrowser, { searchStr }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.searchStr,
           "testQuickFindLink: failed to find sample link");
       });
@@ -551,7 +553,7 @@
     async function testQuickFindText() {
       await clearFocus();
 
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         let document = content.document;
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
@@ -564,7 +566,7 @@
         "testQuickFindText: find field is not focused");
 
       await enterStringIntoFindField(SEARCH_TEXT);
-      await SpecialPowers.spawn(gBrowser, [{ SEARCH_TEXT }], async function(args) {
+      await ContentTask.spawn(gBrowser, { SEARCH_TEXT }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "testQuickFindText: failed to find '" + args.SEARCH_TEXT + "'");
       });
@@ -575,7 +577,7 @@
       await clearFocus();
 
       if (linksOnly) {
-        await SpecialPowers.spawn(gBrowser, [], async function() {
+        await ContentTask.spawn(gBrowser, null, async function() {
           let document = content.document;
           let event = document.createEvent("KeyboardEvent");
           event.initKeyEvent("keypress", true, true, null, false, false,
@@ -671,12 +673,12 @@
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
 
       await enterStringIntoFindField("t");
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "T", "First T should be selected.");
       });
 
       await changeCase(1);
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "t", "First t should be selected.");
       });
     }
@@ -690,12 +692,12 @@
       promise = promiseFindResult(gBrowser.hasAttribute("remote") ? SEARCH_TEXT.toUpperCase() : "");
       await enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
       await promise;
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, null, async function() {
         Assert.equal(content.getSelection().toString(), "", "Not found.");
       });
 
       await changeCase(0);
-      await SpecialPowers.spawn(gBrowser, [{ SEARCH_TEXT }], async function(args) {
+      await ContentTask.spawn(gBrowser, { SEARCH_TEXT }, async function(args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "Search text should be selected.");
       });

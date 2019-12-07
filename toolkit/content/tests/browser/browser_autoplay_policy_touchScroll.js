@@ -29,7 +29,7 @@ async function callMediaPlay(shouldStartPlaying) {
       audio.isPlayStarted = true;
       resolve();
     });
-    content.setTimeout(() => {
+    setTimeout(() => {
       if (audio.isPlayStarted) {
         return;
       }
@@ -87,15 +87,15 @@ add_task(async function testTouchScroll() {
     },
     async browser => {
       info(`- media should not start playing -`);
-      await SpecialPowers.spawn(browser, [false], checkMediaPlayingState);
+      await ContentTask.spawn(browser, false, checkMediaPlayingState);
 
       info(`- simulate touch scroll which should not activate document -`);
       await synthesizeTouchScroll("#testAudio", browser);
-      await SpecialPowers.spawn(browser, [false], callMediaPlay);
+      await ContentTask.spawn(browser, false, callMediaPlay);
 
       info(`- simulate touch at a point which should activate document -`);
       await BrowserTestUtils.synthesizeTouch("#testAudio", 0, 0, {}, browser);
-      await SpecialPowers.spawn(browser, [true], callMediaPlay);
+      await ContentTask.spawn(browser, true, callMediaPlay);
     }
   );
 });

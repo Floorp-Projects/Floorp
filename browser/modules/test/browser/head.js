@@ -57,7 +57,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
  *        The name of the field to write to.
  */
 let typeInSearchField = async function(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
+  await ContentTask.spawn(browser, [fieldName, text], async function([
     contentFieldName,
     contentText,
   ]) {

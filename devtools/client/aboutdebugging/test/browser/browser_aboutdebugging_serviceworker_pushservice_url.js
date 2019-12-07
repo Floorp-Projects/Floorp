@@ -45,7 +45,7 @@ add_task(async function() {
   );
 
   info("Subscribe from the push service");
-  SpecialPowers.spawn(swTab.linkedBrowser, [], () => {
+  ContentTask.spawn(swTab.linkedBrowser, {}, () => {
     content.wrappedJSObject.subscribeToPush();
   });
 
@@ -59,7 +59,7 @@ add_task(async function() {
   is(pushUrl.textContent, FAKE_ENDPOINT, "Push URL shows the expected content");
 
   info("Unsubscribe from the push service");
-  SpecialPowers.spawn(swTab.linkedBrowser, [], () => {
+  ContentTask.spawn(swTab.linkedBrowser, {}, () => {
     content.wrappedJSObject.unsubscribeToPush();
   });
 

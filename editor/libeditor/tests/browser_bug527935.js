@@ -19,7 +19,7 @@ add_task(async function() {
         listener
       );
 
-      await SpecialPowers.spawn(aBrowser, [], async function() {
+      await ContentTask.spawn(aBrowser, {}, async function() {
         var window = content.window.wrappedJSObject;
         var document = window.document;
         var formTarget = document.getElementById("formTarget");
@@ -35,7 +35,7 @@ add_task(async function() {
 
       EventUtils.synthesizeKey("KEY_Enter");
 
-      await SpecialPowers.spawn(aBrowser, [], async function() {
+      await ContentTask.spawn(aBrowser, {}, async function() {
         var window = content.window.wrappedJSObject;
         var document = window.document;
 

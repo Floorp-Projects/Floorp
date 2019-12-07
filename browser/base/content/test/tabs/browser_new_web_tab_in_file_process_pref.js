@@ -10,7 +10,13 @@ testFile.normalize();
 const testFileURI = Services.io.newFileURI(testFile).spec;
 
 function getBrowserPid(browser) {
-  return SpecialPowers.spawn(browser, [], () => Services.appinfo.processID);
+  return SpecialPowers.spawn(browser, [], () => {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+
+    return Services.appinfo.processID;
+  });
 }
 
 async function CheckBrowserInPid(browser, expectedPid, message) {
