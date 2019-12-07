@@ -332,6 +332,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetUnsnappedScrolledRectInternal(const nsRect& aScrolledOverflowArea,
                                           const nsSize& aScrollPortSize) const;
 
+  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const;
+
   uint32_t GetScrollbarVisibility() const {
     return (mHasVerticalScrollbar ? nsIScrollableFrame::VERTICAL : 0) |
            (mHasHorizontalScrollbar ? nsIScrollableFrame::HORIZONTAL : 0);
@@ -862,6 +864,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
       const final {
     return mHelper.GetOverscrollBehaviorInfo();
   }
+  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const final {
+    return mHelper.GetAvailableScrollingDirectionsForUserInputEvents();
+  }
   uint32_t GetScrollbarVisibility() const final {
     return mHelper.GetScrollbarVisibility();
   }
@@ -1323,6 +1328,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
       const final {
     return mHelper.GetOverscrollBehaviorInfo();
+  }
+  uint32_t GetAvailableScrollingDirectionsForUserInputEvents() const final {
+    return mHelper.GetAvailableScrollingDirectionsForUserInputEvents();
   }
   uint32_t GetScrollbarVisibility() const final {
     return mHelper.GetScrollbarVisibility();
