@@ -657,6 +657,47 @@ class TestInfoReport(TestInfo):
         self.add_activedata_for_suite(branches, days, by_component,
                                       suite_clause, None)
 
+    def description(self, components, flavor, subsuite, paths,
+                    show_manifests, show_tests, show_summary, show_annotations,
+                    show_activedata,
+                    filter_values, filter_keys,
+                    branches, days):
+        # provide a natural language description of the report options
+        what = []
+        if show_manifests:
+            what.append("test manifests")
+        if show_tests:
+            what.append("tests")
+        if show_annotations:
+            what.append("test manifest annotations")
+        if show_summary and len(what) == 0:
+            what.append("summary of tests only")
+        if len(what) > 1:
+            what[-1] = "and " + what[-1]
+        what = ", ".join(what)
+        d = "Test summary report for " + what
+        if components:
+            d += ", in specified components (%s)" % components
+        else:
+            d += ", in all components"
+        if flavor:
+            d += ", in specified flavor (%s)" % flavor
+        if subsuite:
+            d += ", in specified subsuite (%s)" % subsuite
+        if paths:
+            d += ", on specified paths (%s)" % paths
+        if filter_values:
+            d += ", containing '%s'" % filter_values
+            if filter_keys:
+                d += " in manifest keys '%s'" % filter_keys
+            else:
+                d += " in any part of manifest entry"
+        if show_activedata:
+            d += ", including historical run-time data for the last %d days on %s" % (
+                days, branches)
+        d += " as of %s." % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        return d
+
     def report(self, components, flavor, subsuite, paths,
                show_manifests, show_tests, show_summary, show_annotations,
                show_activedata,
@@ -834,6 +875,13 @@ class TestInfoReport(TestInfo):
             except Exception:
                 print("Failed to retrieve some ActiveData data.")
                 traceback.print_exc()
+
+        by_component['description'] = self.description(
+            components, flavor, subsuite, paths,
+            show_manifests, show_tests, show_summary, show_annotations,
+            show_activedata,
+            filter_values, filter_keys,
+            branches, days)
 
         if show_summary:
             by_component['summary'] = {}
