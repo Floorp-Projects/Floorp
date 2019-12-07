@@ -10,7 +10,11 @@ async function installMozAM(filename) {
     gBrowser.selectedBrowser,
     [`${BASE}/${filename}`],
     async function(url) {
-      await content.wrappedJSObject.installMozAM(url);
+      try {
+        await content.wrappedJSObject.installMozAM(url);
+      } catch (e) {
+        Cu.reportError(e);
+      }
     }
   );
 }
