@@ -18,7 +18,8 @@ add_task(async function() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ TEST_JSON_FILE }],
-    async function({ TEST_JSON_FILE }) { // eslint-disable-line
+    // eslint-disable-next-line no-shadow
+    async function({ TEST_JSON_FILE }) {
       const channel = content.docShell.currentDocumentChannel;
       const channelURI = channel.URI.spec;
       ok(
@@ -60,6 +61,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ TEST_JSON_FILE }],
+    // eslint-disable-next-line no-shadow
     async function({ TEST_JSON_FILE }) {
       // eslint-disable-line
       const channel = content.docShell.currentDocumentChannel;
