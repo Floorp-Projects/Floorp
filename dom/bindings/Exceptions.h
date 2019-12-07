@@ -55,6 +55,11 @@ namespace exceptions {
 already_AddRefed<nsIStackFrame> CreateStack(JSContext* aCx,
                                             JS::StackCapture&& aCaptureMode);
 
+// Like the above, but creates a JSStackFrame wrapper for an existing
+// JS::SavedFrame object, passed as aStack.
+already_AddRefed<nsIStackFrame> CreateStack(JSContext* aCx,
+                                            JS::Handle<JSObject*> aStack);
+
 }  // namespace exceptions
 }  // namespace dom
 }  // namespace mozilla
