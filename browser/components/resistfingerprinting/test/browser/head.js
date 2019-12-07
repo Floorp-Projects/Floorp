@@ -23,7 +23,9 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
     );
 
     let contentSize = await SpecialPowers.spawn(
-      tab.linkedBrowser, [], async function() {
+      tab.linkedBrowser,
+      [],
+      async function() {
         let result = {
           width: content.innerWidth,
           height: content.innerHeight,
@@ -81,7 +83,9 @@ async function calcPopUpWindowChromeUISize() {
   );
 
   let result = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], async function() {
+    tab.linkedBrowser,
+    [],
+    async function() {
       let win;
 
       await new Promise(resolve => {

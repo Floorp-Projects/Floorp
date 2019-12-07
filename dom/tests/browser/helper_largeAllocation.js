@@ -187,7 +187,9 @@ async function largeAllocSuccessTests() {
     await BrowserTestUtils.browserLoaded(aBrowser);
 
     await SpecialPowers.spawn(
-      aBrowser, [], () => (content.document.location = "about:blank")
+      aBrowser,
+      [],
+      () => (content.document.location = "about:blank")
     );
 
     await BrowserTestUtils.browserLoaded(aBrowser);

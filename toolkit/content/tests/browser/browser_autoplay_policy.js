@@ -55,7 +55,11 @@ add_task(async function testAutoplayPolicy() {
       isAllowedAutoplay = false;
       isAllowedMuted = true;
       await setupTestPreferences(isAllowedAutoplay, isAllowedMuted);
-      await SpecialPowers.spawn(browser, ["allowed-muted"], checkAutoplayPolicy);
+      await SpecialPowers.spawn(
+        browser,
+        ["allowed-muted"],
+        checkAutoplayPolicy
+      );
 
       info(`- Disable autoplay for all kinds of media -`);
       isAllowedAutoplay = false;

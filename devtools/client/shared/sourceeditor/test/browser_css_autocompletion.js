@@ -114,7 +114,10 @@ async function checkStateAndMoveOn() {
   const [line, ch] = lineCh;
 
   ++index;
-  await SpecialPowers.spawn(browser, [[index, tests.length]], function([idx, len]) {
+  await SpecialPowers.spawn(browser, [[index, tests.length]], function([
+    idx,
+    len,
+  ]) {
     const progress = content.document.getElementById("progress");
     const progressDiv = content.document.querySelector("#progress > div");
     progress.dataset.progress = idx;

@@ -39,7 +39,9 @@ add_task(async function() {
       BrowserTestUtils.removeTab(viewSourceTab);
     });
     await SpecialPowers.spawn(
-      viewSourceTab.linkedBrowser, [DATA_URI_SOURCE], uri => {
+      viewSourceTab.linkedBrowser,
+      [DATA_URI_SOURCE],
+      uri => {
         is(
           content.document.documentURI,
           uri,

@@ -31,7 +31,9 @@ function assertWindowIsPrivate(win) {
   );
 
   return SpecialPowers.spawn(
-    win.gBrowser.selectedBrowser, [], async function() {
+    win.gBrowser.selectedBrowser,
+    [],
+    async function() {
       let contentLoadContext = docShell.QueryInterface(Ci.nsILoadContext);
       Assert.ok(
         contentLoadContext.usePrivateBrowsing,

@@ -120,7 +120,9 @@ testUrls.forEach(testUrl => {
 
     // the form should have been autofilled with the login
     let fieldValues = await SpecialPowers.spawn(
-      tab1.linkedBrowser, [], function() {
+      tab1.linkedBrowser,
+      [],
+      function() {
         let doc = content.document;
         return {
           username: doc.getElementById("form-basic-username").value,

@@ -281,7 +281,9 @@ add_task(async function test_AddSearchProvider() {
     "http://example.com"
   );
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [{ engineURL }], async function(args) {
+    gBrowser.selectedBrowser,
+    [{ engineURL }],
+    async function(args) {
       content.window.external.AddSearchProvider(args.engineURL);
     }
   );

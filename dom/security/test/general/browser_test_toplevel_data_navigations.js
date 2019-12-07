@@ -16,7 +16,11 @@ add_task(async function test_nav_data_uri() {
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
   await BrowserTestUtils.withNewTab(kDataURI, async function(browser) {
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [{kDataBody}], async function({kDataBody}) { // eslint-disable-line
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [{ kDataBody }],
+      async function({ kDataBody }) {
+        // eslint-disable-line
         is(
           content.document.body.innerHTML,
           kDataBody,

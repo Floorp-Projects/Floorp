@@ -30,13 +30,19 @@ function waitForMPDialog(action) {
 }
 
 function waitForLoginCountToReach(browser, loginCount) {
-  return SpecialPowers.spawn(browser, [loginCount], async expectedLoginCount => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    await ContentTaskUtils.waitForCondition(() => {
-      return loginList._loginGuidsSortedOrder.length == expectedLoginCount;
-    });
-    return loginList._loginGuidsSortedOrder.length;
-  });
+  return SpecialPowers.spawn(
+    browser,
+    [loginCount],
+    async expectedLoginCount => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      await ContentTaskUtils.waitForCondition(() => {
+        return loginList._loginGuidsSortedOrder.length == expectedLoginCount;
+      });
+      return loginList._loginGuidsSortedOrder.length;
+    }
+  );
 }
 
 add_task(async function test() {

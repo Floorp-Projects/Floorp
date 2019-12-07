@@ -142,7 +142,9 @@ async function submitFormAndGetResults(
     form.submit();
   }
   await SpecialPowers.spawn(
-    browser, [[formAction, selectorValues]], contentSubmitForm
+    browser,
+    [[formAction, selectorValues]],
+    contentSubmitForm
   );
   let result = await getFormSubmitResponseResult(
     browser,
@@ -167,11 +169,15 @@ async function getFormSubmitResponseResult(
 ) {
   // default selectors are for the response page produced by formsubmit.sjs
   let fieldValues = await SpecialPowers.spawn(
-    browser, [{
-      resultURL,
-      usernameSelector: username,
-      passwordSelector: password,
-    }], async function({ resultURL, usernameSelector, passwordSelector }) {
+    browser,
+    [
+      {
+        resultURL,
+        usernameSelector: username,
+        passwordSelector: password,
+      },
+    ],
+    async function({ resultURL, usernameSelector, passwordSelector }) {
       await ContentTaskUtils.waitForCondition(() => {
         return (
           content.location.pathname.endsWith(resultURL) &&
@@ -529,11 +535,13 @@ async function openACPopup(popup, browser, inputSelector) {
   info("content window focused");
 
   // Focus the username field to open the popup.
-  await SpecialPowers.spawn(browser, [[inputSelector]], function openAutocomplete(
-    sel
-  ) {
-    content.document.querySelector(sel).focus();
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [[inputSelector]],
+    function openAutocomplete(sel) {
+      content.document.querySelector(sel).focus();
+    }
+  );
 
   let shown = await promiseShown;
   ok(shown, "autocomplete popup shown");

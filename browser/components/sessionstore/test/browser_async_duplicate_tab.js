@@ -18,10 +18,16 @@ add_task(async function test_duplicate() {
   // Click the link to navigate, this will add second shistory entry.
   await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener("hashchange", function onHashChange() {
-        docShell.chromeEventHandler.removeEventListener("hashchange", onHashChange);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "hashchange",
+        function onHashChange() {
+          docShell.chromeEventHandler.removeEventListener(
+            "hashchange",
+            onHashChange
+          );
+          resolve();
+        }
+      );
 
       // Click the link.
       content.document.querySelector("a").click();
@@ -56,10 +62,16 @@ add_task(async function test_duplicate_remove() {
   // Click the link to navigate, this will add second shistory entry.
   await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener("hashchange", function onHashChange() {
-        docShell.chromeEventHandler.removeEventListener("hashchange", onHashChange);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "hashchange",
+        function onHashChange() {
+          docShell.chromeEventHandler.removeEventListener(
+            "hashchange",
+            onHashChange
+          );
+          resolve();
+        }
+      );
 
       // Click the link.
       content.document.querySelector("a").click();

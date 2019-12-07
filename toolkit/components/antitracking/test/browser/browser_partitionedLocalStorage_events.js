@@ -95,9 +95,13 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+        },
+      ],
+      async obj => {
         let ifr = content.document.createElement("iframe");
         ifr.setAttribute("id", "ifr");
         ifr.setAttribute("src", obj.page);
@@ -211,11 +215,15 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
-        dynamicFPITest: test.dynamicFPITest,
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+          withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+          dynamicFPITest: test.dynamicFPITest,
+        },
+      ],
+      async obj => {
         let ifr1 = content.document.createElement("iframe");
         ifr1.setAttribute("id", "ifr1");
         ifr1.setAttribute("src", obj.page);
@@ -328,9 +336,13 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+        },
+      ],
+      async obj => {
         let ifr1 = content.document.createElement("iframe");
         ifr1.setAttribute("id", "ifr1");
         ifr1.setAttribute("src", obj.page);
@@ -435,11 +447,15 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
-        dynamicFPITest: test.dynamicFPITest,
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+          withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+          dynamicFPITest: test.dynamicFPITest,
+        },
+      ],
+      async obj => {
         let ifr = content.document.createElement("iframe");
         ifr.setAttribute("id", "ifr");
         ifr.setAttribute("src", obj.page);
@@ -529,9 +545,13 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+        },
+      ],
+      async obj => {
         let ifr = content.document.createElement("iframe");
         ifr.setAttribute("id", "ifr");
         ifr.setAttribute("src", obj.page);
@@ -619,11 +639,15 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
-        dynamicFPITest: test.dynamicFPITest,
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+          withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+          dynamicFPITest: test.dynamicFPITest,
+        },
+      ],
+      async obj => {
         let ifr = content.document.createElement("iframe");
         ifr.setAttribute("id", "ifr");
         ifr.setAttribute("src", obj.page);
@@ -713,9 +737,13 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
 
     info("The non-tracker page opens a tracker iframe");
     await SpecialPowers.spawn(
-      normalBrowser, [{
-        page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-      }], async obj => {
+      normalBrowser,
+      [
+        {
+          page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
+        },
+      ],
+      async obj => {
         let ifr = content.document.createElement("iframe");
         ifr.setAttribute("id", "ifr");
         ifr.setAttribute("src", obj.page);

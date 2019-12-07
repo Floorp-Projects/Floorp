@@ -83,7 +83,9 @@ function check_should_not_send_unselected_tab_hover_msg(browser) {
 function get_video_decoding_suspend_promise(browser, reload) {
   let suspend = true;
   return SpecialPowers.spawn(
-    browser, [{ suspend, reload }], check_video_decoding_state
+    browser,
+    [{ suspend, reload }],
+    check_video_decoding_state
   );
 }
 
@@ -91,7 +93,9 @@ function get_video_decoding_resume_promise(browser) {
   let suspend = false;
   let reload = false;
   return SpecialPowers.spawn(
-    browser, [{ suspend, reload }], check_video_decoding_state
+    browser,
+    [{ suspend, reload }],
+    check_video_decoding_state
   );
 }
 

@@ -43,7 +43,9 @@ add_task(async function should_not_show_sound_indicator_for_silent_video() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, SILENT_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [true], check_audio_playing_state
+    tab.linkedBrowser,
+    [true],
+    check_audio_playing_state
   );
 
   info("- tab should not have sound indicator after playing silent video -");
@@ -70,7 +72,9 @@ add_task(
     BrowserTestUtils.loadURI(tab.linkedBrowser, ALMOST_SILENT_PAGE);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [true], check_audio_playing_state
+      tab.linkedBrowser,
+      [true],
+      check_audio_playing_state
     );
 
     info(
