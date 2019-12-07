@@ -144,7 +144,7 @@ add_task(async function nested_window_opens() {
     let secondTab = await secondTabPromise;
     let nestedBrowser = secondTab.linkedBrowser;
 
-    await SpecialPowers.spawn(nestedBrowser, [], function() {
+    await ContentTask.spawn(nestedBrowser, null, function() {
       ok(content.opener, "this window has an opener");
     });
 

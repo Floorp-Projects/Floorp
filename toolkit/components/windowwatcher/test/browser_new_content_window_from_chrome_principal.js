@@ -17,7 +17,7 @@ add_task(async function test_chrome_opens_window() {
     url: "http://example.com/",
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.open("http://example.com/", "_blank");
   });
 
@@ -28,7 +28,7 @@ add_task(async function test_chrome_opens_window() {
     "Should have the default content remote type."
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     Assert.ok(
       !content.document.nodePrincipal.isSystemPrincipal,
       "We should not have a system principal."

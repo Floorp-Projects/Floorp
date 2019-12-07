@@ -41,7 +41,7 @@ add_task(async function() {
 
   info("Call the log function defined in the test page");
   const onMessage = waitForMessage(hud, "wrapperTrace");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.render();
   });
   const message = await onMessage;

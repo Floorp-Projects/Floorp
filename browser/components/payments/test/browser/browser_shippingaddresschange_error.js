@@ -23,19 +23,17 @@ add_task(async function test_show_error_on_addresschange() {
       });
 
       info("setting up the event handler for shippingoptionchange");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingoptionchange",
-            details: Object.assign(
-              {},
-              PTU.Details.genericShippingError,
-              PTU.Details.noShippingOptions,
-              PTU.Details.total2USD
-            ),
-          },
-        ],
+        {
+          eventName: "shippingoptionchange",
+          details: Object.assign(
+            {},
+            PTU.Details.genericShippingError,
+            PTU.Details.noShippingOptions,
+            PTU.Details.total2USD
+          ),
+        },
         PTU.ContentTasks.updateWith
       );
 
@@ -46,13 +44,11 @@ add_task(async function test_show_error_on_addresschange() {
       );
 
       info("awaiting the shippingoptionchange event");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingoptionchange",
-          },
-        ],
+        {
+          eventName: "shippingoptionchange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -71,32 +67,28 @@ add_task(async function test_show_error_on_addresschange() {
       );
 
       info("setting up the event handler for shippingaddresschange");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-            details: Object.assign(
-              {},
-              PTU.Details.noError,
-              PTU.Details.twoShippingOptions,
-              PTU.Details.total2USD
-            ),
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+          details: Object.assign(
+            {},
+            PTU.Details.noError,
+            PTU.Details.twoShippingOptions,
+            PTU.Details.total2USD
+          ),
+        },
         PTU.ContentTasks.updateWith
       );
 
       await selectPaymentDialogShippingAddressByCountry(frame, "DE");
 
       info("awaiting the shippingaddresschange event");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -136,19 +128,17 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       });
 
       info("setting up the event handler for shippingaddresschange");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-            details: Object.assign(
-              {},
-              PTU.Details.fieldSpecificErrors,
-              PTU.Details.noShippingOptions,
-              PTU.Details.total2USD
-            ),
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+          details: Object.assign(
+            {},
+            PTU.Details.fieldSpecificErrors,
+            PTU.Details.noShippingOptions,
+            PTU.Details.total2USD
+          ),
+        },
         PTU.ContentTasks.updateWith
       );
 
@@ -159,13 +149,11 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       );
 
       info("awaiting the shippingaddresschange event");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -266,23 +254,21 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       info(
         "setting up the event handler for a 2nd shippingaddresschange with a different error"
       );
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-            details: Object.assign(
-              {},
-              {
-                shippingAddressErrors: {
-                  phone: "Invalid phone number",
-                },
+        {
+          eventName: "shippingaddresschange",
+          details: Object.assign(
+            {},
+            {
+              shippingAddressErrors: {
+                phone: "Invalid phone number",
               },
-              PTU.Details.noShippingOptions,
-              PTU.Details.total2USD
-            ),
-          },
-        ],
+            },
+            PTU.Details.noShippingOptions,
+            PTU.Details.total2USD
+          ),
+        },
         PTU.ContentTasks.updateWith
       );
 
@@ -344,18 +330,16 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       });
 
       info("setup updateWith to clear errors");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-            details: Object.assign(
-              {},
-              PTU.Details.twoShippingOptions,
-              PTU.Details.total2USD
-            ),
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+          details: Object.assign(
+            {},
+            PTU.Details.twoShippingOptions,
+            PTU.Details.total2USD
+          ),
+        },
         PTU.ContentTasks.updateWith
       );
 

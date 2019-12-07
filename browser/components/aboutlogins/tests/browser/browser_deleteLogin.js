@@ -16,9 +16,9 @@ add_task(async function setup() {
 add_task(async function test_show_logins() {
   let browser = gBrowser.selectedBrowser;
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [[TEST_LOGIN1.guid, TEST_LOGIN2.guid]],
+    [TEST_LOGIN1.guid, TEST_LOGIN2.guid],
     async loginGuids => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
@@ -62,7 +62,7 @@ add_task(async function test_login_item() {
   }
 
   function deleteFirstLoginAfterEdit() {
-    return SpecialPowers.spawn(browser, [], async () => {
+    return ContentTask.spawn(browser, null, async () => {
       let loginList = content.document.querySelector("login-list");
       let loginListItem = loginList.shadowRoot.querySelector(
         ".login-list-item[data-guid]:not([hidden])"
@@ -105,7 +105,7 @@ add_task(async function test_login_item() {
   }
 
   function deleteFirstLogin() {
-    return SpecialPowers.spawn(browser, [], async () => {
+    return ContentTask.spawn(browser, null, async () => {
       let loginList = content.document.querySelector("login-list");
       let loginListItem = loginList.shadowRoot.querySelector(
         ".login-list-item[data-guid]:not([hidden])"
@@ -141,7 +141,7 @@ add_task(async function test_login_item() {
 
   onDeletePromise = waitForDelete();
 
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let loginList = content.document.querySelector("login-list");
     ok(
       !content.document.documentElement.classList.contains("no-logins"),
@@ -164,7 +164,7 @@ add_task(async function test_login_item() {
   await deleteFirstLogin();
   await onDeletePromise;
 
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let loginList = content.document.querySelector("login-list");
     ok(
       content.document.documentElement.classList.contains("no-logins"),

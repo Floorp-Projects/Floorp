@@ -59,11 +59,16 @@ let addons = gProvider.createAddons([
 addons[3].permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
 
 function API_getAddonByID(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
+  return ContentTask.spawn(browser, id, async function(id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
 
     // We can't send native objects back so clone its properties.
-    return JSON.parse(JSON.stringify(addon));
+    let result = {};
+    for (let prop in addon) {
+      result[prop] = addon[prop];
+    }
+
+    return result;
   });
 }
 
@@ -118,7 +123,7 @@ add_task(
 add_task(
   testWithAPI(async function(browser) {
     async function check(value, message) {
-      let enabled = await SpecialPowers.spawn(browser, [], async function() {
+      let enabled = await ContentTask.spawn(browser, null, async function() {
         return content.navigator.mozAddonManager.permissionPromptsEnabled;
       });
       is(enabled, value, message);

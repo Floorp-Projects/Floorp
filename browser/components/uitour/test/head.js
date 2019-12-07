@@ -158,9 +158,9 @@ function waitForPopupAtAnchor(popup, anchorNode, nextTestFn, msg) {
 }
 
 function getConfigurationPromise(configName) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     gTestTab.linkedBrowser,
-    [configName],
+    configName,
     contentConfigName => {
       return new Promise(resolve => {
         let contentWin = Cu.waiveXrays(content);
@@ -201,7 +201,7 @@ function showInfoPromise(
 ) {
   let popup = document.getElementById("UITourTooltip");
   let shownPromise = promisePanelElementShown(window, popup);
-  return SpecialPowers.spawn(gTestTab.linkedBrowser, [[...arguments]], args => {
+  return ContentTask.spawn(gTestTab.linkedBrowser, [...arguments], args => {
     let contentWin = Cu.waiveXrays(content);
     let [
       contentTarget,
@@ -235,7 +235,7 @@ function showHighlightPromise(...args) {
 }
 
 function showMenuPromise(name) {
-  return SpecialPowers.spawn(gTestTab.linkedBrowser, [name], contentName => {
+  return ContentTask.spawn(gTestTab.linkedBrowser, name, contentName => {
     return new Promise(resolve => {
       let contentWin = Cu.waiveXrays(content);
       contentWin.Mozilla.UITour.showMenu(contentName, resolve);
@@ -244,7 +244,7 @@ function showMenuPromise(name) {
 }
 
 function waitForCallbackResultPromise() {
-  return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async function() {
+  return ContentTask.spawn(gTestTab.linkedBrowser, null, async function() {
     let contentWin = Cu.waiveXrays(content);
     await ContentTaskUtils.waitForCondition(() => {
       return contentWin.callbackResult;
@@ -334,9 +334,9 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               methodName: prop,
               args,
             };
-            return SpecialPowers.spawn(
+            return ContentTask.spawn(
               gTestTab.linkedBrowser,
-              [taskArgs],
+              taskArgs,
               contentArgs => {
                 let contentWin = Cu.waiveXrays(content);
                 return contentWin[contentArgs.methodName].apply(

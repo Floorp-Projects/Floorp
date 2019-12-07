@@ -28,7 +28,7 @@ add_task(async function test_frametree() {
 
   // Go back in history.
   let pageShowPromise = ContentTask.spawn(browser, null, async () => {
-    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
+    return ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
   browser.goBack();
   await pageShowPromise;
@@ -37,11 +37,11 @@ add_task(async function test_frametree() {
   is(await countNonDynamicFrames(browser), 0, "no child frames");
 
   // Append a dynamic frame.
-  await SpecialPowers.spawn(browser, [URL], async ([url]) => {
+  await ContentTask.spawn(browser, URL, async ([url]) => {
     let frame = content.document.createElement("iframe");
     frame.setAttribute("src", url);
     content.document.body.appendChild(frame);
-    await ContentTaskUtils.waitForEvent(frame, "load");
+    return ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The dynamic frame should be ignored.
@@ -69,14 +69,14 @@ add_task(async function test_frametree_dynamic() {
   is(await enumerateIndexes(browser), "0,1", "correct indexes 0 and 1");
 
   // Insert a dynamic frame.
-  await SpecialPowers.spawn(browser, [URL], async ([url]) => {
+  await ContentTask.spawn(browser, URL, async ([url]) => {
     let frame = content.document.createElement("iframe");
     frame.setAttribute("src", url);
     content.document.body.insertBefore(
       frame,
       content.document.getElementsByTagName("iframe")[1]
     );
-    await ContentTaskUtils.waitForEvent(frame, "load");
+    return ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The page still has two iframes.
@@ -84,11 +84,11 @@ add_task(async function test_frametree_dynamic() {
   is(await enumerateIndexes(browser), "0,1", "correct indexes 0 and 1");
 
   // Append a dynamic frame.
-  await SpecialPowers.spawn(browser, [URL], async ([url]) => {
+  await ContentTask.spawn(browser, URL, async ([url]) => {
     let frame = content.document.createElement("iframe");
     frame.setAttribute("src", url);
     content.document.body.appendChild(frame);
-    await ContentTaskUtils.waitForEvent(frame, "load");
+    return ContentTaskUtils.waitForEvent(frame, "load");
   });
 
   // The page still has two iframes.
@@ -96,7 +96,7 @@ add_task(async function test_frametree_dynamic() {
   is(await enumerateIndexes(browser), "0,1", "correct indexes 0 and 1");
 
   // Remopve a non-dynamic iframe.
-  await SpecialPowers.spawn(browser, [URL], async ([url]) => {
+  await ContentTask.spawn(browser, URL, async ([url]) => {
     // Remove the first iframe, which should be a non-dynamic iframe.
     content.document.body.removeChild(
       content.document.getElementsByTagName("iframe")[0]
@@ -111,20 +111,17 @@ add_task(async function test_frametree_dynamic() {
 });
 
 async function countNonDynamicFrames(browser) {
-  return SpecialPowers.spawn(browser, [], async () => {
+  return ContentTask.spawn(browser, null, async () => {
     let count = 0;
-    content.SessionStoreUtils.forEachNonDynamicChildFrame(
-      content,
-      () => count++
-    );
+    SessionStoreUtils.forEachNonDynamicChildFrame(content, () => count++);
     return count;
   });
 }
 
 async function enumerateIndexes(browser) {
-  return SpecialPowers.spawn(browser, [], async () => {
+  return ContentTask.spawn(browser, null, async () => {
     let indexes = [];
-    content.SessionStoreUtils.forEachNonDynamicChildFrame(content, (frame, i) =>
+    SessionStoreUtils.forEachNonDynamicChildFrame(content, (frame, i) =>
       indexes.push(i)
     );
     return indexes.join(",");

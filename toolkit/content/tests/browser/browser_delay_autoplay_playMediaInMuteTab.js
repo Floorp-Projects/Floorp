@@ -57,12 +57,12 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- audio doesn't be started in beginning -");
-  await SpecialPowers.spawn(tab.linkedBrowser, [true], check_audio_pause_state);
+  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
   info("- audio shouldn't be muted -");
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     tab.linkedBrowser,
-    [false],
+    false /* unmute */,
     check_audio_volume_and_mute
   );
 
@@ -74,7 +74,7 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
 
   info("- try to start audio in background tab -");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], play_audio);
+  await ContentTask.spawn(tab.linkedBrowser, null, play_audio);
 
   info("- tab should display unblocking icon -");
   await waitForTabBlockEvent(tab, true);
@@ -83,9 +83,9 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   await BrowserTestUtils.switchTab(window.gBrowser, tab);
 
   info("- audio shoule be muted, but not be blocked -");
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     tab.linkedBrowser,
-    [true],
+    true /* mute */,
     check_audio_volume_and_mute
   );
 

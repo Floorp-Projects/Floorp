@@ -7,7 +7,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: gTestRoot + "file_bug839103.html" },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [gTestRoot], testBody);
+      await ContentTask.spawn(browser, gTestRoot, testBody);
     }
   );
 });
@@ -40,7 +40,7 @@ async function testBody(testRoot) {
   link.setAttribute("href", testRoot + gStyleSheet);
 
   let stateChanged = ContentTaskUtils.waitForEvent(
-    docShell.chromeEventHandler,
+    this,
     "StyleSheetApplicableStateChanged",
     true
   );
@@ -59,7 +59,7 @@ async function testBody(testRoot) {
   is(evt.applicable, true, "evt.applicable has the right value");
 
   stateChanged = ContentTaskUtils.waitForEvent(
-    docShell.chromeEventHandler,
+    this,
     "StyleSheetApplicableStateChanged",
     true
   );

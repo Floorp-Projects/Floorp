@@ -29,7 +29,7 @@ const TESTS = [
     category: "HTML",
     matchString: "multipart/form-data",
     onload: function() {
-      SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+      ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
         const form = content.document.querySelector("form");
         form.submit();
       });

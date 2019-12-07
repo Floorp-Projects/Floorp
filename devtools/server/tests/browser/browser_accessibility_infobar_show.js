@@ -13,7 +13,7 @@ add_task(async function() {
       url: MAIN_DOMAIN + "doc_accessibility_infobar.html",
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         const { require } = ChromeUtils.import(
           "resource://devtools/shared/Loader.jsm"
         );

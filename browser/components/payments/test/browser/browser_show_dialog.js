@@ -21,7 +21,7 @@ add_task(async function test_show_abort_dialog() {
       });
 
       // abort the payment request
-      SpecialPowers.spawn(browser, [], async () => content.rq.abort());
+      ContentTask.spawn(browser, null, async () => content.rq.abort());
       await BrowserTestUtils.waitForCondition(
         () => win.closed,
         "dialog should be closed"
@@ -116,9 +116,9 @@ add_task(async function test_show_completePayment() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 
@@ -178,13 +178,11 @@ add_task(async function test_show_completePayment2() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       });
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingoptionchange",
-          },
-        ],
+        {
+          eventName: "shippingoptionchange",
+        },
         PTU.ContentTasks.promisePaymentRequestEvent
       );
 
@@ -197,13 +195,11 @@ add_task(async function test_show_completePayment2() {
         "1"
       );
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingoptionchange",
-          },
-        ],
+        {
+          eventName: "shippingoptionchange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
       info("got shippingoptionchange event");
@@ -235,9 +231,9 @@ add_task(async function test_show_completePayment2() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 
@@ -294,7 +290,7 @@ add_task(async function test_localized() {
       });
 
       // abort the payment request
-      SpecialPowers.spawn(browser, [], async () => content.rq.abort());
+      ContentTask.spawn(browser, null, async () => content.rq.abort());
       await BrowserTestUtils.waitForCondition(
         () => win.closed,
         "dialog should be closed"

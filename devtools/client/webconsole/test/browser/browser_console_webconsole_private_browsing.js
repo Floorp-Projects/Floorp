@@ -80,7 +80,7 @@ add_task(async function() {
     hud,
     NON_PRIVATE_MESSAGE
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [NON_PRIVATE_MESSAGE], function(
+  ContentTask.spawn(gBrowser.selectedBrowser, NON_PRIVATE_MESSAGE, function(
     msg
   ) {
     content.console.log(msg);
@@ -124,7 +124,7 @@ add_task(async function() {
 });
 
 function logPrivateMessages(browser) {
-  SpecialPowers.spawn(browser, [], () => content.wrappedJSObject.logMessages());
+  ContentTask.spawn(browser, null, () => content.wrappedJSObject.logMessages());
 }
 
 function assertNoPrivateMessages(hud) {

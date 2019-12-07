@@ -359,9 +359,7 @@ async function prepareSubframes(browser, options) {
   browser.reload();
   await BrowserTestUtils.browserLoaded(browser);
 
-  await SpecialPowers.spawn(browser, [{ options, PAGE_URL }], async function(
-    args
-  ) {
+  await ContentTask.spawn(browser, { options, PAGE_URL }, async function(args) {
     let { options: allSubframeOptions, PAGE_URL: contentPageURL } = args;
     function loadBeforeUnloadHelper(doc, subframeOptions) {
       let subframe = doc.getElementById("subframe");

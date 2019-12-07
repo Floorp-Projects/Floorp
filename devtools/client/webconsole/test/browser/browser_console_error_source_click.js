@@ -24,7 +24,7 @@ add_task(async function() {
   }
 
   info("generate exception and wait for the message");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     const button = content.document.querySelector("button");
     button.click();
   });

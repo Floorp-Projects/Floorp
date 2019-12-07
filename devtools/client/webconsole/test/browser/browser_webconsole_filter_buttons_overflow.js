@@ -29,7 +29,7 @@ add_task(async function() {
   resizeWindow(750, win);
   await waitForFilterBarLayout(hud, ".wide");
   const onMessage = waitForMessage(hud, "world");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.console.log({ hello: "world" });
   });
   const { node } = await onMessage;

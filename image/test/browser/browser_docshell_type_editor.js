@@ -32,7 +32,7 @@ add_task(async function() {
       url: SIMPLE_HTML,
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         let rootDocShell = docShell
           .QueryInterface(Ci.nsIDocShellTreeItem)
           .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -87,7 +87,7 @@ add_task(async function() {
       url: SIMPLE_HTML,
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         let rootDocShell = docShell
           .QueryInterface(Ci.nsIDocShellTreeItem)
           .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)

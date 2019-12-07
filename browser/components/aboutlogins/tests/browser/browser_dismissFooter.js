@@ -79,7 +79,7 @@ add_task(async function test_open_links() {
     let promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, urlFinal);
     let browser = gBrowser.selectedBrowser;
 
-    await SpecialPowers.spawn(browser, [selector], async buttonClass => {
+    await ContentTask.spawn(browser, selector, async buttonClass => {
       let footer = Cu.waiveXrays(
         content.document
           .querySelector("login-item")
@@ -115,7 +115,7 @@ add_task(async function dismissFooter() {
 
   let browser = gBrowser.selectedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let footer = Cu.waiveXrays(
       content.document
         .querySelector("login-item")

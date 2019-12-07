@@ -44,7 +44,7 @@ var testSwitchToTab = async function(url, options) {
   is(browser.currentURI.spec, url, "correct URL loaded");
 
   // Check that we didn't lose any history entries.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     Assert.equal(history && history.count, 3, "three history entries");

@@ -15,7 +15,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessage = waitForMessage(hud, "Document");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(content.wrappedJSObject.document);
   });
 

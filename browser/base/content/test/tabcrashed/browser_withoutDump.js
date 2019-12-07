@@ -22,7 +22,7 @@ add_task(async function test_without_dump() {
 
       let tabClosingPromise = BrowserTestUtils.waitForTabClosing(tab);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
         Assert.ok(
           !doc.documentElement.classList.contains("crashDumpAvailable"),

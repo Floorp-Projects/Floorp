@@ -16,7 +16,7 @@ add_task(async function() {
 
   info("Reload the content window");
   const onNavigate = hud.currentTarget.once("navigate");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });
   await onNavigate;
