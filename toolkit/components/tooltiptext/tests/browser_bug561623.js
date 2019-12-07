@@ -6,7 +6,7 @@ add_task(async function() {
         "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>",
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [""], function() {
+      await ContentTask.spawn(browser, "", function() {
         let tttp = Cc[
           "@mozilla.org/embedcomp/default-tooltiptextprovider;1"
         ].getService(Ci.nsITooltipTextProvider);

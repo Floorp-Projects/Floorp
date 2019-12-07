@@ -25,10 +25,8 @@ add_task(async function() {
 
   // Wait for Activity Stream to add its panels
   await BrowserTestUtils.waitForCondition(() =>
-    SpecialPowers.spawn(
-      gBrowser.selectedTab.linkedBrowser,
-      [],
-      () => !!content.document.getElementById("homeContentsGroup")
+    ContentTask.spawn(gBrowser.selectedTab.linkedBrowser, {}, async () =>
+      content.document.getElementById("homeContentsGroup")
     )
   );
 

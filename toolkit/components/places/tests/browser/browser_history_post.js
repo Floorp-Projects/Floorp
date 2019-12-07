@@ -8,7 +8,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URI }, async function(
     aBrowser
   ) {
-    await SpecialPowers.spawn(aBrowser, [], async function() {
+    await ContentTask.spawn(aBrowser, null, async function() {
       let doc = content.document;
       let submit = doc.getElementById("submit");
       let iframe = doc.getElementById("post_iframe");

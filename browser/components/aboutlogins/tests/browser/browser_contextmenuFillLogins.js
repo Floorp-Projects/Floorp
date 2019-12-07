@@ -17,7 +17,7 @@ const gTests = [
     name: "test contextmenu on password field in create login view",
     async setup(browser) {
       // load up the create login view
-      await SpecialPowers.spawn(browser, [], async () => {
+      await ContentTask.spawn(browser, null, async () => {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
@@ -30,9 +30,9 @@ const gTests = [
     name: "test contextmenu on password field in edit login view",
     async setup(browser) {
       // load up the edit login view
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
+        LoginHelper.loginToVanillaObject(TEST_LOGIN1),
         async login => {
           let loginList = content.document.querySelector("login-list");
           let loginListItem = loginList.shadowRoot.querySelector(
@@ -73,7 +73,7 @@ async function openContextMenuForPasswordInput(browser) {
     "popupshown"
   );
 
-  let passwordInputCoords = await SpecialPowers.spawn(browser, [], async () => {
+  let passwordInputCoords = await ContentTask.spawn(browser, null, async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
     let passwordInput = loginItem.shadowRoot.querySelector(
@@ -122,7 +122,7 @@ async function openContextMenuForPasswordInput(browser) {
   eventDetails = { type: "contextmenu", button: 2 };
   await EventUtils.synthesizeMouseAtPoint(offsetX, offsetY, eventDetails);
 
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let event = await content.contextmenuPromise;
     // XXX the event target here is the login-item element,
     //     not the input[type='password'] in its shadowRoot

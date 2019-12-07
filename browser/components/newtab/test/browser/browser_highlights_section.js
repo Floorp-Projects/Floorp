@@ -11,7 +11,7 @@ function test_highlights(bookmarkCount, test) {
       if (bookmarkCount) {
         await addHighlightsBookmarks(bookmarkCount);
         // Wait for HighlightsFeed to update and display the items.
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+        await ContentTask.spawn(tab.linkedBrowser, null, async () => {
           await ContentTaskUtils.waitForCondition(
             () =>
               content.document.querySelector(".card-outer:not(.placeholder)"),

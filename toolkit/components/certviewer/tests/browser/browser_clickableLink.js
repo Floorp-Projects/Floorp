@@ -11,7 +11,7 @@ add_task(async function testClickableLink() {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, validCert);
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let crlEndpoints;
     await ContentTaskUtils.waitForCondition(() => {
       crlEndpoints = content.document

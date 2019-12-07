@@ -18,7 +18,7 @@ add_task(async function() {
 
   info("Reload the page");
   const onInitMessage = waitForMessage(hud, "hello world");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.location.reload();
   });
   await onInitMessage;

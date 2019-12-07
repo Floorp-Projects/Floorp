@@ -10,7 +10,7 @@ add_task(async function() {
 
   await new Promise(resolve => executeSoon(resolve));
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     is(content.document.activeElement, content.document.body, "body focused");
   });
 });

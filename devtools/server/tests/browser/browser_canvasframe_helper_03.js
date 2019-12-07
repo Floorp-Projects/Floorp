@@ -10,7 +10,7 @@ const TEST_URL =
 
 add_task(async function() {
   const browser = await addTab(TEST_URL);
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );

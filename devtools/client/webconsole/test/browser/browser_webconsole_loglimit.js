@@ -15,7 +15,7 @@ add_task(async function() {
   await clearOutput(hud);
 
   let onMessage = waitForMessage(hud, "test message [149]");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
     }
@@ -32,7 +32,7 @@ add_task(async function() {
   );
 
   onMessage = waitForMessage(hud, "hello world");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.console.log("hello world");
   });
   await onMessage;

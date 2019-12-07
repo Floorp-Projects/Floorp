@@ -10,6 +10,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
@@ -154,12 +157,11 @@ async function clickOn(selector, beforeContentFn) {
     URL
   );
 
-  let { SpecialPowers } = lastTab.ownerGlobal;
   if (beforeContentFn) {
-    await SpecialPowers.spawn(lastTab.linkedBrowser, [], beforeContentFn);
+    await ContentTask.spawn(lastTab.linkedBrowser, null, beforeContentFn);
   }
 
-  await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
+  await ContentTask.spawn(lastTab.linkedBrowser, selector, async function(arg) {
     E10SUtils.wrapHandlingUserInput(content, true, function() {
       let element = content.document.querySelector(arg);
       element.click();

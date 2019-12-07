@@ -16,9 +16,9 @@ async function test_ntp_theme(theme, isBrightText) {
 
   let browser = gBrowser.selectedBrowser;
 
-  let { originalBackground, originalColor } = await SpecialPowers.spawn(
+  let { originalBackground, originalColor } = await ContentTask.spawn(
     browser,
-    [],
+    {},
     function() {
       let doc = content.document;
       ok(
@@ -43,15 +43,13 @@ async function test_ntp_theme(theme, isBrightText) {
 
   Services.ppmm.sharedData.flush();
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [
-      {
-        isBrightText,
-        background: hexToCSS(theme.colors.ntp_background),
-        color: hexToCSS(theme.colors.ntp_text),
-      },
-    ],
+    {
+      isBrightText,
+      background: hexToCSS(theme.colors.ntp_background),
+      color: hexToCSS(theme.colors.ntp_text),
+    },
     function({ isBrightText, background, color }) {
       let doc = content.document;
       ok(
@@ -83,14 +81,12 @@ async function test_ntp_theme(theme, isBrightText) {
 
   Services.ppmm.sharedData.flush();
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [
-      {
-        originalBackground,
-        originalColor,
-      },
-    ],
+    {
+      originalBackground,
+      originalColor,
+    },
     function({ originalBackground, originalColor }) {
       let doc = content.document;
       ok(

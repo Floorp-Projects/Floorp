@@ -66,7 +66,7 @@ add_task(async function test_link_contextmenu() {
     );
 
   // Add a link to the page
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     let a = content.document.createElement("a");
     a.href = "https://www.example.org";
     a.id = "testingLink";

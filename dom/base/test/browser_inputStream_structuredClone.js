@@ -27,8 +27,6 @@ async function runTest(input, url) {
     "The length of the inputStream matches: " + input.length
   );
 
-  // FIXME: SpecialPowers.spawn currently crashes when trying to return
-  // values containing input streams.
   /* eslint-disable no-shadow */
   let dataBack = await ContentTask.spawn(browser, data, function(data) {
     let dataBack = {

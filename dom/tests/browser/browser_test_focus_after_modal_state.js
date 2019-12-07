@@ -30,7 +30,7 @@ add_task(async function() {
 
   // Focus on editable iframe.
   await BrowserTestUtils.synthesizeMouseAtCenter("#edit", {}, browser);
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     is(
       content.document.activeElement,
       content.document.getElementById("edit"),
@@ -57,13 +57,13 @@ add_task(async function() {
   let dialogShown = awaitAndClosePrompt();
   let waitForBlur = waitForMessage("Test:BlurReceived");
   let waitForFocus = waitForMessage("Test:FocusReceived");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let div = content.document.getElementById("clickMeDiv");
     div.click();
   });
   await dialogShown;
   await Promise.all([waitForBlur, waitForFocus]);
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     is(
       content.document.activeElement,
       content.document.getElementById("edit"),

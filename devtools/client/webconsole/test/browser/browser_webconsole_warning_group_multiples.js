@@ -274,7 +274,7 @@ const now = Date.now();
  */
 function emitContentBlockingMessage() {
   const url = `${CONTENT_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -285,7 +285,7 @@ function emitContentBlockingMessage() {
  */
 function emitStorageAccessBlockedMessage() {
   const url = `${STORAGE_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -298,7 +298,7 @@ function emitStorageAccessBlockedMessage() {
  */
 function logString(hud, str) {
   const onMessage = waitForMessage(hud, str);
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
+  ContentTask.spawn(gBrowser.selectedBrowser, str, function(arg) {
     content.console.log(arg);
   });
   return onMessage;

@@ -223,7 +223,7 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   }
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
   await sleep();
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, {}, async function() {
     const { FormLikeFactory } = ChromeUtils.import(
       "resource://gre/modules/FormLikeFactory.jsm"
     );
@@ -272,7 +272,7 @@ async function expectPopupClose(browser) {
 }
 
 async function closePopup(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, {}, async function() {
     content.document.activeElement.blur();
   });
 

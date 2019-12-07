@@ -126,7 +126,7 @@ async function testPlayWithoutUserGesture() {
     await canplayPromise;
     ok(video.paused, "video can't start without user input.");
   }
-  await SpecialPowers.spawn(tab.linkedBrowser, [], checkAutoplayKeyword);
+  await ContentTask.spawn(tab.linkedBrowser, null, checkAutoplayKeyword);
 
   async function playVideo() {
     let video = content.document.getElementById("v");
@@ -135,7 +135,7 @@ async function testPlayWithoutUserGesture() {
       ok(video.paused, "video can't start play without user input.");
     });
   }
-  await SpecialPowers.spawn(tab.linkedBrowser, [], playVideo);
+  await ContentTask.spawn(tab.linkedBrowser, null, playVideo);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
@@ -169,7 +169,7 @@ async function testPlayWithUserGesture(gesture) {
     }
   }
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [gesture], playVideo);
+  await ContentTask.spawn(tab.linkedBrowser, gesture, playVideo);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
@@ -210,7 +210,7 @@ function resumeWithoutExpectedSuccess() {
   let promise = ac.resume();
   ac.resumePromises.push(promise);
   return new Promise((resolve, reject) => {
-    content.setTimeout(() => {
+    setTimeout(() => {
       if (ac.state == "suspended") {
         ok(true, "audio context is still suspended");
         resolve();
@@ -243,9 +243,9 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- check whether audio context starts running -");
   try {
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       tab.linkedBrowser,
-      [],
+      null,
       checkingAudioContextRunningState
     );
   } catch (error) {
@@ -254,9 +254,9 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- calling resume() -");
   try {
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       tab.linkedBrowser,
-      [],
+      null,
       resumeWithoutExpectedSuccess
     );
   } catch (error) {
@@ -271,7 +271,7 @@ async function testWebAudioWithUserGesture(gesture) {
     let resumeFunc = gesture.isActivationGesture
       ? resumeWithExpectedSuccess
       : resumeWithoutExpectedSuccess;
-    await SpecialPowers.spawn(tab.linkedBrowser, [], resumeFunc);
+    await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
   } catch (error) {
     ok(false, error.toString());
   }

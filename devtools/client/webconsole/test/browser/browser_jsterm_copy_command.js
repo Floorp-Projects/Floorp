@@ -36,9 +36,9 @@ add_task(async function() {
   await testCopy(hud, JSON.stringify(string), string);
   await testCopy(hud, obj.toSource(), JSON.stringify(obj, null, "  "));
 
-  const outerHTML = await SpecialPowers.spawn(
+  const outerHTML = await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [id],
+    id,
     function(elementId) {
       return content.document.getElementById(elementId).outerHTML;
     }

@@ -50,7 +50,7 @@ function check_submit_pending(tab, crashes) {
     // loaded the crash report page
     ok(true, "got submission onload");
 
-    SpecialPowers.spawn(browser, [], function() {
+    ContentTask.spawn(browser, null, function() {
       // grab the Crash ID here to verify later
       let CrashID = content.location.search.split("=")[1];
       let CrashURL = content.location.toString();
@@ -124,7 +124,7 @@ function check_submit_pending(tab, crashes) {
     url => url !== "about:crashes"
   ).then(csp_onload);
   function csp_pageshow() {
-    SpecialPowers.spawn(browser, [{ CrashID, CrashURL }], function({
+    ContentTask.spawn(browser, { CrashID, CrashURL }, function({
       CrashID,
       CrashURL,
     }) {
@@ -155,7 +155,7 @@ function check_submit_pending(tab, crashes) {
     }
   }
 
-  SpecialPowers.spawn(browser, [SubmittedCrash.id], id => {
+  ContentTask.spawn(browser, SubmittedCrash.id, id => {
     const submitButton = content.document
       .getElementById(id)
       .getElementsByClassName("submit-button")[0];
@@ -187,8 +187,8 @@ function test() {
   );
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:crashes").then(tab => {
-    SpecialPowers.spawn(tab.linkedBrowser, [crashes], check_crash_list).then(
-      () => check_submit_pending(tab, crashes)
+    ContentTask.spawn(tab.linkedBrowser, crashes, check_crash_list).then(() =>
+      check_submit_pending(tab, crashes)
     );
   });
 }

@@ -49,7 +49,7 @@ add_task(async function testExportToClipboard() {
   await clearOutput(hud);
 
   info("Call the log function defined in the test page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.logStuff();
   });
 
@@ -73,7 +73,7 @@ add_task(async function testExportToFile() {
   await clearOutput(hud);
 
   info("Call the log function defined in the test page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.logStuff();
   });
 

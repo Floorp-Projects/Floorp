@@ -40,7 +40,7 @@ add_task(async function test_openPasswordSubDialog() {
 
   let dialogOpened = promiseLoadSubDialog(PM_URL);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
     let savePasswordCheckBox = doc.getElementById("savePasswords");
     Assert.ok(
@@ -87,7 +87,7 @@ add_task(async function test_deletePasswordWithKey() {
 add_task(async function subdialog_cleanup() {
   Services.telemetry.clearEvents();
   // Undo the save password change.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
     let savePasswordCheckBox = doc.getElementById("savePasswords");
     if (savePasswordCheckBox.checked) {
@@ -110,7 +110,7 @@ add_task(async function test_openPasswordManagement_overrideURI() {
 
   let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:logins");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
     let showPasswordsButton = doc.getElementById("showPasswords");
     showPasswordsButton.click();

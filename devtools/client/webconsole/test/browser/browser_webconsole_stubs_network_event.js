@@ -94,9 +94,7 @@ async function generateNetworkEventStubs() {
       packets.set(updateKey, getCleanedPacket(updateKey, packet));
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
-      subCode
-    ) {
+    await ContentTask.spawn(gBrowser.selectedBrowser, code, function(subCode) {
       const script = content.document.createElement("script");
       script.append(
         content.document.createTextNode(`function triggerPacket() {${subCode}}`)

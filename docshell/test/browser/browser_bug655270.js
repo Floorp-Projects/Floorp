@@ -34,7 +34,7 @@ function test() {
         is(aValue, faviconURL, "FaviconURL for original URI");
         // Ignore the promise returned here and wait for the next
         // onPageChanged notification.
-        SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+        ContentTask.spawn(tab.linkedBrowser, null, function() {
           content.history.pushState("", "", "?new_page");
         });
       }

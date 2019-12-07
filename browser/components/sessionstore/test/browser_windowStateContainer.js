@@ -71,7 +71,7 @@ add_task(async function() {
 
   // Test the last tab, which doesn't have userContextId.
   let browser = win2.gBrowser.tabs[4].linkedBrowser;
-  await SpecialPowers.spawn(browser, [{ expectedId: 0 }], async function(args) {
+  await ContentTask.spawn(browser, { expectedId: 0 }, async function(args) {
     Assert.equal(
       docShell.getOriginAttributes().userContextId,
       args.expectedId,

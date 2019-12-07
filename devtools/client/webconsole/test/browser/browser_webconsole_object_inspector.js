@@ -11,7 +11,7 @@ add_task(async function() {
 
   logAllStoreChanges(hud);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log("oi-test", [1, 2, { a: "a", b: "b" }], {
       c: "c",
       d: [3, 4],

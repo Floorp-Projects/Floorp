@@ -28,9 +28,9 @@ add_task(async function() {
         true,
         true
       );
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [{ base1: BASE1, base2: BASE2 }],
+        { base1: BASE1, base2: BASE2 },
         async function({ base1, base2 }) {
           let top = content;
           top.name = "top";

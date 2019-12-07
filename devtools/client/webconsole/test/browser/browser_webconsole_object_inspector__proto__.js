@@ -12,7 +12,7 @@ add_task(async function() {
 
   logAllStoreChanges(hud);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const obj = Object.create(null);
     // eslint-disable-next-line no-proto
     obj.__proto__ = [];

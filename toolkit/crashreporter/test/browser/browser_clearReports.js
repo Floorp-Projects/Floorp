@@ -103,7 +103,7 @@ add_task(async function test() {
         pendingdir.path,
       ];
 
-      SpecialPowers.spawn(browser, [], clickClearReports);
+      ContentTask.spawn(browser, null, clickClearReports);
       await BrowserTestUtils.waitForCondition(
         () =>
           content.document

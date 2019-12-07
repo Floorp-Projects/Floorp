@@ -12,17 +12,20 @@ SimpleTest.ignoreAllUncaughtExceptions(true);
 SimpleTest.requestCompleteLog();
 
 async function requestNotificationPermission(browser) {
-  return SpecialPowers.spawn(browser, [], () => {
+  return ContentTask.spawn(browser, null, () => {
     return content.Notification.requestPermission();
   });
 }
 
 async function requestCameraPermission(browser) {
-  return SpecialPowers.spawn(browser, [], () =>
-    content.navigator.mediaDevices
-      .getUserMedia({ video: true, fake: true })
-      .then(() => true, () => false)
-  );
+  return ContentTask.spawn(browser, null, () => {
+    return new Promise(resolve => {
+      content.navigator.mediaDevices
+        .getUserMedia({ video: true, fake: true })
+        .catch(resolve(false))
+        .then(resolve(true));
+    });
+  });
 }
 
 add_task(async function test_fullscreen_closes_permissionui_prompt() {
@@ -142,7 +145,7 @@ add_task(async function test_permission_prompt_closes_fullscreen() {
   let fullScreenExit = waitForFullScreenState(browser, false);
 
   info("Requesting notification permission");
-  requestNotificationPermission(browser).catch(() => {});
+  requestNotificationPermission(browser);
   await popupShown;
 
   info("Waiting for full-screen exit");
