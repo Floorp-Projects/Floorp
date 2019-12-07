@@ -12,13 +12,13 @@ BEGIN_TEST(testSABAccounting) {
 
   // Self-hosting and chrome code should not use SABs, or the point of this
   // predicate is completely lost.
-  CHECK(!JS_ContainsSharedArrayBuffer(cx));
+  CHECK(!JS::ContainsSharedArrayBuffer(cx));
 
   JS::RootedObject obj(cx), obj2(cx);
   CHECK(obj = JS::NewSharedArrayBuffer(cx, 4096));
-  CHECK(JS_ContainsSharedArrayBuffer(cx));
+  CHECK(JS::ContainsSharedArrayBuffer(cx));
   CHECK(obj2 = JS::NewSharedArrayBuffer(cx, 4096));
-  CHECK(JS_ContainsSharedArrayBuffer(cx));
+  CHECK(JS::ContainsSharedArrayBuffer(cx));
 
   // Discard those objects again.
   obj = nullptr;
@@ -27,7 +27,7 @@ BEGIN_TEST(testSABAccounting) {
   NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
 
   // Should be back to base state.
-  CHECK(!JS_ContainsSharedArrayBuffer(cx));
+  CHECK(!JS::ContainsSharedArrayBuffer(cx));
 
   return true;
 }
