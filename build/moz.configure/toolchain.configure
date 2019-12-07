@@ -1524,6 +1524,7 @@ option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
 def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
                               target):
     compiler_is_gccish = c_compiler.type in ('gcc', 'clang')
+    mingw_clang = c_compiler.type == 'clang' and target.os == 'WINNT'
 
     flags = []
     ldflags = []
@@ -1543,12 +1544,15 @@ def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
                 flags.append("-D_FORTIFY_SOURCE=2")
             js_flags.append("-U_FORTIFY_SOURCE")
             js_flags.append("-D_FORTIFY_SOURCE=2")
+            if mingw_clang:
+                # mingw-clang needs to link in ssp which is not done by default
+                ldflags.append('-lssp')
+                js_ldflags.append('-lssp')
 
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
         # not on as ASAN will catch the crashes for us
         # mingw-clang cross-compile toolchain has bugs with stack protector
-        mingw_clang = c_compiler.type == 'clang' and target.os == 'WINNT'
         if compiler_is_gccish and not asan:
             if not mingw_clang:
                 flags.append("-fstack-protector-strong")
