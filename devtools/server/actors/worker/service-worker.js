@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {
   serviceWorkerSpec,
@@ -20,11 +21,17 @@ const ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
       return null;
     }
 
+    // handlesFetchEvents is not available if the worker's main script is in the
+    // evaluating state.
+    const isEvaluating =
+      this._worker.state == Ci.nsIServiceWorkerInfo.STATE_PARSED;
+    const fetch = isEvaluating ? undefined : this._worker.handlesFetchEvents;
+
     return {
       actor: this.actorID,
       url: this._worker.scriptSpec,
       state: this._worker.state,
-      fetch: this._worker.handlesFetchEvents,
+      fetch,
       id: this._worker.id,
     };
   },
