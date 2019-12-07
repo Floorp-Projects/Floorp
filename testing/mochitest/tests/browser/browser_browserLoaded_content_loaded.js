@@ -3,7 +3,7 @@
 "use strict";
 
 function isDOMLoaded(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return ContentTask.spawn(browser, null, async function() {
     Assert.equal(
       content.document.readyState,
       "complete",

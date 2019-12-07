@@ -19,7 +19,7 @@ add_task(async function test_show_statuspanel_twice() {
   );
 
   let promise = promiseStatusPanelShown(window, TEST_STATUS_TEXT);
-  SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+  ContentTask.spawn(tab.linkedBrowser, null, async () => {
     content.document.links[0].focus();
   });
   await promise;

@@ -113,7 +113,7 @@ async function postFrom(start, target) {
       info("Test tab ready: postFrom " + start);
 
       // Create the form element in our loaded URI.
-      await SpecialPowers.spawn(browser, [{ target }], function({ target }) {
+      await ContentTask.spawn(browser, { target }, function({ target }) {
         // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = `
         <form method="post" action="${target}">
@@ -142,7 +142,7 @@ async function postFrom(start, target) {
           maybeErrorPage: true,
         },
         async () => {
-          await SpecialPowers.spawn(browser, [], () => {
+          await ContentTask.spawn(browser, null, () => {
             content.document.querySelector("#submit").click();
           });
         }
@@ -150,7 +150,7 @@ async function postFrom(start, target) {
 
       // Check that the POST data was submitted.
       info("Fetching results");
-      return SpecialPowers.spawn(browser, [], () => {
+      return ContentTask.spawn(browser, null, () => {
         return {
           remoteType: Services.appinfo.remoteType,
           location: "" + content.location.href,
@@ -181,7 +181,7 @@ async function loadAndGetProcessID(browser, target, expectedProcessSwitch) {
 
   info(`Navigated to: ${target}`);
   browser = gBrowser.selectedBrowser;
-  let processID = await SpecialPowers.spawn(browser, [], () => {
+  let processID = await ContentTask.spawn(browser, null, () => {
     return Services.appinfo.processID;
   });
   return processID;
@@ -202,7 +202,7 @@ async function testLoadAndRedirect(
       info("Test tab ready: getFrom " + start);
 
       let browser = gBrowser.selectedBrowser;
-      let firstProcessID = await SpecialPowers.spawn(browser, [], () => {
+      let firstProcessID = await ContentTask.spawn(browser, null, () => {
         return Services.appinfo.processID;
       });
 

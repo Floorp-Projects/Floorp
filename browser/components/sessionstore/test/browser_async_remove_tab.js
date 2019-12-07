@@ -33,7 +33,7 @@ function restoreClosedTabWithValue(rval) {
 }
 
 function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
-  return SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
+  return ContentTask.spawn(browser, snippet, async function(codeSnippet) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let shistory = webNavigation.sessionHistory.legacySHistory;
 
@@ -57,7 +57,7 @@ function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
       shistory.addSHistoryListener(listener);
 
       /* Keep the weak shistory listener alive. */
-      docShell.chromeEventHandler.addEventListener("unload", function() {
+      addEventListener("unload", function() {
         try {
           shistory.removeSHistoryListener(listener);
         } catch (e) {

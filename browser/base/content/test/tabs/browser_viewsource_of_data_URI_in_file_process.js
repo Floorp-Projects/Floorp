@@ -13,7 +13,7 @@ add_task(async function() {
   const uriString = Services.io.newFileURI(dir).spec;
 
   await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
-    let filePid = await SpecialPowers.spawn(fileBrowser, [], () => {
+    let filePid = await ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;
     });
 
@@ -26,7 +26,7 @@ add_task(async function() {
     BrowserTestUtils.loadURI(fileBrowser, DATA_URI);
     let href = await promiseLoad;
     is(href, DATA_URI, "Check data URI loaded.");
-    let dataPid = await SpecialPowers.spawn(fileBrowser, [], () => {
+    let dataPid = await ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;
     });
     is(dataPid, filePid, "Check that data URI loaded in file content process.");
@@ -38,9 +38,9 @@ add_task(async function() {
     registerCleanupFunction(async function() {
       BrowserTestUtils.removeTab(viewSourceTab);
     });
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       viewSourceTab.linkedBrowser,
-      [DATA_URI_SOURCE],
+      DATA_URI_SOURCE,
       uri => {
         is(
           content.document.documentURI,

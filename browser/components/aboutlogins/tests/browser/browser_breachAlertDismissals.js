@@ -31,7 +31,7 @@ add_task(async function setup() {
 
 add_task(async function test_show_login() {
   let browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let breachAlert = loginItem.shadowRoot.querySelector(".breach-alert");
     let breachAlertVisible = await ContentTaskUtils.waitForCondition(() => {

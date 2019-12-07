@@ -24,7 +24,9 @@ function getParentTabState(aTab) {
 }
 
 function getChildTabState(aTab) {
-  return ContentTask.spawn(aTab.linkedBrowser, null, () => docShell.isActive);
+  return ContentTask.spawn(aTab.linkedBrowser, {}, async function() {
+    return docShell.isActive;
+  });
 }
 
 function checkState(parentSide, childSide, value, message) {

@@ -31,13 +31,13 @@ async function testLink(link, name) {
 
   let winPromise = waitForNewWindow();
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [link], contentLink => {
+  ContentTask.spawn(gBrowser.selectedBrowser, link, contentLink => {
     content.document.getElementById(contentLink).click();
   });
 
   let win = await winPromise;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     Assert.equal(
       content.document.getElementById("unload-flag").textContent,
       "Okay",
@@ -57,7 +57,7 @@ async function testLink(link, name) {
 async function testLocation(link, url) {
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [link], contentLink => {
+  ContentTask.spawn(gBrowser.selectedBrowser, link, contentLink => {
     content.document.getElementById(contentLink).click();
   });
 

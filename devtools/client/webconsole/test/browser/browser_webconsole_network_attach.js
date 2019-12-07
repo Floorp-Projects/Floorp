@@ -21,7 +21,7 @@ add_task(async function task() {
   const netReady = monitor.panelWin.api.once("NetMonitor:PayloadReady");
 
   // Fire an XHR POST request.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrGet();
   });
 

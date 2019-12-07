@@ -86,7 +86,7 @@ async function toggleClassAndWaitForViewChange(
 ) {
   const onRefreshed = inspector.once(eventName);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [whatToMutate], function({
+  await ContentTask.spawn(tab.linkedBrowser, whatToMutate, function({
     target,
     className,
     force,

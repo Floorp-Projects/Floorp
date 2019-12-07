@@ -62,7 +62,7 @@ async function addJsonViewTab(
 
   // Catch RequireJS errors (usually timeouts)
   const error = tabLoaded.then(() =>
-    SpecialPowers.spawn(browser, [], function() {
+    ContentTask.spawn(browser, null, function() {
       return new Promise((resolve, reject) => {
         const { requirejs } = content.wrappedJSObject;
         if (requirejs) {

@@ -166,22 +166,18 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Create a sub-frame");
 
   let subframeURL = `${BASE}#subframe-url-1`;
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [subframeURL],
-    async url => {
-      const iframe = this.content.document.createElement("iframe");
-      iframe.setAttribute("id", "test-subframe");
-      iframe.setAttribute("src", url);
-      iframe.setAttribute("style", "height: 200px; width: 200px");
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
+    const iframe = this.content.document.createElement("iframe");
+    iframe.setAttribute("id", "test-subframe");
+    iframe.setAttribute("src", url);
+    iframe.setAttribute("style", "height: 200px; width: 200px");
 
-      // Await the initial url to be loaded in the subframe.
-      await new Promise(resolve => {
-        iframe.onload = resolve;
-        this.content.document.body.appendChild(iframe);
-      });
-    }
-  );
+    // Await the initial url to be loaded in the subframe.
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      this.content.document.body.appendChild(iframe);
+    });
+  });
 
   await BrowserTestUtils.waitForCondition(() => {
     return document.getElementById(pageActionId);
@@ -190,21 +186,15 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Navigating the sub-frame");
 
   subframeURL = `${BASE}/file_dummy.html#subframe-url-2`;
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [subframeURL],
-    async url => {
-      const iframe = this.content.document.querySelector(
-        "iframe#test-subframe"
-      );
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
+    const iframe = this.content.document.querySelector("iframe#test-subframe");
 
-      // Await the subframe navigation.
-      await new Promise(resolve => {
-        iframe.onload = resolve;
-        iframe.setAttribute("src", url);
-      });
-    }
-  );
+    // Await the subframe navigation.
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      iframe.setAttribute("src", url);
+    });
+  });
 
   info("Subframe location changed");
 

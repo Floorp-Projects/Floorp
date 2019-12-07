@@ -20,7 +20,7 @@ add_task(async function test() {
 });
 
 function promiseGetIndex(browser) {
-  return SpecialPowers.spawn(browser, [], function() {
+  return ContentTask.spawn(browser, null, function() {
     let shistory = docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsISHistory);

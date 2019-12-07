@@ -35,7 +35,7 @@ async function test_decoder_doctor_notification(
       "decoder-doctor-notification"
     );
 
-    await SpecialPowers.spawn(browser, [data], async function(aData) {
+    await ContentTask.spawn(browser, data, async function(aData) {
       Services.obs.notifyObservers(
         content.window,
         "decoder-doctor-notification",

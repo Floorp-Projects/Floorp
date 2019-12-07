@@ -17,7 +17,7 @@ add_task(async function() {
     let testDone = {};
     if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
       // 2.  Add a promise that will be resolved when the 'content viewer evicted' event goes off
-      testDone.promise = SpecialPowers.spawn(browser, [], async function() {
+      testDone.promise = ContentTask.spawn(browser, null, async function() {
         return new Promise(resolve => {
           let webNavigation = content.docShell.QueryInterface(
             Ci.nsIWebNavigation

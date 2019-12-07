@@ -16,7 +16,7 @@ add_task(async function test_open_import() {
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
-  await SpecialPowers.spawn(browser, [], async () => {
+  await ContentTask.spawn(browser, null, async () => {
     return ContentTaskUtils.waitForCondition(() => {
       let menuButton = Cu.waiveXrays(
         content.document.querySelector("menu-button")
@@ -30,7 +30,7 @@ add_task(async function test_open_import() {
   // thinks that the shadow DOM element is in another document and throws an exception
   // when trying to call element.ownerGlobal on the targeted shadow DOM node. This is
   // on file as bug 1557489. As a workaround, this manually calculates the position to click.
-  let { x, y } = await SpecialPowers.spawn(browser, [], async () => {
+  let { x, y } = await ContentTask.spawn(browser, null, async () => {
     let menuButton = Cu.waiveXrays(
       content.document.querySelector("menu-button")
     );

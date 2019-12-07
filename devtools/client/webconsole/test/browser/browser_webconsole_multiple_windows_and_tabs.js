@@ -42,7 +42,7 @@ add_task(async function() {
 
     // Log a message in the newly opened console.
     const onMessage = waitForMessage(hud, message);
-    await SpecialPowers.spawn(browser, [message], function(msg) {
+    await ContentTask.spawn(browser, message, function(msg) {
       content.console.log(msg);
     });
     await onMessage;

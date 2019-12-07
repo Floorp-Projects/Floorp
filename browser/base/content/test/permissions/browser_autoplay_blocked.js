@@ -209,7 +209,7 @@ add_task(async function testBFCache() {
     // Not sure why using `gBrowser.goForward()` doesn't trigger document's
     // visibility changes in some debug build on try server, which makes us not
     // to receive the blocked event.
-    await SpecialPowers.spawn(browser, [], () => {
+    await ContentTask.spawn(browser, null, () => {
       content.history.forward();
     });
     await blockedIconShown();

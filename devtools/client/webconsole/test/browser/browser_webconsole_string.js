@@ -15,7 +15,7 @@ add_task(async function() {
     messages: [{ text: "stringLog" }],
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.stringLog();
   });
   await receivedMessages;
