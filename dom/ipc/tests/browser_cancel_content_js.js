@@ -25,15 +25,13 @@ async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
     opening: TEST_PAGE,
   });
 
-  const loopEnded = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [],
-    async function() {
-      return new Promise(resolve => {
-        content.window.addEventListener("LongLoopEnded", resolve);
+  const loopEnded = ContentTask.spawn(tab.linkedBrowser, [], async function() {
+    await new Promise(resolve => {
+      content.addEventListener("LongLoopEnded", resolve, {
+        once: true,
       });
-    }
-  );
+    });
+  });
 
   // Wait for the test page's long-running JS loop to start; it happens ~500ms
   // after load.
