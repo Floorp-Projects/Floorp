@@ -684,7 +684,9 @@ const browsingContextTargetPrototype = {
   },
 
   pauseWorkersUntilAttach(shouldPause) {
-    this.ensureWorkerTargetActorList().setPauseMatchingWorkers(shouldPause);
+    this.ensureWorkerTargetActorList().workerPauser.setPauseMatching(
+      shouldPause
+    );
   },
 
   listWorkers(request) {
@@ -960,8 +962,7 @@ const browsingContextTargetPrototype = {
 
     // Make sure that no more workerListChanged notifications are sent.
     if (this._workerTargetActorList !== null) {
-      this._workerTargetActorList.onListChanged = null;
-      this._workerTargetActorList.setPauseMatchingWorkers(false);
+      this._workerTargetActorList.destroy();
       this._workerTargetActorList = null;
     }
 

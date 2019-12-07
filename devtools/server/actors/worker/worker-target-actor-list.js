@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(
   this,
@@ -37,31 +38,64 @@ function matchWorkerDebugger(dbg, options) {
   return true;
 }
 
+function matchServiceWorker(dbg, origin) {
+  return (
+    dbg.type == Ci.nsIWorkerDebugger.TYPE_SERVICE &&
+    new URL(dbg.url).origin == origin
+  );
+}
+
 // When a new worker appears, in some cases (i.e. the debugger is running) we
 // want it to pause during registration until a later time (i.e. the debugger
 // finishes attaching to the worker). This is an optional WorkderDebuggerManager
 // listener that can be installed in addition to the WorkerTargetActorList
-// listener. It always listens to new workers and pauses any which are matched
-// by the WorkerTargetActorList.
-function PauseMatchingWorkers(options) {
+// listener. It always listens to new workers and pauses any matching filters
+// which have been set on it.
+//
+// Two kinds of filters are supported:
+//
+// setPauseMatching(true) will pause all workers which match the options strcut
+// passed in on creation.
+//
+// setPauseServiceWorkers(origin) will pause all service workers which have the
+// specified origin.
+//
+// FIXME Bug 1601279 separate WorkerPauser from WorkerTargetActorList and give
+// it a more consistent interface.
+function WorkerPauser(options) {
   this._options = options;
+  this._pauseMatching = null;
+  this._pauseServiceWorkerOrigin = null;
+
   this.onRegister = this._onRegister.bind(this);
   this.onUnregister = () => {};
 
   wdm.addListener(this);
 }
 
-PauseMatchingWorkers.prototype = {
+WorkerPauser.prototype = {
   destroy() {
     wdm.removeListener(this);
   },
 
   _onRegister(dbg) {
-    if (matchWorkerDebugger(dbg, this._options)) {
+    if (
+      (this._pauseMatching && matchWorkerDebugger(dbg, this._options)) ||
+      (this._pauseServiceWorkerOrigin &&
+        matchServiceWorker(dbg, this._pauseServiceWorkerOrigin))
+    ) {
       // Prevent the debuggee from executing in this worker until the debugger
       // has finished attaching to it.
       dbg.setDebuggerReady(false);
     }
+  },
+
+  setPauseMatching(shouldPause) {
+    this._pauseMatching = shouldPause;
+  },
+
+  setPauseServiceWorkers(origin) {
+    this._pauseServiceWorkerOrigin = origin;
   },
 };
 
@@ -70,13 +104,21 @@ function WorkerTargetActorList(conn, options) {
   this._options = options;
   this._actors = new Map();
   this._onListChanged = null;
-  this._pauseMatchingWorkers = null;
+  this._workerPauser = null;
   this._mustNotify = false;
   this.onRegister = this.onRegister.bind(this);
   this.onUnregister = this.onUnregister.bind(this);
 }
 
 WorkerTargetActorList.prototype = {
+  destroy() {
+    this.onListChanged = null;
+    if (this._workerPauser) {
+      this._workerPauser.destroy();
+      this._workerPauser = null;
+    }
+  },
+
   getList() {
     // Create a set of debuggers.
     const dbgs = new Set();
@@ -159,15 +201,11 @@ WorkerTargetActorList.prototype = {
     }
   },
 
-  setPauseMatchingWorkers(shouldPause) {
-    if (shouldPause != !!this._pauseMatchingWorkers) {
-      if (shouldPause) {
-        this._pauseMatchingWorkers = new PauseMatchingWorkers(this._options);
-      } else {
-        this._pauseMatchingWorkers.destroy();
-        this._pauseMatchingWorkers = null;
-      }
+  get workerPauser() {
+    if (!this._workerPauser) {
+      this._workerPauser = new WorkerPauser(this._options);
     }
+    return this._workerPauser;
   },
 };
 
