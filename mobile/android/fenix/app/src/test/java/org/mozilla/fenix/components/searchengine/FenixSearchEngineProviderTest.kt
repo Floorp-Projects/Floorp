@@ -1,36 +1,44 @@
 package org.mozilla.fenix.components.searchengine
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.SearchEngineList
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider.Companion.INSTALLED_ENGINES_KEY
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.util.UUID
 
 @ExperimentalCoroutinesApi
+@RunWith(RobolectricTestRunner::class)
+@Config(application = TestApplication::class)
 class FenixSearchEngineProviderTest {
 
-    private val testContext = mockk<Context>()
+//    private val testContext = mockk<Context>()
 
     private lateinit var fenixSearchEngineProvider: FenixSearchEngineProvider
 
     @Before
     fun before() {
+//        mockSharedPreferences(installedEngines = null)
         fenixSearchEngineProvider = FakeFenixSearchEngineProvider(testContext)
-
-        every {
-            testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE, Context.MODE_PRIVATE)
-        } returns mockk(relaxed = true)
     }
 
     /*
@@ -42,18 +50,36 @@ class FenixSearchEngineProviderTest {
      */
 
     @Test
-    fun `temp test class inits`() = runBlockingTest {
-        val t = fenixSearchEngineProvider.loadSearchEngines(testContext)
+    fun `GIVEN sharedprefs does not ontain installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
+        val expectedDefaults = fenixSearchEngineProvider.baseSearchEngines.toIdSet()
+        val expectedCustom = fenixSearchEngineProvider.customSearchEngines.toIdSet()
+        val expected = expectedDefaults + expectedCustom
 
-        println(t)
+        val actual = fenixSearchEngineProvider.installedSearchEngineIdentifiers(testContext)
+        assertEquals(expected, actual)
     }
 
+    @Test
+    fun `GIVEN sharedprefs contains installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
+        val sp = testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE, Context.MODE_PRIVATE)
+        sp.edit().putStringSet(INSTALLED_ENGINES_KEY, STORED_INSTALLED_ENGINES).apply()
 
+        val expectedStored = STORED_INSTALLED_ENGINES
+        val expectedCustom = fenixSearchEngineProvider.customSearchEngines.toIdSet()
+        val expected = expectedStored + expectedCustom
 
+        val actual = fenixSearchEngineProvider.installedSearchEngineIdentifiers(testContext)
+        assertEquals(expected, actual)
+    }
 }
 
+private suspend fun Deferred<SearchEngineList>.toIdSet() =
+    await().list.map { it.identifier }.toSet()
+
+private val STORED_INSTALLED_ENGINES = setOf("bing", "ecosia")
+
 class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvider(context) {
-    override val defaultEngines: Deferred<SearchEngineList>
+    override val baseSearchEngines: Deferred<SearchEngineList>
         get() {
             val google = mockSearchEngine(id = "google-b-1-m", n = "Google")
 
@@ -68,7 +94,7 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
             )
         }
 
-    override val bundledEngines = CompletableDeferred(
+    override val bundledSearchEngines = CompletableDeferred(
         SearchEngineList(
             listOf(
                 mockSearchEngine("ecosia", "Ecosia"),
@@ -78,7 +104,7 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
         )
     )
 
-    override var customEngines: Deferred<SearchEngineList>
+    override var customSearchEngines: Deferred<SearchEngineList>
         get() {
             return CompletableDeferred(
                 SearchEngineList(
