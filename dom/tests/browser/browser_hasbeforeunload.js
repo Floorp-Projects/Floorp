@@ -226,7 +226,7 @@ function removeSubframeFrom(browser, frameDepth = 0) {
  * @return {Promise}
  */
 function controlFrameAt(browser, frameDepth, command) {
-  return SpecialPowers.spawn(browser, [{ frameDepth, command }], async function(
+  return ContentTask.spawn(browser, { frameDepth, command }, async function(
     args
   ) {
     ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
@@ -313,7 +313,7 @@ function controlFrameAt(browser, frameDepth, command) {
         break;
       }
     }
-  }).catch(Cu.reportError);
+  });
 }
 
 /**
