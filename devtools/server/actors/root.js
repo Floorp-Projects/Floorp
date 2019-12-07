@@ -194,7 +194,7 @@ RootActor.prototype = {
       this._parameters.addonList.onListChanged = null;
     }
     if (this._parameters.workerList) {
-      this._parameters.workerList.onListChanged = null;
+      this._parameters.workerList.destroy();
     }
     if (this._parameters.serviceWorkerRegistrationList) {
       this._parameters.serviceWorkerRegistrationList.onListChanged = null;
