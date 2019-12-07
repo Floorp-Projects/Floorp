@@ -68,11 +68,11 @@ add_task(async function moving_works() {
   await BrowserTestUtils.closeWindow(newWin);
 
   tab = BrowserTestUtils.addTab(gBrowser, BROWSER_NEW_TAB_URL);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
     });
-  }).catch(Cu.reportError);
+  });
 
   ok(true, "Managed to open a tab in the original window still.");
 
