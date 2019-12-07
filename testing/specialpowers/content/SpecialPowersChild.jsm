@@ -1709,12 +1709,17 @@ class SpecialPowersChild extends JSWindowActorChild {
 
     sb.sandbox.SpecialPowers = this;
     sb.sandbox.ContentTaskUtils = ContentTaskUtils;
-    Object.defineProperty(sb.sandbox, "content", {
-      get: () => {
-        return this.contentWindow;
-      },
-      enumerable: true,
-    });
+    for (let [global, prop] of Object.entries({
+      content: "contentWindow",
+      docShell: "docShell",
+    })) {
+      Object.defineProperty(sb.sandbox, global, {
+        get: () => {
+          return this[prop];
+        },
+        enumerable: true,
+      });
+    }
 
     return sb.execute(task, args, caller);
   }
