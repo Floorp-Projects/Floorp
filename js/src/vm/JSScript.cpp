@@ -1186,16 +1186,14 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     RootedObject functionOrGlobal(cx,
                                   fun ? static_cast<JSObject*>(fun)
                                       : static_cast<JSObject*>(cx->global()));
-    script =
-        JSScript::Create(cx, functionOrGlobal, *options, sourceObject,
-                         sourceStart, sourceEnd, toStringStart, toStringEnd);
+    script = JSScript::Create(cx, functionOrGlobal, *options, sourceObject,
+                              sourceStart, sourceEnd, toStringStart,
+                              toStringEnd, lineno, column);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
     scriptp.set(script);
 
-    script->lineno_ = lineno;
-    script->column_ = column;
     script->immutableFlags_ = immutableFlags;
 
     if (script->argumentsHasVarBinding()) {
@@ -4266,15 +4264,19 @@ void PrivateScriptData::trace(JSTracer* trc) {
 JSScript::JSScript(HandleObject functionOrGlobal, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
-                   uint32_t toStringEnd)
+                   uint32_t toStringEnd, uint32_t lineno, uint32_t column)
     : js::BaseScript(stubEntry, functionOrGlobal, sourceObject, sourceStart,
-                     sourceEnd, toStringStart, toStringEnd) {}
+                     sourceEnd, toStringStart, toStringEnd) {
+  lineno_ = lineno;
+  column_ = column;
+}
 
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         HandleScriptSourceObject sourceObject,
                         uint32_t sourceStart, uint32_t sourceEnd,
-                        uint32_t toStringStart, uint32_t toStringEnd) {
+                        uint32_t toStringStart, uint32_t toStringEnd,
+                        uint32_t lineno, uint32_t column) {
   void* script = Allocate<JSScript>(cx);
   if (!script) {
     return nullptr;
@@ -4288,7 +4290,7 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
 
   return new (script)
       JSScript(functionOrGlobal, stubEntry, sourceObject, sourceStart,
-               sourceEnd, toStringStart, toStringEnd);
+               sourceEnd, toStringStart, toStringEnd, lineno, column);
 }
 
 static bool ShouldTrackRecordReplayProgress(JSScript* script) {
@@ -4307,10 +4309,11 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                            const ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
                            uint32_t sourceStart, uint32_t sourceEnd,
-                           uint32_t toStringStart, uint32_t toStringEnd) {
+                           uint32_t toStringStart, uint32_t toStringEnd,
+                           uint32_t lineno, uint32_t column) {
   RootedScript script(
       cx, JSScript::New(cx, functionOrGlobal, sourceObject, sourceStart,
-                        sourceEnd, toStringStart, toStringEnd));
+                        sourceEnd, toStringStart, toStringEnd, lineno, column));
   if (!script) {
     return nullptr;
   }
@@ -4332,10 +4335,10 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                                                 Handle<LazyScript*> lazy) {
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
   RootedObject fun(cx, lazy->function());
-  RootedScript script(cx,
-                      JSScript::New(cx, fun, sourceObject, lazy->sourceStart(),
-                                    lazy->sourceEnd(), lazy->toStringStart(),
-                                    lazy->toStringEnd()));
+  RootedScript script(
+      cx, JSScript::New(cx, fun, sourceObject, lazy->sourceStart(),
+                        lazy->sourceEnd(), lazy->toStringStart(),
+                        lazy->toStringEnd(), lazy->lineno(), lazy->column()));
   if (!script) {
     return nullptr;
   }
@@ -4470,9 +4473,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  // Initialize POD fields
-  script->lineno_ = bce->firstLine;
-  script->column_ = bce->firstColumn;
+  MOZ_ASSERT(script->lineno_ == bce->firstLine);
+  MOZ_ASSERT(script->column_ == bce->firstColumn);
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
@@ -5071,14 +5073,13 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   RootedScript dst(cx,
                    JSScript::Create(cx, functionOrGlobal, options, sourceObject,
                                     src->sourceStart(), src->sourceEnd(),
-                                    src->toStringStart(), src->toStringEnd()));
+                                    src->toStringStart(), src->toStringEnd(),
+                                    src->lineno(), src->column()));
   if (!dst) {
     return nullptr;
   }
 
   // Copy POD fields
-  dst->lineno_ = src->lineno();
-  dst->column_ = src->column();
   dst->immutableFlags_ = src->immutableFlags();
 
   dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,

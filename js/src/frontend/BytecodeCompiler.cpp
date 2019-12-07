@@ -456,9 +456,10 @@ bool BytecodeCompiler::internalCreateScript(HandleObject functionOrGlobal,
                                             uint32_t toStringStart,
                                             uint32_t toStringEnd,
                                             uint32_t sourceBufferLength) {
-  script = JSScript::Create(cx, functionOrGlobal, options, sourceObject,
-                            /* sourceStart = */ 0, sourceBufferLength,
-                            toStringStart, toStringEnd);
+  script =
+      JSScript::Create(cx, functionOrGlobal, options, sourceObject,
+                       /* sourceStart = */ 0, sourceBufferLength, toStringStart,
+                       toStringEnd, options.lineno, options.column);
   return script != nullptr;
 }
 
@@ -759,7 +760,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   RootedScript script(cx, JSScript::Create(cx, cx->global(), options, sourceObj,
-                                           0, len, 0, len));
+                                           0, len, 0, len, 0, 0));
 
   if (!script) {
     return nullptr;
@@ -1088,10 +1089,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   RootedScriptSourceObject sourceObj(cx, lazy->sourceObject());
   MOZ_ASSERT(sourceObj);
 
-  RootedScript script(
-      cx, JSScript::Create(cx, fun, options, sourceObj, lazy->sourceStart(),
-                           lazy->sourceEnd(), lazy->sourceStart(),
-                           lazy->sourceEnd()));
+  RootedScript script(cx, JSScript::CreateFromLazy(cx, lazy));
 
   if (!script) {
     return false;
