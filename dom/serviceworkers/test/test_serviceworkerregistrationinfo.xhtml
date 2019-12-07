@@ -52,29 +52,36 @@
 
               return waitForServiceWorkerRegistrationChange(registration, function  () {
                 is(registration.scriptSpec, EXAMPLE_URL + "worker.js");
-                ok(registration.installingWorker !== null);
-                is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker.js");
+                ok(registration.evaluatingWorker !== null);
+                ok(registration.installingWorker === null);
                 ok(registration.waitingWorker === null);
                 ok(registration.activeWorker === null);
 
-                return waitForServiceWorkerRegistrationChange(registration, function () {
-                  ok(registration.installingWorker === null);
-                  ok(registration.waitingWorker !== null);
+                return waitForServiceWorkerRegistrationChange(registration, function  () {
+                  ok(registration.installingWorker !== null);
+                  is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker.js");
+                  ok(registration.waitingWorker === null);
                   ok(registration.activeWorker === null);
 
                   return waitForServiceWorkerRegistrationChange(registration, function () {
-                    // Activating
                     ok(registration.installingWorker === null);
-                    ok(registration.waitingWorker === null);
-                    ok(registration.activeWorker !== null);
+                    ok(registration.waitingWorker !== null);
+                    ok(registration.activeWorker === null);
 
                     return waitForServiceWorkerRegistrationChange(registration, function () {
-                      // Activated
+                      // Activating
                       ok(registration.installingWorker === null);
                       ok(registration.waitingWorker === null);
                       ok(registration.activeWorker !== null);
 
-                      return registration;
+                      return waitForServiceWorkerRegistrationChange(registration, function () {
+                        // Activated
+                        ok(registration.installingWorker === null);
+                        ok(registration.waitingWorker === null);
+                        ok(registration.activeWorker !== null);
+
+                        return registration;
+                      });
                     });
                   });
                 });
@@ -90,31 +97,35 @@
             ok(registration.waitingWorker === null);
             ok(registration.activeWorker !== null);
 
-            return waitForServiceWorkerRegistrationChange(registration, function () {
+            return waitForServiceWorkerRegistrationChange(registration, function  () {
               is(registration.scriptSpec, EXAMPLE_URL + "worker2.js");
-              ok(registration.installingWorker !== null);
-              is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker2.js");
-              ok(registration.waitingWorker === null);
-              ok(registration.activeWorker !== null);
+              ok(registration.evaluatingWorker !== null);
 
               return waitForServiceWorkerRegistrationChange(registration, function () {
-                ok(registration.installingWorker === null);
-                ok(registration.waitingWorker !== null);
+                ok(registration.installingWorker !== null);
+                is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker2.js");
+                ok(registration.waitingWorker === null);
                 ok(registration.activeWorker !== null);
 
                 return waitForServiceWorkerRegistrationChange(registration, function () {
-                  // Activating
                   ok(registration.installingWorker === null);
-                  ok(registration.waitingWorker === null);
+                  ok(registration.waitingWorker !== null);
                   ok(registration.activeWorker !== null);
 
                   return waitForServiceWorkerRegistrationChange(registration, function () {
-                    // Activated
+                    // Activating
                     ok(registration.installingWorker === null);
                     ok(registration.waitingWorker === null);
                     ok(registration.activeWorker !== null);
 
-                    return registration;
+                    return waitForServiceWorkerRegistrationChange(registration, function () {
+                      // Activated
+                      ok(registration.installingWorker === null);
+                      ok(registration.waitingWorker === null);
+                      ok(registration.activeWorker !== null);
+
+                      return registration;
+                    });
                   });
                 });
               });
