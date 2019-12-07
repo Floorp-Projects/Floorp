@@ -18,6 +18,9 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/Assert.jsm"
 );
 
+// Note: When updating the set of globals exposed to sandboxes by
+// default, please also update the ESLint plugin rule defined in
+// import-content-task-globals.js.
 const SANDBOX_GLOBALS = [
   "Blob",
   "ChromeUtils",
@@ -25,6 +28,10 @@ const SANDBOX_GLOBALS = [
   "TextEncoder",
   "URL",
 ];
+const EXTRA_IMPORTS = {
+  EventUtils: "resource://specialpowers/SpecialPowersEventUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+};
 
 let expectFail = false;
 function expectingFail(fn) {
@@ -62,14 +69,16 @@ class SpecialPowersSandbox {
     }
 
     let imports = {
-      EventUtils: "resource://specialpowers/SpecialPowersEventUtils.jsm",
-      Services: "resource://gre/modules/Services.jsm",
+      ...EXTRA_IMPORTS,
       ...opts.imports,
     };
     for (let [symbol, url] of Object.entries(imports)) {
       ChromeUtils.defineModuleGetter(this.sandbox, symbol, url);
     }
 
+    // Note: When updating the set of globals exposed to sandboxes by
+    // default, please also update the ESLint plugin rule defined in
+    // import-content-task-globals.js.
     Object.assign(this.sandbox, {
       BrowsingContext,
       InspectorUtils,
