@@ -18,6 +18,14 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/Assert.jsm"
 );
 
+const SANDBOX_GLOBALS = [
+  "Blob",
+  "ChromeUtils",
+  "TextDecoder",
+  "TextEncoder",
+  "URL",
+];
+
 let expectFail = false;
 function expectingFail(fn) {
   try {
@@ -38,7 +46,7 @@ class SpecialPowersSandbox {
     this.sandbox = Cu.Sandbox(
       Cu.getGlobalForObject({}),
       Object.assign(
-        { wantGlobalProperties: ["ChromeUtils"] },
+        { wantGlobalProperties: SANDBOX_GLOBALS },
         opts.sandboxOptions
       )
     );
@@ -53,11 +61,18 @@ class SpecialPowersSandbox {
       });
     }
 
-    for (let [symbol, url] of Object.entries(opts.imports || {})) {
+    let imports = {
+      EventUtils: "resource://specialpowers/SpecialPowersEventUtils.jsm",
+      Services: "resource://gre/modules/Services.jsm",
+      ...opts.imports,
+    };
+    for (let [symbol, url] of Object.entries(imports)) {
       ChromeUtils.defineModuleGetter(this.sandbox, symbol, url);
     }
 
     Object.assign(this.sandbox, {
+      BrowsingContext,
+      InspectorUtils,
       ok: (...args) => {
         this.Assert.ok(...args);
       },
