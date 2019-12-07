@@ -11,7 +11,7 @@ add_task(async function() {
 
   const willNavigate = once(target, "will-navigate");
   const navigate = once(target, "navigate");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.location = "data:text/html,<meta charset='utf8'/>test navigation";
   });
   await willNavigate;

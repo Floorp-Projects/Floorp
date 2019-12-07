@@ -32,7 +32,7 @@ add_task(async function() {
 
   info("Logging a message in the content window");
   const onLogMessage = waitForMessage(hud, "simple text message");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("simple text message");
   });
   const logMessage = await onLogMessage;
@@ -45,7 +45,7 @@ add_task(async function() {
 
   info("Logging multiple messages to make the output overflow");
   const onLastMessage = waitForMessage(hud, "message-100");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     for (let i = 1; i <= 100; i++) {
       content.wrappedJSObject.console.log("message-" + i);
     }

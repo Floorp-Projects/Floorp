@@ -44,10 +44,8 @@ add_task(async function setup() {
 // with properties that the AddonInstall object is expected to have when
 // that event is triggered.
 async function testInstall(browser, args, steps, description) {
-  let success = await ContentTask.spawn(
-    browser,
-    { args, steps },
-    async function(opts) {
+  let success = await SpecialPowers.spawn(
+    browser, [{ args, steps }], async function(opts) {
       let { args, steps } = opts;
       let install = await content.navigator.mozAddonManager.createInstall(args);
       if (!install) {
@@ -382,7 +380,7 @@ add_task(
 add_task(async function test_permissions() {
   function testBadUrl(url, pattern, successMessage) {
     return BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
-      let result = await ContentTask.spawn(browser, { url, pattern }, function(
+      let result = await SpecialPowers.spawn(browser, [{ url, pattern }], function(
         opts
       ) {
         return new Promise(resolve => {

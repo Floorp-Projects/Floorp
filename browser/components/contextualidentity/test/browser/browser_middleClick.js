@@ -15,7 +15,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Create a HTMLAnchorElement...");
-  await ContentTask.spawn(browser, URI, function(uri) {
+  await SpecialPowers.spawn(browser, [URI], function(uri) {
     let anchor = content.document.createElement("a");
     anchor.setAttribute("id", "clickMe");
     anchor.setAttribute("href", uri);

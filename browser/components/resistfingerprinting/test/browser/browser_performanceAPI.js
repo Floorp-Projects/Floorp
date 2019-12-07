@@ -100,15 +100,13 @@ let setupTest = async function(
   if (resistFingerprinting) {
     expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
   }
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{
       list: PERFORMANCE_TIMINGS,
       precision: expectedPrecision,
       isRoundedFunc: isRounded.toString(),
       workerCall,
-    },
-    runTests
+    }], runTests
   );
 };
 // ================================================================================================

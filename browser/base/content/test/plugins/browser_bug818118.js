@@ -46,7 +46,7 @@ add_task(async function() {
   );
   ok(!pluginInfo.activated, "plugin should not be activated");
 
-  await ContentTask.spawn(gTestBrowser, null, () => {
+  await SpecialPowers.spawn(gTestBrowser, [], () => {
     let unknown = content.document.getElementById("unknown");
     ok(unknown, "should have unknown plugin in page");
   });

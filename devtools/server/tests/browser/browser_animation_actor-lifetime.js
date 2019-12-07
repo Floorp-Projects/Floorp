@@ -54,10 +54,8 @@ add_task(async function setup() {
   );
 
   async function assertNumberOfAnimationActors(expected, message) {
-    const actors = await ContentTask.spawn(
-      gBrowser.selectedBrowser,
-      [animations.actorID],
-      function(actorID) {
+    const actors = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser, [[animations.actorID]], function(actorID) {
         const { require } = ChromeUtils.import(
           "resource://devtools/shared/Loader.jsm"
         );

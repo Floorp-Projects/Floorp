@@ -402,7 +402,7 @@ async function loadBadCertPage(url) {
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
   await loaded;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.document.getElementById("exceptionDialogButton").click();
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

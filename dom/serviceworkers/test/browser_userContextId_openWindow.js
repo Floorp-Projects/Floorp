@@ -104,7 +104,7 @@ add_task(async function test() {
 
   // here the test.
   /* eslint-disable no-shadow */
-  let uci = await ContentTask.spawn(browser, URI, uri => {
+  let uci = await SpecialPowers.spawn(browser, [URI], uri => {
     let uci = content.document.nodePrincipal.userContextId;
 
     // Registration of the SW
@@ -145,7 +145,7 @@ add_task(async function test() {
 
   // wait for SW unregistration
   /* eslint-disable no-shadow */
-  uci = await ContentTask.spawn(browser, null, () => {
+  uci = await SpecialPowers.spawn(browser, [], () => {
     let uci = content.document.nodePrincipal.userContextId;
 
     return content.navigator.serviceWorker

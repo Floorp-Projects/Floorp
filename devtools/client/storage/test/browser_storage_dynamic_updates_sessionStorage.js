@@ -58,7 +58,7 @@ add_task(async function() {
   await findVariableViewProperties([{ name: "ss2", value: "changed=ss2" }]);
 
   // Clearing items.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.clear();
   });
 
@@ -70,17 +70,15 @@ add_task(async function() {
 });
 
 async function setSessionStorageItem(key, value) {
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [key, value],
-    ([innerKey, innerValue]) => {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[key, value]], ([innerKey, innerValue]) => {
       content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
     }
   );
 }
 
 async function removeSessionStorageItem(key) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, key, innerKey => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [key], innerKey => {
     content.wrappedJSObject.sessionStorage.removeItem(innerKey);
   });
 }

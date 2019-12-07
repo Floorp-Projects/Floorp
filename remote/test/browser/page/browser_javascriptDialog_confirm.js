@@ -35,7 +35,7 @@ function createConfirmDialog(Page) {
   const onDialogOpen = Page.javascriptDialogOpening();
 
   info("Trigger a confirm in the test page");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.isConfirmed = content.confirm("confirm-1234?");
   });
 

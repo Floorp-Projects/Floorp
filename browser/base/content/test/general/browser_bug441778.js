@@ -42,7 +42,7 @@ function test() {
             resolve()
           );
         });
-        ContentTask.spawn(testBrowser, TEST_IFRAME_URL, url => {
+        SpecialPowers.spawn(testBrowser, [TEST_IFRAME_URL], url => {
           content.document.querySelector("iframe").src = url;
         });
       });

@@ -32,10 +32,8 @@ const finish_test = async function(count) {
   is(count, 0, "No add-ons should have been installed");
   PermissionTestUtils.remove("http://example.com", "install");
 
-  const results = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    () => {
+  const results = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], () => {
       return {
         return: content.document.getElementById("return").textContent,
         status: content.document.getElementById("status").textContent,

@@ -17,7 +17,7 @@ async function sendMessages(receiver) {
   const channelName = "contextualidentity-broadcastchannel";
 
   // reflect the received message on title
-  await ContentTask.spawn(receiver.browser, channelName, function(name) {
+  await SpecialPowers.spawn(receiver.browser, [channelName], function(name) {
     content.testPromise = new content.Promise(resolve => {
       content.bc = new content.BroadcastChannel(name);
       content.bc.onmessage = function(e) {
@@ -35,10 +35,8 @@ async function sendMessages(receiver) {
   // send a message from a tab in different user context first
   // then send a message from a tab in the same user context
   for (const sender of [sender1, sender2]) {
-    await ContentTask.spawn(
-      sender.browser,
-      { name: channelName, message: sender.message },
-      function(opts) {
+    await SpecialPowers.spawn(
+      sender.browser, [{ name: channelName, message: sender.message }], function(opts) {
         const bc = new content.BroadcastChannel(opts.name);
         bc.postMessage(opts.message);
       }
@@ -55,7 +53,7 @@ async function sendMessages(receiver) {
 async function verifyResults({ sender1, sender2, receiver }) {
   // Since sender1 sends before sender2, if the title is exactly
   // sender2's message, sender1's message must've been blocked
-  await ContentTask.spawn(receiver.browser, sender2.message, async function(
+  await SpecialPowers.spawn(receiver.browser, [sender2.message], async function(
     message
   ) {
     await content.testPromise.then(function() {

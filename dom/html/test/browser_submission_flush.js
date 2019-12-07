@@ -24,10 +24,8 @@ async function runTest(aTestActions) {
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
 
   /* eslint-disable no-shadow */
-  let frame_url = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { kFormId, kFrameId, kSubmitButtonId, aTestActions },
-    async function({ kFormId, kFrameId, kSubmitButtonId, aTestActions }) {
+  let frame_url = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [{ kFormId, kFrameId, kSubmitButtonId, aTestActions }], async function({ kFormId, kFrameId, kSubmitButtonId, aTestActions }) {
       let form = content.document.getElementById(kFormId);
 
       form.addEventListener(

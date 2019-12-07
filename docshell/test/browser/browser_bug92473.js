@@ -3,7 +3,7 @@
  */
 
 function testContent(text) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, text, text => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [text], text => {
     Assert.equal(
       content.document.getElementById("testpar").innerHTML,
       text,

@@ -37,7 +37,7 @@ function createPromptDialog(Page) {
   const onDialogOpen = Page.javascriptDialogOpening();
 
   info("Trigger a prompt in the test page");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.promptResult = content.prompt("prompt-1234");
   });
 

@@ -23,7 +23,7 @@ add_task(async function test() {
   let blobURL;
 
   info("Creating a blob URL...");
-  await ContentTask.spawn(browser1, null, function() {
+  await SpecialPowers.spawn(browser1, [], function() {
     return Promise.resolve(
       content.window.URL.createObjectURL(new content.window.Blob([123]))
     );
@@ -40,7 +40,7 @@ add_task(async function test() {
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
 
-  await ContentTask.spawn(browser2, blobURL, function(url) {
+  await SpecialPowers.spawn(browser2, [blobURL], function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
       xhr.onerror = function() {
@@ -67,7 +67,7 @@ add_task(async function test() {
   let browser3 = gBrowser.getBrowserForTab(tab3);
   await BrowserTestUtils.browserLoaded(browser3);
 
-  await ContentTask.spawn(browser3, blobURL, function(url) {
+  await SpecialPowers.spawn(browser3, [blobURL], function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
       xhr.open("GET", url);

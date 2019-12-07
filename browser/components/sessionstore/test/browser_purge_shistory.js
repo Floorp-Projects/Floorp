@@ -15,7 +15,7 @@ const TAB_STATE = {
 };
 
 function checkTabContents(browser) {
-  return ContentTask.spawn(browser, null, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     Assert.ok(

@@ -22,7 +22,7 @@ function withAboutStudies(testFunc) {
 
 // Test that the code renders at all
 decorate_task(withAboutStudies, async function testAboutStudiesWorks(browser) {
-  const appFound = await ContentTask.spawn(browser, null, () =>
+  const appFound = await SpecialPowers.spawn(browser, [], () =>
     content.document.getElementById("app")
   );
   ok(appFound, "App element was found");
@@ -35,7 +35,7 @@ decorate_task(
   }),
   withAboutStudies,
   async function testLearnMore(browser) {
-    ContentTask.spawn(browser, null, async () => {
+    SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
       await ContentTaskUtils.waitForCondition(() =>
         doc.getElementById("shield-studies-learn-more")
@@ -61,7 +61,7 @@ decorate_task(withAboutStudies, async function testUpdatePreferences(browser) {
   // We have to use gBrowser instead of browser in most spots since we're
   // dealing with a new tab outside of the about:studies tab.
   const tab = await BrowserTestUtils.switchTab(gBrowser, () => {
-    ContentTask.spawn(browser, null, async () => {
+    SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
       await ContentTaskUtils.waitForCondition(() =>
         doc.getElementById("shield-studies-update-preferences")
@@ -132,10 +132,8 @@ decorate_task(
   ]),
   withAboutStudies,
   async function testStudyListing(addonStudies, prefStudies, browser) {
-    await ContentTask.spawn(
-      browser,
-      { addonStudies, prefStudies },
-      async ({ addonStudies, prefStudies }) => {
+    await SpecialPowers.spawn(
+      browser, [{ addonStudies, prefStudies }], async ({ addonStudies, prefStudies }) => {
         const doc = content.document;
 
         function getStudyRow(docElem, slug) {
@@ -273,7 +271,7 @@ decorate_task(
   AddonStudies.withStudies([]),
   withAboutStudies,
   async function testStudyListingNoStudies(studies, browser) {
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
       await ContentTaskUtils.waitForCondition(
         () => doc.querySelectorAll(".study-list-info").length
@@ -317,7 +315,7 @@ decorate_task(
     try {
       RecipeRunner.disable();
 
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         const doc = content.document;
         await ContentTaskUtils.waitForCondition(() =>
           doc.querySelector(".info-box-content > span")
@@ -355,7 +353,7 @@ decorate_task(
       "RecipeRunner should be enabled as a Precondition"
     );
 
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
       await ContentTaskUtils.waitForCondition(() => {
         const span = doc.querySelector(".info-box-content > span");
@@ -401,10 +399,8 @@ decorate_task(
       reason: "disabled-automatically-test",
     });
 
-    await ContentTask.spawn(
-      browser,
-      { addonStudy, prefStudy },
-      async ({ addonStudy, prefStudy }) => {
+    await SpecialPowers.spawn(
+      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
 
         function getStudyRow(docElem, slug) {
@@ -490,10 +486,8 @@ decorate_task(
   withAboutStudies,
   async function testOtherTabsUpdated([addonStudy], [prefStudy], browser) {
     // Ensure that both our studies are active in the current tab.
-    await ContentTask.spawn(
-      browser,
-      { addonStudy, prefStudy },
-      async ({ addonStudy, prefStudy }) => {
+    await SpecialPowers.spawn(
+      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
         await ContentTaskUtils.waitForCondition(
           () => doc.querySelectorAll(".remove-button").length == 2,
@@ -522,10 +516,8 @@ decorate_task(
     // Open a new about:studies tab.
     await BrowserTestUtils.withNewTab("about:studies", async browser => {
       // Delete both studies in this tab; this should pass if previous tests have passed.
-      await ContentTask.spawn(
-        browser,
-        { addonStudy, prefStudy },
-        async ({ addonStudy, prefStudy }) => {
+      await SpecialPowers.spawn(
+        browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
           const doc = content.document;
 
           function getStudyRow(docElem, slug) {
@@ -589,10 +581,8 @@ decorate_task(
     });
 
     // Ensure that the original tab has updated correctly.
-    await ContentTask.spawn(
-      browser,
-      { addonStudy, prefStudy },
-      async ({ addonStudy, prefStudy }) => {
+    await SpecialPowers.spawn(
+      browser, [{ addonStudy, prefStudy }], async ({ addonStudy, prefStudy }) => {
         const doc = content.document;
         await ContentTaskUtils.waitForCondition(
           () => doc.querySelectorAll(".inactive-study-list .study").length == 2,

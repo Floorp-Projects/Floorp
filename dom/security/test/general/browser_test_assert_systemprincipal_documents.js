@@ -22,7 +22,7 @@ add_task(async function open_test_iframe_in_tab() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: kTestURI },
     async browser => {
-      await ContentTask.spawn(browser, {}, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let outerPrincipal = content.document.nodePrincipal;
         ok(
           outerPrincipal.isSystemPrincipal,

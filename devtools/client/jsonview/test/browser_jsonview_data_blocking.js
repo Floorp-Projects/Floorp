@@ -25,7 +25,7 @@ add_task(async function test_blocked_data_exposure() {
   });
   await BrowserTestUtils.withNewTab(TEST_PATH + "empty.html", async browser => {
     const tabCount = gBrowser.tabs.length;
-    await ContentTask.spawn(browser, null, function() {
+    await SpecialPowers.spawn(browser, [], function() {
       content.w = content.window.open(
         "data:application/vnd.mozilla.json.view,1",
         "_blank"

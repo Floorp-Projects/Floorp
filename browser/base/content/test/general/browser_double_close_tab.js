@@ -80,7 +80,7 @@ registerCleanupFunction(async function() {
   if (testTab.parentNode) {
     // Remove the handler, or closing this tab will prove tricky:
     try {
-      await ContentTask.spawn(testTab.linkedBrowser, null, function() {
+      await SpecialPowers.spawn(testTab.linkedBrowser, [], function() {
         content.window.onbeforeunload = null;
       });
     } catch (ex) {}

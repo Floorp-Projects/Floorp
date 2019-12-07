@@ -11,7 +11,7 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     let proxy = new Proxy({}, {});
     for (let i = 0; i < 1e5; ++i) {
       proxy = new Proxy(proxy, proxy);

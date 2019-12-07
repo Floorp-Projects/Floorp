@@ -31,7 +31,7 @@ add_task(async function test() {
       // check that PDF is opened with internal viewer
       await waitForPdfJS(browser, TESTROOT + "file_pdfjs_test.pdf");
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         Assert.ok(
           content.document.querySelector("div#viewer"),
           "document content has viewer UI"

@@ -42,7 +42,7 @@ function test() {
         is(tabState.entries[0].url, baseURL + 0, "... but not more");
 
         // visit yet another anchor (appending it to session history)
-        ContentTask.spawn(tab.linkedBrowser, null, function() {
+        SpecialPowers.spawn(tab.linkedBrowser, [], function() {
           content.window.document.querySelector("a").click();
         }).then(flushAndCheck);
 

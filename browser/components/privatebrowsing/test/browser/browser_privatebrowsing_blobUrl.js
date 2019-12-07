@@ -17,7 +17,7 @@ add_task(async function test() {
   let blobURL;
 
   info("Creating a blob URL...");
-  await ContentTask.spawn(tab, null, function() {
+  await SpecialPowers.spawn(tab, [], function() {
     return Promise.resolve(
       content.window.URL.createObjectURL(new content.window.Blob([123]))
     );
@@ -35,7 +35,7 @@ add_task(async function test() {
   BrowserTestUtils.loadURI(privateTab, BASE_URI);
   await BrowserTestUtils.browserLoaded(privateTab);
 
-  await ContentTask.spawn(privateTab, blobURL, function(url) {
+  await SpecialPowers.spawn(privateTab, [blobURL], function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
       xhr.onerror = function() {

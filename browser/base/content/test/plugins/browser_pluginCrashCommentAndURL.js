@@ -71,7 +71,7 @@ add_task(async function() {
   );
 
   // Test that the crash submission UI is actually visible and submit the crash report.
-  await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
+  await SpecialPowers.spawn(gTestBrowser, [config], async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
     let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(
@@ -122,7 +122,7 @@ add_task(async function() {
   );
 
   // Test that the crash submission UI is actually visible and submit the crash report.
-  await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
+  await SpecialPowers.spawn(gTestBrowser, [config], async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
     let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(
@@ -217,7 +217,7 @@ add_task(async function() {
   await pluginCrashed;
 
   // Test that the crash submission UI is not visible and do not submit a crash report.
-  await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
+  await SpecialPowers.spawn(gTestBrowser, [config], async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
     let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById(

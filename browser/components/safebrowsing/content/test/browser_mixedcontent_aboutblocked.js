@@ -25,7 +25,7 @@ add_task(async function testNormalBrowsing() {
       );
     });
 
-    await ContentTask.spawn(browser, PHISH_URL, async function(aPhishUrl) {
+    await SpecialPowers.spawn(browser, [PHISH_URL], async function(aPhishUrl) {
       // Create an iframe which is going to load a phish url.
       let iframe = content.document.createElement("iframe");
       iframe.src = aPhishUrl;

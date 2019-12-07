@@ -21,7 +21,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Wait for WS connection(s) to be established + send messages
-  await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection(2);
     await content.wrappedJSObject.openConnection(1);
   });
@@ -79,7 +79,7 @@ add_task(async function() {
   is(secondRequestFrames.length, 2, "There should be two frames");
 
   // Close WS connection
-  await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.closeConnection();
   });
 

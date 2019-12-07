@@ -28,7 +28,7 @@ add_task(async function checkWrongSystemTimeWarning() {
     info("Loading and waiting for the cert error");
     await certErrorLoaded;
 
-    return ContentTask.spawn(browser, null, async function() {
+    return SpecialPowers.spawn(browser, [], async function() {
       let doc = content.document;
       let div = doc.getElementById("errorShortDescText");
       let systemDateDiv = doc.getElementById("wrongSystemTime_systemDate1");

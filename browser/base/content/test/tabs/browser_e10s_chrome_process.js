@@ -130,7 +130,7 @@ var TRANSITIONS = [
   function clickLink(browser, uri) {
     info("Clicking link");
 
-    ContentTask.spawn(browser, uri, function frame_script(frameUri) {
+    SpecialPowers.spawn(browser, [uri], function frame_script(frameUri) {
       let link = content.document.querySelector("a[href='" + frameUri + "']");
       link.click();
     });
