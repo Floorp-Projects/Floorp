@@ -1,11 +1,7 @@
 package org.mozilla.fenix.components.searchengine
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Bitmap
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,27 +13,22 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider.Companion.INSTALLED_ENGINES_KEY
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.util.UUID
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class FenixSearchEngineProviderTest {
 
-//    private val testContext = mockk<Context>()
-
     private lateinit var fenixSearchEngineProvider: FenixSearchEngineProvider
 
     @Before
     fun before() {
-//        mockSharedPreferences(installedEngines = null)
         fenixSearchEngineProvider = FakeFenixSearchEngineProvider(testContext)
     }
 
@@ -62,9 +53,9 @@ class FenixSearchEngineProviderTest {
     @Test
     fun `GIVEN sharedprefs contains installed engines WHEN installedSearchEngineIdentifiers THEN defaultEngines + customEngines ids are returned`() = runBlockingTest {
         val sp = testContext.getSharedPreferences(FenixSearchEngineProvider.PREF_FILE, Context.MODE_PRIVATE)
-        sp.edit().putStringSet(INSTALLED_ENGINES_KEY, STORED_INSTALLED_ENGINES).apply()
+        sp.edit().putStringSet(INSTALLED_ENGINES_KEY, persistedInstalledEngines).apply()
 
-        val expectedStored = STORED_INSTALLED_ENGINES
+        val expectedStored = persistedInstalledEngines
         val expectedCustom = fenixSearchEngineProvider.customSearchEngines.toIdSet()
         val expected = expectedStored + expectedCustom
 
@@ -76,7 +67,7 @@ class FenixSearchEngineProviderTest {
 private suspend fun Deferred<SearchEngineList>.toIdSet() =
     await().list.map { it.identifier }.toSet()
 
-private val STORED_INSTALLED_ENGINES = setOf("bing", "ecosia")
+private val persistedInstalledEngines = setOf("bing", "ecosia")
 
 class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvider(context) {
     override val baseSearchEngines: Deferred<SearchEngineList>
@@ -114,18 +105,13 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
                 )
             )
         }
-        set(_) = throw RuntimeException("Setting not currently supported on this fake")
+        set(_) = throw NotImplementedError("Setting not currently supported on this fake")
 
     private fun mockSearchEngine(
         id: String,
         n: String = id
-        // TODO this fails with `Missing calls inside every { ... } block`. Not sure why
-//    ) = mockk<SearchEngine> {
-//        every { identifier } returns id
-//        every { name } returns n
-//        every { icon } returns mockk()
-//    }
     ): SearchEngine {
+        // Uses Mockito because of a strange Mockk error. Feel free to rewrite
         return mock(SearchEngine::class.java).apply {
             `when`(identifier).thenReturn(id)
             `when`(name).thenReturn(n)

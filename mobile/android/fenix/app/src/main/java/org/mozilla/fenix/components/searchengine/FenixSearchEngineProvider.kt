@@ -140,20 +140,18 @@ open class FenixSearchEngineProvider(
     suspend fun installedSearchEngineIdentifiers(context: Context): Set<String> {
         val prefs = prefs(context)
 
-        val identifiers = if (!prefs.contains(INSTALLED_ENGINES_KEY)) {
+        if (!prefs.contains(INSTALLED_ENGINES_KEY)) {
             val defaultSet = baseSearchEngines.await()
                 .list
                 .map { it.identifier }
                 .toSet()
 
             prefs.edit().putStringSet(INSTALLED_ENGINES_KEY, defaultSet).apply()
-            defaultSet
-        } else {
-            prefs.getStringSet(INSTALLED_ENGINES_KEY, setOf()) ?: setOf()
         }
 
+        val installedIdentifiers = prefs(context).getStringSet(INSTALLED_ENGINES_KEY, setOf()) ?: setOf()
         val customEngineIdentifiers = customSearchEngines.await().list.map { it.identifier }.toSet()
-        return identifiers + customEngineIdentifiers
+        return installedIdentifiers + customEngineIdentifiers
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
