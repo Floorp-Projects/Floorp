@@ -1299,16 +1299,29 @@ function testScope(aTester, aTest, expected) {
       self.record(condition, name);
     }
   };
-  this.record = function test_record(condition, name, ex, stack) {
-    aTest.addResult(
-      new testResult({
-        name,
-        pass: condition,
-        ex,
-        stack: stack || Components.stack.caller,
-        allowFailure: aTest.allowFailure,
-      })
-    );
+  this.record = function test_record(condition, name, ex, stack, expected) {
+    if (expected == "fail") {
+      aTest.addResult(
+        new testResult({
+          name,
+          pass: !condition,
+          todo: true,
+          ex,
+          stack: stack || Components.stack.caller,
+          allowFailure: aTest.allowFailure,
+        })
+      );
+    } else {
+      aTest.addResult(
+        new testResult({
+          name,
+          pass: condition,
+          ex,
+          stack: stack || Components.stack.caller,
+          allowFailure: aTest.allowFailure,
+        })
+      );
+    }
   };
   this.is = function test_is(a, b, name) {
     self.record(
