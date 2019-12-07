@@ -217,32 +217,25 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this.MemoryStats = simpleTestScope.MemoryStats;
   this.ContentTask = ChromeUtils.import(
-    "resource://testing-common/ContentTask.jsm",
-    null
+    "resource://testing-common/ContentTask.jsm"
   ).ContentTask;
   this.BrowserTestUtils = ChromeUtils.import(
-    "resource://testing-common/BrowserTestUtils.jsm",
-    null
+    "resource://testing-common/BrowserTestUtils.jsm"
   ).BrowserTestUtils;
   this.TestUtils = ChromeUtils.import(
-    "resource://testing-common/TestUtils.jsm",
-    null
+    "resource://testing-common/TestUtils.jsm"
   ).TestUtils;
   this.Promise = ChromeUtils.import(
-    "resource://gre/modules/Promise.jsm",
-    null
+    "resource://gre/modules/Promise.jsm"
   ).Promise;
   this.PromiseTestUtils = ChromeUtils.import(
-    "resource://testing-common/PromiseTestUtils.jsm",
-    null
+    "resource://testing-common/PromiseTestUtils.jsm"
   ).PromiseTestUtils;
   this.Assert = ChromeUtils.import(
-    "resource://testing-common/Assert.jsm",
-    null
+    "resource://testing-common/Assert.jsm"
   ).Assert;
   this.PerTestCoverageUtils = ChromeUtils.import(
-    "resource://testing-common/PerTestCoverageUtils.jsm",
-    null
+    "resource://testing-common/PerTestCoverageUtils.jsm"
   ).PerTestCoverageUtils;
 
   this.PromiseTestUtils.init();
