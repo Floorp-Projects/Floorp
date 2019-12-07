@@ -50,7 +50,7 @@ add_task(async function() {
       "to bottom"
   );
   const onNewMessage = waitForMessage(hud, "new-message");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.console.group("GROUP-2");
     content.console.log("new-message");
   });

@@ -6,15 +6,11 @@ async function installMozAM(filename) {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, INSTALL_PAGE);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [`${BASE}/${filename}`],
+    `${BASE}/${filename}`,
     async function(url) {
-      try {
-        await content.wrappedJSObject.installMozAM(url);
-      } catch (e) {
-        Cu.reportError(e);
-      }
+      await content.wrappedJSObject.installMozAM(url);
     }
   );
 }

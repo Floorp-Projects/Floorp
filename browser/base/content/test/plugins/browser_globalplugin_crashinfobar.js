@@ -21,7 +21,7 @@ add_task(async function() {
         pluginName: "GlobalTestPlugin",
       });
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         const GMP_CRASH_EVENT = {
           pluginID: 1,
           pluginName: "GlobalTestPlugin",

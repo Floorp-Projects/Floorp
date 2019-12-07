@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("Send a console.clear()");
   const onMessagesCleared = waitForMessage(hud, "Console was cleared");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.clear();
   });
   await onMessagesCleared;
@@ -70,7 +70,7 @@ add_task(async function() {
 
 async function showSidebar(hud) {
   const onMessage = waitForMessage(hud, "Object");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log({ a: 1 });
   });
   await onMessage;

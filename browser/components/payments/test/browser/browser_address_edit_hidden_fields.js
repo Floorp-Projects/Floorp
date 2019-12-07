@@ -48,13 +48,11 @@ add_task(async function test_hiddenFieldNotSaved() {
       let newAddress = Object.assign({}, PTU.Addresses.TimBL);
       newAddress["given-name"] = "hiddenFields";
 
-      let shippingAddressChangePromise = SpecialPowers.spawn(
+      let shippingAddressChangePromise = ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -141,13 +139,11 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       });
 
-      let shippingAddressChangePromise = SpecialPowers.spawn(
+      let shippingAddressChangePromise = ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 

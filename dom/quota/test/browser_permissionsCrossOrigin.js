@@ -33,7 +33,7 @@ add_task(async function testNoPermissionPrompt() {
       );
     });
 
-    await SpecialPowers.spawn(browser, [], async function(host0) {
+    await ContentTask.spawn(browser, null, async function(host0) {
       let frame = content.document.createElement("iframe");
       // Cross origin src
       frame.src = "https://example.org/browser/dom/quota/test/empty.html";

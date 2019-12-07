@@ -57,7 +57,7 @@ add_task(async function moving_works() {
     browser,
     "Preloaded browser is usable when opening a new tab."
   );
-  await SpecialPowers.spawn(browser, [], function() {
+  await ContentTask.spawn(browser, null, function() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
     });
@@ -115,7 +115,7 @@ add_task(async function moving_shouldnt_move_across_private_state() {
     browser,
     "Preloaded browser is usable when opening a new tab."
   );
-  await SpecialPowers.spawn(browser, [], function() {
+  await ContentTask.spawn(browser, null, function() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
     });

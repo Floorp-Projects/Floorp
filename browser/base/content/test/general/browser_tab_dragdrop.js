@@ -3,7 +3,7 @@ function swapTabsAndCloseOther(a, b) {
 }
 
 var getClicks = function(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  return ContentTask.spawn(tab.linkedBrowser, {}, function() {
     return content.wrappedJSObject.clicks;
   });
 };
@@ -11,7 +11,7 @@ var getClicks = function(tab) {
 var clickTest = async function(tab) {
   let clicks = await getClicks(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
     let target = content.document.body;
     let rect = target.getBoundingClientRect();
     let left = (rect.left + rect.right) / 2;

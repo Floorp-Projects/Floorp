@@ -19,7 +19,7 @@ add_task(async function() {
   logAllStoreChanges(hud);
 
   const onMessagesLogged = waitForMessage(hud, "log-6");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.doLog();
   });
   await onMessagesLogged;

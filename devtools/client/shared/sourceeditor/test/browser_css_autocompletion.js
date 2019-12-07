@@ -114,10 +114,7 @@ async function checkStateAndMoveOn() {
   const [line, ch] = lineCh;
 
   ++index;
-  await SpecialPowers.spawn(browser, [[index, tests.length]], function([
-    idx,
-    len,
-  ]) {
+  await ContentTask.spawn(browser, [index, tests.length], function([idx, len]) {
     const progress = content.document.getElementById("progress");
     const progressDiv = content.document.querySelector("#progress > div");
     progress.dataset.progress = idx;
@@ -143,7 +140,7 @@ async function checkState(expected, actual) {
         ", Actual: " +
         actual.length
     );
-    await SpecialPowers.spawn(browser, [], function() {
+    await ContentTask.spawn(browser, null, function() {
       const progress = content.document.getElementById("progress");
       progress.classList.add("failed");
     });

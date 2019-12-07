@@ -58,7 +58,7 @@ function test() {
           eventHandler
         );
 
-        await SpecialPowers.spawn(tabBrowser, [], async function() {
+        await ContentTask.spawn(tabBrowser, null, async function() {
           const swr = await content.navigator.serviceWorker.getRegistration();
           await swr.unregister();
         });

@@ -15,13 +15,13 @@ add_task(async function() {
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a new message from the content page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.wrappedJSObject.console.log("msg");
   });
   await waitForMessage("msg", hud);
 
   info("Send a console.clear() from the content page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.wrappedJSObject.console.clear();
   });
   await waitForMessage("Console was cleared", hud);

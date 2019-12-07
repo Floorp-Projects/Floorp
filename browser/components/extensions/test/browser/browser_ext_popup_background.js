@@ -54,7 +54,7 @@ async function testPanel(browser, standAlone, initial_background) {
   };
 
   function getBackground(browser) {
-    return SpecialPowers.spawn(browser, [], async function() {
+    return ContentTask.spawn(browser, null, async function() {
       return content.getComputedStyle(content.document.body).backgroundColor;
     });
   }

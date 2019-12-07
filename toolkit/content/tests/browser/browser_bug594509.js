@@ -4,7 +4,7 @@ add_task(async function() {
     "about:rights"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     Assert.ok(
       content.document.getElementById("your-rights"),
       "about:rights content loaded"

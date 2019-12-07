@@ -77,13 +77,11 @@ add_task(async function test_add_link() {
       delete newAddress.email;
 
       for (let options of testOptions) {
-        let shippingAddressChangePromise = SpecialPowers.spawn(
+        let shippingAddressChangePromise = ContentTask.spawn(
           browser,
-          [
-            {
-              eventName: "shippingaddresschange",
-            },
-          ],
+          {
+            eventName: "shippingaddresschange",
+          },
           PTU.ContentTasks.awaitPaymentEventPromise
         );
 
@@ -150,13 +148,11 @@ add_task(async function test_edit_link() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       });
 
-      let shippingAddressChangePromise = SpecialPowers.spawn(
+      let shippingAddressChangePromise = ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -795,13 +791,11 @@ add_task(async function test_private_persist_addresses() {
       );
 
       info("awaiting the shippingaddresschange event");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "shippingaddresschange",
-          },
-        ],
+        {
+          eventName: "shippingaddresschange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -865,9 +859,9 @@ add_task(async function test_private_persist_addresses() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 

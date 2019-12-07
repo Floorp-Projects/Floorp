@@ -51,7 +51,7 @@ add_task(async function() {
     client.on("networkEventUpdate", onNetworkEventUpdate);
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.wrappedJSObject.testXhrPost();
   });
 

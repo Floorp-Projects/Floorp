@@ -96,9 +96,9 @@ add_task(async function() {
 
     let iconPromise = waitForFaviconMessage(!testCase.richIcon, expectedIcon);
 
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
-      [[testCase.icons, ROOTURI + ICON]],
+      [testCase.icons, ROOTURI + ICON],
       ([icons, defaultIcon]) => {
         let doc = content.document;
         let head = doc.head;
@@ -124,7 +124,7 @@ add_task(async function() {
       ok(!testCase.pass, testCase.text);
     }
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
       let links = content.document.querySelectorAll("link");
       for (let link of links) {
         link.remove();

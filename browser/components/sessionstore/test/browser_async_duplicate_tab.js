@@ -16,13 +16,12 @@ add_task(async function test_duplicate() {
   await TabStateFlusher.flush(browser);
 
   // Click the link to navigate, this will add second shistory entry.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener(
-        "hashchange",
-        () => resolve(),
-        { once: true }
-      );
+      addEventListener("hashchange", function onHashChange() {
+        removeEventListener("hashchange", onHashChange);
+        resolve();
+      });
 
       // Click the link.
       content.document.querySelector("a").click();
@@ -55,13 +54,12 @@ add_task(async function test_duplicate_remove() {
   await TabStateFlusher.flush(browser);
 
   // Click the link to navigate, this will add second shistory entry.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener(
-        "hashchange",
-        () => resolve(),
-        { once: true }
-      );
+      addEventListener("hashchange", function onHashChange() {
+        removeEventListener("hashchange", onHashChange);
+        resolve();
+      });
 
       // Click the link.
       content.document.querySelector("a").click();

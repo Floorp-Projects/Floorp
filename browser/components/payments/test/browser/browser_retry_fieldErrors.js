@@ -146,18 +146,16 @@ add_task(async function test_retry_with_shippingAddressErrors() {
 
       // Add a handler to retry the payment above.
       info("Tell merchant page to retry with a country error string");
-      let retryPromise = SpecialPowers.spawn(
+      let retryPromise = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              shippingAddress: {
-                country: "Can only ship to USA",
-              },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            shippingAddress: {
+              country: "Can only ship to USA",
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -167,18 +165,16 @@ add_task(async function test_retry_with_shippingAddressErrors() {
       await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
       info("Tell merchant page to retry with a regionCode error string");
-      let retryPromise2 = SpecialPowers.spawn(
+      let retryPromise2 = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              shippingAddress: {
-                regionCode: "Can only ship to California",
-              },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            shippingAddress: {
+              regionCode: "Can only ship to California",
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -245,9 +241,9 @@ add_task(async function test_retry_with_shippingAddressErrors() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 
@@ -386,18 +382,16 @@ add_task(async function test_retry_with_payerErrors() {
 
       // Add a handler to retry the payment above.
       info("Tell merchant page to retry with a country error string");
-      let retryPromise = SpecialPowers.spawn(
+      let retryPromise = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              payer: {
-                email: "You must use your employee email address",
-              },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            payer: {
+              email: "You must use your employee email address",
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -411,18 +405,16 @@ add_task(async function test_retry_with_payerErrors() {
       );
 
       info("Tell merchant page to retry with a phone error string");
-      let retryPromise2 = SpecialPowers.spawn(
+      let retryPromise2 = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              payer: {
-                phone: "Your phone number isn't valid",
-              },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            payer: {
+              phone: "Your phone number isn't valid",
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -475,25 +467,21 @@ add_task(async function test_retry_with_payerErrors() {
       let newPhoneNumber = "+16175555555";
       await fillInPayerAddressForm(frame, { tel: newPhoneNumber });
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "payerdetailchange",
-          },
-        ],
+        {
+          eventName: "payerdetailchange",
+        },
         PTU.ContentTasks.promisePaymentResponseEvent
       );
 
       await submitAddressForm(frame, null, { isEditing: true });
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "payerdetailchange",
-          },
-        ],
+        {
+          eventName: "payerdetailchange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -514,9 +502,9 @@ add_task(async function test_retry_with_payerErrors() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 
@@ -663,18 +651,16 @@ add_task(async function test_retry_with_paymentMethodErrors() {
 
       // Add a handler to retry the payment above.
       info("Tell merchant page to retry with a cardSecurityCode error string");
-      let retryPromise = SpecialPowers.spawn(
+      let retryPromise = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              paymentMethod: {
-                cardSecurityCode: "Your CVV is incorrect",
-              },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            paymentMethod: {
+              cardSecurityCode: "Your CVV is incorrect",
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -690,20 +676,18 @@ add_task(async function test_retry_with_paymentMethodErrors() {
       info(
         "Tell merchant page to retry with a billing postalCode error string"
       );
-      let retryPromise2 = SpecialPowers.spawn(
+      let retryPromise2 = ContentTask.spawn(
         browser,
-        [
-          {
-            delayMs: 1000,
-            validationErrors: {
-              paymentMethod: {
-                billingAddress: {
-                  postalCode: "Your postal code isn't valid",
-                },
+        {
+          delayMs: 1000,
+          validationErrors: {
+            paymentMethod: {
+              billingAddress: {
+                postalCode: "Your postal code isn't valid",
               },
             },
           },
-        ],
+        },
         PTU.ContentTasks.addRetryHandler
       );
 
@@ -768,13 +752,11 @@ add_task(async function test_retry_with_paymentMethodErrors() {
       let newPostalCode = "90210";
       await fillInBillingAddressForm(frame, { "postal-code": newPostalCode });
 
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "paymentmethodchange",
-          },
-        ],
+        {
+          eventName: "paymentmethodchange",
+        },
         PTU.ContentTasks.promisePaymentResponseEvent
       );
 
@@ -817,13 +799,11 @@ add_task(async function test_retry_with_paymentMethodErrors() {
       });
 
       // TODO: Add an `await` here after bug 1477113.
-      SpecialPowers.spawn(
+      ContentTask.spawn(
         browser,
-        [
-          {
-            eventName: "paymentmethodchange",
-          },
-        ],
+        {
+          eventName: "paymentmethodchange",
+        },
         PTU.ContentTasks.awaitPaymentEventPromise
       );
 
@@ -844,9 +824,9 @@ add_task(async function test_retry_with_paymentMethodErrors() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await SpecialPowers.spawn(
+      let result = await ContentTask.spawn(
         browser,
-        [],
+        {},
         PTU.ContentTasks.addCompletionHandler
       );
 

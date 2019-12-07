@@ -22,9 +22,9 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
       testPath + "file_dummy.html"
     );
 
-    let contentSize = await SpecialPowers.spawn(
+    let contentSize = await ContentTask.spawn(
       tab.linkedBrowser,
-      [],
+      null,
       async function() {
         let result = {
           width: content.innerWidth,
@@ -82,9 +82,9 @@ async function calcPopUpWindowChromeUISize() {
     testPath + "file_dummy.html"
   );
 
-  let result = await SpecialPowers.spawn(
+  let result = await ContentTask.spawn(
     tab.linkedBrowser,
-    [],
+    null,
     async function() {
       let win;
 
@@ -150,7 +150,7 @@ async function testWindowOpen(
     targetHeight: aTargetHeight,
   };
 
-  await SpecialPowers.spawn(aBrowser, [testParams], async function(input) {
+  await ContentTask.spawn(aBrowser, testParams, async function(input) {
     // Call window.open() with window features.
     await new Promise(resolve => {
       let win = content.open("http://example.net/", "", input.winFeatures);
@@ -218,7 +218,7 @@ async function testWindowSizeSetting(
     testOuter: aTestOuter,
   };
 
-  await SpecialPowers.spawn(aBrowser, [testParams], async function(input) {
+  await ContentTask.spawn(aBrowser, testParams, async function(input) {
     let win;
     // Open a new window and wait until it loads.
     await new Promise(resolve => {

@@ -187,7 +187,7 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     // This ensures bug 605127 is fixed: pagehide in an unrelated document
     // should not cancel the autoscroll.
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       var iframe = content.document.getElementById("iframe");
 
       if (iframe) {
@@ -259,16 +259,14 @@ body > div > div {width: 1000px;height: 1000px;}\
     let scrollVert = test.expected & expectScrollVert;
     let scrollHori = test.expected & expectScrollHori;
 
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
-      [
-        {
-          scrollVert,
-          scrollHori,
-          elemid: test.elem,
-          checkWindow: test.testwindow,
-        },
-      ],
+      {
+        scrollVert,
+        scrollHori,
+        elemid: test.elem,
+        checkWindow: test.testwindow,
+      },
       async function(args) {
         let msg = "";
         if (args.checkWindow) {

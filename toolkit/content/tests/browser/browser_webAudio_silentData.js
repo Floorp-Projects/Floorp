@@ -51,7 +51,7 @@ add_task(async function testSilentAudioContext() {
   mm.loadFrameScript("data:,(" + createAudioContext.toString() + ")();", false);
 
   info(`- check AudioContext's state -`);
-  await SpecialPowers.spawn(browser, [], waitUntilAudioContextStarts);
+  await ContentTask.spawn(browser, null, waitUntilAudioContextStarts);
   ok(true, `AudioContext is running.`);
 
   info(`- should not show sound indicator -`);

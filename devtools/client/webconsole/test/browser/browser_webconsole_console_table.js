@@ -315,9 +315,9 @@ add_task(async function() {
     },
   ];
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [testCases.map(({ input, headers }) => ({ input, headers }))],
+    testCases.map(({ input, headers }) => ({ input, headers })),
     function(tests) {
       tests.forEach(test => {
         let { input, headers } = test;

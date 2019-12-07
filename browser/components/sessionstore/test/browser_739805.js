@@ -35,7 +35,7 @@ function test() {
     is(formdata && formdata.id.foo, "bar", "tab state's formdata is valid");
 
     promiseTabRestored(tab).then(() => {
-      SpecialPowers.spawn(browser, [], function() {
+      ContentTask.spawn(browser, null, function() {
         let input = content.document.getElementById("foo");
         is(input.value, "bar", "formdata has been restored correctly");
       }).then(() => {

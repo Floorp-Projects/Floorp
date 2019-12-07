@@ -28,7 +28,7 @@ add_task(async function() {
     openedUriString,
     true
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [openedUriString], uri => {
+  await ContentTask.spawn(tab.linkedBrowser, openedUriString, uri => {
     content.open(uri, "_blank");
   });
 

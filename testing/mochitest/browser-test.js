@@ -217,25 +217,32 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this.MemoryStats = simpleTestScope.MemoryStats;
   this.ContentTask = ChromeUtils.import(
-    "resource://testing-common/ContentTask.jsm"
+    "resource://testing-common/ContentTask.jsm",
+    null
   ).ContentTask;
   this.BrowserTestUtils = ChromeUtils.import(
-    "resource://testing-common/BrowserTestUtils.jsm"
+    "resource://testing-common/BrowserTestUtils.jsm",
+    null
   ).BrowserTestUtils;
   this.TestUtils = ChromeUtils.import(
-    "resource://testing-common/TestUtils.jsm"
+    "resource://testing-common/TestUtils.jsm",
+    null
   ).TestUtils;
   this.Promise = ChromeUtils.import(
-    "resource://gre/modules/Promise.jsm"
+    "resource://gre/modules/Promise.jsm",
+    null
   ).Promise;
   this.PromiseTestUtils = ChromeUtils.import(
-    "resource://testing-common/PromiseTestUtils.jsm"
+    "resource://testing-common/PromiseTestUtils.jsm",
+    null
   ).PromiseTestUtils;
   this.Assert = ChromeUtils.import(
-    "resource://testing-common/Assert.jsm"
+    "resource://testing-common/Assert.jsm",
+    null
   ).Assert;
   this.PerTestCoverageUtils = ChromeUtils.import(
-    "resource://testing-common/PerTestCoverageUtils.jsm"
+    "resource://testing-common/PerTestCoverageUtils.jsm",
+    null
   ).PerTestCoverageUtils;
 
   this.PromiseTestUtils.init();
@@ -1292,29 +1299,16 @@ function testScope(aTester, aTest, expected) {
       self.record(condition, name);
     }
   };
-  this.record = function test_record(condition, name, ex, stack, expected) {
-    if (expected == "fail") {
-      aTest.addResult(
-        new testResult({
-          name,
-          pass: !condition,
-          todo: true,
-          ex,
-          stack: stack || Components.stack.caller,
-          allowFailure: aTest.allowFailure,
-        })
-      );
-    } else {
-      aTest.addResult(
-        new testResult({
-          name,
-          pass: condition,
-          ex,
-          stack: stack || Components.stack.caller,
-          allowFailure: aTest.allowFailure,
-        })
-      );
-    }
+  this.record = function test_record(condition, name, ex, stack) {
+    aTest.addResult(
+      new testResult({
+        name,
+        pass: condition,
+        ex,
+        stack: stack || Components.stack.caller,
+        allowFailure: aTest.allowFailure,
+      })
+    );
   };
   this.is = function test_is(a, b, name) {
     self.record(

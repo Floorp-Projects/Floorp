@@ -71,7 +71,7 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
     "The test tab is on about:blank"
   );
   // Ensure that this tab's document has no child nodes
-  await SpecialPowers.spawn(testTab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(testTab.linkedBrowser, null, async function() {
     ok(
       !content.document.body.hasChildNodes(),
       "The test tab has no child nodes"
