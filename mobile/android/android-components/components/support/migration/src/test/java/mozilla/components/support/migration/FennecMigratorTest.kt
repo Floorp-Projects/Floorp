@@ -28,7 +28,11 @@ import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
 import java.lang.IllegalStateException
 import kotlinx.coroutines.CompletableDeferred
+import mozilla.appservices.logins.MismatchedLockException
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.sharing.ShareableAccount
+import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
+import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.test.argumentCaptor
 import org.mockito.Mockito.reset
 
@@ -70,11 +74,19 @@ class FennecMigratorTest {
     }
 
     @Test
-    fun `history & bookmark migrations must be done before FxA`() {
+    fun `history & bookmark & logins migrations must be done before FxA`() {
         try {
             FennecMigrator.Builder(testContext, mock())
                 .migrateFxa(mock())
                 .migrateHistory(mock())
+                .build()
+            fail()
+        } catch (e: IllegalStateException) {}
+
+        try {
+            FennecMigrator.Builder(testContext, mock())
+                .migrateFxa(mock())
+                .migrateLogins(mock(), "")
                 .build()
             fail()
         } catch (e: IllegalStateException) {}
@@ -529,5 +541,228 @@ class FennecMigratorTest {
         }
 
         verifyZeroInteractions(accountManager)
+    }
+
+    @Test
+    fun `logins migrations - no master password`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "basic").absolutePath, true)
+            )
+            .setKey4DbName("key4.db")
+            .setSignonsDbName("signons.sqlite")
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertTrue(this.getValue(Migration.Logins).success)
+        }
+
+        // Ensure that loginStorage is locked after a migration.
+        try {
+            loginStorage.lock().await()
+            fail()
+        } catch (e: MismatchedLockException) {}
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        with(loginStorage.list().await()) {
+            assertEquals(2, this.size)
+            assertEquals(listOf(
+                ServerPassword(
+                    id = "{390e62d7-77ef-4907-bc03-4c8010543a36}",
+                    hostname = "https://getbootstrap.com",
+                    username = "test@example.com",
+                    password = "super duper pass 1",
+                    httpRealm = null,
+                    formSubmitURL = "https://getbootstrap.com",
+                    timesUsed = 1,
+                    timeCreated = 1574735368749,
+                    timeLastUsed = 1574735368749,
+                    timePasswordChanged = 1574735368749,
+                    usernameField = null,
+                    passwordField = null
+                ),
+                ServerPassword(
+                    id = "{cf7cabe4-ec82-4800-b077-c6d97ffcd63a}",
+                    hostname = "https://html.com",
+                    username = null,
+                    password = "testp",
+                    httpRealm = null,
+                    formSubmitURL = "https://html.com",
+                    timesUsed = 1,
+                    timeCreated = 1574735237274,
+                    timeLastUsed = 1574735237274,
+                    timePasswordChanged = 1574735237274,
+                    usernameField = null,
+                    passwordField = "password"
+                )
+            ), this)
+        }
+    }
+
+    @Test
+    fun `logins migrations - with master password`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            )
+            .setKey4DbName("key4.db")
+            .setSignonsDbName("signons.sqlite")
+            .build()
+
+        // Expect MP presence to be detected, and migration to succeed. But, not actual records are imported.
+        // We actually _can_ migrate with a set MP, but that's currently exposed over the FennecMigrator interface.
+        // See FennecLoginsMigration for details.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertTrue(this.getValue(Migration.Logins).success)
+        }
+
+        // Ensure that loginStorage is locked after a migration.
+        try {
+            loginStorage.lock().await()
+            fail()
+        } catch (e: MismatchedLockException) {}
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `logins migrations - with mp and empty key4db`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            )
+            .setKey4DbName("empty-key4.db")
+            .setSignonsDbName("signons.sqlite")
+            .build()
+
+        // Empty key4db means we can't decrypt records, or even check for MP status.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertFalse(this.getValue(Migration.Logins).success)
+        }
+
+        // Ensure that loginStorage is locked after a migration.
+        try {
+            loginStorage.lock().await()
+            fail()
+        } catch (e: MismatchedLockException) {}
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `logins migrations - with mp and no nss in key4db`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            )
+            .setKey4DbName("noNss-key4.db")
+            .setSignonsDbName("signons.sqlite")
+            .build()
+
+        // Empty nss table in key4db means we can't decrypt records, but we still check the master password.
+        // It's detected, and migration aborted.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertTrue(this.getValue(Migration.Logins).success)
+        }
+
+        // Ensure that loginStorage is locked after a migration.
+        try {
+            loginStorage.lock().await()
+            fail()
+        } catch (e: MismatchedLockException) {}
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `logins migrations - missing profile`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setKey4DbName("noNss-key4.db")
+            .setSignonsDbName("signons.sqlite")
+            .build()
+
+        // Empty nss table in key4db means we can't decrypt records, but we still check the master password.
+        // It's detected, and migration aborted.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertFalse(this.getValue(Migration.Logins).success)
+        }
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `logins migrations - with master password, old signons version`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
+            )
+            .setKey4DbName("key4.db")
+            .setSignonsDbName("signons-v5.sqlite")
+            .build()
+
+        // MP is checked first, so we don't even get to check signons version.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertTrue(this.getValue(Migration.Logins).success)
+        }
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `logins migrations - without master password, old signons version`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateLogins(loginStorage, "test storage key")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("logins"), "basic").absolutePath, true)
+            )
+            .setKey4DbName("key4.db")
+            .setSignonsDbName("signons-v5.sqlite")
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Logins))
+            assertFalse(this.getValue(Migration.Logins).success)
+        }
+
+        loginStorage.ensureUnlocked("test storage key").await()
+        assertEquals(0, loginStorage.list().await().size)
     }
 }

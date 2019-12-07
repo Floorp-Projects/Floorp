@@ -276,6 +276,17 @@ interface AsyncLoginsStorage : AutoCloseable {
      * Use it with SyncManager.
      */
     fun getHandle(): Long
+
+    /**
+     * Bulk-import of a list of [ServerPassword].
+     * Storage must be empty, otherwise underlying implementation this will throw.
+     *
+     * @return number of records that could not be imported.
+     *
+     * @rejectsWith [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
+     * (IO failure, rust panics, etc).
+     */
+    fun importLoginsAsync(logins: List<ServerPassword>): Deferred<Long>
 }
 
 /**
@@ -354,6 +365,10 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
 
     override fun getHandle(): Long {
         return wrapped.getHandle()
+    }
+
+    override fun importLoginsAsync(logins: List<ServerPassword>): Deferred<Long> {
+        return scope.async { wrapped.importLogins(logins.toTypedArray()) }
     }
 
     override fun close() {

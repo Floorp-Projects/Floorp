@@ -46,8 +46,11 @@ dependencies {
 
     implementation project(':browser-storage-sync')
     implementation project(':service-firefox-accounts')
+    implementation project(':service-sync-logins')
 
     implementation project(':lib-crash')
+
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

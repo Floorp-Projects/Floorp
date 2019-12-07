@@ -15,6 +15,12 @@ permalink: /changelog/
 * **feature-remotetabs**
   * Add new `RemoteTabsFeature` to view tabs from other synced devices and upload our own.
 
+* **support-migration**
+  * Added Fennec login migration logic.
+
+* **service-sync-logins**
+  * `AsyncLoginsStorage` interface gained a new method: `importLoginsAsync`, used for bulk-inserting logins (for example, during a migration).
+
 # 24.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v23.0.0...v24.0.0)

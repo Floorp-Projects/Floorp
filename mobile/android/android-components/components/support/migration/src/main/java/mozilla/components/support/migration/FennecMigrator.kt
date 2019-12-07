@@ -19,6 +19,7 @@ import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.lang.Exception
@@ -39,6 +40,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates bookmarks. Must run after history was migrated.
      */
     object Bookmarks : Migration(currentVersion = 1)
+
+    /**
+     * Migrates logins.
+     */
+    object Logins : Migration(currentVersion = 1)
 
     /**
      * Migrates open tabs.
@@ -90,6 +96,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
     class MigrateBookmarksException(cause: Exception) : FennecMigratorException(cause)
 
     /**
+     * Unexpected exception while migrating logins.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateLoginsException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
      * Unexpected exception while migrating open tabs.
      * @param cause Original exception which caused the problem.
      */
@@ -110,26 +122,33 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
  * @param bookmarksStorage An optional instance of [PlacesBookmarksStorage] used to store migrated bookmarks data.
  * @param coroutineContext An instance of [CoroutineContext] used for executing async migration tasks.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class FennecMigrator private constructor(
     private val context: Context,
     private val crashReporter: CrashReporter,
     private val migrations: List<VersionedMigration>,
     private val historyStorage: PlacesHistoryStorage?,
     private val bookmarksStorage: PlacesBookmarksStorage?,
+    private val loginsStorage: AsyncLoginsStorage?,
+    private val loginsStorageKey: String?,
     private val sessionManager: SessionManager?,
     private val accountManager: FxaAccountManager?,
     private val profile: FennecProfile?,
     private val fxaState: File?,
     private val browserDbName: String,
+    private val signonsDbName: String,
+    private val key4DbName: String,
     private val coroutineContext: CoroutineContext
 ) {
     /**
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
      */
+    @Suppress("TooManyFunctions")
     class Builder(private val context: Context, private val crashReporter: CrashReporter) {
         private var historyStorage: PlacesHistoryStorage? = null
         private var bookmarksStorage: PlacesBookmarksStorage? = null
+        private var loginsStorage: AsyncLoginsStorage? = null
+        private var loginsStorageKey: String? = null
         private var sessionManager: SessionManager? = null
         private var accountManager: FxaAccountManager? = null
 
@@ -141,6 +160,9 @@ class FennecMigrator private constructor(
         private var fxaState = File("${context.filesDir}", "fxa.account.json")
         private var fennecProfile = FennecProfile.findDefault(context, crashReporter)
         private var browserDbName = "browser.db"
+        private var signonsDbName = "signons.sqlite"
+        private var key4DbName = "key4.db"
+        private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD
 
         /**
          * Enable history migration.
@@ -175,6 +197,25 @@ class FennecMigrator private constructor(
             }
             bookmarksStorage = storage
             migrations.add(VersionedMigration(Migration.Bookmarks, version))
+            return this
+        }
+
+        /**
+         * Enable logins migration.
+         *
+         * @param storage An instance of [AsyncLoginsStorage], used for storing data.
+         */
+        fun migrateLogins(
+            storage: AsyncLoginsStorage,
+            storageKey: String,
+            version: Int = Migration.Logins.currentVersion
+        ): Builder {
+            check(migrations.find { it.migration is Migration.FxA } == null) {
+                "FxA migration, if desired, must run after logins"
+            }
+            loginsStorage = storage
+            loginsStorageKey = storageKey
+            migrations.add(VersionedMigration(Migration.Logins, version))
             return this
         }
 
@@ -222,11 +263,15 @@ class FennecMigrator private constructor(
                 migrations,
                 historyStorage,
                 bookmarksStorage,
+                loginsStorage,
+                loginsStorageKey,
                 sessionManager,
                 accountManager,
                 fennecProfile,
                 fxaState,
                 browserDbName,
+                signonsDbName,
+                key4DbName,
                 coroutineContext
             )
         }
@@ -241,6 +286,18 @@ class FennecMigrator private constructor(
         @VisibleForTesting
         internal fun setBrowserDbName(name: String): Builder {
             browserDbName = name
+            return this
+        }
+
+        @VisibleForTesting
+        internal fun setSignonsDbName(name: String): Builder {
+            signonsDbName = name
+            return this
+        }
+
+        @VisibleForTesting
+        internal fun setKey4DbName(name: String): Builder {
+            key4DbName = name
             return this
         }
 
@@ -318,6 +375,7 @@ class FennecMigrator private constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun runMigrationsAsync(
         migrations: List<VersionedMigration>
     ): Deferred<MigrationResults> = CoroutineScope(coroutineContext).async {
@@ -336,6 +394,7 @@ class FennecMigrator private constructor(
                 Migration.OpenTabs -> migrateOpenTabs()
                 Migration.FxA -> migrateFxA()
                 Migration.Gecko -> migrateGecko()
+                Migration.Logins -> migrateLogins()
             }
 
             results[versionedMigration.migration] = when (migrationResult) {
@@ -405,6 +464,78 @@ class FennecMigrator private constructor(
                 FennecMigratorException.MigrateBookmarksException(e)
             )
             Result.Failure(e)
+        }
+    }
+
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught", "LongMethod", "ReturnCount")
+    private suspend fun migrateLogins(): Result<LoginsMigrationResult> {
+        if (profile == null) {
+            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            return Result.Failure(IllegalStateException("Missing Profile path"))
+        }
+
+        val result = try {
+            logger.debug("Migrating logins...")
+            FennecLoginsMigration.migrate(
+                crashReporter,
+                signonsDbPath = "${profile.path}/$signonsDbName",
+                key4DbPath = "${profile.path}/$key4DbName"
+            )
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
+            return Result.Failure(e)
+        }
+
+        if (result is Result.Failure<LoginsMigrationResult>) {
+            val migrationFailureWrapper = result.throwables.first() as LoginMigrationException
+            return when (val failure = migrationFailureWrapper.failure) {
+                is LoginsMigrationResult.Failure.FailedToCheckMasterPassword -> {
+                    logger.error("Failed to check master password: $failure")
+                    // We definitely expect to be able to check our master password, so report a failure.
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+                is LoginsMigrationResult.Failure.UnsupportedSignonsDbVersion -> {
+                    logger.error("Unsupported logins database version: $failure")
+                    // We really don't expect anyone to hit this, so let's submit it to Sentry.
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+                is LoginsMigrationResult.Failure.UnexpectedLoginsKeyMaterialAlg,
+                is LoginsMigrationResult.Failure.UnexpectedMetadataKeyMaterialAlg -> {
+                    logger.error("Encryption failure: $failure")
+                    // While this may happen in theory, let's keep track of exact reasons.
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+            }
+        }
+
+        val loginMigrationSuccess = result as Result.Success<LoginsMigrationResult>
+        return when (val success = loginMigrationSuccess.value as LoginsMigrationResult.Success) {
+            is LoginsMigrationResult.Success.MasterPasswordIsSet -> {
+                logger.debug("Could not migrate logins - master password is set")
+                result
+            }
+
+            is LoginsMigrationResult.Success.LoginRecords -> {
+                logger.debug(
+                    "Parsed ${success.records.size} out of ${success.recordsDetected} login records. Importing..."
+                )
+
+                loginsStorage!!.ensureUnlocked(loginsStorageKey!!).await()
+                try {
+                    val failedToImport = loginsStorage.importLoginsAsync(success.records).await()
+                    if (failedToImport > 0L) {
+                        logger.debug("Failed to import $failedToImport")
+                    } else {
+                        logger.debug("Imported all records")
+                    }
+                } finally {
+                    loginsStorage.ensureLocked().await()
+                }
+                result
+            }
         }
     }
 
