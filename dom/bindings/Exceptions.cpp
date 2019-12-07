@@ -742,12 +742,15 @@ already_AddRefed<nsIStackFrame> CreateStack(JSContext* aCx,
     return nullptr;
   }
 
-  if (!stack) {
-    return nullptr;
-  }
+  return CreateStack(aCx, stack);
+}
 
-  nsCOMPtr<nsIStackFrame> frame = new JSStackFrame(stack);
-  return frame.forget();
+already_AddRefed<nsIStackFrame> CreateStack(JSContext* aCx,
+                                            JS::Handle<JSObject*> aStack) {
+  if (aStack) {
+    return MakeAndAddRef<JSStackFrame>(aStack);
+  }
+  return nullptr;
 }
 
 }  // namespace exceptions
