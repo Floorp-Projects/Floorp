@@ -91,6 +91,11 @@ NS_IMETHODIMP
 ServiceWorkerInfo::GetHandlesFetchEvents(bool* aValue) {
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mHandlesFetch == Unknown) {
+    return NS_ERROR_FAILURE;
+  }
+
   *aValue = HandlesFetch();
   return NS_OK;
 }
