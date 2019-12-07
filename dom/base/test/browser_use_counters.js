@@ -28,7 +28,9 @@ add_task(async function test_initialize() {
   });
 
   gOldContentCanRecord = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], function() {
+    gBrowser.selectedBrowser,
+    [],
+    function() {
       let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
         Ci.nsITelemetry
       );
@@ -138,7 +140,9 @@ add_task(async function() {
   Telemetry.canRecordExtended = gOldParentCanRecord;
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [{ oldCanRecord: gOldContentCanRecord }], async function(arg) {
+    gBrowser.selectedBrowser,
+    [{ oldCanRecord: gOldContentCanRecord }],
+    async function(arg) {
       await new Promise(resolve => {
         let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
           Ci.nsITelemetry
@@ -203,7 +207,9 @@ var check_use_counter_iframe = async function(
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Inject our desired file into the iframe of the newly-loaded page.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [{ file }], function(opts) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [{ file }], function(
+    opts
+  ) {
     let iframe = content.document.getElementById("content");
     iframe.src = opts.file;
 
@@ -275,20 +281,22 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Inject our desired file into the img of the newly-loaded page.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [{ file }], async function(
-    opts
-  ) {
-    let img = content.document.getElementById("display");
-    img.src = opts.file;
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ file }],
+    async function(opts) {
+      let img = content.document.getElementById("display");
+      img.src = opts.file;
 
-    return new Promise(resolve => {
-      let listener = event => {
-        img.removeEventListener("load", listener, true);
-        resolve();
-      };
-      img.addEventListener("load", listener, true);
-    });
-  });
+      return new Promise(resolve => {
+        let listener = event => {
+          img.removeEventListener("load", listener, true);
+          resolve();
+        };
+        img.addEventListener("load", listener, true);
+      });
+    }
+  );
 
   // Tear down the page.
   let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);

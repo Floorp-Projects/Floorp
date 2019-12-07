@@ -57,11 +57,13 @@ add_task(async function test_detach_loading_page() {
 
   info("Wait for content document to be created");
   await BrowserTestUtils.waitForCondition(async function() {
-    return SpecialPowers.spawn(slowLoadingTab.linkedBrowser, [URL], async function(
-      url
-    ) {
-      return content.document.documentURI == url;
-    });
+    return SpecialPowers.spawn(
+      slowLoadingTab.linkedBrowser,
+      [URL],
+      async function(url) {
+        return content.document.documentURI == url;
+      }
+    );
   });
 
   info("Detaching tab");

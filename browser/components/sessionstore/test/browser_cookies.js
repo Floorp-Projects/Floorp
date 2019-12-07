@@ -5,7 +5,9 @@ function promiseSetCookie(cookie) {
   return Promise.all([
     waitForCookieChanged(),
     SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [cookie], passedCookie => (content.document.cookie = passedCookie)
+      gBrowser.selectedBrowser,
+      [cookie],
+      passedCookie => (content.document.cookie = passedCookie)
     ),
   ]);
 }

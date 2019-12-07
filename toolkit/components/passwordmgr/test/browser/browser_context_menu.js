@@ -143,7 +143,9 @@ add_task(async function test_context_menu_password_fill() {
     },
     async function(browser) {
       let formDescriptions = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           let forms = Array.from(
             content.document.getElementsByClassName("test-form")
           );
@@ -155,7 +157,9 @@ add_task(async function test_context_menu_password_fill() {
         info("Testing form: " + description);
 
         let passwordInputIds = await SpecialPowers.spawn(
-          browser, [{ description }], async function({ description }) {
+          browser,
+          [{ description }],
+          async function({ description }) {
             let formElement = content.document.querySelector(
               `[description="${description}"]`
             );
@@ -175,7 +179,9 @@ add_task(async function test_context_menu_password_fill() {
             "#" + inputId,
             async function() {
               let inputDisabled = await SpecialPowers.spawn(
-                browser, [{ inputId }], async function({ inputId }) {
+                browser,
+                [{ inputId }],
+                async function({ inputId }) {
                   let input = content.document.getElementById(inputId);
                   return input.disabled || input.readOnly;
                 }
@@ -231,7 +237,9 @@ add_task(async function test_context_menu_username_login_fill() {
     },
     async function(browser) {
       let formDescriptions = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           let forms = Array.from(
             content.document.getElementsByClassName("test-form")
           );
@@ -242,7 +250,9 @@ add_task(async function test_context_menu_username_login_fill() {
       for (let description of formDescriptions) {
         info("Testing form: " + description);
         let usernameInputIds = await SpecialPowers.spawn(
-          browser, [{ description }], async function({ description }) {
+          browser,
+          [{ description }],
+          async function({ description }) {
             let formElement = content.document.querySelector(
               `[description="${description}"]`
             );
@@ -266,7 +276,9 @@ add_task(async function test_context_menu_username_login_fill() {
 
               let data = { description, inputId, headerHidden, headerDisabled };
               let shouldContinue = await SpecialPowers.spawn(
-                browser, [data], async function(data) {
+                browser,
+                [data],
+                async function(data) {
                   let {
                     description,
                     inputId,
@@ -317,7 +329,9 @@ add_task(async function test_context_menu_username_login_fill() {
           }
 
           let passwordFieldId = await SpecialPowers.spawn(
-            browser, [{ description }], async function({ description }) {
+            browser,
+            [{ description }],
+            async function({ description }) {
               let formElement = content.document.querySelector(
                 `[description="${description}"]`
               );
@@ -334,20 +348,22 @@ add_task(async function test_context_menu_username_login_fill() {
             1
           );
 
-          await SpecialPowers.spawn(browser, [{ passwordFieldId }], async function({
-            passwordFieldId,
-          }) {
-            let passwordField = content.document.getElementById(
-              passwordFieldId
-            );
-            if (!passwordField.hasAttribute("expectedFail")) {
-              Assert.equal(
-                passwordField.value,
-                "password1",
-                "Check upgraded login was actually used"
+          await SpecialPowers.spawn(
+            browser,
+            [{ passwordFieldId }],
+            async function({ passwordFieldId }) {
+              let passwordField = content.document.getElementById(
+                passwordFieldId
               );
+              if (!passwordField.hasAttribute("expectedFail")) {
+                Assert.equal(
+                  passwordField.value,
+                  "password1",
+                  "Check upgraded login was actually used"
+                );
+              }
             }
-          });
+          );
 
           await closePopup(CONTEXT_MENU);
         }
@@ -433,7 +449,9 @@ async function assertContextMenuFill(
     formId,
     unchangedSelector,
   };
-  let continuePromise = SpecialPowers.spawn(browser, [data], async function(data) {
+  let continuePromise = SpecialPowers.spawn(browser, [data], async function(
+    data
+  ) {
     let {
       username,
       password,

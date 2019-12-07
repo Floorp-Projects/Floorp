@@ -87,7 +87,9 @@ add_task(async function() {
 
 async function checkProxyCardVisibility(tab, shouldBeHidden) {
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ _shouldBeHidden: shouldBeHidden }], async function({ _shouldBeHidden }) {
+    tab.linkedBrowser,
+    [{ _shouldBeHidden: shouldBeHidden }],
+    async function({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const proxyCard = content.document.querySelector(".proxy-card");
         return ContentTaskUtils.is_hidden(proxyCard) === _shouldBeHidden;

@@ -186,7 +186,9 @@ async function openDocumentSelect(aURI, aCSSSelector) {
   });
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [{ selector: aCSSSelector }], async function(arg) {
+    gBrowser.selectedBrowser,
+    [{ selector: aCSSSelector }],
+    async function(arg) {
       let element = content.document.querySelector(arg.selector);
       content.getSelection().selectAllChildren(element);
     }

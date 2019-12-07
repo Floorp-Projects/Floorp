@@ -316,7 +316,9 @@ async function newTabTest(location) {
     browser
   ) {
     await SpecialPowers.spawn(
-      browser, [{ location, testInDocument_: testInDocument.toSource() }], async function({ location, testInDocument_ }) {
+      browser,
+      [{ location, testInDocument_: testInDocument.toSource() }],
+      async function({ location, testInDocument_ }) {
         // eslint-disable-next-line no-eval
         let testInDocument = eval(`(() => (${testInDocument_}))()`);
         testInDocument(content.document, location);

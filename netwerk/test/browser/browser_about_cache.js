@@ -62,7 +62,9 @@ add_task(async function() {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function(kTestPage) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function(
+    kTestPage
+  ) {
     ok(
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache with query params should still not have system principal"

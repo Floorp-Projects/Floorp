@@ -120,7 +120,9 @@ add_task(async function test() {
 
     // Write a cookie according to the userContext.
     await SpecialPowers.spawn(
-      tabInfo.browser, [{ userContext: USER_CONTEXTS[userContextId] }], function(arg) {
+      tabInfo.browser,
+      [{ userContext: USER_CONTEXTS[userContextId] }],
+      function(arg) {
         content.document.cookie = "userContext=" + arg.userContext;
       }
     );

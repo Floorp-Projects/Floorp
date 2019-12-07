@@ -30,7 +30,9 @@ add_task(async function test_show_logins() {
 add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(
-    browser, [LoginHelper.loginToVanillaObject(TEST_LOGIN1)], async login => {
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
+    async login => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
