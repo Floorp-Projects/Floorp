@@ -4999,7 +4999,7 @@
 # Expose the media query -moz-touch-enabled to web content.
 - name: layout.css.moz-touch-enabled.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
