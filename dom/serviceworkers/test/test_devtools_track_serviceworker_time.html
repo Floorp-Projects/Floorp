@@ -11,6 +11,7 @@
 
 const State = {
   BYTECHECK: -1,
+  PARSED: Ci.nsIServiceWorkerInfo.STATE_PARSED,
   INSTALLING: Ci.nsIServiceWorkerInfo.STATE_INSTALLING,
   INSTALLED: Ci.nsIServiceWorkerInfo.STATE_INSTALLED,
   ACTIVATING: Ci.nsIServiceWorkerInfo.STATE_ACTIVATING,
@@ -33,6 +34,10 @@ let expectedResults = [
     // Speacial state for verifying update since we will do the byte-check
     // first.
     state: State.BYTECHECK, installedTimeRecorded: false,
+    activatedTimeRecorded: false, redundantTimeRecorded: false
+  },
+  {
+    state: State.PARSED, installedTimeRecorded: false,
     activatedTimeRecorded: false, redundantTimeRecorded: false
   },
   {
@@ -113,7 +118,8 @@ function verifyServiceWorkTime(aSWRInfo, resolve) {
   info("Check the ServiceWorker time in its state is " + expectedResult.state);
 
   // Get serviceWorkerInfo from swrInfo or get the astray one which we hold.
-  let swInfo = aSWRInfo.installingWorker ||
+  let swInfo = aSWRInfo.evaluatingWorker ||
+               aSWRInfo.installingWorker ||
                aSWRInfo.waitingWorker ||
                aSWRInfo.activeWorker ||
                astrayServiceWorkerInfo;
