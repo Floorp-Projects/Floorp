@@ -8,6 +8,7 @@
 
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "nsIDocShell.h"
 
 nsHtml5OplessBuilder::nsHtml5OplessBuilder() : nsHtml5DocumentBuilder(true) {}
 
