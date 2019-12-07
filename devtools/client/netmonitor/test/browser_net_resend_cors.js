@@ -24,9 +24,7 @@ add_task(async function() {
 
   info("Waiting for OPTIONS, then POST");
   const wait = waitForNetworkEvents(monitor, 2);
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function(
-    url
-  ) {
+  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
     content.wrappedJSObject.performRequests(
       url,
       "triggering/preflight",

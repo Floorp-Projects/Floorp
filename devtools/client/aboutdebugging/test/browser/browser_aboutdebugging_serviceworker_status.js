@@ -42,7 +42,7 @@ add_task(async function() {
   );
 
   info("Install the service worker");
-  SpecialPowers.spawn(swTab.linkedBrowser, [], () =>
+  ContentTask.spawn(swTab.linkedBrowser, {}, () =>
     content.wrappedJSObject.installServiceWorker()
   );
 

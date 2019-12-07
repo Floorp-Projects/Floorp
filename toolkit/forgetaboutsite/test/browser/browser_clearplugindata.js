@@ -60,7 +60,7 @@ add_task(async function() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
   // Set data for the plugin after the page load.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.wrappedJSObject.testSteps();
   });
 

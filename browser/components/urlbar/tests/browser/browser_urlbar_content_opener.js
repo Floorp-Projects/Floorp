@@ -8,7 +8,7 @@ add_task(async function() {
     TEST_BASE_URL + "dummy_page.html",
     async function(browser) {
       let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-      await SpecialPowers.spawn(browser, [], function() {
+      await ContentTask.spawn(browser, null, function() {
         content.window.open("", "_BLANK", "toolbar=no,height=300,width=500");
       });
       let newWin = await windowOpenedPromise;

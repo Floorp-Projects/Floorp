@@ -5,7 +5,7 @@
 "use strict";
 
 async function fillTestPage(aBrowser) {
-  await SpecialPowers.spawn(aBrowser, [], async function() {
+  await ContentTask.spawn(aBrowser, null, async function() {
     content.document
       .getElementById("form-basic-username")
       .setUserInput("my_username");

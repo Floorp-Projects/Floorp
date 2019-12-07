@@ -30,14 +30,12 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Loading tracking scripts");
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [
-      {
-        scriptURL: TEST_DOMAIN + TEST_PATH + "tracker.js",
-        page: TEST_3RD_PARTY_PAGE,
-      },
-    ],
+    {
+      scriptURL: TEST_DOMAIN + TEST_PATH + "tracker.js",
+      page: TEST_3RD_PARTY_PAGE,
+    },
     async obj => {
       info("Checking if permission is denied");
       let callbackBlocked = async _ => {
@@ -104,14 +102,12 @@ add_task(async function() {
   await AntiTracking.interactWithTracker();
 
   info("Loading tracking scripts");
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [
-      {
-        scriptURL: TEST_DOMAIN + TEST_PATH + "tracker.js",
-        page: TEST_3RD_PARTY_PAGE,
-      },
-    ],
+    {
+      scriptURL: TEST_DOMAIN + TEST_PATH + "tracker.js",
+      page: TEST_3RD_PARTY_PAGE,
+    },
     async obj => {
       info("Checking if permission is denied");
       let callbackBlocked = async _ => {

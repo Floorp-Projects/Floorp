@@ -9,7 +9,7 @@ const BASE_URL = "http://example.com/browser/browser/modules/test/browser/";
 
 async function play(tab) {
   let browser = tab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, {}, async function() {
     let audio = content.document.querySelector("audio");
     await audio.play();
   });

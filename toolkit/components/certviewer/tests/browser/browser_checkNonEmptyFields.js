@@ -5,7 +5,7 @@
 
 async function checkNonEmptyFields(url) {
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await ContentTask.spawn(browser, null, async function() {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");

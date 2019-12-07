@@ -1346,9 +1346,9 @@ async function selectFrame(dbg, frame) {
 async function pauseDebugger(dbg) {
   info("Waiting for debugger to pause");
   const onPaused = waitForPaused(dbg);
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.wrappedJSObject.firstCall();
-  }).catch(() => {});
+  });
   await onPaused;
 }
 
@@ -1540,7 +1540,7 @@ function reloadPage() {
     "load",
     true
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.location.reload();
   });
   return onLoad;

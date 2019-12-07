@@ -28,7 +28,7 @@ const {
 // Checks for the SimulatorActor
 
 async function setup() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.window.testColorMatrix = function(actual, expected) {
       for (const idx in actual) {
         is(
@@ -40,7 +40,7 @@ async function setup() {
     };
   });
   SimpleTest.registerCleanupFunction(async function() {
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
       content.window.testColorMatrix = null;
     });
   });
@@ -50,9 +50,9 @@ async function testSimulate(simulator, matrix, type = null) {
   const matrixApplied = await simulator.simulate({ types: type ? [type] : [] });
   ok(matrixApplied, "Simulation color matrix is successfully applied.");
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [[type, matrix]],
+    [type, matrix],
     ([simulationType, simulationMatrix]) => {
       const { window } = content;
       info(

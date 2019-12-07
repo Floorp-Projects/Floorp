@@ -50,7 +50,7 @@ add_task(async function() {
   ok(unhighlightSnapshot, "Got unhighlightSnapshot");
 
   // Select the matches that should have been highlighted manually
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let doc = content.document;
     let win = doc.defaultView;
 

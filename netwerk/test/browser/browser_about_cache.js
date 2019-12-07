@@ -32,7 +32,7 @@ add_task(async function() {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     ok(
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache should not have system principal"
@@ -62,9 +62,7 @@ add_task(async function() {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function(
-    kTestPage
-  ) {
+  await ContentTask.spawn(tab.linkedBrowser, kTestPage, function(kTestPage) {
     ok(
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache with query params should still not have system principal"
@@ -92,7 +90,7 @@ add_task(async function() {
   await entryLoaded;
   info("about:cache entry loaded");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [triggeringURISpec], function(
+  await ContentTask.spawn(tab.linkedBrowser, triggeringURISpec, function(
     triggeringURISpec
   ) {
     ok(

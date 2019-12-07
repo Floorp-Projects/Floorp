@@ -20,7 +20,7 @@ add_task(async function maxTouchPoints() {
     gBrowser,
     "data:text/html,Test page for navigator.maxTouchPoints"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
     is(content.navigator.maxTouchPoints, 5, "Should have touch points.");
   });
 

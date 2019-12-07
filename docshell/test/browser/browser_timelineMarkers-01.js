@@ -11,7 +11,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
     browser
   ) {
-    await SpecialPowers.spawn(browser, [], function() {
+    await ContentTask.spawn(browser, null, function() {
       ok(
         "recordProfileTimelineMarkers" in docShell,
         "The recordProfileTimelineMarkers attribute exists"

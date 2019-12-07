@@ -9,7 +9,7 @@ const TEST_URI = "data:text/html;charset=utf8,test Object Inspector";
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(
       "oi-test",
       content.wrappedJSObject.Math

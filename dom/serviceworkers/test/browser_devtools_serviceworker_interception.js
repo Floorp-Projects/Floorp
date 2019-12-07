@@ -175,10 +175,10 @@ async function fetchAndCheckObservers(
   if (gIsParentInterceptEnabled) {
     promise = checkObserver(checkArgs);
   } else {
-    promise = SpecialPowers.spawn(aObserverBrowser, [checkArgs], checkObserver);
+    promise = ContentTask.spawn(aObserverBrowser, checkArgs, checkObserver);
   }
 
-  await SpecialPowers.spawn(aFetchBrowser, [aTestCase.url], contentFetch);
+  await ContentTask.spawn(aFetchBrowser, aTestCase.url, contentFetch);
   await promise;
 }
 
@@ -278,7 +278,7 @@ add_task(async function test_serivce_worker_interception() {
   await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[0]);
 
   info("Register a service worker");
-  await SpecialPowers.spawn(tabBrowser, [sw], registerSWAndWaitForActive);
+  await ContentTask.spawn(tabBrowser, sw, registerSWAndWaitForActive);
 
   info("Test 2: Verify simple hijack");
   await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[1]);
@@ -290,7 +290,7 @@ add_task(async function test_serivce_worker_interception() {
   await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[3]);
 
   info("Clean up");
-  await SpecialPowers.spawn(tabBrowser, [undefined], unregisterSW);
+  await ContentTask.spawn(tabBrowser, undefined, unregisterSW);
 
   gBrowser.removeTab(tab);
   gBrowser.removeTab(tab_observer);

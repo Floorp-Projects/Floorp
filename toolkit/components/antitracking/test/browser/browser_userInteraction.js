@@ -45,7 +45,7 @@ add_task(async function() {
   });
 
   info("Simulating user-interaction.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     content.document.userInteractionForTesting();
   });
 
@@ -64,7 +64,7 @@ add_task(async function() {
     });
 
     info("Simulating another user-interaction.");
-    await SpecialPowers.spawn(browser, [], async function() {
+    await ContentTask.spawn(browser, null, async function() {
       content.document.userInteractionForTesting();
     });
 
@@ -97,7 +97,7 @@ add_task(async function() {
   });
 
   info("Simulating another user-interaction.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     content.document.userInteractionForTesting();
   });
 
