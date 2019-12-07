@@ -33,13 +33,8 @@ add_task(async function() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "DOMTitleChanged",
-        function onTitleChanged() {
-          docShell.chromeEventHandler.removeEventListener(
-            "DOMTitleChanged",
-            onTitleChanged
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       content.document.title = "new title";
