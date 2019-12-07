@@ -2479,6 +2479,8 @@ extern JS_FRIEND_API JSObject* GetJSMEnvironmentOfScriptedCaller(JSContext* cx);
 // other embedding such as a Gecko FrameScript. Caller can check compartment.
 extern JS_FRIEND_API bool IsJSMEnvironment(JSObject* obj);
 
+extern JS_FRIEND_API bool IsSavedFrame(JSObject* obj);
+
 // Matches the condition in js/src/jit/ProcessExecutableMemory.cpp
 #if defined(XP_WIN)
 // Parameters use void* types to avoid #including windows.h. The return value of
