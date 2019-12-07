@@ -18,8 +18,8 @@
         title="360437 test">
 
   <script type="application/javascript"><![CDATA[
-    ;
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
@@ -48,12 +48,9 @@
       gFindBar.browser = gBrowser;
 
       let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser);
-      let contentLoadedPromise = SpecialPowers.spawn(gBrowser, [], async function() {
+      let contentLoadedPromise = ContentTask.spawn(gBrowser, null, async function() {
         return new Promise(resolve => {
-          docShell.chromeEventHandler.addEventListener("DOMContentLoaded", function listener() {
-            docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
+          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
         });
       });
       BrowserTestUtils.loadURI(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");

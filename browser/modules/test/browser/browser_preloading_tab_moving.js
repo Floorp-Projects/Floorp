@@ -72,7 +72,7 @@ add_task(async function moving_works() {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
     });
-  });
+  }).catch(Cu.reportError);
 
   ok(true, "Managed to open a tab in the original window still.");
 
