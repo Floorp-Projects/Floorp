@@ -15,6 +15,14 @@ const EMPTY_URL = (URL_ROOT + "resources/service-workers/empty.html").replace(
   "test2.example.com"
 );
 
+// FIXME bug 1575427 this rejection is very common.
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /this._frontCreationListeners is null/
+);
+
 add_task(async function() {
   await enableApplicationPanel();
 
