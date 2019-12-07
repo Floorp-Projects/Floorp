@@ -828,6 +828,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void unboxBigInt(const Operand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
   }
+  void unboxBigInt(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
+  }
 
   void unboxObject(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
