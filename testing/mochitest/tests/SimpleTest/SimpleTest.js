@@ -278,7 +278,7 @@ SimpleTest.ok = function (condition, name) {
     }
 };
 
-SimpleTest.record = function (condition, name, diag, stack) {
+SimpleTest.record = function (condition, name, diag, stack, expected) {
     var test = {'result': !!condition, 'name': name, 'diag': diag};
     if (SimpleTest.expected == 'fail') {
       if (!test.result) {
@@ -295,6 +295,9 @@ SimpleTest.record = function (condition, name, diag, stack) {
       }
       var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
+    } else if (expected == "fail") {
+      var successInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
+      var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
     } else {
       var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
