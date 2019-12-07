@@ -53,6 +53,10 @@ class SpecialPowersSandbox {
       });
     }
 
+    for (let [symbol, url] of Object.entries(opts.imports || {})) {
+      ChromeUtils.defineModuleGetter(this.sandbox, symbol, url);
+    }
+
     Object.assign(this.sandbox, {
       ok: (...args) => {
         this.Assert.ok(...args);
