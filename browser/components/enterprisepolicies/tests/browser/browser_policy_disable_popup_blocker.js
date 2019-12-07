@@ -36,6 +36,7 @@ async function test_popup_blocker_disabled({ disabled, locked }) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ disabled, locked }],
+    // eslint-disable-next-line no-shadow
     async function({ disabled, locked }) {
       let checkbox = content.document.getElementById("popupPolicy");
       is(
