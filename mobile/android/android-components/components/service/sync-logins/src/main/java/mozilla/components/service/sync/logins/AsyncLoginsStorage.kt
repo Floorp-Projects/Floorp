@@ -278,9 +278,13 @@ interface AsyncLoginsStorage : AutoCloseable {
     fun getHandle(): Long
 
     /**
-     * Bulk-import of a list of [ServerPassword]. Storage must be empty, otherwise this will throw.
+     * Bulk-import of a list of [ServerPassword].
+     * Storage must be empty, otherwise underlying implementation this will throw.
      *
      * @return number of records that could not be imported.
+     *
+     * @rejectsWith [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
+     * (IO failure, rust panics, etc).
      */
     fun importLoginsAsync(logins: List<ServerPassword>): Deferred<Long>
 }

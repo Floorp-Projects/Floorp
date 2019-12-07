@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
+import java.lang.IllegalArgumentException
 
 @RunWith(AndroidJUnit4::class)
 class FennecLoginsMigrationTest {
@@ -186,5 +187,41 @@ class FennecLoginsMigrationTest {
             ), successResult.records)
         }
         verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `exception collector`() {
+        val exceptionCollector: MutableMap<String, Exception> = mutableMapOf()
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector) {}
+        assertEquals(0, exceptionCollector.size)
+
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector) {
+            throw IllegalArgumentException("boo")
+        }
+        assertEquals(1, exceptionCollector.size)
+
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector) {
+            throw IllegalArgumentException("boo")
+        }
+        // Exception occurs at a different line number in the file.
+        assertEquals(2, exceptionCollector.size)
+
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector) {
+            throw IllegalArgumentException("blah")
+        }
+        // Exception occurs at a different line number in the file.
+        assertEquals(3, exceptionCollector.size)
+
+        // New exception entirely.
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector, ::throwingFunction)
+        assertEquals(4, exceptionCollector.size)
+
+        // Repeat the same exact exception as above.
+        FennecLoginsMigration.collectExceptionsIntoASet(exceptionCollector, ::throwingFunction)
+        assertEquals(4, exceptionCollector.size)
+    }
+
+    private fun throwingFunction() {
+        throw IllegalArgumentException("where are ma argz!")
     }
 }

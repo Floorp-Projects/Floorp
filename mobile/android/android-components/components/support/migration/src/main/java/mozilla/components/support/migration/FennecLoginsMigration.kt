@@ -8,6 +8,7 @@ import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
+import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.base.log.logger.Logger
@@ -102,6 +103,10 @@ internal object FennecLoginsMigration {
      */
     internal fun isMasterPasswordValid(masterPassword: String, key4DbPath: String): Boolean {
         val db = SQLiteDatabase.openDatabase(key4DbPath, null, OPEN_READONLY)
+        // item1 is global salt, item2 is DER-encoded blob containing: entry salt and ciphertext.
+        // Master password is combined with global salt and entry salt, and from this combination we derive key and iv
+        // necessary for the TDES cipher. Once we have key and iv, we can decrypt item2.
+        // item2, once decrypted using a correct master password, will contain a "password check" string.
         return db.rawQuery("select item1, item2 from metadata where id = 'password'", null).use {
             it.moveToNext()
 
@@ -117,7 +122,7 @@ internal object FennecLoginsMigration {
         }
     }
 
-    @Suppress("TooGenericExceptionCaught", "LongMethod")
+    @Suppress("LongMethod")
     private fun getLogins(
         crashReporter: CrashReporter,
         masterPassword: String,
@@ -136,7 +141,6 @@ internal object FennecLoginsMigration {
         val totalRecordCount = DatabaseUtils.longForQuery(
             db, "select count(id) from moz_logins", null
         ).toInt()
-        var failedRecordsCount = 0
 
         val selectQuery = """
             select
@@ -156,59 +160,62 @@ internal object FennecLoginsMigration {
                 moz_logins
         """.trimIndent()
 
+        val exceptionCollector: MutableMap<String, Exception> = mutableMapOf()
+
         db.rawQuery(selectQuery, null).use {
-            while (it.moveToNext()) {
-                try {
-                    val encryptedUsername = it.getString(it.getColumnIndexOrThrow("encryptedUsername"))
-                    val encryptedPassword = it.getString(it.getColumnIndexOrThrow("encryptedPassword"))
+            while (it.moveToNext()) { collectExceptionsIntoASet(exceptionCollector) {
+                val encryptedUsername = it.getString(it.getColumnIndexOrThrow("encryptedUsername"))
+                val encryptedPassword = it.getString(it.getColumnIndexOrThrow("encryptedPassword"))
 
-                    val derUsername = Base64.decode(encryptedUsername, Base64.DEFAULT)
-                    val plaintextUsername = derDecodeLoginEntry(derUsername)
-                        .decrypt(masterPassword, key4DbPath)
-                        .pkcs7unpad()
+                val derUsername = Base64.decode(encryptedUsername, Base64.DEFAULT)
+                val plaintextUsername = derDecodeLoginEntry(derUsername)
+                    .decrypt(masterPassword, key4DbPath)
+                    .pkcs7unpad()
 
-                    val derPassword = Base64.decode(encryptedPassword, Base64.DEFAULT)
-                    val plaintextPassword = derDecodeLoginEntry(derPassword)
-                        .decrypt(masterPassword, key4DbPath)
-                        .pkcs7unpad()
+                val derPassword = Base64.decode(encryptedPassword, Base64.DEFAULT)
+                val plaintextPassword = derDecodeLoginEntry(derPassword)
+                    .decrypt(masterPassword, key4DbPath)
+                    .pkcs7unpad()
 
-                    val encodedUsername = String(plaintextUsername, Charsets.UTF_8)
-                    val encodedPassword = String(plaintextPassword, Charsets.UTF_8)
+                val encodedUsername = String(plaintextUsername, Charsets.UTF_8)
+                val encodedPassword = String(plaintextPassword, Charsets.UTF_8)
 
-                    val hostname = it.getString(it.getColumnIndexOrThrow("hostname"))
-                    val httpRealm = it.getString(it.getColumnIndexOrThrow("httpRealm"))
-                    val formSubmitURL = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
-                    val usernameField = it.getString(it.getColumnIndexOrThrow("usernameField"))
-                    val passwordField = it.getString(it.getColumnIndexOrThrow("passwordField"))
-                    val guid = it.getString(it.getColumnIndexOrThrow("guid"))
-                    val timeCreated = it.getLong(it.getColumnIndexOrThrow("timeCreated"))
-                    val timesUsed = it.getInt(it.getColumnIndexOrThrow("timesUsed"))
-                    val timeLastUsed = it.getLong(it.getColumnIndexOrThrow("timeLastUsed"))
-                    val timePasswordChanged = it.getLong(it.getColumnIndexOrThrow("timePasswordChanged"))
+                val hostname = it.getString(it.getColumnIndexOrThrow("hostname"))
+                val httpRealm = it.getString(it.getColumnIndexOrThrow("httpRealm"))
+                val formSubmitURL = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
+                val usernameField = it.getString(it.getColumnIndexOrThrow("usernameField"))
+                val passwordField = it.getString(it.getColumnIndexOrThrow("passwordField"))
+                val guid = it.getString(it.getColumnIndexOrThrow("guid"))
+                val timeCreated = it.getLong(it.getColumnIndexOrThrow("timeCreated"))
+                val timesUsed = it.getInt(it.getColumnIndexOrThrow("timesUsed"))
+                val timeLastUsed = it.getLong(it.getColumnIndexOrThrow("timeLastUsed"))
+                val timePasswordChanged = it.getLong(it.getColumnIndexOrThrow("timePasswordChanged"))
 
-                    val fullRecord = ServerPassword(
-                        // 'id' is renamed to 'guid' as this record goes over the FFI boundary.
-                        id = guid,
-                        hostname = hostname,
-                        username = encodedUsername,
-                        password = encodedPassword,
-                        httpRealm = httpRealm,
-                        formSubmitURL = formSubmitURL,
-                        timesUsed = timesUsed,
-                        timeCreated = timeCreated,
-                        timeLastUsed = timeLastUsed,
-                        timePasswordChanged = timePasswordChanged,
-                        usernameField = usernameField,
-                        passwordField = passwordField
-                    )
-                    records.add(fullRecord)
-                } catch (e: Exception) {
-                    crashReporter.submitCaughtException(e)
-                    failedRecordsCount++
-                    continue
-                }
-            }
+                val fullRecord = ServerPassword(
+                    // 'id' is renamed to 'guid' as this record goes over the FFI boundary.
+                    id = guid,
+                    hostname = hostname,
+                    username = encodedUsername,
+                    password = encodedPassword,
+                    httpRealm = httpRealm,
+                    formSubmitURL = formSubmitURL,
+                    timesUsed = timesUsed,
+                    timeCreated = timeCreated,
+                    timeLastUsed = timeLastUsed,
+                    timePasswordChanged = timePasswordChanged,
+                    usernameField = usernameField,
+                    passwordField = passwordField
+                )
+                records.add(fullRecord)
+            } }
         }
+
+        // Report exceptions encountered to Sentry. Exceptions are collected into a set, to prevent spamming Sentry
+        // if we encounter the same exception again and again in a while loop above.
+        exceptionCollector.forEach {
+            crashReporter.submitCaughtException(it.value)
+        }
+
         return LoginsMigrationResult.Success.LoginRecords(records = records, recordsDetected = totalRecordCount)
     }
 
@@ -220,10 +227,11 @@ internal object FennecLoginsMigration {
 
         // To decrypt a signons.sqlite entry (username or password), we first need to obtain an encryption key.
         // This key is stored in an encrypted form in the key4.db file; we can use our masterPassword to decrypt it.
-        val key = getKey(this.keyId, masterPassword, key4DbPath) ?: throw IllegalStateException()
+        val key = getKeyProtectedWithMasterPassword(this.keyId, masterPassword, key4DbPath)
+            ?: throw IllegalStateException()
 
         // Once we have the key, we can go ahead and decrypt this entry.
-        return decryptTDes(key, this.iv, this.cipherText)
+        return decryptTDES(key, this.iv, this.cipherText)
     }
 
     private fun Key4Entry.decrypt(masterPassword: String, globalSalt: ByteArray): ByteArray {
@@ -239,7 +247,7 @@ internal object FennecLoginsMigration {
         val ivMaterial = derivedKeyMaterial[1]
 
         // Once we have key and iv, we can decrypt this entry.
-        return decryptTDes(keyMaterial, ivMaterial, cipherText)
+        return decryptTDES(keyMaterial, ivMaterial, cipherText)
     }
 
     private fun ByteArray.matchesBER(berHex: String, otherwise: (hexValue: String) -> Unit): Boolean {
@@ -257,13 +265,20 @@ internal object FennecLoginsMigration {
      *
      * This is a memoizing function.
      */
-    private fun getKey(keyId: ByteArray, masterPassword: String, key4DbPath: String): ByteArray? {
+    private fun getKeyProtectedWithMasterPassword(
+        keyId: ByteArray,
+        masterPassword: String,
+        key4DbPath: String
+    ): ByteArray? {
         val cacheKey = keyId.toHexString() + masterPassword + key4DbPath
 
         keyForId[cacheKey]?.let { return it }
 
         val globalSalt = getGlobalSalt(key4DbPath)
         val db = SQLiteDatabase.openDatabase(key4DbPath, null, OPEN_READONLY)
+        // a102 is keyid.
+        // a11 is a binary blob. It's ASN.1 decoded, and tells us algorithm oid, entry salt, iteration count, and
+        // ciphertext for the key itself. See derDecodeKey4Entry for details.
         val a11 = db.rawQuery("select a11, a102 from nssPrivate", null).use {
             while (it.moveToNext()) {
                 val maybeRightKeyId = it.getBlob(it.getColumnIndexOrThrow("a102"))
@@ -271,10 +286,12 @@ internal object FennecLoginsMigration {
                     return@use it.getBlob(it.getColumnIndexOrThrow("a11"))
                 }
             }
-            null
-        } ?: return null
+            return null
+        }
 
+        // Now that we have a11, decode it and decrypt the key stored in it.
         val decryptedKeyMaterial = derDecodeKey4Entry(a11).decrypt(masterPassword, globalSalt)
+        // Unpad the key, store it in the cache for future reference.
         return (decryptedKeyMaterial.copyOfRange(0, DES_KEY_SIZE)).also { keyForId[cacheKey] = it }
     }
 
@@ -292,7 +309,7 @@ internal object FennecLoginsMigration {
     /**
      * Decrypts [ciphertext] using TDES.
      */
-    private fun decryptTDes(key: ByteArray, iv: ByteArray, ciphertext: ByteArray): ByteArray {
+    private fun decryptTDES(key: ByteArray, iv: ByteArray, ciphertext: ByteArray): ByteArray {
         val keyFactory = SecretKeyFactory.getInstance(DES_EDE)
         val desKeySpec = DESedeKeySpec(key)
 
@@ -463,6 +480,22 @@ internal object FennecLoginsMigration {
             in 65536..16777215 -> 4
             // We don't need to deal with larger values.
             else -> throw NotImplementedError("Octet length not supported: $length")
+        }
+    }
+
+    /**
+     * Runs [block], and inserts exception that it may possibly throw into a set of exceptions, the [collector].
+     */
+    @Suppress("TooGenericExceptionCaught")
+    @VisibleForTesting
+    internal fun collectExceptionsIntoASet(collector: MutableMap<String, Exception>, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            // In extreme cases, VM is allowed to return an empty stacktrace.
+            val topStackFrameString = e.stackTrace.getOrNull(0)?.toString() ?: ""
+            val exceptionKey = "${e::class.java.canonicalName} $topStackFrameString"
+            collector[exceptionKey] = e
         }
     }
 }
