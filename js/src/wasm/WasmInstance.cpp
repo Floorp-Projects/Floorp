@@ -28,6 +28,7 @@
 #include "jit/JitScript.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/BigIntType.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmStubs.h"
@@ -116,7 +117,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  if (fi.funcType().hasI64ArgOrRet()) {
+  if (fi.funcType().hasI64ArgOrRet() && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -140,10 +141,23 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       case ValType::AnyRef:
         args[i].set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
         break;
+      case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+        MOZ_ASSERT(HasI64BigIntSupport(cx));
+        // If bi is manipulated other than test & storing, it would need
+        // to be rooted here.
+        BigInt* bi = BigInt::createFromInt64(cx, *(int64_t*)&argv[i]);
+        if (!bi) {
+          return false;
+        }
+        args[i].set(BigIntValue(bi));
+        break;
+#else
+        MOZ_CRASH("unhandled type in callImport");
+#endif
+      }
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callImport");
-      case ValType::I64:
-        MOZ_CRASH("unhandled type in callImport");
       case ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
     }
@@ -222,6 +236,15 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
           return true;
         }
         break;
+      case ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+        if (!argTypes->hasType(TypeSet::BigIntType())) {
+          return true;
+        }
+        break;
+#else
+        MOZ_CRASH("NYI");
+#endif
       case ValType::AnyRef:
         // We don't know what type the value will be, so we can't really check
         // whether the callee will accept it.  It doesn't make much sense to see
@@ -238,8 +261,6 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         break;
       case ValType::Ref:
         MOZ_CRASH("case guarded above");
-      case ValType::I64:
-        MOZ_CRASH("NYI");
       case ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
     }
@@ -289,9 +310,19 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex,
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex,
                          int32_t argc, uint64_t* argv) {
   JSContext* cx = TlsContext.get();
+#ifdef ENABLE_WASM_BIGINT
+  RootedValue rval(cx);
+  if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
+    return false;
+  }
+
+  JS_TRY_VAR_OR_RETURN_FALSE(cx, *argv, ToBigInt64(cx, rval));
+  return true;
+#else
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_I64_TYPE);
   return false;
+#endif
 }
 
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
@@ -1626,7 +1657,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  if (funcType->hasI64ArgOrRet()) {
+  if (funcType->hasI64ArgOrRet() && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -1661,8 +1692,24 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         DebugCodegen(DebugChannel::Function, "i32(%d) ",
                      *(int32_t*)&exportArgs[i]);
         break;
-      case ValType::I64:
+      case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+        MOZ_ASSERT(HasI64BigIntSupport(cx),
+                   "unexpected i64 flowing into callExport");
+        RootedBigInt bigint(cx, ToBigInt(cx, v));
+        if (!bigint) {
+          return false;
+        }
+
+        int64_t* res = (int64_t*)&exportArgs[i];
+        *res = BigInt::toInt64(bigint);
+        DebugCodegen(DebugChannel::Function, "i64(%" PRId64 ") ",
+                     *(int64_t*)&exportArgs[i]);
+        break;
+#else
         MOZ_CRASH("unexpected i64 flowing into callExport");
+#endif
+      }
       case ValType::F32:
         if (!RoundFloat32(cx, v, (float*)&exportArgs[i])) {
           return false;
@@ -1771,8 +1818,22 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         args.rval().set(Int32Value(*(int32_t*)retAddr));
         DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
         break;
-      case ValType::I64:
+      case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+        MOZ_ASSERT(HasI64BigIntSupport(cx),
+                   "unexpected i64 flowing from callExport");
+        // If bi is manipulated other than test & storing, it would need
+        // to be rooted here.
+        BigInt* bi = BigInt::createFromInt64(cx, *(int64_t*)retAddr);
+        if (!bi) {
+          return false;
+        }
+        args.rval().set(BigIntValue(bi));
+        break;
+#else
         MOZ_CRASH("unexpected i64 flowing from callExport");
+#endif
+      }
       case ValType::F32:
         args.rval().set(NumberValue(*(float*)retAddr));
         DebugCodegen(DebugChannel::Function, "f32(%f)", *(float*)retAddr);
