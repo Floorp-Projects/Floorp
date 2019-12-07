@@ -1021,10 +1021,18 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                  sampler->GetGuid(*zoomedMetrics) == sampler->GetGuid(wrapper))
                     ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
                     : LayoutAndVisual;
-
             AsyncTransform asyncTransformWithoutOverscroll =
                 sampler->GetCurrentAsyncTransform(wrapper,
                                                   asyncTransformComponents);
+            Maybe<CompositionPayload> payload =
+                sampler->NotifyScrollSampling(wrapper);
+            // The scroll latency should be measured between composition and the
+            // first scrolling event. Otherwise we observe metrics with <16ms
+            // latency even when frame.delay is enabled.
+            if (payload.isSome()) {
+              mLayerManager->RegisterPayload(*payload);
+            }
+
             AsyncTransformComponentMatrix overscrollTransform =
                 sampler->GetOverscrollTransform(wrapper);
             AsyncTransformComponentMatrix asyncTransform =
