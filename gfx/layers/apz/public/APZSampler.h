@@ -95,6 +95,8 @@ class APZSampler {
       const LayerMetricsWrapper& aLayer);
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
       const LayerMetricsWrapper& aLayer);
+  Maybe<CompositionPayload> NotifyScrollSampling(
+      const LayerMetricsWrapper& aLayer);
 
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
