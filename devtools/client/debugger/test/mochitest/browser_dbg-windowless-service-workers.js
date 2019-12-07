@@ -7,6 +7,14 @@ async function checkWorkerThreads(dbg, count) {
   ok(true, `Have ${count} threads`);
 }
 
+async function checkWorkerStatus(dbg, status) {
+  await waitUntil(() => {
+    const threads = dbg.selectors.getThreads();
+    return threads.some(t => t.serviceWorkerStatus == status);
+  });
+  ok(true, `Have thread with status ${status}`);
+}
+
 // Test that we can detect a new service worker and hit breakpoints that we've
 // set in it.
 add_task(async function() {
@@ -31,8 +39,9 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 13);
 
-  // Leave the breakpoint in place for the next subtest.
+  // Leave the breakpoint and worker in place for the next subtest.
   await resume(dbg);
+  await waitForRequestsToSettle(dbg);
   await removeTab(gBrowser.selectedTab);
 });
 
@@ -61,6 +70,7 @@ add_task(async function() {
   invokeInTab("unregisterWorker");
 
   await checkWorkerThreads(dbg, 0);
+  await waitForRequestsToSettle(dbg);
   await removeTab(gBrowser.selectedTab);
 });
 
@@ -73,6 +83,7 @@ add_task(async function() {
 
   invokeInTab("registerWorker");
   await checkWorkerThreads(dbg, 1);
+  await checkWorkerStatus(dbg, "active");
 
   const firstTab = gBrowser.selectedTab;
 
@@ -101,13 +112,55 @@ add_task(async function() {
   ok(content0.value.includes("newServiceWorker") != content1.value.includes("newServiceWorker"),
      "Got two different sources for service worker");
 
+  // Add a breakpoint for the next subtest.
+  await addBreakpoint(dbg, "service-worker.sjs", 2);
+
   invokeInTab("unregisterWorker");
 
   await checkWorkerThreads(dbg, 0);
+  await waitForRequestsToSettle(dbg);
   await removeTab(firstTab);
   await removeTab(secondTab);
 
   // Reset the SJS in case we will be repeating the test.
   await addTab(EXAMPLE_URL + "service-worker.sjs?setStatus=");
+  await removeTab(gBrowser.selectedTab);
+});
+
+// Test setting breakpoints while the service worker is starting up.
+add_task(async function() {
+  info("Subtest #4");
+
+  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-service-workers.html", "jsdebugger");
+  const dbg = createDebuggerContext(toolbox);
+
+  invokeInTab("registerWorker");
+  await checkWorkerThreads(dbg, 1);
+
+  await waitForSource(dbg, "service-worker.sjs");
+  const workerSource = findSource(dbg, "service-worker.sjs");
+
+  await waitForBreakpointCount(dbg, 1);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, workerSource.id, 2);
+  await checkWorkerStatus(dbg, "evaluating");
+
+  await addBreakpoint(dbg, "service-worker.sjs", 19);
+  await resume(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, workerSource.id, 19);
+  await checkWorkerStatus(dbg, "installing");
+
+  await addBreakpoint(dbg, "service-worker.sjs", 5);
+  await resume(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, workerSource.id, 5);
+  await checkWorkerStatus(dbg, "active");
+
+  await resume(dbg);
+  invokeInTab("unregisterWorker");
+
+  await checkWorkerThreads(dbg, 0);
+  await waitForRequestsToSettle(dbg);
   await removeTab(gBrowser.selectedTab);
 });

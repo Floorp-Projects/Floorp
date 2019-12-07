@@ -19,6 +19,10 @@ self.addEventListener("fetch", event => {
     event.respondWith(response);
   }
 });
+
+self.addEventListener("install", event => {
+  dump("Install\\n");
+});
 `;
 
 function handleRequest(request, response) {
@@ -30,17 +34,5 @@ function handleRequest(request, response) {
   }
 
   const status = getState("status");
-
-  let newBody = body.replace("STATUS", status);
-
-  if (status == "stuckInstall") {
-newBody += `
-self.addEventListener("install", event => {
-  dump("Install\\n");
-  event.waitUntil(new Promise(resolve => {}));
-});
-`;
-  }
-
-  response.write(newBody);
+  response.write(body.replace("STATUS", status));
 }

@@ -50,14 +50,12 @@ function setupEvents(dependencies: Dependencies) {
   sourceQueue.initialize(actions);
 
   addThreadEventListeners(threadFront);
-  tabTarget.on("workerListChanged", () => threadListChanged("worker"));
-  debuggerClient.mainRoot.on("processListChanged", () =>
-    threadListChanged("contentProcess")
-  );
+  tabTarget.on("workerListChanged", () => threadListChanged());
+  debuggerClient.mainRoot.on("processListChanged", () => threadListChanged());
 
   if (features.windowlessServiceWorkers || attachAllTargets(tabTarget)) {
     const workersListener = new WorkersListener(debuggerClient.mainRoot);
-    workersListener.addListener(() => threadListChanged("worker"));
+    workersListener.addListener(() => threadListChanged());
   }
 }
 
@@ -114,8 +112,8 @@ function newSource(threadFront: ThreadFront, { source }: SourcePacket) {
   });
 }
 
-function threadListChanged(type) {
-  actions.updateThreads(type);
+function threadListChanged() {
+  actions.updateThreads();
 }
 
 function replayFramePositions(
