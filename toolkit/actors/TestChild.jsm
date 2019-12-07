@@ -24,6 +24,12 @@ class TestChild extends JSWindowActorChild {
         return new Promise(resolve => {
           resolve({ result: a + b });
         });
+      case "error":
+        return Promise.reject(new SyntaxError(aMessage.data.message));
+      case "exception":
+        return Promise.reject(
+          Components.Exception(aMessage.data.message, aMessage.data.result)
+        );
       case "done":
         this.done(aMessage.data);
         break;
