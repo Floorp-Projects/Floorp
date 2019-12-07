@@ -2,11 +2,27 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+function maybeAsyncStack(offset, column) {
+  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+    return "";
+  }
+
+  let stack = Error().stack.replace(/^.*?\n/, "");
+  return (
+    "JSWindowActor query*" +
+    stack.replace(
+      /^([^\n]+?):(\d+):\d+/,
+      (m0, m1, m2) => `${m1}:${+m2 + offset}:${column}`
+    )
+  );
+}
+
 declTest("sendQuery Error", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
     let actorParent = parent.getActor("Test");
 
+    let asyncStack = maybeAsyncStack(2, 8);
     let error = await actorParent
       .sendQuery("error", { message: "foo" })
       .catch(e => e);
@@ -15,7 +31,8 @@ declTest("sendQuery Error", {
     is(error.name, "SyntaxError", "Error should have the correct name");
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestChild.jsm:28:31\n",
+      "receiveMessage@resource://testing-common/TestChild.jsm:28:31\n" +
+        asyncStack,
       "Error should have the correct stack"
     );
   },
@@ -26,6 +43,7 @@ declTest("sendQuery Exception", {
     let parent = browser.browsingContext.currentWindowGlobal;
     let actorParent = parent.getActor("Test");
 
+    let asyncStack = maybeAsyncStack(2, 8);
     let error = await actorParent
       .sendQuery("exception", {
         message: "foo",
@@ -41,7 +59,8 @@ declTest("sendQuery Exception", {
     );
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestChild.jsm:31:22\n",
+      "receiveMessage@resource://testing-common/TestChild.jsm:31:22\n" +
+        asyncStack,
       "Error should have the correct stack"
     );
   },
