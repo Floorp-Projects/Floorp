@@ -426,23 +426,19 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
 }
 
 IPCResult WindowGlobalChild::RecvRawMessage(
-    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData,
-    const ClonedMessageData& aStack) {
+    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForChild(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForChild(aStack);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  ReceiveRawMessage(aMeta, std::move(data));
   return IPC_OK();
 }
 
 void WindowGlobalChild::ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
-                                          StructuredCloneData&& aData,
-                                          StructuredCloneData&& aStack) {
+                                          StructuredCloneData&& aData) {
   RefPtr<JSWindowActorChild> actor =
       GetActor(aMeta.actorName(), IgnoreErrors());
   if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
+    actor->ReceiveRawMessage(aMeta, std::move(aData));
   }
 }
 

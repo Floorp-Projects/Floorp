@@ -85,8 +85,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   already_AddRefed<BrowserChild> GetBrowserChild();
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
-                         ipc::StructuredCloneData&& aData,
-                         ipc::StructuredCloneData&& aStack);
+                         ipc::StructuredCloneData&& aData);
 
   // Get a JS actor object by name.
   already_AddRefed<JSWindowActorChild> GetActor(const nsAString& aName,
@@ -113,8 +112,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   // IPC messages
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
-                                         const ClonedMessageData& aData,
-                                         const ClonedMessageData& aStack);
+                                         const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState,
                                              bool aSetNavigating);

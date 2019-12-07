@@ -6,10 +6,6 @@
 
 #include "mozilla/dom/JSWindowActor.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
-#include "mozilla/dom/ClonedErrorHolder.h"
-#include "mozilla/dom/ClonedErrorHolderBinding.h"
-#include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
@@ -112,34 +108,6 @@ void JSWindowActor::SetName(const nsAString& aName) {
   mName = aName;
 }
 
-static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
-                                             JS::Handle<JSObject*> aStack) {
-  JS::Rooted<JS::Value> stackVal(aCx, JS::ObjectOrNullValue(aStack));
-
-  {
-    IgnoredErrorResult rv;
-    ipc::StructuredCloneData data;
-    data.Write(aCx, stackVal, rv);
-    if (!rv.Failed()) {
-      return data;
-    }
-  }
-  ErrorResult rv;
-  ipc::StructuredCloneData data;
-  data.Write(aCx, JS::NullHandleValue, rv);
-  return data;
-}
-
-static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
-  JS::Rooted<JSObject*> stack(aCx, nullptr);
-  if (JS::ContextOptionsRef(aCx).asyncStack() &&
-      !JS::CaptureCurrentStack(aCx, &stack)) {
-    JS_ClearPendingException(aCx);
-  }
-
-  return CloneJSStack(aCx, stack);
-}
-
 void JSWindowActor::SendAsyncMessage(JSContext* aCx,
                                      const nsAString& aMessageName,
                                      JS::Handle<JS::Value> aObj,
@@ -156,7 +124,7 @@ void JSWindowActor::SendAsyncMessage(JSContext* aCx,
   meta.messageName() = aMessageName;
   meta.kind() = JSWindowActorMessageKind::Message;
 
-  SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
+  SendRawMessage(meta, std::move(data), aRv);
 }
 
 already_AddRefed<Promise> JSWindowActor::SendQuery(
@@ -188,22 +156,12 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
 
   mPendingQueries.Put(meta.queryId(), promise);
 
-  SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
+  SendRawMessage(meta, std::move(data), aRv);
   return promise.forget();
 }
 
-#define CHILD_DIAGNOSTIC_ASSERT(test, msg) \
-  do {                                     \
-    if (XRE_IsParentProcess()) {           \
-      MOZ_ASSERT(test, msg);               \
-    } else {                               \
-      MOZ_DIAGNOSTIC_ASSERT(test, msg);    \
-    }                                      \
-  } while (0)
-
 void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
-                                      ipc::StructuredCloneData&& aData,
-                                      ipc::StructuredCloneData&& aStack) {
+                                      ipc::StructuredCloneData&& aData) {
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
 
@@ -212,24 +170,13 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
   JS::Rooted<JS::Value> data(cx);
   aData.Read(cx, &data, error);
   if (NS_WARN_IF(error.Failed())) {
-    CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+    if (XRE_IsParentProcess()) {
+      MOZ_ASSERT(false, "Should not receive non-decodable data");
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+    }
     MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(cx));
     return;
-  }
-
-  JS::Rooted<JSObject*> stack(cx);
-  Maybe<JS::AutoSetAsyncStackForNewCalls> stackSetter;
-  {
-    JS::Rooted<JS::Value> stackVal(cx);
-    aStack.Read(cx, &stackVal, IgnoreErrors());
-    if (stackVal.isObject()) {
-      stack = &stackVal.toObject();
-      if (!js::IsSavedFrame(stack)) {
-        CHILD_DIAGNOSTIC_ASSERT(false, "Stack must be a SavedFrame object");
-        return;
-      }
-      stackSetter.emplace(cx, stack, "JSWindowActor query");
-    }
   }
 
   switch (aMetadata.kind()) {
@@ -277,7 +224,7 @@ void JSWindowActor::ReceiveMessageOrQuery(
       return;
     }
 
-    RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata, promise);
+    RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata);
     promise->AppendNativeHandler(handler);
   }
 
@@ -324,63 +271,33 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
   if (aMetadata.kind() == JSWindowActorMessageKind::QueryResolve) {
     promise->MaybeResolve(data);
   } else {
-    promise->MaybeReject(data);
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 }
 
 // Native handler for our generated promise which is used to handle Queries and
 // send the reply when their promises have been resolved.
 JSWindowActor::QueryHandler::QueryHandler(
-    JSWindowActor* aActor, const JSWindowActorMessageMeta& aMetadata,
-    Promise* aPromise)
+    JSWindowActor* aActor, const JSWindowActorMessageMeta& aMetadata)
     : mActor(aActor),
-      mPromise(aPromise),
       mMessageName(aMetadata.messageName()),
       mQueryId(aMetadata.queryId()) {}
 
 void JSWindowActor::QueryHandler::RejectedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue) {
   if (!mActor) {
-    // Make sure that this rejection is reported. See comment below.
-    Unused << JS::CallOriginalPromiseReject(aCx, aValue);
     return;
   }
 
-  JS::Rooted<JS::Value> value(aCx, aValue);
-  if (value.isObject()) {
-    JS::Rooted<JSObject*> error(aCx, &value.toObject());
-    if (RefPtr<ClonedErrorHolder> ceh =
-            ClonedErrorHolder::Create(aCx, error, IgnoreErrors())) {
-      JS::RootedObject obj(aCx);
-      // Note: We can't use `ToJSValue` here because ClonedErrorHolder isn't
-      // wrapper cached.
-      if (ceh->WrapObject(aCx, nullptr, &obj)) {
-        value.setObject(*obj);
-      } else {
-        JS_ClearPendingException(aCx);
-      }
-    } else {
-      JS_ClearPendingException(aCx);
-    }
-  }
+  // Make sure that this rejection is reported, despite being "handled". This
+  // is done by creating a new promise in the rejected state, and throwing it
+  // away. This will be reported as an unhandled rejected promise.
+  Unused << JS::CallOriginalPromiseReject(aCx, aValue);
 
-  Maybe<ipc::StructuredCloneData> data;
-  data.emplace();
-  IgnoredErrorResult rv;
-  data->Write(aCx, value, rv);
-  if (rv.Failed()) {
-    // Failed to clone the rejection value. Make sure that this rejection is
-    // reported, despite being "handled". This is done by creating a new
-    // promise in the rejected state, and throwing it away. This will be
-    // reported as an unhandled rejected promise.
-    Unused << JS::CallOriginalPromiseReject(aCx, aValue);
-
-    data.reset();
-    data.emplace();
-    data->Write(aCx, JS::UndefinedHandleValue, rv);
-  }
-
-  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(*data));
+  // The exception probably isn't cloneable, so just send down undefined.
+  ipc::StructuredCloneData data;
+  data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
+  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
 }
 
 void JSWindowActor::QueryHandler::ResolvedCallback(
@@ -401,16 +318,14 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
     msg.Append(mActor->Name());
     msg.Append(':');
     msg.Append(mMessageName);
-    msg.AppendLiteral(": message reply cannot be cloned.");
+    msg.Append(NS_LITERAL_STRING(": message reply cannot be cloned."));
+    nsContentUtils::LogSimpleConsoleError(msg, "chrome", false, true);
 
-    auto exc = MakeRefPtr<Exception>(
-        NS_ConvertUTF16toUTF8(msg), NS_ERROR_FAILURE,
-        NS_LITERAL_CSTRING("DataCloneError"), nullptr, nullptr);
+    JS_ClearPendingException(aCx);
 
-    JS::Rooted<JS::Value> val(aCx);
-    if (ToJSValue(aCx, exc, &val)) {
-      RejectedCallback(aCx, val);
-    }
+    ipc::StructuredCloneData data;
+    data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
+    SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
     return;
   }
 
@@ -428,13 +343,8 @@ void JSWindowActor::QueryHandler::SendReply(JSContext* aCx,
   meta.queryId() = mQueryId;
   meta.kind() = aKind;
 
-  JS::Rooted<JSObject*> promise(aCx, mPromise->PromiseObj());
-  JS::Rooted<JSObject*> stack(aCx, JS::GetPromiseResolutionSite(promise));
-
-  mActor->SendRawMessage(meta, std::move(aData), CloneJSStack(aCx, stack),
-                         IgnoreErrors());
+  mActor->SendRawMessage(meta, std::move(aData), IgnoreErrors());
   mActor = nullptr;
-  mPromise = nullptr;
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActor::QueryHandler)
@@ -444,7 +354,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActor::QueryHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActor::QueryHandler)
 
-NS_IMPL_CYCLE_COLLECTION(JSWindowActor::QueryHandler, mActor, mPromise)
+NS_IMPL_CYCLE_COLLECTION(JSWindowActor::QueryHandler, mActor)
 
 }  // namespace dom
 }  // namespace mozilla

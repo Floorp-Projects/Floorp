@@ -68,7 +68,7 @@ child:
   async DisplayLoadError(nsString aURI);
 
 both:
-  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData, ClonedMessageData aStack);
+  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
 
 parent:
   // Load the given URI load state into the current owner process of the given
