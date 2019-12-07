@@ -70,7 +70,7 @@ var reloadPageAndWaitForStyleSheets = async function(ui) {
 
   const onReset = ui.once("stylesheets-reset");
   const browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], "() => content.location.reload()");
+  await SpecialPowers.spawn(browser, [], () => content.location.reload());
   await onReset;
 };
 
