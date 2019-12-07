@@ -106,8 +106,14 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     };
 
     registrations.forEach(front => {
-      const { activeWorker, waitingWorker, installingWorker } = front;
-      const newestWorker = activeWorker || waitingWorker || installingWorker;
+      const {
+        activeWorker,
+        waitingWorker,
+        installingWorker,
+        evaluatingWorker,
+      } = front;
+      const newestWorker =
+        activeWorker || waitingWorker || installingWorker || evaluatingWorker;
 
       // All the information is simply mirrored from the registration front.
       // However since registering workers will fetch similar information from the worker
@@ -165,8 +171,10 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
           });
 
           if (registration) {
-            // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
-            // have a scriptSpec, but its associated WorkerDebugger does.
+            // Before bug 1595964, URLs were not available for registrations
+            // whose worker's main script is being evaluated. Now, URLs are
+            // always available, and this test deals with older servers.
+            // @backward-compatibility: remove in Firefox 75
             if (!registration.url) {
               registration.name = registration.url = front.url;
             }
