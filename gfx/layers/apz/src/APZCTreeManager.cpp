@@ -1568,7 +1568,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       }
       break;
     }
-    case PINCHGESTURE_INPUT: {  // note: no one currently sends these
+    case PINCHGESTURE_INPUT: {
       PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
       HitTestResult hit = GetTargetAPZC(pinchInput.mFocusPoint);
       aEvent.mLayersId = hit.mLayersId;
@@ -1577,6 +1577,12 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       if (hit.mTargetApzc) {
         MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
 
+        if (!hit.mTargetApzc->IsRootContent()) {
+          hit.mTargetApzc = FindZoomableApzc(hit.mTargetApzc);
+        }
+      }
+
+      if (hit.mTargetApzc) {
         ScreenToScreenMatrix4x4 outTransform =
             GetScreenToApzcTransform(hit.mTargetApzc) *
             GetApzcToGeckoTransform(hit.mTargetApzc);
