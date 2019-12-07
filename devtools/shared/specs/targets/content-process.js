@@ -23,6 +23,13 @@ const contentProcessTargetSpec = generateActorSpec({
       request: {},
       response: RetVal("contentProcessTarget.workers"),
     },
+
+    pauseMatchingServiceWorkers: {
+      request: {
+        origin: Option(0, "string"),
+      },
+      response: {},
+    },
   },
 
   events: {
