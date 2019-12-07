@@ -252,14 +252,13 @@ bool DispatchFailed(nsresult aStatus) {
 
 }  // anonymous namespace
 
-class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerDebuggeeRunnable {
+class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerRunnable {
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
   ServiceWorkerOpRunnable(RefPtr<ServiceWorkerOp> aOwner,
                           WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
-        mOwner(std::move(aOwner)) {
+      : WorkerRunnable(aWorkerPrivate), mOwner(std::move(aOwner)) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mOwner);
     MOZ_ASSERT(aWorkerPrivate);

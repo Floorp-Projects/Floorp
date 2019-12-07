@@ -58,9 +58,6 @@ interface nsIServiceWorkerInfo : nsISupports
 
   readonly attribute nsIWorkerDebugger debugger;
 
-  // Return whether the ServiceWorker has a "fetch" event listener. Throws if
-  // this is unknown because the worker's main script hasn't finished executing
-  // (when exposed as evaluatingWorker).
   readonly attribute bool handlesFetchEvents;
 
   readonly attribute PRTime installedTime;
@@ -94,7 +91,6 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
 
   readonly attribute PRTime lastUpdateTime;
 
-  readonly attribute nsIServiceWorkerInfo evaluatingWorker;
   readonly attribute nsIServiceWorkerInfo installingWorker;
   readonly attribute nsIServiceWorkerInfo waitingWorker;
   readonly attribute nsIServiceWorkerInfo activeWorker;
