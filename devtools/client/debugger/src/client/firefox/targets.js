@@ -90,6 +90,7 @@ async function listWorkerTargets(args: Args) {
   } else {
     workers = (await currentTarget.listWorkers()).workers;
     if (currentTarget.url && features.windowlessServiceWorkers) {
+      allWorkers = await debuggerClient.mainRoot.listAllWorkerTargets();
       const {
         registrations,
       } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
@@ -100,10 +101,16 @@ async function listWorkerTargets(args: Args) {
   }
 
   for (const front of serviceWorkerRegistrations) {
-    const { activeWorker, waitingWorker, installingWorker } = front;
+    const {
+      activeWorker,
+      waitingWorker,
+      installingWorker,
+      evaluatingWorker,
+    } = front;
     await maybeMarkServiceWorker(activeWorker, "active");
     await maybeMarkServiceWorker(waitingWorker, "waiting");
     await maybeMarkServiceWorker(installingWorker, "installing");
+    await maybeMarkServiceWorker(evaluatingWorker, "evaluating");
   }
 
   async function maybeMarkServiceWorker(info, status) {
@@ -111,9 +118,6 @@ async function listWorkerTargets(args: Args) {
       return;
     }
 
-    if (!allWorkers) {
-      allWorkers = await debuggerClient.mainRoot.listAllWorkerTargets();
-    }
     const worker = allWorkers.find(front => front && front.id == info.id);
     if (!worker) {
       return;
@@ -128,20 +132,37 @@ async function listWorkerTargets(args: Args) {
   return workers;
 }
 
-async function listProcessTargets(args: Args) {
-  const { currentTarget, debuggerClient } = args;
-  if (!attachAllTargets(currentTarget)) {
-    return [];
-  }
-
+async function getAllProcessTargets(args) {
+  const { debuggerClient } = args;
   const { processes } = await debuggerClient.mainRoot.listProcesses();
-  const targets = await Promise.all(
+  return Promise.all(
     processes
       .filter(descriptor => !descriptor.isParent)
       .map(descriptor => descriptor.getTarget())
   );
+}
 
-  return targets;
+async function listProcessTargets(args: Args) {
+  const { currentTarget } = args;
+  if (!attachAllTargets(currentTarget)) {
+    if (currentTarget.url && features.windowlessServiceWorkers) {
+      // Service workers associated with our target's origin need to pause until
+      // we attach, regardless of which process they are running in.
+      const origin = new URL(currentTarget.url).origin;
+      const targets = await getAllProcessTargets(args);
+      try {
+        await Promise.all(
+          targets.map(t => t.pauseMatchingServiceWorkers({ origin }))
+        );
+      } catch (e) {
+        // Old servers without pauseMatchingServiceWorkers will throw.
+        // @backward-compatibility: remove in Firefox 75
+      }
+    }
+    return [];
+  }
+
+  return getAllProcessTargets(args);
 }
 
 export async function updateTargets(args: Args) {
