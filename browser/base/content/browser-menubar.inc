@@ -179,7 +179,7 @@
                     <menuseparator/>
                     <menuitem id="menu_zoomReset"
                               key="key_fullZoomReset"
-                              command="cmd_fullZoomReset" data-l10n-id="menu-view-full-zoom-reset"/>
+                              command="cmd_fullZoomReset" data-l10n-id="menu-view-full-zoom-actual-size"/>
                     <menuseparator/>
                     <menuitem id="toggle_zoom"
                               type="checkbox"
