@@ -21,6 +21,6 @@ try {
     savedFrame.older;
     throw new Error("expected exception, none thrown");
 } catch (exc) {
-    assertEq(exc.message, "Debugger.Frame is not on stack");
+    assertEq(exc.message, "Debugger.Frame is not on stack or suspended");
 }
 
