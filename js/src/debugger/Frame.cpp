@@ -649,28 +649,39 @@ bool DebuggerFrame::getAsyncPromise(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame,
                             MutableHandleValue result) {
-  MOZ_ASSERT(frame->isOnStack());
-
-  if (!requireScriptReferent(cx, frame)) {
-    return false;
-  }
-
   Debugger* dbg = frame->owner();
 
-  Maybe<FrameIter> maybeIter;
-  if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
-  }
-  FrameIter& iter = *maybeIter;
+  if (frame->isOnStack()) {
+    if (!requireScriptReferent(cx, frame)) {
+      return false;
+    }
 
-  {
-    AbstractFramePtr frame = iter.abstractFramePtr();
-    AutoRealm ar(cx, frame.environmentChain());
+    Maybe<FrameIter> maybeIter;
+    if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
+      return false;
+    }
+    FrameIter& iter = *maybeIter;
 
-    UpdateFrameIterPc(iter);
+    {
+      AbstractFramePtr frame = iter.abstractFramePtr();
+      AutoRealm ar(cx, frame.environmentChain());
 
-    if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, iter.pc(),
-                                                  result)) {
+      UpdateFrameIterPc(iter);
+
+      if (!GetThisValueForDebuggerFrameMaybeOptimizedOut(cx, frame, iter.pc(),
+                                                         result)) {
+        return false;
+      }
+    }
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+
+    AbstractGeneratorObject& genObj =
+        frame->generatorInfo()->unwrappedGenerator();
+    JSScript* script = frame->generatorInfo()->generatorScript();
+
+    if (!GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
+            cx, genObj, script, result)) {
       return false;
     }
   }
@@ -1477,7 +1488,7 @@ bool DebuggerFrame::CallData::asyncPromiseGetter() {
 }
 
 bool DebuggerFrame::CallData::thisGetter() {
-  if (!ensureOnStack()) {
+  if (!ensureOnStackOrSuspended()) {
     return false;
   }
 

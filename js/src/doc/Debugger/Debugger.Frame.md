@@ -201,7 +201,7 @@ Accessing this property will throw if `.onStack == false`.
 The value of `this` for this frame (a debuggee value). For a `wasmcall`
 frame, this property throws a `TypeError`.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `older`
 The next-older visible frame, in which control will resume when this
