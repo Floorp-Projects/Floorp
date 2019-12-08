@@ -72,7 +72,7 @@ class FullscreenRequest : public FullscreenChange {
  public:
   static const ChangeType kType = eEnter;
 
-  static UniquePtr<FullscreenRequest> Create(Element* aElement,
+  static UniquePtr<FullscreenRequest> Create(dom::Element* aElement,
                                              dom::CallerType aCallerType,
                                              ErrorResult& aRv) {
     RefPtr<Promise> promise = Promise::Create(aElement->GetOwnerGlobal(), aRv);
@@ -80,7 +80,7 @@ class FullscreenRequest : public FullscreenChange {
         new FullscreenRequest(aElement, promise.forget(), aCallerType, true));
   }
 
-  static UniquePtr<FullscreenRequest> CreateForRemote(Element* aElement) {
+  static UniquePtr<FullscreenRequest> CreateForRemote(dom::Element* aElement) {
     return WrapUnique(new FullscreenRequest(aElement, nullptr,
                                             dom::CallerType::NonSystem, false));
   }

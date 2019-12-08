@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_FramingChecker_h
 #define mozilla_dom_FramingChecker_h
 
+#include "nsStringFwd.h"
+
 class nsIDocShell;
 class nsIChannel;
 class nsIHttpChannel;
@@ -47,8 +49,9 @@ class FramingChecker {
                           nsIURI* aChildURI, const nsAString& aPolicy,
                           uint64_t aInnerWindowID);
   static void ReportError(const char* aMessageTag,
-                          BrowsingContext* aParentContext, nsIURI* aChildURI,
-                          const nsAString& aPolicy, uint64_t aInnerWindowID);
+                          mozilla::dom::BrowsingContext* aParentContext,
+                          nsIURI* aChildURI, const nsAString& aPolicy,
+                          uint64_t aInnerWindowID);
 
   static bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
                                          const nsAString& aPolicy);
