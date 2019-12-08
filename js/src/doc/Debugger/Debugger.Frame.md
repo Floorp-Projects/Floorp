@@ -265,7 +265,7 @@ Accessing this property will throw if `.terminated == true`.
 True if this frame is for a function called as a constructor, false
 otherwise.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `arguments`
 The arguments passed to the current frame, or `null` if this is not a

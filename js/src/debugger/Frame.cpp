@@ -457,15 +457,20 @@ bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getIsConstructing(JSContext* cx, HandleDebuggerFrame frame,
                                       bool& result) {
-  MOZ_ASSERT(frame->isOnStack());
+  if (frame->isOnStack()) {
+    Maybe<FrameIter> maybeIter;
+    if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
+      return false;
+    }
+    FrameIter& iter = *maybeIter;
 
-  Maybe<FrameIter> maybeIter;
-  if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
+    result = iter.isFunctionFrame() && iter.isConstructing();
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+
+    // Generators and async functions can't be constructed.
+    result = false;
   }
-  FrameIter& iter = *maybeIter;
-
-  result = iter.isFunctionFrame() && iter.isConstructing();
   return true;
 }
 
@@ -1409,7 +1414,7 @@ bool DebuggerFrame::CallData::generatorGetter() {
 }
 
 bool DebuggerFrame::CallData::constructingGetter() {
-  if (!ensureOnStack()) {
+  if (!ensureOnStackOrSuspended()) {
     return false;
   }
 
