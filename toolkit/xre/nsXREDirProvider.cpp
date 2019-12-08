@@ -614,7 +614,6 @@ static const char* GetProcessTempBaseDirKey() {
 #  endif
 }
 
-#  if defined(MOZ_SANDBOX)
 //
 // Sets mContentTempDir so that it refers to the appropriate temp dir.
 // If the sandbox is enabled, NS_APP_CONTENT_PROCESS_TEMP_DIR, otherwise
@@ -652,7 +651,6 @@ nsresult nsXREDirProvider::LoadContentProcessTempDir() {
 
   return NS_OK;
 }
-#  endif
 
 //
 // Sets mPluginTempDir so that it refers to the appropriate temp dir.
