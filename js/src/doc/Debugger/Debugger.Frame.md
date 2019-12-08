@@ -247,7 +247,7 @@ The lexical environment within which evaluation is taking place (a
 that do not represent the evaluation of debuggee code, like calls
 non-debuggee functions, host functions or `"debugger"` frames.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `callee`
 The function whose application created this frame, as a debuggee value,
