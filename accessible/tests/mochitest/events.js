@@ -1,3 +1,7 @@
+/* import-globals-from common.js */
+/* import-globals-from states.js */
+/* import-globals-from text.js */
+
 // XXX Bug 1425371 - enable no-redeclare and fix the issues with the tests.
 /* eslint-disable no-redeclare */
 

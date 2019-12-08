@@ -1,3 +1,6 @@
+/* import-globals-from common.js */
+/* import-globals-from states.js */
+
 /**
  * Test selection getter methods of nsIAccessibleSelectable.
  *

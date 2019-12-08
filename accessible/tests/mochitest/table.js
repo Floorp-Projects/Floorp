@@ -7,6 +7,9 @@
  *   role.js
  *   states.js
  */
+/* import-globals-from common.js */
+/* import-globals-from role.js */
+/* import-globals-from states.js */
 
 /**
  * Constants used to describe cells array.

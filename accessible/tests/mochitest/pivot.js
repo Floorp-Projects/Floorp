@@ -1,3 +1,9 @@
+/* import-globals-from common.js */
+/* import-globals-from events.js */
+/* import-globals-from role.js */
+/* import-globals-from states.js */
+/* import-globals-from text.js */
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // //////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 /**
  * Create grid object based on HTML table.
  */

@@ -1,3 +1,6 @@
+/* import-globals-from ../common.js */
+/* import-globals-from ../events.js */
+
 /**
  * Perform all editable text tests.
  */
