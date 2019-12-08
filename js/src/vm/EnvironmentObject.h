@@ -1153,8 +1153,11 @@ ModuleObject* GetModuleObjectForScript(JSScript* script);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
-MOZ_MUST_USE bool GetThisValueForDebuggerMaybeOptimizedOut(
+MOZ_MUST_USE bool GetThisValueForDebuggerFrameMaybeOptimizedOut(
     JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+    MutableHandleValue res);
+MOZ_MUST_USE bool GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
+    JSContext* cx, AbstractGeneratorObject& genObj, JSScript* script,
     MutableHandleValue res);
 
 MOZ_MUST_USE bool CheckVarNameConflict(

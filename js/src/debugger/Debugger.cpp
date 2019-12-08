@@ -1409,7 +1409,8 @@ static bool GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame,
   if (frame.debuggerNeedsCheckPrimitiveReturn()) {
     {
       AutoRealm ar(cx, frame.environmentChain());
-      if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, thisv)) {
+      if (!GetThisValueForDebuggerFrameMaybeOptimizedOut(cx, frame, pc,
+                                                         thisv)) {
         return false;
       }
     }
