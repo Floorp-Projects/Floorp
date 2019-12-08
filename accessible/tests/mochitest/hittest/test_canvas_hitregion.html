@@ -56,7 +56,7 @@
       // test if we hit the region associated with the shadow dom checkbox
       var tgtX = hitX + deltaX;
       var tgtY = hitY + deltaY;
-      hitAcc = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
+      let hitAcc = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
       isObject(hitAcc, hitcheck, `Hit match at (${tgtX}, ${tgtY}`);
 
       // test that we don't hit the region associated with the shadow dom checkbox

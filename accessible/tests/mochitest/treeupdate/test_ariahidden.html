@@ -92,7 +92,7 @@
     function doTests() {
       ok(!isAccessible("t1_child"), "No accessible for aria-hidden");
 
-      gQueue = new eventQueue();
+      const gQueue = new eventQueue();
       gQueue.push(new t1_removeARIAHidden());
       gQueue.push(new t1_setARIAHidden());
       gQueue.push(new t2_setARIAHidden());
