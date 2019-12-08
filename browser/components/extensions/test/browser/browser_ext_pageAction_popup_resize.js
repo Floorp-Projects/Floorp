@@ -34,14 +34,14 @@ add_task(async function testPageActionPopupResize() {
 
   browser = await awaitExtensionPanel(extension);
 
-  async function checkSize(expected) {
+  async function checkSize(height, width) {
     let dims = await promiseContentDimensions(browser);
     let { body, root } = dims;
 
     is(
       dims.window.innerHeight,
-      expected,
-      `Panel window should be ${expected}px tall`
+      height,
+      `Panel window should be ${height}px tall`
     );
     is(
       body.clientHeight,
@@ -54,16 +54,20 @@ add_task(async function testPageActionPopupResize() {
       "Panel root should be tall enough to fit its contents"
     );
 
-    // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
-    ok(
-      Math.abs(dims.window.innerWidth - expected) <= 1,
-      `Panel window should be ${expected}px wide`
-    );
-    is(
-      body.clientWidth,
-      body.scrollWidth,
-      "Panel body should be wide enough to fit its contents"
-    );
+    if (width) {
+      is(
+        body.clientWidth,
+        body.scrollWidth,
+        "Panel body should be wide enough to fit its contents"
+      );
+
+      // Tolerate if it is 1px too wide, as that may happen with the current
+      // resizing method.
+      ok(
+        Math.abs(dims.window.innerWidth - width) <= 1,
+        `Panel window should be ${width}px wide`
+      );
+    }
   }
 
   function setSize(size) {
@@ -72,11 +76,17 @@ add_task(async function testPageActionPopupResize() {
     elem.style.width = `${size}px`;
   }
 
+  function setHeight(height) {
+    content.document.body.style.overflow = "hidden";
+    let elem = content.document.body.firstElementChild;
+    elem.style.height = `${height}px`;
+  }
+
   let sizes = [200, 400, 300];
 
   for (let size of sizes) {
     await alterContent(browser, setSize, size);
-    await checkSize(size);
+    await checkSize(size, size);
   }
 
   let dims = await alterContent(browser, setSize, 1400);
@@ -95,6 +105,11 @@ add_task(async function testPageActionPopupResize() {
     `Panel root height (${root.clientHeight}px) is less than 600px`
   );
   is(root.scrollHeight, 1400, "Panel root scroll height");
+
+  for (let size of sizes) {
+    await alterContent(browser, setHeight, size);
+    await checkSize(size, null);
+  }
 
   await extension.unload();
 });
