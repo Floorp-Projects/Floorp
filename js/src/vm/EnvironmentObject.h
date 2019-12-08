@@ -13,6 +13,7 @@
 #include "gc/WeakMap.h"
 #include "js/GCHashTable.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -885,6 +886,9 @@ class LiveEnvironmentVal {
 extern JSObject* GetDebugEnvironmentForFunction(JSContext* cx,
                                                 HandleFunction fun);
 
+extern JSObject* GetDebugEnvironmentForSuspendedGenerator(
+    JSContext* cx, JSScript* script, AbstractGeneratorObject& genObj);
+
 extern JSObject* GetDebugEnvironmentForFrame(JSContext* cx,
                                              AbstractFramePtr frame,
                                              jsbytecode* pc);
@@ -1183,6 +1187,11 @@ MOZ_MUST_USE bool PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
 MOZ_MUST_USE bool GetFrameEnvironmentAndScope(JSContext* cx,
                                               AbstractFramePtr frame,
                                               jsbytecode* pc,
+                                              MutableHandleObject env,
+                                              MutableHandleScope scope);
+
+void GetSuspendedGeneratorEnvironmentAndScope(AbstractGeneratorObject& genObj,
+                                              JSScript* script,
                                               MutableHandleObject env,
                                               MutableHandleScope scope);
 
