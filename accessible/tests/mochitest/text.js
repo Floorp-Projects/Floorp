@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 // //////////////////////////////////////////////////////////////////////////////
 // Public
 
@@ -320,7 +322,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag) {
   var wordIdx = aWordIndex;
   var startOffsetObj = { value: 0 },
     endOffsetObj = { value: 0 };
-  for (offset = 0; offset < textLength; offset = endOffsetObj.value) {
+  for (let offset = 0; offset < textLength; offset = endOffsetObj.value) {
     acc.getTextAtOffset(
       offset,
       BOUNDARY_WORD_START,
@@ -375,7 +377,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag) {
     return;
   }
 
-  text = acc.getText(startWordOffset, endWordOffset);
+  let text = acc.getText(startWordOffset, endWordOffset);
   isFunc(
     text,
     aText,

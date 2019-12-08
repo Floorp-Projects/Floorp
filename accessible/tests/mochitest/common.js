@@ -1,3 +1,17 @@
+// This file has circular dependencies that may require other files. Rather
+// than use import-globals-from, we list the globals individually here to save
+// confusing ESLint.
+// actions.js
+/* globals testActionNames */
+// attributes.js
+/* globals testAttrs, testAbsentAttrs, testTextAttrs */
+// relations.js
+/* globals testRelation */
+// role.js
+/* globals isRole */
+// state.js
+/* globals testStates */
+
 // //////////////////////////////////////////////////////////////////////////////
 // Interfaces
 

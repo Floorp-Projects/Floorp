@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 // //////////////////////////////////////////////////////////////////////////////
 // Object attributes.
 
@@ -268,6 +270,8 @@ function testTextAttrsWrongOffset(aID, aOffset) {
   try {
     var s = {},
       e = {};
+    // Bug 1602031
+    // eslint-disable-next-line no-undef
     var acc = getAccessible(ID, [nsIAccessibleText]);
     acc.getTextAttributes(false, 157, s, e);
   } catch (ex) {
