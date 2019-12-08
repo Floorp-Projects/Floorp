@@ -270,11 +270,12 @@ nsISerialEventTarget* RemoteWorkerChild::GetOwningEventTarget() const {
 }
 
 void RemoteWorkerChild::ActorDestroy(ActorDestroyReason) {
-  Unused << NS_WARN_IF(!mTerminationPromise.IsEmpty());
-  mTerminationPromise.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
-
   MOZ_ACCESS_THREAD_BOUND(mLauncherData, launcherData);
   launcherData->mIPCActive = false;
+
+  Unused << NS_WARN_IF(!launcherData->mTerminationPromise.IsEmpty());
+  launcherData->mTerminationPromise.RejectIfExists(NS_ERROR_DOM_ABORT_ERR,
+                                                   __func__);
 
   auto lock = mState.Lock();
 
@@ -562,9 +563,8 @@ void RemoteWorkerChild::ShutdownOnWorker() {
 }
 
 RefPtr<GenericNonExclusivePromise> RemoteWorkerChild::GetTerminationPromise() {
-  MOZ_ASSERT(GetOwningEventTarget()->IsOnCurrentThread());
-
-  return mTerminationPromise.Ensure(__func__);
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, launcherData);
+  return launcherData->mTerminationPromise.Ensure(__func__);
 }
 
 void RemoteWorkerChild::CreationSucceededOnAnyThread() {
@@ -765,14 +765,15 @@ void RemoteWorkerChild::TransitionStateToTerminated(State& aState) {
     CancelAllPendingOps(aState);
   }
 
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [self = SelfHolder(this)]() {
+        MOZ_ACCESS_THREAD_BOUND(self->mLauncherData, launcherData);
+        launcherData->mTerminationPromise.ResolveIfExists(true, __func__);
+      });
+
   if (GetOwningEventTarget()->IsOnCurrentThread()) {
-    mTerminationPromise.ResolveIfExists(true, __func__);
+    r->Run();
   } else {
-    SelfHolder self = this;
-    nsCOMPtr<nsIRunnable> r =
-        NS_NewRunnableFunction(__func__, [self = std::move(self)] {
-          self->mTerminationPromise.ResolveIfExists(true, __func__);
-        });
     GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   }
 
