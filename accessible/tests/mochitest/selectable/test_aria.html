@@ -36,7 +36,7 @@
       // ////////////////////////////////////////////////////////////////////////
       // role="tablist"
 
-      id = "tablist_single";
+      let id = "tablist_single";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
 
@@ -51,7 +51,7 @@
 
       testSelectableSelection(id, [ ]);
 
-      select = getAccessible(id, [nsIAccessibleSelectable]);
+      let select = getAccessible(id, [nsIAccessibleSelectable]);
       select.addItemToSelection(0);
       testSelectableSelection(id, [ "tab_multi1" ]);
       select.removeItemFromSelection(0);
@@ -88,7 +88,7 @@
       testSelectableSelection(id, [ "listbox2_item1", "listbox2_item2" ]);
       select.unselectAll();
       testSelectableSelection(id, [ ]);
-    
+
       // ////////////////////////////////////////////////////////////////////////
       // role="grid"
 

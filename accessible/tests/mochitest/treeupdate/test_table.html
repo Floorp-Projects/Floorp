@@ -49,7 +49,7 @@
     }
 
     function doTest() {
-      gQueue = new eventQueue();
+      const gQueue = new eventQueue();
       gQueue.push(new appendCaption("table"));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

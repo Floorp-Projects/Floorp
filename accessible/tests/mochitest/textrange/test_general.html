@@ -22,7 +22,7 @@
 
       var ta = getAccessible("textarea", [ nsIAccessibleText ]);
       testTextRange(ta.enclosingRange, "enclosing range for 'textarea'",
-                    ta, 0, ta, 5, "hello", textarea);
+                    ta, 0, ta, 5, "hello", ta);
 
       var iframeDocNode = getNode("iframe").contentDocument;
       var iframeDoc = getAccessible(iframeDocNode, [ nsIAccessibleText ]);

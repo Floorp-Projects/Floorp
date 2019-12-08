@@ -97,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       is(acc.actionCount, actionCount,
          "Wrong number of actions for " + aID + "!");
       if (actionCount) {
-        for (index = 0; index < aActionNames.length; index++) {
+        for (let index = 0; index < aActionNames.length; index++) {
           is(acc.getActionName(index), aActionNames[index],
              "Wrong action name for " + aID + ", index " + index + "!");
         }
