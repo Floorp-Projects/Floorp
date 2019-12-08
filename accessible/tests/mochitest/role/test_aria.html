@@ -110,18 +110,18 @@
       // landmarks
       let landmarks = ["banner", "complementary", "contentinfo",
           "main", "navigation", "search"];
-      for (l in landmarks) {
+      for (const l in landmarks) {
         testRole(landmarks[l], ROLE_LANDMARK);
       }
 
-      for (l in landmarks) {
+      for (const l in landmarks) {
         let id = landmarks[l] + "_table";
         testRole(id, ROLE_LANDMARK);
-    
+
         let accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
                                             DONOTFAIL_IF_NO_INTERFACE);
         ok(!!accessibleTable, "landmarked table should have nsIAccessibleTable");
-    
+
         if (accessibleTable)
           is(accessibleTable.getCellAt(0, 0).firstChild.name, "hi", "no cell");
       }
@@ -135,7 +135,7 @@
       var abstract_roles = ["composite", "landmark", "structure", "widget",
                             "window", "input", "range", "select", "section",
                             "sectionhead"];
-      for (a in abstract_roles)
+      for (const a in abstract_roles)
         testRole(abstract_roles[a], ROLE_SECTION);
 
       // ////////////////////////////////////////////////////////////////////////
@@ -368,12 +368,12 @@
     <div role="listitem">C</div>
   </div>
 
-  <p>Image: 
+  <p>Image:
     <img id="img_eq" role="math" src="foo" alt="x^2 + y^2 + z^2">
   </p>
 
-  <p>Text: 
-    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
+  <p>Text:
+    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> +
       y<sup>2</sup> + z<sup>2</sup></span>
 
 </body>

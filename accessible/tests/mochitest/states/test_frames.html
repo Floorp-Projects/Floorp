@@ -21,10 +21,10 @@
     }
 
     function doTest() {
-      frameDoc = document.getElementById("frame_doc").contentDocument;
-      frameDocArticle = document.getElementById("frame_doc_article").contentDocument;
-      frameDocCheckbox = document.getElementById("frame_doc_checkbox").contentDocument;
-      frameDocTextbox = document.getElementById("frame_doc_textbox").contentDocument;
+      const frameDoc = document.getElementById("frame_doc").contentDocument;
+      const frameDocArticle = document.getElementById("frame_doc_article").contentDocument;
+      const frameDocCheckbox = document.getElementById("frame_doc_checkbox").contentDocument;
+      const frameDocTextbox = document.getElementById("frame_doc_textbox").contentDocument;
 
       testStates(frameDoc, STATE_READONLY, 0, 0, 0,
                  "test1: frameDoc");

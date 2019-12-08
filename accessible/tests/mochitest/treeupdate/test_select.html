@@ -22,7 +22,7 @@
       this.selectList = this.select.firstChild;
 
       this.invoke = function addOptions_invoke() {
-        for (i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
           var opt = document.createElement("option");
           opt.value = i;
           opt.text = "Option: Value " + i;
@@ -111,7 +111,7 @@
     }
 
     function doTest() {
-      gQueue = new eventQueue();
+      const gQueue = new eventQueue();
 
       gQueue.push(new addOptions("select"));
       gQueue.push(new removeOptions("select"));

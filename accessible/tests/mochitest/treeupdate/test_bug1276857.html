@@ -76,6 +76,7 @@
             { TEXT_LEAF: [] }, // More text
           ],
         };
+        const iframe = document.getElementById("iframe");
         testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
 
         var shadowRoot = iframe.contentDocument.getElementById("c2_c").shadowRoot;
@@ -93,6 +94,7 @@
             { PUSHBUTTON: [] }, // The button we appended.
           ],
         };
+        const iframe = document.getElementById("iframe");
         testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
       };
 

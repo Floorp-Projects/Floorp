@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         is(docAcc.actionCount, 0, "Wrong number of actions for document!");
 
         // attributes should contain tag:body
-        attributes = docAcc.attributes;
+        const attributes = docAcc.attributes;
         is(attributes.getStringProperty("tag"), "body",
            "Wrong attribute on document!");
 

@@ -36,7 +36,7 @@ function doTest() {
   ok(tableInterfaceExposed, "table interface is not exposed");
 
   if (tableInterfaceExposed) {
-    accNotCreated = (!isAccessible("tr"));
+    let accNotCreated = (!isAccessible("tr"));
     ok(!accNotCreated, "missed tr accessible");
 
     testRole(accTable4, ROLE_TABLE);
