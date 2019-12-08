@@ -220,21 +220,21 @@ ScaledFontFontconfig::InstanceData::InstanceData(
       mHinting(FontHinting::FULL),
       mLcdFilter(FT_LCD_FILTER_LEGACY) {
   if (aOptions) {
-    if (aOptions->flags & wr::FontInstanceFlags_FORCE_AUTOHINT) {
+    if (aOptions->flags & wr::FontInstanceFlags::FORCE_AUTOHINT) {
       mFlags |= AUTOHINT;
     }
-    if (aOptions->flags & wr::FontInstanceFlags_EMBEDDED_BITMAPS) {
+    if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
       mFlags |= EMBEDDED_BITMAP;
     }
-    if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
+    if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
       mFlags |= EMBOLDEN;
     }
     if (aOptions->render_mode == wr::FontRenderMode::Subpixel) {
       mAntialias = AntialiasMode::SUBPIXEL;
-      if (aOptions->flags & wr::FontInstanceFlags_SUBPIXEL_BGR) {
+      if (aOptions->flags & wr::FontInstanceFlags::SUBPIXEL_BGR) {
         mFlags |= SUBPIXEL_BGR;
       }
-      if (aOptions->flags & wr::FontInstanceFlags_LCD_VERTICAL) {
+      if (aOptions->flags & wr::FontInstanceFlags::LCD_VERTICAL) {
         mFlags |= LCD_VERTICAL;
       }
     } else if (aOptions->render_mode != wr::FontRenderMode::Mono) {
@@ -374,7 +374,7 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   options.render_mode = wr::FontRenderMode::Alpha;
   options.flags = wr::FontInstanceFlags{0};
   if (UseSubpixelPosition()) {
-    options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
+    options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
@@ -385,23 +385,23 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   platformOptions.hinting = wr::FontHinting::Normal;
 
   if (mInstanceData.mFlags & InstanceData::AUTOHINT) {
-    options.flags |= wr::FontInstanceFlags_FORCE_AUTOHINT;
+    options.flags |= wr::FontInstanceFlags::FORCE_AUTOHINT;
   }
   if (mInstanceData.mFlags & InstanceData::EMBOLDEN) {
-    options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
   if (mInstanceData.mFlags & InstanceData::EMBEDDED_BITMAP) {
-    options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
+    options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
   }
   if (mInstanceData.mAntialias != AntialiasMode::NONE) {
     if (mInstanceData.mAntialias == AntialiasMode::SUBPIXEL) {
       options.render_mode = wr::FontRenderMode::Subpixel;
       platformOptions.hinting = wr::FontHinting::LCD;
       if (mInstanceData.mFlags & InstanceData::LCD_VERTICAL) {
-        options.flags |= wr::FontInstanceFlags_LCD_VERTICAL;
+        options.flags |= wr::FontInstanceFlags::LCD_VERTICAL;
       }
       if (mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR) {
-        options.flags |= wr::FontInstanceFlags_SUBPIXEL_BGR;
+        options.flags |= wr::FontInstanceFlags::SUBPIXEL_BGR;
       }
     }
 

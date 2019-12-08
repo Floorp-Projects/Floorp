@@ -567,41 +567,41 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
     flags |= (bit);                                        \
   }
 
-  GFX_WEBRENDER_DEBUG(".profiler", wr::DebugFlags_PROFILER_DBG)
-  GFX_WEBRENDER_DEBUG(".render-targets", wr::DebugFlags_RENDER_TARGET_DBG)
-  GFX_WEBRENDER_DEBUG(".texture-cache", wr::DebugFlags_TEXTURE_CACHE_DBG)
-  GFX_WEBRENDER_DEBUG(".gpu-time-queries", wr::DebugFlags_GPU_TIME_QUERIES)
-  GFX_WEBRENDER_DEBUG(".gpu-sample-queries", wr::DebugFlags_GPU_SAMPLE_QUERIES)
-  GFX_WEBRENDER_DEBUG(".disable-batching", wr::DebugFlags_DISABLE_BATCHING)
-  GFX_WEBRENDER_DEBUG(".epochs", wr::DebugFlags_EPOCHS)
-  GFX_WEBRENDER_DEBUG(".compact-profiler", wr::DebugFlags_COMPACT_PROFILER)
-  GFX_WEBRENDER_DEBUG(".smart-profiler", wr::DebugFlags_SMART_PROFILER)
+  GFX_WEBRENDER_DEBUG(".profiler", wr::DebugFlags::PROFILER_DBG)
+  GFX_WEBRENDER_DEBUG(".render-targets", wr::DebugFlags::RENDER_TARGET_DBG)
+  GFX_WEBRENDER_DEBUG(".texture-cache", wr::DebugFlags::TEXTURE_CACHE_DBG)
+  GFX_WEBRENDER_DEBUG(".gpu-time-queries", wr::DebugFlags::GPU_TIME_QUERIES)
+  GFX_WEBRENDER_DEBUG(".gpu-sample-queries", wr::DebugFlags::GPU_SAMPLE_QUERIES)
+  GFX_WEBRENDER_DEBUG(".disable-batching", wr::DebugFlags::DISABLE_BATCHING)
+  GFX_WEBRENDER_DEBUG(".epochs", wr::DebugFlags::EPOCHS)
+  GFX_WEBRENDER_DEBUG(".compact-profiler", wr::DebugFlags::COMPACT_PROFILER)
+  GFX_WEBRENDER_DEBUG(".smart-profiler", wr::DebugFlags::SMART_PROFILER)
   GFX_WEBRENDER_DEBUG(".echo-driver-messages",
-                      wr::DebugFlags_ECHO_DRIVER_MESSAGES)
+                      wr::DebugFlags::ECHO_DRIVER_MESSAGES)
   GFX_WEBRENDER_DEBUG(".new-frame-indicator",
-                      wr::DebugFlags_NEW_FRAME_INDICATOR)
+                      wr::DebugFlags::NEW_FRAME_INDICATOR)
   GFX_WEBRENDER_DEBUG(".new-scene-indicator",
-                      wr::DebugFlags_NEW_SCENE_INDICATOR)
-  GFX_WEBRENDER_DEBUG(".show-overdraw", wr::DebugFlags_SHOW_OVERDRAW)
-  GFX_WEBRENDER_DEBUG(".gpu-cache", wr::DebugFlags_GPU_CACHE_DBG)
+                      wr::DebugFlags::NEW_SCENE_INDICATOR)
+  GFX_WEBRENDER_DEBUG(".show-overdraw", wr::DebugFlags::SHOW_OVERDRAW)
+  GFX_WEBRENDER_DEBUG(".gpu-cache", wr::DebugFlags::GPU_CACHE_DBG)
   GFX_WEBRENDER_DEBUG(".slow-frame-indicator",
-                      wr::DebugFlags_SLOW_FRAME_INDICATOR)
+                      wr::DebugFlags::SLOW_FRAME_INDICATOR)
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
-                      wr::DebugFlags_TEXTURE_CACHE_DBG_CLEAR_EVICTED)
-  GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags_PICTURE_CACHING_DBG)
-  GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags_PRIMITIVE_DBG)
+                      wr::DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED)
+  GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags::PICTURE_CACHING_DBG)
+  GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags::PRIMITIVE_DBG)
   // Bit 18 is for the zoom display, which requires the mouse position and thus
   // currently only works in wrench.
-  GFX_WEBRENDER_DEBUG(".small-screen", wr::DebugFlags_SMALL_SCREEN)
+  GFX_WEBRENDER_DEBUG(".small-screen", wr::DebugFlags::SMALL_SCREEN)
   GFX_WEBRENDER_DEBUG(".disable-opaque-pass",
-                      wr::DebugFlags_DISABLE_OPAQUE_PASS)
-  GFX_WEBRENDER_DEBUG(".disable-alpha-pass", wr::DebugFlags_DISABLE_ALPHA_PASS)
-  GFX_WEBRENDER_DEBUG(".disable-clip-masks", wr::DebugFlags_DISABLE_CLIP_MASKS)
-  GFX_WEBRENDER_DEBUG(".disable-text-prims", wr::DebugFlags_DISABLE_TEXT_PRIMS)
+                      wr::DebugFlags::DISABLE_OPAQUE_PASS)
+  GFX_WEBRENDER_DEBUG(".disable-alpha-pass", wr::DebugFlags::DISABLE_ALPHA_PASS)
+  GFX_WEBRENDER_DEBUG(".disable-clip-masks", wr::DebugFlags::DISABLE_CLIP_MASKS)
+  GFX_WEBRENDER_DEBUG(".disable-text-prims", wr::DebugFlags::DISABLE_TEXT_PRIMS)
   GFX_WEBRENDER_DEBUG(".disable-gradient-prims",
-                      wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
-  GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags_OBSCURE_IMAGES)
-  GFX_WEBRENDER_DEBUG(".glyph-flashing", wr::DebugFlags_GLYPH_FLASHING)
+                      wr::DebugFlags::DISABLE_GRADIENT_PRIMS)
+  GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags::OBSCURE_IMAGES)
+  GFX_WEBRENDER_DEBUG(".glyph-flashing", wr::DebugFlags::GLYPH_FLASHING)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);

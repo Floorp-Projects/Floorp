@@ -7004,10 +7004,10 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   if (IsScrollbarContainer()) {
-    params.prim_flags |= wr::PrimitiveFlags_IS_SCROLLBAR_CONTAINER;
+    params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_CONTAINER;
   }
   if (IsScrollThumbLayer()) {
-    params.prim_flags |= wr::PrimitiveFlags_IS_SCROLLBAR_THUMB;
+    params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_THUMB;
   }
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
@@ -8701,7 +8701,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   params.animation = animationsId ? &prop : nullptr;
   params.mTransformPtr = transformForSC;
   params.prim_flags = !BackfaceIsHidden()
-                          ? wr::PrimitiveFlags_IS_BACKFACE_VISIBLE
+                          ? wr::PrimitiveFlags::IS_BACKFACE_VISIBLE
                           : wr::PrimitiveFlags{0};
   params.mDeferredTransformItem = deferredTransformItem;
   params.mAnimated = animated;
@@ -9406,7 +9406,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   params.mTransformPtr = &perspectiveMatrix;
   params.reference_frame_kind = wr::WrReferenceFrameKind::Perspective;
   params.prim_flags = !BackfaceIsHidden()
-                          ? wr::PrimitiveFlags_IS_BACKFACE_VISIBLE
+                          ? wr::PrimitiveFlags::IS_BACKFACE_VISIBLE
                           : wr::PrimitiveFlags{0};
   params.SetPreserve3D(preserve3D);
   params.clip =
