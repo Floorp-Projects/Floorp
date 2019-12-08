@@ -63,6 +63,9 @@ parent:
   async EvictContentViewersOrReplaceEntry(nullable PSHEntry newSHEntry, bool replace);
   async NotifyListenersContentViewerEvicted(uint32_t numEvicted);
   async __delete__();
+
+child:
+  async ReloadCurrentEntryFromChild();
 };
 
 } // namespace dom
