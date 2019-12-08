@@ -37,6 +37,8 @@ class LegacySHistory final : public nsSHistory {
                  CanonicalBrowsingContext* aRootBC, const nsID& aDocShellID);
 
   NS_IMETHOD CreateEntry(nsISHEntry** aEntry) override;
+  using nsSHistory::ReloadCurrentEntry;
+  NS_IMETHOD ReloadCurrentEntry() override;
 
   SHistoryParent* GetActor() { return mSHistoryParent; }
 };

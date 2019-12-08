@@ -40,6 +40,11 @@ class SHistoryChild final : public PSHistoryChild,
   }
 
  private:
+  bool RecvReloadCurrentEntryFromChild() {
+    ReloadCurrentEntry();
+    return true;
+  }
+
   // The timer based history tracker is used to evict bfcache on expiration.
   class HistoryTracker final
       : public nsExpirationTracker<SHEntryChildShared, 3> {
