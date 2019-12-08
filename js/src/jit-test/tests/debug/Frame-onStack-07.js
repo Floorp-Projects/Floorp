@@ -45,7 +45,7 @@ function test(when, what) {
     assertEq(poppedFrame.onStack, false);
     assertErrorMessage(() => poppedFrame.older,
                        Error,
-                       "Debugger.Frame is not on stack");
+                       "Debugger.Frame is not on stack or suspended");
 }
 
 for (let when = 0; when < 6; when++) {
