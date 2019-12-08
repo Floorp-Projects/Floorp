@@ -149,8 +149,6 @@ class RemoteWorkerChild final
 
   void MaybeStartOp(RefPtr<Op>&& aOp);
 
-  MozPromiseHolder<GenericNonExclusivePromise> mTerminationPromise;
-
   const bool mIsServiceWorker;
   const nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
@@ -159,6 +157,7 @@ class RemoteWorkerChild final
 
   struct LauncherBoundData {
     bool mIPCActive = true;
+    MozPromiseHolder<GenericNonExclusivePromise> mTerminationPromise;
   };
 
   ThreadBound<LauncherBoundData> mLauncherData;

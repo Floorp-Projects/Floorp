@@ -359,21 +359,6 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
         } else {
           MOZ_ASSERT(state.is<Running>());
 
-          if (NS_WARN_IF(
-                  state.as<Running>().mWorkerPrivate->ParentStatusProtected() >
-                  Running)) {
-            owner->GetTerminationPromise()->Then(
-                GetCurrentThreadSerialEventTarget(), __func__,
-                [self = std::move(self)](
-                    const GenericNonExclusivePromise::ResolveOrRejectValue&) {
-                  MOZ_ASSERT(!self->mPromiseHolder.IsEmpty());
-                  self->RejectAll(NS_ERROR_DOM_ABORT_ERR);
-                });
-
-            owner->CloseWorkerOnMainThread(state);
-            return;
-          }
-
           RefPtr<WorkerRunnable> workerRunnable =
               self->GetRunnable(state.as<Running>().mWorkerPrivate);
 
