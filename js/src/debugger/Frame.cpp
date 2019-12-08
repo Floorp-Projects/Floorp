@@ -524,24 +524,36 @@ static void UpdateFrameIterPc(FrameIter& iter) {
 /* static */
 bool DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
                                    MutableHandleDebuggerEnvironment result) {
-  MOZ_ASSERT(frame->isOnStack());
-
   Debugger* dbg = frame->owner();
-
-  Maybe<FrameIter> maybeIter;
-  if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
-  }
-  FrameIter& iter = *maybeIter;
-
   Rooted<Env*> env(cx);
-  {
-    AutoRealm ar(cx, iter.abstractFramePtr().environmentChain());
-    UpdateFrameIterPc(iter);
-    env = GetDebugEnvironmentForFrame(cx, iter.abstractFramePtr(), iter.pc());
-    if (!env) {
+
+  if (frame->isOnStack()) {
+    Maybe<FrameIter> maybeIter;
+    if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
       return false;
     }
+    FrameIter& iter = *maybeIter;
+
+    {
+      AutoRealm ar(cx, iter.abstractFramePtr().environmentChain());
+      UpdateFrameIterPc(iter);
+      env = GetDebugEnvironmentForFrame(cx, iter.abstractFramePtr(), iter.pc());
+    }
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+
+    AbstractGeneratorObject& genObj =
+        frame->generatorInfo()->unwrappedGenerator();
+    JSScript* script = frame->generatorInfo()->generatorScript();
+
+    {
+      AutoRealm ar(cx, &genObj.environmentChain());
+      env = GetDebugEnvironmentForSuspendedGenerator(cx, script, genObj);
+    }
+  }
+
+  if (!env) {
+    return false;
   }
 
   return dbg->wrapEnvironment(cx, env, result);
@@ -1379,7 +1391,7 @@ bool DebuggerFrame::CallData::implementationGetter() {
 }
 
 bool DebuggerFrame::CallData::environmentGetter() {
-  if (!ensureOnStack()) {
+  if (!ensureOnStackOrSuspended()) {
     return false;
   }
 

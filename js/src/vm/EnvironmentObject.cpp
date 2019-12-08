@@ -3261,6 +3261,16 @@ JSObject* js::GetDebugEnvironmentForFunction(JSContext* cx,
   return GetDebugEnvironment(cx, ei);
 }
 
+JSObject* js::GetDebugEnvironmentForSuspendedGenerator(
+    JSContext* cx, JSScript* script, AbstractGeneratorObject& genObj) {
+  RootedObject env(cx);
+  RootedScope scope(cx);
+  GetSuspendedGeneratorEnvironmentAndScope(genObj, script, &env, &scope);
+
+  EnvironmentIter ei(cx, env, scope);
+  return GetDebugEnvironment(cx, ei);
+}
+
 JSObject* js::GetDebugEnvironmentForFrame(JSContext* cx, AbstractFramePtr frame,
                                           jsbytecode* pc) {
   cx->check(frame);
@@ -3767,6 +3777,16 @@ bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
     scope.set(frame.script()->innermostScope(pc));
   }
   return true;
+}
+
+void js::GetSuspendedGeneratorEnvironmentAndScope(
+    AbstractGeneratorObject& genObj, JSScript* script, MutableHandleObject env,
+    MutableHandleScope scope) {
+  env.set(&genObj.environmentChain());
+
+  jsbytecode* pc =
+      script->offsetToPC(script->resumeOffsets()[genObj.resumeIndex()]);
+  scope.set(script->innermostScope(pc));
 }
 
 #ifdef DEBUG
