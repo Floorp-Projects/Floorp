@@ -92,15 +92,15 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   options.render_mode = wr::FontRenderMode::Alpha;
   options.flags = wr::FontInstanceFlags{0};
   if (UseSubpixelPosition()) {
-    options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
+    options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
-  options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
+  options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 
   if (mApplySyntheticBold) {
-    options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
 
   wr::FontInstancePlatformOptions platformOptions;
@@ -123,7 +123,7 @@ ScaledFontFreeType::InstanceData::InstanceData(
     const wr::FontInstancePlatformOptions* aPlatformOptions)
     : mApplySyntheticBold(false) {
   if (aOptions) {
-    if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
+    if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
       mApplySyntheticBold = true;
     }
   }

@@ -26,6 +26,7 @@ args = "Vertical"
 rename_args = "GeckoCase"
 
 [struct]
+associated_constants_in_body = true
 derive_eq = true
 
 [enum]
