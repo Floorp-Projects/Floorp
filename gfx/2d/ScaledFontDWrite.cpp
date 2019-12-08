@@ -408,17 +408,17 @@ ScaledFontDWrite::InstanceData::InstanceData(
       mContrast(1.0f),
       mClearTypeLevel(1.0f) {
   if (aOptions) {
-    if (aOptions->flags & wr::FontInstanceFlags_EMBEDDED_BITMAPS) {
+    if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
       mUseEmbeddedBitmap = true;
     }
-    if (aOptions->flags & wr::FontInstanceFlags_SYNTHETIC_BOLD) {
+    if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
       mApplySyntheticBold = true;
     }
-    if (aOptions->flags & wr::FontInstanceFlags_FORCE_GDI) {
+    if (aOptions->flags & wr::FontInstanceFlags::FORCE_GDI) {
       mRenderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
-    } else if (aOptions->flags & wr::FontInstanceFlags_FORCE_SYMMETRIC) {
+    } else if (aOptions->flags & wr::FontInstanceFlags::FORCE_SYMMETRIC) {
       mRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
-    } else if (aOptions->flags & wr::FontInstanceFlags_NO_SYMMETRIC) {
+    } else if (aOptions->flags & wr::FontInstanceFlags::NO_SYMMETRIC) {
       mRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL;
     }
   }
@@ -490,28 +490,28 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
   options.flags = wr::FontInstanceFlags{0};
   if (HasSyntheticBold()) {
-    options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
   if (UseEmbeddedBitmaps()) {
-    options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
+    options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
   }
   if (ForceGDIMode()) {
-    options.flags |= wr::FontInstanceFlags_FORCE_GDI;
+    options.flags |= wr::FontInstanceFlags::FORCE_GDI;
   } else {
-    options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
+    options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
   switch (GetRenderingMode()) {
     case DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC:
-      options.flags |= wr::FontInstanceFlags_FORCE_SYMMETRIC;
+      options.flags |= wr::FontInstanceFlags::FORCE_SYMMETRIC;
       break;
     case DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL:
-      options.flags |= wr::FontInstanceFlags_NO_SYMMETRIC;
+      options.flags |= wr::FontInstanceFlags::NO_SYMMETRIC;
       break;
     default:
       break;
   }
   if (Factory::GetBGRSubpixelOrder()) {
-    options.flags |= wr::FontInstanceFlags_SUBPIXEL_BGR;
+    options.flags |= wr::FontInstanceFlags::SUBPIXEL_BGR;
   }
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
