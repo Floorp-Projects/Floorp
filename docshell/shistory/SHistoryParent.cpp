@@ -365,5 +365,11 @@ LegacySHistory::CreateEntry(nsISHEntry** aEntry) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LegacySHistory::ReloadCurrentEntry() {
+  return mSHistoryParent->SendReloadCurrentEntryFromChild() ? NS_OK
+                                                            : NS_ERROR_FAILURE;
+}
+
 }  // namespace dom
 }  // namespace mozilla
