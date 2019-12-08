@@ -40,7 +40,9 @@ def get_decision_parameters(graph_config, parameters):
     head_tag = os.environ.get("MOBILE_HEAD_TAG", "").decode('utf-8')
     parameters["head_tag"] = head_tag
     parameters["release_type"] = _resolve_release_type(head_tag)
-    parameters["release_version"] = head_tag[1:] if head_tag else ""
+    parameters["release_version"] = read_version_file()
+    if head_tag:
+        parameters["release_version"] = head_tag[1:]
 
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
@@ -54,6 +56,11 @@ def get_decision_parameters(graph_config, parameters):
                     )
                 )
         parameters["target_tasks_method"] = "release"
+
+
+def read_version_file():
+    with open(os.path.join(os.path.dirname(__file__), '..', '..', 'version.txt')) as f:
+        return f.read().strip()
 
 
 def _resolve_release_type(head_tag):
