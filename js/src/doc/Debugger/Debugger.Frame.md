@@ -205,9 +205,10 @@ Accessing this property will throw if `.onStack == false`.
 
 ### `older`
 The next-older visible frame, in which control will resume when this
-frame completes. If there is no older frame, this is `null`.
+frame completes. If there is no older frame, this is `null`. If this frame is
+a suspended generator or async call, this will also be `null`.
 
-Accessing this property will throw if `.onStack == false`.
+Accessing this property will throw if `.terminated == true`.
 
 ### `onStack`
 True if the frame this `Debugger.Frame` instance refers to is still on

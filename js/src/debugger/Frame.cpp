@@ -593,23 +593,27 @@ bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
                              MutableHandleDebuggerFrame result) {
-  MOZ_ASSERT(frame->isOnStack());
+  if (frame->isOnStack()) {
+    Debugger* dbg = frame->owner();
 
-  Debugger* dbg = frame->owner();
-
-  Maybe<FrameIter> maybeIter;
-  if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
-  }
-  FrameIter& iter = *maybeIter;
-
-  for (++iter; !iter.done(); ++iter) {
-    if (dbg->observesFrame(iter)) {
-      if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx)) {
-        return false;
-      }
-      return dbg->getFrame(cx, iter, result);
+    Maybe<FrameIter> maybeIter;
+    if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
+      return false;
     }
+    FrameIter& iter = *maybeIter;
+
+    for (++iter; !iter.done(); ++iter) {
+      if (dbg->observesFrame(iter)) {
+        if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx)) {
+          return false;
+        }
+        return dbg->getFrame(cx, iter, result);
+      }
+    }
+  } else {
+    MOZ_ASSERT(frame->hasGenerator());
+
+    // If the frame is suspended, there is no older frame.
   }
 
   result.set(nullptr);
@@ -1481,7 +1485,7 @@ bool DebuggerFrame::CallData::thisGetter() {
 }
 
 bool DebuggerFrame::CallData::olderGetter() {
-  if (!ensureOnStack()) {
+  if (!ensureOnStackOrSuspended()) {
     return false;
   }
 
