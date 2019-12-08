@@ -7,12 +7,11 @@ package org.mozilla.fenix.settings
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
@@ -65,30 +64,32 @@ import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
 import org.mozilla.fenix.settings.account.AccountPreference
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
-@SuppressWarnings("TooManyFunctions", "LargeClass")
-class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
-    private val preferenceChangeListener =
-        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-            try {
-                context?.let {
-                    it.components.analytics.metrics.track(
-                        Event.PreferenceToggled
-                            (key, sharedPreferences.getBoolean(key, false), it)
-                    )
-                }
-            } catch (e: IllegalArgumentException) {
-                // The event is not tracked
-            } catch (e: ClassCastException) {
-                // The setting is not a boolean, not tracked
+@Suppress("LargeClass")
+class SettingsFragment : PreferenceFragmentCompat() {
+
+    private val accountObserver = object : AccountObserver {
+        private fun updateAccountUi(profile: Profile? = null) {
+            val context = context ?: return
+            lifecycleScope.launch {
+                updateAccountUIState(
+                    context = context,
+                    profile = profile ?: context.components.backgroundServices.accountManager.accountProfile()
+                )
             }
         }
+
+        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) = updateAccountUi()
+        override fun onLoggedOut() = updateAccountUi()
+        override fun onProfileUpdated(profile: Profile) = updateAccountUi(profile)
+        override fun onAuthenticationProblems() = updateAccountUi()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Observe account changes to keep the UI up-to-date.
         requireComponents.backgroundServices.accountManager.register(
-            this,
+            accountObserver,
             owner = this,
             autoPause = true
         )
@@ -102,9 +103,20 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             requireComponents.backgroundServices.accountManager.accountProfile()
         )
 
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(
-            preferenceChangeListener
-        )
+        preferenceManager.sharedPreferences
+            .registerOnSharedPreferenceChangeListener(this) { sharedPreferences, key ->
+                try {
+                    context?.let { context ->
+                        context.components.analytics.metrics.track(
+                            Event.PreferenceToggled(key, sharedPreferences.getBoolean(key, false), context)
+                        )
+                    }
+                } catch (e: IllegalArgumentException) {
+                    // The event is not tracked
+                } catch (e: ClassCastException) {
+                    // The setting is not a boolean, not tracked
+                }
+            }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -178,33 +190,35 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
-        when (preference.key) {
+        val directions: NavDirections? = when (preference.key) {
             resources.getString(pref_key_search_settings) -> {
-                navigateToSearchEngineSettings()
+                SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
             }
             resources.getString(pref_key_tracking_protection_settings) -> {
                 requireContext().metrics.track(Event.TrackingProtectionSettings)
-                navigateToTrackingProtectionSettings()
+                SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
             }
             resources.getString(pref_key_site_permissions) -> {
-                navigateToSitePermissions()
+                SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
             }
             resources.getString(pref_key_add_private_browsing_shortcut) -> {
                 requireContext().metrics.track(Event.PrivateBrowsingCreateShortcut)
                 PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
+                null
             }
             resources.getString(pref_key_accessibility) -> {
-                navigateToAccessibility()
+                SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
             }
             resources.getString(pref_key_language) -> {
                 // TODO #220
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "220")
+                ItsNotBrokenSnack(requireContext()).showSnackbar(issueNumber = "220")
+                null
             }
             resources.getString(pref_key_make_default_browser) -> {
-                navigateToDefaultBrowserSettingsFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
             }
             resources.getString(pref_key_data_choices) -> {
-                navigateToDataChoices()
+                SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
             }
             resources.getString(pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
@@ -215,6 +229,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                     newTab = true,
                     from = BrowserDirection.FromSettings
                 )
+                null
             }
             resources.getString(pref_key_rate) -> {
                 try {
@@ -228,58 +243,53 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                         from = BrowserDirection.FromSettings
                     )
                 }
+                null
             }
             resources.getString(pref_key_passwords) -> {
-                navigateToLoginsSettingsFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToLoginsFragment()
             }
             resources.getString(pref_key_about) -> {
-                navigateToAbout()
+                SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
             }
             resources.getString(pref_key_account) -> {
-                navigateToAccountSettings()
+                SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
             }
             resources.getString(pref_key_account_auth_error) -> {
-                navigateToAccountProblem()
+                SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment()
             }
             resources.getString(pref_key_delete_browsing_data) -> {
-                navigateToDeleteBrowsingData()
+                SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
             }
             resources.getString(pref_key_delete_browsing_data_on_quit_preference) -> {
-                navigateToDeleteBrowsingDataOnQuit()
+                SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
             }
             resources.getString(pref_key_theme) -> {
-                navigateToThemeSettings()
+                SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
             }
             resources.getString(pref_key_toolbar) -> {
-                navigateToToolbarSettings()
+                SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
             }
             resources.getString(pref_key_privacy_link) -> {
-                requireContext().let { context ->
-                    val intent = SupportUtils.createCustomTabIntent(
-                        context,
-                        SupportUtils.getPrivacyNoticeUrl()
-                    )
-                    startActivity(intent)
-                }
+                val intent = SupportUtils.createCustomTabIntent(
+                    requireContext(),
+                    SupportUtils.getPrivacyNoticeUrl()
+                )
+                startActivity(intent)
+                null
             }
             resources.getString(pref_key_your_rights) -> {
-                requireContext().let { context ->
-                    val intent = SupportUtils.createCustomTabIntent(
-                        context,
-                        SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
-                    )
-                    startActivity(intent)
-                }
+                val context = requireContext()
+                val intent = SupportUtils.createCustomTabIntent(
+                    context,
+                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
+                )
+                startActivity(intent)
+                null
             }
+            else -> null
         }
+        directions?.let { navigateFromSettings(directions) }
         return super.onPreferenceTreeClick(preference)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(
-            preferenceChangeListener
-        )
     }
 
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
@@ -313,128 +323,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateFromSettings(directions: NavDirections) {
-        view?.let {
-            val navController = Navigation.findNavController(it)
+        view?.findNavController()?.let { navController ->
             if (navController.currentDestination?.id == R.id.settingsFragment) {
                 navController.navigate(directions)
-            }
-        }
-    }
-
-    private fun navigateToLoginsSettingsFragment() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToLoginsFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToSearchEngineSettings() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToTrackingProtectionSettings() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToThemeSettings() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToToolbarSettings() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToSitePermissions() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToAccessibility() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToDefaultBrowserSettingsFragment() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToDataChoices() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToAbout() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToAccountProblem() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToAccountSettings() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToDeleteBrowsingData() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
-        navigateFromSettings(directions)
-    }
-
-    private fun navigateToDeleteBrowsingDataOnQuit() {
-        val directions =
-            SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
-        navigateFromSettings(directions)
-    }
-
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        lifecycleScope.launch {
-            context?.let {
-                updateAccountUIState(
-                    it,
-                    it.components.backgroundServices.accountManager.accountProfile()
-                )
-            }
-        }
-    }
-
-    override fun onLoggedOut() {
-        lifecycleScope.launch {
-            context?.let {
-                updateAccountUIState(
-                    it,
-                    it.components.backgroundServices.accountManager.accountProfile()
-                )
-            }
-        }
-    }
-
-    override fun onProfileUpdated(profile: Profile) {
-        lifecycleScope.launch {
-            context?.let {
-                updateAccountUIState(it, profile)
-            }
-        }
-    }
-
-    override fun onAuthenticationProblems() {
-        lifecycleScope.launch {
-            context?.let {
-                updateAccountUIState(
-                    it,
-                    it.components.backgroundServices.accountManager.accountProfile()
-                )
             }
         }
     }

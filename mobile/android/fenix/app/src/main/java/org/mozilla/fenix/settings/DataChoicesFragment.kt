@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -20,36 +19,24 @@ import org.mozilla.fenix.ext.showToolbar
  */
 class DataChoicesFragment : PreferenceFragmentCompat() {
 
-    private val preferenceChangeListener =
-        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-            when (key) {
-                getPreferenceKey(R.string.pref_key_telemetry) -> {
-                    if (sharedPreferences.getBoolean(key, requireContext().settings().isTelemetryEnabled)) {
-                        context?.components?.analytics?.metrics?.start()
-                    } else {
-                        context?.components?.analytics?.metrics?.stop()
-                    }
-                }
-            }
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        context?.let {
-            preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+
+        val context = requireContext()
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this) { sharedPreferences, key ->
+            if (key == getPreferenceKey(R.string.pref_key_telemetry)) {
+                if (sharedPreferences.getBoolean(key, context.settings().isTelemetryEnabled)) {
+                    context.components.analytics.metrics.start()
+                } else {
+                    context.components.analytics.metrics.stop()
+                }
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_data_collection))
-    }
-
-    override fun onDestroy() {
-        context?.let {
-            preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
-        }
-        super.onDestroy()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

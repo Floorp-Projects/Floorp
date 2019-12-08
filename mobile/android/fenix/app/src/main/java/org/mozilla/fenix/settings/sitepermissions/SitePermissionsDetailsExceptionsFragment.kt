@@ -8,12 +8,13 @@ import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -47,28 +48,22 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
             val context = requireContext()
             sitePermissions =
                 requireNotNull(context.components.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
-            launch(Main) {
+            withContext(Main) {
                 bindCategoryPhoneFeatures()
             }
         }
     }
 
     private fun bindCategoryPhoneFeatures() {
-        val context = requireContext()
-
-        val cameraAction = CAMERA.getActionLabel(context, sitePermissions)
-        val locationAction = LOCATION.getActionLabel(context, sitePermissions)
-        val microphoneAction = MICROPHONE.getActionLabel(context, sitePermissions)
-        val notificationAction = NOTIFICATION.getActionLabel(context, sitePermissions)
-
-        initPhoneFeature(CAMERA, cameraAction)
-        initPhoneFeature(LOCATION, locationAction)
-        initPhoneFeature(MICROPHONE, microphoneAction)
-        initPhoneFeature(NOTIFICATION, notificationAction)
+        initPhoneFeature(CAMERA)
+        initPhoneFeature(LOCATION)
+        initPhoneFeature(MICROPHONE)
+        initPhoneFeature(NOTIFICATION)
         bindClearPermissionsButton()
     }
 
-    private fun initPhoneFeature(phoneFeature: PhoneFeature, summary: String) {
+    private fun initPhoneFeature(phoneFeature: PhoneFeature) {
+        val summary = phoneFeature.getActionLabel(requireContext(), sitePermissions)
         val keyPreference = phoneFeature.getPreferenceKey(requireContext())
         val cameraPhoneFeatures: Preference = requireNotNull(findPreference(keyPreference))
         cameraPhoneFeatures.summary = summary
@@ -103,8 +98,8 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     private fun clearSitePermissions() {
         lifecycleScope.launch(IO) {
             requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
-            launch(Main) {
-                Navigation.findNavController(requireNotNull(view)).popBackStack()
+            withContext(Main) {
+                requireView().findNavController().popBackStack()
             }
         }
     }
@@ -115,6 +110,6 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
                 phoneFeatureId = phoneFeature.id,
                 sitePermissions = sitePermissions
             )
-        Navigation.findNavController(view!!).navigate(directions)
+        requireView().findNavController().navigate(directions)
     }
 }

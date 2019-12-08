@@ -6,15 +6,13 @@ package org.mozilla.fenix.settings.search
 
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.custom_search_engine.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -26,12 +24,13 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 import java.util.Locale
 
 class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine) {
     private val engineIdentifier: String by lazy {
-        navArgs<EditCustomSearchEngineFragmentArgs>().value.searchEngineIdentifier
+        EditCustomSearchEngineFragmentArgs.fromBundle(requireArguments()).searchEngineIdentifier
     }
 
     private lateinit var searchEngine: SearchEngine
@@ -68,8 +67,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.search_engine_edit_custom_search_engine_title)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.search_engine_edit_custom_search_engine_title))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

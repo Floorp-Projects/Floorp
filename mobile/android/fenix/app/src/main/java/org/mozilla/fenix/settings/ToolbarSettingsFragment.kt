@@ -5,16 +5,17 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.showToolbar
 
+/**
+ * Settings to adjust the position of the browser toolbar.
+ */
 class ToolbarSettingsFragment : PreferenceFragmentCompat() {
-    private lateinit var topPreference: RadioButtonPreference
-    private lateinit var bottomPreference: RadioButtonPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.toolbar_preferences, rootKey)
@@ -22,16 +23,14 @@ class ToolbarSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_toolbar)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_toolbar))
 
-        setupClickListeners()
-        setupRadioGroups()
+        setupPreferences()
     }
 
-    private fun setupClickListeners() {
+    private fun setupPreferences() {
         val keyToolbarTop = getPreferenceKey(R.string.pref_key_toolbar_top)
-        topPreference = requireNotNull(findPreference(keyToolbarTop))
+        val topPreference = requireNotNull(findPreference<RadioButtonPreference>(keyToolbarTop))
         topPreference.onClickListener {
             requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
                 Event.ToolbarPositionChanged.Position.TOP
@@ -39,15 +38,13 @@ class ToolbarSettingsFragment : PreferenceFragmentCompat() {
         }
 
         val keyToolbarBottom = getPreferenceKey(R.string.pref_key_toolbar_bottom)
-        bottomPreference = requireNotNull(findPreference(keyToolbarBottom))
+        val bottomPreference = requireNotNull(findPreference<RadioButtonPreference>(keyToolbarBottom))
         bottomPreference.onClickListener {
             requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
                 Event.ToolbarPositionChanged.Position.BOTTOM
             ))
         }
-    }
 
-    private fun setupRadioGroups() {
         topPreference.addToRadioGroup(bottomPreference)
         bottomPreference.addToRadioGroup(topPreference)
     }
