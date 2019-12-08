@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 /**
  * Tests if the given child and grand child accessibles at the given point are
  * expected.

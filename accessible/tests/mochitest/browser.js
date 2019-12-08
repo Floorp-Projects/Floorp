@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

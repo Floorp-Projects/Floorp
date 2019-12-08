@@ -1,3 +1,5 @@
+/* import-globals-from common.js */
+
 /**
  * Test accessible name for the given accessible identifier.
  */

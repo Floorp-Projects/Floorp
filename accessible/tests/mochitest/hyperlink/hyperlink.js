@@ -1,3 +1,7 @@
+/* import-globals-from ../common.js */
+/* import-globals-from ../events.js */
+/* import-globals-from ../states.js */
+
 /**
  * Focus hyperlink invoker.
  *
