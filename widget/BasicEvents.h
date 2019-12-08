@@ -897,6 +897,12 @@ class WidgetEvent : public WidgetEventTime {
         // All wheel events are composed
         mFlags.mComposed = mMessage == eWheel;
         break;
+      case eMouseScrollEventClass:
+        // Legacy mouse scroll events are composed too, for consistency with
+        // wheel.
+        mFlags.mComposed = mMessage == eLegacyMouseLineOrPageScroll ||
+                           mMessage == eLegacyMousePixelScroll;
+        break;
       default:
         mFlags.mComposed = false;
         break;
