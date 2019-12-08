@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L32)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L33)
 
 Supported Fennec migrations and their current versions.
 
@@ -14,6 +14,7 @@ Supported Fennec migrations and their current versions.
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
+| [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
 
 ### Properties
@@ -36,4 +37,5 @@ Supported Fennec migrations and their current versions.
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
+| [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |

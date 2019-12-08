@@ -2,7 +2,7 @@
 
 # FennecMigratorException
 
-`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L79)
+`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L85)
 
 Exceptions related to Fennec migrations.
 
@@ -16,6 +16,7 @@ exceptions.
 | [MigrateBookmarksException](-migrate-bookmarks-exception/index.md) | `class MigrateBookmarksException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating bookmarks. |
 | [MigrateGeckoException](-migrate-gecko-exception/index.md) | `class MigrateGeckoException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating gecko profile. |
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
+| [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
 
 ### Extension Functions
@@ -31,4 +32,5 @@ exceptions.
 | [MigrateBookmarksException](-migrate-bookmarks-exception/index.md) | `class MigrateBookmarksException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating bookmarks. |
 | [MigrateGeckoException](-migrate-gecko-exception/index.md) | `class MigrateGeckoException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating gecko profile. |
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
+| [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
