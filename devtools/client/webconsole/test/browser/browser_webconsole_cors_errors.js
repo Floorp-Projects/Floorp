@@ -171,7 +171,7 @@ add_task(async function() {
 async function checkCorsMessage(message, category) {
   const node = message.node;
   ok(
-    node.classList.contains("warn"),
+    node.classList.contains("error"),
     "The cors message has the expected classname"
   );
   const learnMoreLink = node.querySelector(".learn-more-link");
