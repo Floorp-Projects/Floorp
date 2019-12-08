@@ -626,7 +626,7 @@ class nsContentUtils {
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
   // Check if the principal is chrome or an addon with the permission.
-  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal,
+  static bool PrincipalHasPermission(nsIPrincipal& aPrincipal,
                                      const nsAtom* aPerm);
 
   // Check if the JS caller is chrome or an addon with the permission.
@@ -2336,7 +2336,7 @@ class nsContentUtils {
    * allowed for the given subject principal. These are only allowed if the user
    * initiated them (like with a mouse-click or key press).
    */
-  static bool IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal);
+  static bool IsCutCopyAllowed(nsIPrincipal& aSubjectPrincipal);
 
   /*
    * Returns true if the browser should attempt to prevent the given caller type

@@ -984,7 +984,7 @@ bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) {
     return true;
   }
 
-  return nsContentUtils::PrincipalHasPermission(prin,
+  return nsContentUtils::PrincipalHasPermission(*prin,
                                                 nsGkAtoms::all_urlsPermission);
 }
 

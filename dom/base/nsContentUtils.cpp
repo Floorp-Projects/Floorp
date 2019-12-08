@@ -1869,20 +1869,20 @@ bool nsContentUtils::CanCallerAccess(nsPIDOMWindowInner* aWindow) {
 }
 
 // static
-bool nsContentUtils::PrincipalHasPermission(nsIPrincipal* aPrincipal,
+bool nsContentUtils::PrincipalHasPermission(nsIPrincipal& aPrincipal,
                                             const nsAtom* aPerm) {
   // Chrome gets access by default.
-  if (aPrincipal->IsSystemPrincipal()) {
+  if (aPrincipal.IsSystemPrincipal()) {
     return true;
   }
 
   // Otherwise, only allow if caller is an addon with the permission.
-  return BasePrincipal::Cast(aPrincipal)->AddonHasPermission(aPerm);
+  return BasePrincipal::Cast(aPrincipal).AddonHasPermission(aPerm);
 }
 
 // static
 bool nsContentUtils::CallerHasPermission(JSContext* aCx, const nsAtom* aPerm) {
-  return PrincipalHasPermission(SubjectPrincipal(aCx), aPerm);
+  return PrincipalHasPermission(*SubjectPrincipal(aCx), aPerm);
 }
 
 // static
@@ -6436,7 +6436,7 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
 }
 
 /* static */
-bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal) {
+bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal& aSubjectPrincipal) {
   if (StaticPrefs::dom_allow_cut_copy() &&
       UserActivation::IsHandlingUserInput()) {
     return true;
