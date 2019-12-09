@@ -31,7 +31,9 @@ import org.mozilla.geckoview.test.util.Callbacks
 class AutofillDelegateTest : BaseSessionTest() {
 
     @Test fun autofillCommit() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("signon.rememberSignons" to true))
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "signon.rememberSignons" to true,
+                "signon.userInputRequiredToCapture.enabled" to false))
 
         mainSession.loadTestPath(FORMS_HTML_PATH)
         // Wait for the auto-fill nodes to populate.
