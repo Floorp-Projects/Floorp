@@ -491,7 +491,6 @@ linux-rusttests/opt:
         mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
-        need-xvfb: true
     run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
@@ -532,7 +531,6 @@ linux-rusttests/debug:
         mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
-        need-xvfb: true
     run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
@@ -1106,7 +1104,6 @@ linux64-rusttests/opt:
         mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
-        need-xvfb: true
     run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:
@@ -1146,7 +1143,6 @@ linux64-rusttests/debug:
         mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
-        need-xvfb: true
     run-on-projects: ['trunk', 'try']
     fetches:
         toolchain:

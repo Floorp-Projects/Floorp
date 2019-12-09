@@ -48,7 +48,6 @@ jobs:
                 - builds/releng_base_linux_32_builds.py
             mozconfig-variant: profile-generate
             tooltool-downloads: public
-            need-xvfb: true
         fetches:
             toolchain:
                 - linux64-binutils
@@ -74,7 +73,6 @@ jobs:
                 - builds/releng_base_linux_64_builds.py
             mozconfig-variant: profile-generate
             tooltool-downloads: public
-            need-xvfb: true
         fetches:
             toolchain:
                 - linux64-binutils
