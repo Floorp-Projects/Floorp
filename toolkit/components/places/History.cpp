@@ -2002,10 +2002,9 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    mozilla::dom::ContentChild* cpc =
-        mozilla::dom::ContentChild::GetSingleton();
-    NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendSetURITitle(uri, PromiseFlatString(aTitle));
+    auto* cpc = dom::ContentChild::GetSingleton();
+    MOZ_ASSERT(cpc, "Content Protocol is NULL!");
+    Unused << cpc->SendSetURITitle(uri, PromiseFlatString(aTitle));
     return NS_OK;
   }
 
