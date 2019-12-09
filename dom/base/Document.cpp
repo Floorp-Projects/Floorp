@@ -3668,7 +3668,7 @@ bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
       nsContentUtils::SubjectPrincipal(aCx);
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
   return nsContentUtils::PrincipalAllowsL10n(
-      callerPrincipal, win ? win->GetDocumentURI() : nullptr);
+      *callerPrincipal, win ? win->GetDocumentURI() : nullptr);
 }
 
 void Document::LocalizationLinkAdded(Element* aLinkElement) {
@@ -3777,7 +3777,8 @@ void Document::InitialDocumentTranslationCompleted() {
 }
 
 bool Document::AllowsL10n() const {
-  return nsContentUtils::PrincipalAllowsL10n(NodePrincipal(), GetDocumentURI());
+  return nsContentUtils::PrincipalAllowsL10n(*NodePrincipal(),
+                                             GetDocumentURI());
 }
 
 bool Document::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
