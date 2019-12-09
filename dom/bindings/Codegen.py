@@ -3063,7 +3063,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if len(idsToInit) > 0:
             initIdCalls = ["!InitIds(aCx, %s.Upcast())" % (properties)
                            for properties in idsToInit]
-            idsInitedFlag = CGGeneric("static bool sIdsInited = false;\n")
+            idsInitedFlag = CGGeneric("static Atomic<bool, Relaxed> sIdsInited(false);\n")
             setFlag = CGGeneric("sIdsInited = true;\n")
             initIdConditionals = [CGIfWrapper(CGGeneric("return;\n"), call)
                                   for call in initIdCalls]
@@ -15201,6 +15201,8 @@ class CGBindingRoot(CGThing):
             d.wantsXrays for d in descriptors)
         bindingHeaders["mozilla/dom/StructuredCloneTags.h"] = any(
             d.interface.isSerializable() for d in descriptors)
+        bindingHeaders["mozilla/Atomics.h"] = any(
+            d.wantsXrays for d in descriptors)
 
         for ancestor in (findAncestorWithInstrumentedProps(d) for d in descriptors):
             if not ancestor:
