@@ -88,6 +88,22 @@ nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& 
                                       int32_t aStartPage, int32_t aEndPage) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  // Print Core of Application Service sent print job with names exceeding
+  // 255 bytes. This is a workaround until fix it.
+  // (https://openradar.appspot.com/34428043)
+  nsAutoString adjustedTitle;
+  PrintTarget::AdjustPrintJobNameForIPP(aTitle, adjustedTitle);
+
+  if (!adjustedTitle.IsEmpty()) {
+    CFStringRef cfString = ::CFStringCreateWithCharacters(
+        NULL, reinterpret_cast<const UniChar*>(adjustedTitle.BeginReading()),
+        adjustedTitle.Length());
+    if (cfString) {
+      ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
+      ::CFRelease(cfString);
+    }
+  }
+
   OSStatus status;
   status = ::PMSetFirstPage(mPrintSettings, aStartPage, false);
   NS_ASSERTION(status == noErr, "PMSetFirstPage failed");
