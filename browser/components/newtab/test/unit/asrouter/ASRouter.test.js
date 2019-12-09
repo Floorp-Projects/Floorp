@@ -166,6 +166,7 @@ describe("ASRouter", () => {
       ASRouterTargeting,
       ASRouterTriggerListeners,
       QueryCache,
+      gURLBar: {},
       AttributionCode: fakeAttributionCode,
       // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
       // importing these modules into the global scope ourselves.
@@ -187,7 +188,7 @@ describe("ASRouter", () => {
       },
       Downloader: class {
         download() {
-          return Promise.resolve("/path/to/downlowned");
+          return Promise.resolve("/path/to/download");
         }
       },
     });
@@ -2773,7 +2774,10 @@ describe("ASRouter", () => {
           sendAsyncMessage: sandbox.stub(),
           documentURI: { scheme: "https", host: "mozilla.com" },
         };
+        const gURLBar = document.createElement("div");
+        gURLBar.textbox = document.createElement("div");
         target.ownerGlobal = {
+          gURLBar,
           gBrowser: { selectedBrowser: target },
           document: { getElementById },
           promiseDocumentFlushed: sandbox.stub().resolves([{ width: 0 }]),
