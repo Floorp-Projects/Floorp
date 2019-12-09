@@ -24,78 +24,64 @@ enum class MediaControlActions : uint32_t {
 };
 
 /**
- * MediaController is a class which is used to control media in the content
- * process. It's a basic interface class and you should implement you own class
- * to inherit this class. Every controller would correspond to a browsing
- * context. For example, TabMediaController corresponds to the top level
- * browsing context. In the future, we might implement MediaSessionController
- * which could correspond to any browsing context, depending on which browsing
- * context has active media session.
+ * MediaController is a class, which is used to control all media within a tab.
+ * It can only be used in Chrome process and the controlled media are usually
+ * in the content process (unless we disable e10s).
+ *
+ * Each tab would have only one media controller, they are 1-1 corresponding
+ * relationship, we use tab's top-level browsing context ID to initialize the
+ * controller and use that as its ID.
+ *
+ * Whenever controlled media started, we would notify the controller to increase
+ * or decrease the amount of its controlled media when its controlled media
+ * started or stopped.
+ *
+ * Once the controller started, which means it has controlled some media, then
+ * we can use its controlling methods, such as `Play()`, `Pause()` to control
+ * the media within the tab. If there is at least one controlled media playing
+ * in the tab, then we would say the controller is `playing`. If there is at
+ * least one controlled media is playing and audible, then we would say the
+ * controller is `audible`.
+ *
+ * Note that, if we don't enable audio competition, then we might have multiple
+ * tabs playing media at the same time, we can use the ID to query the specific
+ * controller from `MediaControlService`.
  */
-class MediaController {
+class MediaController final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController);
 
-  explicit MediaController(uint64_t aContextId)
-      : mBrowsingContextId(aContextId) {}
+  explicit MediaController(uint64_t aContextId);
 
-  virtual void Play() = 0;
-  virtual void Pause() = 0;
-  virtual void Stop() = 0;
-  virtual void Shutdown() = 0;
+  void Play();
+  void Pause();
+  void Stop();
+  void Shutdown();
 
-  virtual void NotifyMediaActiveChanged(bool aActive) = 0;
-  virtual void NotifyMediaAudibleChanged(bool aAudible) = 0;
+  uint64_t Id() const;
+  bool IsPlaying() const;
+  bool IsAudible() const;
+  uint64_t ControlledMediaNum() const;
 
-  bool IsPlaying() const { return mIsPlaying; }
-  uint64_t Id() const { return mBrowsingContextId; }
-  virtual uint64_t ControlledMediaNum() const { return 0; }
-  virtual bool IsAudible() const { return false; }
-
- protected:
-  virtual ~MediaController() = default;
-
-  already_AddRefed<BrowsingContext> GetContext() const;
-
-  uint64_t mBrowsingContextId;
-  bool mIsPlaying = false;
-};
-
-/**
- * TabMediaController is used to control all media in a tab. It can only be used
- * in Chrome process. Everytime media starts in the tab, it would increase the
- * number of controlled media, and also would decrease the number when media
- * stops. The media it controls might be in different content processes, so we
- * keep tracking the top level browsing context in the tab, which can be used to
- * propagate conmmands to remote content processes.
- */
-class TabMediaController final : public MediaController {
- public:
-  explicit TabMediaController(uint64_t aContextId);
-
-  void Play() override;
-  void Pause() override;
-  void Stop() override;
-  void Shutdown() override;
-
-  uint64_t ControlledMediaNum() const override;
-  bool IsAudible() const override;
-
-  void NotifyMediaActiveChanged(bool aActive) override;
-  void NotifyMediaAudibleChanged(bool aAudible) override;
-
- protected:
-  ~TabMediaController();
+  // These methods are only being used to notify the state changes of controlled
+  // media in ContentParent or MediaControlUtils.
+  void NotifyMediaActiveChanged(bool aActive);
+  void NotifyMediaAudibleChanged(bool aAudible);
 
  private:
+  ~MediaController();
+
+  already_AddRefed<BrowsingContext> GetContext() const;
   void IncreaseControlledMediaNum();
   void DecreaseControlledMediaNum();
 
   void Activate();
   void Deactivate();
 
-  int64_t mControlledMediaNum = 0;
+  uint64_t mBrowsingContextId;
+  bool mIsPlaying = false;
   bool mAudible = false;
+  int64_t mControlledMediaNum = 0;
 };
 
 }  // namespace dom

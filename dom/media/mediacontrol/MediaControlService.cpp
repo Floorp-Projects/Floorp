@@ -96,7 +96,7 @@ RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(
     const uint64_t aId) const {
   RefPtr<MediaController> controller = mControllers.Get(aId);
   if (!controller) {
-    controller = new TabMediaController(aId);
+    controller = new MediaController(aId);
   }
   return controller;
 }
