@@ -3033,11 +3033,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // test above handles relevant changes in the StyleWillChangeBit_TRANSFORM
   // bit, which in turn handles frame reconstruction for changes in the
   // containing block of fixed-positioned elements.
-  //
-  // TODO(emilio): Should add xor to the generated cbindgen type.
-  auto willChangeBitsChanged =
-      StyleWillChangeBits{static_cast<decltype(StyleWillChangeBits::bits)>(
-          mWillChange.bits.bits ^ aNewData.mWillChange.bits.bits)};
+  auto willChangeBitsChanged = mWillChange.bits ^ aNewData.mWillChange.bits;
 
   if (willChangeBitsChanged &
       (StyleWillChangeBits::STACKING_CONTEXT | StyleWillChangeBits::SCROLL |
