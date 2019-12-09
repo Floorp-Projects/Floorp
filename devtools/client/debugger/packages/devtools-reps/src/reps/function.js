@@ -20,7 +20,6 @@ const IGNORED_SOURCE_URLS = ["debugger eval code"];
  */
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
-  parameterNames: PropTypes.array,
   onViewSourceInDebugger: PropTypes.func,
   sourceMapService: PropTypes.object,
 };
@@ -72,7 +71,7 @@ function FunctionRep(props) {
     getTitle(grip, props),
     getFunctionName(grip, props),
     "(",
-    ...renderParams(props),
+    ...renderParams(grip),
     ")",
     jumpToDefinitionButton
   );
@@ -169,8 +168,8 @@ function cleanFunctionName(name) {
   return name;
 }
 
-function renderParams(props) {
-  const { parameterNames = [] } = props;
+function renderParams(grip) {
+  const { parameterNames = [] } = grip;
 
   return parameterNames
     .filter(param => param)
