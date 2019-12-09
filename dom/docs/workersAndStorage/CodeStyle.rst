@@ -203,6 +203,12 @@ In function signatures, prefer accepting or returning ``RefPtr`` instead of
 legimitate uses of ``already_AddRefed`` are described in its
 `documentation <https://searchfox.org/mozilla-central/rev/4df8821c1b824db5f40f381f48432f219d99ae36/mfbt/AlreadyAddRefed.h#31>`_.
 
+Prefer using ``mozilla::UniquePtr`` over ``nsAutoPtr``, since the latter is
+deprecated (and e.g. has no factory function, see Bug 1600079).
+
+Use ``nsCOMPtr<T>`` iff ``T`` is an XPCOM interface type
+(`more details on MDN <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/nsCOMPtr_versus_RefPtr>`).
+
 Enums
 -----
 
