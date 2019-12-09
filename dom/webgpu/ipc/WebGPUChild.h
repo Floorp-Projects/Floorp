@@ -38,6 +38,8 @@ class WebGPUChild final : public PWebGPUChild {
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
                                     const dom::GPUDeviceDescriptor& aDesc);
+  RawId DeviceCreateBuffer(RawId aSelfId,
+                           const dom::GPUBufferDescriptor& aDesc);
 
  private:
   virtual ~WebGPUChild();

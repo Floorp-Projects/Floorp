@@ -66,6 +66,9 @@ UNIFIED_SOURCES += [
     'ipc/WebGPUParent.cpp',
 ]
 
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CXXFLAGS += ['-Werror=implicit-int-conversion']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
