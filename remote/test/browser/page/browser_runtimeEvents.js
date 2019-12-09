@@ -41,7 +41,7 @@ add_task(async function testCDP(client) {
 
   // Runtime.enable will dispatch `executionContextCreated` for the existing document
   let { context } = await onExecutionContextCreated;
-  ok(!!context.id, "The execution context has an id");
+  ok(!!context.id, `The execution context has an id ${context.id}`);
   ok(context.auxData.isDefault, "The execution context is the default one");
   ok(!!context.auxData.frameId, "The execution context has a frame id set");
 
