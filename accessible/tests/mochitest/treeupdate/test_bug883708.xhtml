@@ -6,8 +6,8 @@
 
 function boom() {
   var newSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
-  c.insertBefore(newSpan, d);
-  a.style.visibility = "visible";
+  document.getElementById("c").insertBefore(newSpan, document.getElementById("d"));
+  document.getElementById("a").style.visibility = "visible";
   ok(true, "test didn't crash or assert");
   SimpleTest.finish();
 }

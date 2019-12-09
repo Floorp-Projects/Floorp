@@ -152,11 +152,6 @@
       treeNode.view = new nsTreeTreeView();
     }
 
-    function test1()
-    {
-      getNode("tabletree").view.setCellValue(0, boxObj.columns.firstColumn, "false");
-    }
-
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
   ]]>
@@ -189,7 +184,6 @@
       </tree>
 
       <vbox id="debug"/>
-      <button oncommand="test1();" label="uncheck"/>
     </vbox>
   </hbox>
 
