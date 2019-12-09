@@ -517,3 +517,17 @@ raptor-jetstream2-chrome:
     fetches:
         fetch:
             - jetstream2
+
+raptor-youtube-playback-chrome:
+    description: "Raptor YouTube Playback on Chrome"
+    try-name: raptor-youtube-playback-chrome
+    treeherder-symbol: Rap-ChR(ytp)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback
+            - --app=chrome
