@@ -116,12 +116,12 @@ impl<F> Global<F> {
             &*texture_guard,
         );
 
-        if let Some((pipeline_layout_id, follow_up_sets, follow_up_offsets)) = pass
+        if let Some((pipeline_layout_id, follow_ups)) = pass
             .binder
             .provide_entry(index as usize, bind_group_id, bind_group, offsets)
         {
             let bind_groups = iter::once(bind_group.raw.raw())
-                .chain(follow_up_sets.map(|bg_id| bind_group_guard[bg_id].raw.raw()));
+                .chain(follow_ups.clone().map(|(bg_id, _)| bind_group_guard[bg_id].raw.raw()));
             unsafe {
                 pass.raw.bind_compute_descriptor_sets(
                     &pipeline_layout_guard[pipeline_layout_id].raw,
@@ -129,7 +129,7 @@ impl<F> Global<F> {
                     bind_groups,
                     offsets
                         .iter()
-                        .chain(follow_up_offsets)
+                        .chain(follow_ups.flat_map(|(_, offsets)| offsets))
                         .map(|&off| off as hal::command::DescriptorSetOffset),
                 );
             }
@@ -161,8 +161,9 @@ impl<F> Global<F> {
     ) {
         let hub = B::hub(self);
         let mut token = Token::root();
+        let (mut pass_guard, mut token) = hub.compute_passes.write(&mut token);
         let (buffer_guard, _) = hub.buffers.read(&mut token);
-        let (mut pass_guard, _) = hub.compute_passes.write(&mut token);
+
         let pass = &mut pass_guard[pass_id];
 
         let (src_buffer, src_pending) = pass.trackers.buffers.use_replace(

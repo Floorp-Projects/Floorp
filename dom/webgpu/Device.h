@@ -6,6 +6,7 @@
 #ifndef GPU_DEVICE_H_
 #define GPU_DEVICE_H_
 
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -34,10 +35,16 @@ struct GPUCommandEncoderDescriptor;
 
 class EventHandlerNonNull;
 class Promise;
+template <typename T>
+class Sequence;
 class GPUBufferOrGPUTexture;
 enum class GPUErrorFilter : uint8_t;
 class GPULogCallback;
 }  // namespace dom
+namespace ipc {
+enum class ResponseRejectReason;
+class Shmem;
+}  // namespace ipc
 
 namespace webgpu {
 class Adapter;
@@ -57,11 +64,21 @@ class ShaderModule;
 class Texture;
 class WebGPUChild;
 
+typedef MozPromise<ipc::Shmem, ipc::ResponseRejectReason, true> MappingPromise;
+
 class Device final : public DOMEventTargetHelper {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
   GPU_DECL_JS_WRAP(Device)
+
+  explicit Device(Adapter* const aParent, RawId aId);
+  static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
+                                             ipc::Shmem& aShmem);
+  RefPtr<MappingPromise> MapBufferForReadAsync(RawId aId, size_t aSize,
+                                               ErrorResult& aRv);
+  void UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem);
+  void DestroyBuffer(RawId aId);
 
  private:
   Device() = delete;
@@ -72,9 +89,12 @@ class Device final : public DOMEventTargetHelper {
   nsString mLabel;
 
  public:
-  explicit Device(Adapter* const aParent, RawId aId);
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
+
+  already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc);
+  void CreateBufferMapped(JSContext* aCx, const dom::GPUBufferDescriptor& aDesc,
+                          nsTArray<JS::Value>& aSequence, ErrorResult& aRv);
 
   // IMPL_EVENT_HANDLER(uncapturederror)
 };

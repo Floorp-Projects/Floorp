@@ -54,7 +54,7 @@ dictionary GPUObjectDescriptorBase {
 
 [
     Pref="dom.webgpu.enable",
-    Exposed=Window,
+    Exposed=Window
 ]
 interface GPU {
     // May reject with DOMException
@@ -105,8 +105,10 @@ interface GPUDevice {
     //GPULimits getLimits();
     //readonly attribute GPUAdapter adapter;
 
-    //GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
-    //GPUMappedBuffer createBufferMapped(GPUBufferDescriptor descriptor);
+    [NewObject]
+    GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
+    [NewObject, Throws]
+    GPUMappedBuffer createBufferMapped(GPUBufferDescriptor descriptor);
     //Promise<GPUMappedBuffer> createBufferMappedAsync(GPUBufferDescriptor descriptor);
     //GPUTexture createTexture(GPUTextureDescriptor descriptor);
     //GPUSampler createSampler(optional GPUSamplerDescriptor descriptor = {});
@@ -202,9 +204,11 @@ dictionary GPUBufferDescriptor {
 [Pref="dom.webgpu.enable",
  Exposed=Window]
 interface GPUBuffer {
-    //Promise<ArrayBuffer> mapReadAsync();
+    [NewObject]
+    Promise<ArrayBuffer> mapReadAsync();
     //Promise<ArrayBuffer> mapWriteAsync();
-    //void unmap();
+    [Throws]
+    void unmap();
 
     //void destroy();
 };
