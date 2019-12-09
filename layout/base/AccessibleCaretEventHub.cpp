@@ -11,7 +11,6 @@
 #include "Layers.h"
 
 #include "mozilla/AutoRestore.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -105,7 +104,9 @@ class AccessibleCaretEventHub::NoActionState
 };
 
 // -----------------------------------------------------------------------------
-// PressCaretState: Always consume the event since we've pressed on the caret.
+// PressCaretState: Because we've pressed on the caret, always consume the
+// event, both real and synthesized, so that other event handling code won't
+// have a chance to do something else to interrupt caret dragging.
 //
 class AccessibleCaretEventHub::PressCaretState
     : public AccessibleCaretEventHub::State {
@@ -113,9 +114,10 @@ class AccessibleCaretEventHub::PressCaretState
   const char* Name() const override { return "PressCaretState"; }
 
   MOZ_CAN_RUN_SCRIPT
-  nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
-                       const nsPoint& aPoint) override {
-    if (aContext->MoveDistanceIsLarge(aPoint)) {
+  nsEventStatus OnMove(AccessibleCaretEventHub* aContext, const nsPoint& aPoint,
+                       WidgetMouseEvent::Reason aReason) override {
+    if (aReason == WidgetMouseEvent::eReal &&
+        aContext->MoveDistanceIsLarge(aPoint)) {
       if (NS_SUCCEEDED(aContext->mManager->DragCaret(aPoint))) {
         aContext->SetState(AccessibleCaretEventHub::DragCaretState());
       }
@@ -140,7 +142,9 @@ class AccessibleCaretEventHub::PressCaretState
 };
 
 // -----------------------------------------------------------------------------
-// DragCaretState: Always consume the event since we've pressed on the caret.
+// DragCaretState: Because we've pressed on the caret, always consume the event,
+// both real and synthesized, so that other event handling code won't have a
+// chance to do something else to interrupt caret dragging.
 //
 class AccessibleCaretEventHub::DragCaretState
     : public AccessibleCaretEventHub::State {
@@ -148,9 +152,11 @@ class AccessibleCaretEventHub::DragCaretState
   const char* Name() const override { return "DragCaretState"; }
 
   MOZ_CAN_RUN_SCRIPT
-  nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
-                       const nsPoint& aPoint) override {
-    aContext->mManager->DragCaret(aPoint);
+  nsEventStatus OnMove(AccessibleCaretEventHub* aContext, const nsPoint& aPoint,
+                       WidgetMouseEvent::Reason aReason) override {
+    if (aReason == WidgetMouseEvent::eReal) {
+      aContext->mManager->DragCaret(aPoint);
+    }
 
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -172,8 +178,8 @@ class AccessibleCaretEventHub::PressNoCaretState
  public:
   const char* Name() const override { return "PressNoCaretState"; }
 
-  nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
-                       const nsPoint& aPoint) override {
+  nsEventStatus OnMove(AccessibleCaretEventHub* aContext, const nsPoint& aPoint,
+                       WidgetMouseEvent::Reason aReason) override {
     if (aContext->MoveDistanceIsLarge(aPoint)) {
       aContext->SetState(AccessibleCaretEventHub::NoActionState());
     }
@@ -455,7 +461,10 @@ nsEventStatus AccessibleCaretEventHub::HandleMouseEvent(
 
     case eMouseMove:
       AC_LOGV("Before eMouseMove, state: %s", mState->Name());
-      rv = mState->OnMove(this, point);
+      // The mouse move events synthesized from the touch move events can have
+      // wrong point (bug 1549355). Workaround it by ignoring the events when
+      // dragging the caret because the caret doesn't really need them.
+      rv = mState->OnMove(this, point, aEvent->mReason);
       AC_LOGV("After eMouseMove, state: %s, consume: %d", mState->Name(), rv);
       break;
 
@@ -504,7 +513,8 @@ nsEventStatus AccessibleCaretEventHub::HandleTouchEvent(
 
     case eTouchMove:
       AC_LOGV("Before eTouchMove, state: %s", mState->Name());
-      rv = mState->OnMove(this, point);
+      // There is no synthesized touch move event.
+      rv = mState->OnMove(this, point, WidgetMouseEvent::eReal);
       AC_LOGV("After eTouchMove, state: %s, consume: %d", mState->Name(), rv);
       break;
 
