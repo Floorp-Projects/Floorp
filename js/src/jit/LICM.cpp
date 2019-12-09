@@ -30,7 +30,7 @@ static bool LoopContainsPossibleCall(MIRGraph& graph, MBasicBlock* header,
       MInstruction* ins = *insIter;
       if (ins->possiblyCalls()) {
 #ifdef JS_JITSPEW
-        JitSpew(JitSpew_LICM, "    Possile call found at %s%u", ins->opName(),
+        JitSpew(JitSpew_LICM, "    Possible call found at %s%u", ins->opName(),
                 ins->id());
 #endif
         return true;
