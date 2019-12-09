@@ -55,7 +55,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
     environ: &mut FE,
 ) -> WasmResult<()> {
     if !state.reachable {
-        translate_unreachable_operator(module_translation_state, &op, builder, state)?;
+        translate_unreachable_operator(module_translation_state, &op, builder, state, environ)?;
         return Ok(());
     }
 
@@ -139,13 +139,13 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
          ***********************************************************************************/
         Operator::Block { ty } => {
             let (params, results) = blocktype_params_results(module_translation_state, *ty)?;
-            let next = ebb_with_params(builder, results)?;
+            let next = ebb_with_params(builder, results, environ)?;
             state.push_block(next, params.len(), results.len());
         }
         Operator::Loop { ty } => {
             let (params, results) = blocktype_params_results(module_translation_state, *ty)?;
-            let loop_body = ebb_with_params(builder, params)?;
-            let next = ebb_with_params(builder, results)?;
+            let loop_body = ebb_with_params(builder, params, environ)?;
+            let next = ebb_with_params(builder, results, environ)?;
             builder.ins().jump(loop_body, state.peekn(params.len()));
             state.push_loop(loop_body, next, params.len(), results.len());
 
@@ -168,7 +168,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                 // destination ebb following the whole `if...end`. If we do end
                 // up discovering an `else`, then we will allocate an ebb for it
                 // and go back and patch the jump.
-                let destination = ebb_with_params(builder, results)?;
+                let destination = ebb_with_params(builder, results, environ)?;
                 let branch_inst = builder
                     .ins()
                     .brz(val, destination, state.peekn(params.len()));
@@ -176,8 +176,8 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             } else {
                 // The `if` type signature is not valid without an `else` block,
                 // so we eagerly allocate the `else` block here.
-                let destination = ebb_with_params(builder, results)?;
-                let else_block = ebb_with_params(builder, params)?;
+                let destination = ebb_with_params(builder, results, environ)?;
+                let else_block = ebb_with_params(builder, params, environ)?;
                 builder
                     .ins()
                     .brz(val, else_block, state.peekn(params.len()));
@@ -229,7 +229,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                                 let (params, _results) =
                                     blocktype_params_results(module_translation_state, blocktype)?;
                                 debug_assert_eq!(params.len(), num_return_values);
-                                let else_ebb = ebb_with_params(builder, params)?;
+                                let else_ebb = ebb_with_params(builder, params, environ)?;
                                 builder.ins().jump(destination, state.peekn(params.len()));
                                 state.popn(params.len());
 
@@ -987,18 +987,104 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::Fence { .. } => {
             return Err(wasm_unsupported!("proposed thread operator {:?}", op));
         }
-        Operator::MemoryInit { .. }
-        | Operator::DataDrop { .. }
-        | Operator::MemoryCopy
-        | Operator::MemoryFill
-        | Operator::TableInit { .. }
-        | Operator::ElemDrop { .. }
-        | Operator::TableCopy
-        | Operator::TableGet { .. }
-        | Operator::TableSet { .. }
-        | Operator::TableGrow { .. }
-        | Operator::TableSize { .. } => {
-            return Err(wasm_unsupported!("proposed bulk memory operator {:?}", op));
+        Operator::MemoryCopy => {
+            // The WebAssembly MVP only supports one linear memory and
+            // wasmparser will ensure that the memory indices specified are
+            // zero.
+            let heap_index = MemoryIndex::from_u32(0);
+            let heap = state.get_heap(builder.func, 0, environ)?;
+            let len = state.pop1();
+            let src = state.pop1();
+            let dest = state.pop1();
+            environ.translate_memory_copy(builder.cursor(), heap_index, heap, dest, src, len)?;
+        }
+        Operator::MemoryFill => {
+            // The WebAssembly MVP only supports one linear memory and
+            // wasmparser will ensure that the memory index specified is
+            // zero.
+            let heap_index = MemoryIndex::from_u32(0);
+            let heap = state.get_heap(builder.func, 0, environ)?;
+            let len = state.pop1();
+            let val = state.pop1();
+            let dest = state.pop1();
+            environ.translate_memory_fill(builder.cursor(), heap_index, heap, dest, val, len)?;
+        }
+        Operator::MemoryInit { segment } => {
+            // The WebAssembly MVP only supports one linear memory and
+            // wasmparser will ensure that the memory index specified is
+            // zero.
+            let heap_index = MemoryIndex::from_u32(0);
+            let heap = state.get_heap(builder.func, 0, environ)?;
+            let len = state.pop1();
+            let src = state.pop1();
+            let dest = state.pop1();
+            environ.translate_memory_init(
+                builder.cursor(),
+                heap_index,
+                heap,
+                *segment,
+                dest,
+                src,
+                len,
+            )?;
+        }
+        Operator::DataDrop { segment } => {
+            environ.translate_data_drop(builder.cursor(), *segment)?;
+        }
+        Operator::TableSize { table: index } => {
+            let table = state.get_table(builder.func, *index, environ)?;
+            state.push1(environ.translate_table_size(
+                builder.cursor(),
+                TableIndex::from_u32(*index),
+                table,
+            )?);
+        }
+        Operator::TableCopy => {
+            // The WebAssembly MVP only supports one table and wasmparser will
+            // ensure that the table index specified is zero.
+            let dst_table_index = 0;
+            let dst_table = state.get_table(builder.func, dst_table_index, environ)?;
+            let src_table_index = 0;
+            let src_table = state.get_table(builder.func, src_table_index, environ)?;
+            let len = state.pop1();
+            let src = state.pop1();
+            let dest = state.pop1();
+            environ.translate_table_copy(
+                builder.cursor(),
+                TableIndex::from_u32(dst_table_index),
+                dst_table,
+                TableIndex::from_u32(src_table_index),
+                src_table,
+                dest,
+                src,
+                len,
+            )?;
+        }
+        Operator::TableInit { segment } => {
+            // The WebAssembly MVP only supports one table and we assume it here.
+            let table_index = 0;
+            let table = state.get_table(builder.func, table_index, environ)?;
+            let len = state.pop1();
+            let src = state.pop1();
+            let dest = state.pop1();
+            environ.translate_table_init(
+                builder.cursor(),
+                *segment,
+                TableIndex::from_u32(table_index),
+                table,
+                dest,
+                src,
+                len,
+            )?;
+        }
+        Operator::ElemDrop { segment } => {
+            environ.translate_elem_drop(builder.cursor(), *segment)?;
+        }
+        Operator::TableGet { .. } | Operator::TableSet { .. } | Operator::TableGrow { .. } => {
+            return Err(wasm_unsupported!(
+                "proposed reference types operator {:?}",
+                op
+            ));
         }
         Operator::V128Const { value } => {
             let data = value.bytes().to_vec().into();
@@ -1266,11 +1352,12 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
 /// Deals with a Wasm instruction located in an unreachable portion of the code. Most of them
 /// are dropped but special ones like `End` or `Else` signal the potential end of the unreachable
 /// portion so the translation state must be updated accordingly.
-fn translate_unreachable_operator(
+fn translate_unreachable_operator<FE: FuncEnvironment + ?Sized>(
     module_translation_state: &ModuleTranslationState,
     op: &Operator,
     builder: &mut FunctionBuilder,
     state: &mut FuncTranslationState,
+    environ: &mut FE,
 ) -> WasmResult<()> {
     debug_assert!(!state.reachable);
     match *op {
@@ -1311,7 +1398,7 @@ fn translate_unreachable_operator(
                             ElseData::NoElse { branch_inst } => {
                                 let (params, _results) =
                                     blocktype_params_results(module_translation_state, blocktype)?;
-                                let else_ebb = ebb_with_params(builder, params)?;
+                                let else_ebb = ebb_with_params(builder, params, environ)?;
 
                                 // We change the target of the branch instruction.
                                 builder.change_jump_destination(branch_inst, else_ebb);
