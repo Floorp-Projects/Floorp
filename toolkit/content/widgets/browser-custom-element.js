@@ -291,6 +291,8 @@
 
       this._loadContext = null;
 
+      this._imageDocument = null;
+
       this._webBrowserFind = null;
 
       this._finder = null;
@@ -563,6 +565,24 @@
       }
 
       return this.docShellIsActive;
+    }
+
+    get imageDocument() {
+      if (this.isRemoteBrowser) {
+        return this._imageDocument;
+      }
+      var document = this.contentDocument;
+      if (!document || !(document instanceof Ci.nsIImageDocument)) {
+        return null;
+      }
+
+      try {
+        return {
+          width: document.imageRequest.image.width,
+          height: document.imageRequest.image.height,
+        };
+      } catch (e) {}
+      return null;
     }
 
     get isRemoteBrowser() {
@@ -1243,6 +1263,7 @@
 
         this.messageManager.addMessageListener("Browser:Init", this);
         this.messageManager.addMessageListener("DOMTitleChanged", this);
+        this.messageManager.addMessageListener("ImageDocumentLoaded", this);
 
         let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
         let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
@@ -1475,6 +1496,12 @@
         case "DOMTitleChanged":
           this._contentTitle = data.title;
           break;
+        case "ImageDocumentLoaded":
+          this._imageDocument = {
+            width: data.width,
+            height: data.height,
+          };
+          break;
         default:
           return this._receiveMessage(aMessage);
       }
@@ -1574,6 +1601,7 @@
         this._remoteWebNavigation._currentURI = aLocation;
         this._documentURI = aDocumentURI;
         this._contentTitle = aTitle;
+        this._imageDocument = null;
         this._contentPrincipal = aContentPrincipal;
         this._contentStoragePrincipal = aContentStoragePrincipal;
         this._contentBlockingAllowListPrincipal = aContentBlockingAllowListPrincipal;
@@ -1923,6 +1951,7 @@
             "_contentPrincipal",
             "_contentStoragePrincipal",
             "_contentBlockingAllowListPrincipal",
+            "_imageDocument",
             "_fullZoom",
             "_textZoom",
             "_isSyntheticDocument",
