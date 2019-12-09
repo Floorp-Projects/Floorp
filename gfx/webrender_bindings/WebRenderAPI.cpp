@@ -73,11 +73,15 @@ class NewRenderer : public RendererEvent {
     bool allow_texture_swizzling = gfx::gfxVars::UseGLSwizzle();
     bool isMainWindow = true;  // TODO!
     bool supportLowPriorityTransactions = isMainWindow;
+    bool supportLowPriorityThreadpool =
+        supportLowPriorityTransactions &&
+        StaticPrefs::gfx_webrender_enable_low_priority_pool();
     bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions, allow_texture_swizzling,
+            supportLowPriorityTransactions, supportLowPriorityThreadpool,
+            allow_texture_swizzling,
             StaticPrefs::gfx_webrender_picture_caching() &&
                 supportPictureCaching,
 #ifdef NIGHTLY_BUILD
@@ -92,7 +96,8 @@ class NewRenderer : public RendererEvent {
             aRenderThread.GetShaders()
                 ? aRenderThread.GetShaders()->RawShaders()
                 : nullptr,
-            aRenderThread.ThreadPool().Raw(), &WebRenderMallocSizeOf,
+            aRenderThread.ThreadPool().Raw(),
+            aRenderThread.ThreadPoolLP().Raw(), &WebRenderMallocSizeOf,
             &WebRenderMallocEnclosingSizeOf, (uint32_t)wr::RenderRoot::Default,
             compositor->ShouldUseNativeCompositor() ? compositor.get()
                                                     : nullptr,
