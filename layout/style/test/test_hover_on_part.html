@@ -1,0 +1,52 @@
+<!doctype html>
+<title>Shadow parts are invalidated correctly when only a pseudo-class state to the right of the part matches</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  div {
+    width: 100px;
+    height: 100px;
+  }
+  #host::part(p) {
+    background-color: red;
+  }
+  #host::part(p):hover {
+    background-color: lime;
+  }
+</style>
+<div id="host"></div>
+<div id="random-element-to-force-change"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+let host = document.getElementById("host");
+host.attachShadow({ mode: "open" }).innerHTML = `
+  <style>
+    div {
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+  <div part=p></div>
+`;
+
+let part = host.shadowRoot.querySelector("div");
+let other = document.getElementById("random-element-to-force-change");
+
+SimpleTest.waitForFocus(function() {
+  synthesizeMouseAtCenter(other, {type: "mousemove"});
+  is(
+    getComputedStyle(part).backgroundColor,
+    "rgb(255, 0, 0)",
+    "Part is red"
+  );
+
+  synthesizeMouseAtCenter(part, {type: "mousemove"});
+  is(
+    getComputedStyle(part).backgroundColor,
+    "rgb(0, 255, 0)",
+    "Part is lime"
+  );
+  SimpleTest.finish();
+});
+</script>
