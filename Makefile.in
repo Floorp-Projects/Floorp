@@ -121,24 +121,11 @@ GARBAGE_DIRS += dist _tests
 # Dummy rule for the cases below where we don't depend on dist/include
 recurse_pre-export::
 
-# Windows PGO builds don't perform a clean before the 2nd pass. So, we want
-# to preserve content for the 2nd pass on Windows. Everywhere else, we always
-# process the install manifests as part of export.
 # For the binaries rule, not all the install manifests matter, so force only
 # the interesting ones to be done.
-ifdef MOZ_1TIER_PGO
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
-ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 recurse_pre-export:: install-manifests
 binaries::
 	@$(MAKE) install-manifests install_manifests=dist/include
-endif
-endif
-else # !MOZ_1TIER_PGO (normal build)
-recurse_pre-export:: install-manifests
-binaries::
-	@$(MAKE) install-manifests install_manifests=dist/include
-endif
 
 # Host binaries are not produced for macOS consumers: that is, there's
 # no macOS-hosted job to produce them at this time.  Therefore we
