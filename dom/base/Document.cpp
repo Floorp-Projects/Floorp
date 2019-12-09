@@ -13912,9 +13912,6 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
 
   mStyleSet->AddSizeOfIncludingThis(aWindowSizes);
 
-  aWindowSizes.mDOMOtherSize += mLangGroupFontPrefs.SizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
-
   aWindowSizes.mPropertyTablesSize +=
       mPropertyTable.SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 

@@ -14,6 +14,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIPipe.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 
