@@ -76,10 +76,10 @@ class ContextObserver {
       case "DOMWindowCreated":
         // Do not pass `id` here as that's the new document ID instead of the old one
         // that is destroyed. Instead, pass the frameId and let the listener figure out
-        // what ExecutionContext to destroy.
+        // what ExecutionContext(s) to destroy.
         this.emit("context-destroyed", { frameId });
         this.emit("frame-navigated", { frameId, window });
-        this.emit("context-created", { id, window });
+        this.emit("context-created", { windowId: id, window });
         break;
       case "pageshow":
         // `persisted` is true when this is about a page being resurected from BF Cache
@@ -88,7 +88,7 @@ class ContextObserver {
         }
         // XXX(ochameau) we might have to emit FrameNavigate here to properly handle BF Cache
         // scenario in Page domain events
-        this.emit("context-created", { id, window });
+        this.emit("context-created", { windowId: id, window });
         break;
 
       case "pagehide":
@@ -96,7 +96,7 @@ class ContextObserver {
         if (!persisted) {
           return;
         }
-        this.emit("context-destroyed", { id });
+        this.emit("context-destroyed", { windowId: id });
         break;
     }
   }
@@ -104,6 +104,6 @@ class ContextObserver {
   // "inner-window-destroyed" observer service listener
   observe(subject, topic, data) {
     const innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    this.emit("context-destroyed", { id: innerWindowID });
+    this.emit("context-destroyed", { windowId: innerWindowID });
   }
 }

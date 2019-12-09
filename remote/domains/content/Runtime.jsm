@@ -21,14 +21,42 @@ const { addDebuggerToGlobal } = ChromeUtils.import(
 // Import the `Debugger` constructor in the current scope
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
+class SetMap extends Map {
+  constructor() {
+    super();
+    this._count = 1;
+  }
+  // Every key in the map is associated with a Set.
+  // The first time `key` is used `obj.set(key, value)` maps `key` to
+  // to `Set(value)`. Subsequent calls add more values to the Set for `key`.
+  // Note that `obj.get(key)` will return undefined if there's no such key,
+  // as in a regular Map.
+  set(key, value) {
+    const innerSet = this.get(key);
+    if (innerSet) {
+      innerSet.add(value);
+    } else {
+      super.set(key, new Set([value]));
+    }
+    this._count++;
+    return this;
+  }
+  // used as ExecutionContext id
+  get count() {
+    return this._count;
+  }
+}
+
 class Runtime extends ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;
 
     // Map of all the ExecutionContext instances:
-    // [Execution context id (Number) => ExecutionContext instance]
+    // [id (Number) => ExecutionContext instance]
     this.contexts = new Map();
+    // [innerWindowId (Number) => Set of ExecutionContext instances]
+    this.contextsByWindow = new SetMap();
 
     this._onContextCreated = this._onContextCreated.bind(this);
     this._onContextDestroyed = this._onContextDestroyed.bind(this);
@@ -52,8 +80,9 @@ class Runtime extends ContentProcessDomain {
       // after we replied to `enable` request.
       Services.tm.dispatchToMainThread(() => {
         this._onContextCreated("context-created", {
-          id: this.content.windowUtils.currentInnerWindowID,
+          windowId: this.content.windowUtils.currentInnerWindowID,
           window: this.content,
+          isDefault: true,
         });
       });
     }
@@ -77,7 +106,7 @@ class Runtime extends ContentProcessDomain {
         );
       }
     } else {
-      context = this._getCurrentContext();
+      context = this._getDefaultContextForWindow();
     }
 
     if (typeof expression != "string") {
@@ -186,45 +215,93 @@ class Runtime extends ContentProcessDomain {
     return null;
   }
 
-  _getCurrentContext() {
-    const { windowUtils } = this.content;
-    return this.contexts.get(windowUtils.currentInnerWindowID);
-  }
-
-  _getContextByFrameId(frameId) {
-    for (const ctx of this.contexts.values()) {
-      if (ctx.frameId == frameId) {
-        return ctx;
+  _getDefaultContextForWindow(innerWindowId) {
+    if (!innerWindowId) {
+      const { windowUtils } = this.content;
+      innerWindowId = windowUtils.currentInnerWindowID;
+    }
+    const curContexts = this.contextsByWindow.get(innerWindowId);
+    if (curContexts) {
+      for (const ctx of curContexts) {
+        if (ctx.isDefault) {
+          return ctx;
+        }
       }
     }
     return null;
   }
 
+  _getContextsForFrame(frameId) {
+    const frameContexts = [];
+    for (const ctx of this.contexts.values()) {
+      if (ctx.frameId == frameId) {
+        frameContexts.push(ctx);
+      }
+    }
+    return frameContexts;
+  }
+
   /**
    * Helper method in order to instantiate the ExecutionContext for a given
-   * DOM Window as well as emitting the related `Runtime.executionContextCreated`
-   * event.
+   * DOM Window as well as emitting the related
+   * `Runtime.executionContextCreated` event
    *
-   * @param {Window} window
+   * @param {string} name
+   *     Event name
+   * @param {Object=} options
+   * @param {number} options.windowId
+   *     The inner window id of the newly instantiated document.
+   * @param {Window} options.window
    *     The window object of the newly instantiated document.
+   * @param {string=} options.contextName
+   *     Human-readable name to describe the execution context.
+   * @param {boolean=} options.isDefault
+   *     Whether the execution context is the default one.
+   * @param {string=} options.contextType
+   *     "default" or "isolated"
+   *
    */
-  _onContextCreated(name, { id, window }) {
-    if (this.contexts.has(id)) {
-      return;
+  _onContextCreated(name, options = {}) {
+    const {
+      windowId,
+      window,
+      contextName = "",
+      isDefault = options.window == this.content,
+      contextType = options.contextType ||
+        (options.window == this.content ? "default" : ""),
+    } = options;
+
+    if (windowId === undefined) {
+      throw new Error("windowId is required");
     }
 
-    const context = new ExecutionContext(this._debugger, window);
-    this.contexts.set(id, context);
+    // allow only one default context per inner window
+    if (isDefault && this.contextsByWindow.has(windowId)) {
+      for (const ctx of this.contextsByWindow.get(windowId)) {
+        if (ctx.isDefault) {
+          return;
+        }
+      }
+    }
+
+    const context = new ExecutionContext(
+      this._debugger,
+      window,
+      this.contextsByWindow.count,
+      isDefault
+    );
+    this.contexts.set(context.id, context);
+    this.contextsByWindow.set(windowId, context);
 
     this.emit("Runtime.executionContextCreated", {
       context: {
-        id,
+        id: context.id,
         origin: window.location.href,
-        name: "",
+        name: contextName,
         auxData: {
-          isDefault: window == this.content,
+          isDefault,
           frameId: context.frameId,
-          type: window == this.content ? "default" : "",
+          type: contextType,
         },
       },
     });
@@ -236,30 +313,41 @@ class Runtime extends ContentProcessDomain {
    * ContextObserver will call this method with either `id` or `frameId` argument
    * being set.
    *
+   * @param {string} name
+   *     Event name
+   * @param {Object=} options
    * @param {number} id
    *     The execution context id to destroy.
+   * @param {number} windowId
+   *     The inner-window id of the execution context to destroy.
    * @param {string} frameId
    *     The frame id of execution context to destroy.
-   * Eiter `id` or `frameId` is passed.
+   * Either `id` or `frameId` or `windowId` is passed.
    */
-  _onContextDestroyed(name, { id, frameId }) {
-    let context;
-    if (id && frameId) {
-      throw new Error("Expects only id *or* frameId argument to be passed");
+  _onContextDestroyed(name, { id, frameId, windowId }) {
+    let contexts;
+    if ([id, frameId, windowId].filter(id => !!id).length > 1) {
+      throw new Error("Expects only *one* of id, frameId, windowId");
     }
 
     if (id) {
-      context = this.contexts.get(id);
+      contexts = [this.contexts.get(id)];
+    } else if (frameId) {
+      contexts = this._getContextsForFrame(frameId);
     } else {
-      context = this._getContextByFrameId(frameId);
+      contexts = this.contextsByWindow.get(windowId) || [];
     }
 
-    if (context) {
-      context.destructor();
-      this.contexts.delete(context.id);
+    for (const ctx of contexts) {
+      ctx.destructor();
+      this.contexts.delete(ctx.id);
+      this.contextsByWindow.get(ctx.windowId).delete(ctx);
       this.emit("Runtime.executionContextDestroyed", {
-        executionContextId: context.id,
+        executionContextId: ctx.id,
       });
+      if (this.contextsByWindow.get(ctx.windowId).size == 0) {
+        this.contextsByWindow.delete(ctx.windowId);
+      }
     }
   }
 }
