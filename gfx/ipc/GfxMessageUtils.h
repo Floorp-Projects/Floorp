@@ -7,7 +7,6 @@
 #ifndef __GFXMESSAGEUTILS_H__
 #define __GFXMESSAGEUTILS_H__
 
-#include "mozilla/webrender/webrender_ffi.h"
 #include "FilterSupport.h"
 #include "ImageTypes.h"
 #include "RegionBuilder.h"

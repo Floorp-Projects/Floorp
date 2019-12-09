@@ -7,6 +7,7 @@
 #ifndef _mozilla_dom_ClientInfo_h
 #define _mozilla_dom_ClientInfo_h
 
+#include "X11UndefineNone.h"
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"

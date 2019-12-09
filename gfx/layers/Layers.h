@@ -39,6 +39,7 @@
 #include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/mozalloc.h"        // for operator delete, etc
 #include "nsAutoPtr.h"               // for nsAutoPtr, nsRefPtr, etc
 #include "nsCOMPtr.h"                // for already_AddRefed
