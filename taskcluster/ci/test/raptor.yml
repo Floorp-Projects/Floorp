@@ -11,12 +11,21 @@ job-defaults:
     suite: raptor
     workdir: /home/cltbld
     run-on-projects:
-        by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-            windows10-aarch64/opt: ['try']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
-            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-            default: ['try', 'trunk', 'mozilla-beta']
+        by-test-name:
+            raptor-tp6-.*-cold:
+                by-test-platform:
+                    windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
+                    windows10-aarch64/opt: ['try']
+                    (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
+                    macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+                    default: ['try', 'trunk', 'mozilla-beta']
+            default:
+                by-test-platform:
+                    windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
+                    windows10-aarch64/opt: ['try']
+                    (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
+                    macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+                    default: ['try', 'mozilla-beta']
     tier:
         by-test-platform:
             windows10-aarch64/.*: 2
@@ -1022,7 +1031,7 @@ browsertime-tp6:
 browsertime-speedometer:
     description: "Raptor (browsertime) Speedometer on Firefox"
     raptor-test: raptor-speedometer
-    run-on-projects: ['integration', 'try']
+    run-on-projects: ['try']
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime(sp)
