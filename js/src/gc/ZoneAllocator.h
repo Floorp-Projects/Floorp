@@ -203,7 +203,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   gc::MemoryTracker mallocTracker;
 #endif
 
-  friend class GCRuntime;
+  friend class gc::GCRuntime;
 };
 
 /*
