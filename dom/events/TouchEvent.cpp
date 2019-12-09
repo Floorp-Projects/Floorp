@@ -225,18 +225,9 @@ bool TouchEvent::PlatformSupportsTouch() {
 bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
-  static bool sPrefCached = false;
-  static int32_t sPrefCacheValue = 0;
-
   auto touchEventsOverride = nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE;
   if (aDocShell) {
     touchEventsOverride = aDocShell->GetTouchEventsOverride();
-  }
-
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddIntVarCache(&sPrefCacheValue,
-                                "dom.w3c_touch_events.enabled");
   }
 
   bool enabled = false;
@@ -246,7 +237,8 @@ bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
              nsIDocShell::TOUCHEVENTS_OVERRIDE_DISABLED) {
     enabled = false;
   } else {
-    if (sPrefCacheValue == 2) {
+    const int32_t prefValue = StaticPrefs::dom_w3c_touch_events_enabled();
+    if (prefValue == 2) {
       enabled = PlatformSupportsTouch();
 
       static bool firstTime = true;
@@ -269,7 +261,7 @@ bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
       }
 #endif
     } else {
-      enabled = !!sPrefCacheValue;
+      enabled = !!prefValue;
     }
   }
 

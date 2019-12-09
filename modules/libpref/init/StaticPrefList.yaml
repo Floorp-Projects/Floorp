@@ -2655,6 +2655,19 @@
   value: @IS_ANDROID@
   mirror: always
 
+# W3C touch events
+# 0 - disabled, 1 - enabled, 2 - autodetect
+# Autodetection is currently only supported on Windows and GTK3 (and assumed on
+# Android).
+- name: dom.w3c_touch_events.enabled
+  type: int32_t
+#if defined(XP_MACOSX)
+  value: 0
+#else
+  value: 2
+#endif
+  mirror: always
+
 # Is support for the Web Audio API enabled?
 - name: dom.webaudio.enabled
   type: bool
