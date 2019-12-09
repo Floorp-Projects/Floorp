@@ -43,12 +43,7 @@
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     HANDLE aChildMainThread, const bool aIsSafeMode) {
-  // The AArch64 build has not yet been tested with this.
-#if defined(_M_ARM64)
-  return mozilla::Ok();
-#else
   return mozilla::InitializeDllBlocklistOOP(aFullImagePath, aChildProcess);
-#endif  // defined(_M_ARM64)
 }
 
 #if !defined( \
