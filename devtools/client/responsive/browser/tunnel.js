@@ -30,6 +30,7 @@ const SWAPPED_BROWSER_STATE = [
   "_contentTitle",
   "_characterSet",
   "_contentPrincipal",
+  "_imageDocument",
   "_isSyntheticDocument",
   "_innerWindowID",
 ];
@@ -103,6 +104,7 @@ function tunnelToInnerBrowser(outer, inner) {
         inner._contentTitle = outer._contentTitle;
         inner._characterSet = outer._characterSet;
         inner._contentPrincipal = outer._contentPrincipal;
+        inner._imageDocument = outer._imageDocument;
         inner._isSyntheticDocument = outer._isSyntheticDocument;
         inner._innerWindowID = outer._innerWindowID;
         inner._remoteWebNavigation._currentURI =
@@ -457,6 +459,7 @@ MessageManagerTunnel.prototype = {
     "PageStyle:StyleSheets",
     // Messages sent to browser.js
     "DOMTitleChanged",
+    "ImageDocumentLoaded",
     "InPermitUnload",
     "PermitUnload",
     // Messages sent to SessionStore.jsm
