@@ -8,15 +8,13 @@
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsPrintSettingsX.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsCocoaUtils.h"
 
 using namespace mozilla::embedding;
 
 NS_IMETHODIMP
-nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
-                                              PrintData* data) {
-  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
+nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, PrintData* data) {
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, data);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -32,14 +30,13 @@ nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, nsIWe
   data->adjustedPaperHeight() = adjustedHeight;
 
   if (XRE_IsParentProcess()) {
-    return SerializeToPrintDataParent(aSettings, aWBP, data);
+    return SerializeToPrintDataParent(aSettings, data);
   }
 
   return NS_OK;
 }
 
 nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                                             nsIWebBrowserPrint* aWBP,
                                                              PrintData* data) {
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
   if (NS_WARN_IF(!settingsX)) {

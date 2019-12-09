@@ -10,7 +10,7 @@
 #include "nsPrintDialogUtil.h"
 
 #include "nsGfxCIID.h"
-#include "nsIWebBrowserPrint.h"
+#include "nsIServiceManager.h"
 #include "nsWindowsHelpers.h"
 #include "ipc/IPCMessageUtils.h"
 
@@ -21,10 +21,8 @@ using namespace mozilla::embedding;
 
 NS_IMETHODIMP
 nsPrintSettingsServiceWin::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                                nsIWebBrowserPrint* aWBP,
                                                 PrintData* data) {
-  nsresult rv =
-      nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrintSettingsWin> psWin = do_QueryInterface(aSettings);

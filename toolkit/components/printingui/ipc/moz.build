@@ -15,7 +15,6 @@ EXPORTS.mozilla.embedding.printingui += [
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsPrintingProxy.cpp',
-        'PrintDataUtils.cpp',
         'PrintingParent.cpp',
         'PrintProgressDialogChild.cpp',
         'PrintProgressDialogParent.cpp',

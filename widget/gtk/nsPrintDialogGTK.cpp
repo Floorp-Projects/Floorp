@@ -918,8 +918,7 @@ nsFlatpakPrintPortal::~nsFlatpakPrintPortal() {
 
 NS_IMETHODIMP
 nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter* aParent,
-                              nsIPrintSettings* aSettings,
-                              nsIWebBrowserPrint* aWebBrowserPrint) {
+                              nsIPrintSettings* aSettings) {
   MOZ_ASSERT(aParent, "aParent must not be null");
   MOZ_ASSERT(aSettings, "aSettings must not be null");
 
