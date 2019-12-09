@@ -391,7 +391,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
     }
 }
 
-impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
+impl<'a, 'b, 'c> TargetEnvironment for TransEnv<'a, 'b, 'c> {
     fn target_config(&self) -> TargetFrontendConfig {
         self.isa.frontend_config()
     }
@@ -399,7 +399,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     fn pointer_type(&self) -> ir::Type {
         native_pointer_type()
     }
+}
 
+impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     fn make_global(
         &mut self,
         func: &mut ir::Function,
