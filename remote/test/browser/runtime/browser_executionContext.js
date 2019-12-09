@@ -18,13 +18,31 @@ add_task(async function(client) {
   await testReload(client, context4);
 });
 
+add_task(async function testRuntimeNotEnabled({ Runtime }) {
+  await Runtime.disable();
+  const sentinel = "timeout resolved";
+  const created = Runtime.executionContextCreated().then(() => {
+    return "executionContextCreated";
+  });
+  const destroyed = Runtime.executionContextDestroyed().then(() => {
+    return "executionContextCreated";
+  });
+  const timeout = timeoutPromise(1000).then(() => {
+    return sentinel;
+  });
+  await loadURL(TEST_DOC);
+  const result = await Promise.race([created, destroyed, timeout]);
+  is(result, sentinel, "No Runtime events emitted while Runtime is disabled");
+});
+
 async function testRuntimeEnable({ Runtime }) {
+  const contextCreated = Runtime.executionContextCreated();
   // Enable watching for new execution context
   await Runtime.enable();
   info("Runtime domain has been enabled");
 
   // Calling Runtime.enable will emit executionContextCreated for the existing contexts
-  const { context } = await Runtime.executionContextCreated();
+  const { context } = await contextCreated;
   ok(!!context.id, "The execution context has an id");
   ok(!!context.origin, "The execution context has an origin");
   is(context.name, "", "The default execution context is named ''");
