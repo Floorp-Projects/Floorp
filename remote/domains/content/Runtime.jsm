@@ -188,7 +188,7 @@ class Runtime extends ContentProcessDomain {
 
   getContextByFrameId(frameId) {
     for (const ctx of this.contexts.values()) {
-      if (ctx.frameId === frameId) {
+      if (ctx.frameId == frameId) {
         return ctx;
       }
     }
@@ -228,9 +228,9 @@ class Runtime extends ContentProcessDomain {
    * ContextObserver will call this method with either `id` or `frameId` argument
    * being set.
    *
-   * @param {Number} id
+   * @param {number} id
    *     The execution context id to destroy.
-   * @param {Number} frameId
+   * @param {string} frameId
    *     The frame id of execution context to destroy.
    * Eiter `id` or `frameId` is passed.
    */

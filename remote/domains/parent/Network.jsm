@@ -124,7 +124,7 @@ class Network extends Domain {
       initiator: undefined,
       redirectResponse: undefined,
       type: LOAD_CAUSE_STRINGS[causeType] || "unknown",
-      frameId: topFrame.outerWindowID,
+      frameId: topFrame.outerWindowID.toString(),
       hasUserGesture: undefined,
     });
   }

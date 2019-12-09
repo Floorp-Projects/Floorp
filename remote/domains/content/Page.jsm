@@ -95,7 +95,7 @@ class Page extends ContentProcessDomain {
     this.docShell.loadURI(url, opts);
 
     return {
-      frameId: this.content.windowUtils.outerWindowID,
+      frameId: this.content.windowUtils.outerWindowID.toString(),
     };
   }
 
@@ -109,7 +109,7 @@ class Page extends ContentProcessDomain {
   }
 
   getFrameTree() {
-    const frameId = this.content.windowUtils.outerWindowID;
+    const frameId = this.content.windowUtils.outerWindowID.toString();
     return {
       frameTree: {
         frame: {
@@ -172,7 +172,7 @@ class Page extends ContentProcessDomain {
     }
 
     const timestamp = Date.now();
-    const frameId = target.defaultView.windowUtils.outerWindowID;
+    const frameId = target.defaultView.windowUtils.outerWindowID.toString();
     const url = target.location.href;
 
     switch (type) {
