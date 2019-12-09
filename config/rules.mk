@@ -477,11 +477,6 @@ ifdef MSMANIFEST_TOOL
 		$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
-ifdef MOZ_PROFILE_GENERATE
-# touch it a few seconds into the future to work around FAT's
-# 2-second granularity
-	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
-endif
 else # !WINNT || GNU_CC
 	$(call EXPAND_CC_OR_CXX,$@) -o $@ $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) $($(notdir $@)_$(OBJS_VAR_SUFFIX)) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
 	$(call py_action,check_binary,--target $@)
@@ -634,9 +629,6 @@ ifdef EMBED_MANIFEST_AT
 	fi
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
-ifdef MOZ_PROFILE_GENERATE
-	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
-endif
 endif	# WINNT && !GCC
 	chmod +x $@
 ifdef ENABLE_STRIP
