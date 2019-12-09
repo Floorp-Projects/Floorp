@@ -11,7 +11,6 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -65,12 +64,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun visitedUrlHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -82,12 +81,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteHistoryItemTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -98,12 +97,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteAllHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -115,12 +114,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun multiSelectionToolbarItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -138,12 +137,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun openHistoryInNewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openHomeScreen {
             closeTab()
         }.openThreeDotMenu {
@@ -160,12 +159,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun openHistoryInPrivateTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -181,17 +180,18 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openHomeScreen {}
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
+            verifyPageContent("Page content: 2")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
@@ -210,12 +210,12 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun shareButtonTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent("Page content: 1")
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {
