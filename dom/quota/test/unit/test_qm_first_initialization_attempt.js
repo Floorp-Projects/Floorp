@@ -12,18 +12,17 @@ const telemetry = "QM_FIRST_INITIALIZATION_ATTEMPT";
 const testcases = [
   {
     key: "Storage",
-    testingInitFunction() {
-      return init();
-    },
+    initFunction: init,
+    initArgs: [[]],
     get metadataDir() {
       return getRelativeFile(
         "storage/default/https+++example.com/.metadata-v2"
       );
     },
-    async settingForForcingInitFailure() {
+    async breakInit() {
       this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
     },
-    removeSetting() {
+    unbreakInit() {
       this.metadataDir.remove(false);
     },
     expectedResult: {
@@ -33,15 +32,14 @@ const testcases = [
   },
   {
     key: "TemporaryStorage",
-    testingInitFunction() {
-      return initTemporaryStorage();
-    },
+    initFunction: initTemporaryStorage,
+    initArgs: [[]],
     get metadataDir() {
       return getRelativeFile(
         "storage/default/https+++example.com/.metadata-v2"
       );
     },
-    async settingForForcingInitFailure() {
+    async breakInit() {
       // We need to initialize storage before creating the metadata directory.
       // If we don't do that, the storage directory created for the metadata
       // directory would trigger storage upgrades (from version 0 to current
@@ -52,7 +50,7 @@ const testcases = [
 
       this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
     },
-    removeSetting() {
+    unbreakInit() {
       this.metadataDir.remove(false);
     },
     expectedResult: {
@@ -62,34 +60,20 @@ const testcases = [
   },
   {
     key: "PersistentOrigin",
-    testingInitFunction: [
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example1.com"),
-          "persistent"
-        );
-      },
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example2.com"),
-          "persistent"
-        );
-      },
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example3.com"),
-          "default"
-        );
-      },
+    initFunction: initStorageAndOrigin,
+    initArgs: [
+      [getPrincipal("https://example.com"), "persistent"],
+      [getPrincipal("https://example1.com"), "persistent"],
+      [getPrincipal("https://example2.com"), "default"],
     ],
     get originFiles() {
       return [
+        getRelativeFile("storage/permanent/https+++example.com"),
         getRelativeFile("storage/permanent/https+++example1.com"),
-        getRelativeFile("storage/permanent/https+++example2.com"),
-        getRelativeFile("storage/default/https+++example3.com"),
+        getRelativeFile("storage/default/https+++example2.com"),
       ];
     },
-    async settingForForcingInitFailure() {
+    async breakInit() {
       // We need to initialize temporary storage before creating the origin
       // file. If we don't do that, the initialization would fail while
       // initializating the temporary storage.
@@ -100,7 +84,7 @@ const testcases = [
         originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
       }
     },
-    removeSetting() {
+    unbreakInit() {
       for (let originFile of this.originFiles) {
         originFile.remove(false);
       }
@@ -114,31 +98,12 @@ const testcases = [
   },
   {
     key: "TemporaryOrigin",
-    testingInitFunction: [
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example.com"),
-          "temporary"
-        );
-      },
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example.com"),
-          "default"
-        );
-      },
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example1.com"),
-          "default"
-        );
-      },
-      function() {
-        return initStorageAndOrigin(
-          getPrincipal("https://example2.com"),
-          "persistent"
-        );
-      },
+    initFunction: initStorageAndOrigin,
+    initArgs: [
+      [getPrincipal("https://example.com"), "temporary"],
+      [getPrincipal("https://example.com"), "default"],
+      [getPrincipal("https://example1.com"), "default"],
+      [getPrincipal("https://example2.com"), "persistent"],
     ],
     get originFiles() {
       return [
@@ -148,7 +113,7 @@ const testcases = [
         getRelativeFile("storage/permanent/https+++example2.com"),
       ];
     },
-    async settingForForcingInitFailure() {
+    async breakInit() {
       // We need to initialize temporary storage before creating the origin
       // file. If we don't do that, the initialization would fail while
       // initializating the temporary storage.
@@ -159,7 +124,7 @@ const testcases = [
         originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
       }
     },
-    removeSetting() {
+    unbreakInit() {
       for (let originFile of this.originFiles) {
         originFile.remove(false);
       }
@@ -214,7 +179,7 @@ async function testSteps() {
       );
 
       if (!expectedInitResult) {
-        await testcase.settingForForcingInitFailure();
+        await testcase.breakInit();
       }
 
       const msg =
@@ -223,12 +188,8 @@ async function testSteps() {
       // The steps below verify we should get the result of the first attempt
       // for the initialization.
       for (let i = 0; i < 2; ++i) {
-        const iterableInitFunc =
-          typeof testcase.testingInitFunction[Symbol.iterator] === "function"
-            ? testcase.testingInitFunction
-            : [testcase.testingInitFunction];
-        for (let initFunc of iterableInitFunc) {
-          request = initFunc();
+        for (let initArg of testcase.initArgs) {
+          request = testcase.initFunction(...initArg);
           try {
             await requestFinished(request);
             ok(expectedInitResult, msg);
@@ -239,10 +200,10 @@ async function testSteps() {
       }
 
       if (!expectedInitResult) {
-        // Remove the setting (e.g. files) created by the
-        // settingForForcingInitFilaure(). We need to do that for the next
-        // iteration in which the initialization is supposed to succeed.
-        testcase.removeSetting();
+        // Remove the setting (e.g. files) created by the breakInit(). We need
+        // to do that for the next iteration in which the initialization is
+        // supposed to succeed.
+        testcase.unbreakInit();
       }
 
       const expectedResultForThisRun = expectedInitResult
