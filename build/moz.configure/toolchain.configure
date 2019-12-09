@@ -1469,6 +1469,7 @@ def ubsan(options):
         'bool',
         'bounds',
         'integer-divide-by-zero',
+        'object-size',
         'pointer-overflow',
         'vla-bound',
     ]
