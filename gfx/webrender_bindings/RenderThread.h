@@ -44,7 +44,7 @@ class RenderThread;
 /// process.
 class WebRenderThreadPool {
  public:
-  WebRenderThreadPool();
+  explicit WebRenderThreadPool(bool low_priority);
 
   ~WebRenderThreadPool();
 
@@ -230,6 +230,10 @@ class RenderThread final {
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
 
+  /// Thread pool for low priority scene building
+  /// Can be called from any thread.
+  WebRenderThreadPool& ThreadPoolLP() { return mThreadPoolLP; }
+
   /// Returns the cache used to serialize shader programs to disk, if enabled.
   ///
   /// Can only be called from the render thread.
@@ -288,6 +292,7 @@ class RenderThread final {
   base::Thread* const mThread;
 
   WebRenderThreadPool mThreadPool;
+  WebRenderThreadPool mThreadPoolLP;
 
   UniquePtr<WebRenderProgramCache> mProgramCache;
   UniquePtr<WebRenderShaders> mShaders;

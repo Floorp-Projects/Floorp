@@ -77,6 +77,7 @@ fn dump_index(blob: &[u8]) -> () {
 /// Handles the interpretation and rasterization of gecko-based (moz2d) WR blob images.
 pub struct Moz2dBlobImageHandler {
     workers: Arc<ThreadPool>,
+    workers_low_priority: Arc<ThreadPool>,
     blob_commands: HashMap<BlobImageKey, BlobCommand>,
 }
 
@@ -502,6 +503,8 @@ struct BlobCommand {
 struct Moz2dBlobRasterizer {
     /// Pool of rasterizers.
     workers: Arc<ThreadPool>,
+    /// Pool of low priority rasterizers.
+    workers_low_priority: Arc<ThreadPool>,
     /// Blobs to rasterize.
     blob_commands: HashMap<BlobImageKey, BlobCommand>,
 }
@@ -559,9 +562,14 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
             // Parallel version synchronously installs a job on the thread pool which will
             // try to do the work in parallel.
             // This thread is blocked until the thread pool is done doing the work.
-            self.workers.install(||{
-                requests.into_par_iter().map(rasterize_blob).collect()
-            })
+            let lambda = ||{ requests.into_par_iter().map(rasterize_blob).collect() };
+            if low_priority {
+                //TODO --bpe runtime flag to A/B test these two
+                self.workers_low_priority.install(lambda)
+                //self.workers.install(lambda)
+            } else {
+                self.workers.install(lambda)
+            }
         } else {
             requests.into_iter().map(rasterize_blob).collect()
         }
@@ -653,6 +661,7 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
     fn create_blob_rasterizer(&mut self) -> Box<dyn AsyncBlobImageRasterizer> {
         Box::new(Moz2dBlobRasterizer {
             workers: Arc::clone(&self.workers),
+            workers_low_priority: Arc::clone(&self.workers_low_priority),
             blob_commands: self.blob_commands.clone(),
         })
     }
@@ -705,10 +714,11 @@ extern "C" {
 
 impl Moz2dBlobImageHandler {
     /// Create a new BlobImageHandler with the given thread pool.
-    pub fn new(workers: Arc<ThreadPool>) -> Self {
+    pub fn new(workers: Arc<ThreadPool>, workers_low_priority: Arc<ThreadPool>) -> Self {
         Moz2dBlobImageHandler {
             blob_commands: HashMap::new(),
             workers: workers,
+            workers_low_priority: workers_low_priority,
         }
     }
 
