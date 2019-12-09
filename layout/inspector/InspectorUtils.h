@@ -233,6 +233,8 @@ class InspectorUtils {
 
   static bool IsElementThemed(GlobalObject& aGlobal, Element& aElement);
 
+  static Element* ContainingBlockOf(GlobalObject&, Element&);
+
   /**
    * Parse CSS and update the style sheet in place.
    *
