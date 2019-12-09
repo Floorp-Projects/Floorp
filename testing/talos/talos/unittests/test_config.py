@@ -479,8 +479,7 @@ class Test_get_config(object):
         assert 'mac_counters' not in test_config
         assert test_config['filters'] is not None
         assert test_config['preferences'] == {
-            'devtools.memory.enabled': True,
-            'addon.test.damp.webserver': '${webserver}'
+            'devtools.memory.enabled': True
         }
         assert test_config['unit'] == 'ms'
 
