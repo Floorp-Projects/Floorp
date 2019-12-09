@@ -20,7 +20,7 @@ linux64-rust-size:
         toolchain-artifact: public/build/rust-size.tar.xz
     fetches:
         toolchain:
-            - linux64-rust-1.28
+            - linux64-rust-1.39
 
 win64-rust-size:
     treeherder:
@@ -36,4 +36,4 @@ win64-rust-size:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust-1.28
+            - win64-rust-1.39
