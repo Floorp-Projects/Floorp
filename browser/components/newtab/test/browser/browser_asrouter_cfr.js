@@ -336,6 +336,53 @@ add_task(async function test_cfr_notification_show() {
   );
 });
 
+add_task(async function test_cfr_notification_minimize() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  let response = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(
+    response,
+    "Should return true if addRecommendation checks were successful"
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => gURLBar.hasAttribute("cfr-recommendation-state"),
+    "Wait for the notification to show up and have a state"
+  );
+  Assert.ok(
+    gURLBar.getAttribute("cfr-recommendation-state") === "expanded",
+    "CFR recomendation state is correct"
+  );
+
+  gURLBar.focus();
+
+  await BrowserTestUtils.waitForCondition(
+    () => gURLBar.getAttribute("cfr-recommendation-state") === "collapsed",
+    "After urlbar focus the CFR notification should collapse"
+  );
+
+  // Open the panel and click to dismiss to ensure cleanup
+  const showPanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  let hidePanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphidden"
+  );
+  document
+    .getElementById("contextual-feature-recommendation-notification")
+    .button.click();
+  await hidePanel;
+});
+
 add_task(async function test_cfr_addon_install() {
   // addRecommendation checks that scheme starts with http and host matches
   const browser = gBrowser.selectedBrowser;
