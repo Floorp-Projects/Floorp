@@ -4464,9 +4464,10 @@ static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
     return style;
   }
 
-  if (IsEditingHost(aFrame)) {
+  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame)) {
     // We don't implement 'contain' itself, but we make 'text' behave as
-    // 'contain' for contenteditable elements anyway so this is ok.
+    // 'contain' for contenteditable and <input> / <textarea> elements anyway so
+    // this is ok.
     return StyleUserSelect::Text;
   }
 
