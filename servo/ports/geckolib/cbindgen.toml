@@ -6,8 +6,13 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
 #pragma GCC diagnostic push
 #ifdef __clang__
 #  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-#endif"""
+#endif
+// Work-around silly windows.h define.
+#pragma push_macro("STRICT")
+#undef STRICT
+"""
 trailer = """
+#pragma pop_macro("STRICT")
 #pragma GCC diagnostic pop
 #include "mozilla/ServoStyleConstsInlines.h"
 """
