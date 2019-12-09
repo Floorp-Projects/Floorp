@@ -21,7 +21,7 @@ pub fn wgpu_create_surface(raw_handle: raw_window_handle::RawWindowHandle) -> id
     let instance = &GLOBAL.instance;
     let surface = match raw_handle {
         #[cfg(target_os = "ios")]
-        Rwh::IOS(h) => core::instance::Surface {
+        Rwh::IOS(h) => Surface {
             #[cfg(feature = "vulkan-portability")]
             vulkan: None,
             metal: instance

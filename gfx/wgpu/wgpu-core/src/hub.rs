@@ -167,7 +167,6 @@ impl<B: hal::Backend> Access<BindGroupLayout<B>> for Root {}
 impl<B: hal::Backend> Access<BindGroupLayout<B>> for Device<B> {}
 impl<B: hal::Backend> Access<BindGroup<B>> for Root {}
 impl<B: hal::Backend> Access<BindGroup<B>> for Device<B> {}
-impl<B: hal::Backend> Access<BindGroup<B>> for BindGroupLayout<B> {}
 impl<B: hal::Backend> Access<BindGroup<B>> for PipelineLayout<B> {}
 impl<B: hal::Backend> Access<BindGroup<B>> for CommandBuffer<B> {}
 impl<B: hal::Backend> Access<CommandBuffer<B>> for Root {}
@@ -320,17 +319,17 @@ impl<T, I: TypedId + Copy, F> Registry<T, I, F> {
         assert!(old.is_none());
     }
 
-    pub fn read<'a, A: Access<T>>(
-        &'a self,
-        _token: &'a mut Token<A>,
-    ) -> (RwLockReadGuard<'a, Storage<T, I>>, Token<'a, T>) {
+    pub fn read<A: Access<T>>(
+        &self,
+        _token: &mut Token<A>,
+    ) -> (RwLockReadGuard<Storage<T, I>>, Token<T>) {
         (self.data.read(), Token::new())
     }
 
-    pub fn write<'a, A: Access<T>>(
-        &'a self,
-        _token: &'a mut Token<A>,
-    ) -> (RwLockWriteGuard<'a, Storage<T, I>>, Token<'a, T>) {
+    pub fn write<A: Access<T>>(
+        &self,
+        _token: &mut Token<A>,
+    ) -> (RwLockWriteGuard<Storage<T, I>>, Token<T>) {
         (self.data.write(), Token::new())
     }
 }
@@ -347,11 +346,7 @@ impl<T, I: TypedId + Copy, F: IdentityFilter<I>> Registry<T, I, F> {
         id
     }
 
-    pub fn unregister<'a, A: Access<T>>(
-        &self,
-        id: I,
-        _token: &'a mut Token<A>,
-    ) -> (T, Token<'a, T>) {
+    pub fn unregister<A: Access<T>>(&self, id: I, _token: &mut Token<A>) -> (T, Token<T>) {
         let value = self.data.write().remove(id).unwrap();
         //Note: careful about the order here!
         self.identity.free(id);
@@ -438,7 +433,6 @@ impl<B: hal::Backend, F> Drop for Hub<B, F> {
             }
         }
         for (_, (buffer, _)) in self.buffers.data.write().map.drain() {
-            //TODO: unmap if needed
             unsafe {
                 devices[buffer.device_id.value]
                     .raw

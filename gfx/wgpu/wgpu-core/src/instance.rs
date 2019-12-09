@@ -14,7 +14,7 @@ use crate::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-pub use hal::adapter::{AdapterInfo, DeviceType};
+pub use hal::adapter::AdapterInfo;
 use hal::{self, adapter::PhysicalDevice as _, queue::QueueFamily as _, Instance as _};
 
 
