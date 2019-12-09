@@ -47,6 +47,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const PREF_SETTINGS_DEFAULT_BUCKET = "services.settings.default_bucket";
 const PREF_SETTINGS_BRANCH = "services.settings.";
+const PREF_SETTINGS_SERVER = "server";
 const PREF_SETTINGS_DEFAULT_SIGNER = "default_signer";
 const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";
@@ -69,6 +70,11 @@ XPCOMUtils.defineLazyGetter(this, "gPrefs", () => {
   return Services.prefs.getBranch(PREF_SETTINGS_BRANCH);
 });
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gServerURL",
+  PREF_SETTINGS_BRANCH + PREF_SETTINGS_SERVER
+);
 
 /**
  * Default entry filtering function, in charge of excluding remote settings entries
@@ -222,7 +228,7 @@ function remoteSettingsFunction() {
 
     let pollResult;
     try {
-      pollResult = await Utils.fetchLatestChanges(Utils.SERVER_URL, {
+      pollResult = await Utils.fetchLatestChanges(gServerURL, {
         expectedTimestamp,
         lastEtag,
       });
@@ -369,7 +375,7 @@ function remoteSettingsFunction() {
     const {
       changes,
       currentEtag: serverTimestamp,
-    } = await Utils.fetchLatestChanges(Utils.SERVER_URL);
+    } = await Utils.fetchLatestChanges(gServerURL);
 
     const collections = await Promise.all(
       changes.map(async change => {
@@ -396,8 +402,8 @@ function remoteSettingsFunction() {
     );
 
     return {
-      serverURL: Utils.SERVER_URL,
-      pollingEndpoint: Utils.SERVER_URL + Utils.CHANGES_PATH,
+      serverURL: gServerURL,
+      pollingEndpoint: gServerURL + Utils.CHANGES_PATH,
       serverTimestamp,
       localTimestamp: gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
       lastCheck: gPrefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
