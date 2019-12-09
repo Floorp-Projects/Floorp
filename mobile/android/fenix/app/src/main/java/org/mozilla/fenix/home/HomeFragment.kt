@@ -483,7 +483,8 @@ class HomeFragment : Fragment() {
 
     private fun hideOnboarding() {
         onboarding.finish()
-        currentMode.emitModeChanges()
+        homeFragmentStore.dispatch(
+            HomeFragmentAction.ModeChange(currentMode.getCurrentMode()))
     }
 
     private fun setupHomeMenu() {
