@@ -204,9 +204,6 @@ constexpr auto kPersistentOriginTelemetryKey =
 constexpr auto kTemporaryOriginTelemetryKey =
     NS_LITERAL_CSTRING("TemporaryOrigin");
 
-const uint8_t kEnsurePersistentOriginIsIinitializedSet = 1;
-const uint8_t kEnsureTemporaryOriginIsInitializedSet = 2;
-
 #define INDEXEDDB_DIRECTORY_NAME "indexedDB"
 #define STORAGE_DIRECTORY_NAME "storage"
 #define PERSISTENT_DIRECTORY_NAME "persistent"
@@ -6861,11 +6858,11 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
                           static_cast<uint32_t>(NS_SUCCEEDED(rv)));
   });
 
-  auto& entry = mOriginInitializationsAttempted.GetOrInsert(aOrigin);
-  if (entry & kEnsurePersistentOriginIsIinitializedSet) {
+  auto& info = mOriginInitializationInfos.GetOrInsert(aOrigin);
+  if (info.mPersistentOriginAttempted) {
     autoReportTelemetry.release();
   } else {
-    entry |= kEnsurePersistentOriginIsIinitializedSet;
+    info.mPersistentOriginAttempted = true;
   }
 
   nsCOMPtr<nsIFile> directory;
@@ -6941,11 +6938,11 @@ nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
                           static_cast<uint32_t>(NS_SUCCEEDED(rv)));
   });
 
-  auto& entry = mOriginInitializationsAttempted.GetOrInsert(aOrigin);
-  if (entry & kEnsureTemporaryOriginIsInitializedSet) {
+  auto& info = mOriginInitializationInfos.GetOrInsert(aOrigin);
+  if (info.mTemporaryOriginAttempted) {
     autoReportTelemetry.release();
   } else {
-    entry |= kEnsureTemporaryOriginIsInitializedSet;
+    info.mTemporaryOriginAttempted = true;
   }
 
   // Get directory for this origin and persistence type.
@@ -7056,6 +7053,7 @@ void QuotaManager::ShutdownStorage() {
   AssertIsOnIOThread();
 
   if (mStorageConnection) {
+    mOriginInitializationInfos.Clear();
     mInitializedOrigins.Clear();
 
     if (mTemporaryStorageInitialized) {
@@ -7069,7 +7067,6 @@ void QuotaManager::ShutdownStorage() {
     }
 
     mTemporaryStorageInitializationAttempted = false;
-    mOriginInitializationsAttempted.Clear();
 
     ReleaseIOThreadObjects();
 
