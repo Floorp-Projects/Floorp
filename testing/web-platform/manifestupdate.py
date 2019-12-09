@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import ConfigParser
 import argparse
 import hashlib
 import imp
 import os
 import sys
+
+from six.moves import configparser
 
 from mozboot.util import get_state_dir
 
@@ -136,7 +137,7 @@ def ensure_manifest_directories(logger, test_paths):
 def read_local_config(wpt_dir):
     src_config_path = os.path.join(wpt_dir, "wptrunner.ini")
 
-    parser = ConfigParser.SafeConfigParser()
+    parser = configparser.SafeConfigParser()
     success = parser.read(src_config_path)
     assert src_config_path in success
     return parser
