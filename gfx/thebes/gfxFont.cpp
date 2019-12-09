@@ -2537,9 +2537,14 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
                                 metrics.mAscent + metrics.mDescent);
           }
           if (isRTL) {
+            // Swap left/right sidebearings of the glyph, because we're doing
+            // mirrored measurement.
             glyphRect.MoveToX(advance - glyphRect.XMost());
+            // Move to current x position, mirroring any x-offset amount.
+            glyphRect.MoveByX(x - details->mOffset.x);
+          } else {
+            glyphRect.MoveByX(x + details->mOffset.x);
           }
-          glyphRect.MoveByX(x + details->mOffset.x);
           glyphRect.MoveByY(details->mOffset.y);
           metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
           x += advance;
