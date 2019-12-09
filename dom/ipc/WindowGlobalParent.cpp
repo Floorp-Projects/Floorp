@@ -401,14 +401,13 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
 
   // Initialize the ShareWidget
   RefPtr<BrowserParent> parent = GetBrowserParent();
-  if (NS_WARN_IF(!parent)) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
-  nsCOMPtr<mozIDOMWindowProxy> openerWindow = parent->GetParentWindowOuter();
-  if (!openerWindow) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
+  nsCOMPtr<mozIDOMWindowProxy> openerWindow;
+  if (parent) {
+    openerWindow = parent->GetParentWindowOuter();
+    if (!openerWindow) {
+      aResolver(NS_ERROR_FAILURE);
+      return IPC_OK();
+    }
   }
   sharePicker->Init(openerWindow);
 
