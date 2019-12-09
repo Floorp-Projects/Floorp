@@ -26,8 +26,11 @@ async function testRuntimeEnable({ Runtime }) {
   // Calling Runtime.enable will emit executionContextCreated for the existing contexts
   const { context } = await Runtime.executionContextCreated();
   ok(!!context.id, "The execution context has an id");
+  ok(!!context.origin, "The execution context has an origin");
+  is(context.name, "", "The default execution context is named ''");
   ok(context.auxData.isDefault, "The execution context is the default one");
   ok(!!context.auxData.frameId, "The execution context has a frame id set");
+  is(context.auxData.type, "default", "Execution context has 'default' type");
 
   return context;
 }
