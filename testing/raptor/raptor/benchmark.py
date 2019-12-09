@@ -43,7 +43,7 @@ class Benchmark(object):
             fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
             if test.get('fetch_task', False) and fetches_dir and os.path.isdir(fetches_dir):
                 for name in os.listdir(fetches_dir):
-                    if test.get('fetch_task') in name:
+                    if test.get('fetch_task').lower() in name.lower():
                         path = os.path.join(fetches_dir, name)
                         if os.path.isdir(path):
                             shutil.copytree(path, os.path.join(self.bench_dir, name))
