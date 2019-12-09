@@ -9,6 +9,8 @@ from __future__ import absolute_import, unicode_literals, print_function
 import os
 import sys
 
+from six import iteritems
+
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
@@ -213,6 +215,45 @@ class WebPlatformTestsUnittestRunner(MozbuildObject):
         return unittestrunner.run(self.topsrcdir, **kwargs)
 
 
+class WebPlatformTestsTestPathsRunner(MozbuildObject):
+    """Update web platform tests."""
+    def run(self, **kwargs):
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                        "tests", "tools")))
+        from wptrunner import wptcommandline
+        from manifest import testpaths
+        import manifestupdate
+
+        import logging
+        logger = logging.getLogger("web-platform-tests")
+
+        src_root = self.topsrcdir
+        obj_root = self.topobjdir
+        src_wpt_dir = os.path.join(src_root, "testing", "web-platform")
+
+        config_path = manifestupdate.generate_config(logger, src_root, src_wpt_dir,
+                                                     os.path.join(obj_root, "_tests", "web-platform"),
+                                                     False)
+
+        test_paths = wptcommandline.get_test_paths(wptcommandline.config.read(config_path))
+        results = {}
+        for url_base, paths in iteritems(test_paths):
+            if "manifest_path" not in paths:
+                paths["manifest_path"] = os.path.join(paths["metadata_path"],
+                                                      "MANIFEST.json")
+            results.update(
+                testpaths.get_paths(path=paths["manifest_path"],
+                                    src_root=src_root,
+                                    tests_root=paths["tests_path"],
+                                    update=kwargs["update"],
+                                    rebuild=kwargs["rebuild"],
+                                    url_base=url_base,
+                                    cache_root=kwargs["cache_root"],
+                                    test_ids=kwargs["test_ids"]))
+        testpaths.write_output(results, kwargs["json"])
+        return True
+
+
 def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
@@ -263,6 +304,28 @@ def create_parser_serve():
 def create_parser_unittest():
     import unittestrunner
     return unittestrunner.get_parser()
+
+
+def create_parser_testpaths():
+    import argparse
+    from mozboot.util import get_state_dir
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--no-update", dest="update", action="store_false", default=True,
+        help="Don't update manifest before continuing")
+    parser.add_argument(
+        "-r", "--rebuild", action="store_true", default=False,
+        help="Force a full rebuild of the manifest.")
+    parser.add_argument(
+        "--cache-root", action="store", default=os.path.join(get_state_dir(), "cache", "wpt"),
+        help="Path in which to store any caches (default <tests_root>/.wptcache/)")
+    parser.add_argument(
+        "test_ids", action="store", nargs="+",
+        help="Test ids for which to get paths")
+    parser.add_argument(
+        "--json", action="store_true", default=False,
+        help="Output as JSON")
+    return parser
 
 
 @CommandProvider
@@ -381,3 +444,12 @@ class MachCommands(MachCommandBase):
         self.virtualenv_manager.install_pip_package('tox')
         runner = self._spawn(WebPlatformTestsUnittestRunner)
         return 0 if runner.run(**params) else 1
+
+    @Command("wpt-test-paths",
+             category="testing",
+             description="Get a mapping from test ids to files",
+             parser=create_parser_testpaths)
+    def wpt_test_paths(self, **params):
+        runner = self._spawn(WebPlatformTestsTestPathsRunner)
+        runner.run(**params)
+        return 0
