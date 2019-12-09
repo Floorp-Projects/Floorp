@@ -1,108 +1,27 @@
-
 <!DOCTYPE html>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
-   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Custom page for the Inspector</title>
-  <style>
-    div {
-      margin-left: 0.5em;
+  <title>iframe wrapper for the inspector custom page</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    iframe {
+      border-style: none;
+      height: 100%;
+      position: absolute;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <script type="text/javascript">
-    // We first create a deep tree with ${deep} nested children
-    let deep = 50;
-    // Then we create ${n} element after the deep tree
-    let n = 50;
-    // Number of attributes set on the repeated elements
-    let attributes = 50;
-
-    // Build the <div> with $attributes data attributes
-    let div = "<div";
-    for (var i = 1; i <= attributes; i++) {
-      div += ` data-a${i}="${i}"`;
-    }
-    div += ">";
-
-    // Build the tree of $deep elements
-    let tree = "";
-    for (i = 1; i <= deep; i++) {
-      tree += new Array(i).join(" ");
-      tree += div + " " + i + "\n";
-    }
-    for (i = deep; i >= 1; i--) {
-      tree += new Array(i).join(" ");
-      tree += "</div>\n";
-    }
-
-    // Build the list of $n elements
-    let repeat = "";
-    for (i = 1; i <= n; i++) {
-      repeat += div + " " + i + " </div>\n";
-    }
-
-    // Prepare CSS rules to add to the document <style>.
-    let CSS_RULES_COUNT = 200;
-    let manyCssRules = "";
-    for (i = 0; i < CSS_RULES_COUNT; i++) {
-      manyCssRules += `
-      .many-css-rules {
-        font-size: ${i}px;
-        margin: 10px;
-        padding: 10px;
-        font-family: Arial;
-        margin: 20px;
-      }`;
-    }
-
-    let expandManyChildren = new Array(100).join("  <div attr='my-attr'>content</div>\n");
-
-    let maxBalancedDepth = 8;
-    function createBalancedMarkup(level = 0) {
-      let tab = new Array(level + 1).join("  ");
-      if (level < maxBalancedDepth) {
-        let child = createBalancedMarkup(level + 1);
-        return `${tab}<div>
-    ${child}
-    ${child}
-    ${tab}</div>`;
-      } else {
-        return tab + "<div class='leaf'>leaf</div>";
-      }
-    }
-    let expandBalanced = createBalancedMarkup();
-
-    let style = document.createElement("style");
-    style.type = "text/css";
-    style.appendChild(document.createTextNode(manyCssRules));
-    document.head.appendChild(style);
-
-    var tpl = document.createElement('template');
-    tpl.innerHTML =
-      `
-       <div id="initial-node">
-         <!-- <div> elements with ${deep} nested childs, all with ${attributes} attributes -->
-         <!-- The deepest <div> has id="deep"> -->
-         ${tree}
-         <!-- ${n} <div> elements without any children -->
-         ${repeat}
-         <!-- Elements for custom.inspector.manyrules tests -->
-         <div class="no-css-rules"></div>
-         <div class="many-css-rules"></div>
-         <div class="expand-many-children">
-         ${expandManyChildren}
-         </div>
-         <div class="expand-balanced">
-         ${expandBalanced}
-         </div>
-       </div>`;
-    document.body.appendChild(tpl.content);
-  </script>
-
+  <!-- For now we load the iframe in the same site as the damp top frame.
+       We will switch to a different-site URL (eg http://damp.iframe.com) when
+       DevTools work against remote frames. -->
+  <iframe
+    src="http://damp.top.com/tests/devtools/addon/content/pages/custom/inspector/iframe.html"
+  ></iframe>
 </body>
 </html>

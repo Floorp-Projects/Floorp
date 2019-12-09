@@ -2,51 +2,34 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Custom page for the Console</title>
+  <title>iframe wrapper for the console custom page</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    iframe {
+      border-style: none;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
 <script>
-// These query parameters are set in damp.js:customConsole and define the number
-// of console API calls we do in this test.
-let searchParams = new URLSearchParams(location.search);
-let sync = searchParams.get("sync");
-let stream = searchParams.get("stream");
-let async = searchParams.get("async");
+  // Test parameters are passed to this page via url parameters.
+  // Create the iframe URL from the current URL to preserve the parameters.
+  const searchParams = document.location.search;
 
-// We log complex objects:
-// * a complex js object (window)
-// * a DOM node (body)
-// * a large array
-let bigArray = Array.from({length: 10000}, (_, i) => i);
+  // For now we load the iframe in the same site as the damp top frame.
+  // We will switch to a different-site URL (eg http://damp.iframe.com) when
+  // DevTools work against remote frames.
+  const iframeSrc = "http://damp.top.com/tests/devtools/addon/content/pages/custom/console/iframe.html" + searchParams;
 
-// Fill up the console with many logs synchronously during page load.
-for (let i = 0; i < sync; i++) {
-  console.log("sync log", i, window, document.body, bigArray);
-}
-
-// Then, do streamlogs, log asynchronously a lot of messages
-let n = 0;
-function streamLogs() {
-  console.log("stream log", n++, window, document.body, bigArray);
-  if (n < stream) {
-    requestAnimationFrame(streamLogs);
-  } else {
-    requestIdleCallback(asyncLogs);
-  }
-}
-requestIdleCallback(streamLogs);
-
-// Finally, we log by small bulk asynchronously slightly more slowly thanks to idle callback
-let x = 0;
-function asyncLogs() {
-  let asyncBulk = 10;
-  for (let i = 0; i < asyncBulk; i++) {
-    console.log("async log", x++, window, document.body, bigArray);
-  }
-  if (x < async) {
-    requestIdleCallback(asyncLogs);
-  }
-}
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("src", iframeSrc);
+  document.body.appendChild(iframe);
 </script>
 </body>
 </html>
