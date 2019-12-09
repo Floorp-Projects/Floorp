@@ -705,6 +705,7 @@ if __name__ == "__main__":
     stage1_inst_dir = stage1_dir + '/' + package_name
 
     final_stage_dir = stage1_dir
+    final_inst_dir = stage1_inst_dir
 
     if is_darwin():
         extra_cflags = []
@@ -780,6 +781,7 @@ if __name__ == "__main__":
         stage2_dir = build_dir + '/stage2'
         stage2_inst_dir = stage2_dir + '/' + package_name
         final_stage_dir = stage2_dir
+        final_inst_dir = stage2_inst_dir
         build_one_stage(
             [stage1_inst_dir + "/bin/%s%s" %
                 (cc_name, exe_ext)] + extra_cflags2,
@@ -797,7 +799,9 @@ if __name__ == "__main__":
 
     if stages > 2:
         stage3_dir = build_dir + '/stage3'
+        stage3_inst_dir = stage3_dir + '/' + package_name
         final_stage_dir = stage3_dir
+        final_inst_dir = stage3_inst_dir
         build_one_stage(
             [stage2_inst_dir + "/bin/%s%s" %
                 (cc_name, exe_ext)] + extra_cflags2,
@@ -815,6 +819,22 @@ if __name__ == "__main__":
     if build_clang_tidy:
         prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, package_name),
                                        osx_cross_compile)
+
+    # Copy the wasm32 builtins to the final_inst_dir if the archive is present.
+    if "wasi-sysroot" in config:
+        sysroot = config["wasi-sysroot"].format(**os.environ)
+        if os.path.isdir(sysroot):
+            for srcdir in glob.glob(
+                    os.path.join(sysroot, "lib", "clang", "*", "lib", "wasi")):
+                print("Copying from wasi-sysroot srcdir %s" % srcdir)
+                # Copy the contents of the "lib/wasi" subdirectory to the
+                # appropriate location in final_inst_dir.
+                version = os.path.basename(os.path.dirname(os.path.dirname(
+                    srcdir)))
+                destdir = os.path.join(final_inst_dir, "lib", "clang", version,
+                                       "lib", "wasi")
+                mkdir_p(destdir)
+                copy_tree(srcdir, destdir)
 
     if not args.skip_tar:
         ext = "bz2" if is_darwin() or is_windows() else "xz"
