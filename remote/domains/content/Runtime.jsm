@@ -60,11 +60,15 @@ class Runtime extends ContentProcessDomain {
 
     this._onContextCreated = this._onContextCreated.bind(this);
     this._onContextDestroyed = this._onContextDestroyed.bind(this);
+    // TODO Bug 1602083
+    this.contextObserver.on("context-created", this._onContextCreated);
+    this.contextObserver.on("context-destroyed", this._onContextDestroyed);
   }
 
   destructor() {
     this.disable();
-
+    this.contextObserver.off("context-created", this._onContextCreated);
+    this.contextObserver.off("context-destroyed", this._onContextDestroyed);
     super.destructor();
   }
 
@@ -73,8 +77,6 @@ class Runtime extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      this.contextObserver.on("context-created", this._onContextCreated);
-      this.contextObserver.on("context-destroyed", this._onContextDestroyed);
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
@@ -91,8 +93,6 @@ class Runtime extends ContentProcessDomain {
   disable() {
     if (this.enabled) {
       this.enabled = false;
-      this.contextObserver.off("context-created", this._onContextCreated);
-      this.contextObserver.off("context-destroyed", this._onContextDestroyed);
     }
   }
 
@@ -293,18 +293,20 @@ class Runtime extends ContentProcessDomain {
     this.contexts.set(context.id, context);
     this.contextsByWindow.set(windowId, context);
 
-    this.emit("Runtime.executionContextCreated", {
-      context: {
-        id: context.id,
-        origin: window.location.href,
-        name: contextName,
-        auxData: {
-          isDefault,
-          frameId: context.frameId,
-          type: contextType,
+    if (this.enabled) {
+      this.emit("Runtime.executionContextCreated", {
+        context: {
+          id: context.id,
+          origin: window.location.href,
+          name: contextName,
+          auxData: {
+            isDefault,
+            frameId: context.frameId,
+            type: contextType,
+          },
         },
-      },
-    });
+      });
+    }
   }
 
   /**
@@ -342,9 +344,11 @@ class Runtime extends ContentProcessDomain {
       ctx.destructor();
       this.contexts.delete(ctx.id);
       this.contextsByWindow.get(ctx.windowId).delete(ctx);
-      this.emit("Runtime.executionContextDestroyed", {
-        executionContextId: ctx.id,
-      });
+      if (this.enabled) {
+        this.emit("Runtime.executionContextDestroyed", {
+          executionContextId: ctx.id,
+        });
+      }
       if (this.contextsByWindow.get(ctx.windowId).size == 0) {
         this.contextsByWindow.delete(ctx.windowId);
       }
