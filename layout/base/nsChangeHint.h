@@ -519,18 +519,16 @@ namespace mozilla {
 using RestyleHint = StyleRestyleHint;
 
 inline RestyleHint RestyleHint::RestyleSubtree() {
-  return StyleRestyleHint_RESTYLE_SELF | StyleRestyleHint_RESTYLE_DESCENDANTS;
+  return RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_DESCENDANTS;
 }
 
 inline RestyleHint RestyleHint::RecascadeSubtree() {
-  return StyleRestyleHint_RECASCADE_SELF |
-         StyleRestyleHint_RECASCADE_DESCENDANTS;
+  return RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS;
 }
 
 inline RestyleHint RestyleHint::ForAnimations() {
-  return StyleRestyleHint_RESTYLE_CSS_TRANSITIONS |
-         StyleRestyleHint_RESTYLE_CSS_ANIMATIONS |
-         StyleRestyleHint_RESTYLE_SMIL;
+  return RestyleHint::RESTYLE_CSS_TRANSITIONS |
+         RestyleHint::RESTYLE_CSS_ANIMATIONS | RestyleHint::RESTYLE_SMIL;
 }
 
 }  // namespace mozilla

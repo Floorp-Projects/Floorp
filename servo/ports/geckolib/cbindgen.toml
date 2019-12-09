@@ -38,6 +38,7 @@ extra_bindings = ["style"]
 include = ["style", "cssparser", "style_traits", "servo_arc"]
 
 [struct]
+associated_constants_in_body = true
 derive_eq = true
 derive_neq = true
 
@@ -345,7 +346,6 @@ renaming_overrides_prefixing = true
 """
 
 "TextUnderlinePosition" = """
-  static inline StyleTextUnderlinePosition Auto();
   inline bool IsAuto() const;
   inline bool IsUnder() const;
   inline bool IsLeft() const;

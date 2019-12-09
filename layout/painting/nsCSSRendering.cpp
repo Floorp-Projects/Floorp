@@ -3761,7 +3761,7 @@ static void GetPositioning(
 
   // the upper and lower lines/edges of the under or over line
   SkScalar upperLine, lowerLine;
-  if (aParams.decoration == mozilla::StyleTextDecorationLine_OVERLINE) {
+  if (aParams.decoration == mozilla::StyleTextDecorationLine::OVERLINE) {
     lowerLine =
         -aParams.offset + aParams.defaultLineThickness - aCenterBaselineOffset;
     upperLine = lowerLine - rectThickness;
@@ -4017,9 +4017,9 @@ void nsCSSRendering::PaintDecorationLine(
     return;
   }
 
-  if (aParams.decoration != StyleTextDecorationLine_UNDERLINE &&
-      aParams.decoration != StyleTextDecorationLine_OVERLINE &&
-      aParams.decoration != StyleTextDecorationLine_LINE_THROUGH) {
+  if (aParams.decoration != StyleTextDecorationLine::UNDERLINE &&
+      aParams.decoration != StyleTextDecorationLine::OVERLINE &&
+      aParams.decoration != StyleTextDecorationLine::LINE_THROUGH) {
     MOZ_ASSERT_UNREACHABLE("Invalid text decoration value");
     return;
   }
@@ -4030,7 +4030,7 @@ void nsCSSRendering::PaintDecorationLine(
       aFrame->StyleText()->mTextDecorationSkipInk;
   bool skipInkEnabled =
       skipInk == mozilla::StyleTextDecorationSkipInk::Auto &&
-      aParams.decoration != StyleTextDecorationLine_LINE_THROUGH &&
+      aParams.decoration != StyleTextDecorationLine::LINE_THROUGH &&
       StaticPrefs::layout_css_text_decoration_skip_ink_enabled();
 
   if (!skipInkEnabled || aParams.glyphRange.Length() == 0) {
@@ -4422,9 +4422,9 @@ Rect nsCSSRendering::DecorationLineToPath(
     return path;
   }
 
-  if (aParams.decoration != StyleTextDecorationLine_UNDERLINE &&
-      aParams.decoration != StyleTextDecorationLine_OVERLINE &&
-      aParams.decoration != StyleTextDecorationLine_LINE_THROUGH) {
+  if (aParams.decoration != StyleTextDecorationLine::UNDERLINE &&
+      aParams.decoration != StyleTextDecorationLine::OVERLINE &&
+      aParams.decoration != StyleTextDecorationLine::LINE_THROUGH) {
     MOZ_ASSERT_UNREACHABLE("Invalid text decoration value");
     return path;
   }
@@ -4572,7 +4572,7 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
   // upwards. We'll swap them to be physical coords at the end.
   gfxFloat offset = 0.0;
 
-  if (aParams.decoration == StyleTextDecorationLine_UNDERLINE) {
+  if (aParams.decoration == StyleTextDecorationLine::UNDERLINE) {
     offset = aParams.offset;
     if (canLiftUnderline) {
       if (descentLimit < -offset + r.Height()) {
@@ -4585,14 +4585,14 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
         offset = std::min(offsetBottomAligned, offsetTopAligned);
       }
     }
-  } else if (aParams.decoration == StyleTextDecorationLine_OVERLINE) {
+  } else if (aParams.decoration == StyleTextDecorationLine::OVERLINE) {
     // For overline, we adjust the offset by defaultlineThickness (the default
     // thickness of a single decoration line) because empirically it looks
     // better to draw the overline just inside rather than outside the font's
     // ascent, which is what nsTextFrame passes as aParams.offset (as fonts
     // don't provide an explicit overline-offset).
     offset = aParams.offset - defaultLineThickness + r.Height();
-  } else if (aParams.decoration == StyleTextDecorationLine_LINE_THROUGH) {
+  } else if (aParams.decoration == StyleTextDecorationLine::LINE_THROUGH) {
     // To maintain a consistent mid-point for line-through decorations,
     // we adjust the offset by half of the decoration rect's height.
     gfxFloat extra = floor(r.Height() / 2.0 + 0.5);

@@ -3474,7 +3474,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (aBuilder->IsForPainting() &&
-      disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
+      disp->mWillChange.bits & StyleWillChangeBits::SCROLL) {
     aBuilder->AddToWillChangeBudget(mOuter, GetVisualViewportSize());
   }
 
@@ -5483,7 +5483,7 @@ bool ScrollFrameHelper::IsScrollbarOnRight() const {
 
 bool ScrollFrameHelper::IsMaybeScrollingActive() const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
+  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL) {
     return true;
   }
 
@@ -5496,7 +5496,7 @@ bool ScrollFrameHelper::IsMaybeScrollingActive() const {
 bool ScrollFrameHelper::IsScrollingActive(
     nsDisplayListBuilder* aBuilder) const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL &&
+  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL &&
       aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
     return true;
   }
