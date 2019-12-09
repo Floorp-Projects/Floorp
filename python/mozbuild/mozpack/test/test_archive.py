@@ -46,15 +46,15 @@ class TestArchive(unittest.TestCase):
     def _create_files(self, root):
         files = {}
         for i in range(10):
-            p = os.path.join(root, b'file%02d' % i)
+            p = os.path.join(root, 'file%02d' % i)
             with open(p, 'wb') as fh:
                 fh.write(b'file%02d' % i)
             # Need to set permissions or umask may influence testing.
             os.chmod(p, MODE_STANDARD)
-            files[b'file%02d' % i] = p
+            files['file%02d' % i] = p
 
         for i in range(10):
-            files[b'file%02d' % (i + 10)] = GeneratedFile('file%02d' % (i + 10))
+            files['file%02d' % (i + 10)] = GeneratedFile(b'file%02d' % (i + 10))
 
         return files
 
