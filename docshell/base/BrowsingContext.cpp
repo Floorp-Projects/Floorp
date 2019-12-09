@@ -19,7 +19,6 @@
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -676,14 +675,6 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
   return false;
 }
 
-RefPtr<SessionStorageManager> BrowsingContext::SessionStorageManager() {
-  RefPtr<dom::SessionStorageManager>& manager = Top()->mSessionStorageManager;
-  if (!manager) {
-    manager = new dom::SessionStorageManager(this);
-  }
-  return manager;
-}
-
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
   MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
@@ -821,7 +812,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup,
-                                  mEmbedderElement, mSessionStorageManager)
+                                  mEmbedderElement)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -830,7 +821,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup,
-                                    mEmbedderElement, mSessionStorageManager)
+                                    mEmbedderElement)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }

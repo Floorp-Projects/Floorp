@@ -241,7 +241,7 @@ nsresult LocalStorageManagerConstructor(nsISupports* aOuter, REFNSIID aIID,
 
 nsresult SessionStorageManagerConstructor(nsISupports* aOuter, REFNSIID aIID,
                                           void** aResult) {
-  RefPtr<SessionStorageManager> manager = new SessionStorageManager(nullptr);
+  RefPtr<SessionStorageManager> manager = new SessionStorageManager();
   return manager->QueryInterface(aIID, aResult);
 }
 
