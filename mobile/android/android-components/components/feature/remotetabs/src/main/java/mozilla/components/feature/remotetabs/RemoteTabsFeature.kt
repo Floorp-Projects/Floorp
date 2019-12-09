@@ -18,7 +18,6 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
-import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
@@ -30,10 +29,13 @@ class RemoteTabsFeature(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
-) : LifecycleAwareFeature {
+) {
     private var scope: CoroutineScope? = null
 
-    override fun start() {
+    /**
+     * Start listening to browser store changes.
+     */
+    fun start() {
         scope = store.flowScoped { flow ->
             flow.ifChanged { it.tabs }.map { state ->
                 // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5178
@@ -51,7 +53,10 @@ class RemoteTabsFeature(
         }
     }
 
-    override fun stop() {
+    /**
+     * Stop listening to browser store changes.
+     */
+    fun stop() {
         scope?.cancel()
     }
 
