@@ -176,6 +176,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Ingen internetforbindelse</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kontrollér din internetforbindelse, eller prøv at indlæse siden igen om et øjeblik.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Genindlæs</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Ugyldig adresse</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Adressen er ikke angivet i et genkendt format. Undersøg, om der er fejl i adressen, og prøv igen.</p>
