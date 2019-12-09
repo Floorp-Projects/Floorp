@@ -99,7 +99,6 @@ input {
   font: -moz-field;
   text-rendering: optimizeLegibility;
   cursor: text;
-  user-select: text;
   overflow-clip-box: padding-box content-box;
 }
 
@@ -125,7 +124,6 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   resize: both;
-  user-select: text;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-clip-box: content-box;
