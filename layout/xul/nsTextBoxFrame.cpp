@@ -387,8 +387,8 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
     }
     const nsStyleTextReset* styleText = context->StyleTextReset();
 
-    if (decorMask &
-        styleText->mTextDecorationLine) {  // a decoration defined here
+    // a decoration defined here
+    if (decorMask & styleText->mTextDecorationLine) {
       nscolor color;
       if (aOverrideColor) {
         color = *aOverrideColor;
@@ -401,22 +401,21 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
           styleText->mTextDecorationLine) {
         underColor = color;
         underStyle = style;
-        // TODO(emilio): Could add `operator~` or `remove()` to cbindgen.
-        decorMask.bits &= ~StyleTextDecorationLine::UNDERLINE.bits;
+        decorMask &= ~StyleTextDecorationLine::UNDERLINE;
         decorations |= StyleTextDecorationLine::UNDERLINE;
       }
       if (StyleTextDecorationLine::OVERLINE & decorMask &
           styleText->mTextDecorationLine) {
         overColor = color;
         overStyle = style;
-        decorMask.bits &= ~StyleTextDecorationLine::OVERLINE.bits;
+        decorMask &= ~StyleTextDecorationLine::OVERLINE;
         decorations |= StyleTextDecorationLine::OVERLINE;
       }
       if (StyleTextDecorationLine::LINE_THROUGH & decorMask &
           styleText->mTextDecorationLine) {
         strikeColor = color;
         strikeStyle = style;
-        decorMask.bits &= ~StyleTextDecorationLine::LINE_THROUGH.bits;
+        decorMask &= ~StyleTextDecorationLine::LINE_THROUGH;
         decorations |= StyleTextDecorationLine::LINE_THROUGH;
       }
     }
