@@ -40,15 +40,17 @@ function uuid() {
  *   object. But it can also be any global object, like a worker global scope object.
  */
 class ExecutionContext {
-  constructor(dbg, debuggee) {
+  constructor(dbg, debuggee, id, isDefault) {
     this._debugger = dbg;
     this._debuggee = this._debugger.addDebuggee(debuggee);
 
     // Here, we assume that debuggee is a window object and we will propably have
     // to adapt that once we cover workers or contexts that aren't a document.
     const { windowUtils } = debuggee;
-    this.id = windowUtils.currentInnerWindowID;
+    this.windowId = windowUtils.currentInnerWindowID;
+    this.id = id;
     this.frameId = windowUtils.outerWindowID.toString();
+    this.isDefault = isDefault;
 
     this._remoteObjects = new Map();
   }

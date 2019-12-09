@@ -10,12 +10,12 @@ const TEST_DOC = toDataURL("default-test-page");
 add_task(async function(client) {
   await loadURL(TEST_DOC);
 
-  const firstContext = await testRuntimeEnable(client);
-  await testEvaluate(client, firstContext);
-  const secondContext = await testNavigate(client, firstContext);
-  await testNavigateBack(client, firstContext, secondContext);
-  const thirdContext = await testNavigateViaLocation(client, firstContext);
-  await testReload(client, thirdContext);
+  const context1 = await testRuntimeEnable(client);
+  await testEvaluate(client, context1);
+  const context2 = await testNavigate(client, context1);
+  const context3 = await testNavigateBack(client, context1, context2);
+  const context4 = await testNavigateViaLocation(client, context3);
+  await testReload(client, context4);
 });
 
 async function testRuntimeEnable({ Runtime }) {
@@ -60,7 +60,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
   is(
     frameId,
     previousContext.auxData.frameId,
-    "Page.navigate returns the same frameId than executionContextCreated"
+    "Page.navigate returns the same frameId as executionContextCreated"
   );
 
   const { executionContextId } = await executionContextDestroyed;
@@ -84,6 +84,9 @@ async function testNavigate({ Runtime, Page }, previousContext) {
     "The execution context frame id is the same " +
       "than the one returned by Page.navigate"
   );
+  is(context.auxData.type, "default", "Execution context has 'default' type");
+  ok(!!context.origin, "The execution context has an origin");
+  is(context.name, "", "The default execution context is named ''");
 
   isnot(
     executionContextId,
@@ -95,7 +98,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
 }
 
 // Navigates back to the previous page.
-// This should resurect the original document from the BF Cache and recreate the
+// This should resurrect the original document from the BF Cache and recreate the
 // context for it
 async function testNavigateBack({ Runtime }, firstContext, previousContext) {
   info("Navigate back to the previous document");
@@ -106,10 +109,16 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
   gBrowser.selectedBrowser.goBack();
 
   const { context } = await executionContextCreated;
+  ok(!!context.origin, "The execution context has an origin");
   is(
+    context.origin,
+    firstContext.origin,
+    "The new execution context should have the same origin as the first."
+  );
+  isnot(
     context.id,
     firstContext.id,
-    "The new execution context should be the same than the first one"
+    "The new execution context should have a different id"
   );
   ok(context.auxData.isDefault, "The execution context is the default one");
   is(
@@ -117,6 +126,8 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
     firstContext.auxData.frameId,
     "The execution context frame id is always the same"
   );
+  is(context.auxData.type, "default", "Execution context has 'default' type");
+  is(context.name, "", "The default execution context is named ''");
 
   const { executionContextId } = await executionContextDestroyed;
   is(
@@ -134,6 +145,8 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
     TEST_DOC,
     "Runtime.evaluate works and is against the page we just navigated to"
   );
+
+  return context;
 }
 
 async function testNavigateViaLocation({ Runtime }, previousContext) {
@@ -164,6 +177,9 @@ async function testNavigateViaLocation({ Runtime }, previousContext) {
     "The execution context frame id is the same " +
       "the one returned by Page.navigate"
   );
+  is(context.auxData.type, "default", "Execution context has 'default' type");
+  ok(!!context.origin, "The execution context has an origin");
+  is(context.name, "", "The default execution context is named ''");
 
   isnot(
     executionContextId,
@@ -197,6 +213,9 @@ async function testReload({ Runtime, Page }, previousContext) {
     previousContext.auxData.frameId,
     "The execution context frame id is the same one"
   );
+  is(context.auxData.type, "default", "Execution context has 'default' type");
+  ok(!!context.origin, "The execution context has an origin");
+  is(context.name, "", "The default execution context is named ''");
 
   isnot(
     executionContextId,
