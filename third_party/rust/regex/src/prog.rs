@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt;
-use std::ops::Deref;
 use std::mem;
+use std::ops::Deref;
 use std::slice;
 use std::sync::Arc;
 
@@ -93,7 +93,7 @@ impl Program {
             is_anchored_end: false,
             has_unicode_word_boundary: false,
             prefixes: LiteralSearcher::empty(),
-            dfa_size_limit: 2 * (1<<20),
+            dfa_size_limit: 2 * (1 << 20),
         }
     }
 
@@ -149,19 +149,19 @@ impl Program {
         // Unicode codepoint programs) to store non-overlapping codepoint
         // ranges. To keep this operation constant time, we ignore them.
         (self.len() * mem::size_of::<Inst>())
-        + (self.matches.len() * mem::size_of::<InstPtr>())
-        + (self.captures.len() * mem::size_of::<Option<String>>())
-        + (self.capture_name_idx.len() *
-           (mem::size_of::<String>() + mem::size_of::<usize>()))
-        + (self.byte_classes.len() * mem::size_of::<u8>())
-        + self.prefixes.approximate_size()
+            + (self.matches.len() * mem::size_of::<InstPtr>())
+            + (self.captures.len() * mem::size_of::<Option<String>>())
+            + (self.capture_name_idx.len()
+                * (mem::size_of::<String>() + mem::size_of::<usize>()))
+            + (self.byte_classes.len() * mem::size_of::<u8>())
+            + self.prefixes.approximate_size()
     }
 }
 
 impl Deref for Program {
     type Target = [Inst];
 
-    #[inline(always)]
+    #[cfg_attr(feature = "perf-inline", inline(always))]
     fn deref(&self) -> &Self::Target {
         &*self.insts
     }
@@ -187,16 +187,17 @@ impl fmt::Debug for Program {
 
         for (pc, inst) in self.iter().enumerate() {
             match *inst {
-                Match(slot) => {
-                    write!(f, "{:04} Match({:?})", pc, slot)?
-                }
+                Match(slot) => write!(f, "{:04} Match({:?})", pc, slot)?,
                 Save(ref inst) => {
                     let s = format!("{:04} Save({})", pc, inst.slot);
                     write!(f, "{}", with_goto(pc, inst.goto, s))?;
                 }
                 Split(ref inst) => {
                     write!(
-                        f, "{:04} Split({}, {})", pc, inst.goto1, inst.goto2)?;
+                        f,
+                        "{:04} Split({}, {})",
+                        pc, inst.goto1, inst.goto2
+                    )?;
                 }
                 EmptyLook(ref inst) => {
                     let s = format!("{:?}", inst.look);
@@ -207,19 +208,25 @@ impl fmt::Debug for Program {
                     write!(f, "{:04} {}", pc, with_goto(pc, inst.goto, s))?;
                 }
                 Ranges(ref inst) => {
-                    let ranges = inst.ranges
+                    let ranges = inst
+                        .ranges
                         .iter()
                         .map(|r| format!("{:?}-{:?}", r.0, r.1))
                         .collect::<Vec<String>>()
                         .join(", ");
                     write!(
-                        f, "{:04} {}", pc, with_goto(pc, inst.goto, ranges))?;
+                        f,
+                        "{:04} {}",
+                        pc,
+                        with_goto(pc, inst.goto, ranges)
+                    )?;
                 }
                 Bytes(ref inst) => {
                     let s = format!(
                         "Bytes({}, {})",
                         visible_byte(inst.start),
-                        visible_byte(inst.end));
+                        visible_byte(inst.end)
+                    );
                     write!(f, "{:04} {}", pc, with_goto(pc, inst.goto, s))?;
                 }
             }
@@ -235,7 +242,9 @@ impl fmt::Debug for Program {
 impl<'a> IntoIterator for &'a Program {
     type Item = &'a Inst;
     type IntoIter = slice::Iter<'a, Inst>;
-    fn into_iter(self) -> Self::IntoIter { self.iter() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 /// Inst is an instruction code in a Regex program.
@@ -382,24 +391,26 @@ impl InstRanges {
                 return true;
             }
         }
-        self.ranges.binary_search_by(|r| {
-            if r.1 < c {
-                Ordering::Less
-            } else if r.0 > c {
-                Ordering::Greater
-            } else {
-                Ordering::Equal
-            }
-        }).is_ok()
+        self.ranges
+            .binary_search_by(|r| {
+                if r.1 < c {
+                    Ordering::Less
+                } else if r.0 > c {
+                    Ordering::Greater
+                } else {
+                    Ordering::Equal
+                }
+            })
+            .is_ok()
     }
 
     /// Return the number of distinct characters represented by all of the
     /// ranges.
     pub fn num_chars(&self) -> usize {
-        self.ranges.iter()
+        self.ranges
+            .iter()
             .map(|&(s, e)| 1 + (e as u32) - (s as u32))
-            .fold(0, |acc, len| acc + len)
-            as usize
+            .fold(0, |acc, len| acc + len) as usize
     }
 }
 

@@ -9,7 +9,11 @@ extern crate regex;
 
 use std::io::{self, Read};
 
-macro_rules! regex { ($re:expr) => { ::regex::Regex::new($re).unwrap() } }
+macro_rules! regex {
+    ($re:expr) => {
+        ::regex::Regex::new($re).unwrap()
+    };
+}
 
 fn main() {
     let mut seq = String::with_capacity(50 * (1 << 20));

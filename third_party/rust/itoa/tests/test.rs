@@ -1,7 +1,7 @@
-#![cfg_attr(feature = "i128", feature(i128_type, i128))]
-
-#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, string_lit_as_bytes))]
-
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(cast_lossless, string_lit_as_bytes)
+)]
 #![allow(non_snake_case)]
 
 extern crate itoa;
