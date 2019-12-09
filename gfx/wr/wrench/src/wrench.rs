@@ -282,6 +282,12 @@ impl Wrench {
         wrench
     }
 
+    pub fn set_quality_settings(&mut self, settings: QualitySettings) {
+        let mut txn = Transaction::new();
+        txn.set_quality_settings(settings);
+        self.api.send_transaction(self.document_id, txn);
+    }
+
     pub fn get_page_zoom(&self) -> ZoomFactor {
         self.page_zoom_factor
     }
