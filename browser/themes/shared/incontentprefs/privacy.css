@@ -299,6 +299,20 @@
   margin-inline-start: 56px;
 }
 
+#telemetry-container {
+  border-radius: 4px;
+  background-color: rgba(12,12,13,0.2);
+  font-size: 85%;
+  padding: 3px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+#dataDescriptionBox {
+  line-height: 1.3;
+}
+
 .content-blocking-category-description {
   font-size: 90%;
   opacity: 0.6;
