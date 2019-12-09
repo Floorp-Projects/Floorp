@@ -513,6 +513,7 @@ const makeItemsForDetails = (props, parentPath) =>
     if (contents) {
       if (isNodeFront(contents)) {
         contents = translateNodeFrontToGripWrapper(contents);
+        name = "DOMNode";
       } else if (isAccessibleFront(contents)) {
         contents = translateAccessibleFrontToGrip(contents);
       } else if (Array.isArray(contents) || typeof contents === "object") {
