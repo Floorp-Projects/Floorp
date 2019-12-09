@@ -476,7 +476,7 @@ var RecipeRunner = {
           );
           await Uptake.reportRecipe(
             recipe,
-            Uptake.RECIPE_INCOMPATIBLE_COMPATIBILITIES
+            Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
           );
           return false;
         }
