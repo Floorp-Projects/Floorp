@@ -661,6 +661,7 @@ STATIC_ATOMS = [
     Atom("mozCustomContentContainer", "moz-custom-content-container"),
     Atom("mozGrabber", "mozGrabber"),
     Atom("mozNativeAnonymous", "-moz-native-anonymous"),
+    Atom("mozNativeAnonymousNoSpecificity", "-moz-native-anonymous-no-specificity"),
     Atom("mozprivatebrowsing", "mozprivatebrowsing"),
     Atom("mozResizer", "mozResizer"),
     Atom("mozResizingInfo", "mozResizingInfo"),
