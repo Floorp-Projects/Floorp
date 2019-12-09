@@ -235,24 +235,33 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateToSavedLoginsFragment() {
-        context?.components?.analytics?.metrics?.track(Event.OpenLogins)
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToSavedLoginsFragment()
-        findNavController().navigate(directions)
+        if (findNavController().currentDestination?.id == R.id.loginsFragment) {
+            context?.components?.analytics?.metrics?.track(Event.OpenLogins)
+            val directions = LoginsFragmentDirections.actionLoginsFragmentToSavedLoginsFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     private fun navigateToAccountSettingsFragment() {
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToAccountSettingsFragment()
-        findNavController().navigate(directions)
+        if (findNavController().currentDestination?.id == R.id.loginsFragment) {
+            val directions =
+                LoginsFragmentDirections.actionLoginsFragmentToAccountSettingsFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     private fun navigateToAccountProblemFragment() {
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToAccountProblemFragment()
-        findNavController().navigate(directions)
+        if (findNavController().currentDestination?.id == R.id.loginsFragment) {
+            val directions = LoginsFragmentDirections.actionLoginsFragmentToAccountProblemFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     private fun navigateToTurnOnSyncFragment() {
-        val directions = LoginsFragmentDirections.actionLoginsFragmentToTurnOnSyncFragment()
-        findNavController().navigate(directions)
+        if (findNavController().currentDestination?.id == R.id.loginsFragment) {
+            val directions = LoginsFragmentDirections.actionLoginsFragmentToTurnOnSyncFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     companion object {
