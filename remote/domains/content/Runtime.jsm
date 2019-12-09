@@ -214,9 +214,12 @@ class Runtime extends ContentProcessDomain {
     this.emit("Runtime.executionContextCreated", {
       context: {
         id,
+        origin: window.location.href,
+        name: "",
         auxData: {
           isDefault: window == this.content,
           frameId: context.frameId,
+          type: window == this.content ? "default" : "",
         },
       },
     });
