@@ -1016,12 +1016,15 @@ NetworkObserver.prototype = {
    *        The HTTP activity object we work with.
    */
   _onTransactionClose: function(httpActivity) {
-    const result = this._setupHarTimings(httpActivity);
     if (httpActivity.owner) {
+      const result = this._setupHarTimings(httpActivity);
+      const serverTimings = this._extractServerTimings(httpActivity.channel);
+
       httpActivity.owner.addEventTimings(
         result.total,
         result.timings,
-        result.offsets
+        result.offsets,
+        serverTimings
       );
     }
     this.openRequests.delete(httpActivity.channel);
