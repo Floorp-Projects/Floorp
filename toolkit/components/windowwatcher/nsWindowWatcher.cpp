@@ -1236,10 +1236,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // Copy the current session storage for the current domain. Don't perform the
   // copy if we're forcing noopener, however.
   if (!aForceNoOpener && subjectPrincipal && parentDocShell) {
-    const RefPtr<SessionStorageManager> parentStorageManager =
-        parentDocShell->GetBrowsingContext()->SessionStorageManager();
-    const RefPtr<SessionStorageManager> newStorageManager =
-        newDocShell->GetBrowsingContext()->SessionStorageManager();
+    nsCOMPtr<nsIDOMStorageManager> parentStorageManager =
+        do_QueryInterface(parentDocShell);
+    nsCOMPtr<nsIDOMStorageManager> newStorageManager(newDocShell);
 
     if (parentStorageManager && newStorageManager) {
       RefPtr<Storage> storage;

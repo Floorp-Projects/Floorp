@@ -21,17 +21,11 @@ class SessionStorageObserver;
 class SessionStorageManager final : public nsIDOMSessionStorageManager,
                                     public StorageObserverSink {
  public:
-  explicit SessionStorageManager(RefPtr<BrowsingContext> aBrowsingContext);
+  SessionStorageManager();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
   NS_DECL_NSIDOMSESSIONSTORAGEMANAGER
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(SessionStorageManager)
-
-  RefPtr<BrowsingContext> GetBrowsingContext() const {
-    return mBrowsingContext;
-  }
 
  private:
   ~SessionStorageManager();
@@ -51,6 +45,7 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
                      const nsACString& aOriginScope);
 
   nsresult GetSessionStorageCacheHelper(nsIPrincipal* aPrincipal,
+                                        nsIPrincipal* aStoragePrincipal,
                                         bool aMakeIfNeeded,
                                         SessionStorageCache* aCloneFrom,
                                         RefPtr<SessionStorageCache>* aRetVal);
@@ -60,8 +55,6 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
   nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
 
   RefPtr<SessionStorageObserver> mObserver;
-
-  RefPtr<BrowsingContext> mBrowsingContext;
 };
 
 }  // namespace dom
