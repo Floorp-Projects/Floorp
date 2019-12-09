@@ -37,8 +37,8 @@ skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.h
 skip-if(!asyncPan) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
 skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
-skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
-skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
+fails-if(browserIsFission) skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
+fails-if(browserIsFission) skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
 fuzzy-if(skiaContent,0-1,0-11300) skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
 fuzzy-if(Android,0-1,0-800) skip-if(!asyncPan) == position-fixed-inside-clip-path.html position-fixed-inside-clip-path-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-1.html position-fixed-inside-sticky-1-ref.html
