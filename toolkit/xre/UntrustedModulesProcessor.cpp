@@ -765,8 +765,8 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
       new GetModulesTrustPromise::Private(__func__));
 
   if (!mAllowProcessing) {
-    return GetModulesTrustPromise::CreateAndReject(
-        NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
+    p->Reject(NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
+    return p;
   }
 
   // Send the IPC request via the main thread
