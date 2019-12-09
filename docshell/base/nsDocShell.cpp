@@ -529,8 +529,7 @@ void nsDocShell::DestroyChildren() {
   nsDocLoader::DestroyChildren();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDocShell, nsDocLoader,
-                                   mSessionStorageManager, mScriptGlobal,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDocShell, nsDocLoader, mScriptGlobal,
                                    mInitialClientSource, mSessionHistory,
                                    mBrowsingContext, mChromeEventHandler)
 
@@ -549,7 +548,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINetworkInterceptController,
                                      mInterceptController)
   NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
@@ -2246,31 +2244,6 @@ nsDocShell::GetWindowDraggingAllowed(bool* aValue) {
     *aValue = mWindowDraggingAllowed;
   }
   return NS_OK;
-}
-
-nsIDOMStorageManager* nsDocShell::TopSessionStorageManager() {
-  nsresult rv;
-
-  nsCOMPtr<nsIDocShellTreeItem> topItem;
-  rv = GetInProcessSameTypeRootTreeItem(getter_AddRefs(topItem));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  if (!topItem) {
-    return nullptr;
-  }
-
-  nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
-  if (topDocShell != this) {
-    return topDocShell->TopSessionStorageManager();
-  }
-
-  if (!mSessionStorageManager) {
-    mSessionStorageManager = new SessionStorageManager();
-  }
-
-  return mSessionStorageManager;
 }
 
 NS_IMETHODIMP
