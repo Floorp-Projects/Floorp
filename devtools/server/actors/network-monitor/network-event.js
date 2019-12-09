@@ -40,7 +40,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     };
 
     this._timings = {};
-    this._serverTimings = {};
+    this._serverTimings = [];
     this._stackTrace = {};
 
     this._discardRequestBody = false;
