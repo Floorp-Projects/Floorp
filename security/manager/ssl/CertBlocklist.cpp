@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsComponentManagerUtils.h"  // for do_CreateInstance
 #include "nsDependentString.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsICryptoHash.h"
