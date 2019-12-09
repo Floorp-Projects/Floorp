@@ -114,5 +114,13 @@ int main() {
   }
   MOZ_RELEASE_ASSERT(11 == Foo::sNumDestroyed);
 
+  {
+    bool condition = true;
+    const auto f =
+        condition ? mozilla::MakeRefPtr<Bar>() : mozilla::MakeRefPtr<Foo>();
+
+    MOZ_RELEASE_ASSERT(f);
+  }
+
   return 0;
 }
