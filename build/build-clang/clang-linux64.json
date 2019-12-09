@@ -9,6 +9,7 @@
     "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "wasi-sysroot": "{MOZ_FETCHES_DIR}/wasi-sysroot",
     "patches": [
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",

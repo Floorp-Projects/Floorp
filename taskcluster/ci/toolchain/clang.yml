@@ -65,6 +65,7 @@ linux64-clang-9:
         toolchain:
             - linux64-binutils
             - linux64-gcc-7
+            - wasi-sysroot
 
 linux64-clang-9-cross:
     description: "Clang 9 toolchain with patches to cross-compile to windows"
