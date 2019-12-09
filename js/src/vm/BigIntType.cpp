@@ -517,7 +517,9 @@ BigInt* BigInt::absoluteAdd(JSContext* cx, HandleBigInt x, HandleBigInt y,
   }
 
   // Fast path for the likely-common case of up to a uint64_t of magnitude.
-  if (left->absFitsInUint64() && right->absFitsInUint64()) {
+  if (left->absFitsInUint64()) {
+    MOZ_ASSERT(right->absFitsInUint64());
+
     uint64_t lhs = left->uint64FromAbsNonZero();
     uint64_t rhs = right->uint64FromAbsNonZero();
 
@@ -592,7 +594,9 @@ BigInt* BigInt::absoluteSub(JSContext* cx, HandleBigInt x, HandleBigInt y,
   }
 
   // Fast path for the likely-common case of up to a uint64_t of magnitude.
-  if (x->absFitsInUint64() && y->absFitsInUint64()) {
+  if (x->absFitsInUint64()) {
+    MOZ_ASSERT(y->absFitsInUint64());
+
     uint64_t lhs = x->uint64FromAbsNonZero();
     uint64_t rhs = y->uint64FromAbsNonZero();
     MOZ_ASSERT(lhs > rhs);
