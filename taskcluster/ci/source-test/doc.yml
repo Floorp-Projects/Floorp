@@ -6,7 +6,7 @@ generate:
     description: Generate the Sphinx documentation
     platform: lint/opt
     treeherder:
-        symbol: Doc
+        symbol: doc(generate)
         kind: test
         tier: 1
     run-on-projects: ['trunk', 'try']
@@ -29,7 +29,7 @@ upload:
     description: Generate and upload the Sphinx documentation
     platform: lint/opt
     treeherder:
-        symbol: DocUp
+        symbol: doc(upload)
         kind: test
         tier: 2
     run-on-projects: [mozilla-central]
