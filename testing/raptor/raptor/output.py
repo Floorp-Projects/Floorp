@@ -399,6 +399,7 @@ class RaptorOutput(PerftestOutput):
             suite = {
                 'name': test.name,
                 'type': test.type,
+                'tags': [],
                 'extraOptions': test.extra_options,
                 'subtests': subtests,
                 'lowerIsBetter': test.lower_is_better,
@@ -416,6 +417,9 @@ class RaptorOutput(PerftestOutput):
                 suite['cold'] = True
                 suite['browser_cycle'] = int(test.browser_cycle)
                 suite['expected_browser_cycles'] = int(test.expected_browser_cycles)
+                suite['tags'].append('cold')
+            else:
+                suite['tags'].append('warm')
 
             suites.append(suite)
 
@@ -506,6 +510,8 @@ class RaptorOutput(PerftestOutput):
                           test.name)
                 return
 
+            suite['tags'].append(test.type)
+
             # for benchmarks there is generally  more than one subtest in each cycle
             # and a benchmark-specific formula is needed to calculate the final score
 
@@ -520,6 +526,7 @@ class RaptorOutput(PerftestOutput):
                 suite['value'] = self.construct_summary(vals, testname=test.name)
 
             subtests.sort(key=lambda subtest: subtest['name'])
+            suite['tags'].sort()
 
         suites.sort(key=lambda suite: suite['name'])
 
