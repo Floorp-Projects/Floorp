@@ -691,7 +691,6 @@ bool InspectorUtils::IsCustomElementName(GlobalObject&, const nsAString& aName,
   return nsContentUtils::IsCustomElementName(nameElt, namespaceID);
 }
 
-/* static */
 bool InspectorUtils::IsElementThemed(GlobalObject&, Element& aElement) {
   // IsThemed will check if the native theme supports the widget using
   // ThemeSupportsWidget which in turn will check that the widget is not
@@ -700,6 +699,18 @@ bool InspectorUtils::IsElementThemed(GlobalObject&, Element& aElement) {
   // override the appropriate styles, the theme will provide focus styling.
   nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
   return frame && frame->IsThemed();
+}
+
+Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
+  nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
+  if (!frame) {
+    return nullptr;
+  }
+  nsIFrame* cb = frame->GetContainingBlock();
+  if (!cb) {
+    return nullptr;
+  }
+  return Element::FromNodeOrNull(cb->GetContent());
 }
 
 }  // namespace dom
