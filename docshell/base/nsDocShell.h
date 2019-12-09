@@ -28,7 +28,6 @@
 #include "nsIDeprecationWarner.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDOMStorageManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
 #include "nsILoadURIDelegate.h"
@@ -123,7 +122,6 @@ class nsDocShell final : public nsDocLoader,
                          public nsIWebPageDescriptor,
                          public nsIAuthPromptProvider,
                          public nsILoadContext,
-                         public nsIDOMStorageManager,
                          public nsINetworkInterceptController,
                          public nsIDeprecationWarner,
                          public mozilla::SupportsWeakPtr<nsDocShell> {
@@ -200,8 +198,6 @@ class nsDocShell final : public nsDocLoader,
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIDEPRECATIONWARNER
-
-  NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
   // Create a new nsDocShell object, initializing it.
   static already_AddRefed<nsDocShell> Create(
@@ -993,7 +989,6 @@ class nsDocShell final : public nsDocLoader,
                            bool aCheckIfUnloadFired = true);
   uint32_t GetInheritedFrameType();
   nsIScrollableFrame* GetRootScrollFrame();
-  nsIDOMStorageManager* TopSessionStorageManager();
   nsIChannel* GetCurrentDocChannel();
   nsresult EnsureScriptEnvironment();
   nsresult EnsureEditorData();
@@ -1095,7 +1090,6 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIPrincipal> mParentCharsetPrincipal;
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsCOMPtr<nsIMutableArray> mSavedRefreshURIList;
-  nsCOMPtr<nsIDOMStorageManager> mSessionStorageManager;
   uint64_t mContentWindowID;
   nsCOMPtr<nsIContentViewer> mContentViewer;
   nsCOMPtr<nsIWidget> mParentWidget;
