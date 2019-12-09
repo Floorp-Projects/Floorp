@@ -21,7 +21,7 @@ skip_on(android) == box-shadow-spread.yaml box-shadow-spread.png  # Too wide for
 == inset-empty.yaml blank.yaml
 platform(linux,mac) == inset-subpx.yaml inset-subpx.png
 platform(linux,mac) fuzzy(1,4) == inset-downscale.yaml inset-downscale.png
-platform(linux,mac) fuzzy(1,50) == box-shadow-cache.yaml box-shadow-cache.png
+platform(linux,mac) fuzzy(1,979) == box-shadow-cache.yaml box-shadow-cache.png
 platform(linux,mac) fuzzy(1,685) == overlap1.yaml overlap1.png
 fuzzy(2,691) == overlap2.yaml overlap2.png
 platform(linux,mac) fuzzy(1,48) == no-stretch.yaml no-stretch.png

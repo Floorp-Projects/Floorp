@@ -12,7 +12,7 @@ use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
-use api::{NotificationRequest, Checkpoint};
+use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
 use api::channel::{MsgReceiver, MsgSender, Payload};
@@ -75,6 +75,7 @@ pub struct DocumentView {
     pub device_pixel_ratio: f32,
     pub page_zoom_factor: f32,
     pub pinch_zoom_factor: f32,
+    pub quality_settings: QualitySettings,
 }
 
 impl DocumentView {
@@ -400,6 +401,7 @@ impl Document {
                 page_zoom_factor: 1.0,
                 pinch_zoom_factor: 1.0,
                 device_pixel_ratio: default_device_pixel_ratio,
+                quality_settings: QualitySettings::default(),
             },
             stamp: FrameStamp::first(id),
             scene: BuiltScene::empty(),
@@ -773,6 +775,9 @@ impl RenderBackend {
             }
             SceneMsg::SetPageZoom(factor) => {
                 doc.view.page_zoom_factor = factor.get();
+            }
+            SceneMsg::SetQualitySettings { settings } => {
+                doc.view.quality_settings = settings;
             }
             SceneMsg::SetDocumentView {
                 device_rect,
