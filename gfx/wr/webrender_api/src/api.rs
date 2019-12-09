@@ -28,6 +28,26 @@ pub type TileSize = u16;
 /// Documents are rendered in the ascending order of their associated layer values.
 pub type DocumentLayer = i8;
 
+/// Various settings that the caller can select based on desired tradeoffs
+/// between rendering quality and performance / power usage.
+#[derive(Copy, Clone, Deserialize, Serialize)]
+pub struct QualitySettings {
+    /// If true, allow picture cache slices to be created that may prevent
+    /// subpixel AA on text being used due to lack of opaque background. This
+    /// often allows a significant performance win on pages that interleave
+    /// scroll regions with fixed position elements.
+    pub allow_sacrificing_subpixel_aa: bool,
+}
+
+impl Default for QualitySettings {
+    fn default() -> Self {
+        QualitySettings {
+            // Preferring performance in this case retains the current behavior.
+            allow_sacrificing_subpixel_aa: true,
+        }
+    }
+}
+
 /// Update of a persistent resource in WebRender.
 ///
 /// ResourceUpdate changes keep theirs effect across display list changes.
@@ -305,6 +325,11 @@ impl Transaction {
         clamp: ScrollClamping,
     ) {
         self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
+    }
+
+    /// Set the current quality / performance settings for this document.
+    pub fn set_quality_settings(&mut self, settings: QualitySettings) {
+        self.scene_ops.push(SceneMsg::SetQualitySettings { settings });
     }
 
     ///
@@ -812,6 +837,11 @@ pub enum SceneMsg {
         ///
         device_pixel_ratio: f32,
     },
+    /// Set the current quality / performance configuration for this document.
+    SetQualitySettings {
+        /// The set of available quality / performance config values.
+        settings: QualitySettings,
+    },
 }
 
 /// Frame messages affect frame generation (applied after building the scene).
@@ -849,6 +879,7 @@ impl fmt::Debug for SceneMsg {
             SceneMsg::EnableFrameOutput(..) => "SceneMsg::EnableFrameOutput",
             SceneMsg::SetDocumentView { .. } => "SceneMsg::SetDocumentView",
             SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
+            SceneMsg::SetQualitySettings { .. } => "SceneMsg::SetQualitySettings",
         })
     }
 }

@@ -99,6 +99,7 @@ pub struct Reftest {
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
     zoom_factor: f32,
+    allow_sacrificing_subpixel_aa: Option<bool>,
 }
 
 impl Display for Reftest {
@@ -218,6 +219,7 @@ impl ReftestManifest {
             let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
             let mut dirty_region_index = 0;
+            let mut allow_sacrificing_subpixel_aa = None;
 
             let mut paths = vec![];
             for (i, token) in tokens.iter().enumerate() {
@@ -250,6 +252,10 @@ impl ReftestManifest {
                     function if function.starts_with("zoom") => {
                         let (_, args, _) = parse_function(function);
                         zoom_factor = args[0].parse().unwrap();
+                    }
+                    function if function.starts_with("allow_sacrificing_subpixel_aa") => {
+                        let (_, args, _) = parse_function(function);
+                        allow_sacrificing_subpixel_aa = Some(args[0].parse().unwrap());
                     }
                     function if function.starts_with("fuzzy") => {
                         let (_, args, _) = parse_function(function);
@@ -328,6 +334,7 @@ impl ReftestManifest {
                 disable_dual_source_blending,
                 allow_mipmaps,
                 zoom_factor,
+                allow_sacrificing_subpixel_aa,
             });
         }
 
@@ -483,6 +490,18 @@ impl<'a> ReftestHarness<'a> {
                 DebugCommand::ClearCaches(ClearCache::all())
             );
 
+        let quality_settings = match t.allow_sacrificing_subpixel_aa {
+            Some(allow_sacrificing_subpixel_aa) => {
+                QualitySettings {
+                    allow_sacrificing_subpixel_aa,
+                }
+            }
+            None => {
+                QualitySettings::default()
+            }
+        };
+
+        self.wrench.set_quality_settings(quality_settings);
         self.wrench.set_page_zoom(ZoomFactor::new(t.zoom_factor));
 
         if t.disable_dual_source_blending {
