@@ -5,6 +5,8 @@
 package mozilla.components.browser.state.state.content
 
 import android.os.Environment
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 import kotlin.random.Random
 
 /**
@@ -22,6 +24,7 @@ import kotlin.random.Random
  * @property id The unique identifier of this download.
  */
 @Suppress("Deprecation")
+@Parcelize
 data class DownloadState(
     val url: String,
     val fileName: String? = null,
@@ -32,7 +35,7 @@ data class DownloadState(
     val referrerUrl: String? = null,
     val skipConfirmation: Boolean = false,
     val id: Long = Random.nextLong()
-) {
+) : Parcelable {
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
 }

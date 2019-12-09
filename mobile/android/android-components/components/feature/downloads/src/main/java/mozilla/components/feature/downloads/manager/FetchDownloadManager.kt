@@ -20,6 +20,7 @@ import androidx.core.util.set
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.putDownloadExtra
@@ -108,10 +109,10 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * broadcast receiver if there are no more queued downloads.
      */
     override fun onReceive(context: Context, intent: Intent) {
+        val download = intent.getParcelableExtra<DownloadState>(EXTRA_DOWNLOAD)
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
             as AbstractFetchDownloadService.DownloadJobStatus
-        val download = queuedDownloads[downloadID]
 
         if (download != null) {
             onDownloadStopped(download, downloadID, downloadStatus)

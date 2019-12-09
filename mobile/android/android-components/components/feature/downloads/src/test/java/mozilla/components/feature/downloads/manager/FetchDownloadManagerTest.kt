@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -137,10 +138,38 @@ class FetchDownloadManagerTest {
         assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
     }
 
-    private fun notifyDownloadCompleted(id: Long) {
+    @Test
+    fun `onReceive properly gets download object form sendBroadcast`() {
+        var downloadCompleted = false
+        var downloadStatus: DownloadJobStatus? = null
+        var downloadName = ""
+        var downloadSize = 0L
+        val downloadWithFileName = download.copy(fileName = "5MB.zip", contentLength = 5L)
+
+        grantPermissions()
+
+        downloadManager.onDownloadStopped = { download, _, status ->
+            downloadStatus = status
+            downloadCompleted = true
+            downloadName = download.fileName ?: ""
+            downloadSize = download.contentLength ?: 0
+        }
+
+        val id = downloadManager.download(downloadWithFileName)!!
+
+        notifyDownloadCompleted(id, downloadWithFileName)
+
+        assertTrue(downloadCompleted)
+        assertEquals("5MB.zip", downloadName)
+        assertEquals(5L, downloadSize)
+        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+    }
+
+    private fun notifyDownloadCompleted(id: Long, download: DownloadState = DownloadState(url = "")) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.COMPLETED)
+        intent.putExtra(EXTRA_DOWNLOAD, download)
 
         broadcastManager.sendBroadcast(intent)
     }
