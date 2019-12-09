@@ -13061,11 +13061,22 @@ bool nsDocShell::HasUnloadedParent() {
 }
 
 void nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI) {
-  if (mUseGlobalHistory && !UsePrivateBrowsing()) {
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
-    if (history) {
-      history->SetURITitle(aURI, mTitle);
-    }
+  if (!mUseGlobalHistory || UsePrivateBrowsing()) {
+    return;
+  }
+
+  // Global history is interested into sub-frame visits only for link-coloring
+  // purposes, thus title updates are skipped for those.
+  //
+  // Moreover, some iframe documents (such as the ones created via
+  // document.open()) inherit the document uri of the caller, which would cause
+  // us to override a previously set page title with one from the subframe.
+  if (IsFrame()) {
+    return;
+  }
+
+  if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
+    history->SetURITitle(aURI, mTitle);
   }
 }
 
