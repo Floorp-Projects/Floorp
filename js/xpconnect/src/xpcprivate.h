@@ -225,6 +225,7 @@ class nsXPConnect final : public nsIXPConnect {
   // non-interface implementation
  public:
   static XPCJSRuntime* GetRuntimeInstance();
+  XPCJSContext* GetContext() { return mContext; }
 
   static bool IsISupportsDescendant(const nsXPTInterfaceInfo* info);
 
@@ -259,6 +260,7 @@ class nsXPConnect final : public nsIXPConnect {
   static nsXPConnect* gSelf;
   static bool gOnceAliveNowDead;
 
+  XPCJSContext* mContext = nullptr;
   XPCJSRuntime* mRuntime = nullptr;
   bool mShuttingDown;
 
@@ -313,7 +315,6 @@ using XPCWrappedNativeScopeList = mozilla::LinkedList<XPCWrappedNativeScope>;
 class XPCJSContext final : public mozilla::CycleCollectedJSContext,
                            public mozilla::LinkedListElement<XPCJSContext> {
  public:
-  static void InitTLS();
   static XPCJSContext* NewXPCJSContext();
   static XPCJSContext* Get();
 
