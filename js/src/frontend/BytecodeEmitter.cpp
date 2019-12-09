@@ -5679,8 +5679,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       }
 
       if (classContentsIfConstructor) {
-        funbox->setFieldInitializers(
-            setupFieldInitializers(classContentsIfConstructor));
+        mozilla::Maybe<FieldInitializers> fieldInitializers =
+            setupFieldInitializers(classContentsIfConstructor);
+        if (!fieldInitializers) {
+          ReportAllocationOverflow(cx);
+          return false;
+        }
+        funbox->setFieldInitializers(*fieldInitializers);
       }
 
       return true;
@@ -5715,15 +5720,22 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       nestedMode = BytecodeEmitter::Normal;
     }
 
-    FieldInitializers fieldInitializers = FieldInitializers::Invalid();
+    mozilla::Maybe<FieldInitializers> fieldInitializers;
     if (classContentsIfConstructor) {
       fieldInitializers = setupFieldInitializers(classContentsIfConstructor);
+      if (!fieldInitializers) {
+        ReportAllocationOverflow(cx);
+        return false;
+      }
+    } else {
+      // The BCE requires passing some value even if not used.
+      fieldInitializers = Some(FieldInitializers::Invalid());
     }
 
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
                          /* lazyScript = */ nullptr, funbox->startLine,
                          funbox->startColumn, parseInfo, nestedMode,
-                         fieldInitializers);
+                         *fieldInitializers);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -8229,7 +8241,7 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralCreationData* data,
   return true;
 }
 
-FieldInitializers BytecodeEmitter::setupFieldInitializers(
+mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
     ListNode* classMembers) {
   size_t numFields = 0;
   for (ParseNode* propdef : classMembers->contents()) {
@@ -8241,7 +8253,11 @@ FieldInitializers BytecodeEmitter::setupFieldInitializers(
       }
     }
   }
-  return FieldInitializers(numFields);
+  // If there are more initializers than can be represented, return invalid.
+  if (numFields > FieldInitializers::MaxInitializers) {
+    return Nothing();
+  }
+  return Some(FieldInitializers(numFields));
 }
 
 // Purpose of .fieldKeys:
@@ -8310,9 +8326,13 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
 bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
                                                   ListNode* obj) {
   //          [stack] HOMEOBJ HERITAGE?
-  FieldInitializers fieldInitializers = setupFieldInitializers(obj);
-  MOZ_ASSERT(fieldInitializers.valid);
-  size_t numFields = fieldInitializers.numFieldInitializers;
+  mozilla::Maybe<FieldInitializers> fieldInitializers =
+      setupFieldInitializers(obj);
+  if (!fieldInitializers) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+  size_t numFields = fieldInitializers->numFieldInitializers;
 
   if (numFields == 0) {
     return true;
