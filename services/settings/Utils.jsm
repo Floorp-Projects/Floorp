@@ -8,6 +8,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -25,7 +30,23 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gServerURL",
+  "services.settings.server"
+);
+
 var Utils = {
+  get SERVER_URL() {
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
+    return AppConstants.RELEASE_OR_BETA && !Cu.isInAutomation && !isXpcshell
+      ? "https://firefox.settings.services.mozilla.com/v1"
+      : gServerURL;
+  },
+
   CHANGES_PATH: "/buckets/monitor/collections/changes/records",
 
   /**
