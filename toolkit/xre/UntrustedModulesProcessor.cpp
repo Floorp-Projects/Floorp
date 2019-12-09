@@ -764,11 +764,6 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
   RefPtr<GetModulesTrustPromise::Private> p(
       new GetModulesTrustPromise::Private(__func__));
 
-  if (!mAllowProcessing) {
-    return GetModulesTrustPromise::CreateAndReject(
-        NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
-  }
-
   // Send the IPC request via the main thread
   InvokeAsync(GetMainThreadSerialEventTarget(), __func__, std::move(invoker))
       ->Then(
