@@ -10,7 +10,6 @@ module.exports = {
 
   "overrides": [{
     "files": [
-      "*.xhtml",
       // Bug 1602061 TODO: These tests access DOM elements via
       // id-as-variable-name, which eslint doesn't have support for yet.
       "attributes/test_listbox.html",
