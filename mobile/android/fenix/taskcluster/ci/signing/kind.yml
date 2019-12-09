@@ -54,6 +54,12 @@ job-template:
                         '3': production-signing
                         default: dep-signing
                 default: dep-signing
+    signing-format:
+      by-build-type:
+          # Fennec nightly cannot have the sha256 checksums. For more details, see
+          # https://github.com/mozilla-releng/scriptworker-scripts/pull/102#issue-349016967
+          fennec-nightly: autograph_apk_fennec_sha1
+          default: autograph_apk
     index:
         by-build-type:
             (fennec-.+|nightly|performance-test|beta|production):

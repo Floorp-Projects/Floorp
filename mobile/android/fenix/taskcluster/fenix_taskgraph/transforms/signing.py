@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("index", "worker-type", "worker.signing-type"):
+        for key in ("index", "worker-type", "worker.signing-type", "signing-format"):
             resolve_keyed_by(
                 task,
                 key,
@@ -41,6 +41,7 @@ def set_signing_attributes(config, tasks):
 @transforms.add
 def set_signing_format(config, tasks):
     for task in tasks:
+        signing_format = task.pop("signing-format")
         for upstream_artifact in task["worker"]["upstream-artifacts"]:
-            upstream_artifact["formats"] = ["autograph_apk"]
+            upstream_artifact["formats"] = [signing_format]
         yield task
