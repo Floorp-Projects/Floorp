@@ -79,6 +79,8 @@ namespace InspectorUtils {
                               DOMString? namespaceURI);
 
   boolean isElementThemed(Element element);
+
+  Element? containingBlockOf(Element element);
 };
 
 dictionary PropertyNamesOptions {

@@ -1,0 +1,34 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test InspectorUtils.containingBlockOf</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  #positioned-grid {
+    display: grid;
+    position: relative;
+  }
+  .abs {
+    position: absolute;
+  }
+  .fixed {
+    position: fixed;
+  }
+</style>
+<div id="positioned-grid">
+  <div class="item">
+    <div class="abs"></div>
+    <div class="fixed"></div>
+  </div>
+</div>
+<script>
+const InspectorUtils = SpecialPowers.InspectorUtils;
+const abs = document.querySelector(".abs");
+const fixed = document.querySelector(".fixed");
+const grid = document.querySelector("#positioned-grid");
+is(InspectorUtils.containingBlockOf(fixed), null, "CB of fixed pos is the viewport");
+is(SpecialPowers.unwrap(InspectorUtils.containingBlockOf(abs)), grid, "CB of abspos is the grid container");
+const item = document.querySelector(".item");
+item.style.willChange = "transform";
+is(SpecialPowers.unwrap(InspectorUtils.containingBlockOf(fixed)), item, "Transformed element is the cb of fixed pos elements");
+is(SpecialPowers.unwrap(InspectorUtils.containingBlockOf(abs)), item, "Transformed element is the cb of abspos elements");
+</script>
