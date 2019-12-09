@@ -2037,6 +2037,7 @@ void TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent) {
     // corresponding to a single modifier key being pressed.
     default: {
       NSUInteger modifiers = sLastModifierState;
+      AutoTArray<unsigned short, 10> dispatchedKeyCodes;
       for (int32_t bit = 0; bit < 32; ++bit) {
         NSUInteger flag = 1 << bit;
         if (!(diff & flag)) {
@@ -2171,6 +2172,14 @@ void TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent) {
           default:
             break;
         }
+
+        // Avoid dispatching same keydown/keyup events twice or more.
+        // We must be able to assume that there is no case to dispatch
+        // both keydown and keyup events with same key code value here.
+        if (dispatchedKeyCodes.Contains(keyCode)) {
+          continue;
+        }
+        dispatchedKeyCodes.AppendElement(keyCode);
 
         NSEvent* event = [NSEvent keyEventWithType:NSFlagsChanged
                                           location:[aNativeEvent locationInWindow]
