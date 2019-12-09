@@ -3887,7 +3887,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       background-size: 140px; } }
   @media (min-width: 1122px) {
     .onboardingMessageImage {
-      width: 250px;
+      width: 230px;
       background-size: auto 140px; } }
   .onboardingMessageImage.addons {
     background-image: url("../data/content/assets/illustration-addons@2x.png"); }
