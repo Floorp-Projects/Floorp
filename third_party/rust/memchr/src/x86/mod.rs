@@ -59,7 +59,7 @@ macro_rules! ifunc {
     }}
 }
 
-// When std isn't enable (which provides runtime CPU feature detection), or if
+// When std isn't available to provide runtime CPU feature detection, or if
 // runtime CPU feature detection has been explicitly disabled, then just call
 // our optimized SSE2 routine directly. SSE2 is avalbale on all x86_64 targets,
 // so no CPU feature detection is necessary.

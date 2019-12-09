@@ -11,7 +11,6 @@
 /// Should this be factored out into a separate crate? It seems independently
 /// useful. There are other crates that already exist (e.g., `utf-8`) that have
 /// overlapping use cases. Not sure what to do.
-
 use std::char;
 
 const TAG_CONT: u8 = 0b1000_0000;
@@ -56,7 +55,7 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
         Some(&b) => b,
     };
     match b0 {
-        0b110_00000 ... 0b110_11111 => {
+        0b110_00000..=0b110_11111 => {
             if src.len() < 2 {
                 return None;
             }
@@ -64,14 +63,13 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
             if 0b11_000000 & b1 != TAG_CONT {
                 return None;
             }
-            let cp = ((b0 & !TAG_TWO) as u32) << 6
-                     | ((b1 & !TAG_CONT) as u32);
+            let cp = ((b0 & !TAG_TWO) as u32) << 6 | ((b1 & !TAG_CONT) as u32);
             match cp {
-                0x80 ... 0x7FF => char::from_u32(cp).map(|cp| (cp, 2)),
+                0x80..=0x7FF => char::from_u32(cp).map(|cp| (cp, 2)),
                 _ => None,
             }
         }
-        0b1110_0000 ... 0b1110_1111 => {
+        0b1110_0000..=0b1110_1111 => {
             if src.len() < 3 {
                 return None;
             }
@@ -83,15 +81,15 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
                 return None;
             }
             let cp = ((b0 & !TAG_THREE) as u32) << 12
-                     | ((b1 & !TAG_CONT) as u32) << 6
-                     | ((b2 & !TAG_CONT) as u32);
+                | ((b1 & !TAG_CONT) as u32) << 6
+                | ((b2 & !TAG_CONT) as u32);
             match cp {
                 // char::from_u32 will disallow surrogate codepoints.
-                0x800 ... 0xFFFF => char::from_u32(cp).map(|cp| (cp, 3)),
+                0x800..=0xFFFF => char::from_u32(cp).map(|cp| (cp, 3)),
                 _ => None,
             }
         }
-        0b11110_000 ... 0b11110_111 => {
+        0b11110_000..=0b11110_111 => {
             if src.len() < 4 {
                 return None;
             }
@@ -106,11 +104,11 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
                 return None;
             }
             let cp = ((b0 & !TAG_FOUR) as u32) << 18
-                     | ((b1 & !TAG_CONT) as u32) << 12
-                     | ((b2 & !TAG_CONT) as u32) << 6
-                     | ((b3 & !TAG_CONT) as u32);
+                | ((b1 & !TAG_CONT) as u32) << 12
+                | ((b2 & !TAG_CONT) as u32) << 6
+                | ((b3 & !TAG_CONT) as u32);
             match cp {
-                0x10000 ... 0x10FFFF => char::from_u32(cp).map(|cp| (cp, 4)),
+                0x10000..=0x10FFFF => char::from_u32(cp).map(|cp| (cp, 4)),
                 _ => None,
             }
         }
@@ -152,8 +150,7 @@ mod tests {
     use quickcheck::quickcheck;
 
     use super::{
-        TAG_CONT, TAG_TWO, TAG_THREE, TAG_FOUR,
-        decode_utf8, decode_last_utf8,
+        decode_last_utf8, decode_utf8, TAG_CONT, TAG_FOUR, TAG_THREE, TAG_TWO,
     };
 
     #[test]
@@ -209,9 +206,12 @@ mod tests {
             let mut tmp = [0; 4];
             let n = given_cp.encode_utf8(&mut tmp).len();
             let (got_cp, _) = decode_last_utf8(&tmp[..n]).unwrap();
-            let expected_cp =
-                str::from_utf8(&tmp[..n]).unwrap()
-                    .chars().rev().next().unwrap();
+            let expected_cp = str::from_utf8(&tmp[..n])
+                .unwrap()
+                .chars()
+                .rev()
+                .next()
+                .unwrap();
             got_cp == expected_cp
         }
         quickcheck(p as fn(char) -> bool)
@@ -229,12 +229,13 @@ mod tests {
         assert_eq!(decode_utf8(&[0xC3]), None); // 2 bytes
         assert_eq!(decode_utf8(&[0xEF, 0xBF]), None); // 3 bytes
         assert_eq!(decode_utf8(&[0xF4, 0x8F, 0xBF]), None); // 4 bytes
-        // Not a minimal UTF-8 sequence
+                                                            // Not a minimal UTF-8 sequence
         assert_eq!(decode_utf8(&[TAG_TWO, TAG_CONT | b'a']), None);
         assert_eq!(decode_utf8(&[TAG_THREE, TAG_CONT, TAG_CONT | b'a']), None);
-        assert_eq!(decode_utf8(&[
-            TAG_FOUR, TAG_CONT, TAG_CONT, TAG_CONT | b'a',
-        ]), None);
+        assert_eq!(
+            decode_utf8(&[TAG_FOUR, TAG_CONT, TAG_CONT, TAG_CONT | b'a',]),
+            None
+        );
     }
 
     #[test]
@@ -247,13 +248,17 @@ mod tests {
         assert_eq!(decode_last_utf8(&[0xC3]), None); // 2 bytes
         assert_eq!(decode_last_utf8(&[0xEF, 0xBF]), None); // 3 bytes
         assert_eq!(decode_last_utf8(&[0xF4, 0x8F, 0xBF]), None); // 4 bytes
-        // Not a minimal UTF-8 sequence
+                                                                 // Not a minimal UTF-8 sequence
         assert_eq!(decode_last_utf8(&[TAG_TWO, TAG_CONT | b'a']), None);
-        assert_eq!(decode_last_utf8(&[
-            TAG_THREE, TAG_CONT, TAG_CONT | b'a',
-        ]), None);
-        assert_eq!(decode_last_utf8(&[
-            TAG_FOUR, TAG_CONT, TAG_CONT, TAG_CONT | b'a',
-        ]), None);
+        assert_eq!(
+            decode_last_utf8(&[TAG_THREE, TAG_CONT, TAG_CONT | b'a',]),
+            None
+        );
+        assert_eq!(
+            decode_last_utf8(
+                &[TAG_FOUR, TAG_CONT, TAG_CONT, TAG_CONT | b'a',]
+            ),
+            None
+        );
     }
 }

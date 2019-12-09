@@ -1,13 +1,3 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 macro_rules! define_set {
     ($name:ident, $builder_mod:ident, $text_ty:ty, $as_bytes:expr,
      $(#[$doc_regexset_example:meta])* ) => {
@@ -219,9 +209,9 @@ impl RegexSet {
 
     /// Returns the patterns that this set will match on.
     ///
-    /// This function can be used to determine the pattern for a match. The 
-    /// slice returned has exactly as many patterns givens to this regex set, 
-    /// and the order of the slice is the same as the order of the patterns 
+    /// This function can be used to determine the pattern for a match. The
+    /// slice returned has exactly as many patterns givens to this regex set,
+    /// and the order of the slice is the same as the order of the patterns
     /// provided to the set.
     ///
     /// # Example
@@ -328,7 +318,7 @@ impl Iterator for SetMatchesIntoIter {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint() 
+        self.0.size_hint()
     }
 }
 
@@ -368,7 +358,7 @@ impl<'a> Iterator for SetMatchesIter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint() 
+        self.0.size_hint()
     }
 }
 

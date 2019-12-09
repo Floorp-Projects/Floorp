@@ -1,13 +1,3 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 #![cfg_attr(feature = "pattern", feature(pattern))]
 
 extern crate rand;
@@ -17,14 +7,17 @@ macro_rules! regex_new {
     ($re:expr) => {{
         use regex::internal::ExecBuilder;
         ExecBuilder::new($re)
-            .bounded_backtracking().bytes(true).build().map(|e| e.into_regex())
-    }}
+            .bounded_backtracking()
+            .bytes(true)
+            .build()
+            .map(|e| e.into_regex())
+    }};
 }
 
 macro_rules! regex {
     ($re:expr) => {
         regex_new!($re).unwrap()
-    }
+    };
 }
 
 macro_rules! regex_set_new {
@@ -35,13 +28,13 @@ macro_rules! regex_set_new {
             .bytes(true)
             .build()
             .map(|e| e.into_regex_set())
-    }}
+    }};
 }
 
 macro_rules! regex_set {
     ($res:expr) => {
         regex_set_new!($res).unwrap()
-    }
+    };
 }
 
 // Must come before other module definitions.
@@ -60,6 +53,9 @@ mod replace;
 mod searcher;
 mod set;
 mod suffix_reverse;
+#[cfg(feature = "unicode")]
 mod unicode;
+#[cfg(feature = "unicode-perl")]
 mod word_boundary;
+#[cfg(feature = "unicode-perl")]
 mod word_boundary_unicode;
