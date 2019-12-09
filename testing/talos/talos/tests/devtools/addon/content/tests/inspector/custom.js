@@ -20,8 +20,10 @@ const {
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 
+const TEST_URL = PAGES_BASE_URL + "custom/inspector/index.html";
+
 module.exports = async function() {
-  const tab = await testSetup(PAGES_BASE_URL + "custom/inspector/index.html");
+  const tab = await testSetup(TEST_URL, { disableCache: true });
 
   const domReference = await getContentDOMReference("#initial-node", tab);
   let toolbox = await openToolboxWithInspectNode(domReference, tab);
@@ -54,21 +56,22 @@ async function getContentDOMReference(selector, tab) {
       resolve(domReference);
     });
 
-    messageManager.loadFrameScript(
-      "data:,(" +
-        encodeURIComponent(
-          `function () {
-        const { ContentDOMReference } = ChromeUtils.import(
-          "resource://gre/modules/ContentDOMReference.jsm"
-        );
-        const element = content.document.querySelector("${selector}");
-        const domReference = ContentDOMReference.get(element);
-        sendAsyncMessage("get-dom-reference-done", domReference);
-      }`
-        ) +
-        ")()",
-      false
-    );
+    const contentMethod = function(_selector) {
+      const { ContentDOMReference } = ChromeUtils.import(
+        "resource://gre/modules/ContentDOMReference.jsm"
+      );
+      const iframe = content.document.querySelector("iframe");
+      const win = iframe.contentWindow;
+      const element = win.document.querySelector(_selector);
+      const domReference = ContentDOMReference.get(element);
+      sendAsyncMessage("get-dom-reference-done", domReference);
+    };
+
+    const wrappedMethod = encodeURIComponent(`function () {
+      (${contentMethod})("${selector}");
+     }`);
+
+    messageManager.loadFrameScript(`data:,(${wrappedMethod})()`, false);
   });
 }
 
@@ -93,6 +96,15 @@ async function openToolboxWithInspectNode(domReference, tab) {
   return toolbox;
 }
 
+async function getRootNodeFront(inspector) {
+  const root = await inspector.walker.getRootNode();
+  const iframeNodeFront = await inspector.walker.querySelector(root, "iframe");
+
+  // Using iframes, retrieve the document in the iframe front children.
+  const { nodes } = await inspector.walker.children(iframeNodeFront);
+  return nodes[0];
+}
+
 /**
  * Measure the time necessary to select a node and display the rule view when many rules
  * match the element.
@@ -103,7 +115,7 @@ async function selectNodeWithManyRulesAndLog(toolbox) {
   let initialNodeFront = inspector.selection.nodeFront;
 
   // Retrieve the node front for the test node.
-  let root = await inspector.walker.getRootNode();
+  let root = await getRootNodeFront(inspector);
   let referenceNodeFront = await inspector.walker.querySelector(
     root,
     ".no-css-rules"
@@ -132,7 +144,7 @@ async function collapseExpandAllAndLog(toolbox) {
   let inspector = toolbox.getPanel("inspector");
 
   let initialNodeFront = inspector.selection.nodeFront;
-  let root = await inspector.walker.getRootNode();
+  let root = await getRootNodeFront(inspector);
 
   dump("Select expand-many-children node\n");
   let many = await inspector.walker.querySelector(

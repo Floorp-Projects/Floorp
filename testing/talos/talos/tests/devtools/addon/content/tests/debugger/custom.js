@@ -24,17 +24,21 @@ const {
   hoverOnToken,
 } = require("./debugger-helpers");
 
+const IFRAME_BASE_URL =
+  "http://damp.top.com/tests/devtools/addon/content/pages/";
 const EXPECTED = {
   sources: 107,
   file: "App.js",
-  sourceURL: `${PAGES_BASE_URL}custom/debugger/static/js/App.js`,
+  sourceURL: `${IFRAME_BASE_URL}custom/debugger/static/js/App.js`,
   text: "import React, { Component } from 'react';",
 };
 
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 
+const TEST_URL = PAGES_BASE_URL + "custom/debugger/index.html";
+
 module.exports = async function() {
-  const tab = await testSetup(PAGES_BASE_URL + "custom/debugger/index.html");
+  const tab = await testSetup(TEST_URL, { disableCache: true });
   Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
 
   const toolbox = await openDebuggerAndLog("custom", EXPECTED);
