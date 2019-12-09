@@ -55,6 +55,12 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
                                         SessionStorageCache* aCloneFrom,
                                         RefPtr<SessionStorageCache>* aRetVal);
 
+  nsresult GetSessionStorageCacheHelper(const nsACString& aOriginAttrs,
+                                        const nsACString& aOriginKey,
+                                        bool aMakeIfNeeded,
+                                        SessionStorageCache* aCloneFrom,
+                                        RefPtr<SessionStorageCache>* aRetVal);
+
   typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache>
       OriginKeyHashTable;
   nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
