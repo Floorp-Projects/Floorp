@@ -34,7 +34,7 @@ use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResu
 use crate::bindings;
 use crate::isa::make_isa;
 use crate::utils::DashResult;
-use crate::wasm2clif::{init_sig, native_pointer_size, TransEnv};
+use crate::wasm2clif::{init_sig, native_pointer_size, TransEnv, TRAP_THROW_REPORTED};
 
 // Namespace for user-defined functions.
 const USER_FUNCTION_NAMESPACE: u32 = 0;
@@ -413,6 +413,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             ir::TrapCode::BadConversionToInteger => bindings::Trap::InvalidConversionToInteger,
             ir::TrapCode::Interrupt => bindings::Trap::CheckInterrupt,
             ir::TrapCode::UnreachableCodeReached => bindings::Trap::Unreachable,
+            ir::TrapCode::User(x) if x == TRAP_THROW_REPORTED => bindings::Trap::ThrowReported,
             ir::TrapCode::User(_) => panic!("Uncovered trap code {}", code),
         };
 
