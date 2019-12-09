@@ -198,6 +198,9 @@ impl<'a> ModuleEnvironment<'a> {
     pub fn new(env: &'a CraneliftModuleEnvironment) -> Self {
         Self { env }
     }
+    pub fn uses_shared_memory(&self) -> bool {
+        unsafe { low_level::env_uses_shared_memory(self.env) }
+    }
     pub fn function_signature(&self, func_index: FuncIndex) -> FuncTypeWithId {
         FuncTypeWithId(unsafe { low_level::env_function_signature(self.env, func_index.index()) })
     }
