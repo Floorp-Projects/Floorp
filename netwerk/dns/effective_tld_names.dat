@@ -5886,14 +5886,9 @@ gov.rs
 in.rs
 org.rs
 
-// ru : https://cctld.ru/en/domains/domens_ru/reserved/
+// ru : https://cctld.ru/files/pdf/docs/en/rules_ru-rf.pdf
+// Submitted by George Georgievsky <gug@cctld.ru>
 ru
-ac.ru
-edu.ru
-gov.ru
-int.ru
-mil.ru
-test.ru
 
 // rw : https://www.ricta.org.rw/sites/default/files/resources/registry_registrar_contract_0.pdf
 rw
@@ -6958,7 +6953,8 @@ yt
 ак.срб
 
 // xn--p1ai ("rf", Russian-Cyrillic) : RU
-// http://www.cctld.ru/en/docs/rulesrf.php
+// https://cctld.ru/files/pdf/docs/en/rules_ru-rf.pdf
+// Submitted by George Georgievsky <gug@cctld.ru>
 рф
 
 // xn--wgbl6a ("Qatar", Arabic) : QA
@@ -10778,6 +10774,10 @@ s3-website.eu-west-2.amazonaws.com
 s3-website.eu-west-3.amazonaws.com
 s3-website.us-east-2.amazonaws.com
 
+// Amsterdam Wireless: https://www.amsterdamwireless.nl/
+// Submitted by Imre Jonk <hostmaster@amsterdamwireless.nl>
+amsw.nl
+
 // Amune : https://amune.org/
 // Submitted by Team Amune <cert@amune.org>
 t3l3p0rt.net
@@ -11046,6 +11046,15 @@ co.no
 webhosting.be
 hosting-cluster.nl
 
+// Coordination Center for TLD RU and XN--P1AI : https://cctld.ru/en/domains/domens_ru/reserved/
+// Submitted by George Georgievsky <gug@cctld.ru>
+ac.ru
+edu.ru
+gov.ru
+int.ru
+mil.ru
+test.ru
+
 // COSIMO GmbH : http://www.cosimo.de
 // Submitted by Rene Marticke <rmarticke@cosimo.de>
 dyn.cosidns.de
@@ -11069,6 +11078,14 @@ realm.cz
 // Cupcake : https://cupcake.io/
 // Submitted by Jonathan Rudenberg <jonathan@cupcake.io>
 cupcake.is
+
+// Customer OCI - Oracle Dyn https://cloud.oracle.com/home https://dyn.com/dns/
+// Submitted by Gregory Drake <support@dyn.com>
+// Note: This is intended to also include customer-oci.com due to wildcards implicitly including the current label
+*.customer-oci.com
+*.oci.customer-oci.com
+*.ocp.customer-oci.com
+*.ocs.customer-oci.com
 
 // cyon GmbH : https://www.cyon.ch/
 // Submitted by Dominic Luechinger <dol@cyon.ch>
@@ -11101,6 +11118,14 @@ store.dk
 // Submitted by Daniil Burdakov <icqkill@gmail.com>
 *.dapps.earth
 *.bzz.dapps.earth
+
+// Dark, Inc. : https://darklang.com
+// Submitted by Paul Biggar <ops@darklang.com>
+builtwithdark.com
+
+// Datawire, Inc : https://www.datawire.io
+// Submitted by Richard Li <secalert@datawire.io>
+edgestack.me
 
 // Debian : https://www.debian.org/
 // Submitted by Peter Palfrader / Debian Sysadmin Team <dsa-publicsuffixlist@debian.org>
@@ -11475,6 +11500,10 @@ dynv6.net
 // Submitted by Vladimir Dudr <info@e4you.cz>
 e4.cz
 
+// En root‽ : https://en-root.org
+// Submitted by Emmanuel Raviart <emmanuel@raviart.com>
+en-root.fr
+
 // Enalean SAS: https://www.enalean.com
 // Submitted by Thomas Cottier <thomas.cottier@enalean.com>
 mytuleap.com
@@ -11704,6 +11733,10 @@ firebaseapp.com
 flynnhub.com
 flynnhosting.net
 
+// Frederik Braun https://frederik-braun.com
+// Submitted by Frederik Braun <fb@frederik-braun.com>
+0e.vc
+
 // Freebox : http://www.freebox.fr
 // Submitted by Romain Fliedel <rfliedel@freebox.fr>
 freebox-os.com
@@ -11737,8 +11770,9 @@ service.gov.uk
 gehirn.ne.jp
 usercontent.jp
 
-// Gentlent, Limited : https://www.gentlent.com
-// Submitted by Tom Klein <tklein@gentlent.com>
+// Gentlent, Inc. : https://www.gentlent.com
+// Submitted by Tom Klein <tom@gentlent.com>
+gentapps.com
 lab.ms
 
 // GitHub, Inc.
@@ -11783,6 +11817,7 @@ a.run.app
 web.app
 *.0emm.com
 appspot.com
+*.r.appspot.com
 blogspot.ae
 blogspot.al
 blogspot.am
@@ -11867,6 +11902,10 @@ publishproxy.com
 withgoogle.com
 withyoutube.com
 
+// Group 53, LLC : https://www.group53.com
+// Submitted by Tyler Todd <noc@nova53.net>
+awsmppl.com
+
 // Hakaran group: http://hakaran.cz
 // Submited by Arseniy Sokolov <security@hakaran.cz>
 fin.ci
@@ -11916,6 +11955,7 @@ col.ng
 firm.ng
 gen.ng
 ltd.ng
+ngo.ng
 ng.school
 sch.so
 
@@ -12035,6 +12075,10 @@ uni5.net
 // KnightPoint Systems, LLC : http://www.knightpoint.com/
 // Submitted by Roy Keene <rkeene@knightpoint.com>
 knightpoint.systems
+
+// KUROKU LTD : https://kuroku.ltd/
+// Submitted by DisposaBoy <security@oya.to>
+oya.to
 
 // .KRD : http://nic.krd/data/krd/Registration%20Policy.pdf
 co.krd
@@ -12430,6 +12474,10 @@ nom.uy
 nom.vc
 nom.vg
 
+// Observable, Inc. : https://observablehq.com
+// Submitted by Mike Bostock <dns@observablehq.com>
+static.observableusercontent.com
+
 // Octopodal Solutions, LLC. : https://ulterius.io/
 // Submitted by Andrew Sampson <andrew@ulterius.io>
 cya.gg
@@ -12449,6 +12497,10 @@ opencraft.hosting
 // Opera Software, A.S.A.
 // Submitted by Yngve Pettersen <yngve@opera.com>
 operaunite.com
+
+// Oursky Limited : https://skygear.io/
+// Submited by Skygear Developer <hello@skygear.io>
+skygearapp.com
 
 // OutSystems
 // Submitted by Duarte Santos <domain-admin@outsystemscloud.com>
@@ -12491,6 +12543,10 @@ gotpantheon.com
 // Peplink | Pepwave : http://peplink.com/
 // Submitted by Steve Leung <steveleung@peplink.com>
 mypep.link
+
+// Perspecta : https://perspecta.com/
+// Submitted by Kenneth Van Alstyne <kvanalstyne@perspecta.com>
+perspecta.cloud
 
 // Planet-Work : https://www.planet-work.com/
 // Submitted by Frédéric VANNIÈRE <f.vanniere@planet-work.com>
@@ -12554,6 +12610,11 @@ ras.ru
 // Submitted by Daniel Dent (https://www.danieldent.com/)
 qa2.com
 
+// QCX
+// Submitted by Cassandra Beelen <cassandra@beelen.one>
+qcx.io
+*.sys.qcx.io
+
 // QNAP System Inc : https://www.qnap.com
 // Submitted by Nick Chang <nickchang@qnap.com>
 dev-myqnapcloud.com
@@ -12576,6 +12637,7 @@ rackmaze.net
 
 // Rancher Labs, Inc : https://rancher.com
 // Submitted by Vincent Fiduccia <domains@rancher.com>
+*.on-k3s.io
 *.on-rancher.cloud
 *.on-rio.io
 
@@ -12893,6 +12955,10 @@ v-info.info
 // Voorloper.com: https://voorloper.com
 // Submitted by Nathan van Bakel <info@voorloper.com>
 voorloper.cloud
+
+// V.UA Domain Administrator : https://domain.v.ua/
+// Submitted by Serhii Rostilo <sergey@rostilo.kiev.ua>
+v.ua
 
 // Waffle Computer Inc., Ltd. : https://docs.waffleinfo.com
 // Submitted by Masayuki Note <masa@blade.wafflecell.com>
