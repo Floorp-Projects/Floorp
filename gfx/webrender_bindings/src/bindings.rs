@@ -7,6 +7,10 @@ use std::ffi::{CStr, CString};
 use std::ffi::OsString;
 #[cfg(target_os = "windows")]
 use std::os::windows::ffi::OsStringExt;
+#[cfg(target_os = "windows")]
+use winapi::um::processthreadsapi::{SetThreadPriority,GetCurrentThread};
+#[cfg(target_os = "windows")]
+use winapi::um::winbase::{SetThreadAffinityMask};
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use std::os::unix::ffi::OsStringExt;
 use std::io::Cursor;
@@ -38,6 +42,7 @@ use rayon;
 use num_cpus;
 use euclid::SideOffsets2D;
 use nsstring::nsAString;
+//linux only//use thread_priority::*;
 
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
@@ -1053,18 +1058,35 @@ impl ThreadListener for GeckoProfilerThreadListener {
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
+pub unsafe extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
     // Clamp the number of workers between 1 and 8. We get diminishing returns
     // with high worker counts and extra overhead because of rayon and font
     // management.
     let num_threads = num_cpus::get().max(2).min(8);
 
+    let priority_tag = if low_priority { "LP" } else { "" };
+
     let worker = rayon::ThreadPoolBuilder::new()
-        .thread_name(|idx|{ format!("WRWorker#{}", idx) })
+        .thread_name(move |idx|{ format!("WRWorker{}#{}", priority_tag, idx) })
         .num_threads(num_threads)
-        .start_handler(|idx| {
+        .start_handler(move |idx| {
+            #[cfg(target_os = "windows")]
+            {
+                SetThreadPriority(
+                    GetCurrentThread(),
+                    if low_priority {
+                        -1 /* THREAD_PRIORITY_BELOW_NORMAL */
+                    } else {
+                        0 /* THREAD_PRIORITY_NORMAL */
+                    });
+                SetThreadAffinityMask(GetCurrentThread(), 1usize << idx);
+            }
+            /*let thread_id = thread_native_id();
+            set_thread_priority(thread_id,
+                if low_priority { ThreadPriority::Min } else { ThreadPriority::Max },
+                ThreadSchedulePolicy::Normal(NormalThreadSchedulePolicy::Normal));*/
             wr_register_thread_local_arena();
-            let name = format!("WRWorker#{}", idx);
+            let name = format!("WRWorker{}#{}",priority_tag, idx);
             register_thread_with_profiler(name.clone());
             gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
         })
@@ -1305,6 +1327,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_width: i32,
                                 window_height: i32,
                                 support_low_priority_transactions: bool,
+                                support_low_priority_threadpool: bool,
                                 allow_texture_swizzling: bool,
                                 enable_picture_caching: bool,
                                 start_debug_server: bool,
@@ -1313,6 +1336,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 program_cache: Option<&mut WrProgramCache>,
                                 shaders: Option<&mut WrShaders>,
                                 thread_pool: *mut WrThreadPool,
+                                thread_pool_low_priority: *mut WrThreadPool,
                                 size_of_op: VoidPtrToSizeFn,
                                 enclosing_size_of_op: VoidPtrToSizeFn,
                                 document_id: u32,
@@ -1346,6 +1370,13 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     let workers = unsafe {
         Arc::clone(&(*thread_pool).0)
+    };
+    let workers_low_priority = unsafe {
+        if support_low_priority_threadpool {
+            Arc::clone(&(*thread_pool_low_priority).0)
+        } else {
+            Arc::clone(&(*thread_pool).0)
+        }
     };
 
     let upload_method = if unsafe { is_glcontext_angle(gl_context) } {
@@ -1390,7 +1421,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         support_low_priority_transactions,
         allow_texture_swizzling,
         recorder: recorder,
-        blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(workers.clone()))),
+        blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(workers.clone(), workers_low_priority.clone()))),
         workers: Some(workers.clone()),
         thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         size_of_op: Some(size_of_op),
