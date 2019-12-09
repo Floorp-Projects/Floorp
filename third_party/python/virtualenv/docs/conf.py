@@ -1,153 +1,73 @@
-# -*- coding: utf-8 -*-
-#
-# Paste documentation build configuration file, created by
-# sphinx-quickstart on Tue Apr 22 22:08:49 2008.
-#
-# This file is execfile()d with the current directory set to its containing dir.
-#
-# The contents of this file are pickled, so don't put values in the namespace
-# that aren't pickleable (module imports are okay, they're removed automatically).
-#
-# All configuration values have a default value; values that are commented out
-# serve to show the default value.
+from __future__ import absolute_import, unicode_literals
 
 import os
+import re
+import subprocess
 import sys
+from pathlib import Path
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+from virtualenv import __version__
 
-# If your extensions are in another directory, add it here.
-sys.path.insert(0, os.path.abspath(os.pardir))
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.extlinks"]
+source_suffix = ".rst"
+master_doc = "index"
+project = "virtualenv"
+copyright = "2007-2018, Ian Bicking, The Open Planning Project, PyPA"
 
-# General configuration
-# ---------------------
+ROOT_SRC_TREE_DIR = Path(__file__).parents[1]
 
-# Add any Sphinx extension module names here, as strings. They can be extensions
-# coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 
-# Add any paths that contain templates here, relative to this directory.
-#templates_path = ['_templates']
+def generate_draft_news():
+    home = "https://github.com"
+    issue = "{}/issue".format(home)
+    fragments_path = ROOT_SRC_TREE_DIR / "docs" / "changelog"
+    for pattern, replacement in (
+        (r"[^`]@([^,\s]+)", r"`@\1 <{}/\1>`_".format(home)),
+        (r"[^`]#([\d]+)", r"`#pr\1 <{}/\1>`_".format(issue)),
+    ):
+        for path in fragments_path.glob("*.rst"):
+            path.write_text(re.sub(pattern, replacement, path.read_text()))
+    env = os.environ.copy()
+    env["PATH"] += os.pathsep.join([os.path.dirname(sys.executable)] + env["PATH"].split(os.pathsep))
+    changelog = subprocess.check_output(
+        ["towncrier", "--draft", "--version", "DRAFT"], cwd=str(ROOT_SRC_TREE_DIR), env=env
+    ).decode("utf-8")
+    if "No significant changes" in changelog:
+        content = ""
+    else:
+        note = "*Changes in master, but not released yet are under the draft section*."
+        content = "{}\n\n{}".format(note, changelog)
+    (ROOT_SRC_TREE_DIR / "docs" / "_draft.rst").write_text(content)
 
-# The suffix of source filenames.
-source_suffix = '.rst'
 
-# The master toctree document.
-master_doc = 'index'
+generate_draft_news()
 
-# General substitutions.
-project = 'virtualenv'
-copyright = '2007-2014, Ian Bicking, The Open Planning Project, PyPA'
+version = ".".join(__version__.split(".")[:2])
+release = __version__
 
-# The default replacements for |version| and |release|, also used in various
-# other places throughout the built documents.
-try:
-    from virtualenv import __version__
-    # The short X.Y version.
-    version = '.'.join(__version__.split('.')[:2])
-    # The full version, including alpha/beta/rc tags.
-    release = __version__
-except ImportError:
-    version = release = 'dev'
-
-# There are two options for replacing |today|: either, you set today to some
-# non-false value, then it is used:
-#today = ''
-# Else, today_fmt is used as the format for a strftime call.
-today_fmt = '%B %d, %Y'
-
-# List of documents that shouldn't be included in the build.
+today_fmt = "%B %d, %Y"
 unused_docs = []
-
-# If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
-
-# If true, the current module name will be prepended to all description
-# unit titles (such as .. function::).
-#add_module_names = True
-
-# If true, sectionauthor and moduleauthor directives will be shown in the
-# output. They are ignored by default.
-#show_authors = False
-
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
+exclude_patterns = ["changelog/*"]
 
 extlinks = {
-    'issue': ('https://github.com/pypa/virtualenv/issues/%s', '#'),
-    'pull': ('https://github.com/pypa/virtualenv/pull/%s', 'PR #'),
+    "issue": ("https://github.com/pypa/virtualenv/issues/%s", "#"),
+    "pull": ("https://github.com/pypa/virtualenv/pull/%s", "PR #"),
 }
 
-
-# Options for HTML output
-# -----------------------
-
-# The style sheet to use for HTML and HTML Help pages. A file of that name
-# must exist either in Sphinx' static/ path, or in one of the custom paths
-# given in html_static_path.
-#html_style = 'default.css'
-
-html_theme = 'default'
-if not on_rtd:
-    try:
-        import sphinx_rtd_theme
-        html_theme = 'sphinx_rtd_theme'
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    except ImportError:
-        pass
-
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
-
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
-# using the given strftime format.
-html_last_updated_fmt = '%b %d, %Y'
-
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-#html_use_smartypants = True
-
-# Content template for the index page.
-#html_index = ''
-
-# Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
-
-# Additional templates that should be rendered to pages, maps page names to
-# template names.
-#html_additional_pages = {}
-
-# If false, no module index is generated.
-#html_use_modindex = True
-
-# If true, the reST sources are included in the HTML build as _sources/<name>.
-#html_copy_source = True
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'Pastedoc'
-
-
-# Options for LaTeX output
-# ------------------------
-
-# The paper size ('letter' or 'a4').
-#latex_paper_size = 'letter'
-
-# The font size ('10pt', '11pt' or '12pt').
-#latex_font_size = '10pt'
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, document class [howto/manual]).
-#latex_documents = []
-
-# Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
-
-# Documents to append as an appendix to all manuals.
-#latex_appendices = []
-
-# If false, no module index is generated.
-#latex_use_modindex = True
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {
+    "canonical_url": "https://virtualenv.pypa.io/en/latest/",
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": True,
+    # Toc options
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
+}
+html_last_updated_fmt = "%b %d, %Y"
+htmlhelp_basename = "Pastedoc"

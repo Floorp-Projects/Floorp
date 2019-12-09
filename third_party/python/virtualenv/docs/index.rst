@@ -4,14 +4,23 @@ Virtualenv
 `Mailing list <http://groups.google.com/group/python-virtualenv>`_ |
 `Issues <https://github.com/pypa/virtualenv/issues>`_ |
 `Github <https://github.com/pypa/virtualenv>`_ |
-`PyPI <https://pypi.python.org/pypi/virtualenv/>`_ |
+`PyPI <https://pypi.org/project/virtualenv/>`_ |
 User IRC: #pypa
 Dev IRC: #pypa-dev
 
 Introduction
 ------------
 
-``virtualenv`` is a tool to create isolated Python environments.
+
+``virtualenv`` is a tool to create isolated Python environments. Since
+Python 3.3, a subset of it has been integrated into the standard
+library under the  `venv module <https://docs.python.org/3/library/venv.html>`_.
+Note though, that the ``venv`` module does not offer all features of this
+library (e.g. cannot create bootstrap scripts, cannot create virtual
+environments for other python versions than the host python,
+not relocatable, etc.). Tools in general as such still may prefer using
+virtualenv for its ease of upgrading (via pip), unified handling of different
+Python versions and some more advanced features.
 
 The basic problem being addressed is one of dependencies and versions,
 and indirectly permissions. Imagine you have an application that
@@ -45,18 +54,6 @@ doesn't access the globally installed libraries either).
    development
    changes
 
-.. warning::
-
-   Python bugfix releases 2.6.8, 2.7.3, 3.1.5 and 3.2.3 include a change that
-   will cause "import random" to fail with "cannot import name urandom" on any
-   virtualenv created on a Unix host with an earlier release of Python
-   2.6/2.7/3.1/3.2, if the underlying system Python is upgraded. This is due to
-   the fact that a virtualenv uses the system Python's standard library but
-   contains its own copy of the Python interpreter, so an upgrade to the system
-   Python results in a mismatch between the version of the Python interpreter
-   and the version of the standard library. It can be fixed by removing
-   ``$ENV/bin/python`` and re-running virtualenv on the same target directory
-   with the upgraded Python.
 
 Other Documentation and Links
 -----------------------------
@@ -76,14 +73,14 @@ Other Documentation and Links
   your workflow with many virtualenvs even easier. `His initial blog post on it`__.
   He also wrote `an example of using virtualenv to try IPython`__.
 
-  .. _virtualenvwrapper: https://pypi.python.org/pypi/virtualenvwrapper/
+  .. _virtualenvwrapper: https://pypi.org/project/virtualenvwrapper/
   .. __: https://doughellmann.com/blog/2008/05/01/virtualenvwrapper/
   .. __: https://doughellmann.com/blog/2008/02/01/ipython-and-virtualenv/
 
 * `Pew`_ is another wrapper for virtualenv that makes use of a different
   activation technique.
 
-  .. _Pew: https://pypi.python.org/pypi/pew/
+  .. _Pew: https://pypi.org/project/pew/
 
 * `Using virtualenv with mod_wsgi
   <http://code.google.com/p/modwsgi/wiki/VirtualEnvironments>`_.
@@ -102,6 +99,10 @@ Compare & Contrast with Alternatives
 ------------------------------------
 
 There are several alternatives that create isolated environments:
+
+* Python 3's `venv module <https://docs.python.org/3/library/venv.html>`_
+  is recommended for projects that no longer need to support Python 2 and want
+  to create just simple environments for the host python.
 
 * ``workingenv`` (which I do not suggest you use anymore) is the
   predecessor to this library. It used the main Python interpreter,
@@ -125,7 +126,7 @@ There are several alternatives that create isolated environments:
   Setuptools automatically, saving a step and avoiding the need for
   network access.
 
-* `zc.buildout <http://pypi.python.org/pypi/zc.buildout>`_ doesn't
+* `zc.buildout <http://pypi.org/project/zc.buildout>`_ doesn't
   create an isolated Python environment in the same style, but
   achieves similar results through a declarative config file that sets
   up scripts with very particular packages. As a declarative system,

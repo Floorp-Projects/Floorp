@@ -1,0 +1,51 @@
+[build-system]
+requires = [
+    "setuptools >= 40.6.3",
+    "wheel >= 0.29.0",
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.black]
+line-length = 120
+
+[tool.towncrier]
+    package = "virtualenv"
+    filename = "docs/changes.rst"
+    directory = "docs/changelog"
+    template = "docs/changelog/template.jinja2"
+    title_format = "v{version} ({project_date})"
+    issue_format = "`#{issue} <https://github.com/pypa/virtualenv/issues/{issue}>`_"
+    underlines = ["-", "^"]
+
+    [[tool.towncrier.section]]
+        path = ""
+
+    [[tool.towncrier.type]]
+        directory = "bugfix"
+        name = "Bugfixes"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "feature"
+        name = "Features"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "deprecation"
+        name = "Deprecations (removal in next major release)"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "breaking"
+        name = "Backward incompatible changes"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "doc"
+        name = "Documentation"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "misc"
+        name = "Miscellaneous"
+        showcontent = true
