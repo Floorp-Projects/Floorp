@@ -401,8 +401,8 @@ static const MeasureUnit& FindSimpleMeasureUnit(const char* subtype) {
 }
 
 static constexpr size_t MaxUnitLength() {
-  // Enable by default when bug 1560664 is fixed.
-#if __cplusplus >= 201703L
+  // Enable by default when libstdc++ 7 is the minimal version expected
+#if __GLIBCXX__ > 20181026
   size_t length = 0;
   for (const auto& unit : simpleMeasureUnits) {
     length = std::max(length, std::char_traits<char>::length(unit.subtype));
