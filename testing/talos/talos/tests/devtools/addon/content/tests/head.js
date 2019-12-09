@@ -12,14 +12,20 @@ const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { TargetFactory } = require("devtools/client/framework/target");
 
-const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
-
-const PAGES_BASE_URL = webserver + "/tests/devtools/addon/content/pages/";
+// With Bug 1588203, the talos server supports a dynamic proxy that will
+// redirect any http:// call to the talos server. This means we can use
+// arbitrary domains for our tests.
+// Iframes may be loaded via http://damp.frame1.com, http://damp.frame2.com, etc...
+// or any other domain name that is sensible for a given test.
+// To trigger frames to load in separate processes, they must have a different
+// eTLD+1, which means public suffix (.com, .org, ...) and the label before.
+const BASE_DOMAIN = "http://damp.top.com";
+const PAGES_BASE_URL = BASE_DOMAIN + "/tests/devtools/addon/content/pages/";
 
 exports.PAGES_BASE_URL = PAGES_BASE_URL;
 exports.SIMPLE_URL = PAGES_BASE_URL + "simple.html";
 exports.COMPLICATED_URL =
-  webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
+  BASE_DOMAIN + "/tests/tp5n/bild.de/www.bild.de/index.html";
 
 let damp = null;
 /*
