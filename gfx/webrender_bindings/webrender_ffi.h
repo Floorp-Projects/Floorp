@@ -91,7 +91,13 @@ void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
+// Work-around wingdi.h define which conflcits with WR color constant
+#pragma push_macro("TRANSPARENT")
+#undef TRANSPARENT
+
 #include "webrender_ffi_generated.h"
+
+#pragma pop_macro("TRANSPARENT")
 
 // More functions invoked from Rust code. These are down here because they
 // refer to data structures from webrender_ffi_generated.h
