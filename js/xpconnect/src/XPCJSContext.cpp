@@ -74,8 +74,6 @@
 #  include <windows.h>
 #endif
 
-static MOZ_THREAD_LOCAL(XPCJSContext*) gTlsContext;
-
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
@@ -1027,8 +1025,6 @@ XPCJSContext::~XPCJSContext() {
   }
 
   PROFILER_CLEAR_JS_CONTEXT();
-
-  gTlsContext.set(nullptr);
 }
 
 XPCJSContext::XPCJSContext()
@@ -1044,15 +1040,18 @@ XPCJSContext::XPCJSContext()
       mActive(CONTEXT_INACTIVE),
       mLastStateChange(PR_Now()) {
   MOZ_COUNT_CTOR_INHERITED(XPCJSContext, CycleCollectedJSContext);
-  MOZ_RELEASE_ASSERT(!gTlsContext.get());
   MOZ_ASSERT(mWatchdogManager);
   ++sInstanceCount;
   mWatchdogManager->RegisterContext(this);
-  gTlsContext.set(this);
 }
 
 /* static */
-XPCJSContext* XPCJSContext::Get() { return gTlsContext.get(); }
+XPCJSContext* XPCJSContext::Get() {
+  // Do an explicit null check, because this can get called from a process that
+  // does not run JS.
+  nsXPConnect* xpc = static_cast<nsXPConnect*>(nsXPConnect::XPConnect());
+  return xpc ? xpc->GetContext() : nullptr;
+}
 
 #ifdef XP_WIN
 static size_t GetWindowsStackSize() {
@@ -1282,9 +1281,6 @@ WatchdogManager* XPCJSContext::GetWatchdogManager() {
   sWatchdogInstance = new WatchdogManager();
   return sWatchdogInstance;
 }
-
-// static
-void XPCJSContext::InitTLS() { MOZ_RELEASE_ASSERT(gTlsContext.init()); }
 
 // static
 XPCJSContext* XPCJSContext::NewXPCJSContext() {
