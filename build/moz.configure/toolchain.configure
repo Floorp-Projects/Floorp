@@ -709,17 +709,14 @@ def toolchain_search_path_for(host_or_target):
             result.append(vc_compiler_path[0])
 
         # Also add in the location to which `mach bootstrap` or
-        # `mach artifact toolchain` installs clang.
-        bootstrapped = []
-
-        bootstrap_clang_path = os.path.join(mozbuild_state_path, 'clang', 'bin')
-        bootstrapped.append(bootstrap_clang_path)
-
-        bootstrap_cbindgen_path = os.path.join(mozbuild_state_path, 'cbindgen')
-        bootstrapped.append(bootstrap_cbindgen_path)
-
-        bootstrap_nasm_path = os.path.join(mozbuild_state_path, 'nasm')
-        bootstrapped.append(bootstrap_nasm_path)
+        # `mach artifact toolchain` installs clang, cbindgen, etc.
+        bootstrapped = [
+            os.path.join(mozbuild_state_path, *rest) for rest in (
+                ['clang', 'bin'],
+                ['cbindgen'],
+                ['nasm'],
+                ['lucetc'],
+            )]
 
         # Also add the rustup install directory for cargo/rustc.
         rustup_path = os.path.expanduser(os.path.join('~', '.cargo', 'bin'))
