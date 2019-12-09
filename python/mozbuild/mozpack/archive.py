@@ -87,7 +87,7 @@ class _BZ2Proxy(object):
 
     def __init__(self, fp, compresslevel=9):
         self.fp = fp
-        self.compressor = bz2.BZ2Compressor(compresslevel=compresslevel)
+        self.compressor = bz2.BZ2Compressor(compresslevel)
         self.pos = 0
 
     def tell(self):
