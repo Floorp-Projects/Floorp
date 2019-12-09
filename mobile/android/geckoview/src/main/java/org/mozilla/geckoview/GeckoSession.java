@@ -141,7 +141,7 @@ public class GeckoSession implements Parcelable {
     private int mWidth;
     private int mHeight; // Height of the surface (including toolbar);
     private int mClientHeight; // Height of the client area (i.e. excluding toolbar);
-    private int mFixedBottomOffset; // The margin for fixed elements attached to the bottom of the viewport.
+    private int mFixedBottomOffset = 0; // The margin for fixed elements attached to the bottom of the viewport.
     private int mDynamicToolbarMaxHeight = 0; // The maximum height of the dynamic toolbar
     private float mViewportLeft;
     private float mViewportTop;
@@ -5512,7 +5512,9 @@ public class GeckoSession implements Parcelable {
             mToolbar.onCompositorReady();
         }
 
-        mCompositor.setFixedBottomOffset(mFixedBottomOffset);
+        if (mFixedBottomOffset != 0) {
+            mCompositor.setFixedBottomOffset(mFixedBottomOffset);
+        }
     }
 
     /* package */ void updateOverscrollVelocity(final float x, final float y) {
