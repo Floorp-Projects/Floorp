@@ -247,19 +247,24 @@ module.exports = {
     let scriptSrcs = [];
 
     // We use htmlparser as this ensures we find the script tags correctly.
-    let parser = new htmlparser.Parser({
-      onopentag(name, attribs) {
-        if (name === "script" && "src" in attribs) {
-          scriptSrcs.push({
-            src: attribs.src,
-            type:
-              "type" in attribs && attribs.type == "module"
-                ? "module"
-                : "script",
-          });
-        }
+    let parser = new htmlparser.Parser(
+      {
+        onopentag(name, attribs) {
+          if (name === "script" && "src" in attribs) {
+            scriptSrcs.push({
+              src: attribs.src,
+              type:
+                "type" in attribs && attribs.type == "module"
+                  ? "module"
+                  : "script",
+            });
+          }
+        },
       },
-    });
+      {
+        xmlMode: filePath.endsWith("xhtml"),
+      }
+    );
 
     parser.parseComplete(content);
 
