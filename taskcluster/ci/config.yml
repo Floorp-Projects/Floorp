@@ -145,6 +145,7 @@ treeherder:
         'test-info': 'Test manifest skip/fail information'
         'vismet': 'Visual Metrics Analysis'
         'condprof': 'Conditioned Profile Builder'
+        'doc': 'Documentation'
 
 index:
     products:
