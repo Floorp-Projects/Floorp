@@ -39,7 +39,7 @@ class DOM extends ContentProcessDomain {
     if (!Runtime) {
       throw new Error("Runtime domain is not instantiated");
     }
-    const obj = Runtime.getRemoteObject(objectId);
+    const obj = Runtime._getRemoteObject(objectId);
     if (!obj) {
       throw new Error("Cannot find object with id = " + objectId);
     }
@@ -65,7 +65,7 @@ class DOM extends ContentProcessDomain {
 
   getBoxModel({ objectId }) {
     const Runtime = this.session.domains.get("Runtime");
-    const obj = Runtime.getRemoteObject(objectId);
+    const obj = Runtime._getRemoteObject(objectId);
     const unsafeObject = obj.unsafeDereference();
     const bounding = unsafeObject.getBoundingClientRect();
     const model = {

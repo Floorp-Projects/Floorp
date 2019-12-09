@@ -30,8 +30,8 @@ class Runtime extends ContentProcessDomain {
     // [Execution context id (Number) => ExecutionContext instance]
     this.contexts = new Map();
 
-    this.onContextCreated = this.onContextCreated.bind(this);
-    this.onContextDestroyed = this.onContextDestroyed.bind(this);
+    this._onContextCreated = this._onContextCreated.bind(this);
+    this._onContextDestroyed = this._onContextDestroyed.bind(this);
   }
 
   destructor() {
@@ -45,13 +45,13 @@ class Runtime extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      this.contextObserver.on("context-created", this.onContextCreated);
-      this.contextObserver.on("context-destroyed", this.onContextDestroyed);
+      this.contextObserver.on("context-created", this._onContextCreated);
+      this.contextObserver.on("context-destroyed", this._onContextDestroyed);
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
       Services.tm.dispatchToMainThread(() => {
-        this.onContextCreated("context-created", {
+        this._onContextCreated("context-created", {
           id: this.content.windowUtils.currentInnerWindowID,
           window: this.content,
         });
@@ -62,8 +62,8 @@ class Runtime extends ContentProcessDomain {
   disable() {
     if (this.enabled) {
       this.enabled = false;
-      this.contextObserver.off("context-created", this.onContextCreated);
-      this.contextObserver.off("context-destroyed", this.onContextDestroyed);
+      this.contextObserver.off("context-created", this._onContextCreated);
+      this.contextObserver.off("context-destroyed", this._onContextDestroyed);
     }
   }
 
@@ -77,7 +77,7 @@ class Runtime extends ContentProcessDomain {
         );
       }
     } else {
-      context = this.getCurrentContext();
+      context = this._getCurrentContext();
     }
 
     if (typeof expression != "string") {
@@ -88,16 +88,6 @@ class Runtime extends ContentProcessDomain {
     }
 
     return context.evaluate(expression);
-  }
-
-  getRemoteObject(objectId) {
-    for (const ctx of this.contexts.values()) {
-      const obj = ctx.getRemoteObject(objectId);
-      if (typeof obj != "undefined") {
-        return obj;
-      }
-    }
-    return null;
   }
 
   releaseObject({ objectId }) {
@@ -173,6 +163,11 @@ class Runtime extends ContentProcessDomain {
     return null;
   }
 
+  /**
+   * Internal methods: the following methods are not part of CDP;
+   * note the _ prefix.
+   */
+
   get _debugger() {
     if (this.__debugger) {
       return this.__debugger;
@@ -181,12 +176,22 @@ class Runtime extends ContentProcessDomain {
     return this.__debugger;
   }
 
-  getCurrentContext() {
+  _getRemoteObject(objectId) {
+    for (const ctx of this.contexts.values()) {
+      const obj = ctx.getRemoteObject(objectId);
+      if (typeof obj != "undefined") {
+        return obj;
+      }
+    }
+    return null;
+  }
+
+  _getCurrentContext() {
     const { windowUtils } = this.content;
     return this.contexts.get(windowUtils.currentInnerWindowID);
   }
 
-  getContextByFrameId(frameId) {
+  _getContextByFrameId(frameId) {
     for (const ctx of this.contexts.values()) {
       if (ctx.frameId == frameId) {
         return ctx;
@@ -203,7 +208,7 @@ class Runtime extends ContentProcessDomain {
    * @param {Window} window
    *     The window object of the newly instantiated document.
    */
-  onContextCreated(name, { id, window }) {
+  _onContextCreated(name, { id, window }) {
     if (this.contexts.has(id)) {
       return;
     }
@@ -237,7 +242,7 @@ class Runtime extends ContentProcessDomain {
    *     The frame id of execution context to destroy.
    * Eiter `id` or `frameId` is passed.
    */
-  onContextDestroyed(name, { id, frameId }) {
+  _onContextDestroyed(name, { id, frameId }) {
     let context;
     if (id && frameId) {
       throw new Error("Expects only id *or* frameId argument to be passed");
@@ -246,7 +251,7 @@ class Runtime extends ContentProcessDomain {
     if (id) {
       context = this.contexts.get(id);
     } else {
-      context = this.getContextByFrameId(frameId);
+      context = this._getContextByFrameId(frameId);
     }
 
     if (context) {
