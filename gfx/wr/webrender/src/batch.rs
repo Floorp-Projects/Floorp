@@ -1254,6 +1254,7 @@ impl BatchBuilder {
                                         dirty_rect,
                                         clip_rect: device_clip_rect,
                                         z_id,
+                                        tile_id: tile.id,
                                     };
 
                                     composite_state.push_tile(tile, is_opaque);
