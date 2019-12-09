@@ -47,6 +47,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)moz
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$pkcs7unpad(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/pkcs7unpad.md
 $dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
@@ -55,6 +56,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotl
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray, kotlin.Int)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toSha1Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha1-digest.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toSha256Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha256-digest.md
 $dokka.location:mozilla.components.support.ktx.kotlin$tryGetHostFromUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/try-get-host-from-url.md
 $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$filterChanged(kotlinx.coroutines.flow.Flow((kotlin.collections.List((mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged.T)))), kotlin.Function1((mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged.T, mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged.R)))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/filter-changed.md

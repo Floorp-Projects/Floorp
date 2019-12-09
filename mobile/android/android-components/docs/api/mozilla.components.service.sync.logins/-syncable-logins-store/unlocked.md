@@ -2,7 +2,7 @@
 
 # unlocked
 
-`suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: suspend (store: `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L409)
+`suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: suspend (store: `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L424)
 
 Overrides [LockableStore.unlocked](../../mozilla.components.concept.sync/-lockable-store/unlocked.md)
 
