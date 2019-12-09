@@ -566,6 +566,7 @@ sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = g.browserIsRemote;
+    sandbox.browserIsFission = g.browserIsFission;
 
     try {
         sandbox.asyncPan = g.containingWindow.docShell.asyncPanZoomEnabled;
