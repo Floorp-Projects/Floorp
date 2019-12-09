@@ -123,7 +123,7 @@ class MIRGenerator {
   bool needsOverrecursedCheck() const { return needsOverrecursedCheck_; }
 
   void setNeedsStaticStackAlignment() { needsStaticStackAlignment_ = true; }
-  bool needsStaticStackAlignment() const { return needsOverrecursedCheck_; }
+  bool needsStaticStackAlignment() const { return needsStaticStackAlignment_; }
 
   bool modifiesFrameArguments() const { return modifiesFrameArguments_; }
 
