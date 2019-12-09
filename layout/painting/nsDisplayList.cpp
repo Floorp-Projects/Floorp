@@ -822,7 +822,13 @@ static Maybe<TransformData> CreateAnimationData(
   if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
       aFrame->StyleDisplay()->mTransformBox != StyleGeometryBox::ViewBox &&
       aFrame->StyleDisplay()->mTransformBox != StyleGeometryBox::BorderBox) {
-    framePosition = CSSPoint::FromAppUnits(aFrame->GetPosition());
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGContainer)) {
+      nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
+          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::FillBox);
+      framePosition = CSSPoint::FromAppUnits(nsPoint{boxRect.x, boxRect.y});
+    } else {
+      framePosition = CSSPoint::FromAppUnits(aFrame->GetPosition());
+    }
   }
 
   return Some(TransformData(origin, offsetToTransformOrigin, motionPathOrigin,
