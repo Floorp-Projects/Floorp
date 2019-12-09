@@ -229,6 +229,9 @@ class ClusterIterator {
 // Count the number of grapheme clusters in the given string
 uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 
+// Remove diacritics from a character
+uint32_t GetNaked(uint32_t aCh);
+
 // A simple reverse iterator for a string of char16_t codepoints that
 // advances by Unicode grapheme clusters
 class ClusterReverseIterator {

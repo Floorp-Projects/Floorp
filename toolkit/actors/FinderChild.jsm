@@ -28,6 +28,10 @@ class FinderChild extends JSWindowActorChild {
         this.finder.caseSensitive = data.caseSensitive;
         break;
 
+      case "Finder:MatchDiacritics":
+        this.finder.matchDiacritics = data.matchDiacritics;
+        break;
+
       case "Finder:EntireWord":
         this.finder.entireWord = data.entireWord;
         break;

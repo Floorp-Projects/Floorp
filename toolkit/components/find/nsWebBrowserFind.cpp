@@ -50,6 +50,7 @@ nsWebBrowserFind::nsWebBrowserFind()
       mWrapFind(false),
       mEntireWord(false),
       mMatchCase(false),
+      mMatchDiacritics(false),
       mSearchSubFrames(true),
       mSearchParentFrames(true) {}
 
@@ -283,6 +284,19 @@ nsWebBrowserFind::GetMatchCase(bool* aMatchCase) {
 NS_IMETHODIMP
 nsWebBrowserFind::SetMatchCase(bool aMatchCase) {
   mMatchCase = aMatchCase;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebBrowserFind::GetMatchDiacritics(bool* aMatchDiacritics) {
+  NS_ENSURE_ARG_POINTER(aMatchDiacritics);
+  *aMatchDiacritics = mMatchDiacritics;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebBrowserFind::SetMatchDiacritics(bool aMatchDiacritics) {
+  mMatchDiacritics = aMatchDiacritics;
   return NS_OK;
 }
 
@@ -622,6 +636,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   (void)find->SetCaseSensitive(mMatchCase);
+  (void)find->SetMatchDiacritics(mMatchDiacritics);
   (void)find->SetFindBackwards(mFindBackwards);
 
   (void)find->SetEntireWord(mEntireWord);

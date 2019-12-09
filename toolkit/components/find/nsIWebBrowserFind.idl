@@ -80,6 +80,13 @@ interface nsIWebBrowserFind : nsISupports
     attribute boolean matchCase;
 
     /**
+     * matchDiacritics
+     *
+     * Whether to match diacritics when searching. Default is false.
+     */
+    attribute boolean matchDiacritics;
+
+    /**
      * searchFrames
      *
      * Whether to search through all frames in the content area. Default is true.

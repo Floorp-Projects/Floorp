@@ -217,6 +217,12 @@ FinderParent.prototype = {
     });
   },
 
+  set matchDiacritics(aMatchDiacritics) {
+    this.sendMessageToAllContexts("Finder:MatchDiacritics", {
+      matchDiacritics: aMatchDiacritics,
+    });
+  },
+
   async setSearchStringToSelection() {
     return this.setToSelection("Finder:SetSearchStringToSelection", false);
   },
