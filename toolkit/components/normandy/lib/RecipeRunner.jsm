@@ -47,6 +47,7 @@ const SHIELD_ENABLED_PREF = `${PREF_PREFIX}.enabled`;
 const DEV_MODE_PREF = `${PREF_PREFIX}.dev_mode`;
 const API_URL_PREF = `${PREF_PREFIX}.api_url`;
 const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
+const LAST_BUILDID_PREF = `${PREF_PREFIX}.last_seen_buildid`;
 
 // Timer last update preference.
 // see https://searchfox.org/mozilla-central/rev/11cfa0462/toolkit/components/timermanager/UpdateTimerManager.jsm#8
@@ -102,11 +103,25 @@ var RecipeRunner = {
     // false.
     const firstRun = Services.prefs.getBoolPref(FIRST_RUN_PREF, true);
 
+    // If we've seen a build ID from a previous run that doesn't match the
+    // current build ID, run immediately. This is probably an upgrade or
+    // downgrade, which may cause recipe eligibility to change.
+    let lastSeenBuildID = Services.prefs.getCharPref(LAST_BUILDID_PREF, "");
+    let hasNewBuildID =
+      lastSeenBuildID && Services.appinfo.appBuildID != lastSeenBuildID;
+
+    if (hasNewBuildID || !lastSeenBuildID) {
+      Services.prefs.setCharPref(
+        LAST_BUILDID_PREF,
+        Services.appinfo.appBuildID
+      );
+    }
+
     // Dev mode is a mode used for development and QA that bypasses the normal
     // timer function of Normandy, to make testing more convenient.
     const devMode = Services.prefs.getBoolPref(DEV_MODE_PREF, false);
 
-    if (this.enabled && (devMode || firstRun)) {
+    if (this.enabled && (devMode || firstRun || hasNewBuildID)) {
       // In dev mode, if remote settings is enabled, force an immediate sync
       // before running. This ensures that the latest data is used for testing.
       // This is not needed for the first run case, because remote settings
@@ -117,7 +132,16 @@ var RecipeRunner = {
           await gRemoteSettingsClient.sync();
         }
       }
-      await this.run();
+      let trigger;
+      if (devMode) {
+        trigger = "devMode";
+      } else if (firstRun) {
+        trigger = "firstRun";
+      } else if (hasNewBuildID) {
+        trigger = "newBuildID";
+      }
+
+      await this.run({ trigger });
     }
 
     // Update the firstRun pref, to indicate that Normandy has run at least once
