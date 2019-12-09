@@ -1,0 +1,7 @@
+# All entries in this file are to suppress issues reported by object-size.
+# Blacklists for other reasons should go in separate blacklist files.
+
+[object-size]
+
+# bug 1577584
+src:*/gfx/harfbuzz/src/*
