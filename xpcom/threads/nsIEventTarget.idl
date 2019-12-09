@@ -9,6 +9,7 @@
 %{C++
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Atomics.h"
 %}
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
@@ -94,7 +95,7 @@ public:
   bool IsOnCurrentThread();
 
 protected:
-  PRThread* mVirtualThread;
+  mozilla::Atomic<PRThread*> mVirtualThread;
 
   nsIEventTarget() : mVirtualThread(nullptr) {}
   %}

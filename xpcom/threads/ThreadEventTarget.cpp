@@ -96,6 +96,8 @@ void ThreadEventTarget::SetCurrentThread() {
   mVirtualThread = GetCurrentVirtualThread();
 }
 
+void ThreadEventTarget::ClearCurrentThread() { mVirtualThread = nullptr; }
+
 NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget)
 
 NS_IMETHODIMP
