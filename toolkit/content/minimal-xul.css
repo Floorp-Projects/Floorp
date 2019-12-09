@@ -38,7 +38,11 @@
 }
 
 /* Rules required for style caching of anonymous content scrollbar parts */
-scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
+scrollcorner:-moz-native-anonymous-no-specificity,
+resizer:-moz-native-anonymous-no-specificity,
+scrollbar:-moz-native-anonymous-no-specificity,
+scrollbarbutton:-moz-native-anonymous-no-specificity,
+slider:-moz-native-anonymous-no-specificity {
   /* All scrollbar parts must not inherit any properties from the scrollable
    * element (except for visibility and pointer-events), for the anonymous
    * content style caching system to work.
@@ -109,7 +113,9 @@ thumb {
  * expecting them to inherit into its children.  Explicitly inherit those,
  * overriding the 'all: initial; direction: ltr;' declarations above.
  */
-scrollbarbutton, slider, thumb {
+scrollbarbutton:-moz-native-anonymous-no-specificity,
+slider:-moz-native-anonymous-no-specificity,
+thumb:-moz-native-anonymous-no-specificity {
   direction: inherit;
   cursor: inherit;
 }

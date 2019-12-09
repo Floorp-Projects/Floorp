@@ -41,7 +41,7 @@ let whitelist = [
   },
   {
     sourceName: /minimal-xul\.css$/i,
-    errorMessage: /Unknown property.*(-moz-list-reversed|-moz-min-font-size-ratio)/i,
+    errorMessage: /Unknown pseudo-class.*-moz-/i,
     isFromDevTools: false,
   },
   // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
