@@ -26,7 +26,7 @@ class nsPrintSettingsServiceX final : public nsPrintSettingsService {
    * printing are.
    */
   NS_IMETHODIMP SerializeToPrintData(
-      nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
+      nsIPrintSettings* aSettings,
       mozilla::embedding::PrintData* data) override;
 
   NS_IMETHODIMP DeserializeToPrintSettings(
@@ -45,7 +45,6 @@ class nsPrintSettingsServiceX final : public nsPrintSettingsService {
  private:
   /* Serialization done in parent to be deserialized in the child */
   nsresult SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                      nsIWebBrowserPrint* aWBP,
                                       mozilla::embedding::PrintData* data);
 };
 

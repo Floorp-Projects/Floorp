@@ -63,16 +63,13 @@ nsresult nsPrintingPromptService::Init() {
 
 NS_IMETHODIMP
 nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy* parent,
-                                         nsIWebBrowserPrint* webBrowserPrint,
                                          nsIPrintSettings* printSettings) {
-  NS_ENSURE_ARG(webBrowserPrint);
   NS_ENSURE_ARG(printSettings);
 
   nsCOMPtr<nsIPrintDialogService> dlgPrint(
       do_GetService(NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint)
-    return dlgPrint->Show(nsPIDOMWindowOuter::From(parent), printSettings,
-                          webBrowserPrint);
+    return dlgPrint->Show(nsPIDOMWindowOuter::From(parent), printSettings);
 
   return NS_ERROR_FAILURE;
 }

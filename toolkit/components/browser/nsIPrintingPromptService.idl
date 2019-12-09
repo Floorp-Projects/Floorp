@@ -90,7 +90,6 @@ interface nsIPrintingPromptService : nsISupports
    *
    */
   void showPrintDialog(in mozIDOMWindowProxy parent,
-                       in nsIWebBrowserPrint webBrowserPrint,
                        in nsIPrintSettings printSettings);
 
   /**

@@ -28,7 +28,6 @@ WIN_LIBS=                                       \
 #include <commdlg.h>
 
 #include "mozilla/BackgroundHangMonitor.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"
@@ -357,8 +356,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
 //----------------------------------------------------------------------------------
 //-- Show Print Dialog
 //----------------------------------------------------------------------------------
-nsresult NativeShowPrintDialog(HWND aHWnd, nsIWebBrowserPrint* aWebBrowserPrint,
-                               nsIPrintSettings* aPrintSettings) {
+nsresult NativeShowPrintDialog(HWND aHWnd, nsIPrintSettings* aPrintSettings) {
   nsresult rv = ShowNativePrintDialog(aHWnd, aPrintSettings);
   if (aHWnd) {
     ::DestroyWindow(aHWnd);

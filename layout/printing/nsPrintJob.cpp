@@ -922,8 +922,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         // NS_ERROR_NOT_IMPLEMENTED indicates they want default behavior
         // Any other error code means we must bail out
         //
-        nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
-        rv = printPromptService->ShowPrintDialog(domWin, wbp,
+        rv = printPromptService->ShowPrintDialog(domWin,
                                                  printData->mPrintSettings);
         //
         // ShowPrintDialog triggers an event loop which means we can't assume

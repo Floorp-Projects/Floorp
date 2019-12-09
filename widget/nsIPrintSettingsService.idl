@@ -115,14 +115,12 @@ interface nsIPrintSettingsService : nsISupports
   void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
 
   /**
-   * Given some nsIPrintSettings and (optionally) an nsIWebBrowserPrint,
+   * Given some nsIPrintSettings,
    * populates a PrintData representing them which can be sent over IPC. Values
    * are only ever read from aSettings and aWBP.
    *
    * @param aSettings
    *        An nsIPrintSettings for a print job.
-   * @param aWBP (optional)
-   *        The nsIWebBrowserPrint for the print job.
    * @param data
    *        Pointer to a pre-existing PrintData to populate.
    *
@@ -130,7 +128,6 @@ interface nsIPrintSettingsService : nsISupports
    */
   [noscript]
   void SerializeToPrintData(in nsIPrintSettings aPrintSettings,
-                            in nsIWebBrowserPrint aWebBrowserPrint,
                             in PrintDataPtr data);
 
   /**

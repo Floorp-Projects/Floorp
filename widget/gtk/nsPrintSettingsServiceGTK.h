@@ -20,7 +20,7 @@ class nsPrintSettingsServiceGTK final : public nsPrintSettingsService {
   nsPrintSettingsServiceGTK() {}
 
   NS_IMETHODIMP SerializeToPrintData(
-      nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
+      nsIPrintSettings* aSettings,
       mozilla::embedding::PrintData* data) override;
 
   NS_IMETHODIMP DeserializeToPrintSettings(

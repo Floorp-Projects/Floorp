@@ -15,7 +15,6 @@
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsCRT.h"
 
 #import <Cocoa/Cocoa.h>
@@ -34,8 +33,7 @@ NS_IMETHODIMP
 nsPrintDialogServiceX::Init() { return NS_OK; }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings,
-                            nsIWebBrowserPrint* aWebBrowserPrint) {
+nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   MOZ_ASSERT(aSettings, "aSettings must not be null");
