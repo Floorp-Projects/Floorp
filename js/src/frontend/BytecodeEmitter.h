@@ -510,7 +510,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitObjLiteralValue(ObjLiteralCreationData* data,
                                         ParseNode* value);
 
-  FieldInitializers setupFieldInitializers(ListNode* classMembers);
+  mozilla::Maybe<FieldInitializers> setupFieldInitializers(
+      ListNode* classMembers);
   MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj);
   MOZ_MUST_USE bool emitCreateFieldInitializers(ClassEmitter& ce,
                                                 ListNode* obj);
