@@ -55,7 +55,7 @@ TEST(AudioFocusManager, TestAudioFocusNumsWhenEnableAudioFocusManagement)
   ASSERT_TRUE(manager.GetAudioFocusNums() == 0);
 
   RefPtr<MediaController> controller1 =
-      new TabMediaController(FIRST_CONTROLLER_ID);
+      new MediaController(FIRST_CONTROLLER_ID);
   service->AddMediaController(controller1);
   manager.RequestAudioFocus(FIRST_CONTROLLER_ID);
   ASSERT_TRUE(manager.GetAudioFocusNums() == 1);
@@ -63,7 +63,7 @@ TEST(AudioFocusManager, TestAudioFocusNumsWhenEnableAudioFocusManagement)
   // When controller2 starts, it would win the audio focus from controller1. So
   // there would only one audio focus existing.
   RefPtr<MediaController> controller2 =
-      new TabMediaController(SECOND_CONTROLLER_ID);
+      new MediaController(SECOND_CONTROLLER_ID);
   service->AddMediaController(controller2);
   manager.RequestAudioFocus(SECOND_CONTROLLER_ID);
   ASSERT_TRUE(manager.GetAudioFocusNums() == 1);

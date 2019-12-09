@@ -12,7 +12,7 @@ using namespace mozilla::dom;
 
 TEST(MediaController, DefaultValueCheck)
 {
-  RefPtr<MediaController> controller = new TabMediaController(CONTROLLER_ID);
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
   ASSERT_TRUE(controller->Id() == CONTROLLER_ID);
   ASSERT_TRUE(!controller->IsPlaying());
@@ -21,7 +21,7 @@ TEST(MediaController, DefaultValueCheck)
 
 TEST(MediaController, NotifyMediaActiveChanged)
 {
-  RefPtr<MediaController> controller = new TabMediaController(CONTROLLER_ID);
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
 
   controller->NotifyMediaActiveChanged(true);
@@ -43,7 +43,7 @@ TEST(MediaController, ActiveAndDeactiveController)
   ASSERT_TRUE(service->GetControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
-      new TabMediaController(FIRST_CONTROLLER_ID);
+      new MediaController(FIRST_CONTROLLER_ID);
 
   controller1->NotifyMediaActiveChanged(true);
   ASSERT_TRUE(service->GetControllersNum() == 1);
@@ -54,7 +54,7 @@ TEST(MediaController, ActiveAndDeactiveController)
 
 TEST(MediaController, AudibleChanged)
 {
-  RefPtr<MediaController> controller = new TabMediaController(CONTROLLER_ID);
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   controller->Play();
   ASSERT_TRUE(!controller->IsAudible());
 
@@ -67,7 +67,7 @@ TEST(MediaController, AudibleChanged)
 
 TEST(MediaController, AlwaysInaudibleIfControllerIsNotPlaying)
 {
-  RefPtr<MediaController> controller = new TabMediaController(CONTROLLER_ID);
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(!controller->IsAudible());
 
   controller->NotifyMediaAudibleChanged(true);
@@ -88,7 +88,7 @@ TEST(MediaController, AlwaysInaudibleIfControllerIsNotPlaying)
 
 TEST(MediaController, playingStateChanged)
 {
-  RefPtr<MediaController> controller = new TabMediaController(CONTROLLER_ID);
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(!controller->IsPlaying());
 
   controller->Play();
