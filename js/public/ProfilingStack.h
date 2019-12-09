@@ -17,7 +17,7 @@
 #include "js/Utility.h"
 
 class JS_PUBLIC_API JSTracer;
-class ProfilingStack;
+class JS_FRIEND_API ProfilingStack;
 
 // This file defines the classes ProfilingStack and ProfilingStackFrame.
 // The ProfilingStack manages an array of ProfilingStackFrames.
@@ -395,7 +395,7 @@ JS_FRIEND_API void SetProfilingThreadCallbacks(
 // - When popping an old frame, the only operation is the decrementing of the
 //   stack pointer, which is obviously atomic.
 //
-class ProfilingStack final {
+class JS_FRIEND_API ProfilingStack final {
  public:
   ProfilingStack() : stackPointer(0) {}
 
