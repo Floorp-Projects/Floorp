@@ -806,6 +806,26 @@ class JitHeapThreshold : public HeapThreshold {
   explicit JitHeapThreshold(size_t bytes) { bytes_ = bytes; }
 };
 
+struct SharedMemoryUse {
+  explicit SharedMemoryUse(MemoryUse use) : count(0), nbytes(0) {
+#ifdef DEBUG
+    this->use = use;
+#endif
+  }
+
+  size_t count;
+  size_t nbytes;
+#ifdef DEBUG
+  MemoryUse use;
+#endif
+};
+
+// A map which tracks shared memory uses (shared in the sense that an allocation
+// can be referenced by more than one GC thing in a zone). This allows us to
+// only account for the memory once.
+using SharedMemoryMap =
+    HashMap<void*, SharedMemoryUse, DefaultHasher<void*>, SystemAllocPolicy>;
+
 #ifdef DEBUG
 
 // Counts memory associated with GC things in a zone.

@@ -138,6 +138,10 @@ class ZoneAllocator : public JS::shadow::Zone,
 #endif
   }
 
+  // Account for allocations that may be referenced by more than one GC thing.
+  bool addSharedMemory(void* mem, size_t nbytes, MemoryUse use);
+  void removeSharedMemory(void* mem, size_t nbytes, MemoryUse use);
+
   void incJitMemory(size_t nbytes) {
     MOZ_ASSERT(nbytes);
     jitHeapSize.addBytes(nbytes);
@@ -167,36 +171,39 @@ class ZoneAllocator : public JS::shadow::Zone,
 
  public:
   // The size of allocated GC arenas in this zone.
-  js::gc::HeapSize gcHeapSize;
+  gc::HeapSize gcHeapSize;
 
   // Threshold used to trigger GC based on GC heap size.
-  js::gc::GCHeapThreshold gcHeapThreshold;
+  gc::GCHeapThreshold gcHeapThreshold;
 
   // Amount of data to allocate before triggering a new incremental slice for
   // the current GC.
-  js::MainThreadData<size_t> gcDelayBytes;
+  MainThreadData<size_t> gcDelayBytes;
 
   // Amount of malloc data owned by GC things in this zone, including external
   // allocations supplied by JS::AddAssociatedMemory.
-  js::gc::HeapSize mallocHeapSize;
+  gc::HeapSize mallocHeapSize;
 
   // Threshold used to trigger GC based on malloc allocations.
-  js::gc::MallocHeapThreshold mallocHeapThreshold;
+  gc::MallocHeapThreshold mallocHeapThreshold;
 
   // Amount of exectuable JIT code owned by GC things in this zone.
-  js::gc::HeapSize jitHeapSize;
+  gc::HeapSize jitHeapSize;
 
   // Threshold used to trigger GC based on JIT allocations.
-  js::gc::JitHeapThreshold jitHeapThreshold;
+  gc::JitHeapThreshold jitHeapThreshold;
+
+  // Use counts for memory that can be referenced by more than one GC thing.
+  gc::SharedMemoryMap sharedMemoryUseCounts;
 
  private:
 #ifdef DEBUG
   // In debug builds, malloc allocations can be tracked to make debugging easier
   // (possible?) if allocation and free sizes don't balance.
-  js::gc::MemoryTracker mallocTracker;
+  gc::MemoryTracker mallocTracker;
 #endif
 
-  friend class js::gc::GCRuntime;
+  friend class GCRuntime;
 };
 
 /*
