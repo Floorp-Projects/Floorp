@@ -6175,16 +6175,16 @@ class TransactionBase {
   uint64_t mActiveRequestCount;
   Atomic<bool> mInvalidatedOnAnyThread;
   const Mode mMode;
-  bool mHasBeenActive;
-  bool mHasBeenActiveOnConnectionThread;
-  bool mActorDestroyed;
-  bool mInvalidated;
+  FlippedOnce<false> mInitialized;
+  FlippedOnce<false> mHasBeenActiveOnConnectionThread;
+  FlippedOnce<false> mActorDestroyed;
+  FlippedOnce<false> mInvalidated;
 
  protected:
   nsresult mResultCode;
-  bool mCommitOrAbortReceived;
-  bool mCommittedOrAborted;
-  bool mForceAborted;
+  FlippedOnce<false> mCommitOrAbortReceived;
+  FlippedOnce<false> mCommittedOrAborted;
+  FlippedOnce<false> mForceAborted;
 
  public:
   void AssertIsOnConnectionThread() const {
@@ -6209,17 +6209,17 @@ class TransactionBase {
   // May be called on any thread, but is more expensive than IsInvalidated().
   bool IsInvalidatedOnAnyThread() const { return mInvalidatedOnAnyThread; }
 
-  void SetActive(uint64_t aTransactionId) {
+  void Init(const uint64_t aTransactionId) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aTransactionId);
 
     mTransactionId = aTransactionId;
-    mHasBeenActive = true;
+    mInitialized.Flip();
   }
 
   void SetActiveOnConnectionThread() {
     AssertIsOnConnectionThread();
-    mHasBeenActiveOnConnectionThread = true;
+    mHasBeenActiveOnConnectionThread.Flip();
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
@@ -6286,14 +6286,13 @@ class TransactionBase {
 
   void NoteActorDestroyed() {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(!mActorDestroyed);
 
-    mActorDestroyed = true;
+    mActorDestroyed.Flip();
   }
 
 #ifdef DEBUG
   // Only called by VersionChangeTransaction.
-  void FakeActorDestroyed() { mActorDestroyed = true; }
+  void FakeActorDestroyed() { mActorDestroyed.EnsureFlipped(); }
 #endif
 
   bool RecvCommit();
@@ -13508,7 +13507,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
       transaction->LoggingSerialNumber(), aObjectStoreNames,
       aMode != IDBTransaction::Mode::ReadOnly);
 
-  transaction->SetActive(transactionId);
+  transaction->Init(transactionId);
 
   if (NS_WARN_IF(!RegisterTransaction(transaction))) {
     IDB_REPORT_INTERNAL_ERR();
@@ -13679,14 +13678,7 @@ TransactionBase::TransactionBase(Database* aDatabase, Mode aMode)
       mActiveRequestCount(0),
       mInvalidatedOnAnyThread(false),
       mMode(aMode),
-      mHasBeenActive(false),
-      mHasBeenActiveOnConnectionThread(false),
-      mActorDestroyed(false),
-      mInvalidated(false),
-      mResultCode(NS_OK),
-      mCommitOrAbortReceived(false),
-      mCommittedOrAborted(false),
-      mForceAborted(false) {
+      mResultCode(NS_OK) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(mLoggingSerialNumber);
@@ -13695,7 +13687,7 @@ TransactionBase::TransactionBase(Database* aDatabase, Mode aMode)
 TransactionBase::~TransactionBase() {
   MOZ_ASSERT(!mActiveRequestCount);
   MOZ_ASSERT(mActorDestroyed);
-  MOZ_ASSERT_IF(mHasBeenActive, mCommittedOrAborted);
+  MOZ_ASSERT_IF(mInitialized, mCommittedOrAborted);
 }
 
 void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
@@ -13707,7 +13699,7 @@ void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
   }
 
   if (aForce) {
-    mForceAborted = true;
+    mForceAborted.EnsureFlipped();
   }
 
   MaybeCommitOrAbort();
@@ -13721,7 +13713,7 @@ bool TransactionBase::RecvCommit() {
     return false;
   }
 
-  mCommitOrAbortReceived = true;
+  mCommitOrAbortReceived.Flip();
 
   MaybeCommitOrAbort();
   return true;
@@ -13746,7 +13738,7 @@ bool TransactionBase::RecvAbort(nsresult aResultCode) {
     return false;
   }
 
-  mCommitOrAbortReceived = true;
+  mCommitOrAbortReceived.Flip();
 
   Abort(aResultCode, /* aForce */ false);
   return true;
@@ -13754,11 +13746,10 @@ bool TransactionBase::RecvAbort(nsresult aResultCode) {
 
 void TransactionBase::CommitOrAbort() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mCommittedOrAborted);
 
-  mCommittedOrAborted = true;
+  mCommittedOrAborted.Flip();
 
-  if (!mHasBeenActive) {
+  if (!mInitialized) {
     return;
   }
 
@@ -14285,7 +14276,7 @@ void TransactionBase::Invalidate() {
   MOZ_ASSERT(mInvalidated == mInvalidatedOnAnyThread);
 
   if (!mInvalidated) {
-    mInvalidated = true;
+    mInvalidated.Flip();
     mInvalidatedOnAnyThread = true;
 
     Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, /* aForce */ false);
@@ -14528,7 +14519,7 @@ void NormalTransaction::ActorDestroy(ActorDestroyReason aWhy) {
       mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    mForceAborted = true;
+    mForceAborted.EnsureFlipped();
 
     MaybeCommitOrAbort();
   }
@@ -14790,7 +14781,7 @@ void VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy) {
       mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    mForceAborted = true;
+    mForceAborted.EnsureFlipped();
 
     MaybeCommitOrAbort();
   }
@@ -21243,7 +21234,7 @@ nsresult OpenDatabaseOp::DispatchToWorkThread() {
   mVersionChangeOp = versionChangeOp;
 
   mVersionChangeTransaction->NoteActiveRequest();
-  mVersionChangeTransaction->SetActive(transactionId);
+  mVersionChangeTransaction->Init(transactionId);
 
   return NS_OK;
 }
