@@ -11,94 +11,12 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-1.28:
-    treeherder:
-        symbol: TL(rust-1.28)
-    run:
-        arguments: [
-            '--channel', '1.28.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.31:
-    treeherder:
-        symbol: TL(rust-1.31)
-    run:
-        arguments: [
-            '--channel', '1.31.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.32:
-    treeherder:
-        symbol: TL(rust-1.32)
-    run:
-        arguments: [
-            '--channel', '1.32.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.34:
-    treeherder:
-        symbol: TL(rust-1.34)
-    run:
-        arguments: [
-            '--channel', '1.34.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.35:
-    treeherder:
-        symbol: TL(rust-1.35)
-    run:
-        arguments: [
-            '--channel', '1.35.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.36:
-    treeherder:
-        symbol: TL(rust-1.36)
-    run:
-        arguments: [
-            '--channel', '1.36.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
 linux64-rust-1.37:
     treeherder:
         symbol: TL(rust-1.37)
     run:
         arguments: [
             '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
-linux64-rust-1.38:
-    treeherder:
-        symbol: TL(rust-1.38.0)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -130,54 +48,6 @@ linux64-rust-nightly:
             '--target', 'i686-unknown-linux-gnu',
         ]
 
-linux64-rust-macos-1.31:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.31)
-    run:
-        arguments: [
-            '--channel', '1.31.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
-linux64-rust-macos-1.32:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.32)
-    run:
-        arguments: [
-            '--channel', '1.32.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
-linux64-rust-macos-1.34:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.34)
-    run:
-        arguments: [
-            '--channel', '1.34.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
-linux64-rust-macos-1.35:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.35)
-    run:
-        arguments: [
-            '--channel', '1.35.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
 linux64-rust-cross-1.39:
     description: "rust repack with macos and windows cross support"
     treeherder:
@@ -193,42 +63,6 @@ linux64-rust-cross-1.39:
             '--target', 'aarch64-pc-windows-msvc',
         ]
 
-linux64-rust-macos-1.36:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.36)
-    run:
-        arguments: [
-            '--channel', '1.36.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
-linux64-rust-macos-1.37:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
-linux64-rust-macos-1.38:
-    description: "rust repack with macos-cross support"
-    treeherder:
-        symbol: TL(rust-macos-1.38)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-        ]
-
 linux64-rust-macos-1.39:
     description: "rust repack with macos-cross support"
     treeherder:
@@ -241,38 +75,6 @@ linux64-rust-macos-1.39:
             '--target', 'x86_64-apple-darwin',
         ]
         toolchain-alias: linux64-rust-macos
-
-linux64-rust-android-1.37:
-    description: "rust repack with android-cross support"
-    treeherder:
-        symbol: TL(rust-android-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'armv7-linux-androideabi',
-            '--target', 'thumbv7neon-linux-androideabi',
-            '--target', 'aarch64-linux-android',
-            '--target', 'i686-linux-android',
-            '--target', 'x86_64-linux-android',
-        ]
-
-linux64-rust-android-1.38:
-    description: "rust repack with android-cross support"
-    treeherder:
-        symbol: TL(rust-android-1.38)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'armv7-linux-androideabi',
-            '--target', 'thumbv7neon-linux-androideabi',
-            '--target', 'aarch64-linux-android',
-            '--target', 'i686-linux-android',
-            '--target', 'x86_64-linux-android',
-        ]
 
 linux64-rust-android-1.39:
     description: "rust repack with android-cross support"
@@ -291,32 +93,6 @@ linux64-rust-android-1.39:
         ]
         toolchain-alias: linux64-rust-android
 
-linux64-rust-windows-1.37:
-    description: "rust repack with windows-cross support"
-    treeherder:
-        symbol: TL(rust-win-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-        ]
-
-linux64-rust-windows-1.38:
-    description: "rust repack with windows-cross support"
-    treeherder:
-        symbol: TL(rust-win-1.38)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-        ]
-
 linux64-rust-windows-1.39:
     description: "rust repack with windows-cross support"
     treeherder:
@@ -331,53 +107,6 @@ linux64-rust-windows-1.39:
         ]
         toolchain-alias: linux64-rust-windows
 
-win64-rust-1.28:
-    treeherder:
-        symbol: TW64(rust-1.28)
-    run:
-        arguments: [
-            '--channel', '1.28.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-        ]
-
-win64-rust-1.34:
-    treeherder:
-        symbol: TW64(rust-1.34)
-    run:
-        arguments: [
-            '--channel', '1.34.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-        ]
-
-win64-rust-1.37:
-    treeherder:
-        symbol: TW64(rust-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-        ]
-
-win64-rust-1.38:
-    treeherder:
-        symbol: TW64(rust-1.38)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-        ]
-
 win64-rust-1.39:
     treeherder:
         symbol: TW64(rust)
@@ -390,45 +119,6 @@ win64-rust-1.39:
             '--target', 'aarch64-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
-
-mingw32-rust-1.31:
-    treeherder:
-        symbol: TMW(rust-1.31)
-    run:
-        arguments: [
-            '--channel', '1.31.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'i686-pc-windows-gnu',
-            '--target', 'x86_64-pc-windows-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-        ]
-
-mingw32-rust-1.37:
-    treeherder:
-        symbol: TMW(rust-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'i686-pc-windows-gnu',
-            '--target', 'x86_64-pc-windows-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-        ]
-
-mingw32-rust-1.38:
-    treeherder:
-        symbol: TMW(rust-1.38)
-    run:
-        arguments: [
-            '--channel', '1.38.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'i686-pc-windows-gnu',
-            '--target', 'x86_64-pc-windows-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-        ]
 
 mingw32-rust-1.39:
     treeherder:
