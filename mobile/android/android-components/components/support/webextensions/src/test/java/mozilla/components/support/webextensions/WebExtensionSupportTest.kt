@@ -290,7 +290,7 @@ class WebExtensionSupportTest {
         assertNotNull(popupSessionId)
 
         // Select different tab
-        store.dispatch(TabListAction.SelectTabAction("otherTab"))
+        store.dispatch(TabListAction.SelectTabAction("otherTab")).joinBlocking()
 
         // Toggling again should select popup tab
         delegateCaptor.value.onToggleBrowserActionPopup(ext, engineSession, browserAction)
