@@ -27,10 +27,13 @@ def enable_coalescing(config, jobs):
     metadata.
     """
     for job in jobs:
-        if int(config.params['level']) > 1:
-            job['coalesce'] = {
-                'job-identifier': sha256(job["label"]).hexdigest()[:20],
-                'age': 3600,
-                'size': 5,
-            }
+        # TODO: Identify why coalescing became much more frequent (bug 1602446) or
+        #       disable it for backfills, retriggers and manually requested tasks
+        #       (bug 1397389).
+        # if int(config.params['level']) > 1:
+        #     job['coalesce'] = {
+        #         'job-identifier': sha256(job["label"]).hexdigest()[:20],
+        #         'age': 3600,
+        #         'size': 5,
+        #     }
         yield job
