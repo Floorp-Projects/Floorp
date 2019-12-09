@@ -460,13 +460,21 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
 
-  nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
-
   // Note: This may need to be updated if we support more transform-box.
-  bool tweakForSVGLayout =
-      (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
+  Maybe<CSSPoint> tweakForSVG;
+  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
       display->mTransformBox != StyleGeometryBox::ViewBox &&
-      display->mTransformBox != StyleGeometryBox::BorderBox;
+      display->mTransformBox != StyleGeometryBox::BorderBox) {
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGContainer)) {
+      nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
+          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::FillBox);
+      tweakForSVG = Some(CSSPoint::FromAppUnits(nsPoint{boxRect.x, boxRect.y}));
+    } else {
+      tweakForSVG = Some(CSSPoint::FromAppUnits(aFrame->GetPosition()));
+    }
+  }
+
+  nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
 
   // FIXME: It's possible to refactor the calculation of transform-origin, so we
   // could calculate from the caller, and reuse the value in nsDisplayList.cpp.
@@ -478,8 +486,7 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
       GenerateOffsetPathData(aFrame), display->mOffsetDistance,
       display->mOffsetRotate, display->mOffsetAnchor, transformOrigin,
       CSSSize::FromAppUnits(nsSize(refBox.Width(), refBox.Height())),
-      tweakForSVGLayout ? Some(CSSPoint::FromAppUnits(aFrame->GetPosition()))
-                        : Nothing());
+      tweakForSVG);
 }
 
 static OffsetPathData GenerateOffsetPathData(
