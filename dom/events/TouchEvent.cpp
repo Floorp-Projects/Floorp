@@ -207,7 +207,8 @@ bool TouchEvent::PlatformSupportsTouch() {
   // On Windows and GTK3 we auto-detect based on device support.
   if (!sDidCheckTouchDeviceSupport) {
     sDidCheckTouchDeviceSupport = true;
-    sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
+    sIsTouchDeviceSupportPresent =
+        widget::WidgetUtils::IsTouchDeviceSupportPresent();
     // But touch events are only actually supported if APZ is enabled. If
     // APZ is disabled globally, we can check that once and incorporate that
     // into the cached state. If APZ is enabled, we need to further check
@@ -222,6 +223,8 @@ bool TouchEvent::PlatformSupportsTouch() {
 
 // static
 bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
   static bool sPrefCached = false;
   static int32_t sPrefCacheValue = 0;
 
