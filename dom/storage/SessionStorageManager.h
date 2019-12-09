@@ -51,7 +51,6 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
                      const nsACString& aOriginScope);
 
   nsresult GetSessionStorageCacheHelper(nsIPrincipal* aPrincipal,
-                                        nsIPrincipal* aStoragePrincipal,
                                         bool aMakeIfNeeded,
                                         SessionStorageCache* aCloneFrom,
                                         RefPtr<SessionStorageCache>* aRetVal);
