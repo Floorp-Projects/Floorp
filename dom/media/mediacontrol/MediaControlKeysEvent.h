@@ -57,7 +57,7 @@ class MediaControlKeysEventSource : public nsISupports {
   virtual void AddListener(MediaControlKeysEventListener* aListener);
   virtual void RemoveListener(MediaControlKeysEventListener* aListener);
   size_t GetListenersNum() const;
-  void Close();
+  virtual void Close();
 
  protected:
   virtual ~MediaControlKeysEventSource() = default;

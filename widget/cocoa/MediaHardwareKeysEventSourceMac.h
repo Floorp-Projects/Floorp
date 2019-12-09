@@ -18,12 +18,15 @@ class MediaHardwareKeysEventSourceMac final
     : public mozilla::dom::MediaControlKeysEventSource {
  public:
   MediaHardwareKeysEventSourceMac();
-  ~MediaHardwareKeysEventSourceMac();
 
   static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type,
                                      CGEventRef event, void* refcon);
 
+  void Close() override;
+
  private:
+  ~MediaHardwareKeysEventSourceMac() = default;
+
   void StartEventTap();
   void StopEventTap();
 

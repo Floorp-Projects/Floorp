@@ -70,9 +70,10 @@ MediaHardwareKeysEventSourceMac::MediaHardwareKeysEventSourceMac() {
   StartEventTap();
 }
 
-MediaHardwareKeysEventSourceMac::~MediaHardwareKeysEventSourceMac() {
-  LOG("Destroy MediaHardwareKeysEventSourceMac");
+void MediaHardwareKeysEventSourceMac::Close() {
+  LOG("Close MediaHardwareKeysEventSourceMac");
   StopEventTap();
+  MediaControlKeysEventSource::Close();
 }
 
 void MediaHardwareKeysEventSourceMac::StartEventTap() {
