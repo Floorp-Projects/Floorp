@@ -101,6 +101,7 @@ py2commands="
     wpt-metadata-merge
     wpt-metadata-summary
     wpt-serve
+    wpt-test-paths
     wpt-unittest
     wpt-update
     xpcshell-test
