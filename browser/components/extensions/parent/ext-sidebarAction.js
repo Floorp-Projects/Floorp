@@ -421,6 +421,24 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   /**
+   * Toogles this sidebar action for the given window
+   *
+   * @param {ChromeWindow} window
+   */
+  toggle(window) {
+    let { SidebarUI } = window;
+    if (!SidebarUI || !this.extension.canAccessWindow(window)) {
+      return;
+    }
+
+    if (!this.isOpen(window)) {
+      SidebarUI.show(this.id);
+    } else {
+      SidebarUI.hide();
+    }
+  }
+
+  /**
    * Checks whether this sidebar action is open in the given window.
    *
    * @param {ChromeWindow} window
@@ -485,6 +503,13 @@ this.sidebarAction = class extends ExtensionAPI {
           let window = windowTracker.topWindow;
           if (context.canAccessWindow(window)) {
             sidebarAction.close(window);
+          }
+        },
+
+        toggle() {
+          let window = windowTracker.topWindow;
+          if (context.canAccessWindow(window)) {
+            sidebarAction.toggle(window);
           }
         },
 
