@@ -17,9 +17,9 @@ TEST(MediaControlService, TestAddOrRemoveControllers)
   ASSERT_TRUE(service->GetControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
-      new TabMediaController(FIRST_CONTROLLER_ID);
+      new MediaController(FIRST_CONTROLLER_ID);
   RefPtr<MediaController> controller2 =
-      new TabMediaController(SECOND_CONTROLLER_ID);
+      new MediaController(SECOND_CONTROLLER_ID);
 
   service->AddMediaController(controller1);
   ASSERT_TRUE(service->GetControllersNum() == 1);
@@ -40,14 +40,14 @@ TEST(MediaControlService, TestLastAddedController)
   ASSERT_TRUE(service->GetControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
-      new TabMediaController(FIRST_CONTROLLER_ID);
+      new MediaController(FIRST_CONTROLLER_ID);
   service->AddMediaController(controller1);
 
   RefPtr<MediaController> lastController = service->GetLastAddedController();
   ASSERT_TRUE(lastController->Id() == FIRST_CONTROLLER_ID);
 
   RefPtr<MediaController> controller2 =
-      new TabMediaController(SECOND_CONTROLLER_ID);
+      new MediaController(SECOND_CONTROLLER_ID);
   service->AddMediaController(controller2);
 
   lastController = service->GetLastAddedController();
