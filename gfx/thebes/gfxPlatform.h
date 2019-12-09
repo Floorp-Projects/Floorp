@@ -15,7 +15,6 @@
 #include "nsUnicodeScriptCodes.h"
 
 #include "gfxTypes.h"
-#include "gfxFontFamilyList.h"
 #include "gfxBlur.h"
 #include "gfxSkipChars.h"
 #include "nsRect.h"
@@ -44,6 +43,7 @@ class gfxTextPerfMetrics;
 typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
+class FontFamilyList;
 namespace layers {
 class FrameStats;
 }
