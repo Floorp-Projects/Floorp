@@ -131,7 +131,14 @@ class RC<T, AtomicRefCount, Recording> {
       // acquire semantics to synchronize with the memory released by
       // the last release on other threads, that is, to ensure that
       // writes prior to that release are now visible on this thread.
+#ifdef MOZ_TSAN
+      // TSan doesn't understand std::atomic_thread_fence, so in order
+      // to avoid a false positive for every time a refcounted object
+      // is deleted, we replace the fence with an atomic operation.
+      mValue.load(std::memory_order_acquire);
+#else
       std::atomic_thread_fence(std::memory_order_acquire);
+#endif
     }
     return result;
   }
