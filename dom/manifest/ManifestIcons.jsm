@@ -70,6 +70,11 @@ async function getIcon(aWindow, icons, expectedSize) {
 
 async function fetchIcon(aWindow, src) {
   const iconURL = new aWindow.URL(src, aWindow.location);
+  // If this is already a data URL then no need to load it again.
+  if (iconURL.protocol === "data:") {
+    return iconURL.href;
+  }
+
   const request = new aWindow.Request(iconURL, { mode: "cors" });
   request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_IMAGE);
   const response = await aWindow.fetch(request);
