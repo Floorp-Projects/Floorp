@@ -967,6 +967,10 @@ void BaseScript::traceChildren(JSTracer* trc) {
   TraceNullableEdge(trc, &sourceObject_, "sourceObject");
 
   warmUpData_.trace(trc);
+
+  if (data_) {
+    data_->trace(trc);
+  }
 }
 
 void LazyScript::traceChildren(JSTracer* trc) {
@@ -975,10 +979,6 @@ void LazyScript::traceChildren(JSTracer* trc) {
 
   if (trc->traceWeakEdges()) {
     TraceNullableEdge(trc, &script_, "script");
-  }
-
-  if (data_) {
-    data_->trace(trc);
   }
 
   if (trc->isMarkingTracer()) {
@@ -994,8 +994,6 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
 
   thing->warmUpData_.trace(this);
 
-  // script_ is weak so is not traced here.
-
   if (thing->data_) {
     // Traverse the PrivateScriptData::gcthings() array.
     for (JS::GCCellPtr& elem : thing->data_->gcthings()) {
@@ -1008,6 +1006,8 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
       }
     }
   }
+
+  // script_ is weak so is not traced here.
 
   markImplicitEdges(thing);
 }
