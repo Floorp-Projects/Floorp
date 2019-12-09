@@ -60,13 +60,7 @@ const char XPC_SCRIPT_ERROR_CONTRACTID[] = "@mozilla.org/scripterror;1";
 
 /***************************************************************************/
 
-// This global should be used very sparingly: only to create and destroy
-// nsXPConnect.
-static XPCJSContext* gContext;
-
 nsXPConnect::nsXPConnect() : mShuttingDown(false) {
-  XPCJSContext::InitTLS();
-
 #ifdef MOZ_GECKO_PROFILER
   JS::SetProfilingThreadCallbacks(profiler_register_thread,
                                   profiler_unregister_thread);
@@ -75,13 +69,13 @@ nsXPConnect::nsXPConnect() : mShuttingDown(false) {
 
 // static
 void nsXPConnect::InitJSContext() {
-  MOZ_ASSERT(!gContext);
+  MOZ_ASSERT(!gSelf->mContext);
 
   XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext();
   if (!xpccx) {
     MOZ_CRASH("Couldn't create XPCJSContext.");
   }
-  gContext = xpccx;
+  gSelf->mContext = xpccx;
   gSelf->mRuntime = xpccx->Runtime();
 
   // Initialize our singleton scopes.
@@ -98,7 +92,6 @@ void nsXPConnect::InitJSContext() {
 void xpc::InitializeJSContext() { nsXPConnect::InitJSContext(); }
 
 nsXPConnect::~nsXPConnect() {
-  MOZ_ASSERT(XPCJSContext::Get() == gContext);
   MOZ_ASSERT(mRuntime);
 
   mRuntime->DeleteSingletonScopes();
@@ -127,7 +120,7 @@ nsXPConnect::~nsXPConnect() {
   // shutdown the logging system
   XPC_LOG_FINISH();
 
-  delete gContext;
+  delete mContext;
 
   MOZ_ASSERT(gSelf == this);
   gSelf = nullptr;
