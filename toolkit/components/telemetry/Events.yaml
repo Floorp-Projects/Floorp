@@ -620,7 +620,8 @@ pwmgr:
     ]
     bug_numbers:
       - 1548463
-    expiry_version: "74"
+      - 1600958
+    expiry_version: never
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
     products:
