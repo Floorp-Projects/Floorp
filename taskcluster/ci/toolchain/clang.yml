@@ -105,6 +105,7 @@ linux64-clang-8-mingw-x86:
             - mingw-w64
             - libunwind
             - llvm-mingw
+            - gcc-9.1.0
         toolchain:
             - linux64-gcc-7
 
@@ -128,6 +129,7 @@ linux64-clang-8-mingw-x64:
             - mingw-w64
             - libunwind
             - llvm-mingw
+            - gcc-9.1.0
         toolchain:
             - linux64-gcc-7
 
