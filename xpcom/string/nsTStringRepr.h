@@ -124,8 +124,8 @@ class nsTStringRepr {
   typedef StringClassFlags ClassFlags;
 
   // Reading iterators.
-  constexpr const_char_iterator BeginReading() const { return mData; }
-  constexpr const_char_iterator EndReading() const { return mData + mLength; }
+  const_char_iterator BeginReading() const { return mData; }
+  const_char_iterator EndReading() const { return mData + mLength; }
 
   // Deprecated reading iterators.
   const_iterator& BeginReading(const_iterator& aIter) const {
@@ -163,32 +163,26 @@ class nsTStringRepr {
 #endif
 
   // Returns pointer to string data (not necessarily null-terminated)
-  constexpr const typename raw_type<T, int>::type Data() const { return mData; }
+  const typename raw_type<T, int>::type Data() const { return mData; }
 
-  constexpr size_type Length() const { return mLength; }
+  size_type Length() const { return mLength; }
 
-  constexpr DataFlags GetDataFlags() const { return mDataFlags; }
+  DataFlags GetDataFlags() const { return mDataFlags; }
 
-  constexpr bool IsEmpty() const { return mLength == 0; }
+  bool IsEmpty() const { return mLength == 0; }
 
-  constexpr bool IsLiteral() const {
-    return !!(mDataFlags & DataFlags::LITERAL);
-  }
+  bool IsLiteral() const { return !!(mDataFlags & DataFlags::LITERAL); }
 
-  constexpr bool IsVoid() const { return !!(mDataFlags & DataFlags::VOIDED); }
+  bool IsVoid() const { return !!(mDataFlags & DataFlags::VOIDED); }
 
-  constexpr bool IsTerminated() const {
-    return !!(mDataFlags & DataFlags::TERMINATED);
-  }
+  bool IsTerminated() const { return !!(mDataFlags & DataFlags::TERMINATED); }
 
-  constexpr char_type CharAt(index_type aIndex) const {
+  char_type CharAt(index_type aIndex) const {
     NS_ASSERTION(aIndex < mLength, "index exceeds allowable range");
     return mData[aIndex];
   }
 
-  constexpr char_type operator[](index_type aIndex) const {
-    return CharAt(aIndex);
-  }
+  char_type operator[](index_type aIndex) const { return CharAt(aIndex); }
 
   char_type First() const;
 
@@ -353,15 +347,14 @@ Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
         const nsTStringComparator<T>& = nsTDefaultStringComparator<T>());
 
 template <typename T>
-inline constexpr bool operator!=(
-    const mozilla::detail::nsTStringRepr<T>& aLhs,
-    const mozilla::detail::nsTStringRepr<T>& aRhs) {
+inline bool operator!=(const mozilla::detail::nsTStringRepr<T>& aLhs,
+                       const mozilla::detail::nsTStringRepr<T>& aRhs) {
   return !aLhs.Equals(aRhs);
 }
 
 template <typename T>
-inline constexpr bool operator!=(const mozilla::detail::nsTStringRepr<T>& aLhs,
-                                 const T* aRhs) {
+inline bool operator!=(const mozilla::detail::nsTStringRepr<T>& aLhs,
+                       const T* aRhs) {
   return !aLhs.Equals(aRhs);
 }
 
