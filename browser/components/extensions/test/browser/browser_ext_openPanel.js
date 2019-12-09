@@ -35,6 +35,11 @@ add_task(async function test_openPopup_requires_user_interaction() {
         "sidebarAction.close may only be called from a user input handler",
         "The error is informative."
       );
+      await browser.test.assertRejects(
+        browser.sidebarAction.toggle(),
+        "sidebarAction.toggle may only be called from a user input handler",
+        "The error is informative."
+      );
 
       browser.runtime.onMessage.addListener(async msg => {
         browser.test.assertEq(msg, "from-panel", "correct message received");
@@ -68,6 +73,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
       <button id="openPageAction">openPageAction</button>
       <button id="openSidebarAction">openSidebarAction</button>
       <button id="closeSidebarAction">closeSidebarAction</button>
+      <button id="toggleSidebarAction">toggleSidebarAction</button>
       <script src="tab.js"></script>
       </body></html>
       `,
@@ -106,6 +112,13 @@ add_task(async function test_openPopup_requires_user_interaction() {
           },
           { once: true }
         );
+        /* eslint-disable mozilla/balanced-listeners */
+        document
+          .getElementById("toggleSidebarAction")
+          .addEventListener("click", () => {
+            browser.sidebarAction.toggle();
+          });
+        /* eslint-enable mozilla/balanced-listeners */
       },
       "panel.js": function() {
         browser.runtime.sendMessage("from-panel");
@@ -150,6 +163,15 @@ add_task(async function test_openPopup_requires_user_interaction() {
 
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#closeSidebarAction",
+    {},
+    gBrowser.selectedBrowser
+  );
+  await BrowserTestUtils.waitForCondition(() => !SidebarUI.isOpen);
+
+  await click("#toggleSidebarAction");
+  await BrowserTestUtils.waitForCondition(() => SidebarUI.isOpen);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#toggleSidebarAction",
     {},
     gBrowser.selectedBrowser
   );
