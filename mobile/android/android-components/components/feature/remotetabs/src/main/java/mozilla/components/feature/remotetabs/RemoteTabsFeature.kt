@@ -42,7 +42,7 @@ class RemoteTabsFeature(
                 val lastUsed = 0L
                 // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
                 val iconUrl = null
-                state.tabs.map { tab ->
+                state.tabs.filter { !it.content.private }.map { tab ->
                     // TO-DO: https://github.com/mozilla-mobile/android-components/issues/1340
                     val history = listOf(TabEntry(tab.content.title, tab.content.url, iconUrl))
                     Tab(history, 0, lastUsed)
