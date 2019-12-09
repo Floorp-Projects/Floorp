@@ -151,8 +151,16 @@ class BasePrincipal : public nsJSPrincipals {
     return static_cast<BasePrincipal*>(aPrin);
   }
 
+  static BasePrincipal& Cast(nsIPrincipal& aPrin) {
+    return *static_cast<BasePrincipal*>(&aPrin);
+  }
+
   static const BasePrincipal* Cast(const nsIPrincipal* aPrin) {
     return static_cast<const BasePrincipal*>(aPrin);
+  }
+
+  static const BasePrincipal& Cast(const nsIPrincipal& aPrin) {
+    return *static_cast<const BasePrincipal*>(&aPrin);
   }
 
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(

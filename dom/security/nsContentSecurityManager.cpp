@@ -287,7 +287,7 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
     return nsContentUtils::PrincipalAllowsL10n(
-               aLoadInfo->TriggeringPrincipal(),
+               *aLoadInfo->TriggeringPrincipal(),
                doc ? doc->GetDocumentURI() : nullptr)
                ? NS_OK
                : NS_ERROR_DOM_BAD_URI;
