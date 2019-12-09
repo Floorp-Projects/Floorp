@@ -40,15 +40,10 @@ fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
     if (
         inputString.isEmpty() ||
         !URLUtil.isValidUrl(inputString) ||
-        inputString == FILE_PREFIX ||
+        inputString.startsWith(FILE_PREFIX) ||
         uri.port !in -1..MAX_VALID_PORT
     ) {
         return inputString
-    }
-
-    if (inputString.startsWith(FILE_PREFIX)) {
-        // Strip file prefix and return the remainder
-        return inputString.substring(FILE_PREFIX.length)
     }
 
     if (uri.host?.isIpv4() == true ||

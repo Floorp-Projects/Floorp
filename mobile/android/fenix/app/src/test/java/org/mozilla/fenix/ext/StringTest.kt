@@ -186,8 +186,8 @@ class StringTest {
     }
 
     @Test
-    fun `should return not the protocol for file`() {
-        "file:///foo/bar.txt" shortenedShouldBecome "/foo/bar.txt"
+    fun `file uri should return input`() {
+        "file:///foo/bar.txt" shortenedShouldBecome "file:///foo/bar.txt"
     }
 
     @Test
