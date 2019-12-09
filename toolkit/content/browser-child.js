@@ -52,23 +52,6 @@ addEventListener(
   false
 );
 
-addEventListener(
-  "ImageContentLoaded",
-  function(aEvent) {
-    if (content.document instanceof Ci.nsIImageDocument) {
-      let req = content.document.imageRequest;
-      if (!req.image) {
-        return;
-      }
-      sendAsyncMessage("ImageDocumentLoaded", {
-        width: req.image.width,
-        height: req.image.height,
-      });
-    }
-  },
-  false
-);
-
 // This is here for now until we find a better way of forcing an about:blank load
 // with a particular principal that doesn't involve the message manager. We can't
 // do this with JS Window Actors for now because JS Window Actors are tied to the
