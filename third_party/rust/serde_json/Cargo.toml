@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "serde_json"
-version = "1.0.26"
+version = "1.0.44"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A JSON serialization file format"
@@ -20,33 +20,49 @@ documentation = "http://docs.serde.rs/serde_json/"
 readme = "README.md"
 keywords = ["json", "serde", "serialization"]
 categories = ["encoding"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/json"
+[package.metadata.docs.rs]
+features = ["raw_value", "unbounded_depth"]
+
+[package.metadata.playground]
+features = ["raw_value"]
 [dependencies.indexmap]
-version = "1.0"
+version = "1.2"
 optional = true
 
 [dependencies.itoa]
-version = "0.4"
+version = "0.4.3"
 
 [dependencies.ryu]
-version = "0.2"
+version = "1.0"
 
 [dependencies.serde]
 version = "1.0.60"
-[dev-dependencies.compiletest_rs]
-version = "0.3"
+[dev-dependencies.automod]
+version = "0.1"
+
+[dev-dependencies.rustversion]
+version = "1.0"
 
 [dev-dependencies.serde_bytes]
-version = "0.10"
+version = "0.11"
 
 [dev-dependencies.serde_derive]
+version = "1.0"
+
+[dev-dependencies.serde_stacker]
+version = "0.1"
+
+[dev-dependencies.trybuild]
 version = "1.0"
 
 [features]
 arbitrary_precision = []
 default = []
 preserve_order = ["indexmap"]
+raw_value = []
+unbounded_depth = []
 [badges.appveyor]
 repository = "serde-rs/json"
 

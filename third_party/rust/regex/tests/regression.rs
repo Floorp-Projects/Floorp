@@ -27,11 +27,13 @@ fn regression_invalid_flags_expression() {
 }
 
 // See: https://github.com/rust-lang/regex/issues/75
-mat!(regression_unsorted_binary_search_1, r"(?i)[a_]+", "A_", Some((0, 2)));
-mat!(regression_unsorted_binary_search_2, r"(?i)[A_]+", "a_", Some((0, 2)));
+mat!(regression_unsorted_binary_search_1, r"(?i-u)[a_]+", "A_", Some((0, 2)));
+mat!(regression_unsorted_binary_search_2, r"(?i-u)[A_]+", "a_", Some((0, 2)));
 
 // See: https://github.com/rust-lang/regex/issues/99
+#[cfg(feature = "unicode-case")]
 mat!(regression_negated_char_class_1, r"(?i)[^x]", "x", None);
+#[cfg(feature = "unicode-case")]
 mat!(regression_negated_char_class_2, r"(?i)[^x]", "X", None);
 
 // See: https://github.com/rust-lang/regex/issues/101
@@ -53,22 +55,45 @@ mat!(regression_alt_in_alt2, r"^(.*?)(\n|\r\n?|$)", "ab\rcd", Some((0, 3)));
 mat!(regression_leftmost_first_prefix, r"z*azb", "azb", Some((0, 3)));
 
 // See: https://github.com/rust-lang/regex/issues/76
+#[cfg(all(feature = "unicode-case", feature = "unicode-gencat"))]
 mat!(uni_case_lower_nocase_flag, r"(?i)\p{Ll}+", "ΛΘΓΔα", Some((0, 10)));
 
 // See: https://github.com/rust-lang/regex/issues/191
 mat!(many_alternates, r"1|2|3|4|5|6|7|8|9|10|int", "int", Some((0, 3)));
 
 // burntsushi was bad and didn't create an issue for this bug.
-mat!(anchored_prefix1, r"^a\S", "a ", None);
-mat!(anchored_prefix2, r"^a\S", "foo boo a ", None);
+mat!(anchored_prefix1, r"^a[[:^space:]]", "a ", None);
+mat!(anchored_prefix2, r"^a[[:^space:]]", "foo boo a ", None);
 mat!(anchored_prefix3, r"^-[a-z]", "r-f", None);
 
 // See: https://github.com/rust-lang/regex/issues/204
-split!(split_on_word_boundary, r"\b", r"Should this (work?)",
-       &[t!(""), t!("Should"), t!(" "), t!("this"),
-         t!(" ("), t!("work"), t!("?)")]);
-matiter!(word_boundary_dfa, r"\b", "a b c",
-         (0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5));
+#[cfg(feature = "unicode-perl")]
+split!(
+    split_on_word_boundary,
+    r"\b",
+    r"Should this (work?)",
+    &[
+        t!(""),
+        t!("Should"),
+        t!(" "),
+        t!("this"),
+        t!(" ("),
+        t!("work"),
+        t!("?)")
+    ]
+);
+#[cfg(feature = "unicode-perl")]
+matiter!(
+    word_boundary_dfa,
+    r"\b",
+    "a b c",
+    (0, 0),
+    (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5)
+);
 
 // See: https://github.com/rust-lang/regex/issues/268
 matiter!(partial_anchor, r"^a|b", "ba", (0, 1));
@@ -81,13 +106,22 @@ ismatch!(partial_anchor_alternate_end, r"a$|z", "ayyyyy", false);
 mat!(lits_unambiguous1, r"(ABC|CDA|BC)X", "CDAX", Some((0, 4)));
 
 // See: https://github.com/rust-lang/regex/issues/291
-mat!(lits_unambiguous2, r"((IMG|CAM|MG|MB2)_|(DSCN|CIMG))(?P<n>[0-9]+)$",
-     "CIMG2341", Some((0, 8)), Some((0, 4)), None, Some((0, 4)), Some((4, 8)));
+mat!(
+    lits_unambiguous2,
+    r"((IMG|CAM|MG|MB2)_|(DSCN|CIMG))(?P<n>[0-9]+)$",
+    "CIMG2341",
+    Some((0, 8)),
+    Some((0, 4)),
+    None,
+    Some((0, 4)),
+    Some((4, 8))
+);
 
 // See: https://github.com/rust-lang/regex/issues/271
 mat!(endl_or_wb, r"(?m:$)|(?-u:\b)", "\u{6084e}", Some((4, 4)));
 mat!(zero_or_end, r"(?i-u:\x00)|$", "\u{e682f}", Some((4, 4)));
 mat!(y_or_endl, r"(?i-u:y)|(?m:$)", "\u{b4331}", Some((4, 4)));
+#[cfg(feature = "unicode-perl")]
 mat!(wb_start_x, r"(?u:\b)^(?-u:X)", "X", Some((0, 1)));
 
 // See: https://github.com/rust-lang/regex/issues/321
@@ -96,41 +130,55 @@ ismatch!(strange_anchor_non_complete_suffix, r"${2}a", "", false);
 
 // See: https://github.com/BurntSushi/ripgrep/issues/1203
 ismatch!(reverse_suffix1, r"[0-4][0-4][0-4]000", "153.230000", true);
-ismatch!(reverse_suffix2, r"\d\d\d000", "153.230000\n", true);
-matiter!(reverse_suffix3, r"\d\d\d000", "153.230000\n", (4, 10));
+ismatch!(reverse_suffix2, r"[0-9][0-9][0-9]000", "153.230000\n", true);
+matiter!(reverse_suffix3, r"[0-9][0-9][0-9]000", "153.230000\n", (4, 10));
 
 // See: https://github.com/rust-lang/regex/issues/334
 // See: https://github.com/rust-lang/regex/issues/557
-mat!(captures_after_dfa_premature_end1, r"a(b*(X|$))?", "abcbX",
-     Some((0, 1)), None, None);
-mat!(captures_after_dfa_premature_end2, r"a(bc*(X|$))?", "abcbX",
-     Some((0, 1)), None, None);
-mat!(captures_after_dfa_premature_end3, r"(aa$)?", "aaz",
-     Some((0, 0)));
+mat!(
+    captures_after_dfa_premature_end1,
+    r"a(b*(X|$))?",
+    "abcbX",
+    Some((0, 1)),
+    None,
+    None
+);
+mat!(
+    captures_after_dfa_premature_end2,
+    r"a(bc*(X|$))?",
+    "abcbX",
+    Some((0, 1)),
+    None,
+    None
+);
+mat!(captures_after_dfa_premature_end3, r"(aa$)?", "aaz", Some((0, 0)));
 
 // See: https://github.com/rust-lang/regex/issues/437
 ismatch!(
     literal_panic,
-    r"typename type\-parameter\-\d+\-\d+::.+",
+    r"typename type\-parameter\-[0-9]+\-[0-9]+::.+",
     "test",
-    false);
+    false
+);
 
 // See: https://github.com/rust-lang/regex/issues/533
 ismatch!(
     blank_matches_nothing_between_space_and_tab,
     r"[[:blank:]]",
     "\u{a}\u{b}\u{c}\u{d}\u{e}\u{f}\
-    \u{10}\u{11}\u{12}\u{13}\u{14}\u{15}\u{16}\u{17}\
-    \u{18}\u{19}\u{1a}\u{1b}\u{1c}\u{1d}\u{1e}\u{1f}",
-    false);
+     \u{10}\u{11}\u{12}\u{13}\u{14}\u{15}\u{16}\u{17}\
+     \u{18}\u{19}\u{1a}\u{1b}\u{1c}\u{1d}\u{1e}\u{1f}",
+    false
+);
 
 ismatch!(
     inverted_blank_matches_everything_between_space_and_tab,
     r"^[[:^blank:]]+$",
     "\u{a}\u{b}\u{c}\u{d}\u{e}\u{f}\
-    \u{10}\u{11}\u{12}\u{13}\u{14}\u{15}\u{16}\u{17}\
-    \u{18}\u{19}\u{1a}\u{1b}\u{1c}\u{1d}\u{1e}\u{1f}",
-    true);
+     \u{10}\u{11}\u{12}\u{13}\u{14}\u{15}\u{16}\u{17}\
+     \u{18}\u{19}\u{1a}\u{1b}\u{1c}\u{1d}\u{1e}\u{1f}",
+    true
+);
 
 // Tests that our Aho-Corasick optimization works correctly. It only
 // kicks in when we have >32 literals. By "works correctly," we mean that
@@ -146,6 +194,7 @@ mat!(
 
 // See: https://github.com/BurntSushi/ripgrep/issues/1247
 #[test]
+#[cfg(feature = "unicode-perl")]
 fn regression_nfa_stops1() {
     let re = ::regex::bytes::Regex::new(r"\bs(?:[ab])").unwrap();
     assert_eq!(0, re.find_iter(b"s\xE4").count());

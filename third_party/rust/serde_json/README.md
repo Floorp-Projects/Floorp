@@ -27,18 +27,18 @@ You may be looking for:
 JSON is a ubiquitous open-standard format that uses human-readable text to
 transmit data objects consisting of key-value pairs.
 
-```json,ignore
+```json
 {
-  "name": "John Doe",
-  "age": 43,
-  "address": {
-    "street": "10 Downing Street",
-    "city": "London"
-  },
-  "phones": [
-    "+44 1234567",
-    "+44 2345678"
-  ]
+    "name": "John Doe",
+    "age": 43,
+    "address": {
+        "street": "10 Downing Street",
+        "city": "London"
+    },
+    "phones": [
+        "+44 1234567",
+        "+44 2345678"
+    ]
 }
 ```
 
@@ -64,7 +64,7 @@ between each of these representations.
 Any valid JSON data can be manipulated in the following recursive enum
 representation. This data structure is [`serde_json::Value`][value].
 
-```rust,ignore
+```rust
 enum Value {
     Null,
     Bool(bool),
@@ -81,25 +81,24 @@ A string of JSON data can be parsed into a `serde_json::Value` by the
 [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
 a TCP stream.
 
-<a href="http://play.integer32.com/?gist=a266662bc71712e080efbf25ce30f306" target="_blank">
+<a href="https://play.rust-lang.org/?edition=2018&gist=d69d8e3156d4bb81c4461b60b772ab72" target="_blank">
 <img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
 </a>
 
 ```rust
-extern crate serde_json;
+use serde_json::{Result, Value};
 
-use serde_json::{Value, Error};
-
-fn untyped_example() -> Result<(), Error> {
+fn untyped_example() -> Result<()> {
     // Some JSON input data as a &str. Maybe this comes from the user.
-    let data = r#"{
-                    "name": "John Doe",
-                    "age": 43,
-                    "phones": [
-                      "+44 1234567",
-                      "+44 2345678"
-                    ]
-                  }"#;
+    let data = r#"
+        {
+            "name": "John Doe",
+            "age": 43,
+            "phones": [
+                "+44 1234567",
+                "+44 2345678"
+            ]
+        }"#;
 
     // Parse the string of data into serde_json::Value.
     let v: Value = serde_json::from_str(data)?;
@@ -140,18 +139,13 @@ in one of the dozens of places it is used in your code.
 Serde provides a powerful way of mapping JSON data into Rust data structures
 largely automatically.
 
-<a href="http://play.integer32.com/?gist=cff572b80d3f078c942a2151e6020adc" target="_blank">
+<a href="https://play.rust-lang.org/?edition=2018&gist=15cfab66d38ff8a15a9cf1d8d897ac68" target="_blank">
 <img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
 </a>
 
 ```rust
-extern crate serde;
-extern crate serde_json;
-
-#[macro_use]
-extern crate serde_derive;
-
-use serde_json::Error;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 
 #[derive(Serialize, Deserialize)]
 struct Person {
@@ -160,16 +154,17 @@ struct Person {
     phones: Vec<String>,
 }
 
-fn typed_example() -> Result<(), Error> {
+fn typed_example() -> Result<()> {
     // Some JSON input data as a &str. Maybe this comes from the user.
-    let data = r#"{
-                    "name": "John Doe",
-                    "age": 43,
-                    "phones": [
-                      "+44 1234567",
-                      "+44 2345678"
-                    ]
-                  }"#;
+    let data = r#"
+        {
+            "name": "John Doe",
+            "age": 43,
+            "phones": [
+                "+44 1234567",
+                "+44 2345678"
+            ]
+        }"#;
 
     // Parse the string of data into a Person object. This is exactly the
     // same function as the one that produced serde_json::Value above, but
@@ -204,26 +199,24 @@ when we write `p.phones[0]`, then `p.phones` is guaranteed to be a
 ## Constructing JSON values
 
 Serde JSON provides a [`json!` macro][macro] to build `serde_json::Value`
-objects with very natural JSON syntax. In order to use this macro,
-`serde_json` needs to be imported with the `#[macro_use]` attribute.
+objects with very natural JSON syntax.
 
-<a href="http://play.integer32.com/?gist=c216d6beabd9429a6ac13b8f88938dfe" target="_blank">
+<a href="https://play.rust-lang.org/?edition=2018&gist=6ccafad431d72b62e77cc34c8e879b24" target="_blank">
 <img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
 </a>
 
 ```rust
-#[macro_use]
-extern crate serde_json;
+use serde_json::json;
 
 fn main() {
     // The type of `john` is `serde_json::Value`
     let john = json!({
-      "name": "John Doe",
-      "age": 43,
-      "phones": [
-        "+44 1234567",
-        "+44 2345678"
-      ]
+        "name": "John Doe",
+        "age": 43,
+        "phones": [
+            "+44 1234567",
+            "+44 2345678"
+        ]
     });
 
     println!("first phone number: {}", john["phones"][0]);
@@ -241,7 +234,7 @@ be interpolated directly into the JSON value as you are building it. Serde
 will check at compile time that the value you are interpolating is able to
 be represented as JSON.
 
-<a href="http://play.integer32.com/?gist=aae3af4d274bd249d1c8a947076355f2" target="_blank">
+<a href="https://play.rust-lang.org/?edition=2018&gist=f9101a6e61dfc9e02c6a67f315ed24f2" target="_blank">
 <img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
 </a>
 
@@ -251,11 +244,11 @@ let age_last_year = 42;
 
 // The type of `john` is `serde_json::Value`
 let john = json!({
-  "name": full_name,
-  "age": age_last_year + 1,
-  "phones": [
-    format!("+44 {}", random_phone())
-  ]
+    "name": full_name,
+    "age": age_last_year + 1,
+    "phones": [
+        format!("+44 {}", random_phone())
+    ]
 });
 ```
 
@@ -272,18 +265,13 @@ A data structure can be converted to a JSON string by
 [`serde_json::to_writer`][to_writer] which serializes to any `io::Write`
 such as a File or a TCP stream.
 
-<a href="http://play.integer32.com/?gist=40967ece79921c77fd78ebc8f177c063" target="_blank">
+<a href="https://play.rust-lang.org/?edition=2018&gist=3472242a08ed2ff88a944f2a2283b0ee" target="_blank">
 <img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
 </a>
 
 ```rust
-extern crate serde;
-extern crate serde_json;
-
-#[macro_use]
-extern crate serde_derive;
-
-use serde_json::Error;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 
 #[derive(Serialize, Deserialize)]
 struct Address {
@@ -291,7 +279,7 @@ struct Address {
     city: String,
 }
 
-fn print_an_address() -> Result<(), Error> {
+fn print_an_address() -> Result<()> {
     // Some data structure.
     let address = Address {
         street: "10 Downing Street".to_owned(),
@@ -338,23 +326,6 @@ Serde without a standard library, please see the [`serde-json-core`] crate.
 
 [`serde-json-core`]: https://japaric.github.io/serde-json-core/serde_json_core/
 
-## License
-
-Serde JSON is licensed under either of
-
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
-
-at your option.
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde JSON by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
-
 [value]: https://docs.serde.rs/serde_json/value/enum.Value.html
 [from_str]: https://docs.serde.rs/serde_json/de/fn.from_str.html
 [from_slice]: https://docs.serde.rs/serde_json/de/fn.from_slice.html
@@ -363,3 +334,20 @@ be dual licensed as above, without any additional terms or conditions.
 [to_vec]: https://docs.serde.rs/serde_json/ser/fn.to_vec.html
 [to_writer]: https://docs.serde.rs/serde_json/ser/fn.to_writer.html
 [macro]: https://docs.serde.rs/serde_json/macro.json.html
+
+<br>
+
+#### License
+
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
+
+<br>
+
+<sub>
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
+</sub>

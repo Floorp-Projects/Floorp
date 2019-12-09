@@ -6,7 +6,7 @@ macro_rules! regex {
     ($re:expr) => {{
         use regex::internal::ExecBuilder;
         ExecBuilder::new($re).build().unwrap().into_regex()
-    }}
+    }};
 }
 
 fn main() {

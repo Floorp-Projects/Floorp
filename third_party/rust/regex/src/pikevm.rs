@@ -1,13 +1,3 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 // This module implements the Pike VM. That is, it guarantees linear time
 // search of a regex on any text with memory use proportional to the size of
 // the regex.
@@ -29,7 +19,7 @@ use std::mem;
 
 use exec::ProgramCache;
 use input::{Input, InputAt};
-use prog::{Program, InstPtr};
+use prog::{InstPtr, Program};
 use re_trait::Slot;
 use sparse::SparseSet;
 
@@ -86,11 +76,7 @@ impl Cache {
     /// Create a new allocation used by the NFA machine to record execution
     /// and captures.
     pub fn new(_prog: &Program) -> Self {
-        Cache {
-            clist: Threads::new(),
-            nlist: Threads::new(),
-            stack: vec![],
-        }
+        Cache { clist: Threads::new(), nlist: Threads::new(), stack: vec![] }
     }
 }
 
@@ -114,11 +100,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         cache.clist.resize(prog.len(), prog.captures.len());
         cache.nlist.resize(prog.len(), prog.captures.len());
         let at = input.at(start);
-        Fsm {
-            prog: prog,
-            stack: &mut cache.stack,
-            input: input,
-        }.exec_(
+        Fsm { prog: prog, stack: &mut cache.stack, input: input }.exec_(
             &mut cache.clist,
             &mut cache.nlist,
             matches,
@@ -143,7 +125,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         let mut all_matched = false;
         clist.set.clear();
         nlist.set.clear();
-'LOOP:  loop {
+        'LOOP: loop {
             if clist.set.is_empty() {
                 // Three ways to bail out when our current set of threads is
                 // empty.
@@ -157,7 +139,8 @@ impl<'r, I: Input> Fsm<'r, I> {
                 //    soon as the last thread dies.
                 if (matched && matches.len() <= 1)
                     || all_matched
-                    || (!at.is_start() && self.prog.is_anchored_start) {
+                    || (!at.is_start() && self.prog.is_anchored_start)
+                {
                     break;
                 }
 
@@ -176,7 +159,8 @@ impl<'r, I: Input> Fsm<'r, I> {
             // a state starting at the current position in the input for the
             // beginning of the program only if we don't already have a match.
             if clist.set.is_empty()
-                || (!self.prog.is_anchored_start && !all_matched) {
+                || (!self.prog.is_anchored_start && !all_matched)
+            {
                 self.add(&mut clist, slots, 0, at);
             }
             // The previous call to "add" actually inspects the position just
@@ -215,7 +199,7 @@ impl<'r, I: Input> Fsm<'r, I> {
                     }
                 }
             }
-            if at.pos() == end || at.is_end() {
+            if at.pos() >= end {
                 break;
             }
             at = at_next;
@@ -357,11 +341,7 @@ impl<'r, I: Input> Fsm<'r, I> {
 
 impl Threads {
     fn new() -> Self {
-        Threads {
-            set: SparseSet::new(0),
-            caps: vec![],
-            slots_per_thread: 0,
-        }
+        Threads { set: SparseSet::new(0), caps: vec![], slots_per_thread: 0 }
     }
 
     fn resize(&mut self, num_insts: usize, ncaps: usize) {

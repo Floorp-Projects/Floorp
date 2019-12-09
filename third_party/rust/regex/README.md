@@ -7,11 +7,11 @@ linear time with respect to the size of the regular expression and search text.
 Much of the syntax and implementation is inspired
 by [RE2](https://github.com/google/re2).
 
-[![Build Status](https://travis-ci.com/rust-lang/regex.svg?branch=master)](https://travis-ci.com/rust-lang/regex)
+[![Build status](https://travis-ci.com/rust-lang/regex.svg?branch=master)](https://travis-ci.com/rust-lang/regex)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/rust-lang/regex?svg=true)](https://ci.appveyor.com/project/rust-lang-libs/regex)
 [![Coverage Status](https://coveralls.io/repos/github/rust-lang/regex/badge.svg?branch=master)](https://coveralls.io/github/rust-lang/regex?branch=master)
 [![](https://meritbadge.herokuapp.com/regex)](https://crates.io/crates/regex)
-[![Rust](https://img.shields.io/badge/rust-1.24.1%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
+[![Rust](https://img.shields.io/badge/rust-1.28.0%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
 
 ### Documentation
 
@@ -201,9 +201,36 @@ recommended for general use.
 [Documentation `regex-syntax`.](https://docs.rs/regex-syntax)
 
 
+### Crate features
+
+This crate comes with several features that permit tweaking the trade off
+between binary size, compilation time and runtime performance. Users of this
+crate can selectively disable Unicode tables, or choose from a variety of
+optimizations performed by this crate to disable.
+
+When all of these features are disabled, runtime match performance may be much
+worse, but if you're matching on short strings, or if high performance isn't
+necessary, then such a configuration is perfectly serviceable. To disable
+all such features, use the following `Cargo.toml` dependency configuration:
+
+```toml
+[dependencies.regex]
+version = "1.3"
+default-features = false
+# regex currently requires the standard library, you must re-enable it.
+features = ["std"]
+```
+
+This will reduce the dependency tree of `regex` down to a single crate
+(`regex-syntax`).
+
+The full set of features one can disable are
+[in the "Crate features" section of the documentation](https://docs.rs/regex/*/#crate-features).
+
+
 ### Minimum Rust version policy
 
-This crate's minimum supported `rustc` version is `1.24.1`.
+This crate's minimum supported `rustc` version is `1.28.0`.
 
 The current **tentative** policy is that the minimum Rust version required
 to use this crate can be increased in minor version updates. For example, if
