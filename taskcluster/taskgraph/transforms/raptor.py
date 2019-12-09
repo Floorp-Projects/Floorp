@@ -52,6 +52,7 @@ raptor_description_schema = Schema({
     ),
     Optional('run-on-projects'): optionally_keyed_by(
         'app',
+        'test-name',
         test_description_schema['run-on-projects']
     ),
     Optional('variants'): optionally_keyed_by(
