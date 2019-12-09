@@ -128,6 +128,10 @@ if [ "$first_arg" = "help" ]; then
     # When running `./mach help <command>`, the correct Python for <command>
     # needs to be used.
     first_arg=$2
+elif [ "$first_arg" = "mach-completion" ]; then
+    # When running `./mach mach-completion /path/to/mach <command>`, the
+    # correct Python for <command> needs to be used.
+    first_arg=$3
 fi
 
 if [ -z "$first_arg" ]; then
