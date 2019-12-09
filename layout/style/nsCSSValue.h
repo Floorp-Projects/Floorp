@@ -18,16 +18,8 @@
 #include "mozilla/URLExtraData.h"
 #include "mozilla/UniquePtr.h"
 
-#include "nsCSSKeywords.h"
-#include "nsCSSPropertyID.h"
 #include "nsCoord.h"
-#include "nsProxyRelease.h"
-#include "nsRefPtrHashtable.h"
-#include "nsString.h"
-#include "nsStringBuffer.h"
 #include "nsTArray.h"
-#include "nsStyleConsts.h"
-#include "gfxFontFamilyList.h"
 
 #include <type_traits>
 
@@ -170,11 +162,6 @@ class nsCSSValue {
     MOZ_ASSERT(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
                "not an int value");
     return mValue.mInt;
-  }
-
-  nsCSSKeyword GetKeywordValue() const {
-    MOZ_ASSERT(mUnit == eCSSUnit_Enumerated, "not a keyword value");
-    return static_cast<nsCSSKeyword>(mValue.mInt);
   }
 
   float GetPercentValue() const {
