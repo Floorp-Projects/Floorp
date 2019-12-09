@@ -72,11 +72,13 @@ class RemoteWebProgressManager {
     for (let { listener, mask } of this._progressListeners) {
       if (mask & type && listener[methodName]) {
         try {
-          listener[methodName].apply(listener, args);
+          listener[methodName](...args);
         } catch (ex) {
-          Cu.reportError(
-            "RemoteWebProgress failed to call " + methodName + ": " + ex + "\n"
-          );
+          if (ex.result != Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED) {
+            Cu.reportError(
+              `RemoteWebProgress failed to call ${methodName}: ${ex}`
+            );
+          }
         }
       }
     }
