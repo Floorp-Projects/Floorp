@@ -29,10 +29,10 @@ use cranelift_codegen::isa::{CallConv, TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
 use cranelift_wasm::{
     FuncEnvironment, FuncIndex, GlobalIndex, GlobalVariable, MemoryIndex, ReturnMode,
-    SignatureIndex, TableIndex, WasmError, WasmResult,
+    SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
 };
 
-use crate::bindings;
+use crate::bindings::{self, SymbolicAddress};
 use crate::compile::{symbolic_function_name, wasm_function_name};
 
 /// Get the integer type used for representing pointers on this platform.
@@ -52,6 +52,11 @@ pub fn native_pointer_size() -> i32 {
         4
     }
 }
+
+#[cfg(target_pointer_width = "64")]
+const POINTER_TYPE: ir::Type = ir::types::I64;
+#[cfg(target_pointer_width = "32")]
+const POINTER_TYPE: ir::Type = ir::types::I32;
 
 /// Convert a TlsData offset into a `Offset32` for a global decl.
 fn offset32(offset: usize) -> ir::immediates::Offset32 {
@@ -105,6 +110,118 @@ pub fn init_sig(
     init_sig_from_wsig(call_conv, wsig)
 }
 
+/// An instance call may return a special value to indicate that the operation
+/// failed and we need to trap. This indicates what kind of value to check for,
+/// if any.
+enum FailureMode {
+    Infallible,
+    NotZero,
+}
+
+/// A description of builtin call to the `wasm::Instance`.
+struct InstanceCall {
+    address: SymbolicAddress,
+    arguments: &'static [ir::Type],
+    ret: Option<ir::Type>,
+    failure_mode: FailureMode,
+}
+
+// The following are a list of the instance calls used to implement operations.
+
+const FN_MEMORY_GROW: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryGrow,
+    arguments: &[ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::Infallible,
+};
+const FN_MEMORY_SIZE: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemorySize,
+    arguments: &[],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::Infallible,
+};
+const FN_MEMORY_COPY: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryCopy,
+    arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_MEMORY_COPY_SHARED: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryCopyShared,
+    arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_MEMORY_FILL: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryFill,
+    arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_MEMORY_FILL_SHARED: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryFillShared,
+    arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_MEMORY_INIT: InstanceCall = InstanceCall {
+    address: SymbolicAddress::MemoryInit,
+    arguments: &[
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+    ],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_DATA_DROP: InstanceCall = InstanceCall {
+    address: SymbolicAddress::DataDrop,
+    arguments: &[ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_TABLE_SIZE: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableSize,
+    arguments: &[ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::Infallible,
+};
+const FN_TABLE_COPY: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableCopy,
+    arguments: &[
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+    ],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_TABLE_INIT: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableInit,
+    arguments: &[
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+        ir::types::I32,
+    ],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+const FN_ELEM_DROP: InstanceCall = InstanceCall {
+    address: SymbolicAddress::ElemDrop,
+    arguments: &[ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero,
+};
+
+// Custom trap codes specific to this embedding
+
+pub const TRAP_THROW_REPORTED: u16 = 1;
+
 /// A `TargetIsa` and `ModuleEnvironment` joined so we can implement `FuncEnvironment`.
 pub struct TransEnv<'a, 'b, 'c> {
     isa: &'a dyn TargetIsa,
@@ -144,7 +261,7 @@ pub struct TransEnv<'a, 'b, 'c> {
 
     /// Allocated `FuncRef` for symbolic addresses.
     /// See the `SymbolicAddress` enum in `baldrapi.h`.
-    symbolic: [PackedOption<ir::FuncRef>; 2],
+    symbolic: [PackedOption<ir::FuncRef>; bindings::SymbolicAddress::Limit as usize],
 
     /// The address of the `cx` field in the `wasm::TlsData` struct.
     cx_addr: PackedOption<ir::GlobalValue>,
@@ -169,7 +286,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             vmctx_gv: None.into(),
             instance_gv: None.into(),
             interrupt_gv: None.into(),
-            symbolic: [None.into(); 2],
+            symbolic: [None.into(); bindings::SymbolicAddress::Limit as usize],
             cx_addr: None.into(),
             realm_addr: None.into(),
         }
@@ -389,6 +506,66 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let vmctx = pos.ins().global_value(native_pointer_type(), vmctx_gv);
         self.load_pinned_reg(pos, vmctx);
     }
+
+    fn instance_call(
+        &mut self,
+        pos: &mut FuncCursor,
+        call: &InstanceCall,
+        arguments: &[ir::Value],
+    ) -> Option<ir::Value> {
+        debug_assert!(call.arguments.len() == arguments.len());
+
+        let call_conv = self.static_env.call_conv();
+        let (fnref, sigref) = self.symbolic_funcref(pos.func, call.address, || {
+            let mut sig = ir::Signature::new(call_conv);
+            sig.params.push(ir::AbiParam::new(native_pointer_type()));
+            for argument in call.arguments {
+                sig.params.push(ir::AbiParam::new(*argument).uext());
+            }
+            sig.params.push(ir::AbiParam::special(
+                native_pointer_type(),
+                ir::ArgumentPurpose::VMContext,
+            ));
+            if let Some(ret) = &call.ret {
+                sig.returns.push(ir::AbiParam::new(*ret).uext());
+            }
+            sig
+        });
+
+        let instance = self.load_instance(pos);
+        let vmctx = pos
+            .func
+            .special_param(ir::ArgumentPurpose::VMContext)
+            .expect("Missing vmctx arg");
+
+        // We must use `func_addr` for symbolic references since the stubs can be far away, and the
+        // C++ `SymbolicAccess` linker expects it.
+
+        let func_addr = pos.ins().func_addr(native_pointer_type(), fnref);
+        let call_ins = pos.ins().call_indirect(sigref, func_addr, &[]);
+        let mut built_arguments = pos.func.dfg[call_ins].take_value_list().unwrap();
+        built_arguments.push(instance, &mut pos.func.dfg.value_lists);
+        built_arguments.extend(arguments.iter().cloned(), &mut pos.func.dfg.value_lists);
+        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);
+        pos.func.dfg[call_ins].put_value_list(built_arguments);
+
+        self.switch_to_wasm_tls_realm(pos);
+        self.reload_tls_and_pinned_regs(pos);
+
+        if call.ret.is_none() {
+            return None;
+        }
+
+        let ret = pos.func.dfg.first_result(call_ins);
+        match call.failure_mode {
+            FailureMode::Infallible => {}
+            FailureMode::NotZero => {
+                pos.ins()
+                    .trapnz(ret, ir::TrapCode::User(TRAP_THROW_REPORTED));
+            }
+        }
+        Some(ret)
+    }
 }
 
 impl<'a, 'b, 'c> TargetEnvironment for TransEnv<'a, 'b, 'c> {
@@ -514,6 +691,13 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     }
 
     fn make_table(&mut self, func: &mut ir::Function, index: TableIndex) -> WasmResult<ir::Table> {
+        // Currently, Baldrdash doesn't support multiple tables.
+        if index.index() != 0 {
+            return Err(WasmError::Unsupported(
+                "only one wasm table supported".to_string(),
+            ));
+        }
+
         let table_desc = self.get_table(func, index);
 
         // TODO we'd need a better way to synchronize the shape of GlobalDataDesc and these
@@ -736,37 +920,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         _heap: ir::Heap,
         val: ir::Value,
     ) -> WasmResult<ir::Value> {
-        // We emit a call to `uint32_t memoryGrow_i32(Instance* instance, uint32_t delta)` via a
-        // stub.
-        let call_conv = self.static_env.call_conv();
-        let (fnref, sigref) =
-            self.symbolic_funcref(pos.func, bindings::SymbolicAddress::MemoryGrow, || {
-                let mut sig = ir::Signature::new(call_conv);
-                sig.params.push(ir::AbiParam::new(native_pointer_type()));
-                sig.params.push(ir::AbiParam::new(ir::types::I32).uext());
-                sig.params.push(ir::AbiParam::special(
-                    native_pointer_type(),
-                    ir::ArgumentPurpose::VMContext,
-                ));
-                sig.returns.push(ir::AbiParam::new(ir::types::I32).uext());
-                sig
-            });
-
-        // Get the instance pointer needed by `memoryGrow_i32`.
-        let instance = self.load_instance(&mut pos);
-        let vmctx = pos
-            .func
-            .special_param(ir::ArgumentPurpose::VMContext)
-            .expect("Missing vmctx arg");
-        // We must use `func_addr` for symbolic references since the stubs can be far away, and the
-        // C++ `SymbolicAccess` linker expects it.
-        let addr = pos.ins().func_addr(native_pointer_type(), fnref);
-        let call = pos
-            .ins()
-            .call_indirect(sigref, addr, &[instance, val, vmctx]);
-        self.switch_to_wasm_tls_realm(&mut pos);
-        self.reload_tls_and_pinned_regs(&mut pos);
-        Ok(pos.func.dfg.first_result(call))
+        Ok(self
+            .instance_call(&mut pos, &FN_MEMORY_GROW, &[val])
+            .unwrap())
     }
 
     fn translate_memory_size(
@@ -775,31 +931,144 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         _index: MemoryIndex,
         _heap: ir::Heap,
     ) -> WasmResult<ir::Value> {
-        // We emit a call to `uint32_t memorySize_i32(Instance* instance)` via a stub.
-        let call_conv = self.static_env.call_conv();
-        let (fnref, sigref) =
-            self.symbolic_funcref(pos.func, bindings::SymbolicAddress::MemorySize, || {
-                let mut sig = ir::Signature::new(call_conv);
-                sig.params.push(ir::AbiParam::new(native_pointer_type()));
-                sig.params.push(ir::AbiParam::special(
-                    native_pointer_type(),
-                    ir::ArgumentPurpose::VMContext,
-                ));
-                sig.returns.push(ir::AbiParam::new(ir::types::I32).uext());
-                sig
-            });
+        Ok(self.instance_call(&mut pos, &FN_MEMORY_SIZE, &[]).unwrap())
+    }
 
-        // Get the instance pointer needed by `memorySize_i32`.
-        let instance = self.load_instance(&mut pos);
-        let vmctx = pos
-            .func
-            .special_param(ir::ArgumentPurpose::VMContext)
-            .expect("Missing vmctx arg");
-        let addr = pos.ins().func_addr(native_pointer_type(), fnref);
-        let call = pos.ins().call_indirect(sigref, addr, &[instance, vmctx]);
-        self.switch_to_wasm_tls_realm(&mut pos);
-        self.reload_tls_and_pinned_regs(&mut pos);
-        Ok(pos.func.dfg.first_result(call))
+    fn translate_memory_copy(
+        &mut self,
+        mut pos: FuncCursor,
+        _index: MemoryIndex,
+        heap: ir::Heap,
+        dst: ir::Value,
+        src: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        let heap_gv = pos.func.heaps[heap].base;
+        let mem_base = pos.ins().global_value(native_pointer_type(), heap_gv);
+
+        // We have a specialized version of `memory.copy` when we are using
+        // shared memory or not.
+        let ret = if self.env.uses_shared_memory() {
+            self.instance_call(&mut pos, &FN_MEMORY_COPY_SHARED, &[dst, src, len, mem_base])
+        } else {
+            self.instance_call(&mut pos, &FN_MEMORY_COPY, &[dst, src, len, mem_base])
+        };
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_memory_fill(
+        &mut self,
+        mut pos: FuncCursor,
+        _index: MemoryIndex,
+        heap: ir::Heap,
+        dst: ir::Value,
+        val: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        let mem_base_gv = pos.func.heaps[heap].base;
+        let mem_base = pos.ins().global_value(native_pointer_type(), mem_base_gv);
+
+        // We have a specialized version of `memory.fill` when we are using
+        // shared memory or not.
+        let ret = if self.env.uses_shared_memory() {
+            self.instance_call(&mut pos, &FN_MEMORY_FILL_SHARED, &[dst, val, len, mem_base])
+        } else {
+            self.instance_call(&mut pos, &FN_MEMORY_FILL, &[dst, val, len, mem_base])
+        };
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_memory_init(
+        &mut self,
+        mut pos: FuncCursor,
+        _index: MemoryIndex,
+        _heap: ir::Heap,
+        seg_index: u32,
+        dst: ir::Value,
+        src: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        let seg_index = pos.ins().iconst(ir::types::I32, seg_index as i64);
+        let ret = self.instance_call(&mut pos, &FN_MEMORY_INIT, &[dst, src, len, seg_index]);
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_data_drop(&mut self, mut pos: FuncCursor, seg_index: u32) -> WasmResult<()> {
+        let seg_index = pos.ins().iconst(ir::types::I32, seg_index as i64);
+        let ret = self.instance_call(&mut pos, &FN_DATA_DROP, &[seg_index]);
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_table_size(
+        &mut self,
+        mut pos: FuncCursor,
+        table_index: TableIndex,
+        _table: ir::Table,
+    ) -> WasmResult<ir::Value> {
+        assert!(table_index.index() == 0);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        Ok(self
+            .instance_call(&mut pos, &FN_TABLE_SIZE, &[table_index])
+            .unwrap())
+    }
+
+    fn translate_table_copy(
+        &mut self,
+        mut pos: FuncCursor,
+        dst_table_index: TableIndex,
+        _dst_table: ir::Table,
+        src_table_index: TableIndex,
+        _src_table: ir::Table,
+        dst: ir::Value,
+        src: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        assert!(dst_table_index.index() == 0);
+        assert!(src_table_index.index() == 0);
+        // Slightly lower the amount of SSA nodes as `dst == src`
+        let index = pos
+            .ins()
+            .iconst(ir::types::I32, dst_table_index.index() as i64);
+        let ret = self.instance_call(
+            &mut pos,
+            &FN_TABLE_COPY,
+            &[dst, src, len, index, index],
+        );
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_table_init(
+        &mut self,
+        mut pos: FuncCursor,
+        seg_index: u32,
+        table_index: TableIndex,
+        _table: ir::Table,
+        dst: ir::Value,
+        src: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        assert!(table_index.index() == 0);
+        let seg_index = pos.ins().iconst(ir::types::I32, seg_index as i64);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        let ret = self.instance_call(
+            &mut pos,
+            &FN_TABLE_INIT,
+            &[dst, src, len, seg_index, table_index],
+        );
+        debug_assert!(ret.is_none());
+        Ok(())
+    }
+
+    fn translate_elem_drop(&mut self, mut pos: FuncCursor, seg_index: u32) -> WasmResult<()> {
+        let seg_index = pos.ins().iconst(ir::types::I32, seg_index as i64);
+        let ret = self.instance_call(&mut pos, &FN_ELEM_DROP, &[seg_index]);
+        debug_assert!(ret.is_none());
+        Ok(())
     }
 
     fn translate_loop_header(&mut self, mut pos: FuncCursor) -> WasmResult<()> {
