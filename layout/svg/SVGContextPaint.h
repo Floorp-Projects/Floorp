@@ -19,6 +19,7 @@
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
 #include "ImgDrawResult.h"
+#include "nsRefPtrHashtable.h"
 
 class gfxContext;
 

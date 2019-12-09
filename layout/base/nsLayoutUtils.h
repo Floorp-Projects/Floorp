@@ -15,12 +15,10 @@
 #include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsBoundingMetrics.h"
-#include "nsChangeHint.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsThreadUtils.h"
 #include "nsCSSPropertyIDSet.h"
-#include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
@@ -47,6 +45,7 @@ class nsIScrollableFrame;
 class nsRegion;
 class nsDisplayListBuilder;
 enum class nsDisplayListBuilderMode : uint8_t;
+enum nsChangeHint : uint32_t;
 class nsDisplayItem;
 class nsFontMetrics;
 class nsFontFaceList;

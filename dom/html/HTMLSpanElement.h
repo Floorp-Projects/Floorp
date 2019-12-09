@@ -7,11 +7,7 @@
 #ifndef mozilla_dom_HTMLSpanElement_h
 #define mozilla_dom_HTMLSpanElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsAtom.h"
 
 namespace mozilla {
 namespace dom {

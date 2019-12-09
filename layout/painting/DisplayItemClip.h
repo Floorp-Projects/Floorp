@@ -10,7 +10,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsTArray.h"
-#include "nsStyleConsts.h"
 
 class gfxContext;
 class nsPresContext;

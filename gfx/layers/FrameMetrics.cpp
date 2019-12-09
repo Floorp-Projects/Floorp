@@ -86,6 +86,22 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
   aLayoutViewport = aLayoutViewport.MoveInsideAndClamp(aScrollableRect);
 }
 
+ScrollSnapInfo::ScrollSnapInfo()
+    : mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
+      mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}
+
+bool ScrollSnapInfo::HasScrollSnapping() const {
+  return mScrollSnapStrictnessY != StyleScrollSnapStrictness::None ||
+         mScrollSnapStrictnessX != StyleScrollSnapStrictness::None;
+}
+
+bool ScrollSnapInfo::HasSnapPositions() const {
+  return (!mSnapPositionX.IsEmpty() &&
+          mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) ||
+         (!mSnapPositionY.IsEmpty() &&
+          mScrollSnapStrictnessY != StyleScrollSnapStrictness::None);
+}
+
 void ScrollSnapInfo::InitializeScrollSnapStrictness(
     WritingMode aWritingMode, const nsStyleDisplay* aDisplay) {
   if (aDisplay->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {

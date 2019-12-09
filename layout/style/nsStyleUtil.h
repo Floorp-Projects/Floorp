@@ -9,10 +9,10 @@
 #include "nsCoord.h"
 #include "nsCSSPropertyID.h"
 #include "nsTArrayForwardDeclare.h"
-#include "gfxFontFamilyList.h"
 #include "nsStringFwd.h"
-#include "nsStyleStruct.h"
 #include "nsCRT.h"
+#include "nsColor.h"
+#include "nsGkAtoms.h"
 
 class nsCSSValue;
 class nsIContent;
@@ -21,6 +21,7 @@ class nsIURI;
 struct gfxFontFeature;
 struct nsCSSKTableEntry;
 struct nsCSSValueList;
+struct nsStylePosition;
 
 namespace mozilla {
 class FontSlantStyle;
