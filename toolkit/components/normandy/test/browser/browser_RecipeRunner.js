@@ -511,32 +511,6 @@ decorate_task(
   }
 );
 
-// test init() in dev mode
-decorate_task(
-  withPrefEnv({
-    set: [
-      ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
-      ["app.normandy.dev_mode", true],
-      ["app.normandy.first_run", false],
-    ],
-  }),
-  withStub(RecipeRunner, "run"),
-  withStub(RecipeRunner, "registerTimer"),
-  withStub(RecipeRunner._remoteSettingsClientForTesting, "sync"),
-  async function testInitDevMode(runStub, registerTimerStub, syncStub) {
-    await RecipeRunner.init();
-    ok(
-      runStub.called,
-      "RecipeRunner.run should be called immediately when in dev mode"
-    );
-    ok(registerTimerStub.called, "RecipeRunner.init should register a timer");
-    ok(
-      syncStub.called,
-      "RecipeRunner.init should sync remote settings in dev mode"
-    );
-  }
-);
-
 // Test init() during normal operation
 decorate_task(
   withPrefEnv({
@@ -558,6 +532,32 @@ decorate_task(
   }
 );
 
+// test init() in dev mode
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
+      ["app.normandy.dev_mode", true],
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(RecipeRunner, "registerTimer"),
+  withStub(RecipeRunner._remoteSettingsClientForTesting, "sync"),
+  async function testInitDevMode(runStub, registerTimerStub, syncStub) {
+    await RecipeRunner.init();
+    Assert.deepEqual(
+      runStub.args,
+      [[{ trigger: "devMode" }]],
+      "RecipeRunner.run should be called immediately when in dev mode"
+    );
+    ok(registerTimerStub.called, "RecipeRunner.init should register a timer");
+    ok(
+      syncStub.called,
+      "RecipeRunner.init should sync remote settings in dev mode"
+    );
+  }
+);
+
 // Test init() first run
 decorate_task(
   withPrefEnv({
@@ -565,7 +565,6 @@ decorate_task(
       ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
       ["app.normandy.dev_mode", false],
       ["app.normandy.first_run", true],
-      ["app.normandy.api_url", "https://example.com"],
     ],
   }),
   withStub(RecipeRunner, "run"),
@@ -573,7 +572,11 @@ decorate_task(
   withStub(RecipeRunner, "watchPrefs"),
   async function testInitFirstRun(runStub, registerTimerStub, watchPrefsStub) {
     await RecipeRunner.init();
-    ok(runStub.called, "RecipeRunner.run is called immediately on first run");
+    Assert.deepEqual(
+      runStub.args,
+      [[{ trigger: "firstRun" }]],
+      "RecipeRunner.run is called immediately on first run"
+    );
     ok(
       !Services.prefs.getBoolPref("app.normandy.first_run"),
       "On first run, the first run pref is set to false"
@@ -591,6 +594,31 @@ decorate_task(
   }
 );
 
+// Test that new build IDs trigger immediate recipe runs
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
+      ["app.normandy.last_seen_buildid", "not-the-current-buildid"],
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  withStub(RecipeRunner, "registerTimer"),
+  withStub(RecipeRunner, "watchPrefs"),
+  async function testInitFirstRun(runStub, registerTimerStub, watchPrefsStub) {
+    await RecipeRunner.init();
+    Assert.deepEqual(
+      runStub.args,
+      [[{ trigger: "newBuildID" }]],
+      "RecipeRunner.run is called immediately on a new build ID"
+    );
+    ok(
+      registerTimerStub.called,
+      "RecipeRunner.registerTimer registers a timer"
+    );
+  }
+);
+
 // Test that prefs are watched correctly
 decorate_task(
   withPrefEnv({
@@ -598,7 +626,6 @@ decorate_task(
       ["app.normandy.dev_mode", false],
       ["app.normandy.first_run", false],
       ["app.normandy.enabled", true],
-      ["app.normandy.api_url", "https://example.com"], // starts with "https://"
     ],
   }),
   withStub(RecipeRunner, "run"),
