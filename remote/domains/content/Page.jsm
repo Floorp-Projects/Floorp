@@ -27,7 +27,7 @@ class Page extends ContentProcessDomain {
     this.enabled = false;
     this.lifecycleEnabled = false;
 
-    this.onFrameNavigated = this.onFrameNavigated.bind(this);
+    this._onFrameNavigated = this._onFrameNavigated.bind(this);
   }
 
   destructor() {
@@ -42,7 +42,7 @@ class Page extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      this.contextObserver.on("frame-navigated", this.onFrameNavigated);
+      this.contextObserver.on("frame-navigated", this._onFrameNavigated);
 
       this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
         mozSystemGroup: true,
@@ -58,7 +58,7 @@ class Page extends ContentProcessDomain {
 
   disable() {
     if (this.enabled) {
-      this.contextObserver.off("frame-navigated", this.onFrameNavigated);
+      this.contextObserver.off("frame-navigated", this._onFrameNavigated);
 
       this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
         mozSystemGroup: true,
@@ -125,7 +125,36 @@ class Page extends ContentProcessDomain {
   }
 
   addScriptToEvaluateOnNewDocument() {}
-  createIsolatedWorld() {}
+
+  /**
+   * Creates an isolated world for the given frame.
+   *
+   * Really it just creates an execution context with label "isolated".
+   *
+   * @param {Object} options
+   * @param {string} options.frameId
+   * @param {string=} options.worldName
+   * @param {boolean=} options.grantUniversalAccess (not supported)
+   *     This is a powerful option, use with caution.
+   * @return {number} Runtime.ExecutionContextId
+   */
+  createIsolatedWorld(options = {}) {
+    const { frameId, worldName } = options;
+    if (frameId && frameId != this.content.windowUtils.outerWindowID) {
+      throw new UnsupportedError("frameId not supported");
+    }
+    const Runtime = this.session.domains.get("Runtime");
+
+    const executionContextId = Runtime._onContextCreated("context-created", {
+      windowId: this.content.windowUtils.currentInnerWindowID,
+      window: this.content,
+      isDefault: false,
+      contextName: worldName,
+      contextType: "isolated",
+    });
+
+    return { executionContextId };
+  }
 
   /**
    * Controls whether page will emit lifecycle events.
@@ -144,7 +173,7 @@ class Page extends ContentProcessDomain {
     return this.content.location.href;
   }
 
-  onFrameNavigated(name, { frameId, window }) {
+  _onFrameNavigated(name, { frameId, window }) {
     const url = window.location.href;
     this.emit("Page.frameNavigated", {
       frame: {

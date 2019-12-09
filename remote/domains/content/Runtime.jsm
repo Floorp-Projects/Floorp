@@ -260,6 +260,8 @@ class Runtime extends ContentProcessDomain {
    * @param {string=} options.contextType
    *     "default" or "isolated"
    *
+   * @return {number} ID of created context
+   *
    */
   _onContextCreated(name, options = {}) {
     const {
@@ -279,7 +281,7 @@ class Runtime extends ContentProcessDomain {
     if (isDefault && this.contextsByWindow.has(windowId)) {
       for (const ctx of this.contextsByWindow.get(windowId)) {
         if (ctx.isDefault) {
-          return;
+          return null;
         }
       }
     }
@@ -307,6 +309,8 @@ class Runtime extends ContentProcessDomain {
         },
       });
     }
+
+    return context.id;
   }
 
   /**
