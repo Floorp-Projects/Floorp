@@ -266,6 +266,8 @@ class Front extends Pool {
     callFunctionWithAsyncStack(
       () => {
         if (packet.error) {
+          // "Protocol error" is here to avoid TBPL heuristics. See also
+          // https://dxr.mozilla.org/webtools-central/source/tbpl/php/inc/GeneralErrorFilter.php
           let message;
           if (packet.error && packet.message) {
             message =
@@ -273,8 +275,7 @@ class Front extends Pool {
           } else {
             message = packet.error;
           }
-          const packetError = new Error(message);
-          deferred.reject(packetError);
+          deferred.reject(message);
         } else {
           deferred.resolve(packet);
         }

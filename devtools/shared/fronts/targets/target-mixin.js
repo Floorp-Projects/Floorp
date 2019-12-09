@@ -454,7 +454,7 @@ function TargetMixin(parentClass) {
           } catch (e) {
             // Ignore any errors while closing, since there is not much that can be done
             // at this point.
-            console.warn("Error while closing client:", e);
+            console.warn(`Error while closing client: ${e.message}`);
           }
 
           // Not all targets supports attach/detach. For example content process doesn't.
@@ -467,7 +467,7 @@ function TargetMixin(parentClass) {
           try {
             await this.detach();
           } catch (e) {
-            console.warn("Error while detaching target:", e);
+            console.warn(`Error while detaching target: ${e.message}`);
           }
         }
 
