@@ -1988,9 +1988,10 @@ class nsContentUtils {
   /**
    * Determine whether the principal or document is allowed access to the
    * localization system. We don't want the web to ever see this but all our UI
-   * including in content pages should pass this test.
+   * including in content pages should pass this test.  aDocumentURI may be
+   * null.
    */
-  static bool PrincipalAllowsL10n(nsIPrincipal* aPrincipal,
+  static bool PrincipalAllowsL10n(nsIPrincipal& aPrincipal,
                                   nsIURI* aDocumentURI);
 
   /**
