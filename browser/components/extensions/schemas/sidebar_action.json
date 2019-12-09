@@ -242,6 +242,14 @@
         "parameters": []
       },
       {
+        "name": "toggle",
+        "type": "function",
+        "requireUserInput": true,
+        "description": "Toggles the extension sidebar in the active window.",
+        "async": true,
+        "parameters": []
+      },
+      {
         "name": "isOpen",
         "type": "function",
         "description": "Checks whether the sidebar action is open.",
