@@ -363,7 +363,7 @@ pub struct TextureUpdateList {
     /// Commands to alloc/realloc/free the textures. Processed first.
     pub allocations: Vec<TextureCacheAllocation>,
     /// Commands to update the contents of the textures. Processed second.
-    pub updates: Vec<TextureCacheUpdate>,
+    pub updates: FastHashMap<CacheTextureId, Vec<TextureCacheUpdate>>,
 }
 
 impl TextureUpdateList {
@@ -372,7 +372,7 @@ impl TextureUpdateList {
         TextureUpdateList {
             clears_shared_cache: false,
             allocations: Vec::new(),
-            updates: Vec::new(),
+            updates: FastHashMap::default(),
         }
     }
 
@@ -390,7 +390,10 @@ impl TextureUpdateList {
     /// Pushes an update operation onto the list.
     #[inline]
     pub fn push_update(&mut self, update: TextureCacheUpdate) {
-        self.updates.push(update);
+        self.updates
+            .entry(update.id)
+            .or_default()
+            .push(update);
     }
 
     /// Sends a command to the Renderer to clear the portion of the shared region
@@ -480,7 +483,7 @@ impl TextureUpdateList {
         self.debug_assert_coalesced(id);
 
         // Drop any unapplied updates to the to-be-freed texture.
-        self.updates.retain(|x| x.id != id);
+        self.updates.remove(&id);
 
         // Drop any allocations for it as well. If we happen to be allocating and
         // freeing in the same batch, we can collapse them to a no-op.
