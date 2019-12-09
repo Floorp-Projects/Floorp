@@ -252,18 +252,29 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(
   MOZ_ASSERT(obj->getClass() == &class_);
 
   cx->runtime()->incSABCount();
-  obj->acceptRawBuffer(buffer, length);
+
+  if (!obj->acceptRawBuffer(buffer, length)) {
+    return nullptr;
+  }
 
   return obj;
 }
 
-void SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
+bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
                                               uint32_t length) {
+  if (!zone()->addSharedMemory(buffer, length,
+                               MemoryUse::SharedArrayRawBuffer)) {
+    return false;
+  }
+
   setReservedSlot(RAWBUF_SLOT, PrivateValue(buffer));
   setReservedSlot(LENGTH_SLOT, PrivateUint32Value(length));
+  return true;
 }
 
 void SharedArrayBufferObject::dropRawBuffer() {
+  zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), byteLength(),
+                                          MemoryUse::SharedArrayRawBuffer);
   setReservedSlot(RAWBUF_SLOT, UndefinedValue());
 }
 
@@ -331,7 +342,11 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
   }
 
   cx->runtime()->incSABCount();
-  obj->acceptRawBuffer(buffer, initialSize);
+
+  if (!obj->acceptRawBuffer(buffer, initialSize)) {
+    buffer->dropReference();
+    return nullptr;
+  }
 
   return obj;
 }

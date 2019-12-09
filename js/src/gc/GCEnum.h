@@ -141,7 +141,8 @@ enum class ZealMode {
   _(FinalizationGroupRecordVector)         \
   _(FinalizationGroupRegistrations)        \
   _(FinalizationRecordVector)              \
-  _(ZoneAllocPolicy)
+  _(ZoneAllocPolicy)                       \
+  _(SharedArrayRawBuffer)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \

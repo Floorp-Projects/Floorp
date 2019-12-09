@@ -71,6 +71,53 @@ void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
                                     gc.tunables.mallocGrowthFactor(), lock);
 }
 
+bool ZoneAllocator::addSharedMemory(void* mem, size_t nbytes, MemoryUse use) {
+  // nbytes can be zero here for SharedArrayBuffers.
+
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+
+  auto ptr = sharedMemoryUseCounts.lookupForAdd(mem);
+  MOZ_ASSERT_IF(ptr, ptr->value().use == use);
+
+  if (!ptr && !sharedMemoryUseCounts.add(ptr, mem, gc::SharedMemoryUse(use))) {
+    return false;
+  }
+
+  ptr->value().count++;
+
+  // Allocations can grow, so add any increase over the previous size and record
+  // the new size.
+  if (nbytes > ptr->value().nbytes) {
+    mallocHeapSize.addBytes(nbytes - ptr->value().nbytes);
+    ptr->value().nbytes = nbytes;
+  }
+
+  maybeMallocTriggerZoneGC();
+
+  return true;
+}
+
+void ZoneAllocator::removeSharedMemory(void* mem, size_t nbytes,
+                                       MemoryUse use) {
+  // nbytes can be zero here for SharedArrayBuffers.
+
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+  MOZ_ASSERT(CurrentThreadIsGCSweeping());
+
+  auto ptr = sharedMemoryUseCounts.lookup(mem);
+
+  MOZ_ASSERT(ptr);
+  MOZ_ASSERT(ptr->value().count != 0);
+  MOZ_ASSERT(ptr->value().use == use);
+  MOZ_ASSERT(ptr->value().nbytes >= nbytes);
+
+  ptr->value().count--;
+  if (ptr->value().count == 0) {
+    mallocHeapSize.removeBytes(ptr->value().nbytes, true);
+    sharedMemoryUseCounts.remove(ptr);
+  }
+}
+
 void ZoneAllocPolicy::decMemory(size_t nbytes) {
   // Unfortunately we don't have enough context here to know whether we're being
   // called on behalf of the collector so we have to do a TLS lookup to find

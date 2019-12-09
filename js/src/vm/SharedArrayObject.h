@@ -236,7 +236,8 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   size_t wasmMappedSize() const { return rawBufferObject()->mappedSize(); }
 
  private:
-  void acceptRawBuffer(SharedArrayRawBuffer* buffer, uint32_t length);
+  MOZ_MUST_USE bool acceptRawBuffer(SharedArrayRawBuffer* buffer,
+                                    uint32_t length);
   void dropRawBuffer();
 };
 
