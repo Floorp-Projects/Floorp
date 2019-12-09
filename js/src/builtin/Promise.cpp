@@ -4266,11 +4266,8 @@ MOZ_MUST_USE bool js::AsyncFunctionReturned(
 template <typename T>
 static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
                                        HandleObject resultPromise,
-                                       HandleValue onFulfilled,
-                                       HandleValue onRejected, T extraStep) {
-  MOZ_ASSERT(onFulfilled.isInt32());
-  MOZ_ASSERT(onRejected.isInt32());
-
+                                       PromiseHandler onFulfilled,
+                                       PromiseHandler onRejected, T extraStep) {
   Rooted<PromiseObject*> unwrappedPromise(cx);
   if (cx->realm()->creationOptions().getAwaitFixEnabled()) {
     // Step 2: Let promise be ? PromiseResolve(%Promise%, « value »).
@@ -4303,11 +4300,13 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
   // Steps 3-8 of the spec create onFulfilled and onRejected functions.
 
   // Step 9: Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+  RootedValue onFulfilledValue(cx, Int32Value(onFulfilled));
+  RootedValue onRejectedValue(cx, Int32Value(onRejected));
   Rooted<PromiseCapability> resultCapability(cx);
   resultCapability.promise().set(resultPromise);
   Rooted<PromiseReactionRecord*> reaction(
-      cx, NewReactionRecord(cx, resultCapability, onFulfilled, onRejected,
-                            IncumbentGlobalObject::Yes));
+      cx, NewReactionRecord(cx, resultCapability, onFulfilledValue,
+                            onRejectedValue, IncumbentGlobalObject::Yes));
   if (!reaction) {
     return false;
   }
@@ -4322,17 +4321,12 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
 MOZ_MUST_USE JSObject* js::AsyncFunctionAwait(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
     HandleValue value) {
-  // Steps 4-9.
-  RootedValue onFulfilled(
-      cx, Int32Value(PromiseHandlerAsyncFunctionAwaitedFulfilled));
-  RootedValue onRejected(
-      cx, Int32Value(PromiseHandlerAsyncFunctionAwaitedRejected));
-
-  // Steps 2-3, 10.
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
     reaction->setIsAsyncFunction(genObj);
   };
-  if (!InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra)) {
+  if (!InternalAwait(cx, value, nullptr,
+                     PromiseHandlerAsyncFunctionAwaitedFulfilled,
+                     PromiseHandlerAsyncFunctionAwaitedRejected, extra)) {
     return nullptr;
   }
   return genObj->promise();
@@ -4343,17 +4337,12 @@ MOZ_MUST_USE JSObject* js::AsyncFunctionAwait(
 MOZ_MUST_USE bool js::AsyncGeneratorAwait(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
-  // Steps 4-9.
-  RootedValue onFulfilled(
-      cx, Int32Value(PromiseHandlerAsyncGeneratorAwaitedFulfilled));
-  RootedValue onRejected(
-      cx, Int32Value(PromiseHandlerAsyncGeneratorAwaitedRejected));
-
-  // Steps 2-3, 10.
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
     reaction->setIsAsyncGenerator(asyncGenObj);
   };
-  return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
+  return InternalAwait(cx, value, nullptr,
+                       PromiseHandlerAsyncGeneratorAwaitedFulfilled,
+                       PromiseHandlerAsyncGeneratorAwaitedRejected, extra);
 }
 
 // https://tc39.github.io/ecma262/#sec-%asyncfromsynciteratorprototype%.next
@@ -4532,11 +4521,10 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
   //         Iterator Value Unwrap Functions.
   // Step 8: Let onFulfilled be CreateBuiltinFunction(steps, « [[Done]] »).
   // Step 9: Set onFulfilled.[[Done]] to done.
-  RootedValue onFulfilled(
-      cx,
-      Int32Value(done ? PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone
-                      : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone));
-  RootedValue onRejected(cx, Int32Value(PromiseHandlerThrower));
+  PromiseHandler onFulfilled =
+      done ? PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone
+           : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone;
+  PromiseHandler onRejected = PromiseHandlerThrower;
 
   // Steps 5 and 10 are identical to some steps in Await; we have a utility
   // function InternalAwait() that implements the idiom.
@@ -4730,12 +4718,11 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
           // Step 10.b.i.7: Let onRejected be CreateBuiltinFunction(
           //                stepsRejected, « [[Generator]] »).
           // Step 10.b.i.8: Set onRejected.[[Generator]] to generator.
-          static constexpr int32_t ResumeNextReturnFulfilled =
+          //
+          const PromiseHandler onFulfilled =
               PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled;
-          static constexpr int32_t ResumeNextReturnRejected =
+          const PromiseHandler onRejected =
               PromiseHandlerAsyncGeneratorResumeNextReturnRejected;
-          RootedValue onFulfilled(cx, Int32Value(ResumeNextReturnFulfilled));
-          RootedValue onRejected(cx, Int32Value(ResumeNextReturnRejected));
 
           // These steps are nearly identical to some steps in Await;
           // InternalAwait() implements the idiom.
@@ -4785,13 +4772,10 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
       // State_AwaitingYieldReturn.
       generator->setAwaitingYieldReturn();
 
-      static constexpr int32_t YieldReturnAwaitedFulfilled =
+      const PromiseHandler onFulfilled =
           PromiseHandlerAsyncGeneratorYieldReturnAwaitedFulfilled;
-      static constexpr int32_t YieldReturnAwaitedRejected =
+      const PromiseHandler onRejected =
           PromiseHandlerAsyncGeneratorYieldReturnAwaitedRejected;
-
-      RootedValue onFulfilled(cx, Int32Value(YieldReturnAwaitedFulfilled));
-      RootedValue onRejected(cx, Int32Value(YieldReturnAwaitedRejected));
 
       auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
         reaction->setIsAsyncGenerator(generator);
