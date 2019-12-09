@@ -933,6 +933,13 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
+    def is_jsshell(cls):
+        """Must have a jsshell build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_BUILD_APP') == 'js'
+        return False
+
+    @staticmethod
     def is_thunderbird(cls):
         """Must have a Thunderbird build."""
         if hasattr(cls, 'substs'):
@@ -963,6 +970,12 @@ class MachCommandConditions(object):
         """Must have a build."""
         return (MachCommandConditions.is_firefox_or_android(cls) or
                 MachCommandConditions.is_thunderbird(cls))
+
+    @staticmethod
+    def has_build_or_shell(cls):
+        """Must have a build or a shell build."""
+        return (MachCommandConditions.has_build(cls) or
+                MachCommandConditions.is_jsshell(cls))
 
     @staticmethod
     def is_hg(cls):

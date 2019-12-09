@@ -750,6 +750,30 @@ def _get_android_run_parser():
     return parser
 
 
+def _get_jsshell_run_parser():
+    parser = argparse.ArgumentParser()
+    group = parser.add_argument_group('the compiled program')
+    group.add_argument('params', nargs='...', default=[],
+                       help='Command-line arguments to be passed through to the program. Not '
+                       'specifying a --profile or -P option will result in a temporary profile '
+                       'being used.')
+
+    group = parser.add_argument_group('debugging')
+    group.add_argument('--debug', action='store_true',
+                       help='Enable the debugger. Not specifying a --debugger option will result '
+                       'in the default debugger being used.')
+    group.add_argument('--debugger', default=None, type=str,
+                       help='Name of debugger to use.')
+    group.add_argument('--debugger-args', default=None, metavar='params', type=str,
+                       help='Command-line arguments to pass to the debugger itself; '
+                       'split as the Bourne shell would.')
+    group.add_argument('--debugparams', action=StoreDebugParamsAndWarnAction,
+                       default=None, type=str, dest='debugger_args',
+                       help=argparse.SUPPRESS)
+
+    return parser
+
+
 def _get_desktop_run_parser():
     parser = argparse.ArgumentParser()
     group = parser.add_argument_group('the compiled program')
@@ -810,6 +834,8 @@ def setup_run_parser():
     build = MozbuildObject.from_environment(cwd=here)
     if conditions.is_android(build):
         return _get_android_run_parser()
+    if conditions.is_jsshell(build):
+        return _get_jsshell_run_parser()
     return _get_desktop_run_parser()
 
 
@@ -818,12 +844,14 @@ class RunProgram(MachCommandBase):
     """Run the compiled program."""
 
     @Command('run', category='post-build',
-             conditions=[conditions.has_build],
+             conditions=[conditions.has_build_or_shell],
              parser=setup_run_parser,
              description='Run the compiled program, possibly under a debugger or DMD.')
     def run(self, **kwargs):
         if conditions.is_android(self):
             return self._run_android(**kwargs)
+        if conditions.is_jsshell(self):
+            return self._run_jsshell(**kwargs)
         return self._run_desktop(**kwargs)
 
     def _run_android(self, app='org.mozilla.geckoview_example', intent=None, env=[], profile=None,
@@ -905,6 +933,58 @@ class RunProgram(MachCommandBase):
             fail_if_running=fail_if_running)
 
         return 0
+
+    def _run_jsshell(self, params, debug, debugger, debugger_args):
+        try:
+            binpath = self.get_binary_path('app')
+        except Exception as e:
+            print("It looks like your program isn't built.",
+                  "You can run |mach build| to build it.")
+            print(e)
+            return 1
+
+        args = [binpath]
+
+        if params:
+            args.extend(params)
+
+        extra_env = {
+            'RUST_BACKTRACE': 'full',
+        }
+
+        if debug or debugger or debugger_args:
+            if 'INSIDE_EMACS' in os.environ:
+                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+
+            import mozdebug
+            if not debugger:
+                # No debugger name was provided. Look for the default ones on
+                # current OS.
+                debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
+
+            if debugger:
+                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+
+            if not debugger or not self.debuggerInfo:
+                print("Could not find a suitable debugger in your PATH.")
+                return 1
+
+            # Parameters come from the CLI. We need to convert them before
+            # their use.
+            if debugger_args:
+                from mozbuild import shellutil
+                try:
+                    debugger_args = shellutil.split(debugger_args)
+                except shellutil.MetaCharacterException as e:
+                    print("The --debugger-args you passed require a real shell to parse them.")
+                    print("(We can't handle the %r character.)" % e.char)
+                    return 1
+
+            # Prepend the debugger args.
+            args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
+
+        return self.run_process(args=args, ensure_exit_code=False,
+                                pass_thru=True, append_env=extra_env)
 
     def _run_desktop(self, params, remote, background, noprofile, disable_e10s,
                      enable_crash_reporter, setpref, temp_profile, macos_open, debug, debugger,
