@@ -12,7 +12,6 @@
     "patches": [
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",
-      "rename_gcov_flush.patch",
       "android-mangling-error.patch",
       "revert-r359260-due-to-bug41817.patch",
       "r372020-r372182-profiler-linkage.patch",
