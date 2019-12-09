@@ -9,7 +9,7 @@ Virtualenv has one basic command::
 
     $ virtualenv ENV
 
-Where ``ENV`` is a directory to place the new virtual environment. It has
+Where ``ENV`` is a directory in which to place the new virtual environment. It has
 a number of usual effects (modifiable by many :ref:`options`):
 
  - :file:`ENV/lib/` and :file:`ENV/include/` are created, containing supporting
@@ -27,8 +27,8 @@ a number of usual effects (modifiable by many :ref:`options`):
 The python in your new virtualenv is effectively isolated from the python that
 was used to create it.
 
-.. _pip: https://pypi.python.org/pypi/pip
-.. _setuptools: https://pypi.python.org/pypi/setuptools
+.. _pip: https://pypi.org/project/pip
+.. _setuptools: https://pypi.org/project/setuptools
 
 
 .. _activate:
@@ -40,9 +40,9 @@ In a newly created virtualenv there will also be a :command:`activate` shell
 script. For Windows systems, activation scripts are provided for
 the Command Prompt and Powershell.
 
-On Posix systems, this resides in :file:`/ENV/bin/`, so you can run::
+On Posix systems, this resides in :file:`ENV/bin/`, so you can run::
 
-    $ source bin/activate
+    $ source /path/to/ENV/bin/activate
 
 For some shells (e.g. the original Bourne Shell) you may need to use the
 :command:`.` command, when :command:`source` does not exist. There are also
@@ -52,10 +52,20 @@ separate activate files for some other shells, like csh and fish.
 This will change your ``$PATH`` so its first entry is the virtualenv's
 ``bin/`` directory. (You have to use ``source`` because it changes your
 shell environment in-place.) This is all it does; it's purely a
-convenience. If you directly run a script or the python interpreter
+convenience.
+
+If you directly run a script or the python interpreter
 from the virtualenv's ``bin/`` directory (e.g. ``path/to/ENV/bin/pip``
-or ``/path/to/ENV/bin/python-script.py``) there's no need for
-activation.
+or ``/path/to/ENV/bin/python-script.py``) then ``sys.path`` will
+automatically be set to use the Python libraries associated with the
+virtualenv. But, unlike the activation scripts, the environment variables
+``PATH`` and ``VIRTUAL_ENV`` will *not* be modified. This means that if
+your Python script uses e.g. ``subprocess`` to run another Python script
+(e.g. via a ``#!/usr/bin/env python`` shebang line) the second script
+*may not be executed with the same Python binary as the first* nor have
+the same libraries available to it. To avoid this happening your first
+script will need to modify the environment variables in the same manner
+as the activation scripts, before the second script is executed.
 
 The ``activate`` script will also modify your shell prompt to indicate
 which environment is currently active. To disable this behaviour, see
@@ -65,7 +75,7 @@ To undo these changes to your path (and prompt), just run::
 
     $ deactivate
 
-On Windows, the equivalent `activate` script is in the ``Scripts`` folder::
+On Windows, the equivalent ``activate`` script is in the ``Scripts`` folder::
 
     > \path\to\env\Scripts\activate
 
@@ -80,7 +90,7 @@ below.
 
     If using Powershell, the ``activate`` script is subject to the
     `execution policies`_ on the system. By default on Windows 7, the system's
-    excution policy is set to ``Restricted``, meaning no scripts like the
+    execution policy is set to ``Restricted``, meaning no scripts like the
     ``activate`` script are allowed to be executed. But that can't stop us
     from changing that slightly to allow it to be executed.
 
@@ -125,6 +135,15 @@ below.
     Since the ``activate.ps1`` script is generated locally for each virtualenv,
     it is not considered a remote script and can then be executed.
 
+On xonsh, the equivalent ``activate`` script is called ``activate.xsh``, and
+lives in either the ``bin/`` directory (on posix systems) or the ``Scripts\``
+directory (on Windows). For example::
+
+    $ source /path/to/ENV/bin/activate.xsh
+
+With xonsh, you may still run the ``deactivate`` command to undo the changes.
+
+
 .. _`execution policies`: http://technet.microsoft.com/en-us/library/dd347641.aspx
 
 Removing an Environment
@@ -147,6 +166,10 @@ This can be used if you have control over the global site-packages directory,
 and you want to depend on the packages there. If you want isolation from the
 global system, do not use this flag.
 
+If you need to change this option after creating a virtual environment, you can
+add (to turn off) or remove (to turn on) the file ``no-global-site-packages.txt``
+from ``lib/python3.7/`` or equivalent in the environments directory.
+
 Windows Notes
 ~~~~~~~~~~~~~
 
@@ -155,7 +178,7 @@ executables on Windows go in ``ENV\Scripts\`` instead of ``ENV/bin/`` and
 libraries go in ``ENV\Lib\`` rather than ``ENV/lib/``.
 
 To create a virtualenv under a path with spaces in it on Windows, you'll need
-the `win32api <http://sourceforge.net/projects/pywin32/>`_ library installed.
+the `win32api <https://github.com/mhammond/pywin32/>`_ library installed.
 
 
 Using Virtualenv without ``bin/python``
@@ -172,7 +195,7 @@ the path is correct. A script is available to correct the path. You
 can setup the environment like::
 
     activate_this = '/path/to/env/bin/activate_this.py'
-    execfile(activate_this, dict(__file__=activate_this))
+    exec(open(activate_this).read(), {'__file__': activate_this})
 
 This will change ``sys.path`` and even change ``sys.prefix``, but also allow
 you to use an existing interpreter. Items in your environment will show up
@@ -255,4 +278,3 @@ As well as the extra directories, the search order includes:
 #. The ``virtualenv_support`` directory relative to virtualenv.py
 #. The directory where virtualenv.py is located.
 #. The current directory.
-

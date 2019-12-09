@@ -1,84 +1,78 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: virtualenv
-Version: 15.2.0
+Version: 16.7.8
 Summary: Virtual Python Environment builder
 Home-page: https://virtualenv.pypa.io/
-Author: Jannis Leidel, Carl Meyer and Brian Rosner
-Author-email: python-virtualenv@groups.google.com
+Author: Ian Bicking
+Author-email: ianb@colorstudy.com
+Maintainer: Bernat Gabor
+Maintainer-email: gaborjbernat@gmail.com
 License: MIT
-Description: Virtualenv
+Project-URL: Source, https://github.com/pypa/virtualenv
+Project-URL: Tracker, https://github.com/pypa/virtualenv/issues
+Description: virtualenv
         ==========
         
-        `Mailing list <http://groups.google.com/group/python-virtualenv>`_ |
-        `Issues <https://github.com/pypa/virtualenv/issues>`_ |
-        `Github <https://github.com/pypa/virtualenv>`_ |
-        `PyPI <https://pypi.python.org/pypi/virtualenv/>`_ |
-        User IRC: #pypa
-        Dev IRC: #pypa-dev
+        A tool for creating isolated 'virtual' python environments.
         
-        Introduction
-        ------------
+        .. image:: https://img.shields.io/pypi/v/virtualenv.svg
+          :target: https://pypi.org/project/virtualenv
+          :alt: Latest version on PyPi
+        .. image:: https://img.shields.io/pypi/pyversions/virtualenv.svg
+          :target: https://pypi.org/project/virtualenv/
+          :alt: Supported Python versions
+        .. image:: https://dev.azure.com/pypa/virtualenv/_apis/build/status/pypa.virtualenv?branchName=master
+          :target: https://dev.azure.com/pypa/virtualenv/_build/latest?definitionId=11&branchName=master
+          :alt: Azure Pipelines build status
+        .. image:: https://readthedocs.org/projects/virtualenv/badge/?version=latest&style=flat-square
+          :target: https://virtualenv.readthedocs.io/en/latest/?badge=latest
+          :alt: Documentation status
+        .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+          :target: https://github.com/ambv/black
+          :alt: Code style: black
+        .. image:: https://pepy.tech/badge/virtualenv/month
+          :target: https://pepy.tech/project/virtualenv/month
+          :alt: Downloads
         
-        ``virtualenv`` is a tool to create isolated Python environments.
-        
-        The basic problem being addressed is one of dependencies and versions,
-        and indirectly permissions. Imagine you have an application that
-        needs version 1 of LibFoo, but another application requires version
-        2. How can you use both these applications?  If you install
-        everything into ``/usr/lib/python2.7/site-packages`` (or whatever your
-        platform's standard location is), it's easy to end up in a situation
-        where you unintentionally upgrade an application that shouldn't be
-        upgraded.
-        
-        Or more generally, what if you want to install an application *and
-        leave it be*?  If an application works, any change in its libraries or
-        the versions of those libraries can break the application.
-        
-        Also, what if you can't install packages into the global
-        ``site-packages`` directory?  For instance, on a shared host.
-        
-        In all these cases, ``virtualenv`` can help you. It creates an
-        environment that has its own installation directories, that doesn't
-        share libraries with other virtualenv environments (and optionally
-        doesn't access the globally installed libraries either).
-        
-        .. comment: 
-        
-        Release History
-        ===============
-        
-        15.2.0 (2018-03-21)
-        -------------------
-        
-        * Upgrade setuptools to 39.0.1.
-        
-        * Upgrade pip to 9.0.3.
-        
-        * Upgrade wheel to 0.30.0.
+        * `Installation <https://virtualenv.pypa.io/en/latest/installation.html>`_
+        * `Documentation <https://virtualenv.pypa.io/>`_
+        * `Changelog <https://virtualenv.pypa.io/en/latest/changes.html>`_
+        * `Issues <https://github.com/pypa/virtualenv/issues>`_
+        * `PyPI <https://pypi.org/project/virtualenv/>`_
+        * `Github <https://github.com/pypa/virtualenv>`_
+        * `User mailing list <http://groups.google.com/group/python-virtualenv>`_
+        * `Dev mailing list <http://groups.google.com/group/pypa-dev>`_
+        * User IRC: `#pypa on Freenode <https://webchat.freenode.net/?channels=%23pypa>`_
+        * Dev IRC: `#pypa-dev on Freenode <https://webchat.freenode.net/?channels=%23pypa-dev>`_
         
         
-        15.1.0 (2016-11-15)
-        -------------------
+        Code of Conduct
+        ---------------
         
-        * Support Python 3.6.
+        Everyone interacting in the virtualenv project's codebases, issue trackers,
+        chat rooms, and mailing lists is expected to follow the
+        `PyPA Code of Conduct`_.
         
-        * Upgrade setuptools to 28.0.0.
+        .. _PyPA Code of Conduct: https://www.pypa.io/en/latest/code-of-conduct/
         
-        * Upgrade pip to 9.0.1.
-        
-        * Don't install pre-release versions of pip, setuptools, or wheel from PyPI.
-        
-        
-        `Full Changelog <https://virtualenv.pypa.io/en/latest/changes.html>`_.
-Keywords: setuptools deployment installation distutils
-Platform: UNKNOWN
+Keywords: virtual,environments,isolated
+Platform: any
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Utilities
 Classifier: Programming Language :: Python :: 2
-Classifier: Programming Language :: Python :: 2.6
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.4
 Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: !=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7
+Provides-Extra: testing
+Provides-Extra: docs
