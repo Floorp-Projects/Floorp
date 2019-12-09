@@ -79,6 +79,7 @@ class nsWebBrowserFind : public nsIWebBrowserFind,
   bool mWrapFind;
   bool mEntireWord;
   bool mMatchCase;
+  bool mMatchDiacritics;
 
   bool mSearchSubFrames;
   bool mSearchParentFrames;

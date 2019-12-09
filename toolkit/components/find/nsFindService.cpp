@@ -79,3 +79,13 @@ NS_IMETHODIMP nsFindService::SetMatchCase(bool aMatchCase) {
   mMatchCase = aMatchCase;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsFindService::GetMatchDiacritics(bool* aMatchDiacritics) {
+  NS_ENSURE_ARG_POINTER(aMatchDiacritics);
+  *aMatchDiacritics = mMatchDiacritics;
+  return NS_OK;
+}
+NS_IMETHODIMP nsFindService::SetMatchDiacritics(bool aMatchDiacritics) {
+  mMatchDiacritics = aMatchDiacritics;
+  return NS_OK;
+}
