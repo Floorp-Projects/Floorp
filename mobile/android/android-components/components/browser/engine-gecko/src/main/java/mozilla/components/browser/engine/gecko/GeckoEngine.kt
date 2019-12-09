@@ -284,6 +284,7 @@ class GeckoEngine(
                     field = value
                 }
             }
+
         private fun TrackingProtectionPolicy.getAntiTrackingPolicy(): Int {
             /**
              * The [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES] is an
@@ -359,6 +360,10 @@ class GeckoEngine(
                     runtime.settings.fontSizeFactor = it
                 }
             }
+
+        override var forceUserScalableContent: Boolean
+            get() = runtime.settings.forceUserScalableEnabled
+            set(value) { runtime.settings.forceUserScalableEnabled = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -375,6 +380,7 @@ class GeckoEngine(
             this.suspendMediaWhenInactive = it.suspendMediaWhenInactive
             this.fontInflationEnabled = it.fontInflationEnabled
             this.fontSizeFactor = it.fontSizeFactor
+            this.forceUserScalableContent = it.forceUserScalableContent
         }
     }
 }
