@@ -1553,13 +1553,11 @@ def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
         # not on as ASAN will catch the crashes for us
-        # mingw-clang cross-compile toolchain has bugs with stack protector
         if compiler_is_gccish and not asan:
-            if not mingw_clang:
-                flags.append("-fstack-protector-strong")
-                ldflags.append("-fstack-protector-strong")
-                js_flags.append("-fstack-protector-strong")
-                js_ldflags.append("-fstack-protector-strong")
+            flags.append("-fstack-protector-strong")
+            ldflags.append("-fstack-protector-strong")
+            js_flags.append("-fstack-protector-strong")
+            js_ldflags.append("-fstack-protector-strong")
 
         # ftrivial-auto-var-init ------------------------------
         # Initialize local variables with a 0xAA pattern in clang debug builds.
