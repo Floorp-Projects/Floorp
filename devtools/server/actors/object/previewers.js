@@ -119,11 +119,14 @@ const previewers = {
         grip.userDisplayName = hooks.createValueGrip(userDisplayName.value);
       }
 
+      grip.isAsync = obj.isAsyncFunction;
+      grip.isGenerator = obj.isGeneratorFunction;
+
       if (obj.script) {
         grip.location = {
           url: obj.script.url,
           line: obj.script.startLine,
-          column: obj.script.startColumn
+          column: obj.script.startColumn,
         };
       }
 
@@ -224,7 +227,10 @@ const previewers = {
       }
 
       const items = (grip.preview.items = []);
-      for (const item of PropertyIterators.enumSetEntries(objectActor, /* forPreview */ true)) {
+      for (const item of PropertyIterators.enumSetEntries(
+        objectActor,
+        /* forPreview */ true
+      )) {
         items.push(item);
         if (items.length == OBJECT_PREVIEW_MAX_ITEMS) {
           break;
@@ -237,7 +243,10 @@ const previewers = {
 
   WeakSet: [
     function(objectActor, grip) {
-      const enumEntries = PropertyIterators.enumWeakSetEntries(objectActor, /* forPreview */ true);
+      const enumEntries = PropertyIterators.enumWeakSetEntries(
+        objectActor,
+        /* forPreview */ true
+      );
 
       grip.preview = {
         kind: "ArrayLike",
@@ -278,7 +287,10 @@ const previewers = {
       }
 
       const entries = (grip.preview.entries = []);
-      for (const entry of PropertyIterators.enumMapEntries(objectActor, /* forPreview */ true)) {
+      for (const entry of PropertyIterators.enumMapEntries(
+        objectActor,
+        /* forPreview */ true
+      )) {
         entries.push(entry);
         if (entries.length == OBJECT_PREVIEW_MAX_ITEMS) {
           break;
@@ -291,7 +303,10 @@ const previewers = {
 
   WeakMap: [
     function(objectActor, grip) {
-      const enumEntries = PropertyIterators.enumWeakMapEntries(objectActor, /* forPreview */ true);
+      const enumEntries = PropertyIterators.enumWeakMapEntries(
+        objectActor,
+        /* forPreview */ true
+      );
 
       grip.preview = {
         kind: "MapLike",
@@ -546,7 +561,10 @@ previewers.Object = [
       return true;
     }
 
-    const previewLength = Math.min(OBJECT_PREVIEW_MAX_ITEMS, grip.preview.length);
+    const previewLength = Math.min(
+      OBJECT_PREVIEW_MAX_ITEMS,
+      grip.preview.length
+    );
     grip.preview.items = [];
     for (let i = 0; i < previewLength; i++) {
       const desc = obj.getOwnPropertyDescriptor(i);
