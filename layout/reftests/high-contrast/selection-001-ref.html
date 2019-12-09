@@ -1,0 +1,13 @@
+<!doctype html>
+<title>Test reference</title>
+<p>
+  Some selected text
+</p>
+<script>
+onload = function() {
+  getSelection().removeAllRanges();
+  let r = document.createRange();
+  r.selectNode(document.documentElement);
+  getSelection().addRange(r);
+}
+</script>
