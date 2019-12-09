@@ -1,0 +1,20 @@
+<!doctype html>
+<title>First title</title>
+<iframe srcdoc=""></iframe>
+<script>
+onload = function() {
+  // This iframe doc shouldn't override our title.
+  let doc = document.querySelector("iframe").contentDocument;
+  doc.open();
+  doc.write("<title>This is not your title</title>Hello");
+  doc.close();
+
+  if (doc.title == "This is not your title") {
+    // Now navigate away so that the test has something to wait for to ensure the
+    // relevant code has run.
+    let link = document.createElement("a");
+    link.href = window.location.href.replace("-1.html", "-2.html");
+    link.click();
+  }
+}
+</script>

@@ -37,6 +37,8 @@ TEST_HARNESS_FILES.xpcshell.toolkit.components.places.tests += [
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.browser += [
+    'browser/1601563-1.html',
+    'browser/1601563-2.html',
     'browser/399606-history.go-0.html',
     'browser/399606-httprefresh.html',
     'browser/399606-location.reload.html',
