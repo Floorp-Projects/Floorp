@@ -7,6 +7,7 @@ Maintainers
 -----------
 
 Brian Rosner
+Bernat Gabor
 Carl Meyer
 Jannis Leidel
 Paul Moore
@@ -89,3 +90,4 @@ Vinay Sajip
 Vitaly Babiy
 Vladimir Rutsky
 Wang Xuerui
+Wouter De Borger
