@@ -295,20 +295,32 @@ bool UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback,
   bool CFF = false;
   for (CFIndex i = 0; i < count; i++) {
     uint32_t tag = (uint32_t)(uintptr_t)CFArrayGetValueAtIndex(tags, i);
-    if (tag == 0x43464620)  // 'CFF '
+    if (tag == 0x43464620) {  // 'CFF '
       CFF = true;
+    }
     CFDataRef data = CGFontCopyTableForTag(mFont, tag);
+    // Bug 1602391 suggests CGFontCopyTableForTag can fail, even though we just
+    // got the tag from the font via CGFontCopyTableTags above. If we can catch
+    // this (e.g. in fuzz-testing) it'd be good to understand when it happens,
+    // but in any case we'll handle it safely below by treating the table as
+    // zero-length.
+    MOZ_ASSERT(data, "failed to get font table data");
     records[i].tag = tag;
     records[i].offset = offset;
     records[i].data = data;
-    records[i].length = CFDataGetLength(data);
-    bool skipChecksumAdjust = (tag == 0x68656164);  // 'head'
-    records[i].checkSum = CalcTableChecksum(
-        reinterpret_cast<const uint32_t*>(CFDataGetBytePtr(data)),
-        records[i].length, skipChecksumAdjust);
-    offset += records[i].length;
-    // 32 bit align the tables
-    offset = (offset + 3) & ~3;
+    if (data) {
+      records[i].length = CFDataGetLength(data);
+      bool skipChecksumAdjust = (tag == 0x68656164);  // 'head'
+      records[i].checkSum = CalcTableChecksum(
+          reinterpret_cast<const uint32_t*>(CFDataGetBytePtr(data)),
+          records[i].length, skipChecksumAdjust);
+      offset += records[i].length;
+      // 32 bit align the tables
+      offset = (offset + 3) & ~3;
+    } else {
+      records[i].length = 0;
+      records[i].checkSum = 0;
+    }
   }
   CFRelease(tags);
 
@@ -339,10 +351,11 @@ bool UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback,
     if (records[i].tag == 0x68656164) {
       checkSumAdjustmentOffset = buf.offset + 2 * 4;
     }
-    buf.writeMem(CFDataGetBytePtr(records[i].data),
-                 CFDataGetLength(records[i].data));
-    buf.align();
-    CFRelease(records[i].data);
+    if (records[i].data) {
+      buf.writeMem(CFDataGetBytePtr(records[i].data), records[i].length);
+      buf.align();
+      CFRelease(records[i].data);
+    }
   }
   delete[] records;
 
