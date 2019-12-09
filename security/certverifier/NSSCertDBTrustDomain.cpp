@@ -698,6 +698,11 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       }
     }
   }
+#else
+  // "use" these fields to stop the compiler from complaining when
+  // MOZ_NEW_CERT_STORAGE is disabled.
+  Unused << mCRLiteMode;
+  Unused << mCRLiteTelemetryInfo;
 #endif
 
   // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
