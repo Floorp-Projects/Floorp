@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Makes `DownloadState` parcelizable so that it can be passed to `FetchDownloadManager` when completed
+
 * **feature-remotetabs**
   * Add new `RemoteTabsFeature` to view tabs from other synced devices and upload our own.
   * Add `RemoteTabsStorageSuggestionProvider` class to match remote tabs in awesomebar suggestions.

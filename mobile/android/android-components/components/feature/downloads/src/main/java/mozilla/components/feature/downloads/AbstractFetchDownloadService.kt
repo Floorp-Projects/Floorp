@@ -332,9 +332,13 @@ abstract class AbstractFetchDownloadService : Service() {
      * has been completed.
      */
     private fun sendDownloadCompleteBroadcast(downloadID: Long, status: DownloadJobStatus) {
+        val download = downloadJobs[downloadID]?.state ?: return
+
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
-        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, status)
+        intent.putExtra(EXTRA_DOWNLOAD, download)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
+
         broadcastManager.sendBroadcast(intent)
     }
 
@@ -442,6 +446,7 @@ abstract class AbstractFetchDownloadService : Service() {
         private const val PARTIAL_CONTENT_STATUS = 206
         private const val OK_STATUS = 200
 
+        const val EXTRA_DOWNLOAD = "mozilla.components.feature.downloads.extras.DOWNLOAD"
         const val EXTRA_DOWNLOAD_STATUS = "mozilla.components.feature.downloads.extras.DOWNLOAD_STATUS"
         const val ACTION_OPEN = "mozilla.components.feature.downloads.OPEN"
         const val ACTION_PAUSE = "mozilla.components.feature.downloads.PAUSE"
