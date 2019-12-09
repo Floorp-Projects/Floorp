@@ -17,19 +17,10 @@ namespace dom {
 
 using namespace StorageUtils;
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SessionStorageManager)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSessionStorageManager)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(SessionStorageManager, nsIDOMStorageManager,
+                  nsIDOMSessionStorageManager)
 
-NS_IMPL_CYCLE_COLLECTION(SessionStorageManager, mBrowsingContext)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SessionStorageManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SessionStorageManager)
-
-SessionStorageManager::SessionStorageManager(
-    RefPtr<BrowsingContext> aBrowsingContext)
-    : mBrowsingContext(aBrowsingContext.forget()) {
+SessionStorageManager::SessionStorageManager() {
   StorageObserver* observer = StorageObserver::Self();
   NS_ASSERTION(
       observer,
@@ -83,12 +74,14 @@ NS_IMETHODIMP
 SessionStorageManager::GetSessionStorageCache(
     nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
     RefPtr<SessionStorageCache>* aRetVal) {
-  return GetSessionStorageCacheHelper(aPrincipal, true, nullptr, aRetVal);
+  return GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal, true,
+                                      nullptr, aRetVal);
 }
 
 nsresult SessionStorageManager::GetSessionStorageCacheHelper(
-    nsIPrincipal* aPrincipal, bool aMakeIfNeeded,
-    SessionStorageCache* aCloneFrom, RefPtr<SessionStorageCache>* aRetVal) {
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    bool aMakeIfNeeded, SessionStorageCache* aCloneFrom,
+    RefPtr<SessionStorageCache>* aRetVal) {
   *aRetVal = nullptr;
 
   nsAutoCString originKey;
@@ -157,8 +150,8 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
   *aRetval = nullptr;
 
   RefPtr<SessionStorageCache> cache;
-  nsresult rv =
-      GetSessionStorageCacheHelper(aPrincipal, false, nullptr, &cache);
+  nsresult rv = GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal,
+                                             false, nullptr, &cache);
   if (NS_FAILED(rv) || !cache) {
     return rv;
   }
@@ -184,7 +177,7 @@ SessionStorageManager::CloneStorage(Storage* aStorage) {
 
   RefPtr<SessionStorageCache> cache;
   return GetSessionStorageCacheHelper(
-      aStorage->Principal(), true,
+      aStorage->Principal(), aStorage->StoragePrincipal(), true,
       static_cast<SessionStorage*>(aStorage)->Cache(), &cache);
 }
 
@@ -202,8 +195,8 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
   *aRetval = false;
 
   RefPtr<SessionStorageCache> cache;
-  nsresult rv =
-      GetSessionStorageCacheHelper(aPrincipal, false, nullptr, &cache);
+  nsresult rv = GetSessionStorageCacheHelper(
+      aPrincipal, aStorage->StoragePrincipal(), false, nullptr, &cache);
   if (NS_FAILED(rv) || !cache) {
     return rv;
   }

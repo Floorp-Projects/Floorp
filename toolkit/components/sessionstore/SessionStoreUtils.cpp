@@ -1080,8 +1080,8 @@ static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
                                       nsTArray<nsCString>& aOrigins,
                                       nsTArray<nsString>& aKeys,
                                       nsTArray<nsString>& aValues) {
-  BrowsingContext* const browsingContext = aWindow->GetBrowsingContext();
-  if (!browsingContext) {
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (!docShell) {
     return;
   }
 
@@ -1108,8 +1108,7 @@ static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
   }
 
   /* Completed checking for recursion and is about to read storage*/
-  const RefPtr<SessionStorageManager> storageManager =
-      browsingContext->SessionStorageManager();
+  nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(docShell);
   if (!storageManager) {
     return;
   }
@@ -1210,14 +1209,10 @@ void SessionStoreUtils::RestoreSessionStorage(
     int32_t pos = entry.mKey.RFindChar('^');
     nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
         NS_ConvertUTF16toUTF8(Substring(entry.mKey, 0, pos)));
-    BrowsingContext* const browsingContext =
-        nsDocShell::Cast(aDocShell)->GetBrowsingContext();
-    if (!browsingContext) {
-      return;
-    }
-    const RefPtr<SessionStorageManager> storageManager =
-        browsingContext->SessionStorageManager();
-    if (!storageManager) {
+    nsresult rv;
+    nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_QueryInterface(aDocShell, &rv);
+    if (NS_FAILED(rv)) {
       return;
     }
     RefPtr<Storage> storage;

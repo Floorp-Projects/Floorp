@@ -4314,9 +4314,9 @@ already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyleHelper(
 
 Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
   nsIPrincipal* principal = GetPrincipal();
-  BrowsingContext* browsingContext = GetBrowsingContext();
+  nsIDocShell* docShell = GetDocShell();
 
-  if (!principal || !browsingContext || !Storage::StoragePrefIsEnabled()) {
+  if (!principal || !docShell || !Storage::StoragePrefIsEnabled()) {
     return nullptr;
   }
 
@@ -4396,10 +4396,12 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
       return nullptr;
     }
 
-    const RefPtr<SessionStorageManager> storageManager =
-        browsingContext->SessionStorageManager();
-    if (!storageManager) {
-      aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_QueryInterface(docShell, &rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
       return nullptr;
     }
 
@@ -4987,8 +4989,9 @@ void nsGlobalWindowInner::ObserveStorageNotification(
 
     bool check = false;
 
-    if (const RefPtr<SessionStorageManager> storageManager =
-            GetBrowsingContext()->SessionStorageManager()) {
+    nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_QueryInterface(GetDocShell());
+    if (storageManager) {
       nsresult rv =
           storageManager->CheckStorage(principal, changingStorage, &check);
       if (NS_FAILED(rv)) {
