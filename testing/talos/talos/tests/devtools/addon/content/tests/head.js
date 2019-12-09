@@ -45,11 +45,23 @@ function runTest(label, record) {
 }
 exports.runTest = runTest;
 
-exports.testSetup = function(url) {
+exports.testSetup = function(url, { disableCache } = {}) {
+  if (disableCache) {
+    // Tests relying on iframes should disable the cache.
+    // `browser.reload()` skips the cache for resources loaded by the main page,
+    // but not for resources loaded by iframes.
+    // Using the cache makes all the `complicated` tests much faster (except for
+    // the first one that has to fill the cache).
+    // To keep the baseline closer to the historical figures, cache is disabled.
+    Services.prefs.setBoolPref("devtools.cache.disabled", true);
+  }
   return damp.testSetup(url);
 };
 
 exports.testTeardown = function() {
+  // Reset the "devtools.cache.disabled" preference in case it was turned on in
+  // testSetup().
+  Services.prefs.setBoolPref("devtools.cache.disabled", false);
   return damp.testTeardown();
 };
 

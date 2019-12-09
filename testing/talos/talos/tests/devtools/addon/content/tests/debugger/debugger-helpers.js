@@ -200,11 +200,12 @@ function evalInContent(dbg, tab, testFunction) {
   const messageManager = tab.linkedBrowser.messageManager;
   return messageManager.loadFrameScript(
     "data:,(" +
-      encodeURIComponent(
-        `function () {
-        content.window.eval("${testFunction}");
-    }`
-      ) +
+      encodeURIComponent(`
+        function () {
+          const iframe = content.document.querySelector("iframe");
+          const win = iframe.contentWindow;
+          win.eval("${testFunction}");
+        }`) +
       ")()",
     true
   );
