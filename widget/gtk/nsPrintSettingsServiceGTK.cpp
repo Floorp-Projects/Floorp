@@ -20,10 +20,8 @@ static void serialize_gtk_printsettings_to_printdata(const gchar* key,
 
 NS_IMETHODIMP
 nsPrintSettingsServiceGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                                nsIWebBrowserPrint* aWBP,
                                                 PrintData* data) {
-  nsresult rv =
-      nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPrintSettingsGTK> settingsGTK(do_QueryInterface(aSettings));

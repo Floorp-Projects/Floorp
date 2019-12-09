@@ -23,8 +23,8 @@ class nsPrintDialogServiceWin : public nsIPrintDialogService {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() override;
-  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings,
-                  nsIWebBrowserPrint* aWebBrowserPrint) override;
+  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent,
+                  nsIPrintSettings* aSettings) override;
   NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent,
                            nsIPrintSettings* aSettings) override;
 

@@ -5,7 +5,6 @@
 #ifndef nsFlyOwnDialog_h___
 #define nsFlyOwnDialog_h___
 
-nsresult NativeShowPrintDialog(HWND aHWnd, nsIWebBrowserPrint* aWebBrowserPrint,
-                               nsIPrintSettings* aPrintSettings);
+nsresult NativeShowPrintDialog(HWND aHWnd, nsIPrintSettings* aPrintSettings);
 
 #endif /* nsFlyOwnDialog_h___ */

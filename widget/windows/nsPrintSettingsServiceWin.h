@@ -11,14 +11,13 @@
 #include "nsPrintSettingsService.h"
 
 class nsIPrintSettings;
-class nsIWebBrowserPrint;
 
 class nsPrintSettingsServiceWin final : public nsPrintSettingsService {
  public:
   nsPrintSettingsServiceWin() {}
 
   NS_IMETHODIMP SerializeToPrintData(
-      nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
+      nsIPrintSettings* aSettings,
       mozilla::embedding::PrintData* data) override;
 
   NS_IMETHODIMP DeserializeToPrintSettings(
