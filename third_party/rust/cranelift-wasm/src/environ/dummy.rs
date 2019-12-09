@@ -5,7 +5,9 @@
 //! [wasmtime-environ]: https://crates.io/crates/wasmtime-environ
 //! [Wasmtime]: https://github.com/bytecodealliance/wasmtime
 
-use crate::environ::{FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, WasmResult};
+use crate::environ::{
+    FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, TargetEnvironment, WasmResult,
+};
 use crate::func_translator::FuncTranslator;
 use crate::state::ModuleTranslationState;
 use crate::translation_utils::{
@@ -192,11 +194,13 @@ impl<'dummy_environment> DummyFuncEnvironment<'dummy_environment> {
     }
 }
 
-impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environment> {
+impl<'dummy_environment> TargetEnvironment for DummyFuncEnvironment<'dummy_environment> {
     fn target_config(&self) -> TargetFrontendConfig {
         self.mod_info.config
     }
+}
 
+impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environment> {
     fn return_mode(&self) -> ReturnMode {
         self.return_mode
     }
@@ -371,13 +375,96 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     ) -> WasmResult<ir::Value> {
         Ok(pos.ins().iconst(I32, -1))
     }
+
+    fn translate_memory_copy(
+        &mut self,
+        _pos: FuncCursor,
+        _index: MemoryIndex,
+        _heap: ir::Heap,
+        _dst: ir::Value,
+        _src: ir::Value,
+        _len: ir::Value,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_memory_fill(
+        &mut self,
+        _pos: FuncCursor,
+        _index: MemoryIndex,
+        _heap: ir::Heap,
+        _dst: ir::Value,
+        _val: ir::Value,
+        _len: ir::Value,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_memory_init(
+        &mut self,
+        _pos: FuncCursor,
+        _index: MemoryIndex,
+        _heap: ir::Heap,
+        _seg_index: u32,
+        _dst: ir::Value,
+        _src: ir::Value,
+        _len: ir::Value,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_data_drop(&mut self, _pos: FuncCursor, _seg_index: u32) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_table_size(
+        &mut self,
+        mut pos: FuncCursor,
+        _index: TableIndex,
+        _table: ir::Table,
+    ) -> WasmResult<ir::Value> {
+        Ok(pos.ins().iconst(I32, -1))
+    }
+
+    fn translate_table_copy(
+        &mut self,
+        _pos: FuncCursor,
+        _dst_index: TableIndex,
+        _dst_table: ir::Table,
+        _src_index: TableIndex,
+        _src_table: ir::Table,
+        _dst: ir::Value,
+        _src: ir::Value,
+        _len: ir::Value,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_table_init(
+        &mut self,
+        _pos: FuncCursor,
+        _seg_index: u32,
+        _table_index: TableIndex,
+        _table: ir::Table,
+        _dst: ir::Value,
+        _src: ir::Value,
+        _len: ir::Value,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn translate_elem_drop(&mut self, _pos: FuncCursor, _seg_index: u32) -> WasmResult<()> {
+        Ok(())
+    }
 }
 
-impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
+impl TargetEnvironment for DummyEnvironment {
     fn target_config(&self) -> TargetFrontendConfig {
         self.info.config
     }
+}
 
+impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
     fn declare_signature(&mut self, sig: ir::Signature) -> WasmResult<()> {
         self.info.signatures.push(sig);
         Ok(())
