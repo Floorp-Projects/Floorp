@@ -159,8 +159,8 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
           MOZ_ASSERT(f->GetContent() && f->GetContent()->IsElement(),
                      "How could we target a non-element with selectors?");
           f->PresContext()->RestyleManager()->PostRestyleEvent(
-              Element::FromNode(f->GetContent()),
-              StyleRestyleHint_RECASCADE_SELF, nsChangeHint(0));
+              Element::FromNode(f->GetContent()), RestyleHint::RECASCADE_SELF,
+              nsChangeHint(0));
         }
       }
 

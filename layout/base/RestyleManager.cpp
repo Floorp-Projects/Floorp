@@ -3375,16 +3375,16 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   if (aAttribute == nsGkAtoms::style) {
-    restyleHint |= StyleRestyleHint_RESTYLE_STYLE_ATTRIBUTE;
+    restyleHint |= RestyleHint::RESTYLE_STYLE_ATTRIBUTE;
   } else if (AttributeChangeRequiresSubtreeRestyle(*aElement, aAttribute)) {
     restyleHint |= RestyleHint::RestyleSubtree();
   } else if (aElement->IsAttributeMapped(aAttribute)) {
     // FIXME(emilio): Does this really need to re-selector-match?
-    restyleHint |= StyleRestyleHint_RESTYLE_SELF;
+    restyleHint |= RestyleHint::RESTYLE_SELF;
   } else if (aElement->IsInShadowTree() && aAttribute == nsGkAtoms::part) {
     // TODO(emilio, bug 1598094): Maybe finer-grained invalidation for part
     // attribute changes?
-    restyleHint |= StyleRestyleHint_RESTYLE_SELF;
+    restyleHint |= RestyleHint::RESTYLE_SELF;
   }
 
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {

@@ -9411,7 +9411,7 @@ bool nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer,
 /* static */
 StyleTouchAction nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
   if (!aFrame) {
-    return StyleTouchAction_AUTO;
+    return StyleTouchAction::AUTO;
   }
 
   // The touch-action CSS property applies to: all elements except:
@@ -9420,13 +9420,13 @@ StyleTouchAction nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
   bool isNonReplacedInlineElement =
       aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
   if (isNonReplacedInlineElement) {
-    return StyleTouchAction_AUTO;
+    return StyleTouchAction::AUTO;
   }
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   bool isTableElement = disp->IsInternalTableStyleExceptCell();
   if (isTableElement) {
-    return StyleTouchAction_AUTO;
+    return StyleTouchAction::AUTO;
   }
 
   return disp->mTouchAction;

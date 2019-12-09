@@ -126,7 +126,7 @@ void SVGElement::DidAnimateClass() {
   // FIXME(emilio): This re-selector-matches, but we do the snapshot stuff right
   // above... Is this needed anymore?
   if (presShell) {
-    presShell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SELF);
+    presShell->RestyleForAnimation(this, RestyleHint::RESTYLE_SELF);
   }
 }
 

@@ -2663,7 +2663,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mWillChange{{}, {0}},
       mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
-      mContain(StyleContain_NONE),
+      mContain(StyleContain::NONE),
       mAppearance(StyleAppearance::None),
       mPosition(NS_STYLE_POSITION_STATIC),
       mFloat(StyleFloat::None),
@@ -2679,7 +2679,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOrient(StyleOrient::Inline),
       mIsolation(StyleIsolation::Auto),
       mTopLayer(StyleTopLayer::None),
-      mTouchAction(StyleTouchAction_AUTO),
+      mTouchAction(StyleTouchAction::AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
@@ -3040,13 +3040,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(
           mWillChange.bits.bits ^ aNewData.mWillChange.bits.bits)};
 
   if (willChangeBitsChanged &
-      (StyleWillChangeBits_STACKING_CONTEXT | StyleWillChangeBits_SCROLL |
-       StyleWillChangeBits_OPACITY)) {
+      (StyleWillChangeBits::STACKING_CONTEXT | StyleWillChangeBits::SCROLL |
+       StyleWillChangeBits::OPACITY)) {
     hint |= nsChangeHint_RepaintFrame;
   }
 
   if (willChangeBitsChanged &
-      (StyleWillChangeBits_FIXPOS_CB | StyleWillChangeBits_ABSPOS_CB)) {
+      (StyleWillChangeBits::FIXPOS_CB | StyleWillChangeBits::ABSPOS_CB)) {
     hint |= nsChangeHint_UpdateContainingBlock;
   }
 
@@ -3336,7 +3336,7 @@ nsChangeHint nsStyleContent::CalcDifference(
 
 nsStyleTextReset::nsStyleTextReset(const Document& aDocument)
     : mTextOverflow(),
-      mTextDecorationLine(StyleTextDecorationLine_NONE),
+      mTextDecorationLine(StyleTextDecorationLine::NONE),
       mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
       mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL),
       mInitialLetterSink(0),
@@ -3425,7 +3425,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextIndent(LengthPercentage::Zero()),
       mTextUnderlineOffset(StyleTextDecorationLength::Auto()),
       mTextDecorationSkipInk(StyleTextDecorationSkipInk::Auto),
-      mTextUnderlinePosition(StyleTextUnderlinePosition::Auto()),
+      mTextUnderlinePosition(StyleTextUnderlinePosition::AUTO),
       mWebkitTextStrokeWidth(0),
       mTextEmphasisStyle(StyleTextEmphasisStyle::None()) {
   MOZ_COUNT_CTOR(nsStyleText);

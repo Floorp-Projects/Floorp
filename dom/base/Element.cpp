@@ -1834,7 +1834,7 @@ void Element::SetSMILOverrideStyleDeclaration(DeclarationBlock& aDeclaration) {
   // that's been detached since the previous animation sample.)
   if (Document* doc = GetComposedDoc()) {
     if (PresShell* presShell = doc->GetPresShell()) {
-      presShell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SMIL);
+      presShell->RestyleForAnimation(this, RestyleHint::RESTYLE_SMIL);
     }
   }
 }

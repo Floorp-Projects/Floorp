@@ -3669,7 +3669,7 @@ nsDOMWindowUtils::PostRestyleSelfEvent(Element* aElement) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsLayoutUtils::PostRestyleEvent(aElement, StyleRestyleHint_RESTYLE_SELF,
+  nsLayoutUtils::PostRestyleEvent(aElement, RestyleHint::RESTYLE_SELF,
                                   nsChangeHint(0));
   return NS_OK;
 }

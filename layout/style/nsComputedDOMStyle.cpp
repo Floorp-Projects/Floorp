@@ -1836,7 +1836,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
   const nsStyleTextReset* textReset = StyleTextReset();
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
-  if (textReset->mTextDecorationLine != StyleTextDecorationLine_NONE) {
+  if (textReset->mTextDecorationLine != StyleTextDecorationLine::NONE) {
     valueList->AppendCSSValue(
         getPropertyValue(eCSSProperty_text_decoration_line));
   }
