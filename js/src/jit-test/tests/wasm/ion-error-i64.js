@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getJitCompilerOptions()['baseline.enable']
+// |jit-test| skip-if: !getJitCompilerOptions()['baseline.enable'] || wasmBigIntEnabled()
 // These tests need at least baseline to make sense.
 
 const { nextLineNumber, startProfiling, endProfiling, assertEqPreciseStacks } = WasmHelpers;
@@ -32,7 +32,7 @@ var instance = wasmEvalText(`(module
 (function() {
     // In ion-eager mode, make sure we don't try to inline a function that
     // takes or returns i64 arguments.
-    assertErrorMessage(() => instance.add_two_i64(0, 1), TypeError, /cannot pass i64 to or from JS/);
+    assertErrorMessage(() => instance.add_two_i64(0n, 1n), TypeError, /cannot pass i64 to or from JS/);
 })();
 
 enableGeckoProfiling();
