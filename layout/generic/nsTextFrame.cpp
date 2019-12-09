@@ -5015,7 +5015,7 @@ void nsTextFrame::GetTextDecorations(
         styleTextReset->mTextDecorationLine;
 
     if (!useOverride &&
-        (StyleTextDecorationLine_COLOR_OVERRIDE & textDecorations)) {
+        (StyleTextDecorationLine::COLOR_OVERRIDE & textDecorations)) {
       // This handles the <a href="blah.html"><font color="green">La
       // la la</font></a> case. The link underline should be green.
       useOverride = true;
@@ -5083,11 +5083,11 @@ void nsTextFrame::GetTextDecorations(
 
       bool swapUnderlineAndOverline = vertical && IsUnderlineRight(f);
       const auto kUnderline = swapUnderlineAndOverline
-                                  ? StyleTextDecorationLine_OVERLINE
-                                  : StyleTextDecorationLine_UNDERLINE;
+                                  ? StyleTextDecorationLine::OVERLINE
+                                  : StyleTextDecorationLine::UNDERLINE;
       const auto kOverline = swapUnderlineAndOverline
-                                 ? StyleTextDecorationLine_UNDERLINE
-                                 : StyleTextDecorationLine_OVERLINE;
+                                 ? StyleTextDecorationLine::UNDERLINE
+                                 : StyleTextDecorationLine::OVERLINE;
 
       const nsStyleText* const styleText = context->StyleText();
 
@@ -5103,7 +5103,7 @@ void nsTextFrame::GetTextDecorations(
             styleText->mTextUnderlineOffset,
             styleTextReset->mTextDecorationThickness, color, style));
       }
-      if (textDecorations & StyleTextDecorationLine_LINE_THROUGH) {
+      if (textDecorations & StyleTextDecorationLine::LINE_THROUGH) {
         aDecorations.mStrikes.AppendElement(nsTextFrame::LineDecoration(
             f, baselineOffset, styleText->mTextUnderlinePosition,
             styleText->mTextUnderlineOffset,
@@ -5324,7 +5324,7 @@ static void SetOffsetIfLength(const StyleTextDecorationLength& aOffset,
   MOZ_ASSERT(aOffset.IsLength(), "unexpected value type!");
 
   if (aParams.vertical && !aIsSideways &&
-      aParams.decoration == StyleTextDecorationLine_UNDERLINE) {
+      aParams.decoration == StyleTextDecorationLine::UNDERLINE) {
     // vertical text has a baseline that goes through the center of the text
     // the user would expect that an offset of 0 would be slightly behind the
     // automatic offset, not down the middle of the text
@@ -5408,11 +5408,11 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     params.vertical = verticalRun;
     params.sidewaysLeft = mTextRun->IsSidewaysLeft();
     params.offset = underlineOffset / appUnitsPerDevUnit;
-    params.decoration = StyleTextDecorationLine_UNDERLINE;
+    params.decoration = StyleTextDecorationLine::UNDERLINE;
     nsRect underlineRect =
         nsCSSRendering::GetTextDecorationRect(aPresContext, params);
     params.offset = maxAscent / appUnitsPerDevUnit;
-    params.decoration = StyleTextDecorationLine_OVERLINE;
+    params.decoration = StyleTextDecorationLine::OVERLINE;
     nsRect overlineRect =
         nsCSSRendering::GetTextDecorationRect(aPresContext, params);
 
@@ -5485,8 +5485,9 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
             params.defaultLineThickness = params.lineSize.height;
 
             bool swapUnderline = verticalDec && IsUnderlineRight(this);
-            if (swapUnderline ? lineType == StyleTextDecorationLine_OVERLINE
-                              : lineType == StyleTextDecorationLine_UNDERLINE) {
+            if (swapUnderline
+                    ? lineType == StyleTextDecorationLine::OVERLINE
+                    : lineType == StyleTextDecorationLine::UNDERLINE) {
               if (dec.mTextUnderlinePosition.IsUnder()) {
                 params.offset = -metrics.emDescent;
               }
@@ -5514,17 +5515,17 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
       // Below we loop through all text decorations and compute the rectangle
       // containing all of them, in this frame's coordinate space
-      params.decoration = StyleTextDecorationLine_UNDERLINE;
+      params.decoration = StyleTextDecorationLine::UNDERLINE;
       for (const LineDecoration& dec : textDecs.mUnderlines) {
         accumulateDecorationRect(dec, &Metrics::underlineSize,
                                  &Metrics::underlineOffset, params.decoration);
       }
-      params.decoration = StyleTextDecorationLine_OVERLINE;
+      params.decoration = StyleTextDecorationLine::OVERLINE;
       for (const LineDecoration& dec : textDecs.mOverlines) {
         accumulateDecorationRect(dec, &Metrics::underlineSize,
                                  &Metrics::maxAscent, params.decoration);
       }
-      params.decoration = StyleTextDecorationLine_LINE_THROUGH;
+      params.decoration = StyleTextDecorationLine::LINE_THROUGH;
       for (const LineDecoration& dec : textDecs.mStrikes) {
         accumulateDecorationRect(dec, &Metrics::strikeoutSize,
                                  &Metrics::strikeoutOffset, params.decoration);
@@ -5704,8 +5705,8 @@ void nsTextFrame::DrawSelectionDecorations(
           aTextPaintStyle.PresContext(), aFontMetrics, aSelectionType);
 
       bool swapUnderline = aVertical && IsUnderlineRight(this);
-      if (swapUnderline ? aDecoration == StyleTextDecorationLine_OVERLINE
-                        : aDecoration == StyleTextDecorationLine_UNDERLINE) {
+      if (swapUnderline ? aDecoration == StyleTextDecorationLine::OVERLINE
+                        : aDecoration == StyleTextDecorationLine::UNDERLINE) {
         WritingMode wm = GetWritingMode();
         const auto* styleText = StyleText();
         if (styleText->mTextUnderlinePosition.IsUnder()) {
@@ -5798,7 +5799,7 @@ void nsTextFrame::DrawSelectionDecorations(
       SetWidthIfLength(decThickness, &params.lineSize.height,
                        appUnitsPerDevPixel);
       params.offset = metrics.strikeoutOffset + 0.5;
-      params.decoration = StyleTextDecorationLine_LINE_THROUGH;
+      params.decoration = StyleTextDecorationLine::LINE_THROUGH;
       break;
     }
     default:
@@ -6315,8 +6316,8 @@ void nsTextFrame::PaintTextSelectionDecorations(
   gfxFont* firstFont = aParams.provider->GetFontGroup()->GetFirstValidFont();
   bool verticalRun = mTextRun->IsVertical();
   bool rightUnderline = verticalRun && IsUnderlineRight(this);
-  const auto kDecoration = rightUnderline ? StyleTextDecorationLine_OVERLINE
-                                          : StyleTextDecorationLine_UNDERLINE;
+  const auto kDecoration = rightUnderline ? StyleTextDecorationLine::OVERLINE
+                                          : StyleTextDecorationLine::UNDERLINE;
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
   gfxFont::Metrics decorationMetrics(
       firstFont->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
@@ -6995,7 +6996,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
     params.defaultLineThickness = params.lineSize.height;
     params.baselineOffset = dec.mBaselineOffset / app;
 
-    if (lineType == StyleTextDecorationLine_UNDERLINE &&
+    if (lineType == StyleTextDecorationLine::UNDERLINE &&
         dec.mTextUnderlinePosition.IsUnder()) {
       params.offset = -metrics.emDescent;
     } else {
@@ -7003,8 +7004,8 @@ void nsTextFrame::DrawTextRunAndDecorations(
     }
 
     bool swapUnderline = verticalDec && IsUnderlineRight(this);
-    if (swapUnderline ? lineType == StyleTextDecorationLine_OVERLINE
-                      : lineType == StyleTextDecorationLine_UNDERLINE) {
+    if (swapUnderline ? lineType == StyleTextDecorationLine::OVERLINE
+                      : lineType == StyleTextDecorationLine::UNDERLINE) {
       SetOffsetIfLength(dec.mTextUnderlineOffset, params, metrics,
                         PresContext()->AppUnitsPerDevPixel(), wm.IsSideways(),
                         swapUnderline);
@@ -7054,14 +7055,14 @@ void nsTextFrame::DrawTextRunAndDecorations(
   }
 
   // Underlines
-  params.decoration = StyleTextDecorationLine_UNDERLINE;
+  params.decoration = StyleTextDecorationLine::UNDERLINE;
   for (const LineDecoration& dec : Reversed(aDecorations.mUnderlines)) {
     paintDecorationLine(dec, &Metrics::underlineSize, &Metrics::underlineOffset,
                         params.decoration);
   }
 
   // Overlines
-  params.decoration = StyleTextDecorationLine_OVERLINE;
+  params.decoration = StyleTextDecorationLine::OVERLINE;
   for (const LineDecoration& dec : Reversed(aDecorations.mOverlines)) {
     paintDecorationLine(dec, &Metrics::underlineSize, &Metrics::maxAscent,
                         params.decoration);
@@ -7095,7 +7096,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
   }
 
   // Line-throughs
-  params.decoration = StyleTextDecorationLine_LINE_THROUGH;
+  params.decoration = StyleTextDecorationLine::LINE_THROUGH;
   for (const LineDecoration& dec : Reversed(aDecorations.mStrikes)) {
     paintDecorationLine(dec, &Metrics::strikeoutSize, &Metrics::strikeoutOffset,
                         params.decoration);
