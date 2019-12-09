@@ -89,8 +89,6 @@ SessionStorageManager::GetSessionStorageCache(
 nsresult SessionStorageManager::GetSessionStorageCacheHelper(
     nsIPrincipal* aPrincipal, bool aMakeIfNeeded,
     SessionStorageCache* aCloneFrom, RefPtr<SessionStorageCache>* aRetVal) {
-  *aRetVal = nullptr;
-
   nsAutoCString originKey;
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
@@ -98,25 +96,35 @@ nsresult SessionStorageManager::GetSessionStorageCacheHelper(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  return GetSessionStorageCacheHelper(originAttributes, originKey,
+                                      aMakeIfNeeded, aCloneFrom, aRetVal);
+}
+
+nsresult SessionStorageManager::GetSessionStorageCacheHelper(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey,
+    bool aMakeIfNeeded, SessionStorageCache* aCloneFrom,
+    RefPtr<SessionStorageCache>* aRetVal) {
+  *aRetVal = nullptr;
+
   OriginKeyHashTable* table;
-  if (!mOATable.Get(originAttributes, &table)) {
+  if (!mOATable.Get(aOriginAttrs, &table)) {
     if (aMakeIfNeeded) {
       table = new OriginKeyHashTable();
-      mOATable.Put(originAttributes, table);
+      mOATable.Put(aOriginAttrs, table);
     } else {
       return NS_OK;
     }
   }
 
   RefPtr<SessionStorageCache> cache;
-  if (!table->Get(originKey, getter_AddRefs(cache))) {
+  if (!table->Get(aOriginKey, getter_AddRefs(cache))) {
     if (aMakeIfNeeded) {
       if (aCloneFrom) {
         cache = aCloneFrom->Clone();
       } else {
         cache = new SessionStorageCache();
       }
-      table->Put(originKey, cache);
+      table->Put(aOriginKey, cache);
     } else {
       return NS_OK;
     }
