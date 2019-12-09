@@ -31,6 +31,8 @@ class ThreadEventTarget final : public nsISerialEventTarget {
   // Sets the thread for which IsOnCurrentThread returns true to the current
   // thread.
   void SetCurrentThread();
+  // Call ClearCurrentThread() before the PRThread is deleted on thread join.
+  void ClearCurrentThread();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t n = 0;
