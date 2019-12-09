@@ -15,6 +15,7 @@ interface nsIFind : nsISupports
   attribute boolean findBackwards;
   attribute boolean caseSensitive;
   attribute boolean entireWord;
+  attribute boolean matchDiacritics;
 
   /**
    * Find some text in the current context. The implementation is

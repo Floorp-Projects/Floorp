@@ -25,6 +25,11 @@ findbar-case-sensitive =
     .accesskey = C
     .tooltiptext = Search with case sensitivity
 
+findbar-match-diacritics =
+    .label = Match Diacritics
+    .accesskey = D
+    .tooltiptext = Distinguish between accented letters and their base letters (for example, when searching for “resume”, “résumé” will not be matched)
+
 findbar-entire-word =
     .label = Whole Words
     .accesskey = W

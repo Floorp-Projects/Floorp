@@ -58,6 +58,7 @@ add_task(async function test_start() {
         Assert.equal(range.toString(), findText, "Text content should match");
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -88,6 +89,7 @@ add_task(async function test_subframes() {
         Assert.equal(range.toString(), findText, "Text content should match");
       },
     },
+    matchDiacritics: false,
     word: findText,
     useSubFrames: true,
   });
@@ -119,6 +121,7 @@ add_task(async function test_valid_arguments() {
         ++count;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -137,9 +140,27 @@ add_task(async function test_valid_arguments() {
             ++count;
           },
         },
+        matchDiacritics: false,
         word: findText,
       }),
     /Missing required option 'caseSensitive'/,
+    "Should throw when missing an argument"
+  );
+  finderIterator.reset();
+
+  Assert.throws(
+    () =>
+      finderIterator.start({
+        caseSensitive: false,
+        entireWord: false,
+        listener: {
+          onIteratorRangeFound(range) {
+            ++count;
+          },
+        },
+        word: findText,
+      }),
+    /Missing required option 'matchDiacritics'/,
     "Should throw when missing an argument"
   );
   finderIterator.reset();
@@ -153,6 +174,7 @@ add_task(async function test_valid_arguments() {
             ++count;
           },
         },
+        matchDiacritics: false,
         word: findText,
       }),
     /Missing required option 'entireWord'/,
@@ -170,6 +192,7 @@ add_task(async function test_valid_arguments() {
             ++count;
           },
         },
+        matchDiacritics: false,
         word: findText,
       }),
     /Missing required option 'finder'/,
@@ -183,6 +206,7 @@ add_task(async function test_valid_arguments() {
         caseSensitive: true,
         entireWord: false,
         finder: gMockFinder,
+        matchDiacritics: false,
         word: findText,
       }),
     /Missing valid, required option 'listener'/,
@@ -201,6 +225,7 @@ add_task(async function test_valid_arguments() {
             ++count;
           },
         },
+        matchDiacritics: false,
       }),
     /Missing required option 'word'/,
     "Should throw when missing an argument"
@@ -225,6 +250,7 @@ add_task(async function test_stop() {
         ++count;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -252,6 +278,7 @@ add_task(async function test_reset() {
         ++count;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -294,10 +321,11 @@ add_task(async function test_parallel_starts() {
         ++count;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
-  await new Promise(resolve => gMockWindow.setTimeout(resolve, 120));
+  await new Promise(resolve => gMockWindow.setTimeout(resolve, 100));
   Assert.ok(finderIterator.running, "We ought to be running here");
 
   let count2 = 0;
@@ -310,6 +338,7 @@ add_task(async function test_parallel_starts() {
         ++count2;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -360,6 +389,7 @@ add_task(async function test_allowDistance() {
         ++count;
       },
     },
+    matchDiacritics: false,
     word: findText,
   });
 
@@ -373,6 +403,7 @@ add_task(async function test_allowDistance() {
         ++count2;
       },
     },
+    matchDiacritics: false,
     word: "gu",
   });
 
@@ -387,6 +418,7 @@ add_task(async function test_allowDistance() {
         ++count3;
       },
     },
+    matchDiacritics: false,
     word: "gu",
   });
 

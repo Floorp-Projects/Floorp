@@ -118,6 +118,7 @@ class nsTypeAheadFind : public nsITypeAheadFind,
 
   bool mCaseSensitive;
   bool mEntireWord;
+  bool mMatchDiacritics;
 
   bool EnsureFind() {
     if (mFind) {
@@ -131,6 +132,7 @@ class nsTypeAheadFind : public nsITypeAheadFind,
 
     mFind->SetCaseSensitive(mCaseSensitive);
     mFind->SetEntireWord(mEntireWord);
+    mFind->SetMatchDiacritics(mMatchDiacritics);
 
     return true;
   }

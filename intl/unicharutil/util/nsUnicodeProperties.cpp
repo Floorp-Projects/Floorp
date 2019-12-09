@@ -8,7 +8,11 @@
 #include "nsUnicodePropertyData.cpp"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/HashTable.h"
 #include "nsCharTraits.h"
+
+#include "unicode/uchar.h"
+#include "unicode/unorm2.h"
 
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT 0x110000
@@ -303,6 +307,80 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
     iter.Next();
   }
   return result;
+}
+
+uint32_t GetNaked(uint32_t aCh) {
+  using namespace mozilla;
+
+  static const UNormalizer2* normalizer;
+  static HashMap<uint32_t, uint32_t> nakedCharCache;
+
+  HashMap<uint32_t, uint32_t>::Ptr entry = nakedCharCache.lookup(aCh);
+  if (entry.found()) {
+    return entry->value();
+  }
+
+  UErrorCode error = U_ZERO_ERROR;
+  if (!normalizer) {
+    normalizer = unorm2_getNFDInstance(&error);
+    if (U_FAILURE(error)) {
+      return aCh;
+    }
+  }
+
+  static const size_t MAX_DECOMPOSITION_SIZE = 16;
+  UChar decomposition[MAX_DECOMPOSITION_SIZE];
+  UChar* combiners;
+  int32_t decompositionLen;
+  uint32_t baseChar, nextChar;
+  decompositionLen = unorm2_getDecomposition(normalizer, aCh, decomposition,
+                                             MAX_DECOMPOSITION_SIZE, &error);
+  if (decompositionLen < 1) {
+    // The character does not decompose.
+    return aCh;
+  }
+
+  if (u_getIntPropertyValue(aCh, UCHAR_GENERAL_CATEGORY) & U_GC_M_MASK) {
+    // The character is itself a combining character, and we don't want to use
+    // its decomposition into multiple combining characters.
+    baseChar = aCh;
+    goto cache;
+  }
+
+  if (NS_IS_HIGH_SURROGATE(decomposition[0])) {
+    baseChar = SURROGATE_TO_UCS4(decomposition[0], decomposition[1]);
+    combiners = decomposition + 2;
+  } else {
+    baseChar = decomposition[0];
+    combiners = decomposition + 1;
+  }
+
+  if (IS_IN_BMP(baseChar) != IS_IN_BMP(aCh)) {
+    // Mappings that would change the length of a UTF-16 string are not
+    // currently supported.
+    baseChar = aCh;
+    goto cache;
+  }
+
+  if (decompositionLen > 1) {
+    if (NS_IS_HIGH_SURROGATE(combiners[0])) {
+      nextChar = SURROGATE_TO_UCS4(combiners[0], combiners[1]);
+    } else {
+      nextChar = combiners[0];
+    }
+    if (u_getCombiningClass(nextChar) == 0) {
+      // Hangul syllables decompose but do not actually have diacritics.
+      baseChar = aCh;
+    }
+  }
+
+cache:
+  if (!nakedCharCache.putNew(aCh, baseChar)) {
+    // We're out of memory, so delete the cache to free some up.
+    nakedCharCache.clearAndCompact();
+  }
+
+  return baseChar;
 }
 
 }  // end namespace unicode
