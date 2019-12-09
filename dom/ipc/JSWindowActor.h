@@ -12,7 +12,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsRefPtrHashtable.h"
+#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 class nsQueryActor;

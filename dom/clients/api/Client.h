@@ -6,6 +6,7 @@
 #ifndef _mozilla_dom_Client_h
 #define _mozilla_dom_Client_h
 
+#include "X11UndefineNone.h"
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/StorageAccess.h"
 #include "nsCOMPtr.h"
