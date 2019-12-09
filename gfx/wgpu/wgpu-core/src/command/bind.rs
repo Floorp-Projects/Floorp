@@ -12,7 +12,7 @@ use crate::{
 
 use smallvec::{smallvec, SmallVec};
 
-use std::slice;
+use std::convert::identity;
 
 pub const DEFAULT_BIND_GROUPS: usize = 4;
 type BindGroupMask = u8;
@@ -36,21 +36,16 @@ pub enum Provision {
     Changed { was_compatible: bool },
 }
 
-#[derive(Clone)]
-pub struct FollowUpIter<'a> {
-    iter: slice::Iter<'a, BindGroupEntry>,
+struct TakeSome<I> {
+    iter: I,
 }
-impl<'a> Iterator for FollowUpIter<'a> {
-    type Item = (BindGroupId, &'a [BufferAddress]);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .and_then(|entry| {
-                Some((
-                    entry.actual_value()?,
-                    entry.dynamic_offsets.as_slice(),
-                ))
-            })
+impl<T, I> Iterator for TakeSome<I>
+where
+    I: Iterator<Item = Option<T>>,
+{
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        self.iter.next().and_then(identity)
     }
 }
 
@@ -168,7 +163,11 @@ impl Binder {
         bind_group_id: BindGroupId,
         bind_group: &BindGroup<B>,
         offsets: &[BufferAddress],
-    ) -> Option<(PipelineLayoutId, FollowUpIter<'a>)> {
+    ) -> Option<(
+        PipelineLayoutId,
+        impl 'a + Iterator<Item = BindGroupId>,
+        impl 'a + Iterator<Item = &'a BufferAddress>,
+    )> {
         log::trace!("\tBinding [{}] = group {:?}", index, bind_group_id);
         debug_assert_eq!(B::VARIANT, bind_group_id.backend());
 
@@ -185,9 +184,14 @@ impl Binder {
                     log::trace!("\t\tbinding up to {}", end);
                     Some((
                         self.pipeline_layout_id?,
-                        FollowUpIter {
-                            iter: self.entries[index + 1 .. end].iter(),
-                        }
+                        TakeSome {
+                            iter: self.entries[index + 1 .. end]
+                                .iter()
+                                .map(|entry| entry.actual_value()),
+                        },
+                        self.entries[index + 1 .. end]
+                            .iter()
+                            .flat_map(|entry| entry.dynamic_offsets.as_slice()),
                     ))
                 } else {
                     log::trace!("\t\tskipping above compatible {}", compatible_count);

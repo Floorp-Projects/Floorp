@@ -31,7 +31,7 @@ endif
 	run-example-compute run-example-triangle run-example-remote
 
 #TODO: example-remote
-all: example-compute example-triangle lib-remote
+all: example-compute example-triangle
 
 check:
 	cargo check --all

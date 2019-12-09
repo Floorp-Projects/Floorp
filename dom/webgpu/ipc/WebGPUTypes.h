@@ -12,7 +12,6 @@ namespace mozilla {
 namespace webgpu {
 
 typedef uint64_t RawId;
-typedef uint64_t BufferAddress;
 
 }  // namespace webgpu
 
