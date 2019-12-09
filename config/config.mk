@@ -435,23 +435,6 @@ endif # ! WINNT
 # this file
 OBJ_SUFFIX := $(_OBJ_SUFFIX)
 
-OBJS_VAR_SUFFIX := OBJS
-
-# PGO builds with GCC and clang-cl build objects with instrumentation in
-# a first pass, then objects optimized, without instrumentation, in a
-# second pass. If we overwrite the objects from the first pass with
-# those from the second, we end up not getting instrumentation data for
-# better optimization on incremental builds. As a consequence, we use a
-# different object suffix for the first pass.
-ifdef MOZ_PROFILE_GENERATE
-ifneq (,$(GNU_CC)$(CLANG_CL))
-OBJS_VAR_SUFFIX := PGO_OBJS
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
-OBJ_SUFFIX := i_o
-endif
-endif
-endif
-
 PLY_INCLUDE = -I$(MOZILLA_DIR)/other-licenses/ply
 
 # Enable verbose logs when not using `make -s`
