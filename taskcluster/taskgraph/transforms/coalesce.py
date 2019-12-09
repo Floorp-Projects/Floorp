@@ -9,7 +9,8 @@ values for the coalesce settings of the job.
 from __future__ import absolute_import
 
 from taskgraph.transforms.base import TransformSequence
-from hashlib import sha256
+# Caller disabled - see below.
+# from hashlib import sha256
 
 transforms = TransformSequence()
 
