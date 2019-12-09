@@ -29,7 +29,7 @@ use cranelift_codegen::ir::{self, constant::ConstantOffset, stackslot::StackSize
 use cranelift_codegen::isa::TargetIsa;
 use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
-use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult, ModuleTranslationState};
+use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResult};
 
 use crate::bindings;
 use crate::isa::make_isa;

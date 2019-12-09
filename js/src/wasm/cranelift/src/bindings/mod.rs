@@ -154,7 +154,8 @@ impl FuncTypeWithId {
         if num_results == 0 {
             Ok(Vec::new())
         } else {
-            let results = unsafe { slice::from_raw_parts(low_level::funcType_results(self.0), num_results) };
+            let results =
+                unsafe { slice::from_raw_parts(low_level::funcType_results(self.0), num_results) };
             let mut ret = Vec::new();
             for &result in results {
                 ret.push(valtype_to_type(result)?);
@@ -170,7 +171,7 @@ impl FuncTypeWithId {
                 [t] => Ok(Some(*t)),
                 _ => Err(WasmError::Unsupported("multiple values".to_string())),
             },
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
