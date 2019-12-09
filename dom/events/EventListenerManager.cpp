@@ -1714,7 +1714,8 @@ bool EventListenerManager::HasApzAwareListeners() {
 }
 
 bool EventListenerManager::IsApzAwareListener(Listener* aListener) {
-  return !aListener->mFlags.mPassive && IsApzAwareEvent(aListener->mTypeAtom);
+  return !aListener->mFlags.mPassive && mIsMainThreadELM &&
+         IsApzAwareEvent(aListener->mTypeAtom);
 }
 
 bool EventListenerManager::IsApzAwareEvent(nsAtom* aEvent) {
