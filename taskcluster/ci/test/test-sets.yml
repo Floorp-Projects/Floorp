@@ -203,6 +203,7 @@ raptor-chrome:
     - raptor-tp6-30-chrome-cold
     - raptor-ares6-chrome
     - raptor-jetstream2-chrome
+    - raptor-youtube-playback-chrome
 
 raptor-profiling:
     - raptor-tp6-1-firefox-profiling
