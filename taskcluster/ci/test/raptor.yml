@@ -57,7 +57,7 @@ raptor-tp6-1-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-1-firefox
     treeherder-symbol: Rap(tp6-1)
-    condprof: True
+    condprof: true
     mozharness:
         extra-options:
             - --test=raptor-tp6-1
@@ -697,7 +697,7 @@ raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"
     try-name: raptor-tp6-1-firefox-cold
     treeherder-symbol: Rap(tp6-c-1)
-    condprof: True
+    condprof: true
     mozharness:
         extra-options:
             - --test=raptor-tp6-1-cold
@@ -1019,7 +1019,7 @@ browsertime-tp6:
     treeherder-symbol: Btime(tp6)
     max-run-time: 4000
     tier: 3
-    condprof: True
+    condprof: true
     run-visual-metrics:
         by-app:
             chrome: false

@@ -14,11 +14,11 @@ jobs:
           - mozilla-beta
       when:
           by-project:
-              mozilla-beta:
-                - {weekday: 'Monday', hour: 4, minute: 0}
-                - {weekday: 'Wednesday', hour: 4, minute: 0}
-                - {weekday: 'Friday', hour: 4, minute: 0}
               # No default
+              mozilla-beta:
+                  - {weekday: 'Monday', hour: 4, minute: 0}
+                  - {weekday: 'Wednesday', hour: 4, minute: 0}
+                  - {weekday: 'Friday', hour: 4, minute: 0}
 
     - name: nightly-desktop
       job:
