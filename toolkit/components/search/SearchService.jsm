@@ -781,7 +781,7 @@ SearchService.prototype = {
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
       SearchUtils.log(
-        "_init: failure initializng search: " + ex + "\n" + ex.stack
+        "_init: failure initializing search: " + ex + "\n" + ex.stack
       );
     }
     gInitialized = true;
