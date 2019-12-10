@@ -2179,7 +2179,7 @@ class Document : public nsINode,
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
   // It is responsive to dispatch "fullscreenerror" event when necessary.
-  bool FullscreenElementReadyCheck(const FullscreenRequest&);
+  bool FullscreenElementReadyCheck(FullscreenRequest&);
 
   // This is called asynchronously by Document::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
