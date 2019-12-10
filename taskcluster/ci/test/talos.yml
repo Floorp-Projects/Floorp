@@ -412,7 +412,6 @@ talos-motionmark-profiling:
     description: "Talos motionmark with gecko profiling"
     try-name: motionmark-prof
     treeherder-symbol: T-Prof(mm)
-    tier: 2
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     tier:

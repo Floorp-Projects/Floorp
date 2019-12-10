@@ -447,4 +447,3 @@ mac-notarization:
                     production: security/mac/hardenedruntime/production.entitlements.xml
                     default: security/mac/hardenedruntime/developer.entitlements.xml
             default: ''
-
