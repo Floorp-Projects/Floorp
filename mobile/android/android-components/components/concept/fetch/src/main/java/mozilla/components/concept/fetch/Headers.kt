@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.fetch
 
+import java.util.Locale
+
 /**
  * A collection of HTTP [Headers] (immutable) of a [Request] or [Response].
  */
@@ -104,7 +106,8 @@ class MutableHeaders(headers: List<Header>) : Headers, MutableIterable<Header> {
     /**
      * Returns the last value corresponding to the specified header field name. Or null if the header does not exist.
      */
-    override fun get(name: String) = headers.lastOrNull { it.name.toLowerCase() == name.toLowerCase() }?.value
+    override fun get(name: String) =
+        headers.lastOrNull { it.name.toLowerCase(Locale.ROOT) == name.toLowerCase(Locale.ROOT) }?.value
 
     /**
      * Returns the list of values corresponding to the specified header field name.
