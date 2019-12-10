@@ -2163,9 +2163,9 @@ var gPrivacyPane = {
    * Displays the learn more health report page when a user opts out of data collection.
    */
   showDataDeletion() {
-    let url = Services.urlFormatter.formatURLPref(
-      "datareporting.healthreport.infoURL"
-    );
+    let url =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "telemetry-clientid";
     window.open(url, "_blank");
   },
 
