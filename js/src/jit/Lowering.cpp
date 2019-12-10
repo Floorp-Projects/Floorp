@@ -4825,11 +4825,6 @@ bool LIRGenerator::visitInstruction(MInstruction* ins) {
   }
   visitInstructionDispatch(ins);
 
-  if (ins->possiblyCalls()) {
-    gen->setNeedsStaticStackAlignment();
-    gen->setNeedsOverrecursedCheck();
-  }
-
   if (ins->resumePoint()) {
     updateResumeState(ins);
   }
