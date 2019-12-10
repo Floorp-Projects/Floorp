@@ -2,12 +2,11 @@
 'use strict';
 
 promise_test(async testCase => {
-  assert_class_string(navigator.screen, 'ScreenManager');
-  assert_equals(typeof navigator.screen.getScreens, 'function');
-}, 'navigator.screen.getScreens is present');
+  assert_equals(typeof self.getScreens, 'function');
+}, 'self.getScreens is present');
 
 promise_test(async testCase => {
-  const screens = await navigator.screen.getScreens();
+  const screens = await self.getScreens();
   assert_greater_than(screens.length, 0);
 
   assert_equals(typeof screens[0].availWidth, 'number');
@@ -27,4 +26,4 @@ promise_test(async testCase => {
   assert_equals(typeof screens[0].internal, 'boolean');
   assert_equals(typeof screens[0].scaleFactor, 'number');
   assert_equals(typeof screens[0].name, 'string');
-}, 'navigator.screen.getScreens returns at least 1 Screen');
+}, 'self.getScreens returns at least 1 Screen');
