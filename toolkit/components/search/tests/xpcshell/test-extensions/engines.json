@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "engineName": "plainengine",
+      "webExtension": {
+        "id": "plainengine@search.mozilla.org",
+        "version": "1.0"
+      },
+      "orderHint": 10000,
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "engineName": "special-engine",
+      "webExtension": {
+        "id": "special-engine@search.mozilla.org",
+        "version": "1.0"
+      },
+      "orderHint": 7000,
+      "appliesTo": [{
+        "included": { "everywhere": true }
+      }]
+    },
+    {
+      "engineName": "multilocale-an",
+      "webExtension": {
+        "id": "multilocale@search.mozilla.org",
+        "version": "1.0",
+        "locales": ["an"]
+      },
+      "orderHint": 6000,
+      "appliesTo": [{
+        "included": { "regions": ["an"] }
+      }]
+    }
+  ]
+}
