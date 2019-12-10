@@ -74,4 +74,4 @@ linux64-mingw-fxc2-x86:
         fetch:
             - fxc2
         toolchain:
-            - linux64-clang-8-mingw-x86
+            - linux64-clang-mingw-x86
