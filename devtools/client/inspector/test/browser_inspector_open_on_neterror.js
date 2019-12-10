@@ -17,7 +17,9 @@ add_task(async function() {
   ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ url: TEST_URL_1 }], async function({ url }) {
+    tab.linkedBrowser,
+    [{ url: TEST_URL_1 }],
+    async function({ url }) {
       // Also, the neterror being privileged, the DOMContentLoaded only fires on
       // the chromeEventHandler.
       const { chromeEventHandler } = docShell; // eslint-disable-line no-undef

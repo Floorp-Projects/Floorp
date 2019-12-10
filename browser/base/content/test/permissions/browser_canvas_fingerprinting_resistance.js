@@ -240,7 +240,11 @@ async function withNewTabInput(grantPermission, browser) {
     await popupHidden;
     is(testPermission(), Services.perms.DENY_ACTION, "permission denied");
   }
-  await SpecialPowers.spawn(browser, [grantPermission], extractCanvasDataUserInput);
+  await SpecialPowers.spawn(
+    browser,
+    [grantPermission],
+    extractCanvasDataUserInput
+  );
   await SpecialPowers.popPrefEnv();
 }
 

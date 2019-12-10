@@ -179,7 +179,9 @@ async function testDoorHanger(
 
   let url = TEST_3RD_PARTY_PAGE + "?disableWaitUntilPermission";
   let ct = SpecialPowers.spawn(
-    browser, [{ page: url, callback: runChecks.toString(), choice, useEscape }], async function(obj) {
+    browser,
+    [{ page: url, callback: runChecks.toString(), choice, useEscape }],
+    async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
         ifr.onload = function() {

@@ -100,7 +100,9 @@ add_task(async () => {
         await closeContextMenu(menu);
 
         let videoNotCloning = SpecialPowers.spawn(
-          browser, [videoID], async videoID => {
+          browser,
+          [videoID],
+          async videoID => {
             let video = content.document.getElementById(videoID);
             await ContentTaskUtils.waitForCondition(() => {
               return !video.isCloningElementVisually;

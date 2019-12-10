@@ -63,7 +63,9 @@ add_task(async function() {
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
   const textContent = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       return content.document.querySelector("style").textContent;
     }
   );

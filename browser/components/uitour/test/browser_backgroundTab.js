@@ -35,7 +35,9 @@ async function loadForegroundTab() {
   // Spawn a content task that resolves once we're sure the visibilityState was
   // changed. This state is what the tests in this file rely on.
   let promise = SpecialPowers.spawn(
-    gBrowser.selectedTab.linkedBrowser, [], async function() {
+    gBrowser.selectedTab.linkedBrowser,
+    [],
+    async function() {
       return new Promise(resolve => {
         let document = content.document;
         document.addEventListener("visibilitychange", function onStateChange() {

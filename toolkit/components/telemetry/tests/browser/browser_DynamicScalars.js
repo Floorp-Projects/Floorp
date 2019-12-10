@@ -201,7 +201,9 @@ add_task(async function test_aggregation() {
     { gBrowser, url: "about:blank", forceNewProcess: true },
     async function(browser) {
       // Accumulate from the content process into both dynamic scalars.
-      await SpecialPowers.spawn(browser, [SCALAR_FULL_NAME], async function(aName) {
+      await SpecialPowers.spawn(browser, [SCALAR_FULL_NAME], async function(
+        aName
+      ) {
         Services.telemetry.scalarAdd(aName, 3);
       });
     }

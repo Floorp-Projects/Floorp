@@ -20,7 +20,9 @@ add_task(async function test_opening_blocked_popups() {
   );
 
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [baseURL + "popup_blocker.html"], uri => {
+    tab.linkedBrowser,
+    [baseURL + "popup_blocker.html"],
+    uri => {
       let iframe = content.document.createElement("iframe");
       iframe.id = "popupframe";
       iframe.src = uri;
@@ -80,7 +82,9 @@ add_task(async function test_opening_blocked_popups() {
 
   // Remove the frame and add another one:
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [baseURL + "popup_blocker.html"], uri => {
+    tab.linkedBrowser,
+    [baseURL + "popup_blocker.html"],
+    uri => {
       content.document.getElementById("popupframe").remove();
       let iframe = content.document.createElement("iframe");
       iframe.id = "popupframe";

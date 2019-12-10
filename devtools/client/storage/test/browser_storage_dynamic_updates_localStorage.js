@@ -57,7 +57,9 @@ async function testRemoveAndChange(targetKey, expectedKeys, host) {
 
 async function setLocalStorageItem(key, value) {
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[key, value]], ([innerKey, innerValue]) => {
+    gBrowser.selectedBrowser,
+    [[key, value]],
+    ([innerKey, innerValue]) => {
       content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
     }
   );

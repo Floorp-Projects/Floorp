@@ -159,7 +159,9 @@ function waitForPopupAtAnchor(popup, anchorNode, nextTestFn, msg) {
 
 function getConfigurationPromise(configName) {
   return SpecialPowers.spawn(
-    gTestTab.linkedBrowser, [configName], contentConfigName => {
+    gTestTab.linkedBrowser,
+    [configName],
+    contentConfigName => {
       return new Promise(resolve => {
         let contentWin = Cu.waiveXrays(content);
         contentWin.Mozilla.UITour.getConfiguration(contentConfigName, resolve);
@@ -333,7 +335,9 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               args,
             };
             return SpecialPowers.spawn(
-              gTestTab.linkedBrowser, [taskArgs], contentArgs => {
+              gTestTab.linkedBrowser,
+              [taskArgs],
+              contentArgs => {
                 let contentWin = Cu.waiveXrays(content);
                 return contentWin[contentArgs.methodName].apply(
                   contentWin,

@@ -19,7 +19,9 @@ async function checkForErrorSection(infoMessage, url, errorMessage, testType) {
 
   await BrowserTestUtils.withNewTab(url, async function(browser) {
     await SpecialPowers.spawn(
-      browser, [{ errorMessage, testType }], async function({ errorMessage, testType }) {
+      browser,
+      [{ errorMessage, testType }],
+      async function({ errorMessage, testType }) {
         let errorSection;
 
         if (testType === "invalid") {

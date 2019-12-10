@@ -26,7 +26,9 @@ add_task(async function() {
     let test = tests[index];
 
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{ element: test.element, type: test.type, index }], async function(arg) {
+      gBrowser.selectedBrowser,
+      [{ element: test.element, type: test.type, index }],
+      async function(arg) {
         let element = content.document.createElement(arg.element);
         element.id = "element" + arg.index;
         if (arg.type) {

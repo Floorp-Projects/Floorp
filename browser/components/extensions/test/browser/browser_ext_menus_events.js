@@ -455,7 +455,9 @@ add_task(async function test_show_hide_frame() {
     },
     async doOpenMenu() {
       frameId = await SpecialPowers.spawn(
-        gBrowser.selectedBrowser, [], function() {
+        gBrowser.selectedBrowser,
+        [],
+        function() {
           const { WebNavigationFrames } = ChromeUtils.import(
             "resource://gre/modules/WebNavigationFrames.jsm"
           );
@@ -594,7 +596,9 @@ add_task(async function test_show_hide_editable_selection() {
     async doOpenMenu() {
       // Select lots of text in the test page before opening the menu.
       selectionText = await SpecialPowers.spawn(
-        gBrowser.selectedBrowser, [], function() {
+        gBrowser.selectedBrowser,
+        [],
+        function() {
           let node = content.document.getElementById("editabletext");
           node.select();
           node.focus();

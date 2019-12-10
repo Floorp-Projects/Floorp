@@ -68,7 +68,9 @@ add_task(async function() {
     );
 
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [testcase.name], async function testPlugins(name) {
+      tab.linkedBrowser,
+      [testcase.name],
+      async function testPlugins(name) {
         let testcaseDiv = content.document.getElementById(`testcase_${name}`);
         let ctpPlugins = testcaseDiv.querySelectorAll(".expected_ctp");
 
