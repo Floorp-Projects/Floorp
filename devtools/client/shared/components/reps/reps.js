@@ -2914,7 +2914,6 @@ const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
-  parameterNames: PropTypes.array,
   onViewSourceInDebugger: PropTypes.func,
   sourceMapService: PropTypes.object
 };
@@ -2954,7 +2953,7 @@ function FunctionRep(props) {
     // Set dir="ltr" to prevent function parentheses from
     // appearing in the wrong direction
     dir: "ltr"
-  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
+  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(grip), ")", jumpToDefinitionButton);
 }
 
 function getTitle(grip, props) {
@@ -3033,10 +3032,10 @@ function cleanFunctionName(name) {
   return name;
 }
 
-function renderParams(props) {
+function renderParams(grip) {
   const {
     parameterNames = []
-  } = props;
+  } = grip;
   return parameterNames.filter(param => param).reduce((res, param, index, arr) => {
     res.push(span({
       className: "param"
