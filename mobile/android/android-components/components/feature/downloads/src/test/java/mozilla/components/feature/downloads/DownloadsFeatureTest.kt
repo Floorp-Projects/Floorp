@@ -16,7 +16,6 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -26,6 +25,7 @@ import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
@@ -312,9 +312,7 @@ class DownloadsFeatureTest {
             arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
             arrayOf(PackageManager.PERMISSION_GRANTED, PackageManager.PERMISSION_DENIED).toIntArray())
 
-        // Dispatching a random unrelated action to block on it in order to wait for all other
-        // dispatched actions to have completed.
-        store.dispatch(SystemAction.LowMemoryAction).joinBlocking()
+        store.waitUntilIdle()
 
         assertNull(store.state.findTab("test-tab")!!.content.download)
 

@@ -30,6 +30,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `SendTabFeature` no longer takes an instance of `AutoPushFeature`.
     * `FxaPushSupportFeature` is now needed for integrating Firefox Accounts with Push support.
 
+* **support-test-libstate**
+  * 🆕 New component providing utilities to test functionality that relies on lib-state.    
+
 # 25.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...v25.0.0)
