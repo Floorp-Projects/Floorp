@@ -783,7 +783,7 @@ class SetPermissionAction(object):
         state = permission_params["state"]
         one_realm = permission_params.get("oneRealm", False)
         self.logger.debug("Setting permission %s to %s, oneRealm=%s" % (name, state, one_realm))
-        self.protocol.set_permission.set_permission(name, state, one_realm)
+        self.protocol.set_permission.set_permission(descriptor, state, one_realm)
 
 class AddVirtualAuthenticatorAction(object):
     def __init__(self, logger, protocol):

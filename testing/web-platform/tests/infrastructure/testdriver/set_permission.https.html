@@ -8,10 +8,10 @@
 
 <script>
 promise_test(t => {
-  return test_driver.set_permission("ambient-light-sensor", "granted", true);
+  return test_driver.set_permission({name: "ambient-light-sensor"}, "granted", true);
 }, "Grant Permission for one realm");
 
 promise_test(t => {
-  return test_driver.set_permission("ambient-light-sensor", "denied");
+  return test_driver.set_permission({name: "push", userVisibleOnly: true}, "denied");
 }, "Deny Permission, omit one realm");
 </script>
