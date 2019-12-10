@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L33)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L34)
 
 Supported Fennec migrations and their current versions.
 
@@ -16,6 +16,7 @@ Supported Fennec migrations and their current versions.
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
+| [Settings](-settings.md) | `object Settings : `[`Migration`](./index.md)<br>Migrates all Fennec settings backed by SharedPreferences. |
 
 ### Properties
 
@@ -39,3 +40,4 @@ Supported Fennec migrations and their current versions.
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
+| [Settings](-settings.md) | `object Settings : `[`Migration`](./index.md)<br>Migrates all Fennec settings backed by SharedPreferences. |

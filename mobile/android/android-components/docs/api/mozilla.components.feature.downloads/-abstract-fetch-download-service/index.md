@@ -45,6 +45,7 @@ To use this service, you must create a subclass in your application and add it t
 | [ACTION_PAUSE](-a-c-t-i-o-n_-p-a-u-s-e.md) | `const val ACTION_PAUSE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_RESUME](-a-c-t-i-o-n_-r-e-s-u-m-e.md) | `const val ACTION_RESUME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_TRY_AGAIN](-a-c-t-i-o-n_-t-r-y_-a-g-a-i-n.md) | `const val ACTION_TRY_AGAIN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [EXTRA_DOWNLOAD](-e-x-t-r-a_-d-o-w-n-l-o-a-d.md) | `const val EXTRA_DOWNLOAD: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [EXTRA_DOWNLOAD_STATUS](-e-x-t-r-a_-d-o-w-n-l-o-a-d_-s-t-a-t-u-s.md) | `const val EXTRA_DOWNLOAD_STATUS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Companion Object Functions

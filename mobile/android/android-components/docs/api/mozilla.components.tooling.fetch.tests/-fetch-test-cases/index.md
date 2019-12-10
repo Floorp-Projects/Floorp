@@ -2,7 +2,7 @@
 
 # FetchTestCases
 
-`abstract class FetchTestCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L38)
+`abstract class FetchTestCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L39)
 
 Generic test cases for concept-fetch implementations.
 

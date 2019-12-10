@@ -536,6 +536,8 @@
 | [mozilla.components.browser.engine.gecko.integration.SettingUpdater](../mozilla.components.browser.engine.gecko.integration/-setting-updater/index.md) |  |
 | [mozilla.components.concept.engine.Settings](../mozilla.components.concept.engine/-settings/index.md) | Holds settings of an engine or session. Concrete engine implementations define how these settings are applied i.e. whether a setting is applied on an engine or session instance. |
 | [org.mozilla.telemetry.measurement.SettingsMeasurement](../org.mozilla.telemetry.measurement/-settings-measurement/index.md) |  |
+| [mozilla.components.support.migration.SettingsMigrationException](../mozilla.components.support.migration/-settings-migration-exception/index.md) | Wraps [SettingsMigrationResult](../mozilla.components.support.migration/-settings-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](../mozilla.components.support.migration/-result/-failure/index.md). |
+| [mozilla.components.support.migration.SettingsMigrationResult](../mozilla.components.support.migration/-settings-migration-result/index.md) | Result of Fennec settings migration. |
 | [mozilla.components.feature.session.SettingsUseCases](../mozilla.components.feature.session/-settings-use-cases/index.md) | Contains use cases related to user settings. |
 | [mozilla.components.concept.engine.prompt.ShareData](../mozilla.components.concept.engine.prompt/-share-data/index.md) | Represents data to share for the Web Share and Web Share Target APIs. https://w3c.github.io/web-share/ |
 | [mozilla.components.feature.prompts.share.ShareDelegate](../mozilla.components.feature.prompts.share/-share-delegate/index.md) | Delegate to display a share prompt. |

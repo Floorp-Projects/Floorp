@@ -2,7 +2,7 @@
 
 # DownloadState
 
-`data class DownloadState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L25)
+`data class DownloadState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L28)
 
 Value type that represents a download request.
 

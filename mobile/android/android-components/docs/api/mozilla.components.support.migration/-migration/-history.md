@@ -2,7 +2,7 @@
 
 # History
 
-`object History : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L37)
+`object History : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L38)
 
 Migrates history (both "places" and "visits").
 

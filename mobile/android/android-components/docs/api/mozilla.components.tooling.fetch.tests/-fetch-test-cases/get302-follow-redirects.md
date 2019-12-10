@@ -2,4 +2,4 @@
 
 # get302FollowRedirects
 
-`open fun get302FollowRedirects(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L209)
+`open fun get302FollowRedirects(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L211)

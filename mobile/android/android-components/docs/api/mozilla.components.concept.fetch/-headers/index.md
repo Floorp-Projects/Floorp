@@ -2,7 +2,7 @@
 
 # Headers
 
-`interface Headers : `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`Header`](../-header/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L10)
+`interface Headers : `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`Header`](../-header/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L12)
 
 A collection of HTTP [Headers](./index.md) (immutable) of a [Request](../-request/index.md) or [Response](../-response/index.md).
 
