@@ -615,13 +615,9 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  RootedModuleEnvironmentObject env(
-      cx, ModuleEnvironmentObject::create(cx, module));
-  if (!env) {
+  if (!ModuleObject::createEnvironment(cx, module)) {
     return nullptr;
   }
-
-  module->setInitialEnvironment(env);
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!info.scriptSource->tryCompressOffThread(cx)) {

@@ -919,6 +919,10 @@ class ModuleScope : public Scope {
                              Handle<ModuleObject*> module,
                              HandleScope enclosing);
 
+  template <XDRMode mode>
+  static XDRResult XDR(XDRState<mode>* xdr, HandleModuleObject module,
+                       HandleScope enclosing, MutableHandleScope scope);
+
  private:
   static ModuleScope* createWithData(JSContext* cx,
                                      MutableHandle<UniquePtr<Data>> data,

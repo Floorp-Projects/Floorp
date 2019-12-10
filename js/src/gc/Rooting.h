@@ -69,6 +69,7 @@ typedef JS::MutableHandle<DebuggerScript*> MutableHandleDebuggerScript;
 typedef JS::MutableHandle<DebuggerSource*> MutableHandleDebuggerSource;
 typedef JS::MutableHandle<Scope*> MutableHandleScope;
 typedef JS::MutableHandle<ModuleObject*> MutableHandleModuleObject;
+typedef JS::MutableHandle<ArrayObject*> MutableHandleArrayObject;
 
 typedef JS::Rooted<NativeObject*> RootedNativeObject;
 typedef JS::Rooted<Shape*> RootedShape;

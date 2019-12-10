@@ -1218,6 +1218,32 @@ static JSAtom* AtomizeLittleEndianTwoByteChars(JSContext* cx,
 }
 
 template <XDRMode mode>
+XDRResult js::XDRAtomOrNull(XDRState<mode>* xdr, MutableHandleAtom atomp) {
+  uint8_t isNull = false;
+  if (mode == XDR_ENCODE) {
+    if (!atomp) {
+      isNull = true;
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint8(&isNull));
+
+  if (!isNull) {
+    MOZ_TRY(XDRAtom(xdr, atomp));
+  } else if (mode == XDR_DECODE) {
+    atomp.set(nullptr);
+  }
+
+  return Ok();
+}
+
+template XDRResult js::XDRAtomOrNull(XDRState<XDR_DECODE>* xdr,
+                                     MutableHandleAtom atomp);
+
+template XDRResult js::XDRAtomOrNull(XDRState<XDR_ENCODE>* xdr,
+                                     MutableHandleAtom atomp);
+
+template <XDRMode mode>
 static XDRResult XDRAtomIndex(XDRState<mode>* xdr, uint32_t* index) {
   return xdr->codeUint32(index);
 }

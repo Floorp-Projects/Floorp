@@ -1592,7 +1592,7 @@ class alignas(uintptr_t) PrivateScriptData final {
                                     js::HandleScript script,
                                     js::HandleScriptSourceObject sourceObject,
                                     js::HandleScope scriptEnclosingScope,
-                                    js::HandleFunction fun);
+                                    js::HandleObject funOrMod);
 
   // Clone src script data into dst script.
   static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
@@ -2158,8 +2158,8 @@ setterLevel:                                                                  \
  */
 template <XDRMode mode>
 XDRResult XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope,
-                    HandleScriptSourceObject sourceObject, HandleFunction fun,
-                    MutableHandleScript scriptp);
+                    HandleScriptSourceObject sourceObject,
+                    HandleObject funOrMod, MutableHandleScript scriptp);
 
 template <XDRMode mode>
 XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
@@ -2576,7 +2576,7 @@ class JSScript : public js::BaseScript {
   friend js::XDRResult js::XDRScript(js::XDRState<mode>* xdr,
                                      js::HandleScope enclosingScope,
                                      js::HandleScriptSourceObject sourceObject,
-                                     js::HandleFunction fun,
+                                     js::HandleObject funOrMod,
                                      js::MutableHandleScript scriptp);
 
   template <js::XDRMode mode>
@@ -2599,7 +2599,7 @@ class JSScript : public js::BaseScript {
   friend js::XDRResult js::PrivateScriptData::XDR(
       js::XDRState<mode>* xdr, js::HandleScript script,
       js::HandleScriptSourceObject sourceObject,
-      js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
+      js::HandleScope scriptEnclosingScope, js::HandleObject funOrMod);
 
   friend bool js::PrivateScriptData::Clone(
       JSContext* cx, js::HandleScript src, js::HandleScript dst,
