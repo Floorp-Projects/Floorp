@@ -645,6 +645,8 @@ class nsWindow final : public nsBaseWidget {
 
   void SetPopupWindowDecoration(bool aShowOnTaskbar);
 
+  void ApplySizeConstraints(void);
+
   bool IsMainMenuWindow();
   GtkWidget* ConfigureWaylandPopupWindows();
   void HideWaylandWindow();
