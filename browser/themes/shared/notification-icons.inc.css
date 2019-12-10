@@ -70,6 +70,18 @@
   list-style-image: url(chrome://browser/skin/notification-icons/geo-detailed.svg);
 }
 
+.xr-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
+}
+
+.xr-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/xr-blocked.svg);
+}
+
+.popup-notification-icon[popupid="xr"] {
+  list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
+}
+
 .autoplay-media-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
 }

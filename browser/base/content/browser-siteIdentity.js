@@ -290,6 +290,11 @@ var gIdentityHandler = {
     return (this._geoSharingIcon = document.getElementById("geo-sharing-icon"));
   },
 
+  get _xrSharingIcon() {
+    delete this._xrSharingIcon;
+    return (this._xrSharingIcon = document.getElementById("xr-sharing-icon"));
+  },
+
   get _webRTCSharingIcon() {
     delete this._webRTCSharingIcon;
     return (this._webRTCSharingIcon = document.getElementById(
@@ -572,6 +577,7 @@ var gIdentityHandler = {
     this._webRTCSharingIcon.removeAttribute("paused");
     this._webRTCSharingIcon.removeAttribute("sharing");
     this._geoSharingIcon.removeAttribute("sharing");
+    this._xrSharingIcon.removeAttribute("sharing");
 
     if (this._sharingState) {
       if (
@@ -590,6 +596,9 @@ var gIdentityHandler = {
       }
       if (this._sharingState.geo) {
         this._geoSharingIcon.setAttribute("sharing", this._sharingState.geo);
+      }
+      if (this._sharingState.xr) {
+        this._xrSharingIcon.setAttribute("sharing", this._sharingState.xr);
       }
     }
 
@@ -1345,6 +1354,20 @@ var gIdentityHandler = {
       }
     }
 
+    if (this._sharingState && this._sharingState.xr) {
+      let xrPermission = permissions.find(perm => perm.id === "xr");
+      if (xrPermission) {
+        xrPermission.sharingState = true;
+      } else {
+        permissions.push({
+          id: "xr",
+          state: SitePermissions.ALLOW,
+          scope: SitePermissions.SCOPE_REQUEST,
+          sharingState: true,
+        });
+      }
+    }
+
     if (this._sharingState && this._sharingState.webRTC) {
       let webrtcState = this._sharingState.webRTC;
       // If WebRTC device or screen permissions are in use, we need to find
@@ -1572,9 +1595,12 @@ var gIdentityHandler = {
       return container;
     }
 
-    if (aPermission.id == "geo") {
+    if (aPermission.id == "geo" || aPermission.id == "xr") {
       let block = document.createXULElement("vbox");
-      block.setAttribute("id", "identity-popup-geo-container");
+      block.setAttribute(
+        "id",
+        "identity-popup-" + aPermission.id + "-container"
+      );
 
       let button = this._createPermissionClearButton(aPermission, block);
       container.appendChild(button);
@@ -1608,8 +1634,8 @@ var gIdentityHandler = {
       let browser = gBrowser.selectedBrowser;
       this._permissionList.removeChild(container);
       if (aPermission.sharingState) {
-        if (aPermission.id === "geo") {
-          let origins = browser.getDevicePermissionOrigins("geo");
+        if (aPermission.id === "geo" || aPermission.id === "xr") {
+          let origins = browser.getDevicePermissionOrigins(aPermission.id);
           for (let origin of origins) {
             let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               origin
@@ -1664,6 +1690,8 @@ var gIdentityHandler = {
 
       if (aPermission.id === "geo") {
         gBrowser.updateBrowserSharing(browser, { geo: false });
+      } else if (aPermission.id === "xr") {
+        gBrowser.updateBrowserSharing(browser, { xr: false });
       }
     });
 
