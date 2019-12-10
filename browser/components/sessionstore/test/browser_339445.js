@@ -10,7 +10,7 @@ add_task(async function test() {
     "browser/components/sessionstore/test/browser_339445_sample.html";
 
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
-  await promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser, true, testURL);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     let doc = content.document;
@@ -24,7 +24,7 @@ add_task(async function test() {
   let tab2 = gBrowser.duplicateTab(tab);
   await promiseTabRestored(tab2);
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab2.linkedBrowser, null, function() {
     let doc2 = content.document;
     is(
       doc2.getElementById("storageTestItem").textContent,

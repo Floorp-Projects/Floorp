@@ -164,13 +164,13 @@ async function testSearchEngine(engineDetails) {
       searchURL: base.replace("{code}", engineDetails.codes.newTab),
       async preTest(tab) {
         let browser = tab.linkedBrowser;
-        await BrowserTestUtils.loadURI(browser, "about:newtab");
-        await BrowserTestUtils.browserLoaded(browser);
+        BrowserTestUtils.loadURI(browser, "about:newtab");
+        await BrowserTestUtils.browserLoaded(browser, false, "about:newtab");
 
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async function(args) {
+        await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";
