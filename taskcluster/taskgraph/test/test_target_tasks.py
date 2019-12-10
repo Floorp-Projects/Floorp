@@ -69,25 +69,21 @@ class TestTargetTasks(unittest.TestCase):
     def test_default_all(self):
         """run_on_projects=[all] includes release, integration, and other projects"""
         self.assertTrue(self.default_matches_project(['all'], 'mozilla-central'))
-        self.assertTrue(self.default_matches_project(['all'], 'mozilla-inbound'))
         self.assertTrue(self.default_matches_project(['all'], 'baobab'))
 
     def test_default_integration(self):
         """run_on_projects=[integration] includes integration projects"""
         self.assertFalse(self.default_matches_project(['integration'], 'mozilla-central'))
-        self.assertTrue(self.default_matches_project(['integration'], 'mozilla-inbound'))
         self.assertFalse(self.default_matches_project(['integration'], 'baobab'))
 
     def test_default_release(self):
         """run_on_projects=[release] includes release projects"""
         self.assertTrue(self.default_matches_project(['release'], 'mozilla-central'))
-        self.assertFalse(self.default_matches_project(['release'], 'mozilla-inbound'))
         self.assertFalse(self.default_matches_project(['release'], 'baobab'))
 
     def test_default_nothing(self):
         """run_on_projects=[] includes nothing"""
         self.assertFalse(self.default_matches_project([], 'mozilla-central'))
-        self.assertFalse(self.default_matches_project([], 'mozilla-inbound'))
         self.assertFalse(self.default_matches_project([], 'baobab'))
 
     def test_default_hg_branch(self):
