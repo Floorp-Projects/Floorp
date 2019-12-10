@@ -112,7 +112,7 @@ this.CookiePolicyHelper = {
             let ifr = content.document.createElement("iframe");
             ifr.setAttribute("id", "iframe");
             ifr.src = obj.url;
-            ifr.onload = resolve;
+            ifr.onload = () => resolve();
             content.document.body.appendChild(ifr);
           });
         }
