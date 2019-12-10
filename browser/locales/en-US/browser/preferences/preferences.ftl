@@ -689,7 +689,12 @@ search-keyword-warning-bookmark = You have chosen a keyword that is currently in
 
 ## Containers Section
 
-containers-back-link = « Go Back
+containers-back-button =
+    .aria-label =
+      { PLATFORM() ->
+          [windows] Back to Options
+         *[other] Back to Preferences
+      }
 containers-header = Container Tabs
 containers-add-button =
     .label = Add New Container

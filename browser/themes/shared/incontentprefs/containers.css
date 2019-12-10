@@ -20,10 +20,7 @@
 }
 
 #containersView richlistitem {
-  margin: 0px;
-  margin-inline-end: 8px;
-  padding: 0;
-  padding-block-end: 8px;
+  padding-block: 4px;
   border-block-end: 1px solid var(--in-content-box-border-color);
 }
 

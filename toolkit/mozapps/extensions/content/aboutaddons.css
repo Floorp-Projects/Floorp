@@ -70,20 +70,7 @@ search-addons > search-textbox {
 }
 
 .back-button {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  background-image: url("chrome://global/skin/icons/arrow-left.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  min-width: auto;
-  width: 32px;
-  margin-block: 0;
-  margin-inline-start: 0;
   margin-inline-end: 16px;
-}
-
-.back-button:dir(rtl) {
-  transform: scaleX(-1);
 }
 
 /* Plugins aren't yet disabled by safemode (bug 342333),

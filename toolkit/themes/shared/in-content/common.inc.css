@@ -1082,3 +1082,20 @@ input[type="text"][warning]:enabled:not(:focus) {
     display: none;
   }
 }
+
+.back-button {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  min-width: auto;
+  width: 32px;
+  margin-block: 0;
+  margin-inline-start: 0;
+}
+
+.back-button:-moz-locale-dir(rtl),
+.back-button:dir(rtl) {
+  transform: scaleX(-1);
+}
