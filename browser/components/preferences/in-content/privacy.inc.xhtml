@@ -853,6 +853,20 @@
            class="learnMore" is="text-link"
            data-l10n-id="collection-privacy-notice"/>
   </description>
+  <description>
+    <hbox id="telemetry-container" align="stretch" flex="1" hidden="true">
+      <hbox align="top">
+        <image class="info-icon-telemetry" flex="1"></image>
+      </hbox>
+      <hbox align="center" id="dataDescriptionBox" flex="1">
+        <html:span id="telemetryDisabledDescription" class="tail-with-learn-more">You’re no longer allowing Mozilla to capture technical and interaction data. All past data will be deleted within 30 days.</html:span>
+      </hbox>
+      <hbox>
+          <button id="telemetryDataDeletionLearnMore"
+                 class="learnMore" is="text-link">Learn more</button>
+      </hbox>
+    </hbox>
+  </description>
   <vbox data-subcategory="reports">
     <description flex="1">
       <checkbox id="submitHealthReportBox"
