@@ -1891,6 +1891,8 @@ class BaseScript : public gc::TenuredCell {
     return maybeForwardedScriptSource()->filename();
   }
 
+  bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
+
   uint32_t sourceStart() const { return sourceStart_; }
   uint32_t sourceEnd() const { return sourceEnd_; }
   uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }
@@ -1960,8 +1962,6 @@ class BaseScript : public gc::TenuredCell {
     }
   }
   void clearFlag(MutableFlags flag) { mutableFlags_ &= ~uint32_t(flag); }
-
-  void traceChildren(JSTracer* trc);
 
   // Specific flag accessors
 
@@ -2056,6 +2056,7 @@ setterLevel:                                                                  \
   // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(hideScriptFromDebugger, HideScriptFromDebugger)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
+  MUTABLE_FLAG_GETTER_SETTER(isWrappedByDebugger, WrappedByDebugger);
 
 #undef IMMUTABLE_FLAG_GETTER
 #undef IMMUTABLE_FLAG_GETTER_SETTER
@@ -2091,6 +2092,18 @@ setterLevel:                                                                  \
     }
   }
 
+  bool hasEnclosingLazyScript() const {
+    return warmUpData_.isEnclosingScript();
+  }
+  LazyScript* enclosingLazyScript() const {
+    return warmUpData_.toEnclosingScript();
+  }
+  void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
+
+  bool hasEnclosingScope() const { return warmUpData_.isEnclosingScope(); }
+  Scope* enclosingScope() const { return warmUpData_.toEnclosingScope(); }
+  void setEnclosingScope(Scope* enclosingScope);
+
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   }
@@ -2099,13 +2112,13 @@ setterLevel:                                                                  \
     MOZ_ASSERT(data_);
     data_->setFieldInitializers(fieldInitializers);
   }
-
   const FieldInitializers& getFieldInitializers() const {
     MOZ_ASSERT(data_);
     return data_->getFieldInitializers();
   }
 
  protected:
+  void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
 
  public:
@@ -3397,19 +3410,6 @@ class LazyScript : public BaseScript {
   }
   bool hasScript() const { return bool(script_); }
 
-  bool hasEnclosingScope() const { return warmUpData_.isEnclosingScope(); }
-  bool hasEnclosingLazyScript() const {
-    return warmUpData_.isEnclosingScript();
-  }
-
-  LazyScript* enclosingLazyScript() const {
-    return warmUpData_.toEnclosingScript();
-  }
-  void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
-
-  Scope* enclosingScope() const { return warmUpData_.toEnclosingScope(); }
-  void setEnclosingScope(Scope* enclosingScope);
-
   bool hasNonSyntacticScope() const {
     return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
   }
@@ -3420,13 +3420,6 @@ class LazyScript : public BaseScript {
     }
     return frontend::ParseGoal::Script;
   }
-
-  bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
-
-  bool isWrappedByDebugger() const {
-    return hasFlag(MutableFlags::WrappedByDebugger);
-  }
-  void setWrappedByDebugger() { setFlag(MutableFlags::WrappedByDebugger); }
 
   // Returns true if the enclosing script has ever been compiled.
   // Once the enclosing script is compiled, the scope chain is created.

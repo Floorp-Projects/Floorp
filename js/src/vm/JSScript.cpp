@@ -665,6 +665,20 @@ js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
       .source();
 }
 
+void js::BaseScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
+  MOZ_ASSERT(enclosingLazyScript);
+  warmUpData_.initEnclosingScript(enclosingLazyScript);
+}
+
+void js::BaseScript::setEnclosingScope(Scope* enclosingScope) {
+  if (warmUpData_.isEnclosingScript()) {
+    warmUpData_.clearEnclosingScript();
+  }
+
+  MOZ_ASSERT(enclosingScope);
+  warmUpData_.initEnclosingScope(enclosingScope);
+}
+
 void js::BaseScript::finalize(JSFreeOp* fop) {
   if (data_) {
     size_t size = data_->allocationSize();
@@ -5552,30 +5566,6 @@ void LazyScript::initScript(JSScript* script) {
   MOZ_ASSERT(script);
   MOZ_ASSERT(!script_.unbarrieredGet());
   script_.set(script);
-}
-
-void LazyScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
-  MOZ_ASSERT(enclosingLazyScript);
-
-  // We never change an existing LazyScript.
-  MOZ_ASSERT(!hasEnclosingLazyScript());
-
-  // Enclosing scopes never transition back to enclosing lazy scripts.
-  MOZ_ASSERT(!hasEnclosingScope());
-
-  warmUpData_.initEnclosingScript(enclosingLazyScript);
-}
-
-void LazyScript::setEnclosingScope(Scope* enclosingScope) {
-  MOZ_ASSERT(enclosingScope);
-  MOZ_ASSERT(!hasEnclosingScope());
-
-  if (warmUpData_.isEnclosingScript()) {
-    warmUpData_.clearEnclosingScript();
-  }
-
-  MOZ_ASSERT(warmUpData_.isWarmUpCount());
-  warmUpData_.initEnclosingScope(enclosingScope);
 }
 
 /* static */
