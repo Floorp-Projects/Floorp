@@ -131,7 +131,6 @@
 //-----------------------------------------------------------------------------
 
 using mozilla::dom::Promise;
-using mozilla::Telemetry::LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME;
 
 namespace mozilla {
 namespace net {
@@ -824,21 +823,6 @@ void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
 nsresult nsHttpHandler::AsyncOnChannelRedirect(
     nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
     nsIEventTarget* mainThreadEventTarget) {
-  MOZ_ASSERT(NS_IsMainThread() && (oldChan && newChan));
-
-  nsCOMPtr<nsIURI> newURI;
-  newChan->GetURI(getter_AddRefs(newURI));
-  MOZ_ASSERT(newURI);
-
-  nsAutoCString scheme;
-  newURI->GetScheme(scheme);
-  MOZ_ASSERT(!scheme.IsEmpty());
-
-  Telemetry::AccumulateCategoricalKeyed(
-      scheme, oldChan->IsDocument()
-                  ? LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::topLevel
-                  : LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::subresource);
-
   // TODO E10S This helper has to be initialized on the other process
   RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
       new nsAsyncRedirectVerifyHelper();
