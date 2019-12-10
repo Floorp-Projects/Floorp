@@ -139,6 +139,16 @@ permissions-site-location-disable-label =
     .label = Block new requests asking to access your location
 permissions-site-location-disable-desc = This will prevent any websites not listed above from requesting permission to access your location. Blocking access to your location may break some website features.
 
+## Site Permissions - Virtual Reality
+
+permissions-site-xr-window =
+    .title = Settings - Virtual Reality Permissions
+    .style = { permissions-window.style }
+permissions-site-xr-desc = The following websites have requested to access your virtual reality devices. You can specify which websites are allowed to access your virtual reality devices. You can also block new requests asking to access your virtual reality devices.
+permissions-site-xr-disable-label =
+    .label = Block new requests asking to access your virtual reality devices
+permissions-site-xr-disable-desc = This will prevent any websites not listed above from requesting permission to access your virtual reality devices. Blocking access to your virtual reality devices may break some website features.
+
 ## Site Permissions - Camera
 
 permissions-site-camera-window =
