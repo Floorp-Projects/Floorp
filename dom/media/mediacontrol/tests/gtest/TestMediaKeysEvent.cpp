@@ -7,10 +7,14 @@
 
 using namespace mozilla::dom;
 
+class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
+  bool Open() override { return true; }
+};
+
 TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
 {
   RefPtr<MediaControlKeysEventSource> source =
-      new MediaControlKeysEventSource();
+      new MediaControlKeysEventSourceTestImpl();
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
   RefPtr<MediaControlKeysEventListener> listener =
