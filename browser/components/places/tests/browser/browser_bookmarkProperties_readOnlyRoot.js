@@ -19,9 +19,9 @@ add_task(async function test_dialog() {
         // Check that the dialog is read-only.
         Assert.ok(dialogWin.gEditItemOverlay.readOnly, "Dialog is read-only");
         // Check that accept button is disabled
-        let acceptButton = dialogWin.document.documentElement.getButton(
-          "accept"
-        );
+        let acceptButton = dialogWin.document
+          .getElementById("bookmarkproperties")
+          .getButton("accept");
         Assert.ok(acceptButton.disabled, "Accept button is disabled");
 
         // Check that name picker is read only

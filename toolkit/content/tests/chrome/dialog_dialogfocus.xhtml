@@ -1,8 +1,10 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-<dialog buttons="extra2,accept,cancel" onload="loaded()"
+<window onload="loaded()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
+<dialog id="dialog-focus"
+        buttons="extra2,accept,cancel">
 
 <tabbox id="tabbox" hidden="true">
   <tabs>
@@ -56,3 +58,4 @@ function loaded()
 </script>
 
 </dialog>
+</window>

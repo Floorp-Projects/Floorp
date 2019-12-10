@@ -122,7 +122,9 @@
       let dialogObserverTopic = "common-dialog-loaded";
 
       function dialogObserver(subj, topic, data) {
-        subj.Dialog.ui.prompt.document.documentElement.acceptDialog();
+        subj.Dialog.ui.prompt.document
+          .getElementById("commonDialog")
+          .acceptDialog();
         sendAsyncMessage("promptAccepted");
       }
 

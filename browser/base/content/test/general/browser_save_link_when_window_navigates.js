@@ -76,7 +76,9 @@ function triggerSave(aWindow, aCallback) {
   function continueDownloading() {
     for (let win of Services.wm.getEnumerator("")) {
       if (win.location && win.location.href == UCT_URI) {
-        win.document.documentElement._fireButtonEvent("accept");
+        win.document
+          .getElementById("unknownContentType")
+          ._fireButtonEvent("accept");
         win.close();
         return;
       }

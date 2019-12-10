@@ -365,10 +365,7 @@ add_task(async function testReorderingBrowserLanguages() {
   assertLocaleOrder(selected, "en-US,he,pl");
 
   // Accepting the change shows the confirm message bar.
-  let dialogClosed = BrowserTestUtils.waitForEvent(
-    dialogDoc.documentElement,
-    "dialogclosing"
-  );
+  let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "dialogclosing");
   dialog.acceptDialog();
   await dialogClosed;
   is(messageBar.hidden, false, "The message bar is now visible");
@@ -395,10 +392,7 @@ add_task(async function testReorderingBrowserLanguages() {
   assertLocaleOrder(selected, "en-US,pl,he");
 
   // Accepting the change hides the confirm message bar.
-  dialogClosed = BrowserTestUtils.waitForEvent(
-    dialogDoc.documentElement,
-    "dialogclosing"
-  );
+  dialogClosed = BrowserTestUtils.waitForEvent(dialog, "dialogclosing");
   dialog.acceptDialog();
   await dialogClosed;
   is(messageBar.hidden, true, "The message bar is hidden again");
@@ -477,10 +471,7 @@ add_task(async function testAddAndRemoveSelectedLanguages() {
   assertAvailableLocales(available, ["pl", "fr"]);
 
   // Accepting the change shows the confirm message bar.
-  let dialogClosed = BrowserTestUtils.waitForEvent(
-    dialogDoc.documentElement,
-    "dialogclosing"
-  );
+  let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "dialogclosing");
   dialog.acceptDialog();
   await dialogClosed;
 
@@ -621,10 +612,7 @@ add_task(async function testInstallFromAMO() {
   assertLocaleOrder(selected, "en-US,pl");
 
   // Test that disabling the langpack removes it from the list.
-  let dialogClosed = BrowserTestUtils.waitForEvent(
-    dialogDoc.documentElement,
-    "dialogclosing"
-  );
+  let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "dialogclosing");
   dialog.acceptDialog();
   await dialogClosed;
 

@@ -6,6 +6,7 @@ add_task(async function() {
   let dlg = await openHelperAppDialog(launcher);
 
   let doc = dlg.document;
+  let dialogElement = doc.getElementById("unknownContentType");
 
   // Set remember choice
   ok(
@@ -25,8 +26,8 @@ add_task(async function() {
   // Make sure the ok button is enabled, since the ok button might be disabled by
   // EnableDelayHelper mechanism. Please refer the detailed
   // https://dxr.mozilla.org/mozilla-central/source/toolkit/components/prompts/src/SharedPromptUtils.jsm#53
-  doc.documentElement.getButton("accept").disabled = false;
-  doc.documentElement.acceptDialog();
+  dialogElement.getButton("accept").disabled = false;
+  dialogElement.acceptDialog();
   await dialogClosedPromise;
 
   // check the mocked handler information is saved in nsIHandlerService

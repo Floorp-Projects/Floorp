@@ -26,7 +26,7 @@ add_task(async function test() {
 
           is(gBrowser.selectedTab, tab, "Should have selected the new tab");
 
-          domwindow.document.documentElement.cancelDialog();
+          domwindow.document.getElementById("commonDialog").cancelDialog();
         }, domwindow);
       },
 

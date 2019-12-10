@@ -2070,8 +2070,8 @@ var BrowserTestUtils = {
       return win;
     }
 
-    let doc = win.document.documentElement;
-    doc.getButton(buttonAction).click();
+    let dialog = win.document.querySelector("dialog");
+    dialog.getButton(buttonAction).click();
 
     return win;
   },

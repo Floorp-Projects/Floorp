@@ -52,13 +52,14 @@ function test() {
       "about:preferences loaded"
     );
     let dialog = await openAndLoadSubDialog(connectionURL);
+    let dialogElement = dialog.document.getElementById("ConnectionsDialog");
     let dialogClosingPromise = BrowserTestUtils.waitForEvent(
-      dialog.document.documentElement,
+      dialogElement,
       "dialogclosing"
     );
 
     ok(dialog, "connection window opened");
-    dialog.document.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     let dialogClosingEvent = await dialogClosingPromise;
     ok(dialogClosingEvent, "connection window closed");
