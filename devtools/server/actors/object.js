@@ -195,9 +195,9 @@ const proto = {
       return;
     }
 
-    const { dbgDesc } = this._originalDescriptors.get(property);
+    const { dbgDesc, desc } = this._originalDescriptors.get(property);
     this._originalDescriptors.delete(property);
-    this.obj.defineProperty(property, dbgDesc);
+    this.obj.defineProperty(property, { ...dbgDesc, value: desc.value });
 
     this.thread.demoteObjectGrip(this);
   },
