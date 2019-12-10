@@ -16,6 +16,9 @@ import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_share.view.*
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.sendtab.SendTabUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter
@@ -24,6 +27,7 @@ import org.mozilla.fenix.ext.requireComponents
 
 class ShareFragment : AppCompatDialogFragment() {
 
+    private val args by navArgs<ShareFragmentArgs>()
     private val viewModel: ShareViewModel by viewModels {
         AndroidViewModelFactory(requireActivity().application)
     }
@@ -37,6 +41,11 @@ class ShareFragment : AppCompatDialogFragment() {
         viewModel.loadDevicesAndApps()
     }
 
+    override fun dismiss() {
+        consumePrompt { onDismiss() }
+        super.dismiss()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.ShareDialogStyle)
@@ -48,7 +57,6 @@ class ShareFragment : AppCompatDialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_share, container, false)
-        val args by navArgs<ShareFragmentArgs>()
         val shareData = args.data.toList()
 
         val accountManager = requireComponents.backgroundServices.accountManager
@@ -59,9 +67,17 @@ class ShareFragment : AppCompatDialogFragment() {
                 shareData = shareData,
                 snackbarPresenter = FenixSnackbarPresenter(activity!!.getRootView()!!),
                 navController = findNavController(),
-                sendTabUseCases = SendTabUseCases(accountManager),
-                dismiss = ::dismiss
-            )
+                sendTabUseCases = SendTabUseCases(accountManager)
+            ) { result ->
+                consumePrompt {
+                    when (result) {
+                        ShareController.Result.DISMISSED -> onDismiss()
+                        ShareController.Result.SHARE_ERROR -> onFailure()
+                        ShareController.Result.SUCCESS -> onSuccess()
+                    }
+                }
+                super.dismiss()
+            }
         )
 
         view.shareWrapper.setOnClickListener { shareInteractor.onShareClosed() }
@@ -92,6 +108,25 @@ class ShareFragment : AppCompatDialogFragment() {
         viewModel.appsList.observe(viewLifecycleOwner) { appsToShareTo ->
             shareToAppsView.setShareTargets(appsToShareTo)
         }
+    }
+
+    /**
+     * If [ShareFragmentArgs.sessionId] is set and the session has a pending Web Share
+     * prompt request, call [consume] then clean up the prompt.
+     */
+    private fun consumePrompt(
+        consume: PromptRequest.Share.() -> Unit
+    ) {
+        val browserStore = requireComponents.core.store
+        args.sessionId
+            ?.let { sessionId -> browserStore.state.findTabOrCustomTab(sessionId) }
+            ?.let { tab ->
+                val promptRequest = tab.content.promptRequest
+                if (promptRequest is PromptRequest.Share) {
+                    consume(promptRequest)
+                    browserStore.dispatch(ContentAction.ConsumePromptRequestAction(tab.id))
+                }
+            }
     }
 
     companion object {

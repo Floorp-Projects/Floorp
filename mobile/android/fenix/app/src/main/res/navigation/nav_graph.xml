@@ -562,6 +562,11 @@
         <action
             android:id="@+id/action_shareFragment_to_addNewDeviceFragment"
             app:destination="@id/addNewDeviceFragment" />
+        <argument
+                android:name="sessionId"
+                app:argType="string"
+                app:nullable="true"
+                android:defaultValue="null" />
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"

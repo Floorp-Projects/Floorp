@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
@@ -21,10 +22,8 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.sendtab.SendTabUseCases
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -42,6 +41,10 @@ interface ShareController {
     fun handleShareToDevice(device: Device)
     fun handleShareToAllDevices(devices: List<Device>)
     fun handleSignIn()
+
+    enum class Result {
+        DISMISSED, SHARE_ERROR, SUCCESS
+    }
 }
 
 /**
@@ -61,17 +64,17 @@ class DefaultShareController(
     private val sendTabUseCases: SendTabUseCases,
     private val snackbarPresenter: FenixSnackbarPresenter,
     private val navController: NavController,
-    private val dismiss: () -> Unit
+    private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {
 
     override fun handleReauth() {
         val directions = ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
         navController.nav(R.id.shareFragment, directions)
-        dismiss()
+        dismiss(ShareController.Result.DISMISSED)
     }
 
     override fun handleShareClosed() {
-        dismiss()
+        dismiss(ShareController.Result.DISMISSED)
     }
 
     override fun handleShareToApp(app: AppShareOption) {
@@ -82,16 +85,14 @@ class DefaultShareController(
             setClassName(app.packageName, app.activityName)
         }
 
-        try {
+        val result = try {
             context.startActivity(intent)
+            ShareController.Result.SUCCESS
         } catch (e: SecurityException) {
-            context.getRootView()?.let {
-                FenixSnackbar.make(it, Snackbar.LENGTH_LONG)
-                    .setText(context.getString(R.string.share_error_snackbar))
-                    .show()
-            }
+            snackbarPresenter.present(context.getString(R.string.share_error_snackbar))
+            ShareController.Result.SHARE_ERROR
         }
-        dismiss()
+        dismiss(result)
     }
 
     override fun handleAddNewDevice() {
@@ -112,18 +113,20 @@ class DefaultShareController(
         context.metrics.track(Event.SignInToSendTab)
         val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
         navController.nav(R.id.shareFragment, directions)
-        dismiss()
+        dismiss(ShareController.Result.DISMISSED)
     }
 
     private fun shareToDevicesWithRetry(shareOperation: () -> Deferred<Boolean>) {
         // Use GlobalScope to allow the continuation of this method even if the share fragment is closed.
         GlobalScope.launch(Dispatchers.Main) {
-            if (shareOperation.invoke().await()) {
+            val result = if (shareOperation.invoke().await()) {
                 showSuccess()
+                ShareController.Result.SUCCESS
             } else {
                 showFailureWithRetryOption { shareToDevicesWithRetry(shareOperation) }
+                ShareController.Result.DISMISSED
             }
-            dismiss()
+            dismiss(result)
         }
     }
 
@@ -161,7 +164,11 @@ class DefaultShareController(
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     @VisibleForTesting
-    fun List<ShareData>.toTabData() = map { data ->
-        TabData(data.title.orEmpty(), data.url.orEmpty())
+    internal fun List<ShareData>.toTabData() = map { data ->
+        TabData(title = data.title.orEmpty(), url = data.url ?: data.text?.toDataUri().orEmpty())
+    }
+
+    private fun String.toDataUri(): String {
+        return "data:,${Uri.encode(this)}"
     }
 }

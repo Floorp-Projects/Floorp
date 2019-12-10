@@ -63,7 +63,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Load a list of devices and apps into [devicesList] and [appsList].
-     * Should be called when a fragment is attached so the data can be fetched early.
+     * Should be called when the fragment is attached so the data can be fetched early.
      */
     fun loadDevicesAndApps() {
         val networkRequest = NetworkRequest.Builder().build()
@@ -86,6 +86,9 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Unregisters the network callback and cleans up.
+     */
     override fun onCleared() {
         connectivityManager?.unregisterNetworkCallback(networkCallback)
     }
