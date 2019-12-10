@@ -259,7 +259,7 @@ def main(argv):
     # Exclude tests when code coverage is enabled.
     # This part is equivalent to:
     # skip-if = ccov
-    if os.getenv('GCOV_PREFIX') is not None:
+    if os.getenv('JS_CODE_COVERAGE_OUTPUT_DIR') is not None:
         # JSVM errors.
         options.exclude += [os.path.join('basic', 'functionnames.js')]           # Bug 1369783
         options.exclude += [os.path.join('debug', 'Debugger-findScripts-23.js')]
