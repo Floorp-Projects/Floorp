@@ -38,6 +38,7 @@ static const DelegateInfo sPermissionsMap[] = {
     {"camera", u"camera", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"microphone", u"microphone", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"screen", u"display-capture", DelegatePolicy::eDelegateUseFeaturePolicy},
+    {"xr", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
 };
 
 NS_IMPL_CYCLE_COLLECTION(PermissionDelegateHandler)
