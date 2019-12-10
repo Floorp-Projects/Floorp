@@ -1456,18 +1456,6 @@
   value: true
   mirror: always
 
-# Whether touch event listeners are passive by default.
-- name: dom.event.default_to_passive_touch_listeners
-  type: bool
-  value: true
-  mirror: always
-
-# Whether wheel listeners are passive by default.
-- name: dom.event.default_to_passive_wheel_listeners
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Enable clipboard readText() and writeText() by default
 - name: dom.events.asyncClipboard
   type: bool
