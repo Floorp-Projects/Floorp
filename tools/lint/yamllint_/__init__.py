@@ -32,6 +32,7 @@ class YAMLLintProcess(ProcessHandlerMixin):
     def __init__(self, config, *args, **kwargs):
         self.config = config
         kwargs['processOutputLine'] = [self.process_line]
+        kwargs['universal_newlines'] = True
         ProcessHandlerMixin.__init__(self, *args, **kwargs)
 
     def process_line(self, line):
