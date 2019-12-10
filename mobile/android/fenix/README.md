@@ -39,7 +39,7 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * Browse our [current Issues](https://github.com/mozilla-mobile/fenix/issues), or [file a security issue][sec issue].
 
-* Slack: [#fenix on mozilla-android.slack.com](mozilla-android.slack.com) | [Join here](https://join.slack.com/t/mozilla-android/shared_invite/enQtNzk3NDczMzc0ODMzLWNjYTQ5MjA3ZDI0NzNhOTBjMWUyMmNmZDcwM2ZhY2YxZjdjMWIwZWY1YmQ3NjJmMDNkODYxMmRmNTdjNGJmMTU)
+* Slack: #fenix channel on [mozilla-android.slack.com](https://mozilla-android.slack.com) | [Join here](https://join.slack.com/t/mozilla-android/shared_invite/enQtODU0ODk2MTgyMjQyLTU5MWU1ZGJkOGRjZmFjOTg2MTE1ZjlmNTU5ZTc5MDc4NjA1MmM0MjQ5Yjg1N2IzMjZjMGVmOTE0MzI1ZjQ3MTA)
 (**We're available Monday-Friday, GMT and PST working hours**).
 
 * Check out the [project wiki](https://github.com/mozilla-mobile/fenix/wiki) for more information.
