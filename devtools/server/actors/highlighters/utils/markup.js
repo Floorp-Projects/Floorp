@@ -75,11 +75,20 @@ ClassList.prototype = {
     }
     EventEmitter.emit(this, "update");
   },
-  toggle(token) {
-    if (this.contains(token)) {
-      this.remove(token);
-    } else {
+  toggle(token, force) {
+    // If force parameter undefined retain the toggle behavior
+    if (force === undefined) {
+      if (this.contains(token)) {
+        this.remove(token);
+      } else {
+        this.add(token);
+      }
+    } else if (force) {
+      // If force is true, enforce token addition
       this.add(token);
+    } else {
+      // If force is falsy value, enforce token removal
+      this.remove(token);
     }
   },
   get length() {
