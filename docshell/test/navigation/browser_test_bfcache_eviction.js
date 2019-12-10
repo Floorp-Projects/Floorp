@@ -10,7 +10,7 @@ add_task(async function() {
 
   // 1. Open a tab
   var testPage =
-    "data:text/html,<html id='html1'><body id='body1'></body></html>";
+    "data:text/html,<html id='html1'><body id='body1'>First tab ever opened</body></html>";
   await BrowserTestUtils.withNewTab({ gBrowser, url: testPage }, async function(
     browser
   ) {
@@ -31,6 +31,7 @@ add_task(async function() {
                 "History listener got called after a content viewer was evicted"
               );
               legacySHistory.removeSHistoryListener(historyListener);
+              delete content._testListener;
               // 6. Resolve the promise when we got our 'content viewer evicted' event
               resolve();
             },
@@ -40,6 +41,8 @@ add_task(async function() {
             ]),
           };
           legacySHistory.addSHistoryListener(historyListener);
+          // Keep the weak shistory listener alive
+          content._testListener = historyListener;
         });
       });
     } else {
@@ -56,6 +59,7 @@ add_task(async function() {
             "History listener got called after a content viewer was evicted"
           );
           legacySHistory.removeSHistoryListener(historyListener);
+          delete content._testListener;
           // 6. Resolve the promise when we got our 'content viewer evicted' event
           testDone.resolve();
         },
@@ -65,6 +69,8 @@ add_task(async function() {
         ]),
       };
       legacySHistory.addSHistoryListener(historyListener);
+      // Keep the weak shistory listener alive
+      content._testListener = historyListener;
     }
 
     // 4. Open a second tab
