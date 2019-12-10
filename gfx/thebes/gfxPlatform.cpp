@@ -1271,7 +1271,6 @@ bool gfxPlatform::CanMigrateMacGPUs() {
   return forceEnable || (!forceDisable && !blocked);
 }
 
-
 static bool sLayersIPCIsUp = false;
 
 /* static */
@@ -3314,6 +3313,27 @@ void gfxPlatform::InitWebRenderConfig() {
     }
   }
 #endif
+
+  // Initialize WebRender native compositor usage
+  FeatureState& featureComp =
+      gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
+  featureComp.SetDefaultFromPref("gfx.webrender.compositor", true, false);
+  if (!IsFeatureSupported(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, false)) {
+    featureComp.ForceDisable(FeatureStatus::Blacklisted, "Blacklisted",
+                             NS_LITERAL_CSTRING("FEATURE_FAILURE_BLACKLIST"));
+  }
+
+#ifdef XP_WIN
+  if (!gfxVars::UseWebRenderDCompWin()) {
+    featureComp.ForceDisable(FeatureStatus::Unavailable,
+                             "No DirectComposition usage",
+                             NS_LITERAL_CSTRING("FEATURE_FAILURE_BLACKLIST"));
+  }
+#endif
+
+  if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBRENDER_COMPOSITOR)) {
+    gfxVars::SetUseWebRenderCompositor(true);
+  }
 
   // Set features that affect WR's RendererOptions
   gfxVars::SetUseGLSwizzle(

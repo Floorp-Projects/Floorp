@@ -8,6 +8,7 @@
 
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -152,7 +153,7 @@ LayoutDeviceIntSize RenderCompositorOGL::GetBufferSize() {
 }
 
 bool RenderCompositorOGL::ShouldUseNativeCompositor() {
-  return mNativeLayerRoot && StaticPrefs::gfx_webrender_compositor_AtStartup();
+  return mNativeLayerRoot && gfx::gfxVars::UseWebRenderCompositor();
 }
 
 uint32_t RenderCompositorOGL::GetMaxUpdateRects() {
