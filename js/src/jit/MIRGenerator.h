@@ -125,8 +125,6 @@ class MIRGenerator {
   void setNeedsStaticStackAlignment() { needsStaticStackAlignment_ = true; }
   bool needsStaticStackAlignment() const { return needsStaticStackAlignment_; }
 
-  bool modifiesFrameArguments() const { return modifiesFrameArguments_; }
-
   typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
 
   // When aborting with AbortReason::PreliminaryObjects, all groups with
@@ -153,11 +151,6 @@ class MIRGenerator {
   uint32_t wasmMaxStackArgBytes_;
   bool needsOverrecursedCheck_;
   bool needsStaticStackAlignment_;
-
-  // Keep track of whether frame arguments are modified during execution.
-  // RegAlloc needs to know this as spilling values back to their register
-  // slots is not compatible with that.
-  bool modifiesFrameArguments_;
 
   bool instrumentedProfiling_;
   bool instrumentedProfilingIsCached_;

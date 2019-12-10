@@ -12966,7 +12966,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
     }
 
     MSetFrameArgument* store = MSetFrameArgument::New(alloc(), arg, val);
-    modifiesFrameArguments_ = true;
     current->add(store);
     current->setArg(arg);
     return Ok();
