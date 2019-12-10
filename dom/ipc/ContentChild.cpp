@@ -2410,10 +2410,10 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
   // keep persistent state.
   ProcessChild::QuickExit();
 #else
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   RefPtr<DllServices> dllSvc(DllServices::Get());
   dllSvc->DisableFull();
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
 
   if (gFirstIdleTask) {
     gFirstIdleTask->Cancel();
@@ -2440,7 +2440,7 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
   CrashReporterClient::DestroySingleton();
 
   XRE_ShutdownChildProcess();
-#endif  // NS_FREE_PERMANENT_DATA
+#endif    // NS_FREE_PERMANENT_DATA
 }
 
 void ContentChild::ProcessingError(Result aCode, const char* aReason) {
@@ -3176,9 +3176,7 @@ ContentChild::AllocPContentPermissionRequestChild(
     const nsTArray<PermissionRequest>& aRequests,
     const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
     const bool& aIsHandlingUserInput,
-    const bool& aMaybeUnsafePermissionDelegate,
-    const bool& aDocumentHasUserInput, const DOMTimeStamp aPageLoadTimestamp,
-    const TabId& aTabId) {
+    const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId) {
   MOZ_CRASH("unused");
   return nullptr;
 }

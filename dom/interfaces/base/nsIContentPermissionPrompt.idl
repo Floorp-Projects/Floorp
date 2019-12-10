@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 interface nsIPrincipal;
 interface mozIDOMWindow;
@@ -89,8 +88,6 @@ interface nsIContentPermissionRequest : nsISupports {
   readonly attribute Element element;
 
   readonly attribute boolean isHandlingUserInput;
-  readonly attribute boolean userHadInteractedWithDocument;
-  readonly attribute DOMTimeStamp documentDOMContentLoadedTimestamp;
 
   readonly attribute boolean maybeUnsafePermissionDelegate;
   /**

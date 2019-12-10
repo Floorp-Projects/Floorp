@@ -529,9 +529,7 @@ class ContentChild final
       const IPC::Principal& aPrincipal,
       const IPC::Principal& aTopLevelPrincipal,
       const bool& aIsHandlingUserInput,
-      const bool& aMaybeUnsafePermissionDelegate,
-      const bool& aDocumentHasUserInput, const DOMTimeStamp aPageLoadTimestamp,
-      const TabId& aTabId);
+      const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId);
   bool DeallocPContentPermissionRequestChild(
       PContentPermissionRequestChild* actor);
 
