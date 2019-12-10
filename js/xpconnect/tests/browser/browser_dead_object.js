@@ -10,7 +10,7 @@ add_task(async function test() {
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
   let innerWindowId = browser.innerWindowID;
-  let contentDocDead = await ContentTask.spawn(browser, {innerWindowId}, async function(args) {
+  let contentDocDead = await SpecialPowers.spawn(browser, [{innerWindowId}], async function(args) {
     let doc = content.document;
     let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
     let promise = TestUtils.topicObserved("inner-window-nuked", (subject, data) => {

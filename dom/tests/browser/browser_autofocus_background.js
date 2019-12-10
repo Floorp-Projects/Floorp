@@ -21,10 +21,8 @@ add_task(async function() {
 
   for (var i = 0; i < testingList.length; ++i) {
     // Get active element in the tab.
-    let tagName = await ContentTask.spawn(
-      tabs[i + 1].linkedBrowser,
-      null,
-      async function() {
+    let tagName = await SpecialPowers.spawn(
+      tabs[i + 1].linkedBrowser, [], async function() {
         return content.document.activeElement.tagName;
       }
     );

@@ -1082,7 +1082,7 @@ function waitForActive(dbg) {
  */
 function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
-  return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, function*({
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [{ fnc, args }], function*({
     fnc,
     args,
   }) {
@@ -1093,7 +1093,7 @@ function invokeInTab(fnc, ...args) {
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return ContentTask.spawn(gBrowser.selectedBrowser, { selector }, function*({
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [{ selector }], function*({
     selector,
   }) {
     content.wrappedJSObject.document.querySelector(selector).click();

@@ -26,10 +26,8 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(
-    browser,
-    { page: TEST_3RD_PARTY_PAGE_WITH_SVG },
-    async function(obj) {
+  await SpecialPowers.spawn(
+    browser, [{ page: TEST_3RD_PARTY_PAGE_WITH_SVG }], async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
 

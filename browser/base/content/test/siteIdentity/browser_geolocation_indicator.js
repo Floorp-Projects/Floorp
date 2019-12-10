@@ -85,7 +85,7 @@ function openExamplePage(tabbrowser = gBrowser) {
 }
 
 function requestGeoLocation(browser) {
-  return ContentTask.spawn(browser, null, () => {
+  return SpecialPowers.spawn(browser, [], () => {
     return new Promise(resolve => {
       content.navigator.geolocation.getCurrentPosition(
         () => resolve(true),

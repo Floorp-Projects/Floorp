@@ -16,7 +16,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI);
   let browser = tab.linkedBrowser;
 
-  let imageInfo = await ContentTask.spawn(browser, null, async () => {
+  let imageInfo = await SpecialPowers.spawn(browser, [], async () => {
     let testImg = content.document.getElementById("test-image");
 
     return {

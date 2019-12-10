@@ -57,13 +57,11 @@ this.StoragePrincipalHelper = {
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           page: TEST_3RD_PARTY_STORAGE_PAGE,
           callback: callback.toString(),
-        },
-        async obj => {
+        }], async obj => {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
             ifr.onload = __ => {

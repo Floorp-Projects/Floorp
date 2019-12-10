@@ -82,7 +82,7 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
     "Call the content method that should attach a custom element definition"
   );
   const mutated = waitForMutation(inspector, "customElementDefined");
-  ContentTask.spawn(gBrowser.selectedBrowser, { contentMethod }, function(
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [{ contentMethod }], function(
     args
   ) {
     content.wrappedJSObject[args.contentMethod]();

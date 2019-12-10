@@ -8,14 +8,14 @@ const HTML_URI = TEST_PATH + "file_data_load_inherit_csp.html";
 const DATA_URI = "data:text/html;html,<html><body>foo</body></html>";
 
 function setDataHrefOnLink(aBrowser, aDataURI) {
-  return ContentTask.spawn(aBrowser, aDataURI, function(uri) {
+  return SpecialPowers.spawn(aBrowser, [aDataURI], function(uri) {
     let link = content.document.getElementById("testlink");
     link.href = uri;
   });
 }
 
 function verifyCSP(aTestName, aBrowser, aDataURI) {
-  return ContentTask.spawn(aBrowser, { aTestName, aDataURI }, async function({
+  return SpecialPowers.spawn(aBrowser, [{ aTestName, aDataURI }], async function({
     aTestName,
     aDataURI,
   }) {

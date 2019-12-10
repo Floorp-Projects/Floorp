@@ -24,7 +24,7 @@ add_task(async function() {
   });
 
   info("Adding a style sheet");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const document = content.document;
     const style = document.createElement("style");
     style.appendChild(document.createTextNode("div { background: #f06; }"));

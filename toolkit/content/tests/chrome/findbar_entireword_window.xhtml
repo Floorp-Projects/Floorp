@@ -19,7 +19,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    ;
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
@@ -123,10 +123,10 @@
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
 
-      let promise = ContentTask.spawn(gBrowser, null, async function() {
+      let promise = SpecialPowers.spawn(gBrowser, [], async function() {
         return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
+          docShell.chromeEventHandler.addEventListener("DOMContentLoaded", function listener() {
+            docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", listener);
             resolve();
           });
         });
@@ -244,7 +244,7 @@
     }
 
     async function testQuickfind(tests) {
-      await ContentTask.spawn(gBrowser, null, async function() {
+      await SpecialPowers.spawn(gBrowser, [], async function() {
         let document = content.document;
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,

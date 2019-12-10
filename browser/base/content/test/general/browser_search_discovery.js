@@ -69,7 +69,7 @@ async function searchDiscovery() {
       true
     );
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, testCase, test => {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [testCase], test => {
       let doc = content.document;
       let head = doc.getElementById("linkparent");
       let link = doc.createElement("link");
@@ -105,7 +105,7 @@ async function searchDiscovery() {
     e => e.target.href == "http://second.mozilla.com/search.xml",
     true
   );
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     let doc = content.document;
     let head = doc.getElementById("linkparent");
     let link = doc.createElement("link");

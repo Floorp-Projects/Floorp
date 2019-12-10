@@ -4,7 +4,7 @@ add_task(async function duplicateTab() {
   let tab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     let docshell = content.window.docShell.QueryInterface(Ci.nsIWebNavigation);
     let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
@@ -13,7 +13,7 @@ add_task(async function duplicateTab() {
   let tab2 = gBrowser.duplicateTab(tab);
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
-  await ContentTask.spawn(tab2.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], function() {
     let docshell = content.window.docShell.QueryInterface(Ci.nsIWebNavigation);
     let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
@@ -29,7 +29,7 @@ add_task(async function contentToChromeNavigate() {
   let tab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     let docshell = content.window.docShell.QueryInterface(Ci.nsIWebNavigation);
     let sh = docshell.sessionHistory;
     is(sh.count, 1);
@@ -40,7 +40,7 @@ add_task(async function contentToChromeNavigate() {
   });
 
   // Force the browser to navigate to the chrome process.
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     const CHROME_URL = "about:config";
     let webnav = content.window.getInterface(Ci.nsIWebNavigation);
     let loadURIOptions = {

@@ -13,7 +13,7 @@ add_task(async function test_manageCreditCardsInitialState() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: MANAGE_CREDIT_CARDS_DIALOG_URL },
     async function(browser) {
-      await ContentTask.spawn(browser, TEST_SELECTORS, args => {
+      await SpecialPowers.spawn(browser, [TEST_SELECTORS], args => {
         let selRecords = content.document.querySelector(args.selRecords);
         let btnRemove = content.document.querySelector(args.btnRemove);
         let btnAdd = content.document.querySelector(args.btnAdd);

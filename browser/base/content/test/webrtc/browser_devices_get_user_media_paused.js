@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function setTrackEnabled(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [{ audio, video }], function(
     args
   ) {
     let stream = content.wrappedJSObject.gStreams[0];
@@ -16,7 +16,7 @@ function setTrackEnabled(audio, video) {
 }
 
 function cloneTracks(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [{ audio, video }], function(
     args
   ) {
     if (!content.wrappedJSObject.gClones) {
@@ -34,7 +34,7 @@ function cloneTracks(audio, video) {
 }
 
 function stopClonedTracks(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [{ audio, video }], function(
     args
   ) {
     let clones = content.wrappedJSObject.gClones || [];

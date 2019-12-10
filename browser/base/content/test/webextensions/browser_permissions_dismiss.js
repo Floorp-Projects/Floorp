@@ -29,7 +29,7 @@ add_task(async function test_tab_switch_dismiss() {
     AddonManager.addInstallListener(listener);
   });
 
-  ContentTask.spawn(gBrowser.selectedBrowser, INSTALL_XPI, function(url) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function(url) {
     content.wrappedJSObject.installMozAM(url);
   });
 

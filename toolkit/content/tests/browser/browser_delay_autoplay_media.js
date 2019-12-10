@@ -4,7 +4,7 @@ const PAGE_NO_AUTOPLAY =
   "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 function check_audio_paused(browser, shouldBePaused) {
-  return ContentTask.spawn(browser, shouldBePaused, shouldBePaused => {
+  return SpecialPowers.spawn(browser, [shouldBePaused], shouldBePaused => {
     var autoPlay = content.document.getElementById("autoplay");
     if (!autoPlay) {
       ok(false, "Can't get the audio element!");
@@ -41,7 +41,7 @@ add_task(async function delay_media_with_autoplay_keyword() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- set media's autoplay property -");
-  await ContentTask.spawn(tab.linkedBrowser, null, set_media_autoplay);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], set_media_autoplay);
 
   info("- should delay autoplay media -");
   await waitForTabBlockEvent(tab, true);

@@ -19,7 +19,7 @@ add_task(async function() {
 
 var checkViewSource = async function(aTab) {
   let browser = aTab.linkedBrowser;
-  await ContentTask.spawn(browser, content, async function(text) {
+  await SpecialPowers.spawn(browser, [content], async function(text) {
     is(content.document.body.textContent, text, "Correct content loaded");
   });
 
@@ -27,7 +27,7 @@ var checkViewSource = async function(aTab) {
     browser.messageManager.sendAsyncMessage("ViewSource:GoToLine", {
       lineNumber: i,
     });
-    await ContentTask.spawn(browser, i, async function(i) {
+    await SpecialPowers.spawn(browser, [i], async function(i) {
       let selection = content.getSelection();
       Assert.equal(selection.toString(), "line " + i, "Correct text selected");
     });

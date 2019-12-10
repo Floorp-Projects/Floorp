@@ -13,7 +13,7 @@ add_task(async function test_hasBeenTypePassword() {
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
-  await ContentTask.spawn(browser, {}, async function fillFields() {
+  await SpecialPowers.spawn(browser, [], async function fillFields() {
     let doc = content.document;
 
     doc.getElementById("TextValue").setUserInput("abc");

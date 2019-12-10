@@ -18,7 +18,7 @@ add_task(async function() {
 });
 
 async function startFastMutations(tab) {
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await content.wrappedJSObject.startFastMutations();
   });
 }

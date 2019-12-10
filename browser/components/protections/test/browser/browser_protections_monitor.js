@@ -74,7 +74,7 @@ add_task(async function() {
   );
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(
         ".monitor-card.has-logins"
@@ -133,7 +133,7 @@ add_task(async function() {
 
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(
         ".monitor-card.has-logins"
@@ -168,7 +168,7 @@ add_task(async function() {
   );
   await reloadTab(tab);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const monitorCard = content.document.querySelector(".monitor-card");
       return !monitorCard["data-enabled"];
@@ -195,7 +195,7 @@ add_task(async function() {
 });
 
 async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const noLogins = content.document.querySelector(
         ".monitor-card.no-logins"

@@ -113,10 +113,8 @@ add_task(async function test() {
   let keyInfo = generateKeyInfo(TESTKEY);
 
   // Update the media key for the default container.
-  let result = await ContentTask.spawn(
-    defaultContainer.browser,
-    keyInfo,
-    async function(aKeyInfo) {
+  let result = await SpecialPowers.spawn(
+    defaultContainer.browser, [keyInfo], async function(aKeyInfo) {
       let access = await content.navigator.requestMediaKeySystemAccess(
         "org.w3.clearkey",
         [
@@ -182,7 +180,7 @@ add_task(async function test() {
     USER_ID_PERSONAL
   );
 
-  await ContentTask.spawn(personalContainer.browser, keyInfo, async function(
+  await SpecialPowers.spawn(personalContainer.browser, [keyInfo], async function(
     aKeyInfo
   ) {
     let access = await content.navigator.requestMediaKeySystemAccess(

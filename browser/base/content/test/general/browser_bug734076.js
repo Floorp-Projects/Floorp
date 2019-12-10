@@ -23,10 +23,8 @@ add_task(async function() {
       url: "http://mochi.test:8888/",
       element: "body",
       go() {
-        return ContentTask.spawn(
-          gBrowser.selectedBrowser,
-          { writeDomainURL },
-          async function(arg) {
+        return SpecialPowers.spawn(
+          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
             let contentBody = content.document.body;
             contentBody.style.backgroundImage =
               "url('" + arg.writeDomainURL + "')";
@@ -36,7 +34,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(
@@ -51,10 +49,8 @@ add_task(async function() {
       url: "http://mochi.test:8888/",
       element: "img",
       go() {
-        return ContentTask.spawn(
-          gBrowser.selectedBrowser,
-          { writeDomainURL },
-          async function(arg) {
+        return SpecialPowers.spawn(
+          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
             let doc = content.document;
             let img = doc.createElement("img");
             img.height = 100;
@@ -67,7 +63,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(
@@ -83,10 +79,8 @@ add_task(async function() {
       element: "html",
       frameIndex: 0,
       go() {
-        return ContentTask.spawn(
-          gBrowser.selectedBrowser,
-          { writeDomainURL },
-          async function(arg) {
+        return SpecialPowers.spawn(
+          gBrowser.selectedBrowser, [{ writeDomainURL }], async function(arg) {
             let doc = content.document;
             let iframe = doc.createElement("iframe");
             iframe.setAttribute("src", arg.writeDomainURL);
@@ -106,7 +100,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(
