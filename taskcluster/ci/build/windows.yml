@@ -7,6 +7,9 @@ job-defaults:
         using: mozharness
         use-caches: false
         tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - win64-dump-syms
 
 win32/debug:
     description: "Win32 Debug"
