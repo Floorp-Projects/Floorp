@@ -25,7 +25,7 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   NS_DECL_ISUPPORTS_INHERITED
   MediaControlKeysManager() = default;
 
-  void Init();
+  bool Open() override;
 
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
 

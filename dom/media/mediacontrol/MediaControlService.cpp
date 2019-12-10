@@ -59,7 +59,7 @@ MediaControlService::MediaControlService() : mAudioFocusManager(this) {
 void MediaControlService::Init() {
   mMediaKeysHandlder = new MediaControlKeysHandler();
   mMediaControlKeysManager = new MediaControlKeysManager();
-  mMediaControlKeysManager->Init();
+  mMediaControlKeysManager->Open();
   mMediaControlKeysManager->AddListener(mMediaKeysHandlder.get());
 }
 
