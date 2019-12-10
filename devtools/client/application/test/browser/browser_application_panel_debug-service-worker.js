@@ -20,7 +20,10 @@ const TAB_URL = URL_ROOT + "resources/service-workers/debug.html";
 add_task(async function() {
   await enableApplicationPanel();
 
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
+  const { panel, tab, target, toolbox } = await openNewTabAndApplicationPanel(
+    TAB_URL
+  );
+
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -35,39 +38,28 @@ add_task(async function() {
     return button && !button.disabled;
   });
 
-  info("Click on the debug button and wait for the new toolbox to be ready");
-  const onToolboxReady = gDevTools.once("toolbox-ready");
-
+  info("Click on the debug button and wait for debugger to be ready");
   const debugButton = container.querySelector(".js-debug-button");
   debugButton.click();
+  await waitFor(() => toolbox.getPanel("jsdebugger"));
 
-  const serviceWorkerToolbox = await onToolboxReady;
-  await serviceWorkerToolbox.selectTool("jsdebugger");
-  const debuggerContext = createDebuggerContext(serviceWorkerToolbox);
-
-  await waitForSources(debuggerContext, "debug-sw.js");
-  await selectSource(debuggerContext, "debug-sw.js");
+  // add a breakpoint at line 11
+  const debuggerContext = createDebuggerContext(toolbox);
   await waitForLoadedSource(debuggerContext, "debug-sw.js");
+  await addBreakpoint(debuggerContext, "debug-sw.js", 11);
 
-  await addBreakpoint(debuggerContext, "debug-sw.js", 8);
-
-  info(
-    "Reload the main tab, expect the service worker script to pause on line 8"
-  );
-  tab.linkedBrowser.reload();
-
+  // force a pause at the breakpoint
+  info("Invoke fetch, expect the service worker script to pause on line 11");
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    content.wrappedJSObject.fetchFromWorker();
+  });
   await waitForPaused(debuggerContext);
   assertPausedLocation(debuggerContext);
   await resume(debuggerContext);
 
+  // remove breakpoint
   const workerScript = findSource(debuggerContext, "debug-sw.js");
-  await removeBreakpoint(debuggerContext, workerScript.id, 8);
-
-  info("Destroy the worker toolbox");
-  await serviceWorkerToolbox.destroy();
-
-  info("Wait until the focus goes back to the main window");
-  await waitUntil(() => gBrowser.selectedBrowser === tab.linkedBrowser);
+  await removeBreakpoint(debuggerContext, workerScript.id, 11);
 
   await unregisterAllWorkers(target.client);
 });

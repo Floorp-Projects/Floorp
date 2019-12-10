@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'application-services.js',
     'l10n.js',
-    'services.js',
 )

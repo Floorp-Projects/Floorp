@@ -31,16 +31,10 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const { services } = require("../../modules/application-services");
 const Types = require("../../types/index");
 
 const UIButton = createFactory(require("../ui/UIButton"));
-
-loader.lazyRequireGetter(
-  this,
-  "gDevToolsBrowser",
-  "devtools/client/framework/devtools-browser",
-  true
-);
 
 /**
  * This component is dedicated to display a worker, more accurately a service worker, in
@@ -70,8 +64,7 @@ class Worker extends PureComponent {
       return;
     }
 
-    const { workerTargetFront } = this.props.worker;
-    gDevToolsBrowser.openWorkerToolbox(workerTargetFront);
+    services.openWorkerInDebugger(this.props.worker.workerTargetFront);
   }
 
   start() {
