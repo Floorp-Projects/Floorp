@@ -251,7 +251,6 @@ void LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir) {
   lir->setMir(mir);
 
   MOZ_ASSERT(lir->isCall());
-  gen->setNeedsStaticStackAlignment();
 
   uint32_t vreg = getVirtualRegister();
 
@@ -603,6 +602,10 @@ void LIRGeneratorShared::add(T* ins, MInstruction* mir) {
     ins->setMir(mir);
   }
   annotate(ins);
+  if (ins->isCall()) {
+    gen->setNeedsOverrecursedCheck();
+    gen->setNeedsStaticStackAlignment();
+  }
 }
 
 #ifdef JS_NUNBOX32
