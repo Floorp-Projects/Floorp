@@ -316,3 +316,19 @@ file-perm:
             - '**/*.xhtml'
             - '**/*.xml'
             - '**/*.xul'
+
+
+perfdocs-verify:
+    description: Verifies Performance Testing documentation
+    treeherder:
+        symbol: text(perfdocs)
+    run:
+        mach: lint -l perfdocs -f treeherder -f json:/builds/worker/mozlint.json
+    worker:
+        env:
+            WORKSPACE: /builds/worker/checkouts/gecko/
+    when:
+        files-changed:
+            - 'testing/**/*.ini'
+            - 'testing/**/*.yml'
+            - 'testing/**/*.rst'
