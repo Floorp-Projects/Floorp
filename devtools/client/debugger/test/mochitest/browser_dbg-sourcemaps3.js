@@ -55,7 +55,7 @@ add_task(async function() {
 
   await toggleScopeNode(dbg, 10);
 
-  is(getScopeLabel(dbg, 11), "binaryLookup:o()");
-  is(getScopeLabel(dbg, 12), "comparer:t()");
+  is(getScopeLabel(dbg, 11), "binaryLookup:o(n, e, r)");
+  is(getScopeLabel(dbg, 12), "comparer:t(n, e)");
   is(getScopeLabel(dbg, 13), "fancySort");
 });
