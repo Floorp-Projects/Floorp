@@ -198,6 +198,7 @@ EXPORTS.js += [
     '../public/UniquePtr.h',
     '../public/Utility.h',
     '../public/Value.h',
+    '../public/ValueArray.h',
     '../public/Vector.h',
     '../public/Warnings.h',
     '../public/WeakMapPtr.h',
