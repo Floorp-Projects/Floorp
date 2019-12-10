@@ -3528,3 +3528,6 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
 
 unsafe impl<'ctx> Send for AudioUnitStream<'ctx> {}
 unsafe impl<'ctx> Sync for AudioUnitStream<'ctx> {}
+
+#[cfg(test)]
+mod tests;
