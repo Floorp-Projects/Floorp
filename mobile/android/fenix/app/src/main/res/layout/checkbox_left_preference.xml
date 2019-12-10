@@ -12,6 +12,7 @@
     android:focusable="true"
     android:gravity="center_vertical"
     android:paddingStart="8dp"
+    android:paddingBottom="8dp"
     android:paddingEnd="?android:attr/scrollbarSize">
 
     <LinearLayout
