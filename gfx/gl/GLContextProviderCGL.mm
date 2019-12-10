@@ -145,12 +145,15 @@ static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* att
 //     which GPU is currently driving the screen.
 static CGOpenGLDisplayMask GetFreshContextDisplayMask() {
   NSOpenGLPixelFormatAttribute attribs[] = {NSOpenGLPFAAllowOfflineRenderers, 0};
-  NSOpenGLContext* context = CreateWithFormat(attribs);
-  NSOpenGLPixelFormat* pixelFormat = [context pixelFormat];
+  NSOpenGLPixelFormat* pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+  MOZ_RELEASE_ASSERT(pixelFormat);
+  NSOpenGLContext* context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat
+                                                        shareContext:nullptr];
   GLint displayMask = 0;
   [pixelFormat getValues:&displayMask
             forAttribute:NSOpenGLPFAScreenMask
         forVirtualScreen:[context currentVirtualScreen]];
+  [pixelFormat release];
   [context release];
   return static_cast<CGOpenGLDisplayMask>(displayMask);
 }
