@@ -28,6 +28,7 @@ jobs-from:
     - cctools-port.yml
     - clang-tidy.yml
     - clang.yml
+    - dump-syms.yml
     - gcc.yml
     - geckodriver.yml
     - gn.yml

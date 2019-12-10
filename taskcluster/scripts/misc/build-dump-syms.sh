@@ -1,9 +1,9 @@
 #!/bin/bash
 set -x -e -v
 
-PROJECT=rust-size
+PROJECT=dump_syms
 
-# This script is for building rust-size
+# This script is for building dump_syms
 case "$(uname -s)" in
 Linux)
     COMPRESS_EXT=xz
