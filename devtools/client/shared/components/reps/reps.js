@@ -2130,13 +2130,8 @@ function makeNodesForProperties(objProps, parent) {
     const properties = Object.getOwnPropertyNames(allProperties[name]);
     return properties.some(property => ["value", "getterValue", "get", "set"].includes(property));
   });
-  let nodes = [];
-
-  if (parentValue && parentValue.class == "Window") {
-    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
-  } else {
-    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
-  }
+  const isParentNodeWindow = parentValue && parentValue.class == "Window";
+  const nodes = isParentNodeWindow ? makeDefaultPropsBucket(propertiesNames, parent, allProperties) : makeNodesForOwnProps(propertiesNames, parent, allProperties);
 
   if (Array.isArray(ownSymbols)) {
     ownSymbols.forEach((ownSymbol, index) => {
@@ -2165,20 +2160,25 @@ function makeNodesForProperties(objProps, parent) {
   } // Add accessor nodes if needed
 
 
+  const defaultPropertiesNode = isParentNodeWindow ? nodes.find(node => nodeIsDefaultProperties(node)) : null;
+
   for (const name of propertiesNames) {
     const property = allProperties[name];
+    const isDefaultProperty = isParentNodeWindow && defaultPropertiesNode && isDefaultWindowProperty(name);
+    const parentNode = isDefaultProperty ? defaultPropertiesNode : parent;
+    const parentContentsArray = isDefaultProperty && defaultPropertiesNode ? defaultPropertiesNode.contents : nodes;
 
     if (property.get && property.get.type !== "undefined") {
-      nodes.push(createGetterNode({
-        parent,
+      parentContentsArray.push(createGetterNode({
+        parent: parentNode,
         property,
         name
       }));
     }
 
     if (property.set && property.set.type !== "undefined") {
-      nodes.push(createSetterNode({
-        parent,
+      parentContentsArray.push(createSetterNode({
+        parent: parentNode,
         property,
         name
       }));
