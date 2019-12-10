@@ -80,16 +80,6 @@ ENameValueFlag RootAccessible::Name(nsString& aName) const {
   return eNameOK;
 }
 
-role RootAccessible::NativeRole() const {
-  // If it's a <dialog>, use roles::DIALOG instead
-  dom::Element* rootElm = mDocumentNode->GetRootElement();
-  if (rootElm && rootElm->IsXULElement(nsGkAtoms::dialog)) {
-    return roles::DIALOG;
-  }
-
-  return DocAccessibleWrap::NativeRole();
-}
-
 // RootAccessible protected member
 #ifdef MOZ_XUL
 uint32_t RootAccessible::GetChromeFlags() const {
