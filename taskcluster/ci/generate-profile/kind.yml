@@ -37,7 +37,7 @@ jobs:
             env:
                 NEED_XVFB: "true"
             max-run-time: 1200
-            docker-image: {in-tree: desktop1604-test}
+            docker-image: {in-tree: ubuntu1804-test}
             artifacts:
                 - type: directory
                   name: public/build
@@ -93,7 +93,7 @@ jobs:
         worker-type: t-linux-xlarge-pgo
         worker:
             max-run-time: 5400
-            docker-image: {in-tree: desktop1604-test}
+            docker-image: {in-tree: ubuntu1804-test}
             env:
                 WORKSPACE: "/builds/worker/workspace"
                 WORKING_DIR: "/builds/worker"
