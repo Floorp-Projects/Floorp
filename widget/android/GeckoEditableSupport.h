@@ -141,7 +141,7 @@ class GeckoEditableSupport final
       }
 
       void Run() override {
-        if (!this->lambda.GetNativeObject()) {
+        if (NS_WARN_IF(!this->lambda.GetNativeObject())) {
           // Ignore stale calls after disposal.
           jni::GetGeckoThreadEnv()->ExceptionClear();
           return;
