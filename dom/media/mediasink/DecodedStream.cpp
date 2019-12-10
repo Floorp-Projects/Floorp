@@ -494,6 +494,7 @@ void DecodedStream::Stop() {
 
   DisconnectListener();
   ResetVideo(mPrincipalHandle);
+  ResetAudio();
   mStartTime.reset();
   mAudioEndedPromise = nullptr;
   mVideoEndedPromise = nullptr;
@@ -679,6 +680,28 @@ static bool ZeroDurationAtLastChunk(VideoSegment& aInput) {
   return lastVideoStratTime == aInput.GetDuration();
 }
 
+void DecodedStream::ResetAudio() {
+  AssertOwnerThread();
+
+  if (!mData) {
+    return;
+  }
+
+  if (!mInfo.HasAudio()) {
+    return;
+  }
+
+  TrackTime cleared = mData->mAudioTrack->ClearFutureData();
+  mData->mAudioTrackWritten -= cleared;
+  if (const RefPtr<AudioData>& v = mAudioQueue.PeekFront()) {
+    mData->mNextAudioTime = v->mTime;
+  }
+  if (mData->mHaveSentFinishAudio && cleared > 0) {
+    mData->mHaveSentFinishAudio = false;
+    mData->mListener->EndTrackAt(mData->mAudioTrack, TRACK_TIME_MAX);
+  }
+}
+
 void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
   AssertOwnerThread();
 
@@ -688,6 +711,13 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
 
   if (!mInfo.HasVideo()) {
     return;
+  }
+
+  TrackTime cleared = mData->mVideoTrack->ClearFutureData();
+  mData->mVideoTrackWritten -= cleared;
+  if (mData->mHaveSentFinishVideo && cleared > 0) {
+    mData->mHaveSentFinishVideo = false;
+    mData->mListener->EndTrackAt(mData->mVideoTrack, TRACK_TIME_MAX);
   }
 
   VideoSegment resetter;
@@ -892,7 +922,7 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
   // Remove audio samples that have been played by MTG from the queue.
   RefPtr<AudioData> a = mAudioQueue.PeekFront();
-  for (; a && a->mTime < currentTime;) {
+  for (; a && a->GetEndTime() < currentTime;) {
     RefPtr<AudioData> releaseMe = mAudioQueue.PopFront();
     a = mAudioQueue.PeekFront();
   }
@@ -904,6 +934,7 @@ void DecodedStream::PlayingChanged() {
   if (!mPlaying) {
     // On seek or pause we discard future frames.
     ResetVideo(mPrincipalHandle);
+    ResetAudio();
   }
 }
 
