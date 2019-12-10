@@ -1,0 +1,72 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<!DOCTYPE html [
+<!ENTITY % pluginsDTD SYSTEM "chrome://pluginproblem/locale/pluginproblem.dtd">
+%pluginsDTD;
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link rel="stylesheet" href="chrome://global/skin/global.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css"/>
+  <style>
+    :root {
+      background-color: var(--in-content-box-background);
+    }
+
+    #detail-grid {
+      display: grid;
+      grid-template-columns: auto auto;
+      column-gap: 1em;
+      min-height: 250px;
+      align-content: start;
+    }
+
+    .detail-row:not([hidden]) {
+      display: grid;
+      grid-column: span 2;
+      grid-template-columns: subgrid;
+      padding-block: 16px;
+      line-height: 20px;
+    }
+
+    .detail-row:not([hidden]) ~ .detail-row {
+      border-top: 1px solid var(--in-content-box-border-color);
+    }
+
+    #pluginFlashBlocking label,
+    #pluginEnableProtectedMode label {
+      display: block;
+    }
+  </style>
+  <script src="chrome://mozapps/content/extensions/pluginPrefs.js"></script>
+</head>
+<body id="detail-grid">
+  <div class="detail-row">
+    <label>&plugin.file;</label>
+    <label class="text-list" id="pluginLibraries"/>
+  </div>
+  <div class="detail-row">
+    <label>&plugin.mimeTypes;</label>
+    <label class="text-list" id="pluginMimeTypes"/>
+  </div>
+  <div id="pluginFlashBlocking" class="detail-row">
+    <div>
+      <label>&plugin.enableBlocklists.label;</label>
+      <a href="https://support.mozilla.org/kb/flash-blocklists" target="_blank">&setting.learnmore;</a>
+    </div>
+    <input type="checkbox" id="pluginFlashBlockingCheckbox"/>
+  </div>
+  <div id="pluginEnableProtectedMode" class="detail-row">
+    <div>
+      <label>&plugin.flashProtectedMode.label;</label>
+      <a href="https://support.mozilla.org/kb/flash-protected-mode-settings" target="_blank">&setting.learnmore;</a>
+    </div>
+    <input type="checkbox" id="pluginEnableProtectedModeCheckbox"/>
+  </div>
+</body>
+</html>
