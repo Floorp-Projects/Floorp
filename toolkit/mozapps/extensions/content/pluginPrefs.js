@@ -39,9 +39,9 @@ async function renderPluginMetadata(id) {
   }
   typeLabel.textContent = types.join(",\n");
   let showProtectedModePref = canDisableFlashProtectedMode(plugin);
-  document
-    .getElementById("pluginEnableProtectedMode")
-    .setAttribute("collapsed", showProtectedModePref ? "" : "true");
+  document.getElementById(
+    "pluginEnableProtectedMode"
+  ).hidden = !showProtectedModePref;
 
   // Disable flash blocking when Fission is enabled (See Bug 1584931).
   document.getElementById(
@@ -66,7 +66,7 @@ function init() {
     let checkbox = document.getElementById(id);
     var prefVal = Services.prefs.getBoolPref(PREFS[id].pref);
     checkbox.checked = PREFS[id].invert ? !prefVal : prefVal;
-    checkbox.addEventListener("command", () => {
+    checkbox.addEventListener("change", () => {
       Services.prefs.setBoolPref(
         PREFS[id].pref,
         PREFS[id].invert ? !checkbox.checked : checkbox.checked
