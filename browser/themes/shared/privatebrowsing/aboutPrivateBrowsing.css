@@ -63,7 +63,7 @@ p {
 }
 
 .wordmark {
-  background: url("resource://activity-stream/data/content/assets/firefox-wordmark.svg") no-repeat center center;
+  background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
   background-size: 172px;
   -moz-context-properties: fill;
   display: inline-block;

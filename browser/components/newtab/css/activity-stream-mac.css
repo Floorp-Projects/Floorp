@@ -1043,7 +1043,7 @@ main {
       height: 96px;
       width: 96px; }
     .search-wrapper .logo-and-wordmark .wordmark {
-      background: url("../data/content/assets/firefox-wordmark.svg") no-repeat center center;
+      background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
       background-size: 172px;
       -moz-context-properties: fill;
       display: inline-block;

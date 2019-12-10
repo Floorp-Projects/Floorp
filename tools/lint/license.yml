@@ -12,7 +12,6 @@ license:
         # License not super clear
         - browser/branding/
         # Trademark
-        - browser/components/newtab/data/content/assets/firefox-wordmark.svg
         - browser/components/pocket/content/panels/
         - browser/components/shell/ScreenshotChild.jsm
         - browser/extensions/pdfjs/content/web/images/
