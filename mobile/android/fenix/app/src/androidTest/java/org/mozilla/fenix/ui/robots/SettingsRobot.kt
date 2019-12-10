@@ -17,6 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.click
@@ -231,5 +232,6 @@ private fun assertAboutFirefoxPreview() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun goBackButton() =
-    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+private fun goBackButton() = onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+
+fun swipeToBottom() = onView(ViewMatchers.withId(R.id.recycler_view)).perform(ViewActions.swipeUp())

@@ -482,9 +482,9 @@ dependencies {
 
     androidTestImplementation Deps.uiautomator
 // Removed pending AndroidX fixes
-//    androidTestImplementation "tools.fastlane:screengrab:1.2.0"
+    androidTestImplementation "tools.fastlane:screengrab:2.0.0"
 //    androidTestImplementation "br.com.concretesolutions:kappuccino:1.2.1"
-
+    
     androidTestImplementation Deps.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }

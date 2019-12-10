@@ -78,7 +78,6 @@ class ThreeDotMenuMainRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("Settings")), waitingTime)
             settingsButton().click()
 
             SettingsRobot().interact()
@@ -129,6 +128,22 @@ class ThreeDotMenuMainRobot {
             // Close three dot
             mDevice.pressBack()
             // Nav back to previous page
+            mDevice.pressBack()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun close(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            // Close three dot
+            mDevice.pressBack()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
+        fun closeBrowserMenuToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            // Close three dot
             mDevice.pressBack()
 
             BrowserRobot().interact()

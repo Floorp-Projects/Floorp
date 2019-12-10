@@ -15,9 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.hasFocus
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.By
@@ -30,7 +28,7 @@ import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -87,23 +85,23 @@ class HomeScreenRobot {
     // Collections element
     fun clickCollectionThreeDotButton() {
         collectionThreeDotButton().click()
-        mDevice.wait(Until.findObject(By.text("Delete collection")), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.text("Delete collection")), waitingTime)
     }
     fun selectRenameCollection() {
         onView(allOf(ViewMatchers.withText("Rename collection"))).click()
-        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("name_collection_edittext")))
     }
     fun selectDeleteCollection() {
         onView(allOf(ViewMatchers.withText("Delete collection"))).click()
-        mDevice.wait(Until.findObject(By.res("message")), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("message")), waitingTime)
     }
     fun confirmDeleteCollection() {
         onView(allOf(ViewMatchers.withText("DELETE"))).click()
-        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/collections_header")), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("collections_header")), waitingTime)
     }
     fun typeCollectionName(name: String) {
-        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")), waitingTime)
-        collectionNameTextField().check(matches(hasFocus()))
+        mDevice.wait(Until.findObject(By.res("name_collection_edittext")), waitingTime)
+
         collectionNameTextField().perform(ViewActions.replaceText(name))
         collectionNameTextField().perform(ViewActions.pressImeActionButton())
     }
@@ -119,6 +117,15 @@ class HomeScreenRobot {
     fun closeTab() {
         closeTabButton().click()
     }
+
+    fun togglePrivateBrowsingModeOnOff() {
+        onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+                .perform(click())
+    }
+
+    fun swipeToBottom() = onView(ViewMatchers.withId(R.id.home_component)).perform(ViewActions.swipeUp())
+
+    fun swipeToTop() = onView(ViewMatchers.withId(R.id.home_component)).perform(ViewActions.swipeDown())
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -361,4 +368,4 @@ private fun tabsListThreeDotButton() = onView(allOf(ViewMatchers.withId(R.id.tab
 
 private fun collectionThreeDotButton() = onView(allOf(ViewMatchers.withId(R.id.collection_overflow_button)))
 
-private fun collectionNameTextField() = onView(allOf(ViewMatchers.withResourceName("name_collection_edittext"), hasFocus()))
+private fun collectionNameTextField() = onView(allOf(ViewMatchers.withResourceName("name_collection_edittext")))
