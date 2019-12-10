@@ -2,11 +2,25 @@ How to contribute to Firefox
 ============================
 
 The goal of this doc is to have a place where all simple commands
-are listed from start to end on a Linux/Mac system.
+are listed from start to end.
 
 This aims to be a simple tutorial for lazy copy and paste.
 
 Each section in this tutorial links to more detailed documentation on the topic.
+
+Getting ready (For Windows)
+---------------------------
+
+#. You need 64-bit version of Windows 7 or later.
+#. Download and install `Visual Studio. <https://visualstudio.microsoft.com/downloads/>`__
+#. Finally download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
+
+.. code-block:: shell
+
+    $ c:\mozilla-build\
+
+`More
+information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
 
 Clone the sources
 -----------------
