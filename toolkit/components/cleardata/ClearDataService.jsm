@@ -1247,7 +1247,7 @@ ClearDataService.prototype = Object.freeze({
     });
   },
 
-  deleteDataFromOriginAttributesPattern(aPattern) {
+  deleteDataFromOriginAttributesPattern(aPattern, aCallback) {
     if (!aPattern) {
       return Cr.NS_ERROR_INVALID_ARG;
     }
@@ -1260,12 +1260,14 @@ ClearDataService.prototype = Object.freeze({
       patternString
     );
 
-    let dummyCallback = {
-      onDataDeleted: () => {},
-    };
+    if (!aCallback) {
+      aCallback = {
+        onDataDeleted: () => {},
+      };
+    }
     return this._deleteInternal(
       Ci.nsIClearDataService.CLEAR_ALL,
-      dummyCallback,
+      aCallback,
       aCleaner => {
         if (aCleaner.deleteByOriginAttributes) {
           return aCleaner.deleteByOriginAttributes(patternString);

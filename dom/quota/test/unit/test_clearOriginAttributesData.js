@@ -33,8 +33,13 @@ async function testSteps() {
   }
 
   const removingId = 2;
-  Services.clearData.deleteDataFromOriginAttributesPattern({
-    userContextId: removingId,
+  await new Promise(function(aResolve) {
+    Services.clearData.deleteDataFromOriginAttributesPattern(
+      {
+        userContextId: removingId,
+      },
+      aResolve
+    );
   });
 
   for (let origin of origins) {
