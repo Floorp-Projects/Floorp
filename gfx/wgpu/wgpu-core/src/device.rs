@@ -481,6 +481,27 @@ fn map_buffer<B: hal::Backend>(
     Ok(ptr.as_ptr())
 }
 
+fn unmap_buffer<B: hal::Backend>(
+    raw: &B::Device,
+    buffer: &mut resource::Buffer<B>,
+) {
+    if !buffer.mapped_write_ranges.is_empty() {
+        unsafe {
+            raw
+                .flush_mapped_memory_ranges(
+                    buffer
+                        .mapped_write_ranges
+                        .iter()
+                        .map(|r| (buffer.memory.memory(), r.clone())),
+                )
+                .unwrap()
+        };
+        buffer.mapped_write_ranges.clear();
+    }
+
+    buffer.memory.unmap(raw);
+}
+
 #[derive(Debug)]
 pub struct Device<B: hal::Backend> {
     pub(crate) raw: B::Device,
@@ -790,7 +811,7 @@ impl<F: IdentityFilter<BufferId>> Global<F> {
         let hub = B::hub(self);
         let mut token = Token::root();
 
-        let (device_guard, _) = hub.devices.read(&mut token);
+        let (device_guard, mut token) = hub.devices.read(&mut token);
         let device = &device_guard[device_id];
         let buffer = device.create_buffer(device_id, desc);
         let ref_count = buffer.life_guard.ref_count.clone();
@@ -818,7 +839,7 @@ impl<F: IdentityFilter<BufferId>> Global<F> {
         let mut desc = desc.clone();
         desc.usage |= resource::BufferUsage::MAP_WRITE;
 
-        let (device_guard, _) = hub.devices.read(&mut token);
+        let (device_guard, mut token) = hub.devices.read(&mut token);
         let device = &device_guard[device_id];
         let mut buffer = device.create_buffer(device_id, &desc);
         let ref_count = buffer.life_guard.ref_count.clone();
@@ -846,6 +867,76 @@ impl<F: IdentityFilter<BufferId>> Global<F> {
         id
     }
 
+    pub fn device_set_buffer_sub_data<B: GfxBackend>(
+        &self,
+        device_id: DeviceId,
+        buffer_id: BufferId,
+        offset: BufferAddress,
+        data: &[u8],
+    ) {
+        let hub = B::hub(self);
+        let mut token = Token::root();
+
+        let (device_guard, mut token) = hub.devices.read(&mut token);
+        let (mut buffer_guard, _) = hub.buffers.write(&mut token);
+        let device = &device_guard[device_id];
+        let mut buffer = &mut buffer_guard[buffer_id];
+        assert!(buffer.usage.contains(resource::BufferUsage::MAP_WRITE));
+        //assert!(buffer isn't used by the GPU);
+
+        match map_buffer(
+            &device.raw,
+            &mut buffer,
+            offset .. offset + data.len() as BufferAddress,
+            HostMap::Write,
+        ) {
+            Ok(ptr) => unsafe {
+                ptr::copy_nonoverlapping(data.as_ptr(), ptr, data.len());
+            },
+            Err(e) => {
+                log::error!("failed to map a buffer: {:?}", e);
+                return;
+            }
+        }
+
+        unmap_buffer(&device.raw, buffer);
+    }
+
+    pub fn device_get_buffer_sub_data<B: GfxBackend>(
+        &self,
+        device_id: DeviceId,
+        buffer_id: BufferId,
+        offset: BufferAddress,
+        data: &mut [u8],
+    ) {
+        let hub = B::hub(self);
+        let mut token = Token::root();
+
+        let (device_guard, mut token) = hub.devices.read(&mut token);
+        let (mut buffer_guard, _) = hub.buffers.write(&mut token);
+        let device = &device_guard[device_id];
+        let mut buffer = &mut buffer_guard[buffer_id];
+        assert!(buffer.usage.contains(resource::BufferUsage::MAP_READ));
+        //assert!(buffer isn't used by the GPU);
+
+        match map_buffer(
+            &device.raw,
+            &mut buffer,
+            offset .. offset + data.len() as BufferAddress,
+            HostMap::Read,
+        ) {
+            Ok(ptr) => unsafe {
+                ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), data.len());
+            },
+            Err(e) => {
+                log::error!("failed to map a buffer: {:?}", e);
+                return;
+            }
+        }
+
+        unmap_buffer(&device.raw, buffer);
+    }
+
     pub fn buffer_destroy<B: GfxBackend>(&self, buffer_id: BufferId) {
         let hub = B::hub(self);
         let mut token = Token::root();
@@ -869,7 +960,7 @@ impl<F: IdentityFilter<TextureId>> Global<F> {
         let hub = B::hub(self);
         let mut token = Token::root();
 
-        let (device_guard, _) = hub.devices.read(&mut token);
+        let (device_guard, mut token) = hub.devices.read(&mut token);
         let device = &device_guard[device_id];
         let texture = device.create_texture(device_id, desc);
         let range = texture.full_range.clone();
@@ -1176,7 +1267,7 @@ impl<F: IdentityFilter<BindGroupId>> Global<F> {
 
         let (device_guard, mut token) = hub.devices.read(&mut token);
         let device = &device_guard[device_id];
-        let (bind_group_layout_guard, _) = hub.bind_group_layouts.read(&mut token);
+        let (bind_group_layout_guard, mut token) = hub.bind_group_layouts.read(&mut token);
         let bind_group_layout = &bind_group_layout_guard[desc.layout];
         let bindings =
             unsafe { slice::from_raw_parts(desc.bindings, desc.bindings_length as usize) };
@@ -1983,8 +2074,9 @@ impl<F: IdentityFilter<SwapChainId>> Global<F> {
 impl<F: AllIdentityFilter> Global<F> {
     pub fn device_poll<B: GfxBackend>(&self, device_id: DeviceId, force_wait: bool) {
         let hub = B::hub(self);
+        let mut token = Token::root();
         let callbacks = {
-            let (device_guard, mut token) = hub.devices.read(&mut Token::root());
+            let (device_guard, mut token) = hub.devices.read(&mut token);
             device_guard[device_id].maintain(self, force_wait, &mut token)
         };
         Device::<B>::fire_map_callbacks(callbacks);
@@ -1994,7 +2086,8 @@ impl<F: AllIdentityFilter> Global<F> {
 impl<F: AllIdentityFilter + IdentityFilter<DeviceId>> Global<F> {
     pub fn device_destroy<B: GfxBackend>(&self, device_id: DeviceId) {
         let hub = B::hub(self);
-        let (device, mut token) = hub.devices.unregister(device_id, &mut Token::root());
+        let mut token = Token::root();
+        let (device, mut token) = hub.devices.unregister(device_id, &mut token);
         device.maintain(self, true, &mut token);
         device.com_allocator.destroy(&device.raw);
     }
@@ -2049,24 +2142,11 @@ impl<F> Global<F> {
 
         let (device_guard, mut token) = hub.devices.read(&mut token);
         let (mut buffer_guard, _) = hub.buffers.write(&mut token);
-
         let buffer = &mut buffer_guard[buffer_id];
-        let device_raw = &device_guard[buffer.device_id.value].raw;
 
-        if !buffer.mapped_write_ranges.is_empty() {
-            unsafe {
-                device_raw
-                    .flush_mapped_memory_ranges(
-                        buffer
-                            .mapped_write_ranges
-                            .iter()
-                            .map(|r| (buffer.memory.memory(), r.clone())),
-                    )
-                    .unwrap()
-            };
-            buffer.mapped_write_ranges.clear();
-        }
-
-        buffer.memory.unmap(device_raw);
+        unmap_buffer(
+            &device_guard[buffer.device_id.value].raw,
+            buffer,
+        );
     }
 }
