@@ -181,7 +181,8 @@ class FetchDriver final : public nsIStreamListener,
   // response.
   void FailWithNetworkError(nsresult rv);
 
-  void SetRequestHeaders(nsIHttpChannel* aChannel) const;
+  void SetRequestHeaders(nsIHttpChannel* aChannel,
+                         bool aStripRequestBodyHeader) const;
 
   void FinishOnStopRequest(AlternativeDataStreamListener* aAltDataListener);
 };
