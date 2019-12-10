@@ -24,6 +24,7 @@ class MediaHardwareKeysEventSourceMac final
 
   bool Open() override;
   void Close() override;
+  bool IsOpened() const override;
 
  private:
   ~MediaHardwareKeysEventSourceMac() = default;

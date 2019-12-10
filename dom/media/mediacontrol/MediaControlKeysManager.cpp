@@ -23,6 +23,15 @@ namespace dom {
 NS_IMPL_ISUPPORTS_INHERITED0(MediaControlKeysManager,
                              MediaControlKeysEventSource)
 
+bool MediaControlKeysManager::IsOpened() const {
+  // As MediaControlKeysManager represents a platform-indenpendent event source,
+  // which we can use to add other listeners to moniter media key events, we
+  // would always return true even if we fail to open the real media key event
+  // source, because we still have chances to open the source again when there
+  // are other new controllers being added.
+  return true;
+}
+
 bool MediaControlKeysManager::Open() {
   mControllerAmountChangedListener =
       MediaControlService::GetService()
