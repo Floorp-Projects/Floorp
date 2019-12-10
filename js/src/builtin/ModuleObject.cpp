@@ -1246,28 +1246,31 @@ bool ModuleBuilder::buildTables() {
 }
 
 bool ModuleBuilder::initModule() {
-  RootedArrayObject requestedModules(cx_, createArray(requestedModules_));
+  RootedArrayObject requestedModules(cx_,
+                                     js::CreateArray(cx_, requestedModules_));
   if (!requestedModules) {
     return false;
   }
 
-  RootedArrayObject importEntries(cx_, createArray(importEntries_));
+  RootedArrayObject importEntries(cx_, createArrayFromHashMap(importEntries_));
   if (!importEntries) {
     return false;
   }
 
-  RootedArrayObject localExportEntries(cx_, createArray(localExportEntries_));
+  RootedArrayObject localExportEntries(
+      cx_, js::CreateArray(cx_, localExportEntries_));
   if (!localExportEntries) {
     return false;
   }
 
-  RootedArrayObject indirectExportEntries(cx_,
-                                          createArray(indirectExportEntries_));
+  RootedArrayObject indirectExportEntries(
+      cx_, js::CreateArray(cx_, indirectExportEntries_));
   if (!indirectExportEntries) {
     return false;
   }
 
-  RootedArrayObject starExportEntries(cx_, createArray(starExportEntries_));
+  RootedArrayObject starExportEntries(cx_,
+                                      js::CreateArray(cx_, starExportEntries_));
   if (!starExportEntries) {
     return false;
   }
@@ -1622,9 +1625,10 @@ bool ModuleBuilder::maybeAppendRequestedModule(HandleAtom specifier,
 }
 
 template <typename T>
-ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCVector<T>>& vector) {
+ArrayObject* js::CreateArray(JSContext* cx,
+                             const JS::Rooted<GCVector<T>>& vector) {
   uint32_t length = vector.length();
-  RootedArrayObject array(cx_, NewDenseFullyAllocatedArray(cx_, length));
+  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!array) {
     return nullptr;
   }
@@ -1638,7 +1642,7 @@ ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCVector<T>>& vector) {
 }
 
 template <typename K, typename V>
-ArrayObject* ModuleBuilder::createArray(
+ArrayObject* ModuleBuilder::createArrayFromHashMap(
     const JS::Rooted<GCHashMap<K, V>>& map) {
   uint32_t length = map.count();
   RootedArrayObject array(cx_, NewDenseFullyAllocatedArray(cx_, length));
