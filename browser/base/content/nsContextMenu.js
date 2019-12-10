@@ -1847,7 +1847,7 @@ class nsContextMenu {
   }
 
   printFrame() {
-    PrintUtils.printWindow(this.frameOuterWindowID, this.browser);
+    PrintUtils.printWindow(this.actor.browsingContext);
   }
 
   switchPageDirection() {

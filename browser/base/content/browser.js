@@ -2576,10 +2576,7 @@ function HandleAppCommandEvent(evt) {
       BrowserOpenFileWindow();
       break;
     case "Print":
-      PrintUtils.printWindow(
-        gBrowser.selectedBrowser.outerWindowID,
-        gBrowser.selectedBrowser
-      );
+      PrintUtils.printWindow(gBrowser.selectedBrowser.browsingContext);
       break;
     case "Save":
       saveBrowser(gBrowser.selectedBrowser);
