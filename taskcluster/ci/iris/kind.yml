@@ -76,8 +76,8 @@ job-defaults:
         tooltool-downloads: public
     run-on-projects:
         by-name:
-          nightly.*: [try, mozilla-central]
-          default: [try]
+            nightly.*: [try, mozilla-central]
+            default: [try]
     treeherder:
         kind: test
         platform:
