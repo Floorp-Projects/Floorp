@@ -119,7 +119,7 @@ iris-2.0:
     fetch:
         type: git
         repo: https://github.com/mozilla/iris_firefox
-        revision:  34f6e7add8fb66eb40eb94900fea0311ad87b734
+        revision: 34f6e7add8fb66eb40eb94900fea0311ad87b734
 
 isl-0.15:
     description: ISL 0.15 source code
@@ -222,7 +222,7 @@ wix-3.14.0:
     fetch:
         type: static-url
         # This is a dev version of the toolset, upstream will purge over time...
-        url: http://wixtoolset.org/downloads/v3.14.0.2812/wix314-binaries.zip 
+        url: http://wixtoolset.org/downloads/v3.14.0.2812/wix314-binaries.zip
         sha256: 923892298f37514622c58cbbd9c2cadf2822d9bb53df8ee83aaeb05280777611
         size: 34664320
 
