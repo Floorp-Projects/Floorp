@@ -30,18 +30,22 @@ class TestInfo(object):
         self.verbose = verbose
         here = os.path.abspath(os.path.dirname(__file__))
         self.build_obj = MozbuildObject.from_environment(cwd=here)
+        self.total_activedata_seconds = 0
 
     def log_verbose(self, what):
         if self.verbose:
             print(what)
 
     def activedata_query(self, query):
-        self.log_verbose(datetime.datetime.now())
+        start_time = datetime.datetime.now()
+        self.log_verbose(start_time)
         self.log_verbose(json.dumps(query))
         response = requests.post("http://activedata.allizom.org/query",
                                  data=json.dumps(query),
                                  stream=True)
-        self.log_verbose(datetime.datetime.now())
+        end_time = datetime.datetime.now()
+        self.total_activedata_seconds += (end_time - start_time).total_seconds()
+        self.log_verbose(end_time)
         self.log_verbose(response)
         response.raise_for_status()
         data = response.json()["data"]
@@ -507,10 +511,18 @@ class TestInfoReport(TestInfo):
     """
     def __init__(self, verbose):
         TestInfo.__init__(self, verbose)
+        self.total_activedata_matches = 0
 
     def add_activedata_for_suite(self, branches, days, by_component,
-                                 suite_clause, path_mod):
+                                 suite_clause, tests_clause, path_mod):
         dates_clause = {"date": "today-%dday" % days}
+        where_conditions = [
+            suite_clause,
+            {"in": {"repo.branch.name": branches.split(',')}},
+            {"gt": {"run.timestamp": dates_clause}},
+        ]
+        if tests_clause:
+            where_conditions.append(tests_clause)
         ad_query = {
             "from": "unittest",
             "limit": ACTIVEDATA_RECORD_LIMIT,
@@ -543,21 +555,31 @@ class TestInfoReport(TestInfo):
                     "default": 0
                 }
             ],
-            "where": {"and": [
-                suite_clause,
-                {"in": {"repo.branch.name": branches.split(',')}},
-                {"gt": {"run.timestamp": dates_clause}}
-            ]}
+            "where": {"and": where_conditions}
         }
         ad_response = self.activedata_query(ad_query)
-        if len(ad_response) == ACTIVEDATA_RECORD_LIMIT:
+        if len(ad_response) >= ACTIVEDATA_RECORD_LIMIT:
             print("warning: limit reached; some data may be missing")
+        matches = 0
         for record in ad_response:
             if 'result' in record:
                 result = record['result']
-                self.update_report(by_component, result, path_mod)
+                if self.update_report(by_component, result, path_mod):
+                    matches += 1
+        self.log_verbose("  %d results; %d matches" % (len(ad_response), matches))
+        self.total_activedata_matches += matches
 
     def update_report(self, by_component, result, path_mod):
+        def update_item(item, label, value):
+            # It is important to include any existing item value in case ActiveData
+            # returns multiple records for the same test; that can happen if the report
+            # sometimes maps more than one ActiveData record to the same path.
+            new_value = item.get(label, 0) + value
+            if type(new_value) == int:
+                item[label] = new_value
+            else:
+                item[label] = round(new_value, 2)
+
         if 'test' in result and 'tests' in by_component:
             test = result['test']
             if path_mod:
@@ -565,13 +587,11 @@ class TestInfoReport(TestInfo):
             for bc in by_component['tests']:
                 for item in by_component['tests'][bc]:
                     if test == item['test']:
-                        seconds = result.get('duration', 'unknown')
-                        if seconds != 'unknown':
-                            seconds = round(seconds, 2)
-                        item['total run time, seconds'] = seconds
-                        item['total runs'] = result.get('count', 'unknown')
-                        item['skipped runs'] = result.get('skips', 'unknown')
-                        item['failed runs'] = result.get('failures', 'unknown')
+                        seconds = round(result.get('duration', 0), 2)
+                        update_item(item, 'total run time, seconds', seconds)
+                        update_item(item, 'total runs', result.get('count', 0))
+                        update_item(item, 'skipped runs', result.get('skips', 0))
+                        update_item(item, 'failed runs', result.get('failures', 0))
                         return True
         return False
 
@@ -630,32 +650,54 @@ class TestInfoReport(TestInfo):
 
     def add_activedata(self, branches, days, by_component):
         suites = {
-            "reftest": self.path_mod_reftest,
-            "web-platform-tests": self.path_mod_wpt,
-            "web-platform-tests-reftests": self.path_mod_wpt,
-            "jsreftest": self.path_mod_jsreftest,
-            "crashtest": self.path_mod_crashtest,
-            "xpcshell": None,
-            "mochitest-plain": None,
-            "jittest": self.path_mod_jittest,
-            "mochitest-browser-chrome": None,
-            "mochitest-media": None,
-            "mochitest-devtools-chrome": None,
-            "marionette": self.path_mod_marionette,
-            "mochitest-chrome": None,
-            "web-platform-tests-wdspec": self.path_mod_wpt,
-            "geckoview-junit": None,
-            "cppunittest": None,
+            # List of known suites requiring special path handling and/or
+            # suites typically containing thousands of test paths.
+            # regexes have been selected by trial and error to partition data
+            # into queries returning less than ACTIVEDATA_RECORD_LIMIT records.
+            "reftest": (self.path_mod_reftest,
+                        [{"regex": {"result.test": "layout/reftests/[a-k].*"}},
+                         {"regex": {"result.test": "layout/reftests/[^a-k].*"}},
+                         {"not": {"regex": {"result.test": "layout/reftests/.*"}}}]),
+            "web-platform-tests": (self.path_mod_wpt,
+                                   [{"regex": {"result.test": "/[a-g].*"}},
+                                    {"regex": {"result.test": "/[h-p].*"}},
+                                    {"not": {"regex": {"result.test": "/[a-p].*"}}}]),
+            "web-platform-tests-reftests": (self.path_mod_wpt,
+                                            [{"regex": {"result.test": "/css/css-.*"}},
+                                             {"not": {"regex": {"result.test": "/css/css-.*"}}}]),
+            "crashtest": (self.path_mod_crashtest,
+                          [{"regex": {"result.test": ".*/tests/[a-m].*"}},
+                           {"not": {"regex": {"result.test": ".*/tests/[a-m].*"}}}]),
+            "web-platform-tests-wdspec": (self.path_mod_wpt, [None]),
+            "xpcshell": (None, [None]),
+            "mochitest-plain": (None, [None]),
+            "mochitest-browser-chrome": (None, [None]),
+            "mochitest-media": (None, [None]),
+            "mochitest-devtools-chrome": (None, [None]),
+            "marionette": (self.path_mod_marionette, [None]),
+            "mochitest-chrome": (None, [None]),
         }
+        unsupported_suites = [
+            # Usually these suites are excluded because currently the test resolver
+            # does not provide test paths for them.
+            "jsreftest",
+            "jittest",
+            "geckoview-junit",
+            "cppunittest",
+        ]
         for suite in suites:
-            print("Adding ActiveData data for %s..." % suite)
             suite_clause = {"eq": {"run.suite.name": suite}}
-            self.add_activedata_for_suite(branches, days, by_component,
-                                          suite_clause, suites[suite])
-        # remainder
-        suite_clause = {"not": {"in": {"run.suite.name": list(suites)}}}
+            path_mod = suites[suite][0]
+            test_clauses = suites[suite][1]
+            for test_clause in test_clauses:
+                self.log_verbose("Adding ActiveData data for %s / %s..." %
+                                 (suite, str(test_clause)))
+                self.add_activedata_for_suite(branches, days, by_component,
+                                              suite_clause, test_clause, path_mod)
+        # Remainder: All supported suites not handled above.
+        suite_clause = {"not": {"in": {"run.suite.name": unsupported_suites + list(suites)}}}
         self.add_activedata_for_suite(branches, days, by_component,
-                                      suite_clause, None)
+                                      suite_clause, None, None)
 
     def description(self, components, flavor, subsuite, paths,
                     show_manifests, show_tests, show_summary, show_annotations,
@@ -719,6 +761,8 @@ class TestInfoReport(TestInfo):
                 if not value_found:
                     return False
             return True
+
+        start_time = datetime.datetime.now()
 
         # Ensure useful report by default
         if not show_manifests and not show_tests and not show_summary and not show_annotations:
@@ -862,7 +906,15 @@ class TestInfoReport(TestInfo):
                         if show_tests:
                             rkey = key if show_components else 'all'
                             if rkey in by_component['tests']:
-                                by_component['tests'][rkey].append(test_info)
+                                # Avoid duplicates: Some test paths have multiple TestResolver
+                                # entries, as when a test is included by multiple manifests.
+                                found = False
+                                for ctest in by_component['tests'][rkey]:
+                                    if ctest['test'] == test_info['test']:
+                                        found = True
+                                        break
+                                if not found:
+                                    by_component['tests'][rkey].append(test_info)
                             else:
                                 by_component['tests'][rkey] = [test_info]
             if show_tests:
@@ -875,6 +927,10 @@ class TestInfoReport(TestInfo):
             except Exception:
                 print("Failed to retrieve some ActiveData data.")
                 traceback.print_exc()
+            self.log_verbose("%d tests updated with matching ActiveData data" %
+                             self.total_activedata_matches)
+            self.log_verbose("%d seconds waiting for ActiveData" %
+                             self.total_activedata_seconds)
 
         by_component['description'] = self.description(
             components, flavor, subsuite, paths,
@@ -909,3 +965,7 @@ class TestInfoReport(TestInfo):
                 f.write(json_report)
         else:
             print(json_report)
+
+        end_time = datetime.datetime.now()
+        self.log_verbose("%d seconds total to generate report" %
+                         (end_time - start_time).total_seconds())
