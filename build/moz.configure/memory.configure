@@ -51,17 +51,15 @@ set_config('MOZ_REPLACE_MALLOC_STATIC', replace_malloc_static)
 
 # In general, it only makes sense for PHC to run on the platforms that have a
 # crash reporter.
-@depends(target, replace_malloc_default, '--enable-replace-malloc',
+@depends(milestone, target, replace_malloc_default, '--enable-replace-malloc',
          when='--enable-jemalloc')
-def phc_default(target, replace_malloc_default, replace_malloc):
+def phc_default(milestone, target, replace_malloc_default, replace_malloc):
     if not replace_malloc_default or \
        (replace_malloc.origin != 'default' and not replace_malloc):
         return False
     # Nightly only because PHC has a non-negligible performance cost.
-    # XXX: This test is currently disabled to allow some testing of PHC on
-    # early beta 72. It will be re-enabled for late beta 72 in bug 1599337.
-    #if not milestone.is_nightly:
-    #    return False
+    if not milestone.is_nightly:
+        return False
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
     #
