@@ -19,7 +19,20 @@ add_task(
 
 // Test that we advance to the next line when a location
 // has both a breakpoint and set watchpoint.
-async function testBreakpointAndSetWatchpoint({ threadFront, debuggee }) {
+async function testBreakpointAndSetWatchpoint({
+  threadFront,
+  debuggee,
+  targetFront,
+}) {
+  async function evaluateJS(input) {
+    const consoleFront = await targetFront.getFront("console");
+    const { result } = await consoleFront.evaluateJSAsync(input, {
+      thread: threadFront.actor,
+      frameActor: packet.frame.actorID,
+    });
+    return result;
+  }
+
   function evaluateTestCode(debuggee) {
     /* eslint-disable */
     Cu.evalInSandbox(
@@ -72,6 +85,10 @@ async function testBreakpointAndSetWatchpoint({ threadFront, debuggee }) {
   info("Test that we pause on the second debugger statement.");
   Assert.equal(packet3.frame.where.line, 5);
   Assert.equal(packet3.why.type, "debuggerStatement");
+
+  info("Test that the value has updated.");
+  const result = await evaluateJS("obj.a");
+  Assert.equal(result, 2);
 
   info("Remove breakpoint and finish.");
   threadFront.removeBreakpoint(location, {});
