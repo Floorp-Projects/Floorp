@@ -8,12 +8,13 @@
   This test ensures that onsyncfrompreference handlers are called after all the
   values of the corresponding preference element have been set correctly
 -->
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="prefwindow"
         title="preferences window"
         width="300" height="300"
         windowtype="test:preferences"
         onload="onLoad()">
+<dialog>
 
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
@@ -50,3 +51,4 @@
         <checkbox id="check3" label="Label3"
                 preference="tests.onsyncfrompreference.pref3"/>
 </dialog>
+</window>

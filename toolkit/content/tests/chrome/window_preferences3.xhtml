@@ -3,15 +3,15 @@
 <!--
   XUL Widget Test for preferences window
 -->
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         class="prefwindow"
         title="preferences window"
         windowtype="test:preferences3"
-        buttons="accept,cancel"
         onload="RunTest(window.arguments)"
-        type="child"
->
+        type="child">
+<dialog id="window_preferences3_dialog"
+        buttons="accept,cancel">
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
   <![CDATA[
@@ -20,7 +20,8 @@
       // run test
       aArgs[0].test(this);
       // close dialog
-      document.documentElement[aArgs[0].accept ? "acceptDialog" : "cancelDialog"]();
+      let dialog = document.getElementById("window_preferences3_dialog");
+      dialog[aArgs[0].accept ? "acceptDialog" : "cancelDialog"]();
     }
 
     Preferences.addAll([
@@ -63,3 +64,4 @@
     </hbox>
   </vbox>
 </dialog>
+</window>

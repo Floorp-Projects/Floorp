@@ -120,7 +120,9 @@ gTests.push({
           case "popuphidden":
             // Everything worked fine, we can stop observing the window.
             self._cleanShutdown = true;
-            self.window.document.documentElement.cancelDialog();
+            self.window.document
+              .getElementById("bookmarkproperties")
+              .cancelDialog();
             break;
           case "popupshown":
             tagsField.popup.removeEventListener("popupshown", this, true);
@@ -247,7 +249,9 @@ gTests.push({
           case "popuphidden":
             // Everything worked fine.
             self._cleanShutdown = true;
-            self.window.document.documentElement.cancelDialog();
+            self.window.document
+              .getElementById("bookmarkproperties")
+              .cancelDialog();
             break;
           case "popupshown":
             tagsField.popup.removeEventListener("popupshown", this, true);
@@ -402,7 +406,9 @@ gTests.push({
             guid == self._bookmarkGuid
         );
 
-        self.window.document.documentElement.cancelDialog();
+        self.window.document
+          .getElementById("bookmarkproperties")
+          .cancelDialog();
       });
     });
     foldersExpander.doCommand();

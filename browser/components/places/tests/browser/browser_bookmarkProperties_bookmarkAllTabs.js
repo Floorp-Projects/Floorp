@@ -19,7 +19,9 @@ add_task(async function() {
       document.getElementById("Browser:BookmarkAllTabs").doCommand();
     },
     async dialog => {
-      let acceptBtn = dialog.document.documentElement.getButton("accept");
+      let acceptBtn = dialog.document
+        .getElementById("bookmarkproperties")
+        .getButton("accept");
       Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 
       let namepicker = dialog.document.getElementById("editBMPanel_namePicker");

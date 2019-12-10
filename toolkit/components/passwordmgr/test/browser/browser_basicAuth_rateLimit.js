@@ -22,7 +22,7 @@ function promiseAuthWindowShown() {
             "promptUserAndPass",
             "Should be an authenticate prompt"
           );
-          domwindow.document.documentElement.cancelDialog();
+          domwindow.document.getElementById("commonDialog").cancelDialog();
           Services.wm.removeListener(listener);
           resolve();
         }, domwindow);

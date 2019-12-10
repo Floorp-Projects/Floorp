@@ -89,8 +89,9 @@ async function testWithProperties(props, startTime) {
   );
   let doc = dialog.document;
   let win = doc.ownerGlobal;
+  let dialogElement = doc.getElementById("ConnectionsDialog");
   let dialogClosingPromise = BrowserTestUtils.waitForEvent(
-    doc.documentElement,
+    dialogElement,
     "dialogclosing"
   );
   let modeCheckbox = doc.querySelector(modeCheckboxSelector);
@@ -179,7 +180,7 @@ async function testWithProperties(props, startTime) {
   }
 
   info(Date.now() - startTime + ": testWithProperties: calling acceptDialog");
-  doc.documentElement.acceptDialog();
+  dialogElement.acceptDialog();
 
   info(
     Date.now() -

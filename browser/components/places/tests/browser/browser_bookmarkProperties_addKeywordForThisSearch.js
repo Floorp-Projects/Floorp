@@ -28,9 +28,9 @@ add_task(async function() {
         true,
         AddKeywordForSearchField,
         async function(dialogWin) {
-          let acceptBtn = dialogWin.document.documentElement.getButton(
-            "accept"
-          );
+          let acceptBtn = dialogWin.document
+            .getElementById("bookmarkproperties")
+            .getButton("accept");
           Assert.ok(acceptBtn.disabled, "Accept button is disabled");
 
           let promiseKeywordNotification = PlacesTestUtils.waitForNotification(
@@ -111,9 +111,9 @@ add_task(async function reopen_same_field() {
         true,
         AddKeywordForSearchField,
         async function(dialogWin) {
-          let acceptBtn = dialogWin.document.documentElement.getButton(
-            "accept"
-          );
+          let acceptBtn = dialogWin.document
+            .getElementById("bookmarkproperties")
+            .getButton("accept");
           ok(acceptBtn.disabled, "Accept button is disabled");
 
           let elt = dialogWin.document.getElementById(
@@ -157,9 +157,9 @@ add_task(async function open_other_field() {
         true,
         AddKeywordForSearchField,
         function(dialogWin) {
-          let acceptBtn = dialogWin.document.documentElement.getButton(
-            "accept"
-          );
+          let acceptBtn = dialogWin.document
+            .getElementById("bookmarkproperties")
+            .getButton("accept");
           ok(acceptBtn.disabled, "Accept button is disabled");
 
           let elt = dialogWin.document.getElementById(

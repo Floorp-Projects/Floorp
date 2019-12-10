@@ -35,14 +35,8 @@ function test() {
    Open the main tab here.
    */
   open_preferences(async function tabOpened(aContentWindow) {
-    let dialog, dialogClosingPromise;
-    let doc,
-      proxyTypePref,
-      sharePref,
-      httpPref,
-      httpPortPref,
-      ftpPref,
-      ftpPortPref;
+    let dialog, dialogClosingPromise, dialogElement;
+    let proxyTypePref, sharePref, httpPref, httpPortPref, ftpPref, ftpPortPref;
 
     // Convenient function to reset the variables for the new window
     async function setDoc() {
@@ -58,12 +52,12 @@ function test() {
       }
 
       dialog = await openAndLoadSubDialog(connectionURL);
+      dialogElement = dialog.document.getElementById("ConnectionsDialog");
       dialogClosingPromise = BrowserTestUtils.waitForEvent(
-        dialog.document.documentElement,
+        dialogElement,
         "dialogclosing"
       );
 
-      doc = dialog.document;
       proxyTypePref = dialog.Preferences.get("network.proxy.type");
       sharePref = dialog.Preferences.get("network.proxy.share_proxy_settings");
       httpPref = dialog.Preferences.get("network.proxy.http");
@@ -80,18 +74,18 @@ function test() {
     sharePref.value = true;
     httpPref.value = "localhost";
     httpPortPref.value = 0;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // Testing HTTP port 0 + FTP port 80 with share off
     sharePref.value = false;
     ftpPref.value = "localhost";
     ftpPortPref.value = 80;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // Testing HTTP port 80 + FTP port 0 with share off
     httpPortPref.value = 80;
     ftpPortPref.value = 0;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // From now on, the dialog should close since we are giving it legitimate inputs.
     // The test will timeout if the onbeforeaccept kicks in erroneously.
@@ -100,7 +94,7 @@ function test() {
     // Both ports 80, share on
     httpPortPref.value = 80;
     ftpPortPref.value = 80;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // HTTP 80, FTP 0, with share on
     await setDoc();
@@ -110,7 +104,7 @@ function test() {
     httpPref.value = "localhost";
     httpPortPref.value = 80;
     ftpPortPref.value = 0;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // HTTP host empty, port 0 with share on
     await setDoc();
@@ -118,7 +112,7 @@ function test() {
     sharePref.value = true;
     httpPref.value = "";
     httpPortPref.value = 0;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
 
     // HTTP 0, but in no proxy mode
     await setDoc();
@@ -129,7 +123,7 @@ function test() {
 
     // This is the final test, don't spawn another connection window
     finalTest = true;
-    doc.documentElement.acceptDialog();
+    dialogElement.acceptDialog();
     await setDoc();
   });
 }

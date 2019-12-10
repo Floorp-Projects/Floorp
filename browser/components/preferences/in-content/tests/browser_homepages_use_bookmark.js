@@ -42,7 +42,10 @@ add_task(async function testSetHomepageFromBookmark() {
 
   let dialog = await promiseSubDialogLoaded;
   dialog.document.getElementById("bookmarks").selectItems([bm.guid]);
-  dialog.document.documentElement.getButton("accept").click();
+  dialog.document
+    .getElementById("selectBookmarkDialog")
+    .getButton("accept")
+    .click();
 
   await TestUtils.waitForCondition(() => HomePage.get() == TEST_URL1);
 
@@ -74,7 +77,10 @@ add_task(async function testSetHomepageFromTopLevelFolder() {
   dialog.document
     .getElementById("bookmarks")
     .selectItems([PlacesUtils.bookmarks.menuGuid]);
-  dialog.document.documentElement.getButton("accept").click();
+  dialog.document
+    .getElementById("selectBookmarkDialog")
+    .getButton("accept")
+    .click();
 
   await TestUtils.waitForCondition(
     () => HomePage.get() == `${TEST_URL1}|${TEST_URL2}`

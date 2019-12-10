@@ -53,9 +53,9 @@ add_task(async function test_cancel_with_no_changes() {
         tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
-        let acceptButton = dialogWin.document.documentElement.getButton(
-          "accept"
-        );
+        let acceptButton = dialogWin.document
+          .getElementById("bookmarkproperties")
+          .getButton("accept");
         await BrowserTestUtils.waitForCondition(
           () => !acceptButton.disabled,
           "The accept button should be enabled"
@@ -92,9 +92,9 @@ add_task(async function test_cancel_with_changes() {
         tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
-        let acceptButton = dialogWin.document.documentElement.getButton(
-          "accept"
-        );
+        let acceptButton = dialogWin.document
+          .getElementById("bookmarkproperties")
+          .getButton("accept");
         await BrowserTestUtils.waitForCondition(
           () => !acceptButton.disabled,
           "The accept button should be enabled"

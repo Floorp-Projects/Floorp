@@ -450,11 +450,12 @@ class MarionetteParentProcess {
     win.addEventListener(
       "load",
       () => {
-        if (win.document.getElementById("safeModeDialog")) {
+        let dialog = win.document.getElementById("safeModeDialog");
+        if (dialog) {
           // accept the dialog to start in safe-mode
           log.trace("Safe mode detected, supressing dialog");
           win.setTimeout(() => {
-            win.document.documentElement.getButton("accept").click();
+            dialog.getButton("accept").click();
           });
         }
       },
