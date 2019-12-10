@@ -40,7 +40,6 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   ~MediaControlKeysManager();
   void StartMonitoringControlKeys();
   void StopMonitoringControlKeys();
-  void CreateEventSource();
   RefPtr<MediaControlKeysEventSource> mEventSource;
   MediaEventListener mControllerAmountChangedListener;
 };

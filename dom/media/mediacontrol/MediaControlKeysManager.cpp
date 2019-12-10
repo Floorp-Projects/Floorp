@@ -43,40 +43,43 @@ bool MediaControlKeysManager::Open() {
 
 MediaControlKeysManager::~MediaControlKeysManager() {
   StopMonitoringControlKeys();
+  mEventSource = nullptr;
   mControllerAmountChangedListener.DisconnectIfExists();
 }
 
 void MediaControlKeysManager::StartMonitoringControlKeys() {
-  LOG("StartMonitoringControlKeys");
   if (!StaticPrefs::media_hardwaremediakeys_enabled()) {
     return;
   }
-  CreateEventSource();
-}
 
-void MediaControlKeysManager::CreateEventSource() {
-  mEventSource = widget::CreateMediaControlKeysEventSource();
-  if (mEventSource && mEventSource->Open()) {
+  if (!mEventSource) {
+    mEventSource = widget::CreateMediaControlKeysEventSource();
+  }
+
+  // TODO : now we only have implemented the event source on OSX, so we won't
+  // get the event source on other platforms. Once we finish implementation on
+  // all platforms, remove this `if` checks and use `assertion` to make sure the
+  // source alway exists.
+  if (mEventSource && !mEventSource->IsOpened()) {
+    LOG("StartMonitoringControlKeys");
+    mEventSource->Open();
     mEventSource->AddListener(this);
-  } else {
-    mEventSource = nullptr;
   }
 }
 
 void MediaControlKeysManager::StopMonitoringControlKeys() {
-  LOG("StopMonitoringControlKeys");
-  if (mEventSource) {
+  if (mEventSource && mEventSource->IsOpened()) {
+    LOG("StopMonitoringControlKeys");
     mEventSource->Close();
-    mEventSource = nullptr;
   }
 }
 
 void MediaControlKeysManager::ControllerAmountChanged(
     uint64_t aControllerAmount) {
   LOG("Controller amount changed=%" PRId64, aControllerAmount);
-  if (aControllerAmount > 0 && !mEventSource) {
+  if (aControllerAmount > 0) {
     StartMonitoringControlKeys();
-  } else if (aControllerAmount == 0 && mEventSource) {
+  } else if (aControllerAmount == 0) {
     StopMonitoringControlKeys();
   }
 }
