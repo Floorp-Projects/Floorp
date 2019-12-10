@@ -303,7 +303,7 @@ async function focusButtonAndPressKey(key, elem, modifiers) {
 }
 
 var awaitBrowserLoaded = browser =>
-  SpecialPowers.spawn(browser, [], () => {
+  ContentTask.spawn(browser, null, () => {
     if (
       content.document.readyState !== "complete" ||
       content.document.documentURI === "about:blank"
