@@ -14,7 +14,7 @@ add_task(async function() {
   );
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
 
   // Expand nodes and make sure more sources appear.

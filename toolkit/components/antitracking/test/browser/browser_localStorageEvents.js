@@ -28,9 +28,13 @@ add_task(async function testLocalStorageEventPropagation() {
 
   info("Loading tracking scripts");
   await SpecialPowers.spawn(
-    browser, [{
-      page: TEST_3RD_PARTY_DOMAIN + TEST_PATH + "localStorage.html",
-    }], async obj => {
+    browser,
+    [
+      {
+        page: TEST_3RD_PARTY_DOMAIN + TEST_PATH + "localStorage.html",
+      },
+    ],
+    async obj => {
       info("Creating tracker iframe");
 
       let ifr = content.document.createElement("iframe");
@@ -109,9 +113,13 @@ add_task(async function testBlockedLocalStorageEventPropagation() {
 
   info("Loading tracking scripts");
   await SpecialPowers.spawn(
-    browser, [{
-      page: TEST_3RD_PARTY_DOMAIN + TEST_PATH + "localStorage.html",
-    }], async obj => {
+    browser,
+    [
+      {
+        page: TEST_3RD_PARTY_DOMAIN + TEST_PATH + "localStorage.html",
+      },
+    ],
+    async obj => {
       info("Creating tracker iframe");
 
       let ifr = content.document.createElement("iframe");

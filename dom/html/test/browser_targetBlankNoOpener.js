@@ -4,7 +4,9 @@ async function checkOpener(browser, elm, name, rel) {
   let p = BrowserTestUtils.waitForNewTab(gBrowser, null, true, true);
 
   await SpecialPowers.spawn(
-    browser, [{ url: TEST_URL, name, rel, elm }], async obj => {
+    browser,
+    [{ url: TEST_URL, name, rel, elm }],
+    async obj => {
       let element;
 
       if (obj.elm == "anchor") {
@@ -38,7 +40,9 @@ async function checkOpener(browser, elm, name, rel) {
   let newBrowser = gBrowser.getBrowserForTab(newTab);
 
   let hasOpener = await SpecialPowers.spawn(
-    newTab.linkedBrowser, [], _ => !!content.window.opener
+    newTab.linkedBrowser,
+    [],
+    _ => !!content.window.opener
   );
 
   BrowserTestUtils.removeTab(newTab);

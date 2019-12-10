@@ -179,7 +179,9 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
   const { previouslyFocused, previouslyIdentified } = await SpecialPowers.spawn(
-    browser, [{ selector }], async function({ selector }) {
+    browser,
+    [{ selector }],
+    async function({ selector }) {
       const { FormLikeFactory } = ChromeUtils.import(
         "resource://gre/modules/FormLikeFactory.jsm"
       );

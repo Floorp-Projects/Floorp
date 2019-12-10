@@ -19,7 +19,9 @@ add_task(async function() {
 
   const INITIAL_LOGS_NUMBER = 5;
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [INITIAL_LOGS_NUMBER], count => {
+    gBrowser.selectedBrowser,
+    [INITIAL_LOGS_NUMBER],
+    count => {
       content.wrappedJSObject.doLogs(count);
     }
   );
@@ -47,7 +49,9 @@ add_task(async function() {
 
   const INITIAL_LOGS_NUMBER = 5;
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [INITIAL_LOGS_NUMBER], count => {
+    gBrowser.selectedBrowser,
+    [INITIAL_LOGS_NUMBER],
+    count => {
       content.wrappedJSObject.doLogs(count);
     }
   );

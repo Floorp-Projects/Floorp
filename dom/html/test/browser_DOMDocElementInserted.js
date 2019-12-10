@@ -10,10 +10,18 @@ add_task(async function() {
     let deferred = PromiseUtils.defer();
 
     let listener = event => {
-      docShell.chromeEventHandler.removeEventListener("DOMDocElementInserted", listener, true);
+      docShell.chromeEventHandler.removeEventListener(
+        "DOMDocElementInserted",
+        listener,
+        true
+      );
       deferred.resolve(event.target.documentURIObject.spec);
     };
-    docShell.chromeEventHandler.addEventListener("DOMDocElementInserted", listener, true);
+    docShell.chromeEventHandler.addEventListener(
+      "DOMDocElementInserted",
+      listener,
+      true
+    );
 
     return deferred.promise;
   });

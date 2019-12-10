@@ -167,7 +167,9 @@ add_task(async function() {
 
   await assertRowSelected(2);
   const scroll = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], function() {
+    gBrowser.selectedBrowser,
+    [],
+    function() {
       const scroller = content.document.querySelector(
         ".jsonPanelBox .panelContent"
       );
@@ -211,7 +213,9 @@ add_task(async function() {
 
 async function assertRowSelected(rowNum) {
   const idx = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], function() {
+    gBrowser.selectedBrowser,
+    [],
+    function() {
       return [].indexOf.call(
         content.document.querySelectorAll(".treeRow"),
         content.document.querySelector(".treeRow.selected")

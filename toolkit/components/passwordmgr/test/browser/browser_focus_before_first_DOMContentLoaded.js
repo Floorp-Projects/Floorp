@@ -50,7 +50,9 @@ add_task(async function test_autocompleteFromUsername() {
   });
 
   await SpecialPowers.spawn(
-    newTab.linkedBrowser, [], function checkInitialValues() {
+    newTab.linkedBrowser,
+    [],
+    function checkInitialValues() {
       let doc = content.document;
       let uname = doc.querySelector("#uname");
       let pword = doc.querySelector("#pword");

@@ -317,11 +317,15 @@ async function setupPaymentDialog(
 ) {
   let dialogReadyPromise = waitForWidgetReady();
   let { requestId } = await SpecialPowers.spawn(
-    browser, [{
-      methodData,
-      details,
-      options,
-    }], merchantTaskFn
+    browser,
+    [
+      {
+        methodData,
+        details,
+        options,
+      },
+    ],
+    merchantTaskFn
   );
   ok(requestId, "requestId should be defined");
 

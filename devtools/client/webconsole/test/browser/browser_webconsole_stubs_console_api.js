@@ -84,7 +84,9 @@ async function generateConsoleApiStubs() {
       target.activeConsole.on("consoleAPICall", listener);
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(subCode) {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
+      subCode
+    ) {
       const script = content.document.createElement("script");
       script.append(
         content.document.createTextNode(`function triggerPacket() {${subCode}}`)

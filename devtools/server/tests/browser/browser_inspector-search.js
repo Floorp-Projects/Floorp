@@ -19,7 +19,9 @@ add_task(async function() {
   );
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[walker.actorID]], async function(actorID) {
+    gBrowser.selectedBrowser,
+    [[walker.actorID]],
+    async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );

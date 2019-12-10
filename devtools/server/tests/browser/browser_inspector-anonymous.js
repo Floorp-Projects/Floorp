@@ -55,7 +55,9 @@ async function testNativeAnonymousStartingNode(walker) {
   info("Tests attaching an element that a walker can't see.");
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[walker.actorID]], async function(actorID) {
+    gBrowser.selectedBrowser,
+    [[walker.actorID]],
+    async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
