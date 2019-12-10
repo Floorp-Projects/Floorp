@@ -44,7 +44,8 @@ class RemoteTabsFeatureTest {
         store = spy(BrowserStore(BrowserState(
             tabs = listOf(
                 createTab(id = "tab1", url = "https://www.mozilla.org"),
-                createTab(id = "tab2", url = "https://www.foo.bar")
+                createTab(id = "tab2", url = "https://www.foo.bar"),
+                createTab(id = "private", url = "https://private.tab", private = true)
             ),
             selectedTabId = "tab1"
         )))
@@ -61,6 +62,7 @@ class RemoteTabsFeatureTest {
         verify(tabsStorage).store(listOf(
             Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 0),
             Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 0)
+            // Private tab is absent.
         ))
     }
 
