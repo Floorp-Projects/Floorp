@@ -16,11 +16,9 @@ let gContainersPane = {
     this._list = document.getElementById("containersView");
 
     document
-      .getElementById("backContainersLink")
-      .addEventListener("click", function(event) {
-        if (event.button == 0) {
-          gotoPref("general");
-        }
+      .getElementById("backContainersButton")
+      .addEventListener("command", function() {
+        gotoPref("general");
       });
 
     document
