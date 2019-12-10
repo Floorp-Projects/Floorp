@@ -57,10 +57,11 @@ MediaControlService::MediaControlService() : mAudioFocusManager(this) {
 }
 
 void MediaControlService::Init() {
-  mMediaKeysHandlder = new MediaControlKeysHandler();
+  mMediaKeysHandler = new MediaControlKeysHandler();
   mMediaControlKeysManager = new MediaControlKeysManager();
   mMediaControlKeysManager->Open();
-  mMediaControlKeysManager->AddListener(mMediaKeysHandlder.get());
+  MOZ_ASSERT(mMediaControlKeysManager->IsOpened());
+  mMediaControlKeysManager->AddListener(mMediaKeysHandler.get());
 }
 
 MediaControlService::~MediaControlService() {
@@ -89,7 +90,7 @@ void MediaControlService::Shutdown() {
   ShutdownAllControllers();
   mControllers.Clear();
   mAudioFocusManager.Shutdown();
-  mMediaControlKeysManager->RemoveListener(mMediaKeysHandlder.get());
+  mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
 }
 
 RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(

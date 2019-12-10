@@ -25,8 +25,11 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   NS_DECL_ISUPPORTS_INHERITED
   MediaControlKeysManager() = default;
 
+  // MediaControlKeysEventSource methods
   bool Open() override;
+  bool IsOpened() const override;
 
+  // MediaControlKeysEventListener methods
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
 
   // The callback function for monitoring the media controller amount changed

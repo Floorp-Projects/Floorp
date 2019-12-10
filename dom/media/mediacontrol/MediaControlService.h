@@ -71,7 +71,7 @@ class MediaControlService final : public nsIObserver {
   nsTArray<uint64_t> mControllerHistory;
   AudioFocusManager mAudioFocusManager;
   RefPtr<MediaControlKeysManager> mMediaControlKeysManager;
-  RefPtr<MediaControlKeysEventListener> mMediaKeysHandlder;
+  RefPtr<MediaControlKeysEventListener> mMediaKeysHandler;
   MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
 };
 
