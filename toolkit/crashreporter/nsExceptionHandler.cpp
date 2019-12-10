@@ -76,6 +76,7 @@
 #  include "common/linux/eintr_wrapper.h"
 #  include <fcntl.h>
 #  include <sys/types.h>
+#  include "sys/sysinfo.h"
 #  include <sys/wait.h>
 #  include <unistd.h>
 #else
@@ -770,7 +771,7 @@ static void OpenAPIData(PlatformWriter& aWriter, const XP_CHAR* dump_path,
   aWriter.Open(extraDataPath);
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 
 static void WriteMemoryAnnotation(AnnotationWriter& aWriter,
                                   Annotation aAnnotation, uint64_t aValue) {
@@ -778,12 +779,25 @@ static void WriteMemoryAnnotation(AnnotationWriter& aWriter,
   // assumed to fit within 20 decimal digits, so we need neither allocation nor
   // overflow checking.
   char buffer[128];
+#  ifdef XP_LINUX
+  // Under Linux, we cannot call into libc from the exception handler,
+  // so we need to call `my_inttostring`.
+  intmax_t value = intmax_t(aValue);
+  if (uint64_t(value) != aValue) {
+    // Our uint64_t doesn't cast properly to intmax_t. In this (unlikely) case,
+    // report the maximal value that can be represented with intmax_t.
+    value = intmax_t(-1);
+  }
+  my_inttostring(value, buffer, sizeof(buffer));
+  aWriter.Write(aAnnotation, buffer);
+#  else
   if (SprintfLiteral(buffer, "%llu", aValue) > 0) {
     aWriter.Write(aAnnotation, buffer);
   }
+#  endif  // XP_LINUX || else
 }
 
-#endif  // XP_WIN || XP_MACOSX
+#endif  // XP_WIN || XP_MACOSX || XP_LINUX
 
 #ifdef XP_WIN
 static void WriteMemoryStatus(AnnotationWriter& aWriter) {
@@ -860,13 +874,289 @@ static void WriteMemoryStatus(AnnotationWriter& aWriter) {
   WriteAvailableMemoryStatus(aWriter);
   WriteSwapFileStatus(aWriter);
 }
+
+#elif XP_LINUX
+
+static void WriteMemoryStatus(AnnotationWriter& aWriter) {
+  // We can't simply call `sysinfo` as this requires libc.
+  // So we need to parse /proc/meminfo.
+
+  // We read the entire file to memory prior to parsing
+  // as it makes the parser code a little bit simpler.
+  // As /proc/meminfo is synchronized via `proc_create_single`,
+  // there's no risk of race condition regardless of how we
+  // read it.
+
+  // The buffer in which we're going to load the entire file.
+  // A typical size for /proc/meminfo is 1kb, so 10kB should
+  // be large enough until further notice.
+  const size_t BUFFER_SIZE_BYTES = 10000;
+  char buffer[BUFFER_SIZE_BYTES];
+  ssize_t bufferLen = 0;
+
+  {
+    // Read and load into memory.
+    int fd = sys_open("/proc/meminfo", O_RDONLY, /* chmod */ 0);
+    if (fd == -1) {
+      // No /proc/meminfo? Well, fail silently.
+      return;
+    }
+    auto Guard = MakeScopeExit([fd]() { mozilla::Unused << sys_close(fd); });
+
+    if ((bufferLen = sys_read(fd, buffer, BUFFER_SIZE_BYTES)) <= 0) {
+      // Cannot read for some reason. Let's give up.
+      return;
+    }
+  }
+
+  // Each line of /proc/meminfo looks like
+  // SomeLabel:       number unit
+  // The last line is empty.
+  // Let's write a parser.
+  // Note that we don't care about writing a normative parser, so
+  // we happily skip whitespaces without checking that it's necessary.
+
+  // A stack-allocated structure containing a 0-terminated string.
+  // We could avoid the memory copies and make it a slice at the cost
+  // of a slightly more complicated parser. Since we're not in a
+  // performance-critical section, we didn't.
+  struct DataBuffer {
+    DataBuffer() : data{0}, pos(0) {}
+    // Clear the buffer.
+    void reset() {
+      pos = 0;
+      data[0] = 0;
+    }
+    // Append a character.
+    //
+    // In case of error (if c is '\0' or the buffer is full), does nothing.
+    void append(char c) {
+      if (c == 0 || pos >= sizeof(data) - 1) {
+        return;
+      }
+      data[pos++] = c;
+      data[pos] = 0;
+    }
+    // Compare the buffer against a nul-terminated string.
+    bool operator==(const char* s) const {
+      for (size_t i = 0; i < pos; ++i) {
+        if (s[i] != data[i]) {
+          // Note: Since `data` never contains a '0' in positions [0,pos)
+          // this will bailout once we have reached the end of `s`.
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // A NUL-terminated string of `pos + 1` chars (the +1 is for the 0).
+    char data[256];
+
+    // Invariant: < 256.
+    size_t pos;
+  };
+
+  // A DataBuffer holding the string representation of a non-negative number.
+  struct NumberBuffer : DataBuffer {
+    // If possible, convert the string into a number.
+    // Returns `true` in case of success, `false` in case of failure.
+    bool asNumber(size_t* number) {
+      int result;
+      if (!my_strtoui(&result, data)) {
+        return false;
+      }
+      *number = result;
+      return true;
+    }
+  };
+
+  // A DataBuffer holding the string representation of a unit. As of this
+  // writing, we only support unit `kB`, which seems to be the only unit used in
+  // `/proc/meminfo`.
+  struct UnitBuffer : DataBuffer {
+    // If possible, convert the string into a multiplier, e.g. `kB => 1024`.
+    // Return `true` in case of success, `false` in case of failure.
+    bool asMultiplier(size_t* multiplier) {
+      if (*this == "kB") {
+        *multiplier = 1024;
+        return true;
+      }
+      // Other units don't seem to be specified/used.
+      return false;
+    }
+  };
+
+  // The state of the mini-parser.
+  enum class State {
+    // Reading the label, including the trailing ':'.
+    Label,
+    // Reading the number, ignoring any whitespace.
+    Number,
+    // Reading the unit, ignoring any whitespace.
+    Unit,
+  };
+
+  // A single measure being read from /proc/meminfo, e.g.
+  // the total physical memory available on the system.
+  struct Measure {
+    Measure() : state(State::Label) {}
+    // Reset the measure for a new read.
+    void reset() {
+      state = State::Label;
+      label.reset();
+      number.reset();
+      unit.reset();
+    }
+    // Attempt to convert the measure into a number.
+    // Return `true` if both the number and the multiplier could be
+    // converted, `false` otherwise.
+    // In case of overflow, produces the maximal possible `size_t`.
+    bool asValue(size_t* result) {
+      size_t numberAsSize = 0;
+      if (!number.asNumber(&numberAsSize)) {
+        return false;
+      }
+      size_t unitAsMultiplier = 0;
+      if (!unit.asMultiplier(&unitAsMultiplier)) {
+        return false;
+      }
+      if (numberAsSize * unitAsMultiplier >= numberAsSize) {
+        *result = numberAsSize * unitAsMultiplier;
+      } else {
+        // Overflow. Unlikely, but just in case, let's return
+        // the maximal possible value.
+        *result = size_t(-1);
+      }
+      return true;
+    }
+
+    // The label being read, e.g. `MemFree`. Does not include the trailing ':'.
+    DataBuffer label;
+
+    // The number being read, e.g. "1024".
+    NumberBuffer number;
+
+    // The unit being read, e.g. "kB".
+    UnitBuffer unit;
+
+    // What we're reading at the moment.
+    State state;
+  };
+
+  // A value we wish to store for later processing.
+  // e.g. to compute `AvailablePageFile`, we need to
+  // store `CommitLimit` and `Committed_AS`.
+  struct ValueStore {
+    ValueStore() : value(0), found(false) {}
+    size_t value;
+    bool found;
+  };
+  ValueStore commitLimit;
+  ValueStore committedAS;
+  ValueStore memTotal;
+  ValueStore swapTotal;
+
+  // The current measure.
+  Measure measure;
+
+  for (size_t pos = 0; pos < size_t(bufferLen); ++pos) {
+    const char c = buffer[pos];
+    switch (measure.state) {
+      case State::Label:
+        if (c == ':') {
+          // We have finished reading the label.
+          measure.state = State::Number;
+        } else {
+          measure.label.append(c);
+        }
+        break;
+      case State::Number:
+        if (c == ' ') {
+          // Ignore whitespace
+        } else if ('0' <= c && c <= '9') {
+          // Accumulate numbers.
+          measure.number.append(c);
+        } else {
+          // We have jumped to the unit.
+          measure.unit.append(c);
+          measure.state = State::Unit;
+        }
+        break;
+      case State::Unit:
+        if (c == ' ') {
+          // Ignore whitespace
+        } else if (c == '\n') {
+          // Flush line.
+          // - If this one of the measures we're interested in, write it.
+          // - Once we're done, reset the parser.
+          auto Guard = MakeScopeExit([&measure]() { measure.reset(); });
+
+          struct PointOfInterest {
+            // The label we're looking for, e.g. "MemTotal".
+            const char* label;
+            // If non-nullptr, store the value at this address.
+            ValueStore* dest;
+            // If other than Annotation::Count, write the value for this
+            // annotation.
+            Annotation annotation;
+          };
+          const PointOfInterest POINTS_OF_INTEREST[] = {
+              {"MemTotal", &memTotal, Annotation::TotalPhysicalMemory},
+              {"MemFree", nullptr, Annotation::AvailablePhysicalMemory},
+              {"MemAvailable", nullptr, Annotation::AvailableVirtualMemory},
+              {"SwapFree", nullptr, Annotation::AvailableSwapMemory},
+              {"SwapTotal", &swapTotal, Annotation::Count},
+              {"CommitLimit", &commitLimit, Annotation::Count},
+              {"Committed_AS", &committedAS, Annotation::Count},
+          };
+          for (const auto& pointOfInterest : POINTS_OF_INTEREST) {
+            if (measure.label == pointOfInterest.label) {
+              size_t value;
+              if (measure.asValue(&value)) {
+                if (pointOfInterest.dest != nullptr) {
+                  pointOfInterest.dest->found = true;
+                  pointOfInterest.dest->value = value;
+                }
+                if (pointOfInterest.annotation != Annotation::Count) {
+                  WriteMemoryAnnotation(aWriter, pointOfInterest.annotation,
+                                        value);
+                }
+              }
+              break;
+            }
+          }
+          // Otherwise, ignore.
+        } else {
+          measure.unit.append(c);
+        }
+        break;
+    }
+  }
+
+  if (commitLimit.found && committedAS.found) {
+    // If available, attempt to determine the available virtual memory.
+    // As `commitLimit` is not guaranteed to be larger than `committedAS`,
+    // we return `0` in case the commit limit has already been exceeded.
+    uint64_t availablePageFile = (committedAS.value <= commitLimit.value)
+                                     ? (commitLimit.value - committedAS.value)
+                                     : 0;
+    WriteMemoryAnnotation(aWriter, Annotation::AvailablePageFile,
+                          availablePageFile);
+  }
+  if (memTotal.found && swapTotal.found) {
+    // If available, attempt to determine the available virtual memory.
+    WriteMemoryAnnotation(aWriter, Annotation::TotalPageFile,
+                          memTotal.value + swapTotal.value);
+  }
+}
+
 #else
 
 static void WriteMemoryStatus(AnnotationWriter& aWriter) {
   // No memory data for other platforms yet.
 }
 
-#endif  // XP_WIN || XP_MACOSX || else
+#endif  // XP_WIN || XP_MACOSX || XP_LINUX || else
 
 #if !defined(MOZ_WIDGET_ANDROID)
 
