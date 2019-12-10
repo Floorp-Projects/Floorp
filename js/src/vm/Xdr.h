@@ -422,6 +422,7 @@ class XDRState : public XDRCoderBase {
   XDRResult codeCharsZ(XDRTranscodeString<char>& buffer);
   XDRResult codeCharsZ(XDRTranscodeString<char16_t>& buffer);
 
+  XDRResult codeModuleObject(MutableHandleModuleObject modp);
   XDRResult codeFunction(JS::MutableHandleFunction objp,
                          HandleScriptSourceObject sourceObject = nullptr);
   XDRResult codeScript(MutableHandleScript scriptp);
@@ -595,6 +596,9 @@ class XDRIncrementalEncoder : public XDREncoder {
 
   void trace(JSTracer* trc);
 };
+
+template <XDRMode mode>
+XDRResult XDRAtomOrNull(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
 XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);

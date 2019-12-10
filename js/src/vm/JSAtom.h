@@ -78,6 +78,10 @@ extern JSAtom* ToAtom(JSContext* cx,
 // XDRResult
 // XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
+// template<XDRMode mode>
+// XDRResult
+// XDRAtomOrNull(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
+
 extern JS::Handle<PropertyName*> ClassName(JSProtoKey key, JSContext* cx);
 
 #ifdef DEBUG
