@@ -23,12 +23,13 @@ namespace dom {
 NS_IMPL_ISUPPORTS_INHERITED0(MediaControlKeysManager,
                              MediaControlKeysEventSource)
 
-void MediaControlKeysManager::Init() {
+bool MediaControlKeysManager::Open() {
   mControllerAmountChangedListener =
       MediaControlService::GetService()
           ->MediaControllerAmountChangedEvent()
           .Connect(AbstractThread::MainThread(), this,
                    &MediaControlKeysManager::ControllerAmountChanged);
+  return true;
 }
 
 MediaControlKeysManager::~MediaControlKeysManager() {
@@ -46,8 +47,10 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
 
 void MediaControlKeysManager::CreateEventSource() {
   mEventSource = widget::CreateMediaControlKeysEventSource();
-  if (mEventSource) {
+  if (mEventSource && mEventSource->Open()) {
     mEventSource->AddListener(this);
+  } else {
+    mEventSource = nullptr;
   }
 }
 
