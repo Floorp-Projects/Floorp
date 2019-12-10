@@ -710,6 +710,19 @@ void IDBTransaction::Abort(ErrorResult& aRv) {
   mAbortedByScript.Flip();
 }
 
+// Specified by https://w3c.github.io/IndexedDB/#dom-idbtransaction-commit.
+void IDBTransaction::Commit(ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  if (IsCommittingOrFinished()) {
+    aRv = NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return;
+  }
+
+  // TODO
+  aRv = NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void IDBTransaction::FireCompleteOrAbortEvents(const nsresult aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mFiredCompleteOrAbort);
