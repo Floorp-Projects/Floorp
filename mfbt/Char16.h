@@ -39,14 +39,14 @@ class char16ptr_t {
                 "char16_t and wchar_t sizes differ");
 
  public:
-  MOZ_IMPLICIT char16ptr_t(const char16_t* aPtr) : mPtr(aPtr) {}
+  constexpr MOZ_IMPLICIT char16ptr_t(const char16_t* aPtr) : mPtr(aPtr) {}
   MOZ_IMPLICIT char16ptr_t(const wchar_t* aPtr)
       : mPtr(reinterpret_cast<const char16_t*>(aPtr)) {}
 
   /* Without this, nullptr assignment would be ambiguous. */
   constexpr MOZ_IMPLICIT char16ptr_t(decltype(nullptr)) : mPtr(nullptr) {}
 
-  operator const char16_t*() const { return mPtr; }
+  constexpr operator const char16_t*() const { return mPtr; }
   operator const wchar_t*() const {
     return reinterpret_cast<const wchar_t*>(mPtr);
   }
@@ -55,11 +55,13 @@ class char16ptr_t {
     return const_cast<wchar_t*>(reinterpret_cast<const wchar_t*>(mPtr));
   }
 
-  operator const void*() const { return mPtr; }
-  explicit operator bool() const { return mPtr != nullptr; }
+  constexpr operator const void*() const { return mPtr; }
+  constexpr explicit operator bool() const { return mPtr != nullptr; }
 
   /* Explicit cast operators to allow things like (char16_t*)str. */
-  explicit operator char16_t*() const { return const_cast<char16_t*>(mPtr); }
+  constexpr explicit operator char16_t*() const {
+    return const_cast<char16_t*>(mPtr);
+  }
   explicit operator wchar_t*() const {
     return const_cast<wchar_t*>(static_cast<const wchar_t*>(*this));
   }
