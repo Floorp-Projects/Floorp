@@ -16,6 +16,7 @@
     "patches": [
       "static-llvm-symbolizer.patch",
       "rename_gcov_flush.patch",
+      "critical_section_on_gcov_flush.patch",
       "rG7e18aeba5062.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch"
