@@ -10,3 +10,48 @@
 
 #include "new-regexp/regexp-shim.h"
 
+namespace v8 {
+namespace internal {
+
+void PrintF(const char* format, ...) {
+  va_list arguments;
+  va_start(arguments, format);
+  vprintf(format, arguments);
+  va_end(arguments);
+}
+
+void PrintF(FILE* out, const char* format, ...) {
+  va_list arguments;
+  va_start(arguments, format);
+  vfprintf(out, format, arguments);
+  va_end(arguments);
+}
+
+// Origin:
+// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/ostreams.cc#L120-L169
+// (This is a hand-simplified version.)
+// Writes the given character to the output escaping everything outside
+// of printable ASCII range.
+std::ostream& operator<<(std::ostream& os, const AsUC16& c) {
+  uint16_t v = c.value;
+  bool isPrint = 0x20 < v && v <= 0x7e;
+  char buf[10];
+  const char* format = isPrint ? "%c" : (v <= 0xFF) ? "\\x%02x" : "\\u%04x";
+  snprintf(buf, sizeof(buf), format, v);
+  return os << buf;
+}
+std::ostream& operator<<(std::ostream& os, const AsUC32& c) {
+  int32_t v = c.value;
+  if (v <= String::kMaxUtf16CodeUnit) {
+    return os << AsUC16(v);
+  }
+  char buf[13];
+  snprintf(buf, sizeof(buf), "\\u{%06x}", v);
+  return os << buf;
+}
+
+DisallowJavascriptExecution::DisallowJavascriptExecution(Isolate* isolate)
+    : nojs_(isolate->cx()) {}
+
+}  // namespace internal
+}  // namespace v8
