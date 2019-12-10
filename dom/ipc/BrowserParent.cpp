@@ -959,11 +959,9 @@ bool BrowserParent::Show(const ScreenIntSize& size, bool aParentIsActive) {
   return true;
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(const uint32_t& aFlags,
-                                                         const int32_t& aX,
-                                                         const int32_t& aY,
-                                                         const int32_t& aCx,
-                                                         const int32_t& aCy) {
+mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(
+    const uint32_t& aFlags, const int32_t& aX, const int32_t& aY,
+    const int32_t& aCx, const int32_t& aCy, const double& aScale) {
   MOZ_ASSERT(!(aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER),
              "We should never see DIM_FLAGS_SIZE_INNER here!");
 
@@ -975,27 +973,50 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(const uint32_t& aFlags,
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(treeOwner);
   NS_ENSURE_TRUE(treeOwnerAsWin, IPC_OK());
 
-  // We only care about the parameters that actually changed, see more
-  // details in BrowserChild::SetDimensions.
-  int32_t unused;
-  int32_t x = aX;
-  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_X) {
-    treeOwnerAsWin->GetPosition(&x, &unused);
-  }
+  // We only care about the parameters that actually changed, see more details
+  // in `BrowserChild::SetDimensions()`.
+  // Note that `BrowserChild::SetDimensions()` may be called before receiving
+  // our `SendUIResolutionChanged()` call.  Therefore, if given each cordinate
+  // shouldn't be ignored, we need to recompute it if DPI has been changed.
+  // And also note that don't use `mDefaultScale.scale` here since it may be
+  // different from the result of `GetUnscaledDevicePixelsPerCSSPixel()`.
+  double currentScale;
+  treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&currentScale);
 
+  int32_t x = aX;
   int32_t y = aY;
-  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_Y) {
-    treeOwnerAsWin->GetPosition(&unused, &y);
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_X) {
+      int32_t unused;
+      treeOwnerAsWin->GetPosition(&x, &unused);
+    } else if (aScale != currentScale) {
+      x = x * currentScale / aScale;
+    }
+
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_Y) {
+      int32_t unused;
+      treeOwnerAsWin->GetPosition(&unused, &y);
+    } else if (aScale != currentScale) {
+      y = y * currentScale / aScale;
+    }
   }
 
   int32_t cx = aCx;
-  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
-    treeOwnerAsWin->GetSize(&cx, &unused);
-  }
-
   int32_t cy = aCy;
-  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
-    treeOwnerAsWin->GetSize(&unused, &cy);
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
+      int32_t unused;
+      treeOwnerAsWin->GetSize(&cx, &unused);
+    } else if (aScale != currentScale) {
+      cx = cx * currentScale / aScale;
+    }
+
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
+      int32_t unused;
+      treeOwnerAsWin->GetSize(&unused, &cy);
+    } else if (aScale != currentScale) {
+      cy = cy * currentScale / aScale;
+    }
   }
 
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&

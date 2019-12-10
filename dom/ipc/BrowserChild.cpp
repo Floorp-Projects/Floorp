@@ -799,7 +799,9 @@ BrowserChild::SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY,
     aFlags |= nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY;
   }
 
-  Unused << SendSetDimensions(aFlags, aX, aY, aCx, aCy);
+  double scale = mPuppetWidget ? mPuppetWidget->GetDefaultScale().scale : 1.0;
+
+  Unused << SendSetDimensions(aFlags, aX, aY, aCx, aCy, scale);
 
   return NS_OK;
 }

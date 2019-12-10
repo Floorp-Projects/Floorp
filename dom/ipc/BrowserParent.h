@@ -775,11 +775,9 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(
       const LayersObserverEpoch& aEpoch);
 
-  mozilla::ipc::IPCResult RecvSetDimensions(const uint32_t& aFlags,
-                                            const int32_t& aX,
-                                            const int32_t& aY,
-                                            const int32_t& aCx,
-                                            const int32_t& aCy);
+  mozilla::ipc::IPCResult RecvSetDimensions(
+      const uint32_t& aFlags, const int32_t& aX, const int32_t& aY,
+      const int32_t& aCx, const int32_t& aCy, const double& aScale);
 
   mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
       const nsCString& aOrigin, const bool& aHideDoorHanger);
