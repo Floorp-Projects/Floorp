@@ -227,6 +227,10 @@ extern bool MFBT_DATA aes_enabled;
 #endif
 }  // namespace sse_private
 
+#ifdef HAVE_CPUID_H
+MOZ_EXPORT uint64_t xgetbv(uint32_t xcr);
+#endif
+
 #if defined(MOZILLA_PRESUME_MMX)
 #  define MOZILLA_MAY_SUPPORT_MMX 1
 inline bool supports_mmx() { return true; }
