@@ -6,16 +6,16 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://pippki/content/exceptionDialog.css" type="text/css"?>
 
-<!DOCTYPE dialog>
+<!DOCTYPE window>
 
-<dialog id="exceptiondialog"
-        windowtype="mozilla:exceptiondialog"
+<window windowtype="mozilla:exceptiondialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="exception-mgr"
+        onload="initExceptionDialog();">
+<dialog id="exceptiondialog"
         buttonidextra1="exception-mgr-extra-button"
         buttons="cancel,extra1,extra2"
-        onload="initExceptionDialog();"
         defaultButton="extra2">
 
   <linkset>
@@ -85,3 +85,4 @@
             disabled="true"
             data-l10n-id="exception-mgr-permanent"/>
 </dialog>
+</window>

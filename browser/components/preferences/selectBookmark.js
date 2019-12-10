@@ -54,7 +54,9 @@ var SelectBookmarkDialog = {
    * selection within the view.
    */
   selectionChanged: function SBD_selectionChanged() {
-    var accept = document.documentElement.getButton("accept");
+    var accept = document
+      .getElementById("selectBookmarkDialog")
+      .getButton("accept");
     var bookmarks = document.getElementById("bookmarks");
     var disableAcceptButton = true;
     if (bookmarks.hasSelection) {
@@ -73,7 +75,10 @@ var SelectBookmarkDialog = {
        * The user has double clicked on a tree row that is a link. Take this to
        * mean that they want that link to be their homepage, and close the dialog.
        */
-      document.documentElement.getButton("accept").click();
+      document
+        .getElementById("selectBookmarkDialog")
+        .getButton("accept")
+        .click();
     }
   },
 

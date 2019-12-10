@@ -32,7 +32,9 @@ let gSyncChooseWhatToSync = {
       });
     } else {
       // no "disconnect" - hide the button.
-      document.documentElement.getButton("extra2").hidden = true;
+      document
+        .getElementById("syncChooseOptions")
+        .getButton("extra2").hidden = true;
     }
   },
 

@@ -8,14 +8,16 @@
 <?xml-stylesheet href="chrome://browser/content/preferences/siteDataSettings.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/siteDataSettings.css" type="text/css"?>
 
-<dialog id="SiteDataRemoveSelectedDialog"
-        windowtype="Browser:SiteDataRemoveSelected"
+<window windowtype="Browser:SiteDataRemoveSelected"
         width="500"
         data-l10n-id="site-data-removing-dialog"
-        data-l10n-attrs="title, buttonlabelaccept"
+        data-l10n-attrs="title"
         onload="gSiteDataRemoveSelected.init();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
+<dialog id="SiteDataRemoveSelectedDialog"
+        data-l10n-id="site-data-removing-dialog"
+        data-l10n-attrs="buttonlabelaccept">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
@@ -47,3 +49,4 @@
   <!-- Load the script after the elements for layout issues (bug 1501755). -->
   <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
 </dialog>
+</window>

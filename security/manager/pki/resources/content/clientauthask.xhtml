@@ -5,17 +5,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog [
+<!DOCTYPE window [
 <!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
 %pippkiDTD;
 ]>
 
 
-<dialog id="certAuthAsk" title="&clientAuthAsk.title;"
+<window title="&clientAuthAsk.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  buttons="accept,cancel"
   onload="onLoad();">
+<dialog id="certAuthAsk"
+  buttons="accept,cancel">
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
@@ -43,3 +44,4 @@
 <checkbox id="rememberBox" checked="true"/>
 
 </dialog>
+</window>

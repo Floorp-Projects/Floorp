@@ -114,7 +114,7 @@ var dialog = {
       (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
 
     this._itemChoose = document.getElementById("item-choose");
-    this._okButton = document.documentElement.getButton("extra1");
+    this._okButton = document.getElementById("handling").getButton("extra1");
 
     var description = {
       image: document.getElementById("description-image"),

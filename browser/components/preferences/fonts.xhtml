@@ -8,14 +8,14 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<dialog id="FontsDialog" type="child"
+<window type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="fonts-window"
         data-l10n-attrs="title"
+        persist="lastSelected screenX screenY">
+<dialog id="FontsDialog"
         buttons="accept,cancel,help"
-        persist="lastSelected screenX screenY"
-        role="dialog"
         helpTopic="prefs-fonts-and-colors">
 
   <linkset>
@@ -271,3 +271,4 @@
   <script src="chrome://mozapps/content/preferences/fontbuilder.js"/>
   <script src="chrome://browser/content/preferences/fonts.js"/>
 </dialog>
+</window>

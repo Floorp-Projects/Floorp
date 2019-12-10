@@ -16,18 +16,19 @@
 #endif
 ]>
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         windowtype="Shell:SetDesktopBackground"
+        onload="gSetBackground.load();"
+        title="&setDesktopBackground.title;"
+        style="width: 30em;">
+<dialog id="SetDesktopBackgroundDialog"
 #ifndef XP_MACOSX
         buttons="accept,cancel"
 #else
         buttons="accept"
 #endif
-        buttonlabelaccept="&setDesktopBackground.title;"
-        onload="gSetBackground.load();"
-        title="&setDesktopBackground.title;"
-        style="width: 30em;">
+        buttonlabelaccept="&setDesktopBackground.title;">
 
 #ifdef XP_MACOSX
 #include ../../../base/content/macWindow.inc.xhtml
@@ -88,3 +89,4 @@
 #endif
 
 </dialog>
+</window>

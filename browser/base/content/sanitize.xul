@@ -12,17 +12,17 @@
 
 <?xml-stylesheet href="chrome://browser/content/sanitizeDialog.css"?>
 
-<!DOCTYPE dialog>
+<!DOCTYPE window>
 
-<dialog id="SanitizeDialog" type="child"
+<window type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        buttons="accept,cancel"
         persist="lastSelected screenX screenY"
-        role="dialog"
         data-l10n-id="dialog-title"
         data-l10n-attrs="style"
         onload="gSanitizePromptDialog.init();">
+<dialog id="SanitizeDialog"
+        buttons="accept,cancel">
 
   <linkset>
     <html:link rel="localization" href="browser/sanitize.ftl"/>
@@ -101,3 +101,4 @@
     </hbox>
   </groupbox>
 </dialog>
+</window>

@@ -122,5 +122,6 @@ function onPasswordInput(recalculatePasswordStrength) {
   // Disable the accept button if the two passwords don't match, and enable it
   // if the passwords do match.
   let pw2 = document.getElementById("pw2").value;
-  document.documentElement.getButton("accept").disabled = pw1 != pw2;
+  document.getElementById("setp12password").getButton("accept").disabled =
+    pw1 != pw2;
 }

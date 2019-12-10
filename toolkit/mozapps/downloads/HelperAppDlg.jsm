@@ -506,6 +506,8 @@ nsUnknownContentTypeDialog.prototype = {
       this.mLauncher.MIMEInfo.MIMEType;
     this.dialogElement("contentTypeImage").setAttribute("src", iconString);
 
+    let dialog = this.mDialog.document.getElementById("unknownContentType");
+
     // if always-save and is-executable and no-handler
     // then set up simple ui
     var mimeType = this.mLauncher.MIMEInfo.MIMEType;
@@ -523,16 +525,14 @@ nsUnknownContentTypeDialog.prototype = {
       this.dialogElement("basicBox").collapsed = false;
       // change button labels and icons; use "save" icon for the accept
       // button since it's the only action possible
-      let acceptButton = this.mDialog.document.documentElement.getButton(
-        "accept"
-      );
+      let acceptButton = dialog.getButton("accept");
       acceptButton.label = this.dialogElement("strings").getString(
         "unknownAccept.label"
       );
       acceptButton.setAttribute("icon", "save");
-      this.mDialog.document.documentElement.getButton(
-        "cancel"
-      ).label = this.dialogElement("strings").getString("unknownCancel.label");
+      dialog.getButton("cancel").label = this.dialogElement(
+        "strings"
+      ).getString("unknownCancel.label");
       // hide other handler
       this.dialogElement("openHandler").collapsed = true;
       // set save as the selected option
@@ -589,14 +589,10 @@ nsUnknownContentTypeDialog.prototype = {
 
     this.delayHelper = new EnableDelayHelper({
       disableDialog: () => {
-        this.mDialog.document.documentElement.getButton(
-          "accept"
-        ).disabled = true;
+        dialog.getButton("accept").disabled = true;
       },
       enableDialog: () => {
-        this.mDialog.document.documentElement.getButton(
-          "accept"
-        ).disabled = false;
+        dialog.getButton("accept").disabled = false;
       },
       focusTarget: this.mDialog,
     });
@@ -893,7 +889,8 @@ nsUnknownContentTypeDialog.prototype = {
     }
 
     // Enable Ok button if ok to press.
-    this.mDialog.document.documentElement.getButton("accept").disabled = !ok;
+    let dialog = this.mDialog.document.getElementById("unknownContentType");
+    dialog.getButton("accept").disabled = !ok;
   },
 
   // Returns true iff the user-specified helper app has been modified.
@@ -996,9 +993,8 @@ nsUnknownContentTypeDialog.prototype = {
         );
 
         // Disable the OK button.
-        this.mDialog.document.documentElement.getButton(
-          "accept"
-        ).disabled = true;
+        let dialog = this.mDialog.document.getElementById("unknownContentType");
+        dialog.getButton("accept").disabled = true;
         this.dialogElement("mode").focus();
 
         // Clear chosen application.

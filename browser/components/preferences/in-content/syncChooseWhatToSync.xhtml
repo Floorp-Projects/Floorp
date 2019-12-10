@@ -7,15 +7,16 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 
-<dialog id="syncChooseOptions"
-        type="child"
+<window type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        role="dialog"
-        buttons="accept,cancel,extra2"
         onload="gSyncChooseWhatToSync.init();"
         data-l10n-id="sync-choose-what-to-sync-dialog"
-        data-l10n-attrs="title, style, buttonlabelaccept, buttonlabelextra2">
+        data-l10n-attrs="title, style">
+<dialog id="syncChooseOptions"
+        buttons="accept,cancel,extra2"
+        data-l10n-id="sync-choose-what-to-sync-dialog"
+        data-l10n-attrs="buttonlabelaccept, buttonlabelextra2">
 
   <linkset>
     <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
@@ -59,3 +60,4 @@
     </html:div>
   </html:div>
 </dialog>
+</window>
