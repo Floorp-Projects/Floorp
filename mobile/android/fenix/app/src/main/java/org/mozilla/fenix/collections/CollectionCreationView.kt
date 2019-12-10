@@ -252,7 +252,7 @@ class CollectionCreationView(
         name_collection_edittext.setText(
             view.context.getString(
                 R.string.create_collection_default_name,
-                state.tabCollections.size + 1
+                state.defaultCollectionNumber
             )
         )
         name_collection_edittext.setSelection(0, name_collection_edittext.text.length)

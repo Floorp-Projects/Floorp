@@ -4,10 +4,12 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -23,7 +25,7 @@ class DefaultCollectionCreationControllerTest {
 
     private lateinit var controller: DefaultCollectionCreationController
 
-    @MockK private lateinit var store: CollectionCreationStore
+    @MockK(relaxed = true) private lateinit var store: CollectionCreationStore
     @MockK(relaxed = true) private lateinit var dismiss: () -> Unit
     @MockK(relaxed = true) private lateinit var analytics: Analytics
     @MockK private lateinit var tabCollectionStorage: TabCollectionStorage
@@ -90,6 +92,74 @@ class DefaultCollectionCreationControllerTest {
         every { state.tabCollections } returns listOf(mockk())
 
         assertEquals(SaveCollectionStep.SelectCollection, controller.stepBack(SaveCollectionStep.NameCollection))
+    }
+
+    @Test
+    fun `GIVEN list of collections WHEN default collection number is required THEN return next default number`() {
+        val collections: MutableList<TabCollection> = ArrayList()
+        collections.add(mockk {
+            every { title } returns "Collection 1"
+        })
+        collections.add(mockk {
+            every { title } returns "Collection 2"
+        })
+        collections.add(mockk {
+            every { title } returns "Collection 3"
+        })
+        every { state.tabCollections } returns collections
+
+        assertEquals(4, controller.getDefaultCollectionNumber())
+
+        collections.add(mockk {
+            every { title } returns "Collection 5"
+        })
+        assertEquals(6, controller.getDefaultCollectionNumber())
+
+        collections.add(mockk {
+            every { title } returns "Random name"
+        })
+        assertEquals(6, controller.getDefaultCollectionNumber())
+
+        collections.add(mockk {
+            every { title } returns "Collection 10 10"
+        })
+        assertEquals(6, controller.getDefaultCollectionNumber())
+    }
+
+    @Test
+    fun `WHEN adding a new collection THEN dispatch NameCollection step changed`() {
+        val collections: List<TabCollection> = ArrayList()
+        every { state.tabCollections } returns collections
+
+        controller.addNewCollection()
+
+        verify { store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.NameCollection, 1)) }
+    }
+
+    @Test
+    fun `GIVEN empty list of collections WHEN saving tabs to collection THEN dispatch NameCollection step changed`() {
+        val collections: List<TabCollection> = ArrayList()
+        every { state.tabCollections } returns collections
+
+        controller.saveTabsToCollection(ArrayList())
+
+        verify { store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.NameCollection, 1)) }
+    }
+
+    @Test
+    fun `GIVEN list of collections WHEN saving tabs to collection THEN dispatch NameCollection step changed`() {
+        val collections: MutableList<TabCollection> = ArrayList()
+        collections.add(mockk {
+            every { title } returns "Collection 1"
+        })
+        collections.add(mockk {
+            every { title } returns "Random Collection"
+        })
+        every { state.tabCollections } returns collections
+
+        controller.saveTabsToCollection(ArrayList())
+
+        verify { store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.SelectCollection, 2)) }
     }
 
     @Test

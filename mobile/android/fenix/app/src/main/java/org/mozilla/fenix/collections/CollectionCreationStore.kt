@@ -40,7 +40,8 @@ data class CollectionCreationState(
     val selectedTabs: Set<Tab> = emptySet(),
     val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs,
     val tabCollections: List<TabCollection> = emptyList(),
-    val selectedTabCollection: TabCollection? = null
+    val selectedTabCollection: TabCollection? = null,
+    val defaultCollectionNumber: Int = 1
 ) : State
 
 sealed class CollectionCreationAction : Action {
@@ -53,7 +54,10 @@ sealed class CollectionCreationAction : Action {
      *
      * This should be refactored, see kdoc on [SaveCollectionStep].
      */
-    data class StepChanged(val saveCollectionStep: SaveCollectionStep) : CollectionCreationAction()
+    data class StepChanged(
+        val saveCollectionStep: SaveCollectionStep,
+        val defaultCollectionNumber: Int = 1
+    ) : CollectionCreationAction()
 }
 
 private fun collectionCreationReducer(
@@ -64,5 +68,6 @@ private fun collectionCreationReducer(
     is CollectionCreationAction.RemoveAllTabs -> prevState.copy(selectedTabs = emptySet())
     is CollectionCreationAction.TabAdded -> prevState.copy(selectedTabs = prevState.selectedTabs + action.tab)
     is CollectionCreationAction.TabRemoved -> prevState.copy(selectedTabs = prevState.selectedTabs - action.tab)
-    is CollectionCreationAction.StepChanged -> prevState.copy(saveCollectionStep = action.saveCollectionStep)
+    is CollectionCreationAction.StepChanged -> prevState.copy(saveCollectionStep = action.saveCollectionStep,
+        defaultCollectionNumber = action.defaultCollectionNumber)
 }

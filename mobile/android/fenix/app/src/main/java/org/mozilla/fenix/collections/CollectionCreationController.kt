@@ -69,6 +69,12 @@ class DefaultCollectionCreationController(
     private val sessionManager: SessionManager,
     private val lifecycleScope: CoroutineScope
 ) : CollectionCreationController {
+
+    companion object {
+        const val DEFAULT_INCREMENT_VALUE = 1
+        const val DEFAULT_COLLECTION_NUMBER_POSITION = 1
+    }
+
     override fun saveCollectionName(tabs: List<Tab>, name: String) {
         dismiss()
 
@@ -124,17 +130,40 @@ class DefaultCollectionCreationController(
     }
 
     override fun saveTabsToCollection(tabs: List<Tab>) {
-        store.dispatch(CollectionCreationAction.StepChanged(
-            saveCollectionStep = if (store.state.tabCollections.isEmpty()) {
-                SaveCollectionStep.NameCollection
-            } else {
-                SaveCollectionStep.SelectCollection
-            }
-        ))
+        store.dispatch(
+            CollectionCreationAction.StepChanged(
+                saveCollectionStep = if (store.state.tabCollections.isEmpty()) {
+                    SaveCollectionStep.NameCollection
+                } else {
+                    SaveCollectionStep.SelectCollection
+                },
+                defaultCollectionNumber = getDefaultCollectionNumber()
+            )
+        )
     }
 
     override fun addNewCollection() {
-        store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.NameCollection))
+        store.dispatch(
+            CollectionCreationAction.StepChanged(
+                SaveCollectionStep.NameCollection,
+                getDefaultCollectionNumber()
+            )
+        )
+    }
+
+    /**
+     * Returns the new default name recommendation for a collection
+     *
+     * Algorithm: Go through all collections, make a list of their names and keep only the default ones.
+     * Then get the numbers from all these default names, compute the maximum number and add one.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getDefaultCollectionNumber(): Int {
+        return (store.state.tabCollections
+            .map { it.title }
+            .filter { it.matches(Regex("Collection\\s\\d+")) }
+            .map { Integer.valueOf(it.split(" ")[DEFAULT_COLLECTION_NUMBER_POSITION]) }
+            .max() ?: 0) + DEFAULT_INCREMENT_VALUE
     }
 
     override fun addTabToSelection(tab: Tab) {
