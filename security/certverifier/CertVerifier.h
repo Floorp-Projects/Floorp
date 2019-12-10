@@ -140,7 +140,7 @@ class DelegatedCredentialInfo {
   uint32_t authKeyBits;
 };
 
-enum class CRLiteTelemetryInfo {
+enum class CRLiteLookupResult {
   NeverChecked = 0,
   FilterNotAvailable = 1,
   IssuerNotEnrolled = 2,
@@ -148,6 +148,21 @@ enum class CRLiteTelemetryInfo {
   CertificateValid = 4,
   CertificateRevoked = 5,
   LibraryFailure = 6,
+};
+
+class CRLiteTelemetryInfo {
+ public:
+  CRLiteTelemetryInfo() : mLookupResult(CRLiteLookupResult::NeverChecked) {}
+
+  void Reset() {
+    mLookupResult = CRLiteLookupResult::NeverChecked;
+    mCRLiteFasterThanOCSPMillis.reset();
+    mOCSPFasterThanCRLiteMillis.reset();
+  }
+
+  CRLiteLookupResult mLookupResult;
+  Maybe<double> mCRLiteFasterThanOCSPMillis;
+  Maybe<double> mOCSPFasterThanCRLiteMillis;
 };
 
 class NSSCertDBTrustDomain;
