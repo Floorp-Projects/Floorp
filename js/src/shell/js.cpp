@@ -4708,6 +4708,135 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// A JSObject that holds XDRBuffer.
+class XDRBufferObject : public NativeObject {
+  static const size_t VECTOR_SLOT = 0;
+  static const unsigned RESERVED_SLOTS = 1;
+
+ public:
+  static const JSClassOps classOps_;
+  static const JSClass class_;
+
+  inline static MOZ_MUST_USE XDRBufferObject* create(JSContext* cx,
+                                                     JS::TranscodeBuffer* buf);
+
+  JS::TranscodeBuffer* data() const {
+    Value value = getReservedSlot(VECTOR_SLOT);
+    auto buf = static_cast<JS::TranscodeBuffer*>(value.toPrivate());
+    MOZ_ASSERT(buf);
+    return buf;
+  }
+
+  bool hasData() const {
+    // Data may not be present if we hit OOM in initialization.
+    return !getReservedSlot(VECTOR_SLOT).isUndefined();
+  }
+
+  static void finalize(JSFreeOp* fop, JSObject* obj);
+};
+
+/*static */ const JSClassOps XDRBufferObject::classOps_ = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate   */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve     */
+    nullptr, /* mayResolve  */
+    XDRBufferObject::finalize};
+
+/*static */ const JSClass XDRBufferObject::class_ = {
+    "XDRBufferObject",
+    JSCLASS_HAS_RESERVED_SLOTS(XDRBufferObject::RESERVED_SLOTS) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &XDRBufferObject::classOps_};
+
+XDRBufferObject* XDRBufferObject::create(JSContext* cx,
+                                         JS::TranscodeBuffer* buf) {
+  XDRBufferObject* bufObj = NewObjectWithNullTaggedProto<XDRBufferObject>(cx);
+  if (!bufObj) {
+    return nullptr;
+  }
+
+  auto heapBuf = cx->make_unique<JS::TranscodeBuffer>();
+  if (!heapBuf) {
+    return nullptr;
+  }
+
+  if (!heapBuf->appendAll(*buf)) {
+    return nullptr;
+  }
+
+  size_t len = heapBuf->length();
+  InitReservedSlot(bufObj, VECTOR_SLOT, heapBuf.release(), len,
+                   MemoryUse::XDRBufferElements);
+
+  return bufObj;
+}
+
+void XDRBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
+  XDRBufferObject* buf = &obj->as<XDRBufferObject>();
+  if (buf->hasData()) {
+    fop->free_(buf, buf->data(), buf->data()->length(),
+               MemoryUse::XDRBufferElements);
+  }
+}
+
+static bool CodeModule(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "codeModule", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected module object, got %s", typeName);
+    return false;
+  }
+
+  RootedModuleObject modObject(cx, &args[0].toObject().as<ModuleObject>());
+  JS::TranscodeBuffer buf;
+  XDREncoder xdrEncoder_(cx, buf);
+  XDRResult res = xdrEncoder_.codeModuleObject(&modObject);
+  if (res.isErr()) {
+    return false;
+  }
+
+  XDRBufferObject* xdrBuf = XDRBufferObject::create(cx, &buf);
+  if (!xdrBuf) {
+    return false;
+  }
+  args.rval().setObject(*xdrBuf);
+  return true;
+}
+
+static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "decodeModule", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<XDRBufferObject>()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected XDRBufferObject to compile, got %s",
+                        typeName);
+    return false;
+  }
+
+  XDRDecoder xdrDecoder_(cx, *args[0].toObject().as<XDRBufferObject>().data());
+  RootedModuleObject modObject(cx, nullptr);
+  XDRResult res = xdrDecoder_.codeModuleObject(&modObject);
+  if (res.isErr()) {
+    return false;
+  }
+
+  if (!ModuleObject::Freeze(cx, modObject)) {
+    return false;
+  }
+
+  args.rval().setObject(*modObject);
+  return true;
+}
+
 static bool SetModuleLoadHook(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "setModuleLoadHook", 1)) {
@@ -8581,6 +8710,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("parseModule", ParseModule, 1, 0,
 "parseModule(code)",
 "  Parses source text as a module and returns a Module object."),
+
+    JS_FN_HELP("codeModule", CodeModule, 1, 0,
+"codeModule(module)",
+"   Takes an uninstantiated ModuleObject and returns a XDR bytecode representation of that ModuleObject."),
+
+    JS_FN_HELP("decodeModule", DecodeModule, 1, 0,
+"decodeModule(code)",
+"   Takes a XDR bytecode representation of an uninstantiated ModuleObject and returns a ModuleObject."),
 
     JS_FN_HELP("setModuleLoadHook", SetModuleLoadHook, 1, 0,
 "setModuleLoadHook(function(path))",
