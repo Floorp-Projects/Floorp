@@ -18,7 +18,7 @@ function commonDialogOnLoad() {
     args[prop.name] = prop.value;
   }
 
-  let dialog = document.documentElement;
+  let dialog = document.getElementById("commonDialog");
 
   let ui = {
     prompt: window,

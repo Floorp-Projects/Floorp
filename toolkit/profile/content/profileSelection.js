@@ -31,7 +31,7 @@ function startup() {
     gProfileManagerBundle = document.getElementById("bundle_profileManager");
     gBrandBundle = document.getElementById("bundle_brand");
 
-    document.documentElement.centerWindowOnScreen();
+    document.getElementById("profileWindow").centerWindowOnScreen();
 
     var profilesElement = document.getElementById("profiles");
 
@@ -200,7 +200,7 @@ function onProfilesKey(aEvent) {
 
 function onProfilesDblClick(aEvent) {
   if (aEvent.target.closest("richlistitem")) {
-    document.documentElement.acceptDialog();
+    document.getElementById("profileWindow").acceptDialog();
   }
 }
 

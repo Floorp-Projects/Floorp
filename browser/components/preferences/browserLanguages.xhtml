@@ -7,15 +7,15 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<dialog id="BrowserLanguagesDialog" type="child"
+<window type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="browser-languages-window"
         data-l10n-attrs="title, style"
-        buttons="accept,cancel,help"
         persist="screenX screenY"
-        role="dialog"
-        onload="gBrowserLanguagesDialog.onLoad();"
+        onload="gBrowserLanguagesDialog.onLoad();">
+<dialog id="BrowserLanguagesDialog"
+        buttons="accept,cancel,help"
         helpTopic="change-language">
 
   <linkset>
@@ -53,3 +53,4 @@
     <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
   </hbox>
 </dialog>
+</window>

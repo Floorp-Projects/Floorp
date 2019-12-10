@@ -18,7 +18,7 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 function initExceptionDialog() {
   gNeedReset = false;
-  gDialog = document.documentElement;
+  gDialog = document.getElementById("exceptiondialog");
   gSecHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
   let warningText = document.getElementById("warningText");
   document.l10n.setAttributes(warningText, "add-exception-branded-warning");

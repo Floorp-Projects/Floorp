@@ -30,7 +30,9 @@ function init() {
   let bundle = Services.strings.createBundle(
     "chrome://mozapps/locale/update/updates.properties"
   );
-  let cancelButton = document.documentElement.getButton("cancel");
+  let cancelButton = document
+    .getElementById("BlocklistDialog")
+    .getButton("cancel");
   cancelButton.setAttribute(
     "label",
     bundle.GetStringFromName("restartLaterButton")

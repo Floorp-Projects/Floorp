@@ -7,10 +7,9 @@
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 /* import-globals-from in-content/extensionControlled.js */
 
-document.documentElement.addEventListener(
-  "dialoghelp",
-  window.top.openPrefsHelp
-);
+document
+  .getElementById("ConnectionsDialog")
+  .addEventListener("dialoghelp", window.top.openPrefsHelp);
 
 Preferences.addAll([
   // Add network.proxy.autoconfig_url before network.proxy.type so they're
@@ -85,9 +84,11 @@ window.addEventListener(
     gConnectionsDialog.updateProxySettingsUI();
     initializeProxyUI(gConnectionsDialog);
     gConnectionsDialog.registerSyncPrefListeners();
-    document.documentElement.addEventListener("beforeaccept", e =>
-      gConnectionsDialog.beforeAccept(e)
-    );
+    document
+      .getElementById("ConnectionsDialog")
+      .addEventListener("beforeaccept", e =>
+        gConnectionsDialog.beforeAccept(e)
+      );
   },
   { once: true, capture: true }
 );

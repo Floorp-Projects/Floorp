@@ -9,7 +9,7 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
 
-<!DOCTYPE dialog [
+<!DOCTYPE window [
 <!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/updates.dtd">
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %updateDTD;
@@ -19,16 +19,15 @@
 #endif
 ]>
 
-<dialog id="updates"
-        windowtype="Update:Elevation"
+<window windowtype="Update:Elevation"
         type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        buttons="extra2,extra1,accept"
-        role="dialog"
         title="&updateWizard.title;"
         style="width: auto; height: auto"
         onload="gUpdateElevationDialog.onLoad();">
+<dialog id="updates"
+        buttons="extra2,extra1,accept">
 
   <script src="chrome://mozapps/content/update/updateElevation.js"/>
   <script src="chrome://global/content/contentAreaUtils.js"/>
@@ -82,3 +81,4 @@
 	        oncommand="gUpdateElevationDialog.onRestartNow();" default="true"/>
   </hbox>
 </dialog>
+</window>

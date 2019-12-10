@@ -5,10 +5,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="dialogOnLoad()">
+<dialog>
 
   <script src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
@@ -19,3 +20,4 @@
     </vbox>
   </vbox>
 </dialog>
+</window>

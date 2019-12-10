@@ -9,13 +9,13 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 
-<dialog id="selectBookmarkDialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="select-bookmark-window"
         data-l10n-attrs="title, style"
         persist="screenX screenY width height" screenX="24" screenY="24"
         onload="SelectBookmarkDialog.init();">
+<dialog id="selectBookmarkDialog">
 
   <linkset>
     <html:link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
@@ -46,3 +46,4 @@
   <separator class="thin"/>
 
 </dialog>
+</window>

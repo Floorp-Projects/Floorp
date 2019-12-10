@@ -8,18 +8,18 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<!DOCTYPE dialog>
+<!DOCTYPE window>
 
-<dialog id="SanitizeDialog" type="child"
+<window type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
-        role="dialog"
         data-l10n-id="sanitize-prefs"
         data-l10n-attrs="style"
-        helpTopic="prefs-clear-private-data"
         onload="gSanitizeDialog.init();">
+<dialog id="SanitizeDialog"
+        buttons="accept,cancel,help"
+        helpTopic="prefs-clear-private-data">
 
   <linkset>
     <html:link rel="localization" href="browser/sanitize.ftl"/>
@@ -70,3 +70,4 @@
     </hbox>
   </groupbox>
 </dialog>
+</window>

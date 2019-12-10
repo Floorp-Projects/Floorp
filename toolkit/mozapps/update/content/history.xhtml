@@ -4,20 +4,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE dialog>
+<!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
 
-<dialog id="history" windowtype="Update:History"
+<window windowtype="Update:History"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         style="width: 35em;"
+        data-l10n-id="close-button-label"
+        data-l10n-attrs="title"
+        onload="gUpdateHistory.onLoad();">
+<dialog id="history"
         buttons="cancel"
         defaultButton="cancel"
         data-l10n-id="close-button-label"
-        data-l10n-attrs="buttonlabelcancel"
-        onload="gUpdateHistory.onLoad();">
+        data-l10n-attrs="buttonlabelcancel">
 
   <linkset>
     <html:link rel="localization" href="toolkit/updates/history.ftl"/>
@@ -32,3 +35,4 @@
   </richlistbox>
   <separator class="thin"/>
 </dialog>
+</window>

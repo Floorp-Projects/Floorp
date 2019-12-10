@@ -9,7 +9,7 @@
   --animation-easing-function: cubic-bezier(.07,.95,0,1);
 }
 
-:root[subdialog] form {
+dialog[subdialog] form {
   /* Add extra space to ensure invalid input box is displayed properly */
   padding: 2px;
 }
@@ -85,7 +85,7 @@ form :-moz-any(label, div)[required] .label-text::after {
   margin-bottom: var(--grid-column-row-gap);
 }
 
-:root[subdialog] form {
+dialog[subdialog] form {
   /* Match the margin-inline-start of the #controls-container buttons
      and provide enough padding at the top of the form so button outlines
      don't get clipped. */
