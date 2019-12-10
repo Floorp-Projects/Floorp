@@ -42,18 +42,18 @@ EXTRA_JS_MODULES += [
     'LoginManagerPrompter.jsm',
     'LoginRecipes.jsm',
     'OSCrypto.jsm',
+    'storage-json.js',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
     EXTRA_JS_MODULES += [
-        'storage-mozStorage.js',
+        'storage-geckoview.js',
     ]
 else:
     EXTRA_JS_MODULES += [
         'LoginImport.jsm',
         'LoginStore.jsm',
         'PasswordGenerator.jsm',
-        'storage-json.js',
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
