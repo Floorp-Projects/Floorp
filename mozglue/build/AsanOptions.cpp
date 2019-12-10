@@ -99,6 +99,7 @@ extern "C" const char* __lsan_default_suppressions() {
 
          // Bug 987918 - Font shutdown leaks when CLEANUP_MEMORY is not enabled.
          "leak:libfontconfig.so\n"
+         "leak:libfreetype.so\n"
          "leak:GI___strdup\n"
          // The symbol is really __GI___strdup, but if you have the leading _,
          // it doesn't suppress it.
