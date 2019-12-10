@@ -92,9 +92,9 @@ function get_video_decoding_suspend_promise(browser, reload) {
 function get_video_decoding_resume_promise(browser) {
   let suspend = false;
   let reload = false;
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     browser,
-    [{ suspend, reload }],
+    { suspend, reload },
     check_video_decoding_state
   );
 }

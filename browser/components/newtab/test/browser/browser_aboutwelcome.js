@@ -38,9 +38,9 @@ async function test_trailhead_branch(
   );
   let browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [{ expectedSelectors, branchName, unexpectedSelectors }],
+    { expectedSelectors, branchName, unexpectedSelectors },
     async ({
       expectedSelectors: expected,
       branchName: branch,
