@@ -635,6 +635,27 @@ nsresult nsIOService::AsyncOnChannelRedirect(
         helper->DelegateOnChannelRedirect(entries[i], oldChan, newChan, flags);
     if (NS_FAILED(rv)) return rv;
   }
+
+  nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(oldChan));
+
+  // Collect the redirection from HTTP(S) only.
+  if (httpChan) {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIURI> newURI;
+    newChan->GetURI(getter_AddRefs(newURI));
+    MOZ_ASSERT(newURI);
+
+    nsAutoCString scheme;
+    newURI->GetScheme(scheme);
+    MOZ_ASSERT(!scheme.IsEmpty());
+
+    Telemetry::AccumulateCategoricalKeyed(
+        scheme,
+        oldChan->IsDocument()
+            ? Telemetry::LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::topLevel
+            : Telemetry::LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::subresource);
+  }
+
   return NS_OK;
 }
 

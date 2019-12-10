@@ -2483,10 +2483,11 @@
   "NETWORK_HTTP_REDIRECT_TO_SCHEME" :{
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
-    "bug_numbers": [1413512],
-    "expires_in_version": "64",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1413512, 1567462],
+    "expires_in_version": "never",
     "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
     "keyed": true,
     "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
     "labels": ["topLevel", "subresource"]
