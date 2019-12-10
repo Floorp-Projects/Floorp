@@ -24,7 +24,7 @@ add_task(async function() {
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
       await pageShownPromise;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // make sure there is a reading time on the page and that it displays the correct information
         let readingTimeElement = content.document.querySelector(
           ".reader-estimated-time"
@@ -55,7 +55,7 @@ add_task(async function() {
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
       await pageShownPromise;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // make sure there is a reading time on the page and that it displays the correct information
         let readingTimeElement = content.document.querySelector(
           ".reader-estimated-time"
@@ -87,7 +87,7 @@ add_task(async function() {
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
       await pageShownPromise;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // make sure there is a reading time on the page and that it displays the correct information
         let readingTimeElement = content.document.querySelector(
           ".reader-estimated-time"

@@ -40,10 +40,8 @@ add_task(async function() {
     "about:home"
   );
 
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -51,10 +49,8 @@ add_task(async function() {
   );
   is(result, true, "plugin is loaded");
 
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -63,7 +59,7 @@ add_task(async function() {
   is(result, true, "plugin is hidden");
 
   // reset plugin paint count
-  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(pluginTab.linkedBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
@@ -77,10 +73,8 @@ add_task(async function() {
   // wait a bit for spurious paints
   await waitForMs(100);
 
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -89,10 +83,8 @@ add_task(async function() {
   is(result, true, "plugin is visible");
 
   // check for good paint count
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();
@@ -106,7 +98,7 @@ add_task(async function() {
   await tabSwitchedPromise;
 
   // reset paint count
-  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(pluginTab.linkedBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
@@ -116,10 +108,8 @@ add_task(async function() {
   await waitForMs(100);
 
   // check for no paint count
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();
@@ -127,10 +117,8 @@ add_task(async function() {
   );
   is(result, 0, "no paints, this is correct.");
 
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -139,7 +127,7 @@ add_task(async function() {
   is(result, true, "plugin is hidden");
 
   // reset paint count
-  await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(pluginTab.linkedBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     XPCNativeWrapper.unwrap(plugin).resetPaintCount();
@@ -151,10 +139,8 @@ add_task(async function() {
   await tabSwitchedPromise;
 
   // check paint count
-  result = await ContentTask.spawn(
-    pluginTab.linkedBrowser,
-    null,
-    async function() {
+  result = await SpecialPowers.spawn(
+    pluginTab.linkedBrowser, [], async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).getPaintCount();

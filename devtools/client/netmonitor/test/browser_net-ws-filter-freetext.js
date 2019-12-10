@@ -23,7 +23,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Wait for WS connection(s) to be established + send messages
-  await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection(3);
     await content.wrappedJSObject.openConnection(1);
   });
@@ -92,7 +92,7 @@ add_task(async function() {
   is(filterInput.value, "", "The filter input is cleared");
 
   // Close WS connection
-  await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.closeConnection();
   });
 

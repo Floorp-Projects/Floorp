@@ -19,7 +19,7 @@ add_task(async function() {
         Services.search.setDefault(engine),
       ]);
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // Type an X in the search input.
         let input = content.document.querySelector([
           "#searchText",
@@ -30,7 +30,7 @@ add_task(async function() {
 
       await BrowserTestUtils.synthesizeKey("x", {}, browser);
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // Wait for the search suggestions to become visible.
         let table = content.document.getElementById("searchSuggestionTable");
         let input = content.document.querySelector([
@@ -57,7 +57,7 @@ add_task(async function() {
       await BrowserTestUtils.synthesizeKey("a", { accelKey: true }, browser);
       await BrowserTestUtils.synthesizeKey("VK_DELETE", {}, browser);
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let table = content.document.getElementById("searchSuggestionTable");
         await ContentTaskUtils.waitForCondition(
           () => table.hidden,

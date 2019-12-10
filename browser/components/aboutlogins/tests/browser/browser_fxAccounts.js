@@ -32,7 +32,7 @@ add_task(async function test_logged_out() {
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let fxAccountsButton = content.document.querySelector("fxaccounts-button");
     ok(fxAccountsButton, "fxAccountsButton should exist");
     fxAccountsButton = Cu.waiveXrays(fxAccountsButton);
@@ -59,7 +59,7 @@ add_task(async function test_login_syncing_disabled() {
   });
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let fxAccountsButton = content.document.querySelector("fxaccounts-button");
     ok(fxAccountsButton, "fxAccountsButton should exist");
     fxAccountsButton = Cu.waiveXrays(fxAccountsButton);
@@ -130,10 +130,8 @@ add_task(async function test_login_syncing_enabled() {
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(
-    browser,
-    [TEST_EMAIL, TEST_AVATAR_URL],
-    async ([expectedEmail, expectedAvatarURL]) => {
+  await SpecialPowers.spawn(
+    browser, [[TEST_EMAIL, TEST_AVATAR_URL]], async ([expectedEmail, expectedAvatarURL]) => {
       let fxAccountsButton = content.document.querySelector(
         "fxaccounts-button"
       );

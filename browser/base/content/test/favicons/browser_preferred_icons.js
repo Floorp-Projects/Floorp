@@ -10,7 +10,7 @@ async function waitIcon(url) {
 }
 
 function createLinks(linkInfos) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, linkInfos, links => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [linkInfos], links => {
     let doc = content.document;
     let head = doc.head;
     for (let l of links) {

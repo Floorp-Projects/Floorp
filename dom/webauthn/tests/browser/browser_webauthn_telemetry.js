@@ -41,7 +41,7 @@ function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
 }
 
 function promiseMakeCredentialRequest(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, () => {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
@@ -69,7 +69,7 @@ function promiseMakeCredentialRequest(tab) {
 
 function promiseGetAssertionRequest(tab, rawId) {
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(tab.linkedBrowser, [rawId], ([rawId]) => {
+  return SpecialPowers.spawn(tab.linkedBrowser, [[rawId]], ([rawId]) => {
     let newCredential = {
       type: "public-key",
       transports: ["usb"],

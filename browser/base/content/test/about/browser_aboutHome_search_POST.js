@@ -41,7 +41,7 @@ add_task(async function() {
           Services.search.setDefault(engine),
         ]);
         let promise = BrowserTestUtils.browserLoaded(browser);
-        await ContentTask.spawn(browser, { needle }, async function(args) {
+        await SpecialPowers.spawn(browser, [{ needle }], async function(args) {
           let doc = content.document;
           let el = doc.querySelector(["#searchText", "#newtab-search-text"]);
           el.value = args.needle;
@@ -51,7 +51,7 @@ add_task(async function() {
         await promise;
 
         // When the search results load, check them for correctness.
-        await ContentTask.spawn(browser, { needle }, async function(args) {
+        await SpecialPowers.spawn(browser, [{ needle }], async function(args) {
           let loadedText = content.document.body.textContent;
           ok(loadedText, "search page loaded");
           is(

@@ -42,7 +42,7 @@ async function do_test(test) {
   );
 
   info("creating input field");
-  await ContentTask.spawn(tab.linkedBrowser, test, async function(test) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [test], async function(test) {
     let doc = content.document;
     let input = doc.createElement("input");
     doc.body.appendChild(input);
@@ -78,7 +78,7 @@ async function do_test(test) {
         tab.linkedBrowser
       );
       info("Waiting for the input to have the requisite files");
-      await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
         let input = content.document.querySelector("#test_input");
         await ContentTaskUtils.waitForCondition(
           () => input.files.length,

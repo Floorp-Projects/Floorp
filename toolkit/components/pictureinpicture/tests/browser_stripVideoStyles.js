@@ -22,7 +22,7 @@ add_task(async () => {
         position: "absolute",
       };
 
-      await ContentTask.spawn(browser, styles, async videoStyles => {
+      await SpecialPowers.spawn(browser, [styles], async videoStyles => {
         let video = content.document.getElementById("no-controls");
         for (let styleProperty in videoStyles) {
           video.style[styleProperty] = videoStyles[styleProperty];
@@ -33,7 +33,7 @@ add_task(async () => {
       ok(pipWin, "Got Picture-in-Picture window.");
 
       let playerBrowser = pipWin.document.getElementById("browser");
-      await ContentTask.spawn(playerBrowser, styles, async videoStyles => {
+      await SpecialPowers.spawn(playerBrowser, [styles], async videoStyles => {
         let video = content.document.querySelector("video");
         for (let styleProperty in videoStyles) {
           Assert.equal(

@@ -52,10 +52,8 @@ async function checkBlockedPage(url, expectedBlocked) {
     },
     async function() {
       await BrowserTestUtils.waitForCondition(async function() {
-        let blocked = await ContentTask.spawn(
-          gBrowser.selectedBrowser,
-          null,
-          async function() {
+        let blocked = await SpecialPowers.spawn(
+          gBrowser.selectedBrowser, [], async function() {
             return content.document.documentURI.startsWith("about:neterror");
           }
         );

@@ -15,7 +15,7 @@ add_task(async function() {
     true
   );
   info("Opening second tab using a click");
-  await ContentTask.spawn(firstTab.linkedBrowser, "", async function() {
+  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
     content.document.querySelector("#open").click();
   });
 
@@ -27,7 +27,7 @@ add_task(async function() {
 
   info("Focusing second tab by clicking on the first tab");
   await BrowserTestUtils.switchTab(gBrowser, async function() {
-    await ContentTask.spawn(firstTab.linkedBrowser, "", async function() {
+    await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
       content.document.querySelector("#focus").click();
     });
   });

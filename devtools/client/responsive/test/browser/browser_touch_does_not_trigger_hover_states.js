@@ -26,7 +26,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 async function testButtonHoverState(ui, expected) {
-  await ContentTask.spawn(ui.getViewportBrowser(), { expected }, async function(
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [{ expected }], async function(
     args
   ) {
     let button = content.document.querySelector("button");
@@ -50,7 +50,7 @@ async function testButtonHoverState(ui, expected) {
 }
 
 async function testDropDownHoverState(ui, expected) {
-  await ContentTask.spawn(ui.getViewportBrowser(), { expected }, async function(
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [{ expected }], async function(
     args
   ) {
     const dropDownMenu = content.document.querySelector(".drop-down-menu");

@@ -221,20 +221,16 @@ add_task(async function() {
 });
 
 async function addCookie(name, value, path) {
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [name, value, path],
-    ([nam, valu, pat]) => {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[name, value, path]], ([nam, valu, pat]) => {
       content.wrappedJSObject.addCookie(nam, valu, pat);
     }
   );
 }
 
 async function removeCookie(name, path) {
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [name, path],
-    ([nam, pat]) => {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[name, path]], ([nam, pat]) => {
       content.wrappedJSObject.removeCookie(nam, pat);
     }
   );

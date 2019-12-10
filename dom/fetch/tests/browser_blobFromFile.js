@@ -40,7 +40,7 @@ add_task(async function test() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let blob = await ContentTask.spawn(browser, file.leafName, function(
+  let blob = await SpecialPowers.spawn(browser, [file.leafName], function(
     fileName
   ) {
     return new content.window.Promise(resolve => {

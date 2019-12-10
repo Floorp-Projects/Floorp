@@ -14,7 +14,7 @@ add_task(async function testValidCache() {
     { gBrowser, url: "data:text/html;charset=utf-8,page1" },
     async function(browser) {
       // Make a simple modification for bfcache testing.
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         content.document.body.textContent = "modified";
       });
 
@@ -29,7 +29,7 @@ add_task(async function testValidCache() {
       );
       browser.goBack();
       await awaitPageShow;
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         is(content.document.body.textContent, "modified");
       });
     }
@@ -47,7 +47,7 @@ add_task(async function testExpiredCache() {
     { gBrowser, url: "data:text/html;charset=utf-8,page1" },
     async function(browser) {
       // Make a simple modification for bfcache testing.
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         content.document.body.textContent = "modified";
       });
 
@@ -56,7 +56,7 @@ add_task(async function testExpiredCache() {
       await BrowserTestUtils.browserLoaded(browser);
 
       // Wait for 3 times of expiration timeout, hopefully it's evicted...
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         return new Promise(resolve => {
           content.setTimeout(resolve, 3000);
         });
@@ -69,7 +69,7 @@ add_task(async function testExpiredCache() {
       );
       browser.goBack();
       await awaitPageShow;
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         is(content.document.body.textContent, "page1");
       });
     }

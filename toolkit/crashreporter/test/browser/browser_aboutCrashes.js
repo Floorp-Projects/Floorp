@@ -11,7 +11,7 @@ add_task(async function test() {
     { gBrowser, url: "about:crashes" },
     browser => {
       info("about:crashes loaded");
-      return ContentTask.spawn(browser, crashes, crashes => {
+      return SpecialPowers.spawn(browser, [crashes], crashes => {
         const doc = content.document;
 
         const submitted = doc.getElementById("reportListSubmitted");
@@ -48,7 +48,7 @@ add_task(async function test() {
     { gBrowser, url: "about:crashes" },
     browser => {
       info("about:crashes loaded");
-      return ContentTask.spawn(browser, pendingCrash, pendingCrash => {
+      return SpecialPowers.spawn(browser, [pendingCrash], pendingCrash => {
         const doc = content.document;
 
         const submitted = doc.getElementById("reportListSubmitted");

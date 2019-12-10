@@ -46,7 +46,7 @@ add_task(async function() {
 async function pauseDebugger(dbg) {
   info("Waiting for debugger to pause");
   const onPaused = waitForPaused(dbg);
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     const button = content.document.querySelector("button");
     button.click();
   });

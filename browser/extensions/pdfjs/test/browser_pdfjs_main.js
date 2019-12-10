@@ -30,7 +30,7 @@ add_task(async function test() {
     async function(newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
-      await ContentTask.spawn(newTabBrowser, null, async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function() {
         // Overall sanity tests
         Assert.ok(
           content.document.querySelector("div#viewer"),

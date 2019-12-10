@@ -8,10 +8,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 // Changes, then verifies the value of app.update.auto via the about:preferences
 // UI. Requires a tab with about:preferences open to be passed in.
 async function changeAndVerifyPref(tab, newConfigValue) {
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { newConfigValue },
-    async function({ newConfigValue }) {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ newConfigValue }], async function({ newConfigValue }) {
       let radioId = newConfigValue ? "autoDesktop" : "manualDesktop";
       let radioElement = content.document.getElementById(radioId);
       radioElement.click();
@@ -46,10 +44,8 @@ async function changeAndVerifyPref(tab, newConfigValue) {
     );
   }
 
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { newConfigValue },
-    async function({ newConfigValue }) {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ newConfigValue }], async function({ newConfigValue }) {
       let updateRadioGroup = content.document.getElementById(
         "updateRadioGroup"
       );

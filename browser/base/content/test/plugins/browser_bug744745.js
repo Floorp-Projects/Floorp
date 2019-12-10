@@ -39,7 +39,7 @@ add_task(async function() {
 
   await promisePluginBindingAttached;
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     if (!plugin) {
       Assert.ok(false, "plugin element not available.");

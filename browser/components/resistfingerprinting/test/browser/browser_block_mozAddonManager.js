@@ -22,7 +22,7 @@ add_task(async function test() {
       TEST_PATH + "file_dummy.html"
     );
 
-    await ContentTask.spawn(tab.linkedBrowser, pref, function(aPref) {
+    await SpecialPowers.spawn(tab.linkedBrowser, [pref], function(aPref) {
       if (aPref) {
         is(
           content.navigator.mozAddonManager,

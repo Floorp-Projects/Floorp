@@ -112,7 +112,7 @@ add_task(async function() {
   );
 
   // Simulate clicking the overlay
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let bounds = plugin.openOrClosedShadowRoot
@@ -205,7 +205,7 @@ add_task(async function() {
 
   await promisePopupNotification("click-to-play-plugins");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let test = content.document.getElementById("test");
     let secondtestA = content.document.getElementById("secondtestA");
     let secondtestB = content.document.getElementById("secondtestB");
@@ -245,7 +245,7 @@ add_task(async function() {
     gTestRoot + "plugin_alternate_content.html"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -292,7 +292,7 @@ add_task(async function() {
     "Test 19a, Doorhanger should start out dismissed"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let icon = plugin.openOrClosedShadowRoot.getElementById("icon");
@@ -329,7 +329,7 @@ add_task(async function() {
     "Test 19c, Doorhanger should start out dismissed"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let text = plugin.openOrClosedShadowRoot.getElementById("clickToPlay");
@@ -367,7 +367,7 @@ add_task(async function() {
     "Test 19e, Doorhanger should start out dismissed"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", 50, 50, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", 50, 50, 0, 1, 0, false, 0, 0);
@@ -404,14 +404,14 @@ add_task(async function() {
   );
   ok(notification, "Test 20a, Should have a click-to-play notification");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(!!overlay, "Test 20a, Plugin overlay should exist");
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -425,7 +425,7 @@ add_task(async function() {
   let pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 20b, plugin should not be activated");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let div = doc.getElementById("container");
     Assert.equal(
@@ -435,13 +435,13 @@ add_task(async function() {
     );
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let div = doc.getElementById("container");
     div.style.display = "block";
   });
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     // Waiting for layout to flush and the overlay layout to compute
     await new Promise(resolve => content.requestAnimationFrame(resolve));
     await new Promise(resolve => content.requestAnimationFrame(resolve));
@@ -461,7 +461,7 @@ add_task(async function() {
 
   ok(notification.dismissed, "Test 20c, Doorhanger should start out dismissed");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
@@ -480,7 +480,7 @@ add_task(async function() {
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 20c, plugin should be activated");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     Assert.ok(
@@ -520,7 +520,7 @@ add_task(async function() {
     "Test 23, plugin fallback type should be PLUGIN_CLICK_TO_PLAY"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.type = null;
@@ -536,7 +536,7 @@ add_task(async function() {
     "Test 23, plugin should be TYPE_NULL"
   );
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.type = "application/x-test";

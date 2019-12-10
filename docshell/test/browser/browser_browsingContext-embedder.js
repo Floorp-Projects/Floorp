@@ -45,7 +45,7 @@ add_task(async function runTest() {
   is(rootBC.parent, null, "[parent] root has no parent");
 
   // Test with an in-process frame
-  let frameId = await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  let frameId = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     info(`root, child`);
     let rootBC = content.docShell.browsingContext;
     is(rootBC.embedderElement, null, "[child] root has no embedder");
@@ -75,7 +75,7 @@ add_task(async function runTest() {
 
   // Test with an out-of-process iframe.
 
-  let oopID = await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  let oopID = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     info(`creating oop iframe`);
     let oop = content.document.createElement("iframe");
     oop.setAttribute("src", "https://example.com");

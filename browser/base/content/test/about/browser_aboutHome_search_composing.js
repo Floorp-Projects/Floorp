@@ -36,7 +36,7 @@ add_task(async function() {
         );
       });
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // Start composition and type "x"
         let input = content.document.querySelector([
           "#searchText",
@@ -46,7 +46,7 @@ add_task(async function() {
       });
 
       info("Setting up the mutation observer before synthesizing composition");
-      let mutationPromise = ContentTask.spawn(browser, null, async function() {
+      let mutationPromise = SpecialPowers.spawn(browser, [], async function() {
         let searchController = content.wrappedJSObject.gContentSearchController;
 
         // Wait for the search suggestions to become visible.

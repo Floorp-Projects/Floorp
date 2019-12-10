@@ -20,7 +20,7 @@ add_task(async function task() {
   const onMessage = waitForMessage(hud, xhrUrl);
 
   // Fire an XHR POST request.
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.testXhrGet();
   });
 

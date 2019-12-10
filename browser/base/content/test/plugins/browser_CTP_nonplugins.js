@@ -48,7 +48,7 @@ add_task(async function() {
     null,
     true
   );
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let plugin = content.document.getElementById("secondtestA");
     plugin.remove();
     plugin = content.document.getElementById("secondtestB");
@@ -67,7 +67,7 @@ add_task(async function() {
   );
   ok(popupNotification, "Test 2, Should have a click-to-play notification");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     plugin.remove();
   });

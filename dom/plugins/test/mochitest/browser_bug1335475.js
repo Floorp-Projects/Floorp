@@ -19,7 +19,7 @@ add_task(async function() {
     { gBrowser, url: "about:blank" },
     async function(browser) {
       // about:blank triggered from a toplevel load should not inherit permissions
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         is(
           content.window.navigator.plugins.length,
           0,
@@ -35,7 +35,7 @@ add_task(async function() {
       BrowserTestUtils.loadURI(browser, gTestRoot + "plugin_test.html");
       await promise;
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         ok(
           content.window.navigator.plugins.length > 0,
           "plugins should be available to HTTP-loaded pages"
@@ -56,12 +56,12 @@ add_task(async function() {
       // navigate from the HTTP page to an about:blank page which ought to
       // inherit permissions
       promise = BrowserTestUtils.browserLoaded(browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         content.document.getElementById("aboutlink").click();
       });
       await promise;
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         is(
           content.window.location.href,
           "about:blank",
@@ -82,7 +82,7 @@ add_task(async function() {
       BrowserTestUtils.loadURI(browser, converteduri.spec);
       await promise;
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         ok(
           !("application/x-test" in content.window.navigator.mimeTypes),
           "plugins should not be available to file: URI content"

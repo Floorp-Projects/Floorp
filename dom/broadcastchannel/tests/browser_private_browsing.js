@@ -37,7 +37,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(win2.gBrowser.getBrowserForTab(tab2));
   var browser2 = gBrowser.getBrowserForTab(tab2);
 
-  var p1 = ContentTask.spawn(browser1, null, function(opts) {
+  var p1 = SpecialPowers.spawn(browser1, [], function(opts) {
     return new content.window.Promise(resolve => {
       content.window.bc = new content.window.BroadcastChannel("foobar");
       content.window.bc.onmessage = function(e) {
@@ -46,7 +46,7 @@ add_task(async function() {
     });
   });
 
-  var p2 = ContentTask.spawn(browser2, null, function(opts) {
+  var p2 = SpecialPowers.spawn(browser2, [], function(opts) {
     return new content.window.Promise(resolve => {
       content.window.bc = new content.window.BroadcastChannel("foobar");
       content.window.bc.onmessage = function(e) {
@@ -55,7 +55,7 @@ add_task(async function() {
     });
   });
 
-  await ContentTask.spawn(browser1, null, function(opts) {
+  await SpecialPowers.spawn(browser1, [], function(opts) {
     return new content.window.Promise(resolve => {
       var bc = new content.window.BroadcastChannel("foobar");
       bc.postMessage("hello world from private browsing");
@@ -63,7 +63,7 @@ add_task(async function() {
     });
   });
 
-  await ContentTask.spawn(browser2, null, function(opts) {
+  await SpecialPowers.spawn(browser2, [], function(opts) {
     return new content.window.Promise(resolve => {
       var bc = new content.window.BroadcastChannel("foobar");
       bc.postMessage("hello world from non private browsing");

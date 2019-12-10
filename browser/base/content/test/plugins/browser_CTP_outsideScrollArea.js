@@ -49,7 +49,7 @@ add_task(async function() {
     gTestRoot + "plugin_outsideScrollArea.html"
   );
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -66,7 +66,7 @@ add_task(async function() {
 
   await promisePopupNotification("click-to-play-plugins");
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(
@@ -84,7 +84,7 @@ add_task(async function() {
     gTestRoot + "plugin_outsideScrollArea.html"
   );
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -101,7 +101,7 @@ add_task(async function() {
 
   await promisePopupNotification("click-to-play-plugins");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(
@@ -119,7 +119,7 @@ add_task(async function() {
     gTestRoot + "plugin_outsideScrollArea.html"
   );
 
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let doc = content.document;
     let p = doc.createElement("embed");
 
@@ -135,7 +135,7 @@ add_task(async function() {
   await promiseUpdatePluginBindings(gTestBrowser);
 
   await promisePopupNotification("click-to-play-plugins");
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(

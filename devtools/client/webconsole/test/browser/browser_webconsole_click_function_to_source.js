@@ -22,7 +22,7 @@ add_task(async function() {
 
   info("Log a function");
   const onLoggedFunction = waitForMessage(hud, "function foo");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.foo();
   });
   const { node } = await onLoggedFunction;
