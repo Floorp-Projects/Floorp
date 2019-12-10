@@ -691,12 +691,11 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fop,
 ///////////////////////////////////////////////////////////////////////////
 // FunctionDeclaration
 
-FunctionDeclaration::FunctionDeclaration(HandleAtom name, HandleFunction fun)
-    : name(name), fun(fun) {}
+FunctionDeclaration::FunctionDeclaration(HandleAtom name, uint32_t funIndex)
+    : name(name), funIndex(funIndex) {}
 
 void FunctionDeclaration::trace(JSTracer* trc) {
   TraceEdge(trc, &name, "FunctionDeclaration name");
-  TraceEdge(trc, &fun, "FunctionDeclaration fun");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -995,9 +994,9 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 bool ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name,
-                                           HandleFunction fun) {
+                                           uint32_t funIndex) {
   FunctionDeclarationVector* funDecls = functionDeclarations();
-  if (!funDecls->emplaceBack(name, fun)) {
+  if (!funDecls->emplaceBack(name, funIndex)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -1024,12 +1023,12 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 
   RootedModuleEnvironmentObject env(cx, &self->initialEnvironment());
-  RootedFunction fun(cx);
   RootedObject obj(cx);
   RootedValue value(cx);
-
+  RootedFunction fun(cx);
   for (const auto& funDecl : *funDecls) {
-    fun = funDecl.fun;
+    uint32_t funIndex = funDecl.funIndex;
+    fun.set(self->script()->getFunction(funIndex));
     obj = Lambda(cx, fun, env);
     if (!obj) {
       return false;
