@@ -900,12 +900,24 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   // Convenience functions for the many methods that need to scale
-  // from device to CSS pixels or vice versa.  Note: if a presentation
-  // context is not available, they will assume a 1:1 ratio.
+  // from device to CSS pixels.  This computes it with cached scale in
+  // PresContext which may be not recent information of the widget.
+  // Note: if PresContext is not available, they will assume a 1:1 ratio.
   int32_t DevToCSSIntPixels(int32_t px);
-  int32_t CSSToDevIntPixels(int32_t px);
   nsIntSize DevToCSSIntPixels(nsIntSize px);
-  nsIntSize CSSToDevIntPixels(nsIntSize px);
+
+  // Convenience functions for the methods which call methods of nsIBaseWindow
+  // because it takes/returns device pixels.  Unfortunately, mPresContext may
+  // have older scale value for the corresponding widget.  Therefore, these
+  // helper methods convert between CSS pixels and device pixels with aWindow.
+  int32_t DevToCSSIntPixelsForBaseWindow(int32_t aDevicePixels,
+                                         nsIBaseWindow* aWindow);
+  nsIntSize DevToCSSIntPixelsForBaseWindow(nsIntSize aDeviceSize,
+                                           nsIBaseWindow* aWindow);
+  int32_t CSSToDevIntPixelsForBaseWindow(int32_t aCSSPixels,
+                                         nsIBaseWindow* aWindow);
+  nsIntSize CSSToDevIntPixelsForBaseWindow(nsIntSize aCSSSize,
+                                           nsIBaseWindow* aWindow);
 
   virtual void SetFocusedElement(mozilla::dom::Element* aElement,
                                  uint32_t aFocusMethod = 0,
