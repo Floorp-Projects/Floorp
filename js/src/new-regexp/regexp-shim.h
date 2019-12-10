@@ -13,9 +13,22 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Types.h"
 
 #include <algorithm>
+
+#include "js/Value.h"
+
+// Forward declaration of classes
+namespace v8 {
+namespace internal {
+
+class Isolate;
+
+}  // namespace internal
+}  // namespace v8
 
 #define V8_WARN_UNUSED_RESULT MOZ_MUST_USE
 #define V8_EXPORT_PRIVATE MOZ_EXPORT
@@ -102,6 +115,10 @@ constexpr inline bool IsAligned(T value, U alignment) {
   return (value & (alignment - 1)) == 0;
 }
 
+using byte = uint8_t;
+using Address = uintptr_t;
+static const Address kNullAddress = 0;
+
 namespace base {
 
 // Origin:
@@ -136,7 +153,184 @@ inline uint8_t saturated_cast<uint8_t, int>(int x) {
   return (x >= 0) ? ((x < 255) ? uint8_t(x) : 255) : 0;
 }
 
+namespace bits {
+
+inline uint64_t CountTrailingZeros(uint64_t value) {
+  return mozilla::CountTrailingZeroes64(value);
+}
+
+}  // namespace bits
 }  // namespace base
+
+
+namespace internal {
+
+#define PRINTF_FORMAT(x, y) MOZ_FORMAT_PRINTF(x, y)
+void PRINTF_FORMAT(1, 2) PrintF(const char* format, ...);
+void PRINTF_FORMAT(2, 3) PrintF(FILE* out, const char* format, ...);
+
+// Superclass for classes only using static method functions.
+// The subclass of AllStatic cannot be instantiated at all.
+class AllStatic {
+#ifdef DEBUG
+ public:
+  AllStatic() = delete;
+#endif
+};
+
+constexpr int32_t KB = 1024;
+constexpr int32_t MB = 1024 * 1024;
+
+#define kMaxInt JSVAL_INT_MAX
+#define kMinInt JSVAL_INT_MIN
+constexpr int kSystemPointerSize = sizeof(void*);
+
+// The largest integer n such that n and n + 1 are both exactly
+// representable as a Number value.  ES6 section 20.1.2.6
+constexpr double kMaxSafeInteger = 9007199254740991.0;  // 2^53-1
+
+// Latin1/UTF-16 constants
+// Code-point values in Unicode 4.0 are 21 bits wide.
+// Code units in UTF-16 are 16 bits wide.
+using uc16 = uint16_t;
+using uc32 = int32_t;
+
+constexpr int kBitsPerByte = 8;
+constexpr int kBitsPerByteLog2 = 3;
+constexpr int kUInt32Size = sizeof(uint32_t);
+constexpr int kInt64Size = sizeof(int64_t);
+constexpr int kUC16Size = sizeof(uc16);
+
+inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
+inline bool is_uint24(int val) { return (val & 0x00ffffff) == val; }
+
+inline bool IsIdentifierStart(uc32 c) {
+  return js::unicode::IsIdentifierStart(uint32_t(c));
+}
+inline bool IsIdentifierPart(uc32 c) {
+  return js::unicode::IsIdentifierPart(uint32_t(c));
+}
+
+// Wrappers to disambiguate uint16_t and uc16.
+struct AsUC16 {
+  explicit AsUC16(uint16_t v) : value(v) {}
+  uint16_t value;
+};
+
+struct AsUC32 {
+  explicit AsUC32(int32_t v) : value(v) {}
+  int32_t value;
+};
+
+class StdoutStream : public std::ostream {};
+
+std::ostream& operator<<(std::ostream& os, const AsUC16& c);
+std::ostream& operator<<(std::ostream& os, const AsUC32& c);
+
+// Reuse existing Maybe implementation
+using mozilla::Maybe;
+
+template <typename T>
+Maybe<T> Just(const T& value) {
+  return mozilla::Some(value);
+}
+
+template <typename T>
+mozilla::Nothing Nothing() {
+  return mozilla::Nothing();
+}
+
+// Origin:
+// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/utils.h#L600-L642
+// Compare 8bit/16bit chars to 8bit/16bit chars.
+// Used indirectly by regexp-interpreter.cc
+template <typename lchar, typename rchar>
+inline int CompareCharsUnsigned(const lchar* lhs, const rchar* rhs,
+                                size_t chars) {
+  const lchar* limit = lhs + chars;
+  if (sizeof(*lhs) == sizeof(char) && sizeof(*rhs) == sizeof(char)) {
+    // memcmp compares byte-by-byte, yielding wrong results for two-byte
+    // strings on little-endian systems.
+    return memcmp(lhs, rhs, chars);
+  }
+  while (lhs < limit) {
+    int r = static_cast<int>(*lhs) - static_cast<int>(*rhs);
+    if (r != 0) return r;
+    ++lhs;
+    ++rhs;
+  }
+  return 0;
+}
+template <typename lchar, typename rchar>
+inline int CompareChars(const lchar* lhs, const rchar* rhs, size_t chars) {
+  DCHECK_LE(sizeof(lchar), 2);
+  DCHECK_LE(sizeof(rchar), 2);
+  if (sizeof(lchar) == 1) {
+    if (sizeof(rchar) == 1) {
+      return CompareCharsUnsigned(reinterpret_cast<const uint8_t*>(lhs),
+                                  reinterpret_cast<const uint8_t*>(rhs), chars);
+    } else {
+      return CompareCharsUnsigned(reinterpret_cast<const uint8_t*>(lhs),
+                                  reinterpret_cast<const uint16_t*>(rhs),
+                                  chars);
+    }
+  } else {
+    if (sizeof(rchar) == 1) {
+      return CompareCharsUnsigned(reinterpret_cast<const uint16_t*>(lhs),
+                                  reinterpret_cast<const uint8_t*>(rhs), chars);
+    } else {
+      return CompareCharsUnsigned(reinterpret_cast<const uint16_t*>(lhs),
+                                  reinterpret_cast<const uint16_t*>(rhs),
+                                  chars);
+    }
+  }
+}
+
+// Origin:
+// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/utils.h#L40-L48
+// Returns the value (0 .. 15) of a hexadecimal character c.
+// If c is not a legal hexadecimal character, returns a value < 0.
+// Used in regexp-parser.cc
+inline int HexValue(uc32 c) {
+  c -= '0';
+  if (static_cast<unsigned>(c) <= 9) return c;
+  c = (c | 0x20) - ('a' - '0');  // detect 0x11..0x16 and 0x31..0x36.
+  if (static_cast<unsigned>(c) <= 5) return c + 10;
+  return -1;
+}
+
+// RAII Guard classes
+
+class DisallowHeapAllocation {
+ public:
+  DisallowHeapAllocation() {}
+  operator const JS::AutoAssertNoGC&() const { return no_gc_; }
+
+ private:
+  const JS::AutoAssertNoGC no_gc_;
+};
+
+// This is used inside DisallowHeapAllocation regions to enable
+// allocation just before throwing an exception, to allocate the
+// exception object. Specifically, it only ever guards:
+// - isolate->stack_guard()->HandleInterrupts()
+// - isolate->StackOverflow()
+// Those cases don't allocate in SpiderMonkey, so this can be a no-op.
+class AllowHeapAllocation {
+ public:
+  // Empty constructor to avoid unused_variable warnings
+  AllowHeapAllocation() {}
+};
+
+class DisallowJavascriptExecution {
+ public:
+  DisallowJavascriptExecution(Isolate* isolate);
+
+ private:
+  js::AutoAssertNoContentJS nojs_;
+};
+
+}  // namespace internal
 }  // namespace v8
 
 #endif  // RegexpShim_h
