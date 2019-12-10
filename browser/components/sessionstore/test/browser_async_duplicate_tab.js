@@ -20,13 +20,8 @@ add_task(async function test_duplicate() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
-        function onHashChange() {
-          docShell.chromeEventHandler.removeEventListener(
-            "hashchange",
-            onHashChange
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       // Click the link.
@@ -64,13 +59,8 @@ add_task(async function test_duplicate_remove() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
-        function onHashChange() {
-          docShell.chromeEventHandler.removeEventListener(
-            "hashchange",
-            onHashChange
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       // Click the link.
