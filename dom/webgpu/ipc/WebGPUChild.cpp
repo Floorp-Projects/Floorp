@@ -80,5 +80,14 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
   }
 }
 
+RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
+                                      const dom::GPUBufferDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
+  if (!SendDeviceCreateBuffer(aSelfId, aDesc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
 }  // namespace webgpu
 }  // namespace mozilla

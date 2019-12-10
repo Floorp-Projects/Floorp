@@ -247,12 +247,12 @@ impl<F: IdentityFilter<RenderPassId>> Global<F> {
 
         pass.trackers.merge_extend(&bind_group.used);
 
-        if let Some((pipeline_layout_id, follow_up_sets, follow_up_offsets)) = pass
+        if let Some((pipeline_layout_id, follow_ups)) = pass
             .binder
             .provide_entry(index as usize, bind_group_id, bind_group, offsets)
         {
             let bind_groups = iter::once(bind_group.raw.raw())
-                .chain(follow_up_sets.map(|bg_id| bind_group_guard[bg_id].raw.raw()));
+                .chain(follow_ups.clone().map(|(bg_id, _)| bind_group_guard[bg_id].raw.raw()));
             unsafe {
                 pass.raw.bind_graphics_descriptor_sets(
                     &&pipeline_layout_guard[pipeline_layout_id].raw,
@@ -260,7 +260,7 @@ impl<F: IdentityFilter<RenderPassId>> Global<F> {
                     bind_groups,
                     offsets
                         .iter()
-                        .chain(follow_up_offsets)
+                        .chain(follow_ups.flat_map(|(_, offsets)| offsets))
                         .map(|&off| off as hal::command::DescriptorSetOffset),
                 );
             }
@@ -383,7 +383,7 @@ impl<F: IdentityFilter<RenderPassId>> Global<F> {
     ) {
         let hub = B::hub(self);
         let mut token = Token::root();
-        let (mut pass_guard, _) = hub.render_passes.write(&mut token);
+        let (mut pass_guard, mut token) = hub.render_passes.write(&mut token);
         let (buffer_guard, _) = hub.buffers.read(&mut token);
         let pass = &mut pass_guard[pass_id];
         pass.is_ready().unwrap();
@@ -447,7 +447,7 @@ impl<F: IdentityFilter<RenderPassId>> Global<F> {
     ) {
         let hub = B::hub(self);
         let mut token = Token::root();
-        let (mut pass_guard, _) = hub.render_passes.write(&mut token);
+        let (mut pass_guard, mut token) = hub.render_passes.write(&mut token);
         let (buffer_guard, _) = hub.buffers.read(&mut token);
         let pass = &mut pass_guard[pass_id];
         pass.is_ready().unwrap();
