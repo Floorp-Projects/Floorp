@@ -813,7 +813,11 @@ IonBuilder::InliningResult IonBuilder::inlineArray(CallInfo& callInfo,
         return abort(AbortReason::Alloc);
       }
       MDefinition* value = callInfo.getArg(i);
-      MOZ_TRY(initializeArrayElement(array, i, value,
+
+      MConstant* id = MConstant::New(alloc(), Int32Value(i));
+      current->add(id);
+
+      MOZ_TRY(initializeArrayElement(array, id, value,
                                      /* addResumePoint = */ false));
     }
 
