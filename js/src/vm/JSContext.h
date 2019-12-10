@@ -816,8 +816,7 @@ struct JSContext : public JS::RootingContext,
    */
   inline bool runningWithTrustedPrincipals();
 
-  JS_FRIEND_API size_t
-  sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   void trace(JSTracer* trc);
 
