@@ -89,12 +89,6 @@ add_task(async function test_common_initialize() {
 
   // Ensure that the service and the storage module are initialized.
   await Services.logins.initializationPromise;
-
-  // Ensure that every test file starts with an empty database.
-  LoginTestUtils.clearData();
-
-  // Clean up after every test.
-  registerCleanupFunction(() => LoginTestUtils.clearData());
 });
 
 /**
