@@ -7413,11 +7413,11 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
   MConstant* id = MConstant::New(alloc(), Int32Value(index));
   current->add(id);
 
-  return initializeArrayElement(obj->toNewArray(), id, value,
-                                /* addResumePoint = */ true);
+  return initArrayElementFastPath(obj->toNewArray(), id, value,
+                                  /* addResumePoint = */ true);
 }
 
-AbortReasonOr<Ok> IonBuilder::initializeArrayElement(
+AbortReasonOr<Ok> IonBuilder::initArrayElementFastPath(
     MNewArray* obj, MDefinition* id, MDefinition* value,
     bool addResumePointAndIncrementInitializedLength) {
   // Get the elements vector.
