@@ -371,14 +371,14 @@ libunwind:
     fetch:
         type: git
         repo: https://github.com/llvm-mirror/libunwind
-        revision: 6ee92fcc97350ae32db3172a269e9afcc2bab686
+        revision: efd17a11b0fae29d3414e11e99307e082d4ee949
 
 llvm-mingw:
     description: llvm-mingw source code
     fetch:
         type: git
         repo: https://github.com/mstorsjo/llvm-mingw
-        revision: c3a16814bd26aa6702e1e5b482a3d9044bb0f725
+        revision: 9f8e5cebd6dbbb7546e8917e6c59284699a48d26
 
 android-rs-glue:
     description: android-rs-glue source code

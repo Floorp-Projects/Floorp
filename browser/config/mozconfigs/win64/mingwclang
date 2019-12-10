@@ -57,7 +57,7 @@ BINDGEN_CFLAGS="-I$MOZ_FETCHES_DIR/clang/x86_64-w64-mingw32/include/c++/v1 -I$MO
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
-mk_add_options "export PATH=$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/mingw32/bin:$MOZ_FETCHES_DIR/wine/bin:$MOZ_FETCHES_DIR/upx/bin:$MOZ_FETCHES_DIR/fxc2/bin:$PATH"
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/mingw32/bin:$MOZ_FETCHES_DIR/wine/bin:$MOZ_FETCHES_DIR/upx/bin:$MOZ_FETCHES_DIR/fxc2/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 
 LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$MOZ_FETCHES_DIR/mingw32/lib64:$MOZ_FETCHES_DIR/clang/lib
 mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
