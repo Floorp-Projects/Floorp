@@ -2,14 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// Since we apply title localization asynchronously,
-// we'll use this helper to wait for the title to match
-// the condition and then test against it.
-async function verifyTitle(win, test, desc) {
-  await TestUtils.waitForCondition(test);
-  ok(true, desc);
-}
-
 add_task(async function testWindowGetAll() {
   let raisedWin = Services.ww.openWindow(
     null,
@@ -136,15 +128,13 @@ add_task(async function testWindowTitle() {
     let realWin = windowTracker.getWindow(apiWin.id);
     await promiseLoaded;
     let expectedPreface = options.titlePreface ? options.titlePreface : "";
-    await verifyTitle(
-      realWin,
-      () => {
-        return (
-          realWin.document.title.startsWith(expectedPreface || START_TITLE) &&
-          realWin.document.title.includes(START_TITLE)
-        );
-      },
-      "Created window starts with the expected preface and includes the right title text."
+    ok(
+      realWin.document.title.startsWith(expectedPreface),
+      "Created window has the expected title preface."
+    );
+    ok(
+      realWin.document.title.includes(START_TITLE),
+      "Created window has the expected title text."
     );
     return apiWin;
   }
@@ -153,16 +143,13 @@ add_task(async function testWindowTitle() {
     extension.sendMessage("update", options, apiWin.id, expected);
     await extension.awaitMessage("updated");
     let realWin = windowTracker.getWindow(apiWin.id);
-    await verifyTitle(
-      realWin,
-      () => {
-        return (
-          realWin.document.title.startsWith(
-            expected.after.preface || expected.after.text
-          ) && realWin.document.title.includes(expected.after.text)
-        );
-      },
-      "Updated window starts with the expected preface and includes the right title text."
+    ok(
+      realWin.document.title.startsWith(expected.after.preface),
+      "Updated window has the expected title preface."
+    );
+    ok(
+      realWin.document.title.includes(expected.after.text),
+      "Updated window has the expected title text."
     );
     await BrowserTestUtils.closeWindow(realWin);
   }
@@ -193,15 +180,13 @@ add_task(async function testWindowTitle() {
   );
   await BrowserTestUtils.loadURI(realWin.gBrowser.selectedBrowser, NEW_URL);
   await promiseLoaded;
-  await verifyTitle(
-    realWin,
-    () => {
-      return (
-        realWin.document.title.startsWith(PREFACE1) &&
-        realWin.document.title.includes(NEW_TITLE)
-      );
-    },
-    "Updated window starts with the expected preface and includes the expected title."
+  ok(
+    realWin.document.title.startsWith(PREFACE1),
+    "Updated window has the expected title preface."
+  );
+  ok(
+    realWin.document.title.includes(NEW_TITLE),
+    "Updated window has the expected title text."
   );
 
   // Update the titlePreface of the window.
@@ -232,16 +217,10 @@ add_task(async function testWindowTitle() {
       text: START_TITLE,
     },
   };
-  await verifyTitle(
-    realWin,
-    () => realWin.document.title.startsWith(expected.before.preface),
-    "Updated window has the expected title preface."
-  );
   await updateWindow({ titlePreface: "" }, apiWin, expected);
-  await verifyTitle(
-    realWin,
-    () => !realWin.document.title.startsWith(expected.before.preface),
-    "Updated window doesn't not contain the preface after update."
+  ok(
+    !realWin.document.title.startsWith(expected.before.preface),
+    "Updated window has the expected empty title preface."
   );
 
   // Create a window with a preface.

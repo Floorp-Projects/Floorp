@@ -380,7 +380,7 @@ this.windows = class extends ExtensionAPI {
           });
         },
 
-        update: async function(windowId, updateInfo) {
+        update: function(windowId, updateInfo) {
           if (updateInfo.state !== null && updateInfo.state != "normal") {
             if (
               updateInfo.left !== null ||
@@ -419,12 +419,12 @@ this.windows = class extends ExtensionAPI {
 
           if (updateInfo.titlePreface !== null) {
             win.setTitlePreface(updateInfo.titlePreface);
-            await win.window.gBrowser.updateTitlebar();
+            win.window.gBrowser.updateTitlebar();
           }
 
           // TODO: All the other properties, focused=false...
 
-          return win.convert();
+          return Promise.resolve(win.convert());
         },
 
         remove: function(windowId) {

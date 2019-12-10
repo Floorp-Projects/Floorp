@@ -14,16 +14,28 @@ add_task(async function test() {
   // initialization of expected titles
   let test_title = "Test title";
   let app_name = document.title;
-
-  // XXX: Bug 1597849 - Dehardcode titles by fetching them from Fluent
-  //                    to compare with the actual values.
-  let page_with_title = test_title + " - " + app_name;
-  let page_without_title = app_name;
-  let about_pb_title = app_name;
-  let pb_page_with_title =
-    test_title + " - " + app_name + " (Private Browsing)";
-  let pb_page_without_title = app_name + " (Private Browsing)";
-  let pb_about_pb_title = app_name + " (Private Browsing)";
+  const isOSX = "nsILocalFileMac" in Ci;
+  let page_with_title;
+  let page_without_title;
+  let about_pb_title;
+  let pb_page_with_title;
+  let pb_page_without_title;
+  let pb_about_pb_title;
+  if (isOSX) {
+    page_with_title = test_title;
+    page_without_title = app_name;
+    about_pb_title = app_name;
+    pb_page_with_title = test_title + " - (Private Browsing)";
+    pb_page_without_title = app_name + " - (Private Browsing)";
+    pb_about_pb_title = app_name + " - (Private Browsing)";
+  } else {
+    page_with_title = test_title + " - " + app_name;
+    page_without_title = app_name;
+    about_pb_title = app_name;
+    pb_page_with_title = test_title + " - " + app_name + " (Private Browsing)";
+    pb_page_without_title = app_name + " (Private Browsing)";
+    pb_about_pb_title = app_name + " (Private Browsing)";
+  }
 
   async function testTabTitle(aWindow, url, insidePB, expected_title) {
     let tab = await BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser);
