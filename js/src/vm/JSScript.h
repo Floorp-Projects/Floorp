@@ -1879,6 +1879,7 @@ class BaseScript : public gc::TenuredCell {
     return functionOrGlobal_->compartment();
   }
   JS::Compartment* maybeCompartment() const { return compartment(); }
+  inline JSPrincipals* principals() const;
 
   ScriptSourceObject* sourceObject() const { return sourceObject_; }
   ScriptSource* scriptSource() const { return sourceObject()->source(); }
@@ -2103,6 +2104,15 @@ setterLevel:                                                                  \
   bool hasEnclosingScope() const { return warmUpData_.isEnclosingScope(); }
   Scope* enclosingScope() const { return warmUpData_.toEnclosingScope(); }
   void setEnclosingScope(Scope* enclosingScope);
+
+  bool hasJitScript() const { return warmUpData_.isJitScript(); }
+  js::jit::JitScript* jitScript() const {
+    MOZ_ASSERT(hasJitScript());
+    return warmUpData_.toJitScript();
+  }
+  js::jit::JitScript* maybeJitScript() const {
+    return hasJitScript() ? jitScript() : nullptr;
+  }
 
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
@@ -2642,13 +2652,9 @@ class JSScript : public js::BaseScript {
  private:
   // Assert that jump targets are within the code array of the script.
   void assertValidJumpTargets() const;
-
- public:
 #endif
 
  public:
-  inline JSPrincipals* principals();
-
   js::RuntimeScriptData* scriptData() { return scriptData_; }
   js::ImmutableScriptData* immutableScriptData() const {
     return scriptData_->isd_.get();
@@ -2780,16 +2786,6 @@ class JSScript : public js::BaseScript {
   void setArgumentsHasVarBinding();
   bool argumentsAliasesFormals() const {
     return argumentsHasVarBinding() && hasMappedArgsObj();
-  }
-
-  js::GeneratorKind generatorKind() const {
-    return isGenerator() ? js::GeneratorKind::Generator
-                         : js::GeneratorKind::NotGenerator;
-  }
-
-  js::FunctionAsyncKind asyncKind() const {
-    return isAsync() ? js::FunctionAsyncKind::AsyncFunction
-                     : js::FunctionAsyncKind::SyncFunction;
   }
 
   /*
@@ -2929,16 +2925,6 @@ class JSScript : public js::BaseScript {
 
   /* Ensure the script has a JitScript. */
   inline bool ensureHasJitScript(JSContext* cx, js::jit::AutoKeepJitScripts&);
-
-  bool hasJitScript() const { return warmUpData_.isJitScript(); }
-
-  js::jit::JitScript* jitScript() const {
-    MOZ_ASSERT(hasJitScript());
-    return warmUpData_.toJitScript();
-  }
-  js::jit::JitScript* maybeJitScript() const {
-    return hasJitScript() ? jitScript() : nullptr;
-  }
 
   void maybeReleaseJitScript(JSFreeOp* fop);
   void releaseJitScript(JSFreeOp* fop);
