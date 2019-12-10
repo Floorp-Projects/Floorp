@@ -328,6 +328,8 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   MOZ_MUST_USE RefPtr<IDBObjectStore> ObjectStore(const nsAString& aName,
                                                   ErrorResult& aRv);
 
+  void Commit(ErrorResult& aRv);
+
   void Abort(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(abort)
