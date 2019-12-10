@@ -569,11 +569,15 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     if (!this._client) {
       return null;
     }
+
+    this._client.off("networkEventUpdate", this.onNetworkEventUpdate);
+    // This will make future calls to this function harmless because of the early return
+    // at the top of the function.
+    this._client = null;
+
     this.off("evaluationResult", this.onEvaluationResult);
     this.off("serverNetworkEvent", this.onNetworkEvent);
-    this._client.off("networkEventUpdate", this.onNetworkEventUpdate);
     this._longStrings = null;
-    this._client = null;
     this.pendingEvaluationResults.clear();
     this.pendingEvaluationResults = null;
     this.clearNetworkRequests();
