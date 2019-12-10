@@ -30,7 +30,7 @@ document.addEventListener("wheel", function(e) {
     setTimeout(function() {
         flushApzRepaints(checkScroll);
     }, 0);
-});
+}, { passive: false });
 
 function scrollPage() {
   synthesizeNativeWheel(document.body, 100, 100, 0, -50);
