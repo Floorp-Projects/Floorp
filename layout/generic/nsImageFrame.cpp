@@ -305,11 +305,11 @@ void nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
     nsCOMPtr<imgIContainer> image(mImage->Unwrap());
     mImage = nsLayoutUtils::OrientImage(image, newOrientation);
 
-    UpdateIntrinsicSize(mImage);
-    UpdateIntrinsicRatio(mImage);
+    UpdateIntrinsicSize();
+    UpdateIntrinsicRatio();
   } else if (!aOldStyle || aOldStyle->StylePosition()->mAspectRatio !=
                                StylePosition()->mAspectRatio) {
-    UpdateIntrinsicRatio(mImage);
+    UpdateIntrinsicRatio();
   }
 }
 
@@ -471,7 +471,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
   return IntrinsicSize(0, 0);
 }
 
-bool nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage) {
+bool nsImageFrame::UpdateIntrinsicSize() {
   IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
   mIntrinsicSize = ComputeIntrinsicSize(mImage, mKind, *this);
   return mIntrinsicSize != oldIntrinsicSize;
@@ -497,9 +497,9 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
   return AspectRatio();
 }
 
-bool nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage) {
+bool nsImageFrame::UpdateIntrinsicRatio() {
   AspectRatio oldIntrinsicRatio = mIntrinsicRatio;
-  mIntrinsicRatio = ComputeAspectRatio(aImage, *this);
+  mIntrinsicRatio = ComputeAspectRatio(mImage, *this);
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
@@ -709,7 +709,7 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
   // NOTE(emilio): Intentionally using `|` instead of `||` to avoid
   // short-circuiting.
   bool intrinsicSizeChanged =
-      UpdateIntrinsicSize(mImage) | UpdateIntrinsicRatio(mImage);
+      UpdateIntrinsicSize() | UpdateIntrinsicRatio();
   if (!GotInitialReflow()) {
     return;
   }
@@ -796,7 +796,7 @@ void nsImageFrame::ResponsiveContentDensityChanged() {
     return;
   }
 
-  if (!UpdateIntrinsicSize(mImage) && !UpdateIntrinsicRatio(mImage)) {
+  if (!UpdateIntrinsicSize() && !UpdateIntrinsicRatio()) {
     return;
   }
 
@@ -891,8 +891,8 @@ void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
     return;
   }
 
-  UpdateIntrinsicSize(mImage);
-  UpdateIntrinsicRatio(mImage);
+  UpdateIntrinsicSize();
+  UpdateIntrinsicRatio();
 }
 
 LogicalSize nsImageFrame::ComputeSize(
