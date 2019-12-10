@@ -28,10 +28,25 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     # Build default args for symbolstore.py based on platform.
     sym_store_args = []
 
-    dump_syms_bin = os.path.join(buildconfig.topobjdir,
-                                 'dist', 'host',
-                                 'bin', 'dump_syms')
-    dump_syms_bin = '%s%s' % (dump_syms_bin, buildconfig.substs['BIN_SUFFIX'])
+    # Find the `dump_syms` binary to use.
+    dump_syms_bin = None
+    dump_syms_binaries = []
+
+    # Prefer the `dump_syms` toolchain.
+    fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+    if fetches_dir:
+        dump_syms_binaries.append(
+            os.path.join(fetches_dir, 'dump_syms', 'dump_syms'))
+
+    # Fallback to the in-tree breakpad version.
+    dump_syms_binaries.append(os.path.join(buildconfig.topobjdir,
+                                           'dist', 'host',
+                                           'bin', 'dump_syms'))
+
+    for b in dump_syms_binaries:
+        dump_syms_bin = '%s%s' % (b, buildconfig.substs['BIN_SUFFIX'])
+        if os.path.exists(dump_syms_bin):
+            break
 
     os_arch = buildconfig.substs['OS_ARCH']
     if os_arch == 'WINNT':
