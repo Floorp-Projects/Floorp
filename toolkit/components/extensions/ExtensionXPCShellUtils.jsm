@@ -278,11 +278,7 @@ class ContentPage {
   }
 
   spawn(params, task) {
-    return this.browser.ownerGlobal.SpecialPowers.spawn(
-      this.browser,
-      [params],
-      task
-    );
+    return ContentTask.spawn(this.browser, params, task);
   }
 
   async close() {
