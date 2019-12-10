@@ -80,6 +80,10 @@ inline void ScriptWarmUpData::clearEnclosingScope() {
   data_ = ResetState();
 }
 
+inline JSPrincipals* BaseScript::principals() const {
+  return realm()->principals();
+}
+
 }  // namespace js
 
 inline JSFunction* JSScript::getFunction(size_t index) {
@@ -149,8 +153,6 @@ inline js::Shape* JSScript::initialEnvironmentShape() const {
   }
   return nullptr;
 }
-
-inline JSPrincipals* JSScript::principals() { return realm()->principals(); }
 
 inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
   if (analyzedArgsUsage()) {
