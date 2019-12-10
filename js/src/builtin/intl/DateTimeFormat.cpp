@@ -777,12 +777,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
       return &JSAtomState::year;
 
     case UDAT_YEAR_NAME_FIELD:
-#ifdef NIGHTLY_BUILD
       return &JSAtomState::yearName;
-#else
-      // Currently restricted to Nightly.
-      return &JSAtomState::year;
-#endif
 
     case UDAT_MONTH_FIELD:
     case UDAT_STANDALONE_MONTH_FIELD:
@@ -826,12 +821,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
 
 #ifndef U_HIDE_INTERNAL_API
     case UDAT_RELATED_YEAR_FIELD:
-#  ifdef NIGHTLY_BUILD
       return &JSAtomState::relatedYear;
-#  else
-      // Currently restricted to Nightly.
-      return &JSAtomState::unknown;
-#  endif
 #endif
 
     case UDAT_DAY_OF_YEAR_FIELD:
