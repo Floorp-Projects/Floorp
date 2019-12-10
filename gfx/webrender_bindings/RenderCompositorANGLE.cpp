@@ -724,7 +724,7 @@ bool RenderCompositorANGLE::IsContextLost() {
 }
 
 bool RenderCompositorANGLE::UseCompositor() {
-  if (!mDCLayerTree || !StaticPrefs::gfx_webrender_compositor_AtStartup()) {
+  if (!mDCLayerTree || !gfx::gfxVars::UseWebRenderCompositor()) {
     return false;
   }
   return true;
