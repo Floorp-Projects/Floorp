@@ -45,6 +45,23 @@ promise_test(async t => {
   await promise_rejects(t, 'NotAllowedError', reader.scan());
 }, "NDEFReader.scan should fail if user permission is not granted.");
 
+// We do not provide NFC mock here to simulate that there has no available
+// implementation for NFC Mojo interface.
+promise_test(async t => {
+  if (window.testRunner) {
+    window.testRunner.setPermission('nfc', 'granted',
+                                    location.origin, location.origin);
+  }
+  const reader = new NDEFReader();
+  const readerWatcher = new EventWatcher(t, reader, ["reading", "error"]);
+  const promise = readerWatcher.wait_for("error").then(event => {
+    assert_true(event instanceof ErrorEvent);
+  });
+  await promise_rejects(t, 'NotSupportedError', reader.scan());
+  await promise;
+}, "Test that an error event happens if no implementation for NFC Mojo interface \
+is available.");
+
 nfc_test(async (t, mockNFC) => {
   mockNFC.setHWStatus(NFCHWStatus.DISABLED);
   const reader = new NDEFReader();
