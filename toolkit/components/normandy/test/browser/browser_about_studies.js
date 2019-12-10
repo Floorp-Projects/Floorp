@@ -22,8 +22,10 @@ function withAboutStudies(testFunc) {
 
 // Test that the code renders at all
 decorate_task(withAboutStudies, async function testAboutStudiesWorks(browser) {
-  const appFound = await SpecialPowers.spawn(browser, [], () =>
-    content.document.getElementById("app")
+  const appFound = await SpecialPowers.spawn(
+    browser,
+    [],
+    () => !!content.document.getElementById("app")
   );
   ok(appFound, "App element was found");
 });
