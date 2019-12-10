@@ -612,6 +612,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: Top of CheckRevocation\n"));
 
+  Maybe<TimeDuration> crliteLookupDuration;
 #ifdef MOZ_NEW_CERT_STORAGE
   if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
       mCRLiteMode != CRLiteMode::Disabled) {
@@ -629,14 +630,17 @@ Result NSSCertDBTrustDomain::CheckRevocation(
                                      certID.serialNumber.GetLength());
     uint64_t filterTimestamp;
     int16_t crliteRevocationState;
+    TimeStamp crliteLookupBefore = TimeStamp::Now();
     nsresult rv = mCertStorage->GetCRLiteRevocationState(
         issuerBytes, issuerSubjectPublicKeyInfoBytes, serialNumberBytes,
         &filterTimestamp, &crliteRevocationState);
+    TimeStamp crliteLookupAfter = TimeStamp::Now();
     if (NS_FAILED(rv)) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: CRLite call failed"));
       if (mCRLiteTelemetryInfo) {
-        *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::LibraryFailure;
+        mCRLiteTelemetryInfo->mLookupResult =
+            CRLiteLookupResult::LibraryFailure;
       }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -649,6 +653,13 @@ Result NSSCertDBTrustDomain::CheckRevocation(
                // The cast is to silence warnings on compilers where uint64_t is
                // an unsigned long as opposed to an unsigned long long.
                static_cast<unsigned long long>(filterTimestamp)));
+      // If and only if the filter timestamp is non-zero and we didn't get a
+      // "not enrolled" result, we performed a full CRLite lookup.
+      // We only want to note the lookup duration when we actually did a lookup.
+      if (filterTimestamp != 0 &&
+          crliteRevocationState != nsICertStorage::STATE_NOT_ENROLLED) {
+        crliteLookupDuration.emplace(crliteLookupAfter - crliteLookupBefore);
+      }
       Time filterTimestampTime(TimeFromEpochInSeconds(filterTimestamp));
       // We can only use this result if this certificate's `notBefore` time
       // (i.e. the beginning of its validity period) is older than what cert
@@ -658,7 +669,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       if (certValidityPeriodBeginning <= filterTimestampTime &&
           crliteRevocationState == nsICertStorage::STATE_ENFORCE) {
         if (mCRLiteTelemetryInfo) {
-          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateRevoked;
+          mCRLiteTelemetryInfo->mLookupResult =
+              CRLiteLookupResult::CertificateRevoked;
         }
         if (mCRLiteMode == CRLiteMode::Enforce) {
           MOZ_LOG(
@@ -675,7 +687,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 
       if (crliteRevocationState == nsICertStorage::STATE_NOT_ENROLLED) {
         if (mCRLiteTelemetryInfo) {
-          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::IssuerNotEnrolled;
+          mCRLiteTelemetryInfo->mLookupResult =
+              CRLiteLookupResult::IssuerNotEnrolled;
         }
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: issuer not enrolled"));
@@ -684,17 +697,20 @@ Result NSSCertDBTrustDomain::CheckRevocation(
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: no timestamp"));
         if (mCRLiteTelemetryInfo) {
-          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::FilterNotAvailable;
+          mCRLiteTelemetryInfo->mLookupResult =
+              CRLiteLookupResult::FilterNotAvailable;
         }
       } else if (certValidityPeriodBeginning > filterTimestampTime) {
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                 ("NSSCertDBTrustDomain::CheckRevocation: cert too new"));
         if (mCRLiteTelemetryInfo) {
-          *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateTooNew;
+          mCRLiteTelemetryInfo->mLookupResult =
+              CRLiteLookupResult::CertificateTooNew;
         }
       } else if (crliteRevocationState == nsICertStorage::STATE_UNSET &&
                  mCRLiteTelemetryInfo) {
-        *mCRLiteTelemetryInfo = CRLiteTelemetryInfo::CertificateValid;
+        mCRLiteTelemetryInfo->mLookupResult =
+            CRLiteLookupResult::CertificateValid;
       }
     }
   }
@@ -902,7 +918,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     // responses from a failing server.
     return SynchronousCheckRevocationWithServer(
         certID, aiaLocation, time, maxOCSPLifetimeInDays, cachedResponseResult,
-        stapledOCSPResponseResult);
+        stapledOCSPResponseResult, crliteLookupDuration);
   }
 
   return HandleOCSPFailure(cachedResponseResult, stapledOCSPResponseResult,
@@ -912,7 +928,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
     const CertID& certID, const nsCString& aiaLocation, Time time,
     uint16_t maxOCSPLifetimeInDays, const Result cachedResponseResult,
-    const Result stapledOCSPResponseResult) {
+    const Result stapledOCSPResponseResult,
+    const Maybe<TimeDuration>& crliteLookupDuration) {
   uint8_t ocspRequestBytes[OCSP_REQUEST_MAX_LENGTH];
   size_t ocspRequestLength;
 
@@ -924,8 +941,20 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
 
   Vector<uint8_t> ocspResponse;
   Input response;
+  TimeStamp ocspRequestBefore = TimeStamp::Now();
   rv = DoOCSPRequest(aiaLocation, mOriginAttributes, ocspRequestBytes,
                      ocspRequestLength, GetOCSPTimeout(), ocspResponse);
+  TimeDuration ocspRequestDuration = TimeStamp::Now() - ocspRequestBefore;
+  if (mCRLiteMode != CRLiteMode::Disabled && crliteLookupDuration.isSome() &&
+      mCRLiteTelemetryInfo) {
+    if (*crliteLookupDuration < ocspRequestDuration) {
+      mCRLiteTelemetryInfo->mCRLiteFasterThanOCSPMillis.emplace(
+          (ocspRequestDuration - *crliteLookupDuration).ToMilliseconds());
+    } else {
+      mCRLiteTelemetryInfo->mOCSPFasterThanCRLiteMillis.emplace(
+          (*crliteLookupDuration - ocspRequestDuration).ToMilliseconds());
+    }
+  }
   if (rv == Success &&
       response.Init(ocspResponse.begin(), ocspResponse.length()) != Success) {
     rv = Result::ERROR_OCSP_MALFORMED_RESPONSE;  // too big
