@@ -384,6 +384,11 @@ var RemoteSecuritySettings = {
       CRLiteFiltersClient = new CRLiteFilters();
     }
 
+    this.OneCRLBlocklistClient = OneCRLBlocklistClient;
+    this.PinningBlocklistClient = PinningBlocklistClient;
+    this.IntermediatePreloadsClient = IntermediatePreloadsClient;
+    this.CRLiteFiltersClient = CRLiteFiltersClient;
+
     return {
       OneCRLBlocklistClient,
       PinningBlocklistClient,
