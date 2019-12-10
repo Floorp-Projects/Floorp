@@ -10,6 +10,7 @@ import json
 import logging
 import time
 import sys
+from collections import defaultdict
 
 from redo import retry
 import yaml
@@ -175,6 +176,17 @@ def full_task_graph_to_runnable_jobs(full_task_json):
     return runnable_jobs
 
 
+def full_task_graph_to_manifests_by_task(full_task_json):
+    manifests_by_task = defaultdict(list)
+    for label, node in full_task_json.iteritems():
+        manifests = node['attributes'].get('test_manifests')
+        if not manifests:
+            continue
+
+        manifests_by_task[label].extend(manifests)
+    return manifests_by_task
+
+
 def try_syntax_from_message(message):
     """
     Parse the try syntax out of a commit message, returning '' if none is
@@ -219,6 +231,9 @@ def taskgraph_decision(options, parameters=None):
 
     # write out the public/runnable-jobs.json file
     write_artifact('runnable-jobs.json', full_task_graph_to_runnable_jobs(full_task_json))
+
+    # write out the public/manifests-by-task.json file
+    write_artifact('manifests-by-task.json', full_task_graph_to_manifests_by_task(full_task_json))
 
     # this is just a test to check whether the from_json() function is working
     _, _ = TaskGraph.from_json(full_task_json)
