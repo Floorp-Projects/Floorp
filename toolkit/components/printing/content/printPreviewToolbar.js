@@ -282,7 +282,7 @@ customElements.define(
     }
 
     print() {
-      PrintUtils.printWindow(this.mPPBrowser.outerWindowID, this.mPPBrowser);
+      PrintUtils.printWindow(this.mPPBrowser.browsingContext);
     }
 
     promptForScaleValue(aValue) {

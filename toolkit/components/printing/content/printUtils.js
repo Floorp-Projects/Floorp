@@ -126,12 +126,13 @@ var PrintUtils = {
   /**
    * Starts the process of printing the contents of a window.
    *
-   * @param aWindowID
-   *        The outer window ID of the nsIDOMWindow to print.
-   * @param aBrowser
-   *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
+   * @param aBrowsingContext
+   *        The BrowsingContext of the window to print.
    */
-  printWindow(aWindowID, aBrowser) {
+  printWindow(aBrowsingContext) {
+    let windowID = aBrowsingContext.currentWindowGlobal.outerWindowId;
+    let topBrowser = aBrowsingContext.top.embedderElement;
+
     const printPreviewIsOpen = !!document.getElementById(
       "print-preview-toolbar"
     );
@@ -142,8 +143,8 @@ var PrintUtils = {
       this._logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PAGE");
     }
 
-    aBrowser.messageManager.sendAsyncMessage("Printing:Print", {
-      windowID: aWindowID,
+    topBrowser.messageManager.sendAsyncMessage("Printing:Print", {
+      windowID,
       simplifiedMode: this._shouldSimplify,
       defaultPrinterName: this._getDefaultPrinterName(),
     });
