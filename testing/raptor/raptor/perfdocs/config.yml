@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+name: raptor
+manifest: testing/raptor/raptor/raptor.ini
+suites:
+    desktop:
+        description: "Used for testing page-load performance."
+        tests:
+            raptor-tp6: "Used for testing desktop page-load performance using Raptor."
+            browsertime-tp6: "Used for testing desktop page-load performance using browsertime."
+    mobile:
+        description: "Used for testing page-load performance on Android."
+    benchmarks:
+        description: "Benchmark tests"
+    scenario:
+        description: "Scenario tests"
+    unittests:
+        description: "Unit tests"
