@@ -3506,78 +3506,32 @@ void CodeGenerator::visitLambda(LLambda* lir) {
   masm.bind(ool->rejoin());
 }
 
-class OutOfLineLambdaArrow : public OutOfLineCodeBase<CodeGenerator> {
- public:
-  LLambdaArrow* lir;
-  Label entryNoPop_;
-
-  explicit OutOfLineLambdaArrow(LLambdaArrow* lir) : lir(lir) {}
-
-  void accept(CodeGenerator* codegen) override {
-    codegen->visitOutOfLineLambdaArrow(this);
-  }
-
-  Label* entryNoPop() { return &entryNoPop_; }
-};
-
-void CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool) {
-  Register envChain = ToRegister(ool->lir->environmentChain());
-  ValueOperand newTarget = ToValue(ool->lir, LLambdaArrow::NewTargetValue);
-  Register output = ToRegister(ool->lir->output());
-  const LambdaFunctionInfo& info = ool->lir->mir()->info();
-
-  // When we get here, we may need to restore part of the newTarget,
-  // which has been conscripted into service as a temp register.
-  masm.pop(newTarget.scratchReg());
-
-  masm.bind(ool->entryNoPop());
-
-  saveLive(ool->lir);
-
-  pushArg(newTarget);
-  pushArg(envChain);
-  pushArg(ImmGCPtr(info.funUnsafe()));
-
-  using Fn =
-      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
-  callVM<Fn, js::LambdaArrow>(ool->lir);
-  StoreRegisterTo(output).generate(this);
-
-  restoreLiveIgnore(ool->lir, StoreRegisterTo(output).clobbered());
-
-  masm.jump(ool->rejoin());
-}
-
 void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   Register envChain = ToRegister(lir->environmentChain());
   ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetValue);
   Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp());
   const LambdaFunctionInfo& info = lir->mir()->info();
 
-  OutOfLineLambdaArrow* ool = new (alloc()) OutOfLineLambdaArrow(lir);
-  addOutOfLineCode(ool, lir->mir());
+  using Fn =
+      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
+  OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
+      lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain, newTarget),
+      StoreRegisterTo(output));
 
   MOZ_ASSERT(!info.useSingletonForClone);
 
   if (info.singletonType) {
     // If the function has a singleton type, this instruction will only be
     // executed once so we don't bother inlining it.
-    masm.jump(ool->entryNoPop());
+    masm.jump(ool->entry());
     masm.bind(ool->rejoin());
     return;
   }
 
-  // There's not enough registers on x86 with the profiler enabled to request
-  // a temp. Instead, spill part of one of the values, being prepared to
-  // restore it if necessary on the out of line path.
-  Register tempReg = newTarget.scratchReg();
-  masm.push(newTarget.scratchReg());
-
   TemplateObject templateObject(info.funUnsafe());
-  masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
+  masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
                       ool->entry());
-
-  masm.pop(newTarget.scratchReg());
 
   emitLambdaInit(output, envChain, info);
 

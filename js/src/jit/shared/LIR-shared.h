@@ -3583,18 +3583,21 @@ class LLambda : public LInstructionHelper<1, 1, 1> {
   const MLambda* mir() const { return mir_->toLambda(); }
 };
 
-class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 0> {
+class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 1> {
  public:
   LIR_HEADER(LambdaArrow)
 
   static const size_t NewTargetValue = 1;
 
-  LLambdaArrow(const LAllocation& envChain, const LBoxAllocation& newTarget)
+  LLambdaArrow(const LAllocation& envChain, const LBoxAllocation& newTarget,
+               const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(0, envChain);
     setBoxOperand(NewTargetValue, newTarget);
+    setTemp(0, temp);
   }
   const LAllocation* environmentChain() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
   const MLambdaArrow* mir() const { return mir_->toLambdaArrow(); }
 };
 

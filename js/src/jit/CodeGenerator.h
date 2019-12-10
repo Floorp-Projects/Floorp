@@ -60,7 +60,6 @@ class OutOfLineRegExpSearcher;
 class OutOfLineRegExpTester;
 class OutOfLineRegExpPrototypeOptimizable;
 class OutOfLineRegExpInstanceOptimizable;
-class OutOfLineLambdaArrow;
 class OutOfLineNaNToZero;
 class OutOfLineZeroIfNaN;
 class OutOfLineTypedArrayIndexToInt32;
@@ -119,8 +118,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
       OutOfLineRegExpPrototypeOptimizable* ool);
   void visitOutOfLineRegExpInstanceOptimizable(
       OutOfLineRegExpInstanceOptimizable* ool);
-
-  void visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool);
 
   void visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool);
 
