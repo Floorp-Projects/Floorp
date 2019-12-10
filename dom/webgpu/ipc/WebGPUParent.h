@@ -29,6 +29,15 @@ class WebGPUParent final : public PWebGPUParent {
                                           const dom::GPUDeviceDescriptor& aDesc,
                                           RawId aNewId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateBuffer(RawId aSelfId,
+                                        const dom::GPUBufferDescriptor& aDesc,
+                                        RawId aNewId);
+  ipc::IPCResult RecvDeviceMapBufferRead(
+      RawId aSelfId, RawId aBufferId, Shmem&& shmem,
+      DeviceMapBufferReadResolver&& resolver);
+  ipc::IPCResult RecvDeviceUnmapBuffer(RawId aSelfId, RawId aBufferId,
+                                       Shmem&& shmem);
+  ipc::IPCResult RecvBufferDestroy(RawId aSelfId);
   ipc::IPCResult RecvShutdown();
 
  private:
