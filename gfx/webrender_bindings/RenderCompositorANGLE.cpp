@@ -279,7 +279,12 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
 
   HWND hwnd = mWidget->AsWindows()->GetCompositorHwnd();
   if (!hwnd) {
-    gfxCriticalNote << "Compositor window was not created ";
+    // When DirectComposition or DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL is used,
+    // compositor window needs to exist.
+    if (gfx::gfxVars::UseWebRenderDCompWin() ||
+        gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
+      gfxCriticalNote << "Compositor window was not created";
+    }
     return;
   }
 
