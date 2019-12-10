@@ -608,6 +608,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02#0920240e4166d2b562840c8062e149d63f7c3a02"
 dependencies = [
  "core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "coreaudio-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -833,10 +834,11 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02#0920240e4166d2b562840c8062e149d63f7c3a02"
 dependencies = [
  "atomic 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "coreaudio-sys-utils 0.1.0",
+ "coreaudio-sys-utils 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02)",
  "cubeb-backend 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.59 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1453,7 +1455,7 @@ dependencies = [
  "bookmark_sync 0.1.0",
  "cert_storage 0.0.1",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb-coreaudio 0.1.0",
+ "cubeb-coreaudio 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02)",
  "cubeb-pulse 0.3.0",
  "cubeb-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
@@ -4755,6 +4757,7 @@ dependencies = [
 "checksum core-graphics 0.17.3 (registry+https://github.com/rust-lang/crates.io-index)" = "56790968ab1c8a1202a102e6de05fc6e1ec87da99e4e93e9a7d13efbfc1e95a9"
 "checksum core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f3f46450d6f2397261af420b4ccce23807add2e45fa206410a03d66fb7f050ae"
 "checksum coreaudio-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7e8f5954c1c7ccb55340443e8b29fca24013545a5e7d72c1ca7db4fc02b982ce"
+"checksum coreaudio-sys-utils 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02)" = "<none>"
 "checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
 "checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
 "checksum cranelift-bforest 0.51.0 (git+https://github.com/bytecodealliance/cranelift?rev=4727b70b67abfa4f3ae1c276454a0da7a76e1d49)" = "<none>"
@@ -4778,6 +4781,7 @@ dependencies = [
 "checksum cubeb 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3cbcdfde9ea319160af6eff068ffaa96aad3532e1b5c0ebc134614cfacacae24"
 "checksum cubeb-backend 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5a1e7add4e7642a8aebb24172922318482bed52389a12cb339f728bbd4c4ed9c"
 "checksum cubeb-core 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "bfd9b2ea1cb6afed9419b0d18fc4093df552ccb2300eb57793629f8cd370b4c8"
+"checksum cubeb-coreaudio 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=0920240e4166d2b562840c8062e149d63f7c3a02)" = "<none>"
 "checksum cubeb-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "309c5839c5fa03c08363bd308566cbe4654b25a9984342d7546a33d55b80a3d6"
 "checksum d3d12 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bc7ed48e89905e5e146bcc1951cc3facb9e44aea9adf5dc01078cda1bd24b662"
 "checksum darling 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3fe629a532efad5526454efb0700f86d5ad7ff001acb37e431c8bf017a432a8e"
