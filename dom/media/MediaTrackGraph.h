@@ -653,8 +653,15 @@ class SourceMediaTrack : public MediaTrack {
    * because the stream has ended. Returns the duration of the appended data in
    * the graph's track rate otherwise.
    */
-  virtual TrackTime AppendData(MediaSegment* aSegment,
-                               MediaSegment* aRawSegment = nullptr);
+  TrackTime AppendData(MediaSegment* aSegment,
+                       MediaSegment* aRawSegment = nullptr);
+
+  /**
+   * Clear any data appended with AppendData() that hasn't entered the graph
+   * yet. Returns the duration of the cleared data in the graph's track rate.
+   */
+  TrackTime ClearFutureData();
+
   /**
    * Indicate that this track has ended. Do not do any more API calls affecting
    * this track.
