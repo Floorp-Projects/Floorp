@@ -141,6 +141,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun createCustomEngine() {
         custom_search_engine_name_field.error = ""
         custom_search_engine_search_string_field.error = ""
@@ -167,15 +168,15 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
             hasError = true
         }
 
-        if (searchString.isEmpty()) {
-            custom_search_engine_search_string_field
-                .error = resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
-            hasError = true
+        custom_search_engine_search_string_field.error = when {
+            searchString.isEmpty() ->
+                resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
+            !searchString.contains("%s") ->
+                resources.getString(R.string.search_add_custom_engine_error_missing_template)
+            else -> null
         }
 
-        if (!searchString.contains("%s")) {
-            custom_search_engine_search_string_field
-                .error = resources.getString(R.string.search_add_custom_engine_error_missing_template)
+        if (custom_search_engine_search_string_field.error != null) {
             hasError = true
         }
 
