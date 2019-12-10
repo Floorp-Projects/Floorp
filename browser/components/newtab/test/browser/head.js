@@ -47,9 +47,9 @@ async function clearHistoryAndBookmarks() {
  * not necessarily have had all its javascript/render logic executed.
  */
 async function waitForPreloaded(browser) {
-  let readyState = await SpecialPowers.spawn(
+  let readyState = await ContentTask.spawn(
     browser,
-    [],
+    null,
     () => content.document.readyState
   );
   if (readyState !== "complete") {

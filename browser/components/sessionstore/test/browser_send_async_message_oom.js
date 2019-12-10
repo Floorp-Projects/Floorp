@@ -41,7 +41,7 @@ add_task(async function() {
   // Open a browser, configure it to cause OOM.
   let newTab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = newTab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [], frameScript);
+  await ContentTask.spawn(browser, null, frameScript);
 
   let promiseReported = new Promise(resolve => {
     browser.messageManager.addMessageListener("SessionStore:error", resolve);

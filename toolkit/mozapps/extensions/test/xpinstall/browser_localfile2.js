@@ -32,9 +32,13 @@ add_task(async function test() {
     await SpecialPowers.spawn(browser, [URI], async function(URI) {
       content.location.href = URI;
 
-      let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
+      let loaded = ContentTaskUtils.waitForEvent(
+        docShell.chromeEventHandler,
+        "load",
+        true
+      );
       let installTriggered = ContentTaskUtils.waitForEvent(
-        this,
+        docShell.chromeEventHandler,
         "InstallTriggered",
         true,
         null,

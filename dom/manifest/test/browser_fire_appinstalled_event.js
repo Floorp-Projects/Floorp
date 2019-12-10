@@ -23,7 +23,7 @@ function enableOnAppInstalledPref() {
 // This cause file_reg_install_event.html to be dynamically change.
 async function theTest(aBrowser) {
   aBrowser.allowEvents = true;
-  let waitForInstall = SpecialPowers.spawn(aBrowser, [], async function() {
+  let waitForInstall = ContentTask.spawn(aBrowser, null, async function() {
     await ContentTaskUtils.waitForEvent(content.window, "appinstalled");
   });
   const {

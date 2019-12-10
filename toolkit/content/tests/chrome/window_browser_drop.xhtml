@@ -10,12 +10,11 @@
 <script>
 <![CDATA[
 
-;
+const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 
 function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
   ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask
-  return SpecialPowers.spawn(browser, [{data, shouldExpectStateChange}], async function({data, shouldExpectStateChange}) {
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  return ContentTask.spawn(browser, {data, shouldExpectStateChange}, async function({data, shouldExpectStateChange}) {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     if (!content.document.documentElement) {
