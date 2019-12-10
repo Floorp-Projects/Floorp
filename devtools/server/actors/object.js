@@ -156,10 +156,7 @@ const proto = {
             return false;
           }
 
-          if (this.thread.skipBreakpoints) {
-            pauseAndRespond("getWatchpoint");
-          }
-
+          pauseAndRespond("getWatchpoint");
           return desc.value;
         }),
       });
@@ -177,10 +174,7 @@ const proto = {
             return;
           }
 
-          if (this.thread.skipBreakpoints) {
-            pauseAndRespond("setWatchpoint");
-          }
-
+          pauseAndRespond("setWatchpoint");
           desc.value = v;
         }),
         get: this.obj.makeDebuggeeValue(() => {
