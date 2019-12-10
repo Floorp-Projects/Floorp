@@ -210,9 +210,6 @@ Push.prototype = {
       types: typeArray,
       principal: this._principal,
       isHandlingUserInput,
-      userHadInteractedWithDocument: this._window.document.userHasInteracted,
-      documentDOMContentLoadedTimestamp: this._window.performance.timing
-        .domContentLoadedEventEnd,
       topLevelPrincipal: this._topLevelPrincipal,
       allow: allowCallback,
       cancel: cancelCallback,
