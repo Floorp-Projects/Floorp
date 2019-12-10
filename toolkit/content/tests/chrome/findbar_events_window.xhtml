@@ -18,8 +18,6 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    ;
-    ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
     var gBrowser;
@@ -47,8 +45,9 @@
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURI(gBrowser, "data:text/html,hello there");
+      const url = "data:text/html,hello there";
+      let promise = BrowserTestUtils.browserLoaded(gBrowser, false, url);
+      BrowserTestUtils.loadURI(gBrowser, url);
       await promise;
       await onDocumentLoaded();
     }

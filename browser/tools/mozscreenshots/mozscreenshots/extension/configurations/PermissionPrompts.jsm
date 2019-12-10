@@ -154,24 +154,17 @@ async function clickOn(selector, beforeContentFn) {
     URL
   );
 
+  let { SpecialPowers } = lastTab.ownerGlobal;
   if (beforeContentFn) {
-    await lastTab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
-      lastTab.linkedBrowser,
-      [],
-      beforeContentFn
-    );
+    await SpecialPowers.spawn(lastTab.linkedBrowser, [], beforeContentFn);
   }
 
-  await lastTab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
-    lastTab.linkedBrowser,
-    [selector],
-    async function(arg) {
-      E10SUtils.wrapHandlingUserInput(content, true, function() {
-        let element = content.document.querySelector(arg);
-        element.click();
-      });
-    }
-  );
+  await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      let element = content.document.querySelector(arg);
+      element.click();
+    });
+  });
 
   // Wait for the popup to actually be shown before making the screenshot
   await BrowserTestUtils.waitForEvent(
