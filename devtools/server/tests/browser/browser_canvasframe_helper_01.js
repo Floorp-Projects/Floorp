@@ -109,6 +109,44 @@ add_task(async function() {
       "The class attribute was retrieve correctly"
     );
 
+    info("Test the toggle API");
+    el.classList.toggle("test"); // This will set the class
+    is(
+      el.getAttribute("class"),
+      "child-element test",
+      "After toggling the class 'test', the class attribute contained the 'test' class"
+    );
+    el.classList.toggle("test"); // This will remove the class
+    is(
+      el.getAttribute("class"),
+      "child-element",
+      "After toggling the class 'test' again, the class attribute removed the 'test' class"
+    );
+    el.classList.toggle("test", true); // This will set the class
+    is(
+      el.getAttribute("class"),
+      "child-element test",
+      "After toggling the class 'test' again and keeping force=true, the class attribute added the 'test' class"
+    );
+    el.classList.toggle("test", true); // This will keep the class set
+    is(
+      el.getAttribute("class"),
+      "child-element test",
+      "After toggling the class 'test' again and keeping force=true,the class attribute contained the 'test' class"
+    );
+    el.classList.toggle("test", false); // This will remove the class
+    is(
+      el.getAttribute("class"),
+      "child-element",
+      "After toggling the class 'test' again and keeping force=false, the class attribute removed the 'test' class"
+    );
+    el.classList.toggle("test", false); // This will keep the class removed
+    is(
+      el.getAttribute("class"),
+      "child-element",
+      "After toggling the class 'test' again and keeping force=false, the class attribute removed the 'test' class"
+    );
+
     info("Destroying the helper");
     helper.destroy();
     env.destroy();
