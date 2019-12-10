@@ -441,6 +441,7 @@ static void ScaleIntrinsicSizeForDensity(nsIContent& aContent,
 }
 
 static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
+                                          bool aHasRequest,
                                           nsImageFrame::Kind aKind,
                                           const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
@@ -465,7 +466,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     return IntrinsicSize(edgeLengthToUse, edgeLengthToUse);
   }
 
-  if (style.StylePosition()->mAspectRatio != 0.0f) {
+  if (aHasRequest && style.StylePosition()->mAspectRatio != 0.0f) {
     return IntrinsicSize();
   }
 
@@ -474,11 +475,13 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
 
 bool nsImageFrame::UpdateIntrinsicSize() {
   IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
-  mIntrinsicSize = ComputeIntrinsicSize(mImage, mKind, *this);
+  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
+  mIntrinsicSize = ComputeIntrinsicSize(mImage, !!currentRequest, mKind, *this);
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
 static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
+                                      bool aHasRequest,
                                       const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
   if (style.StyleDisplay()->IsContainSize()) {
@@ -489,7 +492,7 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
       return *fromImage;
     }
   }
-  if (style.StylePosition()->mAspectRatio != 0.0f) {
+  if (aHasRequest && style.StylePosition()->mAspectRatio != 0.0f) {
     return AspectRatio(style.StylePosition()->mAspectRatio);
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
@@ -500,7 +503,8 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
 
 bool nsImageFrame::UpdateIntrinsicRatio() {
   AspectRatio oldIntrinsicRatio = mIntrinsicRatio;
-  mIntrinsicRatio = ComputeAspectRatio(mImage, *this);
+  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
+  mIntrinsicRatio = ComputeAspectRatio(mImage, !!currentRequest, *this);
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
@@ -1721,9 +1725,12 @@ static bool OldImageHasDifferentRatio(const nsImageFrame& aFrame,
   }
 
   auto currentRatio = aFrame.GetComputedIntrinsicRatio();
-  MOZ_ASSERT(currentRatio == ComputeAspectRatio(&aImage, aFrame),
+  // If we have an image, we need to have a current request.
+  // Same if we had an image.
+  const bool hasRequest = true;
+  MOZ_ASSERT(currentRatio == ComputeAspectRatio(&aImage, hasRequest, aFrame),
              "aspect-ratio got out of sync during paint? How?");
-  auto oldRatio = ComputeAspectRatio(aPrevImage, aFrame);
+  auto oldRatio = ComputeAspectRatio(aPrevImage, hasRequest, aFrame);
   return oldRatio != currentRatio;
 }
 
