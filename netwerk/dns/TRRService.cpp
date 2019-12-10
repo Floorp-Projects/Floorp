@@ -455,13 +455,10 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     if (mTRRBLStorage) {
       mTRRBLStorage->Clear();
     }
-  } else if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC)) {
-    LOG(("TRRService dnsSuffixList-updated-event"));
+  } else if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC) ||
+             !strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
     nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
     RebuildSuffixList(link);
-  } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
-    LOG(("TRRService link-event"));
-    nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
     CheckPlatformDNSStatus(link);
   }
   return NS_OK;
