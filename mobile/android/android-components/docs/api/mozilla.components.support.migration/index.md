@@ -13,6 +13,7 @@
 | [Migration](-migration/index.md) | `sealed class Migration`<br>Supported Fennec migrations and their current versions. |
 | [MigrationRun](-migration-run/index.md) | `data class MigrationRun`<br>Results of running a single versioned migration. |
 | [Result](-result/index.md) | `sealed class Result<T>`<br>Class representing the result of a successful or failed migration action. |
+| [SettingsMigrationResult](-settings-migration-result/index.md) | `sealed class SettingsMigrationResult`<br>Result of Fennec settings migration. |
 | [VersionedMigration](-versioned-migration/index.md) | `data class VersionedMigration`<br>Describes a [Migration](-migration/index.md) at a specific version, enforcing in-range version specification. |
 
 ### Exceptions
@@ -22,6 +23,7 @@
 | [FennecMigratorException](-fennec-migrator-exception/index.md) | `sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>Exceptions related to Fennec migrations. |
 | [FennecProfileException](-fennec-profile-exception/index.md) | `sealed class FennecProfileException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exceptions related to Fennec profile migrations. |
 | [FxaMigrationException](-fxa-migration-exception/index.md) | `class FxaMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [FxaMigrationResult](-fxa-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
+| [SettingsMigrationException](-settings-migration-exception/index.md) | `class SettingsMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [SettingsMigrationResult](-settings-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 
 ### Type Aliases
 

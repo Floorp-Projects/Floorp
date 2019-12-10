@@ -2,7 +2,7 @@
 
 # FennecMigratorException
 
-`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L85)
+`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L91)
 
 Exceptions related to Fennec migrations.
 
@@ -18,6 +18,7 @@ exceptions.
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
+| [MigrateSettingsException](-migrate-settings-exception/index.md) | `class MigrateSettingsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating settings. |
 
 ### Extension Functions
 
@@ -34,3 +35,4 @@ exceptions.
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
+| [MigrateSettingsException](-migrate-settings-exception/index.md) | `class MigrateSettingsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating settings. |
