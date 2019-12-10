@@ -986,6 +986,12 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
   mSizeConstraints.mMinSize = GetSafeWindowSize(aConstraints.mMinSize);
   mSizeConstraints.mMaxSize = GetSafeWindowSize(aConstraints.mMaxSize);
 
+  ApplySizeConstraints();
+}
+
+void nsWindow::ApplySizeConstraints(void) {
+  LOG(("nsWindow::ApplySizeConstraints [%p]\n", (void*)this));
+
   if (mShell) {
     GdkGeometry geometry;
     geometry.min_width =
@@ -1003,10 +1009,11 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
          geometry.max_height));
 
     uint32_t hints = 0;
-    if (aConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
+    if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
       hints |= GDK_HINT_MIN_SIZE;
     }
-    if (aConstraints.mMaxSize != LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
+    if (mSizeConstraints.mMaxSize !=
+        LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
       hints |= GDK_HINT_MAX_SIZE;
     }
 
@@ -1073,6 +1080,11 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   // bounds (Bug 581866).
 
   mBounds.SizeTo(width, height);
+
+  // Recalculate aspect ratio when resized from DOM
+  if (mAspectRatio != 0.0) {
+    LockAspectRatio(true);
+  }
 
   if (!mCreated) return;
 
@@ -7615,6 +7627,8 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
     LOG(("nsWindow::LockAspectRatio() [%p] removed aspect ratio\n",
          (void*)this));
   }
+
+  ApplySizeConstraints();
 }
 
 #ifdef MOZ_WAYLAND
