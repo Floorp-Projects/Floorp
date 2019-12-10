@@ -777,6 +777,7 @@ package org.mozilla.geckoview {
     field public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
     field public static final int PERMISSION_GEOLOCATION = 0;
     field public static final int PERMISSION_PERSISTENT_STORAGE = 2;
+    field public static final int PERMISSION_XR = 3;
   }
 
   public static interface GeckoSession.PermissionDelegate.Callback {
