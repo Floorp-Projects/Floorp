@@ -7410,16 +7410,16 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
     return resumeAfter(store);
   }
 
-  return initializeArrayElement(obj->toNewArray(), index, value,
+  MConstant* id = MConstant::New(alloc(), Int32Value(index));
+  current->add(id);
+
+  return initializeArrayElement(obj->toNewArray(), id, value,
                                 /* addResumePoint = */ true);
 }
 
 AbortReasonOr<Ok> IonBuilder::initializeArrayElement(
-    MNewArray* obj, size_t index, MDefinition* value,
+    MNewArray* obj, MDefinition* id, MDefinition* value,
     bool addResumePointAndIncrementInitializedLength) {
-  MConstant* id = MConstant::New(alloc(), Int32Value(index));
-  current->add(id);
-
   // Get the elements vector.
   MElements* elements = MElements::New(alloc(), obj);
   current->add(elements);
