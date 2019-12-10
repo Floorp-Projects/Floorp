@@ -355,10 +355,7 @@ void LIRGenerator::visitComputeThis(MComputeThis* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Value);
   MOZ_ASSERT(ins->input()->type() == MIRType::Value);
 
-  // Don't use useBoxAtStart because ComputeThis has a safepoint and needs to
-  // have its inputs in different registers than its return value so that
-  // they aren't clobbered.
-  LComputeThis* lir = new (alloc()) LComputeThis(useBox(ins->input()));
+  LComputeThis* lir = new (alloc()) LComputeThis(useBoxAtStart(ins->input()));
   defineBox(lir, ins);
   assignSafepoint(lir, ins);
 }
