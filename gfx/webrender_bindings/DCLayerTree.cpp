@@ -23,10 +23,6 @@
 namespace mozilla {
 namespace wr {
 
-// Currently, MinGW build environment does not handle IDCompositionDesktopDevice
-// and IDCompositionDevice2
-#if !defined(__MINGW32__)
-
 /* static */
 UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
                                            EGLConfig aEGLConfig,
@@ -489,6 +485,5 @@ void DCLayer::EndDraw() {
   DestroyEGLSurface();
 }
 
-#endif
 }  // namespace wr
 }  // namespace mozilla

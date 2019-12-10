@@ -59,10 +59,7 @@ class DeviceManagerDx final {
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> GetCanvasDevice();
   RefPtr<ID3D11Device> GetImageDevice();
-// Currently, MinGW build environment does not handle IDCompositionDevice2
-#if !defined(__MINGW32__)
   RefPtr<IDCompositionDevice2> GetDirectCompositionDevice();
-#endif
   RefPtr<ID3D11Device> GetVRDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
   RefPtr<layers::MLGDevice> GetMLGDevice();
@@ -175,9 +172,7 @@ class DeviceManagerDx final {
   RefPtr<ID3D11Device> mImageDevice;
   RefPtr<ID3D11Device> mVRDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
-#if !defined(__MINGW32__)
   RefPtr<IDCompositionDevice2> mDirectCompositionDevice;
-#endif
   RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
   RefPtr<layers::MLGDevice> mMLGDevice;
   bool mCompositorDeviceSupportsVideo;
