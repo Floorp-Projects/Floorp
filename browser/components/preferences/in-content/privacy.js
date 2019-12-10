@@ -501,6 +501,11 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showSecurityDevices
     );
+    setEventListener(
+      "telemetryDataDeletionLearnMore",
+      "command",
+      gPrivacyPane.showDataDeletion
+    );
 
     this._pane = document.getElementById("panePrivacy");
 
@@ -2154,6 +2159,16 @@ var gPrivacyPane = {
     gSubDialog.open("chrome://pippki/content/device_manager.xhtml");
   },
 
+  /**
+   * Displays the learn more health report page when a user opts out of data collection.
+   */
+  showDataDeletion() {
+    let url =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "telemetry-clientid";
+    window.open(url, "_blank");
+  },
+
   initDataCollection() {
     this._setupLearnMoreLink(
       "toolkit.datacollection.infoURL",
@@ -2215,7 +2230,13 @@ var gPrivacyPane = {
    */
   updateSubmitHealthReport() {
     let checkbox = document.getElementById("submitHealthReportBox");
+    let telemetryContainer = document.getElementById("telemetry-container");
+
     Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
+
+    if (Services.locale.requestedLocale == "en-US") {
+      telemetryContainer.hidden = checkbox.checked;
+    }
   },
 
   /**
