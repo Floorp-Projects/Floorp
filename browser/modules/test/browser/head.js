@@ -88,9 +88,7 @@ function makeMockPermissionRequest(browser) {
   let principal = browser.contentPrincipal;
   let result = {
     types,
-    documentDOMContentLoadedTimestamp: 0,
     isHandlingUserInput: false,
-    userHadInteractedWithDocument: false,
     principal,
     topLevelPrincipal: principal,
     requester: null,
