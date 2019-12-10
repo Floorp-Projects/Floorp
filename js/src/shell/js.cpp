@@ -1030,12 +1030,15 @@ static void ShellCleanupFinalizationGroupCallback(JSObject* group, void* data) {
   }
 }
 
-static void MaybeRunFinalizationGroupCleanupTasks(JSContext* cx) {
+// Run any FinalizationGroup cleanup tasks and return whether any ran.
+static bool MaybeRunFinalizationGroupCleanupTasks(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   MOZ_ASSERT(!sc->quitting);
 
   Rooted<ShellContext::ObjectVector> groups(cx);
   std::swap(groups.get(), sc->finalizationGroupsToCleanUp.get());
+
+  bool ranTasks = false;
 
   RootedObject group(cx);
   for (const auto& g : groups) {
@@ -1048,10 +1051,14 @@ static void MaybeRunFinalizationGroupCleanupTasks(JSContext* cx) {
       mozilla::Unused << JS::CleanupQueuedFinalizationGroup(cx, group);
     }
 
+    ranTasks = true;
+
     if (sc->quitting) {
       break;
     }
   }
+
+  return ranTasks;
 }
 
 static bool EnqueueJob(JSContext* cx, unsigned argc, Value* vp) {
@@ -1074,14 +1081,19 @@ static void RunShellJobs(JSContext* cx) {
     return;
   }
 
-  // Run microtasks.
-  js::RunJobs(cx);
-  if (sc->quitting) {
-    return;
-  }
+  while (true) {
+    // Run microtasks.
+    js::RunJobs(cx);
+    if (sc->quitting) {
+      return;
+    }
 
-  // Run tasks (only finalization group clean tasks are possible).
-  MaybeRunFinalizationGroupCleanupTasks(cx);
+    // Run tasks (only finalization group clean tasks are possible).
+    bool ranTasks = MaybeRunFinalizationGroupCleanupTasks(cx);
+    if (!ranTasks) {
+      break;
+    }
+  }
 }
 
 static bool DrainJobQueue(JSContext* cx, unsigned argc, Value* vp) {
