@@ -98,7 +98,7 @@ def get_paths(**kwargs):
 
 
 def write_output(path_id_map, as_json):
-    # type: (Dict[Text, List[Text]], Bool) -> None
+    # type: (Dict[Text, List[Text]], bool) -> None
     if as_json:
         print(json.dumps(path_id_map))
     else:
