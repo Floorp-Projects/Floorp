@@ -1866,6 +1866,18 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(21, 20, 16, 4590), "Intel driver >= 21.20.16.4590");
 #endif
+
+    ////////////////////////////////////
+    // FEATURE_WEBRENDER_COMPOSITOR
+
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows10,
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHD520),
+        nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_EQUAL, V(24, 20, 100, 6293),
+        "FEATURE_FAILURE_BUG_1602511");
   }
   return *sDriverInfo;
 }

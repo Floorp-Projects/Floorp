@@ -154,8 +154,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DX_P016 = 27;
   /* Whether OpenGL swizzle configuration of texture units is supported, starting in 70 */
   const long FEATURE_GL_SWIZZLE = 28;
+  /* Whether WebRender native compositor is supported, starting in 73 */
+  const long FEATURE_WEBRENDER_COMPOSITOR = 29;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_GL_SWIZZLE;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_COMPOSITOR;
 
   /*
    * A set of return values from GetFeatureStatus
