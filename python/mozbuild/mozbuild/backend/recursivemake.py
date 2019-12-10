@@ -1337,6 +1337,8 @@ class RecursiveMakeBackend(MakeBackend):
             target_name = obj.output_category
         else:
             target_name = obj.KIND
+        if target_name == 'wasm':
+            target_name = 'target'
         return '%s/%s' % (mozpath.relpath(obj.objdir,
                                           self.environment.topobjdir), target_name)
 
@@ -1376,7 +1378,7 @@ class RecursiveMakeBackend(MakeBackend):
             backend_file.write('%s: %s\n' % (obj_target, objs_ref))
 
         for lib in shared_libs:
-            assert obj.KIND != 'host'
+            assert obj.KIND != 'host' and obj.KIND != 'wasm'
             backend_file.write_once('SHARED_LIBS += %s\n' %
                                     pretty_relpath(lib, lib.import_name))
 
@@ -1394,7 +1396,7 @@ class RecursiveMakeBackend(MakeBackend):
         for lib in os_libs:
             if obj.KIND == 'target':
                 backend_file.write_once('OS_LIBS += %s\n' % lib)
-            else:
+            elif obj.KIND == 'host':
                 backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
         if not isinstance(obj, (StaticLibrary, HostLibrary)) or obj.no_expand_lib:
