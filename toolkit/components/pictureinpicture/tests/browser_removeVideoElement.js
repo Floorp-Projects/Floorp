@@ -60,7 +60,7 @@ add_task(async () => {
           let video = doc.querySelector(`#${videoID}`);
 
           let promise = ContentTaskUtils.waitForEvent(
-            this,
+            docShell.chromeEventHandler,
             "MozStopPictureInPicture",
             { capture: true }
           );
