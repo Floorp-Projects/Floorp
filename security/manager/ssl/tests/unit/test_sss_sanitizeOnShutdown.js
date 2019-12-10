@@ -13,6 +13,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 Sanitizer.onStartup();
 
+// This helps us away from test timed out. If service worker manager(swm) hasn't
+// been initilaized before profile-change-teardown, this test would fail due to
+// the shutdown blocker added by swm. Normally, swm should be initialized before
+// that and the similar crash signatures are fixed. So, assume this cannot
+// happen in the real world and initilaize swm here as a workaround.
+const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+  Ci.nsIServiceWorkerManager
+);
+
 function getStateFileContents() {
   let stateFile = do_get_profile();
   stateFile.append(SSS_STATE_FILE_NAME);
