@@ -79,9 +79,6 @@ with Files("OpenInTabsUtils.jsm"):
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("PermissionUITelemetry.jsm"):
-   BUG_COMPONENT = ("Firefox", "Site Permissions")
-
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
@@ -151,7 +148,6 @@ EXTRA_JS_MODULES += [
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
-    'PermissionUITelemetry.jsm',
     'PingCentre.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',

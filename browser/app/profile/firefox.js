@@ -412,13 +412,6 @@ pref("permissions.fullscreen.allowed", false);
 
 pref("permissions.postPrompt.animate", true);
 
-// This is primarily meant to be enabled for studies.
-#ifdef NIGHTLY_BUILD
-  pref("permissions.eventTelemetry.enabled", true);
-#else
-  pref("permissions.eventTelemetry.enabled", false);
-#endif
-
 #ifdef NIGHTLY_BUILD
   pref("permissions.delegation.enabled", true);
 #else
