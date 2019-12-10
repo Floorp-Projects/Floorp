@@ -2559,6 +2559,18 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   return appended;
 }
 
+TrackTime SourceMediaTrack::ClearFutureData() {
+  MutexAutoLock lock(mMutex);
+  auto graph = GraphImpl();
+  if (!mUpdateTrack || !graph) {
+    return 0;
+  }
+
+  TrackTime duration = mUpdateTrack->mData->GetDuration();
+  mUpdateTrack->mData->Clear();
+  return duration;
+}
+
 void SourceMediaTrack::NotifyDirectConsumers(MediaSegment* aSegment) {
   mMutex.AssertCurrentThreadOwns();
 
