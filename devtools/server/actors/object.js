@@ -170,6 +170,7 @@ const proto = {
           const frame = this.thread.dbg.getNewestFrame();
 
           if (!this.thread.hasMoved(frame, "setWatchpoint")) {
+            desc.value = v;
             return;
           }
 
