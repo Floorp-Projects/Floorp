@@ -70,6 +70,7 @@ class DecodedStream : public MediaSink {
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
   void SendAudio(double aVolume, const PrincipalHandle& aPrincipalHandle);
   void SendVideo(const PrincipalHandle& aPrincipalHandle);
+  void ResetAudio();
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   void SendData();
   void NotifyOutput(int64_t aTime);
