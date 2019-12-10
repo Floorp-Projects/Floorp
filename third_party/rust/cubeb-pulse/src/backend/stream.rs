@@ -84,6 +84,12 @@ fn layout_to_channel_map(layout: ChannelLayout) -> pulse::ChannelMap {
         cm.map[i] = cubeb_channel_to_pa_channel(channel.into());
     }
     cm.channels = layout.num_channels() as _;
+
+    // Special case single channel center mapping as mono.
+    if cm.channels == 1 && cm.map[0] == PA_CHANNEL_POSITION_FRONT_CENTER {
+        cm.map[0] = PA_CHANNEL_POSITION_MONO;
+    }
+
     cm
 }
 
@@ -1254,7 +1260,7 @@ mod test {
 
     map_channel_tests! {
         map_channel_mono, MONO => [
-            PA_CHANNEL_POSITION_FRONT_CENTER
+            PA_CHANNEL_POSITION_MONO
         ],
         map_channel_mono_lfe, MONO_LFE => [
             PA_CHANNEL_POSITION_FRONT_CENTER,
