@@ -299,19 +299,13 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   /**
    * Recalculate mIntrinsicSize from the image.
-   *
-   * @return whether aImage's size did _not_
-   *         match our previous intrinsic size.
    */
-  bool UpdateIntrinsicSize(imgIContainer* aImage);
+  bool UpdateIntrinsicSize();
 
   /**
    * Recalculate mIntrinsicRatio from the image.
-   *
-   * @return whether aImage's ratio did _not_
-   *         match our previous intrinsic ratio.
    */
-  bool UpdateIntrinsicRatio(imgIContainer* aImage);
+  bool UpdateIntrinsicRatio();
 
   /**
    * This function calculates the transform for converting between
