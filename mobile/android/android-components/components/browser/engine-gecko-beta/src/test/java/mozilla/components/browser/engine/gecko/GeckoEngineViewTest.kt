@@ -49,6 +49,7 @@ class GeckoEngineViewTest {
 
     @Test
     fun captureThumbnail() {
+        val geckoSession: GeckoEngineSession = mock()
         val engineView = GeckoEngineView(context)
         val mockGeckoView = mock<NestedGeckoView>()
         var thumbnail: Bitmap? = null
@@ -60,7 +61,19 @@ class GeckoEngineViewTest {
         engineView.captureThumbnail {
             thumbnail = it
         }
+        verify(mockGeckoView, never()).capturePixels()
 
+        engineView.currentSession = geckoSession
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        verify(mockGeckoView, never()).capturePixels()
+
+        whenever(geckoSession.firstContentfulPaint).thenReturn(true)
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        verify(mockGeckoView).capturePixels()
         geckoResult.complete(mock())
         assertNotNull(thumbnail)
 
@@ -83,6 +96,16 @@ class GeckoEngineViewTest {
         engineView.setVerticalClipping(-42)
 
         verify(engineView.currentGeckoView).setVerticalClipping(-42)
+    }
+
+    @Test
+    fun `setDynamicToolbarMaxHeight is forwarded to GeckoView instance`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+
+        engineView.setDynamicToolbarMaxHeight(42)
+
+        verify(engineView.currentGeckoView).setDynamicToolbarMaxHeight(42)
     }
 
     @Test

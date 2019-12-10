@@ -1907,7 +1907,8 @@ class GeckoEngineSessionTest {
             observedTriggeredByWebContent = null
             observedUrl = null
             navigationDelegate.value.onLoadRequest(
-                mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true))
+                mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true,
+                hasUserGesture = expectedTriggeredByWebContent))
             progressDelegate.value.onPageStop(mock(), true)
             assertNotNull(observedTriggeredByWebContent)
             assertEquals(expectedTriggeredByWebContent, observedTriggeredByWebContent!!)
@@ -2043,7 +2044,6 @@ class GeckoEngineSessionTest {
         engineSession.register(object : EngineSession.Observer {
             override fun onWindowRequest(windowRequest: WindowRequest) {
                 receivedWindowRequest = windowRequest
-                assertEquals(WindowRequest.Type.OPEN, windowRequest.type)
             }
         })
 
@@ -2051,6 +2051,7 @@ class GeckoEngineSessionTest {
 
         assertNotNull(receivedWindowRequest)
         assertEquals("mozilla.org", receivedWindowRequest!!.url)
+        assertEquals(WindowRequest.Type.OPEN, receivedWindowRequest!!.type)
     }
 
     @Test
@@ -2074,6 +2075,21 @@ class GeckoEngineSessionTest {
         assertEquals(WindowRequest.Type.CLOSE, receivedWindowRequest!!.type)
     }
 
+    @Test
+    fun managesStateOfFirstContenfulPaint() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        assertFalse(engineSession.firstContentfulPaint)
+        contentDelegate.value.onFirstContentfulPaint(geckoSession)
+        assertTrue(engineSession.firstContentfulPaint)
+
+        engineSession.close()
+        assertFalse(engineSession.firstContentfulPaint)
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(
@@ -2084,7 +2100,8 @@ class GeckoEngineSessionTest {
     private fun mockLoadRequest(
         uri: String,
         target: Int = 0,
-        triggeredByRedirect: Boolean = false
+        triggeredByRedirect: Boolean = false,
+        hasUserGesture: Boolean = false
     ): GeckoSession.NavigationDelegate.LoadRequest {
         var flags = 0
         if (triggeredByRedirect) {
@@ -2095,9 +2112,10 @@ class GeckoEngineSessionTest {
             String::class.java,
             String::class.java,
             Int::class.java,
-            Int::class.java)
+            Int::class.java,
+            Boolean::class.java)
         constructor.isAccessible = true
 
-        return constructor.newInstance(uri, uri, target, flags)
+        return constructor.newInstance(uri, uri, target, flags, hasUserGesture)
     }
 }

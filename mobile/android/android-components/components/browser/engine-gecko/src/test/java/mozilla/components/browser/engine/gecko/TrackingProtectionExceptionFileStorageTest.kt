@@ -22,7 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoResult
@@ -68,7 +68,7 @@ class TrackingProtectionExceptionFileStorageTest {
     fun `add exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
         val runtime: GeckoRuntime = mock()
-        val session = Mockito.spy(GeckoEngineSession(runtime))
+        val session = spy(GeckoEngineSession(runtime))
         val geckoResult = GeckoResult<ContentBlockingController.ExceptionList>()
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList = mock<ContentBlockingController.ExceptionList>()
@@ -135,7 +135,7 @@ class TrackingProtectionExceptionFileStorageTest {
     fun `remove exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
         val runtime: GeckoRuntime = mock()
-        val session = Mockito.spy(GeckoEngineSession(runtime))
+        val session = spy(GeckoEngineSession(runtime))
         var geckoResult = GeckoResult<ContentBlockingController.ExceptionList>()
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList = mock<ContentBlockingController.ExceptionList>()
@@ -185,9 +185,7 @@ class TrackingProtectionExceptionFileStorageTest {
         var containsException = false
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
-        whenever(runtime.contentBlockingController.checkException(mockGeckoSession)).thenReturn(
-            geckoResult
-        )
+        whenever(runtime.contentBlockingController.checkException(mockGeckoSession)).thenReturn(geckoResult)
 
         val storage = TrackingProtectionExceptionFileStorage(testContext, runtime)
 
@@ -200,9 +198,7 @@ class TrackingProtectionExceptionFileStorageTest {
         assertTrue(containsException)
 
         geckoResult = GeckoResult()
-        whenever(runtime.contentBlockingController.checkException(mockGeckoSession)).thenReturn(
-            geckoResult
-        )
+        whenever(runtime.contentBlockingController.checkException(mockGeckoSession)).thenReturn(geckoResult)
 
         storage.contains(session) { contains ->
             containsException = contains

@@ -24,7 +24,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoSession
-import java.security.InvalidParameterException
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MONTH
@@ -35,6 +34,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.NONE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.USER
 import org.robolectric.Shadows.shadowOf
 import java.io.FileInputStream
+import java.security.InvalidParameterException
 import java.util.Calendar
 import java.util.Calendar.YEAR
 import java.util.Date
@@ -795,6 +795,56 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `onSharePrompt must provide a Share PromptRequest`() {
+        val mockSession = GeckoEngineSession(mock())
+        var request: PromptRequest.Share? = null
+        var onSuccessWasCalled = false
+        var onFailureWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Share
+            }
+        })
+
+        var geckoPrompt = GeckoSharePrompt()
+        var geckoResult = promptDelegate.onSharePrompt(mock(), geckoPrompt)
+        geckoResult.accept {
+            onSuccessWasCalled = true
+        }
+
+        with(request!!) {
+            assertEquals(data.title, "title")
+            assertEquals(data.text, "text")
+            assertEquals(data.url, "https://example.com")
+
+            onSuccess()
+            assertTrue(onSuccessWasCalled)
+        }
+
+        geckoPrompt = GeckoSharePrompt()
+        geckoResult = promptDelegate.onSharePrompt(mock(), geckoPrompt)
+        geckoResult.accept {
+            onFailureWasCalled = true
+        }
+
+        request!!.onFailure()
+        assertTrue(onFailureWasCalled)
+
+        geckoPrompt = GeckoSharePrompt()
+        geckoResult = promptDelegate.onSharePrompt(mock(), geckoPrompt)
+        geckoResult.accept {
+            onDismissWasCalled = true
+        }
+
+        request!!.onDismiss()
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
     fun `onButtonPrompt must provide a Confirm PromptRequest`() {
         val mockSession = GeckoEngineSession(mock())
         var request: PromptRequest.Confirm = mock()
@@ -896,6 +946,12 @@ class GeckoPromptDelegateTest {
     class GeckoPopupPrompt(
         targetUri: String = "targetUri"
     ) : GeckoSession.PromptDelegate.PopupPrompt(targetUri)
+
+    class GeckoSharePrompt(
+        title: String? = "title",
+        text: String? = "text",
+        url: String? = "https://example.com"
+    ) : GeckoSession.PromptDelegate.SharePrompt(title, text, url)
 
     class GeckoPromptPrompt(
         title: String = "title",

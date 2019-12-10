@@ -18,6 +18,7 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
+| geckoview.document_site_origins |[custom_distribution](https://mozilla.github.io/glean/book/user/metrics/custom_distribution.html) |When a document is loaded, report the number of [site origins](https://searchfox.org/ mozilla-central/rev/ 3300072e993ae05d50d5c63d815260367eaf9179/ caps/nsIPrincipal.idl#264) of the entire browser if it has been at least 5 minutes since last time we collect this data.  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1589700#c5)||never |
 | geckoview.page_load_progress_time |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |Time between page load progress starts (0) and completion (100).  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10)||never |
 | geckoview.page_load_time |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |The time taken to load a page. This includes all static contents, no dynamic content. Loading of about: pages is not counted.  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1)||never |
 | geckoview.page_reload_time |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |Time taken to reload a page. This includes all static contents, no dynamic content. Loading of about: pages is not counted.  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10)||never |
