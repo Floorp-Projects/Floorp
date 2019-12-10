@@ -24,13 +24,8 @@ add_task(async function test_flush() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
-        function onHashChange() {
-          docShell.chromeEventHandler.removeEventListener(
-            "hashchange",
-            onHashChange
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       // Click the link.
@@ -68,13 +63,8 @@ add_task(async function test_crash() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
-        function onHashChange() {
-          docShell.chromeEventHandler.removeEventListener(
-            "hashchange",
-            onHashChange
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       // Click the link.
@@ -116,13 +106,8 @@ add_task(async function test_remove() {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "hashchange",
-        function onHashChange() {
-          docShell.chromeEventHandler.removeEventListener(
-            "hashchange",
-            onHashChange
-          );
-          resolve();
-        }
+        () => resolve(),
+        { once: true }
       );
 
       // Click the link.
