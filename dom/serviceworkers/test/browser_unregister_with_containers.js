@@ -7,7 +7,9 @@ const SW_SCRIPT = BASE_URI + "empty.js";
 
 function doRegister(browser) {
   return SpecialPowers.spawn(
-    browser, [{ script: SW_SCRIPT, scope: SCOPE }], async function(opts) {
+    browser,
+    [{ script: SW_SCRIPT, scope: SCOPE }],
+    async function(opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
       });

@@ -50,7 +50,9 @@ add_task(async function test() {
         await SimpleTest.promiseClipboardChange(
           testObj.expectedValue,
           async () => {
-            await SpecialPowers.spawn(browser, [testObj], async function(aTestObj) {
+            await SpecialPowers.spawn(browser, [testObj], async function(
+              aTestObj
+            ) {
               let loginItem = content.document.querySelector("login-item");
               let copyButton = loginItem.shadowRoot.querySelector(
                 aTestObj.copyButtonSelector

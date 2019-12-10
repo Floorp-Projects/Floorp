@@ -25,7 +25,9 @@ add_task(async function test_showLoginItemErrors() {
   EXPECTED_ERROR_MESSAGE = "This login already exists.";
 
   await SpecialPowers.spawn(
-    browser, [LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE)], async loginToUpdate => {
+    browser,
+    [LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE)],
+    async loginToUpdate => {
       const loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );

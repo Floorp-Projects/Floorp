@@ -8,7 +8,9 @@ add_task(async function() {
     { gBrowser, url: "about:support" },
     async function(browser) {
       let keyLocationServiceGoogleStatus = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           let textBox = content.document.getElementById(
             "key-location-service-google-box"
           );
@@ -25,7 +27,9 @@ add_task(async function() {
       );
 
       let keySafebrowsingGoogleStatus = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           let textBox = content.document.getElementById(
             "key-safebrowsing-google-box"
           );
@@ -42,7 +46,9 @@ add_task(async function() {
       );
 
       let keyMozillaStatus = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           let textBox = content.document.getElementById("key-mozilla-box");
           await ContentTaskUtils.waitForCondition(
             () => content.document.l10n.getAttributes(textBox).id,

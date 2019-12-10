@@ -10,7 +10,9 @@ const testPageURL =
 
 async function testContentVisibilityState(aIsHidden, aBrowser) {
   await SpecialPowers.spawn(
-    aBrowser.selectedBrowser, [aIsHidden], aExpectedResult => {
+    aBrowser.selectedBrowser,
+    [aIsHidden],
+    aExpectedResult => {
       is(content.document.hidden, aExpectedResult, "document.hidden");
       is(
         content.document.visibilityState,
@@ -22,36 +24,38 @@ async function testContentVisibilityState(aIsHidden, aBrowser) {
 }
 
 async function waitContentVisibilityChange(aIsHidden, aBrowser) {
-  await SpecialPowers.spawn(aBrowser.selectedBrowser, [aIsHidden], async function(
-    aExpectedResult
-  ) {
-    let visibilityState = aExpectedResult ? "hidden" : "visible";
-    if (
-      content.document.hidden === aExpectedResult &&
-      content.document.visibilityState === visibilityState
-    ) {
-      ok(true, "already changed to expected visibility state");
-      return;
-    }
-
-    info("wait visibilitychange event");
-    await ContentTaskUtils.waitForEvent(
-      content.document,
-      "visibilitychange",
-      true /* capture */,
-      aEvent => {
-        info(
-          `visibilitychange: ${content.document.hidden} ${
-            content.document.visibilityState
-          }`
-        );
-        return (
-          content.document.hidden === aExpectedResult &&
-          content.document.visibilityState === visibilityState
-        );
+  await SpecialPowers.spawn(
+    aBrowser.selectedBrowser,
+    [aIsHidden],
+    async function(aExpectedResult) {
+      let visibilityState = aExpectedResult ? "hidden" : "visible";
+      if (
+        content.document.hidden === aExpectedResult &&
+        content.document.visibilityState === visibilityState
+      ) {
+        ok(true, "already changed to expected visibility state");
+        return;
       }
-    );
-  });
+
+      info("wait visibilitychange event");
+      await ContentTaskUtils.waitForEvent(
+        content.document,
+        "visibilitychange",
+        true /* capture */,
+        aEvent => {
+          info(
+            `visibilitychange: ${content.document.hidden} ${
+              content.document.visibilityState
+            }`
+          );
+          return (
+            content.document.hidden === aExpectedResult &&
+            content.document.visibilityState === visibilityState
+          );
+        }
+      );
+    }
+  );
 }
 
 /**

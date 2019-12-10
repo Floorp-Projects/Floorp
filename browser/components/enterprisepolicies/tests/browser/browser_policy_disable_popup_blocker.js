@@ -34,7 +34,9 @@ async function test_popup_blocker_disabled({ disabled, locked }) {
     "about:preferences#privacy"
   );
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ disabled, locked }], async function({ disabled, locked }) {
+    tab.linkedBrowser,
+    [{ disabled, locked }],
+    async function({ disabled, locked }) {
       let checkbox = content.document.getElementById("popupPolicy");
       is(
         checkbox.checked,

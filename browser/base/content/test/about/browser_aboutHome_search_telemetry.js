@@ -25,7 +25,9 @@ add_task(async function() {
       ]);
 
       await SpecialPowers.spawn(
-        browser, [{ expectedName: engine.name }], async function(args) {
+        browser,
+        [{ expectedName: engine.name }],
+        async function(args) {
           let engineName =
             content.wrappedJSObject.gContentSearchController.defaultEngine.name;
           is(

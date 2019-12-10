@@ -9,7 +9,9 @@ add_task(async function test_multiple_pushState() {
       const kExpected = "http://example.org/bar/ABC/DEF?key=baz";
 
       let contentLocation = await SpecialPowers.spawn(
-        browser, [], async function() {
+        browser,
+        [],
+        async function() {
           return content.document.location.href;
         }
       );

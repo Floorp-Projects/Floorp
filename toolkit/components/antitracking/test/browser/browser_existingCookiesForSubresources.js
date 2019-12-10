@@ -116,7 +116,9 @@ add_task(async function() {
 
   info("Creating a 3rd party content");
   await SpecialPowers.spawn(
-    browser, [{ page: TEST_3RD_PARTY_PAGE, callback: (async _ => {}).toString() }], async function(obj) {
+    browser,
+    [{ page: TEST_3RD_PARTY_PAGE, callback: (async _ => {}).toString() }],
+    async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
         ifr.onload = function() {

@@ -20,7 +20,9 @@ function loadSelectors(walker, selectors) {
 }
 
 function doMoves(movesArg) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function(moves) {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function(
+    moves
+  ) {
     function setParent(nodeSelector, newParentSelector) {
       const node = content.document.querySelector(nodeSelector);
       if (newParentSelector) {
@@ -60,7 +62,9 @@ function mutationTest(testSpec) {
     // so do a dummy change to the root node to trigger
     // a mutation event anyway.
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [[gDummySerial++]], function(serial) {
+      gBrowser.selectedBrowser,
+      [[gDummySerial++]],
+      function(serial) {
         content.document.documentElement.setAttribute("data-dummy", serial);
       }
     );

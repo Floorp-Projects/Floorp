@@ -26,7 +26,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.getElementById("restoreDefaultHomePageBtn") !== null
       ),
     "Wait for the button to be added to the page"
@@ -35,7 +37,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
           ) !== null
@@ -46,7 +50,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.getElementById("restoreDefaultHomePageBtn")
             .hidden === false
       ),
@@ -60,7 +66,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
           ).checked
@@ -71,7 +79,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.getElementById("restoreDefaultHomePageBtn").style
             .visibility === "hidden"
       ),
@@ -113,7 +123,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.getElementById("restoreDefaultHomePageBtn") !== null
       ),
     "Wait for the button to be added to the page"
@@ -122,7 +134,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
           ) !== null
@@ -131,7 +145,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   );
 
   const btnDefault = await SpecialPowers.spawn(
-    browser, [], () =>
+    browser,
+    [],
+    () =>
       content.document.getElementById("restoreDefaultHomePageBtn").style
         .visibility
   );
@@ -144,7 +160,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
           ).checked
@@ -162,7 +180,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           !content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
           ).checked
@@ -173,7 +193,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   await BrowserTestUtils.waitForCondition(
     () =>
       SpecialPowers.spawn(
-        browser, [], () =>
+        browser,
+        [],
+        () =>
           content.document.getElementById("restoreDefaultHomePageBtn").style
             .visibility === "visible"
       ),

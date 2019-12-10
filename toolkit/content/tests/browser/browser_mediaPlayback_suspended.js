@@ -56,25 +56,27 @@ async function suspended_pause(url, browser) {
 
   info("- the suspended state of audio should be non-suspened -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 
   info("- pause playing audio -");
   browser.pauseMedia(false /* non-disposable */);
+  await SpecialPowers.spawn(browser, [true], check_audio_pause_state);
   await SpecialPowers.spawn(
-    browser, [true], check_audio_pause_state
-  );
-  await SpecialPowers.spawn(
-    browser, [SuspendedType.SUSPENDED_PAUSE], check_audio_suspended
+    browser,
+    [SuspendedType.SUSPENDED_PAUSE],
+    check_audio_suspended
   );
 
   info("- resume paused audio -");
   browser.resumeMedia();
+  await SpecialPowers.spawn(browser, [false], check_audio_pause_state);
   await SpecialPowers.spawn(
-    browser, [false], check_audio_pause_state
-  );
-  await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 }
 
@@ -87,25 +89,27 @@ async function suspended_pause_disposable(url, browser) {
 
   info("- the suspended state of audio should be non-suspened -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 
   info("- pause playing audio -");
   browser.pauseMedia(true /* disposable */);
+  await SpecialPowers.spawn(browser, [true], check_audio_pause_state);
   await SpecialPowers.spawn(
-    browser, [true], check_audio_pause_state
-  );
-  await SpecialPowers.spawn(
-    browser, [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE], check_audio_suspended
+    browser,
+    [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE],
+    check_audio_suspended
   );
 
   info("- resume paused audio -");
   browser.resumeMedia();
+  await SpecialPowers.spawn(browser, [false], check_audio_pause_state);
   await SpecialPowers.spawn(
-    browser, [false], check_audio_pause_state
-  );
-  await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 }
 
@@ -118,14 +122,18 @@ async function suspended_stop_disposable(url, browser) {
 
   info("- the suspended state of audio should be non-suspened -");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 
   info("- stop playing audio -");
   browser.stopMedia();
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
   await SpecialPowers.spawn(
-    browser, [SuspendedType.NONE_SUSPENDED], check_audio_suspended
+    browser,
+    [SuspendedType.NONE_SUSPENDED],
+    check_audio_suspended
   );
 }
 

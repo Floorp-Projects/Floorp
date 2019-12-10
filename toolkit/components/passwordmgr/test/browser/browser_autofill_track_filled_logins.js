@@ -42,7 +42,9 @@ add_task(async function test() {
     // Convert the login object to a plain JS object for passing across process boundaries.
     login = LoginHelper.loginToVanillaObject(login);
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [{ login, usernameRequested }], async ({ login: addedLogin, usernameRequested: aUsernameRequested }) => {
+      tab.linkedBrowser,
+      [{ login, usernameRequested }],
+      async ({ login: addedLogin, usernameRequested: aUsernameRequested }) => {
         const { LoginFormFactory } = ChromeUtils.import(
           "resource://gre/modules/LoginFormFactory.jsm"
         );

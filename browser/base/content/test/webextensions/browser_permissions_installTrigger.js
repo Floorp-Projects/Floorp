@@ -7,7 +7,9 @@ async function installTrigger(filename) {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [`${BASE}/${filename}`], async function(url) {
+    gBrowser.selectedBrowser,
+    [`${BASE}/${filename}`],
+    async function(url) {
       content.wrappedJSObject.installTrigger(url);
     }
   );

@@ -27,7 +27,9 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   await SpecialPowers.spawn(
-    browser, [{ page: TEST_3RD_PARTY_PAGE_WITH_SVG }], async function(obj) {
+    browser,
+    [{ page: TEST_3RD_PARTY_PAGE_WITH_SVG }],
+    async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
 
