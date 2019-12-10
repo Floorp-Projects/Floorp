@@ -212,6 +212,20 @@ static XDRResult VersionCheck(XDRState<mode>* xdr) {
 }
 
 template <XDRMode mode>
+XDRResult XDRState<mode>::codeModuleObject(MutableHandleModuleObject modp) {
+#ifdef DEBUG
+  auto sanityCheck = mozilla::MakeScopeExit(
+      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
+#endif
+  if (mode == XDR_DECODE) {
+    modp.set(nullptr);
+  }
+
+  MOZ_TRY(XDRModuleObject(this, modp));
+  return Ok();
+}
+
+template <XDRMode mode>
 static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
   return xdr->codeUint32(atomCount);
 }
