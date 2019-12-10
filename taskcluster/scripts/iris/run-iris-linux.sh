@@ -12,6 +12,16 @@ start_xvfb '1920x1080x24+32' 0
 # Re-set `+e` after start_xvfb changes it
 set +e
 
+# configure fluxbox
+mkdir /builds/worker/.fluxbox/
+echo "exec startfluxbox" >> .xinitrc
+
+# required for X server to start correctly
+touch ~/.Xauthority
+
+# start fluxbox
+fluxbox &
+
 # Install iris's pipenv
 cd $MOZ_FETCHES_DIR/iris_firefox
 PIPENV_MAX_RETRIES="5" pipenv install
@@ -38,6 +48,9 @@ status=$?
 # Zip up the test run output
 cd ../..
 zip -r runs.zip iris_runs/runs
+
+# prevent timeout of the task
+killall fluxbox
 
 # Exit with iris's exit code so treeherder knows if tests failed
 exit $status
