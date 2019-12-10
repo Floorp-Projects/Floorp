@@ -23,5 +23,3 @@ SharedLibrary('osclientcerts')
 
 NoVisibilityFlags()
 SYMBOLS_FILE = 'osclientcerts.symbols'
-
-NO_PGO = True
