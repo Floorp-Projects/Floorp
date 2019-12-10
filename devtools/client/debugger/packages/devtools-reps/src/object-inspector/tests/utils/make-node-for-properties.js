@@ -172,8 +172,16 @@ describe("makeNodesForProperties", () => {
     const nodes = makeNodesForProperties(
       {
         ownProperties: {
-          bar: { value: {} },
+          bar: {
+            value: {},
+            get: { type: "function" },
+            set: { type: "function" },
+          },
           location: { value: {} },
+          onload: {
+            get: { type: "function" },
+            set: { type: "function" },
+          },
         },
         class: "Window",
       },
@@ -184,12 +192,38 @@ describe("makeNodesForProperties", () => {
     );
 
     const names = nodes.map(n => n.name);
-    const paths = nodes.map(n => n.path.toString());
+    const paths = nodes.map(n => n.path);
 
-    expect(names).toEqual(["bar", "<default properties>"]);
-    expect(paths).toEqual(["root◦bar", "root◦<default properties>"]);
+    expect(names).toEqual([
+      "bar",
+      "<default properties>",
+      "<get bar()>",
+      "<set bar()>",
+    ]);
+    expect(paths).toEqual([
+      "root◦bar",
+      "root◦<default properties>",
+      "root◦<get bar()>",
+      "root◦<set bar()>",
+    ]);
 
-    expect(nodeIsDefaultProperties(nodes[1])).toBe(true);
+    const defaultPropertyNode = nodes[1];
+    expect(nodeIsDefaultProperties(defaultPropertyNode)).toBe(true);
+
+    const defaultPropNames = defaultPropertyNode.contents.map(n => n.name);
+    const defaultPropPath = defaultPropertyNode.contents.map(n => n.path);
+    expect(defaultPropNames).toEqual([
+      "location",
+      "onload",
+      "<get onload()>",
+      "<set onload()>",
+    ]);
+    expect(defaultPropPath).toEqual([
+      "root◦<default properties>◦location",
+      "root◦<default properties>◦onload",
+      "root◦<default properties>◦<get onload()>",
+      "root◦<default properties>◦<set onload()>",
+    ]);
   });
 
   it("object with entries", () => {
