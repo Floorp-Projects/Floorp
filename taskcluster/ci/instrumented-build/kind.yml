@@ -150,6 +150,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win64-dump-syms
                 - win64-rust
                 - win64-rust-size
                 - win64-cbindgen
@@ -182,6 +183,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win64-dump-syms
                 - win64-rust
                 - win64-rust-size
                 - win64-cbindgen
