@@ -2130,8 +2130,13 @@ function makeNodesForProperties(objProps, parent) {
     const properties = Object.getOwnPropertyNames(allProperties[name]);
     return properties.some(property => ["value", "getterValue", "get", "set"].includes(property));
   });
-  const isParentNodeWindow = parentValue && parentValue.class == "Window";
-  const nodes = isParentNodeWindow ? makeDefaultPropsBucket(propertiesNames, parent, allProperties) : makeNodesForOwnProps(propertiesNames, parent, allProperties);
+  let nodes = [];
+
+  if (parentValue && parentValue.class == "Window") {
+    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
+  } else {
+    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
+  }
 
   if (Array.isArray(ownSymbols)) {
     ownSymbols.forEach((ownSymbol, index) => {
@@ -2160,25 +2165,20 @@ function makeNodesForProperties(objProps, parent) {
   } // Add accessor nodes if needed
 
 
-  const defaultPropertiesNode = isParentNodeWindow ? nodes.find(node => nodeIsDefaultProperties(node)) : null;
-
   for (const name of propertiesNames) {
     const property = allProperties[name];
-    const isDefaultProperty = isParentNodeWindow && defaultPropertiesNode && isDefaultWindowProperty(name);
-    const parentNode = isDefaultProperty ? defaultPropertiesNode : parent;
-    const parentContentsArray = isDefaultProperty && defaultPropertiesNode ? defaultPropertiesNode.contents : nodes;
 
     if (property.get && property.get.type !== "undefined") {
-      parentContentsArray.push(createGetterNode({
-        parent: parentNode,
+      nodes.push(createGetterNode({
+        parent,
         property,
         name
       }));
     }
 
     if (property.set && property.set.type !== "undefined") {
-      parentContentsArray.push(createSetterNode({
-        parent: parentNode,
+      nodes.push(createSetterNode({
+        parent,
         property,
         name
       }));
@@ -2914,6 +2914,7 @@ const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
+  parameterNames: PropTypes.array,
   onViewSourceInDebugger: PropTypes.func,
   sourceMapService: PropTypes.object
 };
@@ -2953,7 +2954,7 @@ function FunctionRep(props) {
     // Set dir="ltr" to prevent function parentheses from
     // appearing in the wrong direction
     dir: "ltr"
-  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(grip), ")", jumpToDefinitionButton);
+  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
 }
 
 function getTitle(grip, props) {
@@ -3032,10 +3033,10 @@ function cleanFunctionName(name) {
   return name;
 }
 
-function renderParams(grip) {
+function renderParams(props) {
   const {
     parameterNames = []
-  } = grip;
+  } = props;
   return parameterNames.filter(param => param).reduce((res, param, index, arr) => {
     res.push(span({
       className: "param"

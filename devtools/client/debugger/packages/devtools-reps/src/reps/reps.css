@@ -314,8 +314,3 @@ button.invoke-getter {
 .more-ellipsis {
   color: var(--comment-node-color);
 }
-
-/* function parameters */
-.objectBox-function .param {
-  color: var(--theme-highlight-red);
-}
