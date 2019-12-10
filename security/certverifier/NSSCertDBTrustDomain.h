@@ -268,8 +268,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   Result SynchronousCheckRevocationWithServer(
       const mozilla::pkix::CertID& certID, const nsCString& aiaLocation,
       mozilla::pkix::Time time, uint16_t maxOCSPLifetimeInDays,
-      const Result cachedResponseResult,
-      const Result stapledOCSPResponseResult);
+      const Result cachedResponseResult, const Result stapledOCSPResponseResult,
+      const Maybe<TimeDuration>& crliteLookupDuration);
   Result HandleOCSPFailure(const Result cachedResponseResult,
                            const Result stapledOCSPResponseResult,
                            const Result error);

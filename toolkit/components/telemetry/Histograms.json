@@ -11686,11 +11686,35 @@
   "CRLITE_RESULT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "expires_in_version": "80",
+    "expires_in_version": "75",
     "kind": "categorical",
     "labels": ["FilterNotAvailable", "IssuerNotEnrolled", "CertificateTooNew", "CertificateValid", "CertificateRevoked", "LibraryFailure"],
     "description": "The result of looking up revocation information for a TLS server certificate in CRLite.",
     "bug_numbers": [1586855],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
+  },
+  "CRLITE_FASTER_THAN_OCSP_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "kind": "exponential",
+    "high": 20000,
+    "n_buckets": 50,
+    "description": "If both a CRLite lookup and OCSP request are made, how many milliseconds faster was CRLite?",
+    "bug_numbers": [1602641],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
+  },
+  "OCSP_FASTER_THAN_CRLITE_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "kind": "exponential",
+    "high": 20000,
+    "n_buckets": 50,
+    "description": "If both a CRLite lookup and OCSP request are made, how many milliseconds faster was OCSP?",
+    "bug_numbers": [1602641],
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
   },

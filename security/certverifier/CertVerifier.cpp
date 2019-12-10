@@ -644,7 +644,7 @@ Result CertVerifier::VerifyCert(
           pinningTelemetryInfo->Reset();
         }
         if (crliteInfo) {
-          *crliteInfo = CRLiteTelemetryInfo::NeverChecked;
+          crliteInfo->Reset();
         }
 
         NSSCertDBTrustDomain trustDomain(
@@ -730,7 +730,7 @@ Result CertVerifier::VerifyCert(
             pinningTelemetryInfo->Reset();
           }
           if (crliteInfo) {
-            *crliteInfo = CRLiteTelemetryInfo::NeverChecked;
+            crliteInfo->Reset();
           }
 
           NSSCertDBTrustDomain trustDomain(
