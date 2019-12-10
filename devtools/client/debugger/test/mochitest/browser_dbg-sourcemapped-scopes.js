@@ -16,7 +16,7 @@ const ACTIVE_TARGETS = new Set([
   "rollup",
   // "rollup-babel6",
   // "rollup-babel7",
-  "parcel"
+  "parcel",
 ]);
 
 const ACTIVE_FIXTURES = [
@@ -42,7 +42,7 @@ const ACTIVE_FIXTURES = [
   testWebpackFunctions,
   testESModules,
   testESModulesCJS,
-  testESModulesES6
+  testESModulesES6,
 ];
 
 async function breakpointScopes(
@@ -103,7 +103,7 @@ function targetToFlags(target) {
     webpackImportGetter,
     webpack4ImportGetter,
     maybeLineStart,
-    defaultExport
+    defaultExport,
   };
 }
 function pairToFnName(target, fixture) {
@@ -126,7 +126,7 @@ function webpackModule(target, fixture, optimizedOut) {
     optimizedOut
       ? ["__webpack_require__", "(optimized away)"]
       : "__webpack_require__()",
-    ["arguments", optimizedOut ? "(unavailable)" : "Arguments"]
+    ["arguments", optimizedOut ? "(unavailable)" : "Arguments"],
   ];
 }
 
@@ -139,7 +139,7 @@ async function testBabelBindingsWithFlow(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const { webpackImportGetter } = targetToFlags(target);
 
@@ -153,7 +153,7 @@ async function testBabelBindingsWithFlow(dbg) {
         ["value", '"a-named"'],
         "Module",
         ["aNamed", webpackImportGetter || '"a-named"'],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -168,7 +168,7 @@ async function testBabelFlowtypeBindings(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const { webpackImportGetter } = targetToFlags(target);
 
@@ -181,7 +181,7 @@ async function testBabelFlowtypeBindings(dbg) {
         "Module",
         ["aConst", '"a-const"'],
         ["Four", webpackImportGetter || '"one"'],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -208,7 +208,7 @@ async function testEvalMaps(dbg) {
       ["one", "1"],
       ...webpackModule(target, "eval-maps", true /* optimized out */),
       ["module", "(optimized away)"],
-      defaultExport("root")
+      defaultExport("root"),
     ]);
   }
 
@@ -220,13 +220,13 @@ async function testEvalMaps(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       defaultExport,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -244,7 +244,7 @@ async function testEvalMaps(dbg) {
         "root",
         ["one", "1"],
         "Module",
-        defaultExport("root")
+        defaultExport("root"),
       ]
     );
   }
@@ -265,7 +265,7 @@ async function testForOf(dbg) {
       "mod",
       ...webpackModule(target, "for-of", true /* optimizedOut */),
       defaultExport("forOf"),
-      "module"
+      "module",
     ]);
   }
 
@@ -277,13 +277,13 @@ async function testForOf(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       defaultExport,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -295,10 +295,10 @@ async function testForOf(dbg) {
         "For",
         ["x", "1"],
         "forOf",
-        "doThing()",
+        "doThing(arg)",
         "Module",
         defaultExport("forOf"),
-        "mod"
+        "mod",
       ]
     );
   }
@@ -332,7 +332,7 @@ async function testShadowedVars(dbg) {
         ["aVar", '"var3"'],
 
         ...webpackModule(target, "shadowed-vars", true /* optimizedOut */),
-        ["module", "(optimized away)"]
+        ["module", "(optimized away)"],
       ]
     );
   }
@@ -345,13 +345,13 @@ async function testShadowedVars(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       isParcel,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -369,14 +369,14 @@ async function testShadowedVars(dbg) {
         isParcel
           ? "Outer()"
           : rollupOptimized
-            ? ["Outer", rollupOptimized]
-            : "Outer:_Outer()",
+          ? ["Outer", rollupOptimized]
+          : "Outer:_Outer()",
         "Function Body",
         ["aConst", rollupOptimized || '"const1"'],
         ["aLet", rollupOptimized || '"let1"'],
         rollupOptimized ? ["Outer", rollupOptimized] : "Outer()",
         "default",
-        ["aVar", rollupOptimized || '"var3"']
+        ["aVar", rollupOptimized || '"var3"'],
       ]
     );
   }
@@ -407,7 +407,7 @@ async function testLineStartBindingsES6(dbg) {
           true /* optimizedOut */
         ),
         ["module", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -420,12 +420,12 @@ async function testLineStartBindingsES6(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -441,7 +441,7 @@ async function testLineStartBindingsES6(dbg) {
         "root",
         ["aFunc", "(optimized away)"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -470,7 +470,7 @@ async function testThisArgumentsBindings(dbg) {
           true /* optimizedOut */
         ),
         ["module", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
 
@@ -498,7 +498,7 @@ async function testThisArgumentsBindings(dbg) {
           true /* optimizedOut */
         ),
         ["module", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -511,13 +511,13 @@ async function testThisArgumentsBindings(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       isParcel,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -530,15 +530,15 @@ async function testThisArgumentsBindings(dbg) {
         ["<this>", '"this-value"'],
         [
           "arrow",
-          target === "rollup" || isParcel ? "(uninitialized)" : "undefined"
+          target === "rollup" || isParcel ? "(uninitialized)" : "undefined",
         ],
         "fn",
         ["arg", '"arg-value"'],
         ["arguments", "Arguments"],
         "root",
-        "fn()",
+        "fn(arg)",
         "Module",
-        "root()"
+        "root()",
       ]
     );
 
@@ -554,14 +554,14 @@ async function testThisArgumentsBindings(dbg) {
         "Function Body",
         target === "rollup" || isParcel
           ? ["arrow", "(optimized away)"]
-          : "arrow()",
+          : "arrow(argArrow)",
         "fn",
         ["arg", '"arg-value"'],
         ["arguments", "Arguments"],
         "root",
-        "fn()",
+        "fn(arg)",
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -583,7 +583,7 @@ async function testClasses(dbg) {
       ["arguments", "(unavailable)"],
       ...webpackModule(target, "classes", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
 
     await breakpointScopes(dbg, target, "classes", { line: 16, column: 0 }, [
@@ -603,7 +603,7 @@ async function testClasses(dbg) {
       ["arguments", "(unavailable)"],
       ...webpackModule(target, "classes", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
   }
 
@@ -615,13 +615,13 @@ async function testClasses(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       isParcel,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -641,7 +641,7 @@ async function testClasses(dbg) {
           ? ["Thing", "(optimized away)"]
           : "Thing()",
         "Module",
-        "root()"
+        "root()",
       ]
     );
 
@@ -661,7 +661,7 @@ async function testClasses(dbg) {
         ["one", "1"],
         "Thing()",
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -679,7 +679,7 @@ async function testForLoops(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "for-loops", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
     await breakpointScopes(dbg, target, "for-loops", { line: 9, column: 0 }, [
       "Block",
@@ -691,7 +691,7 @@ async function testForLoops(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "for-loops", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
     await breakpointScopes(dbg, target, "for-loops", { line: 13, column: 0 }, [
       "Block",
@@ -703,7 +703,7 @@ async function testForLoops(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "for-loops", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
   }
 
@@ -715,12 +715,12 @@ async function testForLoops(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -734,7 +734,7 @@ async function testForLoops(dbg) {
         "Function Body",
         ["i", rollupOptimized || "0"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
     await breakpointScopes(
@@ -748,7 +748,7 @@ async function testForLoops(dbg) {
         "Function Body",
         ["i", rollupOptimized || "0"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
     await breakpointScopes(
@@ -762,7 +762,7 @@ async function testForLoops(dbg) {
         "Function Body",
         ["i", rollupOptimized || "0"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -781,7 +781,7 @@ async function testFunctions(dbg) {
       ["arguments", "Arguments"],
       ["p2", "undefined"],
       "Block",
-      "inner()",
+      "inner(p2)",
       "Block",
       ["inner", "(optimized away)"],
       "decl",
@@ -792,7 +792,7 @@ async function testFunctions(dbg) {
       "decl()",
       ...webpackModule(target, "functions", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
   }
 
@@ -804,13 +804,13 @@ async function testFunctions(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       isParcel,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -822,21 +822,21 @@ async function testFunctions(dbg) {
         "arrow",
         ["p3", "undefined"],
         "Function Body",
-        "arrow()",
+        "arrow(p3)",
         "inner",
         ["p2", "undefined"],
         "Function Expression",
-        "inner()",
+        "inner(p2)",
         "Function Body",
         target === "rollup" || isParcel
           ? ["inner", "(optimized away)"]
-          : "inner()",
+          : "inner(p2)",
         "decl",
         ["p1", "undefined"],
         "root",
-        "decl()",
+        "decl(p1)",
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -854,7 +854,7 @@ async function testSwitches(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "switches", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
 
     await breakpointScopes(dbg, target, "switches", { line: 10, column: 0 }, [
@@ -869,7 +869,7 @@ async function testSwitches(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "switches", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
   }
 
@@ -881,12 +881,12 @@ async function testSwitches(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -900,7 +900,7 @@ async function testSwitches(dbg) {
         "Function Body",
         ["val", rollupOptimized || "1"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
 
@@ -917,7 +917,7 @@ async function testSwitches(dbg) {
         "Function Body",
         ["val", rollupOptimized || "1"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -937,7 +937,7 @@ async function testTryCatches(dbg) {
       ["arguments", "Arguments"],
       ...webpackModule(target, "try-catches", true /* optimizedOut */),
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]);
   }
 
@@ -949,12 +949,12 @@ async function testTryCatches(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -970,7 +970,7 @@ async function testTryCatches(dbg) {
         "Function Body",
         ["one", rollupOptimized || "1"],
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -994,7 +994,7 @@ async function testLexAndNonlex(dbg) {
         ["someHelper", "(optimized away)"],
         ...webpackModule(target, "lex-and-nonlex", true /* optimizedOut */),
         ["module", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -1007,13 +1007,13 @@ async function testLexAndNonlex(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       isParcel,
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -1029,7 +1029,7 @@ async function testLexAndNonlex(dbg) {
           ? ["someHelper", "(optimized away)"]
           : "someHelper()",
         "Module",
-        "root()"
+        "root()",
       ]
     );
   }
@@ -1049,7 +1049,7 @@ async function testTypescriptClasses(dbg) {
         "Module",
         "AnotherThing()",
         "AppComponent()",
-        "decoratorFactory()",
+        "decoratorFactory(opts)",
         rollupOptimized ? ["def", rollupOptimized] : "def()",
         rollupOptimized
           ? ["ExportedOther", rollupOptimized]
@@ -1057,7 +1057,7 @@ async function testTypescriptClasses(dbg) {
         rollupOptimized
           ? ["ExpressionClass", rollupOptimized]
           : "ExpressionClass:Foo()",
-        "fn()",
+        "fn(arg)",
         // Rollup optimizes out the 'ns' reference here, but when it does, it leave a mapping
         // pointed at a location that is super weird, so it ends up being unmapped instead
         // be "(optimized out)".
@@ -1066,7 +1066,7 @@ async function testTypescriptClasses(dbg) {
         // though it's not 100% clear.
         ["ns", isRollup || isParcel ? "(unmapped)" : "{\u2026}"],
         "SubDecl()",
-        "SubVar:SubExpr()"
+        "SubVar:SubExpr()",
       ]
     );
   }
@@ -1083,7 +1083,7 @@ async function testTypeModule(dbg) {
       ...webpackModule(target, "type-module", true /* optimizedOut */),
       ["module", "(optimized away)"],
       ["moduleScoped", "1"],
-      "thirdModuleScoped()"
+      "thirdModuleScoped()",
     ]);
   }
 
@@ -1095,12 +1095,12 @@ async function testTypeModule(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       rollupOptimized,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -1112,7 +1112,7 @@ async function testTypeModule(dbg) {
         "Module",
         ["alsoModuleScoped", "2"],
         ["moduleScoped", "1"],
-        "thirdModuleScoped()"
+        "thirdModuleScoped()",
       ]
     );
   }
@@ -1138,7 +1138,7 @@ async function testTypeScriptCJS(dbg) {
         ["module", "(optimized away)"],
         "moduleScoped",
         "nonModules",
-        "thirdModuleScoped"
+        "thirdModuleScoped",
       ]
     );
   }
@@ -1149,7 +1149,7 @@ async function testTypeScriptCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     await breakpointScopes(
       dbg,
@@ -1161,7 +1161,7 @@ async function testTypeScriptCJS(dbg) {
         "alsoModuleScopes",
         "moduleScoped",
         "nonModules",
-        "thirdModuleScoped"
+        "thirdModuleScoped",
       ]
     );
   }
@@ -1174,7 +1174,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     await breakpointScopes(
       dbg,
@@ -1183,7 +1183,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
       { line: 8, column: 4 },
       [
         "callback",
-        "fn()",
+        "fn(inner)",
         ["val", "undefined"],
         "root",
         ["callback", "(optimized away)"],
@@ -1201,10 +1201,10 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
           "aDefault",
           target.match(/webpack(3|4)-babel7/)
             ? '"a-default"'
-            : "(optimized away)"
+            : "(optimized away)",
         ],
         ["root", "(optimized away)"],
-        ["val", "(optimized away)"]
+        ["val", "(optimized away)"],
       ]
     );
   }
@@ -1223,7 +1223,7 @@ async function testModulesCJS(dbg) {
       ["exports", "(optimized away)"],
       ["module", "(optimized away)"],
       ["moduleScoped", "1"],
-      "thirdModuleScoped()"
+      "thirdModuleScoped()",
     ]);
   }
 
@@ -1233,13 +1233,13 @@ async function testModulesCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 2 }, [
       "Module",
       ["alsoModuleScoped", "2"],
       ["moduleScoped", "1"],
-      "thirdModuleScoped()"
+      "thirdModuleScoped()",
     ]);
   }
 }
@@ -1271,7 +1271,7 @@ async function testWebpackLineMappings(dbg) {
       ["__webpack_require__", "(optimized away)"],
       ["arguments", "(unavailable)"],
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]
   );
 
@@ -1301,7 +1301,7 @@ async function testWebpackLineMappings(dbg) {
       ["_src_mod1__WEBPACK_IMPORTED_MODULE_0__", "{\u2026}"],
       ["arguments", "(unavailable)"],
       ["module", "(optimized away)"],
-      "root()"
+      "root()",
     ]
   );
 }
@@ -1325,7 +1325,7 @@ async function testWebpackFunctions(dbg) {
         ["__webpack_require__", "(optimized away)"],
         ["arguments", "(unavailable)"],
         ["module", "{\u2026}"],
-        defaultExport("root")
+        defaultExport("root"),
       ]
     );
   }
@@ -1358,7 +1358,7 @@ async function testESModules(dbg) {
       "arguments",
       "example",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1388,7 +1388,7 @@ async function testESModules(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1398,12 +1398,12 @@ async function testESModules(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       defaultExport,
       webpackImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -1428,7 +1428,7 @@ async function testESModules(dbg) {
         ["anotherNamed3", webpackImportGetter || '"a-named3"'],
         defaultExport("example"),
         ["optimizedOut", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -1456,7 +1456,7 @@ async function testESModules(dbg) {
       ["original", '"an-original"'],
       ["original$1", '"an-original2"'],
       ["original$2", '"an-original3"'],
-      "root()"
+      "root()",
     ]);
   }
 }
@@ -1488,7 +1488,7 @@ async function testESModulesCJS(dbg) {
       "arguments",
       "example",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1518,7 +1518,7 @@ async function testESModulesCJS(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1528,7 +1528,7 @@ async function testESModulesCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     await breakpointScopes(
       dbg,
@@ -1552,7 +1552,7 @@ async function testESModulesCJS(dbg) {
         ["anotherNamed3", '"a-named3"'],
         ["example", "(optimized away)"],
         ["optimizedOut", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -1585,7 +1585,7 @@ async function testESModulesES6(dbg) {
       "arguments",
       "example",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1615,7 +1615,7 @@ async function testESModulesES6(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()"
+      "root()",
     ]
   );
 
@@ -1625,12 +1625,12 @@ async function testESModulesES6(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7"
+    "webpack4-babel7",
   ]) {
     const {
       defaultExport,
       webpack4ImportGetter,
-      maybeLineStart
+      maybeLineStart,
     } = targetToFlags(target);
 
     await breakpointScopes(
@@ -1655,7 +1655,7 @@ async function testESModulesES6(dbg) {
         ["anotherNamed3", webpack4ImportGetter || '"a-named3"'],
         defaultExport("example"),
         ["optimizedOut", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
@@ -1692,7 +1692,7 @@ async function testESModulesES6(dbg) {
         ["aNamespace", "{\u2026}"],
         ["arguments", "(unavailable)"],
         ["mod4", "(optimized away)"],
-        "root()"
+        "root()",
       ]
     );
   }
