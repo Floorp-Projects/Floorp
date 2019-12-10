@@ -26,14 +26,7 @@ const uint32_t kCacheRefreshInterval = 500;
 
 DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell) {
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocument->GetDocShell());
-
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
-
-  if (treeItem->ItemType() == nsIDocShellTreeItem::typeContent &&
-      (!parentTreeItem ||
-       parentTreeItem->ItemType() == nsIDocShellTreeItem::typeChrome)) {
+  if (aDocument->GetBrowsingContext()->IsTopContent()) {
     // The top-level content document gets this special ID.
     mID = kNoID;
   } else {
