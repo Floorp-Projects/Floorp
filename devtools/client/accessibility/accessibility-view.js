@@ -127,7 +127,7 @@ AccessibilityView.prototype = {
     }
 
     await this.store.dispatch(select(walker, accessible));
-    window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);
+    window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   },
 
   /**
