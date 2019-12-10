@@ -154,7 +154,7 @@ async function createTabAndLoad(url) {
 }
 
 async function playMedia(tab) {
-  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     return new Promise(resolve => {
       const video = content.document.getElementById("autoplay");
       if (!video) {
@@ -174,7 +174,7 @@ async function playMedia(tab) {
 }
 
 async function checkOrWaitUntilMediaStartedPlaying(tab) {
-  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     return new Promise(resolve => {
       const video = content.document.getElementById("autoplay");
       if (!video) {
@@ -196,7 +196,7 @@ async function checkOrWaitUntilMediaStartedPlaying(tab) {
 }
 
 async function checkOrWaitUntilMediaStoppedPlaying(tab) {
-  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     return new Promise(resolve => {
       const video = content.document.getElementById("autoplay");
       if (!video) {

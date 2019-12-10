@@ -55,7 +55,7 @@ add_task(async function testPopupBorderRadius() {
       "borderBottomLeftRadius",
     ];
 
-    let bodyStyle = await ContentTask.spawn(browser, props, async function(
+    let bodyStyle = await SpecialPowers.spawn(browser, [props], async function(
       props
     ) {
       let bodyStyle = content.getComputedStyle(content.document.body);

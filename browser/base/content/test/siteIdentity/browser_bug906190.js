@@ -49,10 +49,8 @@ async function doTest(
       await promiseReloaded;
 
       // Wait for the script in the page to update the contents of the test div.
-      await ContentTask.spawn(
-        browser,
-        childTabSpec,
-        async childTabSpecContent => {
+      await SpecialPowers.spawn(
+        browser, [childTabSpec], async childTabSpecContent => {
           let testDiv = content.document.getElementById("mctestdiv");
           await ContentTaskUtils.waitForCondition(
             () => testDiv.innerHTML == "Mixed Content Blocker disabled"
@@ -150,7 +148,7 @@ add_task(async function test_same_origin() {
         passiveLoaded: false,
       });
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker disabled",
@@ -181,7 +179,7 @@ add_task(async function test_different_origin() {
         passiveLoaded: false,
       });
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker enabled",
@@ -212,7 +210,7 @@ add_task(async function test_same_origin_metarefresh_same_origin() {
         passiveLoaded: false,
       });
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker disabled",
@@ -243,7 +241,7 @@ add_task(async function test_same_origin_metarefresh_different_origin() {
         passiveLoaded: false,
       });
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker enabled",
@@ -274,7 +272,7 @@ add_task(async function test_same_origin_302redirect_same_origin() {
         "OK: Mixed Content is NOT being blocked"
       );
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker disabled",
@@ -304,7 +302,7 @@ add_task(async function test_same_origin_302redirect_different_origin() {
         passiveLoaded: false,
       });
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
         Assert.equal(
           content.document.getElementById("mctestdiv").innerHTML,
           "Mixed Content Blocker enabled",

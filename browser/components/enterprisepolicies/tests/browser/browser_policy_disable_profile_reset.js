@@ -46,7 +46,7 @@ async function test_reset_disabled({ disabled }) {
     gBrowser,
     "about:support"
   );
-  await ContentTask.spawn(tab.linkedBrowser, { disabled }, async function({
+  await SpecialPowers.spawn(tab.linkedBrowser, [{ disabled }], async function({
     // eslint-disable-next-line no-shadow
     disabled,
   }) {

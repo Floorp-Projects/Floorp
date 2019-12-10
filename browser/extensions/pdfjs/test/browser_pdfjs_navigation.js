@@ -165,7 +165,7 @@ add_task(async function test() {
     async function(newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
-      await ContentTask.spawn(newTabBrowser, null, async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function() {
         // Check if PDF is opened with internal viewer
         Assert.ok(
           content.document.querySelector("div#viewer"),
@@ -173,11 +173,11 @@ add_task(async function test() {
         );
       });
 
-      await ContentTask.spawn(newTabBrowser, null, contentSetUp);
+      await SpecialPowers.spawn(newTabBrowser, [], contentSetUp);
 
       await runTests(newTabBrowser);
 
-      await ContentTask.spawn(newTabBrowser, null, async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function() {
         let pageNumber = content.document.querySelector("input#pageNumber");
         Assert.equal(
           pageNumber.value,
@@ -255,7 +255,7 @@ async function contentSetUp() {
  * @param callback
  */
 async function runTests(browser) {
-  await ContentTask.spawn(browser, TESTS, async function(contentTESTS) {
+  await SpecialPowers.spawn(browser, [TESTS], async function(contentTESTS) {
     let window = content;
     let document = window.document;
 

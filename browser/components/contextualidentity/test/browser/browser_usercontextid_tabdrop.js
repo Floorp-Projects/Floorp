@@ -50,7 +50,7 @@ add_task(async function() {
     "Tab shouldn't have usercontextid attribute"
   );
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,
@@ -112,7 +112,7 @@ add_task(async function() {
   let tab2 = await newTabPromise;
   Assert.equal(tab2.getAttribute("usercontextid"), 1);
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,
@@ -162,7 +162,7 @@ add_task(async function() {
 
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
-  await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,

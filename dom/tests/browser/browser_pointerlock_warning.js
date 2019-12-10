@@ -35,7 +35,7 @@ add_task(async function show_pointerlock_warning_escape() {
   ok(true, "Pointerlock warning hidden");
 
   // Pointerlock should be released after escape is pressed.
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     Assert.equal(content.document.pointerLockElement, null);
   });
 
@@ -68,7 +68,7 @@ add_task(async function show_pointerlock_warning_timeout() {
   await warningHiddenPromise;
 
   // The warning closes after a few seconds, but this does not exit pointerlock mode.
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     Assert.equal(content.document.pointerLockElement, content.document.body);
   });
 
@@ -77,7 +77,7 @@ add_task(async function show_pointerlock_warning_timeout() {
   ok(true, "Pointerlock warning hidden");
 
   // Pointerlock should now be released.
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     Assert.equal(content.document.pointerLockElement, null);
   });
 

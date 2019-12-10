@@ -52,7 +52,7 @@ add_task(async function test_download_privatebrowsing() {
       });
     });
 
-    await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
       content.document.querySelector("a").click();
     });
 

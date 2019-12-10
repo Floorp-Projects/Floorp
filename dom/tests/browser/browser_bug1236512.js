@@ -9,10 +9,8 @@ const testPageURL =
   "http://mochi.test:8888/browser/dom/tests/browser/dummy.html";
 
 async function testContentVisibilityState(aIsHidden, aBrowser) {
-  await ContentTask.spawn(
-    aBrowser.selectedBrowser,
-    aIsHidden,
-    aExpectedResult => {
+  await SpecialPowers.spawn(
+    aBrowser.selectedBrowser, [aIsHidden], aExpectedResult => {
       is(content.document.hidden, aExpectedResult, "document.hidden");
       is(
         content.document.visibilityState,
@@ -24,7 +22,7 @@ async function testContentVisibilityState(aIsHidden, aBrowser) {
 }
 
 async function waitContentVisibilityChange(aIsHidden, aBrowser) {
-  await ContentTask.spawn(aBrowser.selectedBrowser, aIsHidden, async function(
+  await SpecialPowers.spawn(aBrowser.selectedBrowser, [aIsHidden], async function(
     aExpectedResult
   ) {
     let visibilityState = aExpectedResult ? "hidden" : "visible";

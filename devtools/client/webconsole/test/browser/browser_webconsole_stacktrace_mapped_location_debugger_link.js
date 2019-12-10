@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("Print a stacktrace");
   const onLoggedStacktrace = waitForMessage(hud, "console.trace");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.logTrace();
   });
   const { node } = await onLoggedStacktrace;

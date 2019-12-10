@@ -59,7 +59,7 @@ add_task(async function test_ShowCertificate() {
     viewCertButton.click();
     await loaded;
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");

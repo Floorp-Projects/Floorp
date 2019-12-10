@@ -23,7 +23,7 @@ add_task(async function test_aboutPreferences() {
     { gBrowser, url: PAGE_PREFS },
     async function(browser) {
       await finalPrefPaneLoaded;
-      await ContentTask.spawn(browser, SELECTORS, selectors => {
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
           content.document.querySelector(selectors.group).hidden,
           true,
@@ -45,7 +45,7 @@ add_task(async function test_aboutPreferencesPrivacy() {
     { gBrowser, url: PAGE_PRIVACY },
     async function(browser) {
       await finalPrefPaneLoaded;
-      await ContentTask.spawn(browser, SELECTORS, selectors => {
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
           content.document.querySelector(selectors.group).hidden,
           false,
@@ -94,7 +94,7 @@ add_task(async function test_openManageAutofillDialogs() {
         MANAGE_ADDRESSES_DIALOG_URL,
         MANAGE_CREDIT_CARDS_DIALOG_URL,
       ];
-      await ContentTask.spawn(browser, args, ([selectors, addrUrl, ccUrl]) => {
+      await SpecialPowers.spawn(browser, [args], ([selectors, addrUrl, ccUrl]) => {
         function testManageDialogOpened(expectedUrl) {
           return {
             open: openUrl => is(openUrl, expectedUrl, "Manage dialog called"),
@@ -128,7 +128,7 @@ add_task(async function test_autofillCheckboxes() {
     { gBrowser, url: PAGE_PRIVACY },
     async function(browser) {
       await finalPrefPaneLoaded;
-      await ContentTask.spawn(browser, SELECTORS, selectors => {
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
           content.document.querySelector(selectors.group).hidden,
           false,
@@ -163,7 +163,7 @@ add_task(async function test_autofillCheckboxes() {
         "Check address autofill is now enabled"
       );
 
-      await ContentTask.spawn(browser, SELECTORS, selectors => {
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         content.document
           .querySelector(selectors.creditCardAutofillCheckbox)
           .scrollIntoView({ block: "center", behavior: "instant" });
@@ -194,7 +194,7 @@ add_task(async function test_creditCardNotAvailable() {
     { gBrowser, url: PAGE_PRIVACY },
     async function(browser) {
       await finalPrefPaneLoaded;
-      await ContentTask.spawn(browser, SELECTORS, selectors => {
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
           content.document.querySelector(selectors.group).hidden,
           false,

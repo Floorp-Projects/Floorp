@@ -52,7 +52,7 @@ add_task(async function redirector_ignores_override() {
      * to the overriding URLs.
      */
     await BrowserTestUtils.withNewTab(tabOptions, async browser => {
-      await ContentTask.spawn(browser, {}, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         Assert.equal(content.location.href, "about:newtab", "Got right URL");
         Assert.equal(
           content.document.location.href,
@@ -95,7 +95,7 @@ add_task(async function override_loads_in_browser() {
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.browserLoaded(browser);
 
-    await ContentTask.spawn(browser, { url: overrideURL }, async args => {
+    await SpecialPowers.spawn(browser, [{ url: overrideURL }], async args => {
       Assert.equal(content.location.href, args.url.trim(), "Got right URL");
       Assert.equal(
         content.document.location.href,
@@ -129,7 +129,7 @@ add_task(async function override_blank_loads_in_browser() {
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.browserLoaded(browser);
 
-    await ContentTask.spawn(browser, {}, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       Assert.equal(content.location.href, "about:blank", "Got right URL");
       Assert.equal(
         content.document.location.href,

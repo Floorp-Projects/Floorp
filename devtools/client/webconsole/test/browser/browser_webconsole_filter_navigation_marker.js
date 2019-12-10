@@ -21,7 +21,7 @@ add_task(async function() {
   ok(true, "Log message rendered");
 
   info("Reload the page");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.location.reload();
   });
 

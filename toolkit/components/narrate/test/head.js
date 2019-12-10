@@ -64,7 +64,7 @@ function spawnInNewReaderTab(url, func) {
   return BrowserTestUtils.withNewTab(
     { gBrowser, url: `about:reader?url=${encodeURIComponent(url)}` },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         // This imports the test utils for all tests, so we'll declare it as
         // a global here which will make it ESLint happy.
         /* global NarrateTestUtils */
@@ -77,7 +77,7 @@ function spawnInNewReaderTab(url, func) {
         await NarrateTestUtils.getReaderReadyPromise(content);
       });
 
-      await ContentTask.spawn(browser, null, func);
+      await SpecialPowers.spawn(browser, [], func);
     }
   );
 }

@@ -33,11 +33,8 @@ async function test_popup_blocker_disabled({ disabled, locked }) {
     gBrowser,
     "about:preferences#privacy"
   );
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { disabled, locked },
-    // eslint-disable-next-line no-shadow
-    async function({ disabled, locked }) {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ disabled, locked }], async function({ disabled, locked }) {
       let checkbox = content.document.getElementById("popupPolicy");
       is(
         checkbox.checked,

@@ -30,7 +30,7 @@ function promiseU2FRegister(tab, app_id) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
 
-  return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], function([
+  return SpecialPowers.spawn(tab.linkedBrowser, [[app_id, challenge]], function([
     app_id,
     challenge,
   ]) {
@@ -51,7 +51,7 @@ function promiseU2FRegister(tab, app_id) {
 }
 
 function promiseWebAuthnRegister(tab, appid) {
-  return ContentTask.spawn(tab.linkedBrowser, [appid], ([appid]) => {
+  return SpecialPowers.spawn(tab.linkedBrowser, [[appid]], ([appid]) => {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let challenge = content.crypto.getRandomValues(new Uint8Array(16));
@@ -83,10 +83,8 @@ function promiseWebAuthnRegister(tab, appid) {
 }
 
 function promiseWebAuthnSign(tab, key_handle, extensions = {}) {
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    [key_handle, extensions],
-    ([key_handle, extensions]) => {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser, [[key_handle, extensions]], ([key_handle, extensions]) => {
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
       let credential = {

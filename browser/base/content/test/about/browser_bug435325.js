@@ -34,7 +34,7 @@ add_task(async function checkSwitchPageToOnlineMode() {
     );
 
     // Click on the 'Try again' button.
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       ok(
         content.document.documentURI.startsWith("about:neterror?e=netOffline"),
         "Should be showing error page"

@@ -36,29 +36,29 @@ add_task(async function() {
   // Note, this might not be true once fission is implemented (Bug 1451850)
   ok(pid1 != pid2, "We should have different processes here.");
 
-  await ContentTask.spawn(browser1, null, async function() {
+  await SpecialPowers.spawn(browser1, [], async function() {
     is(content.document.cookie, "", "Expecting no cookies");
   });
 
-  await ContentTask.spawn(browser2, null, async function() {
+  await SpecialPowers.spawn(browser2, [], async function() {
     is(content.document.cookie, "", "Expecting no cookies");
   });
 
-  await ContentTask.spawn(browser1, null, async function() {
+  await SpecialPowers.spawn(browser1, [], async function() {
     content.document.cookie = "a1=test";
   });
 
-  await ContentTask.spawn(browser2, null, async function() {
+  await SpecialPowers.spawn(browser2, [], async function() {
     is(content.document.cookie, "a1=test", "Cookie should be set");
     content.document.cookie = "a1=other_test";
   });
 
-  await ContentTask.spawn(browser1, null, async function() {
+  await SpecialPowers.spawn(browser1, [], async function() {
     is(content.document.cookie, "a1=other_test", "Cookie should be set");
     content.document.cookie = "a2=again";
   });
 
-  await ContentTask.spawn(browser2, null, async function() {
+  await SpecialPowers.spawn(browser2, [], async function() {
     is(
       content.document.cookie,
       "a1=other_test; a2=again",
@@ -68,7 +68,7 @@ add_task(async function() {
     content.document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT;";
   });
 
-  await ContentTask.spawn(browser1, null, async function() {
+  await SpecialPowers.spawn(browser1, [], async function() {
     is(content.document.cookie, "", "Cookies should be cleared");
   });
 

@@ -26,7 +26,7 @@ add_task(async function() {
   // A toplevel tab should be able to navigate cross process!
   await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
     let epc = expectProcessCreated();
-    await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+    await SpecialPowers.spawn(aBrowser, [TEST_URI], TEST_URI => {
       content.document.location = TEST_URI;
     });
 
@@ -34,7 +34,7 @@ add_task(async function() {
     await epc;
 
     // Allocate a gigabyte of memory in the content process
-    await ContentTask.spawn(aBrowser, null, () => {
+    await SpecialPowers.spawn(aBrowser, [], () => {
       let arrayBuffer = new ArrayBuffer(1024 * 1024 * 1024);
       ok(
         arrayBuffer,

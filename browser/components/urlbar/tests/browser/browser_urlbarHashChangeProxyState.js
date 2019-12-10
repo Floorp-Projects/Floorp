@@ -70,7 +70,7 @@ add_task(async function() {
     verifyURLBarState("after a URL bar hash navigation");
 
     expectURL(baseURL + "#foo");
-    await ContentTask.spawn(browser, null, function() {
+    await SpecialPowers.spawn(browser, [], function() {
       let a = content.document.createElement("a");
       a.href = "#foo";
       a.textContent = "Foo Link";

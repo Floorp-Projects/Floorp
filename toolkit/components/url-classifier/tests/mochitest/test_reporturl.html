@@ -18,7 +18,7 @@
 <script class="testbody" type="text/javascript">
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+;
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 var mainWindow = window.docShell.rootTreeItem.domWindow;
@@ -98,13 +98,13 @@ var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
     await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
     await BrowserTestUtils.browserLoaded(aBrowser);
 
-    await ContentTask.spawn(aBrowser, aUrl, async function(url) {
+    await SpecialPowers.spawn(aBrowser, [aUrl], async function(url) {
       return new Promise(resolve => {
         let listener = e => {
-          removeEventListener("AboutBlockedLoaded", listener, false, true);
+          docShell.chromeEventHandler.removeEventListener("AboutBlockedLoaded", listener, false, true);
           resolve();
         };
-        addEventListener("AboutBlockedLoaded", listener, false, true);
+        docShell.chromeEventHandler.addEventListener("AboutBlockedLoaded", listener, false, true);
         let frame = content.document.getElementById("phishingFrame");
         frame.setAttribute("src", "http://" + url);
       });

@@ -115,7 +115,7 @@ registerCleanupFunction(function() {
 });
 
 async function test_with_mock_shellservice(options, testFn) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, options, async function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [options], async function(
     contentOptions
   ) {
     let doc = content.document;
@@ -137,7 +137,7 @@ async function test_with_mock_shellservice(options, testFn) {
     win.gMainPane.updateSetDefaultBrowser();
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, testFn);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], testFn);
 
   Services.prefs.setBoolPref(
     "browser.shell.checkDefaultBrowser",

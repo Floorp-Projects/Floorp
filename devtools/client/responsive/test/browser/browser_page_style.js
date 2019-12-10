@@ -51,7 +51,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 function waitForContentPageTextColor(ui, expectedColor) {
-  return ContentTask.spawn(ui.getViewportBrowser(), { expectedColor }, function(
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [{ expectedColor }], function(
     args
   ) {
     return new Promise(resolve => {
