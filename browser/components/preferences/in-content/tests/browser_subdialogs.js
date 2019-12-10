@@ -239,7 +239,9 @@ add_task(
     await close_subdialog_and_test_generic_end_state(
       tab.linkedBrowser,
       function() {
-        content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog();
+        content.window.gSubDialog._topDialog._frame.contentDocument
+          .getElementById("subDialog")
+          .acceptDialog();
       },
       "accept",
       1
@@ -254,7 +256,9 @@ add_task(async function check_canceling_dialog() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.cancelDialog();
+      content.window.gSubDialog._topDialog._frame.contentDocument
+        .getElementById("subDialog")
+        .cancelDialog();
     },
     "cancel",
     0
@@ -302,7 +306,9 @@ add_task(async function check_reopening_dialog() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog();
+      content.window.gSubDialog._topDialog._frame.contentDocument
+        .getElementById("subDialog")
+        .acceptDialog();
     },
     "accept",
     1
@@ -310,7 +316,9 @@ add_task(async function check_reopening_dialog() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog();
+      content.window.gSubDialog._topDialog._frame.contentDocument
+        .getElementById("subDialog")
+        .acceptDialog();
     },
     "accept",
     1
@@ -326,7 +334,9 @@ add_task(async function check_opening_while_closing() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog();
+      content.window.gSubDialog._topDialog._frame.contentDocument
+        .getElementById("subDialog")
+        .acceptDialog();
     },
     "accept",
     1

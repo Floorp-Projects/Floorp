@@ -5,11 +5,11 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<dialog id="subDialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="Sample sub-dialog #2" style="width: 32em; height: 5em;"
         onload="document.getElementById('textbox').focus();">
+<dialog id="subDialog">
   <script>
     document.addEventListener("dialogaccept", acceptSubdialog);
     function acceptSubdialog() {
@@ -26,3 +26,4 @@
   <button oncommand="window.close();" icon="close" label="Close" />
 
 </dialog>
+</window>

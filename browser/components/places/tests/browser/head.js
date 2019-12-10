@@ -266,7 +266,7 @@ var withBookmarksDialog = async function(
   } finally {
     if (!closed && autoCancel) {
       info("withBookmarksDialog: canceling the dialog");
-      doc.documentElement.cancelDialog();
+      doc.getElementById("bookmarkproperties").cancelDialog();
       await closePromise;
     }
     // Give the dialog a little time to close itself.

@@ -20,6 +20,6 @@ add_task(async function() {
     "Should not have selected a hidden item."
   );
   let helperAppDialogHiddenPromise = BrowserTestUtils.windowClosed(dlg);
-  doc.documentElement.cancelDialog();
+  doc.getElementById("unknownContentType").cancelDialog();
   await helperAppDialogHiddenPromise;
 });

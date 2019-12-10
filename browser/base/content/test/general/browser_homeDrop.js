@@ -54,7 +54,7 @@ add_task(async function() {
       Services.prefs.addObserver(HOMEPAGE_PREF, observer);
     });
 
-    setHomepageDialog.document.documentElement.acceptDialog();
+    setHomepageDialog.document.getElementById("commonDialog").acceptDialog();
 
     await setHomepagePromise;
   }

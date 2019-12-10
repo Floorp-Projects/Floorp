@@ -69,10 +69,11 @@ add_task(async function() {
   info("Dialog loaded");
 
   let dialogDoc = dialog.document;
+  let dialogElement = dialogDoc.getElementById("app-picker");
   let dialogList = dialogDoc.getElementById("app-picker-listbox");
   dialogList.selectItem(dialogList.firstElementChild);
   let selectedApp = dialogList.firstElementChild.handlerApp;
-  dialogDoc.documentElement.acceptDialog();
+  dialogElement.acceptDialog();
 
   // Verify results are correct in mime service:
   let mimeInfo = gMimeSvc.getFromTypeAndExtension("text/x-test-handler", null);
@@ -114,6 +115,7 @@ add_task(async function() {
   info("Dialog loaded the second time");
 
   dialogDoc = dialog.document;
+  dialogElement = dialogDoc.getElementById("appManager");
   dialogList = dialogDoc.getElementById("appList");
   let itemToRemove = dialogList.querySelector(
     'richlistitem > label[value="' + selectedApp.name + '"]'
@@ -123,7 +125,7 @@ add_task(async function() {
   dialogDoc.getElementById("remove").click();
   ok(!itemToRemove.parentNode, "Item got removed from DOM");
   is(dialogList.children.length, itemsBefore - 1, "Item got removed");
-  dialogDoc.documentElement.acceptDialog();
+  dialogElement.acceptDialog();
 
   // Verify results are correct in mime service:
   mimeInfo = gMimeSvc.getFromTypeAndExtension("text/x-test-handler", null);

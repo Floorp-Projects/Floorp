@@ -139,7 +139,7 @@ add_task(async function test_protocolHandler() {
     let window = await BrowserTestUtils.domWindowOpened(undefined, win => {
       return BrowserTestUtils.waitForEvent(win, "load", false, event => {
         let win = event.target.defaultView;
-        return win.document.documentElement.getAttribute("id") === "handling";
+        return !!win.document.querySelector("dialog#handling");
       });
     });
     let entry =  window.document.getElementById("items").firstChild;

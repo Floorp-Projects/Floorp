@@ -112,7 +112,8 @@ add_task(async function testPasswordStrengthAndEquality() {
     password2Textbox.oninput();
 
     Assert.equal(
-      win.document.documentElement.getButton("accept").disabled,
+      win.document.getElementById("setp12password").getButton("accept")
+        .disabled,
       password1Textbox.value != password2Textbox.value,
       "Actual and expected accept button disable state should " +
         `match for ${testCase.name}`

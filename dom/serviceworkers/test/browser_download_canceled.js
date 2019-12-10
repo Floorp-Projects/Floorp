@@ -53,7 +53,9 @@ function promiseClickDownloadDialogButton(buttonAction) {
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      const button = win.document.documentElement.getButton(buttonAction);
+      const button = win.document
+        .getElementById("unknownContentType")
+        .getButton(buttonAction);
       button.disabled = false;
       info(`clicking ${buttonAction} button`);
       button.click();

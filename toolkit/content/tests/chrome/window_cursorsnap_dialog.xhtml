@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<dialog title="Cursor snapping test" id="dialog"
+<window title="Cursor snapping test"
   width="600" height="600"
   onload="onload();"
   onunload="onunload();"
-  buttons="accept,cancel"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog id="dialog"
+  buttons="accept,cancel">
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -102,3 +103,4 @@ function onunload()
 </script>
 
 </dialog>
+</window>

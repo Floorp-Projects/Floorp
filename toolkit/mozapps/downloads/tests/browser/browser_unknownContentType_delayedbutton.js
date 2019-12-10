@@ -58,7 +58,8 @@ add_task(async function test_unknownContentType_delayedbutton() {
     },
     async function() {
       let uctWindow = await UCTObserver.opened.promise;
-      let ok = uctWindow.document.documentElement.getButton("accept");
+      let dialog = uctWindow.document.getElementById("unknownContentType");
+      let ok = dialog.getButton("accept");
 
       SimpleTest.is(ok.disabled, true, "button started disabled");
 
@@ -81,7 +82,7 @@ add_task(async function test_unknownContentType_delayedbutton() {
       await waitDelay(DIALOG_DELAY);
       SimpleTest.is(ok.disabled, false, "button re-enabled after delay");
 
-      uctWindow.document.documentElement.cancelDialog();
+      dialog.cancelDialog();
       await UCTObserver.closed.promise;
 
       Services.ww.unregisterNotification(UCTObserver);
