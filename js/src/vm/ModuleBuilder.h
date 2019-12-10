@@ -99,11 +99,14 @@ class MOZ_STACK_CLASS ModuleBuilder {
   bool maybeAppendRequestedModule(JS::Handle<JSAtom*> specifier,
                                   frontend::ParseNode* node);
 
-  template <typename T>
-  ArrayObject* createArray(const JS::Rooted<JS::GCVector<T>>& vector);
   template <typename K, typename V>
-  ArrayObject* createArray(const JS::Rooted<JS::GCHashMap<K, V>>& map);
+  ArrayObject* createArrayFromHashMap(
+      const JS::Rooted<JS::GCHashMap<K, V>>& map);
 };
+
+template <typename T>
+ArrayObject* CreateArray(JSContext* cx,
+                         const JS::Rooted<JS::GCVector<T>>& vector);
 
 }  // namespace js
 
