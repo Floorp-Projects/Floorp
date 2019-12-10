@@ -2446,6 +2446,25 @@ CONVERSION_BENCH(PerfUTF8toUTF16VIHundred, CopyUTF8toUTF16, mViHundredUtf8,
 CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8,
                  nsAutoString);
 
+// Tests for usability of nsTLiteralString in constant expressions.
+static_assert(NS_LITERAL_STRING("").IsEmpty());
+
+constexpr auto testStringA = NS_LITERAL_STRING("a");
+static_assert(!testStringA.IsEmpty());
+static_assert(!testStringA.IsVoid());
+static_assert(testStringA.IsLiteral());
+static_assert(testStringA.IsTerminated());
+static_assert(testStringA.GetDataFlags() ==
+              (nsLiteralString::DataFlags::LITERAL |
+               nsLiteralString::DataFlags::TERMINATED));
+static_assert(*static_cast<const char16_t*>(testStringA.Data()) == 'a');
+static_assert(1 == testStringA.Length());
+static_assert(testStringA.CharAt(0) == 'a');
+static_assert(testStringA[0] == 'a');
+static_assert(*testStringA.BeginReading() == 'a');
+static_assert(*testStringA.EndReading() == 0);
+static_assert(testStringA.EndReading() - testStringA.BeginReading() == 1);
+
 }  // namespace TestStrings
 
 #if defined(__clang__) && (__clang_major__ >= 6)
