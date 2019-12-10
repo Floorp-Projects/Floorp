@@ -322,7 +322,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   jsbytecode* pc = ic->pc();
   if (ic->kind() == CacheKind::SetElem) {
-    if (*pc == JSOP_INITELEM_INC) {
+    if (*pc == JSOP_INITELEM_INC || *pc == JSOP_INITELEM_ARRAY) {
       if (!InitArrayElemOperation(cx, pc, obj, idVal.toInt32(), rhs)) {
         return false;
       }

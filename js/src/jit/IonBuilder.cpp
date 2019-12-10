@@ -7342,13 +7342,26 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_inc() {
   MDefinition* id = current->pop();
   MDefinition* obj = current->peek(-1);
 
-  bool emitted = false;
-
   MAdd* nextId = MAdd::New(alloc(), id, constantInt(1), MIRType::Int32);
   current->add(nextId);
   current->push(nextId);
 
+  return initArrayElement(obj, id, value);
+}
+
+AbortReasonOr<Ok> IonBuilder::initArrayElement(MDefinition* obj,
+                                               MDefinition* id,
+                                               MDefinition* value) {
+  MOZ_ASSERT(*pc == JSOP_INITELEM_ARRAY || *pc == JSOP_INITELEM_INC);
+
+  bool emitted = false;
+
   if (!forceInlineCaches()) {
+    MOZ_TRY(initArrayElemTryFastPath(&emitted, obj, id, value));
+    if (emitted) {
+      return Ok();
+    }
+
     MOZ_TRY(initOrSetElemTryDense(&emitted, obj, id, value,
                                   /* writeHole = */ true));
     if (emitted) {
@@ -7373,7 +7386,7 @@ AbortReasonOr<Ok> IonBuilder::initArrayElemTryFastPath(bool* emitted,
                                                        MDefinition* id,
                                                        MDefinition* value) {
   MOZ_ASSERT(*emitted == false);
-  MOZ_ASSERT(*pc == JSOP_INITELEM_ARRAY);
+  MOZ_ASSERT(*pc == JSOP_INITELEM_ARRAY || *pc == JSOP_INITELEM_INC);
 
   // Make sure that arrays have the type being written to them by the
   // intializer, and that arrays are marked as non-packed when writing holes
@@ -7423,20 +7436,10 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
              "produce JSOP_INITELEM_ARRAY with an index exceeding "
              "int32_t range");
 
-  bool emitted = false;
-
   MConstant* id = MConstant::New(alloc(), Int32Value(index));
   current->add(id);
 
-  MOZ_TRY(initArrayElemTryFastPath(&emitted, obj, id, value));
-  if (emitted) {
-    return Ok();
-  }
-
-  MCallInitElementArray* store =
-      MCallInitElementArray::New(alloc(), obj, id, value);
-  current->add(store);
-  return resumeAfter(store);
+  return initArrayElement(obj, id, value);
 }
 
 AbortReasonOr<Ok> IonBuilder::initArrayElementFastPath(
