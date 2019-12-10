@@ -65,6 +65,8 @@ static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
 namespace mozilla {
 namespace widget {
 
+bool MediaHardwareKeysEventSourceMac::IsOpened() const { return mEventTap && mEventTapSource; }
+
 bool MediaHardwareKeysEventSourceMac::Open() {
   LOG("Open MediaHardwareKeysEventSourceMac");
   return StartEventTap();

@@ -62,6 +62,7 @@ class MediaControlKeysEventSource : public nsISupports {
   // sources should implement this method to handle the initialization fails.
   virtual bool Open() = 0;
   virtual void Close();
+  virtual bool IsOpened() const = 0;
 
  protected:
   virtual ~MediaControlKeysEventSource() = default;

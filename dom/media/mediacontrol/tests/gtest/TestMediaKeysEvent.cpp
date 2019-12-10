@@ -9,6 +9,7 @@ using namespace mozilla::dom;
 
 class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
   bool Open() override { return true; }
+  bool IsOpened() const override { return true; }
 };
 
 TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
