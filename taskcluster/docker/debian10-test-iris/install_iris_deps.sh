@@ -11,9 +11,11 @@ set -ve
 
 apt_packages=()
 
+apt_packages+=('apt-utils')
 apt_packages+=('autoconf')
 apt_packages+=('autoconf-archive')
 apt_packages+=('automake')
+apt_packages+=('fluxbox')
 apt_packages+=('libcairo2-dev')
 apt_packages+=('libgtk2.0-dev')
 apt_packages+=('libicu-dev')
