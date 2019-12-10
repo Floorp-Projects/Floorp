@@ -157,6 +157,11 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        progress_bar.visibility = View.GONE
+    }
+
     private fun updateItemCounts() {
         updateTabCount()
         updateHistoryCount()
