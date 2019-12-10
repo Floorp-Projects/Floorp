@@ -1085,6 +1085,37 @@ BrowserPageActions.pinTab = {
   },
 };
 
+// SiteSpecificBrowser
+BrowserPageActions.launchSSB = {
+  updateState() {
+    let action = PageActions.actionForID("launchSSB");
+    let browser = gBrowser.selectedBrowser;
+    action.setDisabled(!browser.currentURI.schemeIs("https"), window);
+  },
+
+  onCommand(event, buttonNode) {
+    if (!gBrowser.currentURI.schemeIs("https")) {
+      return;
+    }
+
+    let sa = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    let uri = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
+    uri.data = gBrowser.currentURI.spec;
+    sa.appendElement(uri);
+    Services.ww.openWindow(
+      null,
+      "chrome://browser/content/ssb/ssb.html",
+      "_blank",
+      "chrome,dialog=no,all",
+      sa
+    );
+
+    gBrowser.removeTab(gBrowser.selectedTab, { closeWindowWithLastTab: false });
+  },
+};
+
 // copy URL
 BrowserPageActions.copyURL = {
   onBeforePlacedInWindow(browserWindow) {
