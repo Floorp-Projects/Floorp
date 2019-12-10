@@ -4,13 +4,27 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 25.0.0-SNAPSHOT (In Development)
+# 26.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/84?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/85?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko`: GeckoView 71.0
+    * `browser-engine-gecko-beta`: GeckoView 72.0
+    * `browser-engine-gecko-nightly`: GeckoView 73.0
+
+# 25.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...v25.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/84?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v25.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v25.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v25.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-downloads**
   * Makes `DownloadState` parcelizable so that it can be passed to `FetchDownloadManager` when completed
@@ -289,7 +303,7 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
-    * `browser-engine-gecko-release`: GeckoView 71.0
+    * `browser-engine-gecko`: GeckoView 70.0
     * `browser-engine-gecko-beta`: GeckoView 71.0
     * `browser-engine-gecko-nightly`: GeckoView 72.0
 
