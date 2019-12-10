@@ -3,37 +3,37 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    description: "rust-size toolchain build"
+    description: "dump_syms toolchain build"
     worker:
         max-run-time: 1800
     run:
-        script: build-rust-size.sh
+        script: build-dump-syms.sh
     fetches:
         fetch:
-            - rust-size
+            - dump-syms
 
-linux64-rust-size:
+linux64-dump-syms:
     treeherder:
-        symbol: TL(rust-size)
+        symbol: TL(dump_syms)
     worker-type: b-linux
     run:
-        toolchain-artifact: public/build/rust-size.tar.xz
+        toolchain-artifact: public/build/dump_syms.tar.xz
     fetches:
         toolchain:
-            - linux64-rust-1.39
+            - linux64-rust
 
-win64-rust-size:
+win64-dump-syms:
     treeherder:
-        symbol: TW64(rust-size)
+        symbol: TW64(dump_syms)
     worker-type: b-win2012
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
-        toolchain-artifact: public/build/rust-size.tar.bz2
+        toolchain-artifact: public/build/dump_syms.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust-1.39
+            - win64-rust
