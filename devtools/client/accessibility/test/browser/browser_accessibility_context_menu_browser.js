@@ -84,5 +84,9 @@ addA11YPanelTask(
       "Accessibility panel is currently selected"
     );
     is(selected, expectedSelected, "Accessible front selected correctly");
+
+    const doc = panel.panelWin.document;
+    const propertiesTree = doc.querySelector(".tree");
+    is(doc.activeElement, propertiesTree, "Properties list must be focused.");
   }
 );
