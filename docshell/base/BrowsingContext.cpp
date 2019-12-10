@@ -679,7 +679,7 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
 RefPtr<SessionStorageManager> BrowsingContext::GetSessionStorageManager() {
   RefPtr<SessionStorageManager>& manager = Top()->mSessionStorageManager;
   if (!manager) {
-    manager = new SessionStorageManager();
+    manager = new SessionStorageManager(this);
   }
   return manager;
 }
