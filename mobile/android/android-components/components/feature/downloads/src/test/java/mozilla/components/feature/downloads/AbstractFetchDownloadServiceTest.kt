@@ -37,7 +37,9 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mock
@@ -49,6 +51,9 @@ import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class AbstractFetchDownloadServiceTest {
+
+    @Rule @JvmField
+    val folder = TemporaryFolder()
 
     @Mock private lateinit var client: Client
     @Mock private lateinit var broadcastManager: LocalBroadcastManager
@@ -411,5 +416,33 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs[providedDownload.value.id]?.job?.join()
         assertEquals(FAILED, service.downloadJobs[providedDownload.value.id]?.status)
+    }
+
+    @Test
+    fun `makeUniqueFileNameIfNecessary transforms fileName when appending FALSE`() {
+        folder.newFile("example.apk")
+
+        val download = DownloadState(
+            url = "mozilla.org",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path
+        )
+        val transformedDownload = service.makeUniqueFileNameIfNecessary(download, false)
+
+        assertNotEquals(download, transformedDownload)
+    }
+
+    @Test
+    fun `makeUniqueFileNameIfNecessary does NOT transform fileName when appending TRUE`() {
+        folder.newFile("example.apk")
+
+        val download = DownloadState(
+            url = "mozilla.org",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path
+        )
+        val transformedDownload = service.makeUniqueFileNameIfNecessary(download, true)
+
+        assertEquals(download, transformedDownload)
     }
 }
