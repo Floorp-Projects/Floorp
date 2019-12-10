@@ -9,7 +9,7 @@
   justify-content: space-between;
 }
 
-:root:not([subdialog]) .editAddressForm {
+dialog:not([subdialog]) .editAddressForm {
   margin-inline-start: calc(var(--grid-column-row-gap) / -2);
   margin-inline-end: calc(var(--grid-column-row-gap) / -2);
 }
@@ -120,6 +120,6 @@
   padding-inline-start: 1em;
 }
 
-:root:not([subdialog]) #country-warning-message {
+dialog:not([subdialog]) #country-warning-message {
   display: none;
 }

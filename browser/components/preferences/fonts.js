@@ -18,10 +18,9 @@ const kFontSizeFmtVariable = "font.size.variable.%LANG%";
 const kFontSizeFmtFixed = "font.size.monospace.%LANG%";
 const kFontMinSizeFmt = "font.minimum-size.%LANG%";
 
-document.documentElement.addEventListener(
-  "dialoghelp",
-  window.top.openPrefsHelp
-);
+document
+  .getElementById("FontsDialog")
+  .addEventListener("dialoghelp", window.top.openPrefsHelp);
 window.addEventListener("load", () => gFontsDialog.onLoad());
 
 Preferences.addAll([

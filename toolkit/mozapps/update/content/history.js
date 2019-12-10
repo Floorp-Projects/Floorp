@@ -71,7 +71,7 @@ var gUpdateHistory = {
         this._view.appendChild(element);
       }
     }
-    var cancelbutton = document.documentElement.getButton("cancel");
+    var cancelbutton = document.getElementById("history").getButton("cancel");
     cancelbutton.focus();
   },
 

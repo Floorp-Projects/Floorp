@@ -5,15 +5,15 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog>
+<!DOCTYPE window>
 
-<dialog id="editCaCert"
-        data-l10n-id="certmgr-edit-ca-cert"
+<window data-l10n-id="certmgr-edit-ca-cert"
         data-l10n-attrs="style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        buttons="accept,cancel"
         onload="onLoad();">
+<dialog id="editCaCert"
+        buttons="accept,cancel">
 
   <linkset>
     <html:link rel="localization" href="security/certificates/certManager.ftl"/>
@@ -33,3 +33,4 @@
   </vbox>
 
 </dialog>
+</window>

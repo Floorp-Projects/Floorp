@@ -14,7 +14,7 @@ function doPrompt(msg) {
 }
 
 function onLoad() {
-  document.documentElement.getButton("accept").disabled = true;
+  document.getElementById("set_password").getButton("accept").disabled = true;
   document.addEventListener("dialogaccept", setPassword);
 
   pw1 = document.getElementById("pw1");
@@ -197,10 +197,13 @@ function checkPasswords() {
       // was called with the intention to change the password.
       // The token currently uses an empty password.
       // We will not allow changing the password from empty to empty.
-      document.documentElement.getButton("accept").disabled = true;
+      document
+        .getElementById("set_password")
+        .getButton("accept").disabled = true;
       return;
     }
   }
 
-  document.documentElement.getButton("accept").disabled = pw1 != pw2;
+  document.getElementById("set_password").getButton("accept").disabled =
+    pw1 != pw2;
 }

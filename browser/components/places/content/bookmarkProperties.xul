@@ -9,20 +9,20 @@
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 
-<!DOCTYPE dialog [
+<!DOCTYPE window [
   <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
   %editBookmarkOverlayDTD;
 ]>
 
-<dialog id="bookmarkproperties"
-        buttons="accept, cancel"
-        buttoniconaccept="save"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         onload="BookmarkPropertiesPanel.onDialogLoad();"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
         style="min-width: 30em;"
         persist="screenX screenY width">
+<dialog id="bookmarkproperties"
+        buttons="accept, cancel"
+        buttoniconaccept="save">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="stringBundle"
@@ -39,3 +39,4 @@
 #include editBookmarkPanel.inc.xhtml
 
 </dialog>
+</window>

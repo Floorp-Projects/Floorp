@@ -15,15 +15,15 @@
 %profileDTD;
 ]>
 
-<dialog
-  id="profileWindow"
+<window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="non-resizable"
   title="&windowtitle.label;"
   orient="vertical"
-  buttons="accept,cancel"
   style="width: 30em;"
-  onload="startup();"
+  onload="startup();">
+<dialog id="profileWindow"
+  buttons="accept,cancel"
   buttonlabelaccept="&start.label;"
   buttonlabelcancel="&exit.label;">
 
@@ -68,3 +68,4 @@
 
   </hbox>
 </dialog>
+</window>

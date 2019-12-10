@@ -263,7 +263,8 @@ const Preferences = (window.Preferences = (function() {
     },
 
     onDialogAccept(event) {
-      if (!this._fireEvent("beforeaccept", document.documentElement)) {
+      let dialog = document.querySelector("dialog");
+      if (!this._fireEvent("beforeaccept", dialog)) {
         event.preventDefault();
         return false;
       }

@@ -7,14 +7,14 @@
 
 <!DOCTYPE dialog>
 
-<dialog id="devicemanager"
-        windowtype="mozilla:devicemanager"
+<window windowtype="mozilla:devicemanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="devmgr"
         data-l10n-attrs="style"
         persist="screenX screenY width height"
-        onload="LoadModules();"
+        onload="LoadModules();">
+<dialog id="devicemanager"
         buttons="accept">
 
 <linkset>
@@ -67,3 +67,4 @@
 </hbox>
 
 </dialog>
+</window>

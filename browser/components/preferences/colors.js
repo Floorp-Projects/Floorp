@@ -4,10 +4,9 @@
 
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 
-document.documentElement.addEventListener(
-  "dialoghelp",
-  window.top.openPrefsHelp
-);
+document
+  .getElementById("ColorsDialog")
+  .addEventListener("dialoghelp", window.top.openPrefsHelp);
 
 Preferences.addAll([
   { id: "browser.display.document_color_use", type: "int" },

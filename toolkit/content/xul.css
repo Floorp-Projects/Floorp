@@ -531,6 +531,7 @@ stringbundleset {
 /********** dialog **********/
 
 dialog {
+  -moz-box-flex: 1;
   -moz-box-orient: vertical;
 }
 

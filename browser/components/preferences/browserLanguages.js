@@ -30,10 +30,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/SelectionChangedMenulist.jsm"
 );
 
-document.documentElement.addEventListener(
-  "dialoghelp",
-  window.top.openPrefsHelp
-);
+document
+  .getElementById("BrowserLanguagesDialog")
+  .addEventListener("dialoghelp", window.top.openPrefsHelp);
 
 /* This dialog provides an interface for managing what language the browser is
  * displayed in.
@@ -384,9 +383,9 @@ var gBrowserLanguagesDialog = {
   },
 
   async onLoad() {
-    document.documentElement.addEventListener("beforeaccept", () =>
-      this.beforeAccept()
-    );
+    document
+      .getElementById("BrowserLanguagesDialog")
+      .addEventListener("beforeaccept", () => this.beforeAccept());
     // Maintain the previously selected locales even if we cancel out.
     let { telemetryId, selected, search } = window.arguments[0];
     this.telemetryId = telemetryId;

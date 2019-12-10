@@ -6,15 +6,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/handling/handling.dtd">
+<!DOCTYPE window SYSTEM "chrome://mozapps/locale/handling/handling.dtd">
 
-<dialog id="handling"
-        onload="dialog.initialize();"
+<window onload="dialog.initialize();"
         style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
         persist="width height screenX screenY"
         aria-describedby="description-text"
-        buttons="cancel,extra1"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog id="handling"
+        buttons="cancel,extra1">
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
 
@@ -55,3 +55,4 @@
   </hbox>
 
 </dialog>
+</window>

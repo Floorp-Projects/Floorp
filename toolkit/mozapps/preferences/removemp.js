@@ -11,7 +11,7 @@ var gRemovePasswordDialog = {
   _okButton: null,
   _password: null,
   init() {
-    this._okButton = document.documentElement.getButton("accept");
+    this._okButton = document.getElementById("removemp").getButton("accept");
     document.l10n.setAttributes(this._okButton, "pw-remove-button");
 
     this._password = document.getElementById("password");
