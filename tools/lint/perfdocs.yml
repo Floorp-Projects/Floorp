@@ -1,0 +1,11 @@
+---
+perfdocs:
+    description: Performance Documentation linter
+    # This task handles its own search, so just include cwd
+    include: ['testing/raptor']
+    exclude: []
+    extensions: ['rst', 'ini', 'yml']
+    support-files: []
+    type: structured_log
+    payload: perfdocs:lint
+    setup: perfdocs:setup
