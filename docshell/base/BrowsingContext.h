@@ -17,6 +17,7 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/UserActivation.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -503,6 +504,8 @@ class BrowsingContext : public nsISupports,
   // Must be called only on the top level BrowsingContext.
   void AddDeprioritizedLoadRunner(nsIRunnable* aRunner);
 
+  RefPtr<SessionStorageManager> GetSessionStorageManager();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
@@ -653,6 +656,8 @@ class BrowsingContext : public nsISupports,
   };
 
   mozilla::LinkedList<DeprioritizedLoadRunner> mDeprioritizedLoadRunner;
+
+  RefPtr<dom::SessionStorageManager> mSessionStorageManager;
 };
 
 /**
