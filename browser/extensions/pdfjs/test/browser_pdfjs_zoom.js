@@ -139,7 +139,7 @@ add_task(async function test() {
             }
 
             // Dispatch the event for changing the zoom
-            ev = new Event(subTest.action.event);
+            ev = new content.Event(subTest.action.event);
           } else {
             // We zoom using keyboard
             // Simulate key press
