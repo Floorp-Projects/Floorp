@@ -329,8 +329,6 @@ class LoginManagerStorage_json {
    * @return {nsILoginInfo[]}
    */
   getAllLogins() {
-    this._store.ensureDataReady();
-
     let [logins, ids] = this._searchLogins({});
 
     // decrypt entries for caller.
@@ -348,8 +346,6 @@ class LoginManagerStorage_json {
    * @resolve {nsILoginInfo[]}
    */
   async getAllLoginsAsync() {
-    this._store.ensureDataReady();
-
     let [logins, ids] = this._searchLogins({});
     if (!logins.length) {
       return [];
@@ -408,8 +404,6 @@ class LoginManagerStorage_json {
    * @return {nsILoginInfo[]} which are decrypted.
    */
   searchLogins(matchData) {
-    this._store.ensureDataReady();
-
     let realMatchData = {};
     let options = {};
     // Convert nsIPropertyBag to normal JS object
@@ -449,9 +443,10 @@ class LoginManagerStorage_json {
     aOptions = {
       schemeUpgrades: false,
       acceptDifferentSubdomains: false,
-    },
-    candidateLogins = this._store.data.logins
+    }
   ) {
+    this._store.ensureDataReady();
+
     if (
       "formActionOrigin" in matchData &&
       matchData.formActionOrigin === "" &&
@@ -544,7 +539,7 @@ class LoginManagerStorage_json {
 
     let foundLogins = [],
       foundIds = [];
-    for (let loginItem of candidateLogins) {
+    for (let loginItem of this._store.data.logins) {
       if (match(loginItem)) {
         // Create the new nsLoginInfo object, push to array
         let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
@@ -599,8 +594,6 @@ class LoginManagerStorage_json {
   }
 
   findLogins(origin, formActionOrigin, httpRealm) {
-    this._store.ensureDataReady();
-
     let loginData = {
       origin,
       formActionOrigin,
@@ -622,8 +615,6 @@ class LoginManagerStorage_json {
   }
 
   countLogins(origin, formActionOrigin, httpRealm) {
-    this._store.ensureDataReady();
-
     let loginData = {
       origin,
       formActionOrigin,
@@ -686,8 +677,6 @@ class LoginManagerStorage_json {
    * stored login (useful for looking at the actual nsILoginMetaInfo values).
    */
   _getIdForLogin(login) {
-    this._store.ensureDataReady();
-
     let matchData = {};
     for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (login[field] != "") {
