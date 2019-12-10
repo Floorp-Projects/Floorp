@@ -45,6 +45,7 @@ errors = {
     "parent-dl": "<dl><picture><img src=x alt></picture></dl>",
     "parent-hgroup": "<hgroup><h1>x</h1><picture><img src=x alt></picture></hgroup>",
     "parent-noscript-in-head": "<noscript><picture><img src=x alt></picture></noscript>",
+    "parent-rp": "<ruby>x<rp><picture><img src=x alt></picture></rp><rt>x</rt><rp>x</rp></ruby>",
     # invalid html syntax
     "html-syntax-source-end-tag": "<picture><source srcset=x></source><img src=x alt></picture>",
     "html-syntax-img-end-tag": "<picture><img src=x alt></img></picture>",
@@ -248,7 +249,6 @@ non_errors = {
     "parent-template-in-body": "<template><picture><img src=x alt></picture></template>",
     "parent-ruby": "<ruby><picture><img src=x alt></picture><rt>x</rt></ruby>",
     "parent-rt": "<ruby>x<rt><picture><img src=x alt></picture></rt></ruby>",
-    "parent-rp": "<ruby>x<rp><picture><img src=x alt></picture></rp><rt>x</rt><rp>x</rp></ruby>",
     "parent-a": "<a href=x><picture><img src=x alt></picture></a>",
     "parent-button": "<button><picture><img src=x alt></picture></button>",
     "parent-td": "<table><tr><td><picture><img src=x alt></picture></table>",
