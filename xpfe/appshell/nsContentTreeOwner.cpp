@@ -734,6 +734,28 @@ nsContentTreeOwner::ProvideWindow(
 // nsContentTreeOwner: Accessors
 //*****************************************************************************
 
+#if defined(XP_MACOSX)
+class nsContentTitleSettingEvent : public Runnable {
+ public:
+  nsContentTitleSettingEvent(dom::Element* dse, const nsAString& wtm)
+      : Runnable("nsContentTitleSettingEvent"),
+        mElement(dse),
+        mTitleDefault(wtm) {}
+
+  NS_IMETHOD Run() override {
+    ErrorResult rv;
+    mElement->SetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault,
+                           rv);
+    mElement->RemoveAttribute(NS_LITERAL_STRING("titlemodifier"), rv);
+    return NS_OK;
+  }
+
+ private:
+  nsCOMPtr<dom::Element> mElement;
+  nsString mTitleDefault;
+};
+#endif
+
 void nsContentTreeOwner::AppWindow(mozilla::AppWindow* aAppWindow) {
   mAppWindow = aAppWindow;
 }
