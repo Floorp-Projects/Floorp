@@ -24,6 +24,13 @@ class CompatibilityApp extends PureComponent {
     };
   }
 
+  _renderNoIssues() {
+    return dom.div(
+      { className: "devtools-sidepanel-no-result" },
+      "No compatibility issues found."
+    );
+  }
+
   render() {
     const { selectedNodeIssues } = this.props;
 
@@ -33,7 +40,7 @@ class CompatibilityApp extends PureComponent {
       },
       selectedNodeIssues.length
         ? IssueList({ issues: selectedNodeIssues })
-        : null
+        : this._renderNoIssues()
     );
   }
 }
