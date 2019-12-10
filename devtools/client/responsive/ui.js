@@ -93,6 +93,8 @@ class ResponsiveUI {
      * as the tool UI is always loaded in the parent process.  The web content
      * contained *within* the tool UI on the other hand is loaded in the child
      * process.
+     *
+     * TODO: we should remove this as part of Bug 1585096
      */
     this.toolWindow = null;
     // The iframe containing the RDM UI.
@@ -844,7 +846,10 @@ class ResponsiveUI {
    * Helper for tests/reloading the viewport. Assumes a single viewport for now.
    */
   getViewportBrowser() {
-    return this.toolWindow.getViewportBrowser();
+    if (!this.isBrowserUIEnabled) {
+      return this.toolWindow.getViewportBrowser();
+    }
+    return this.tab.linkedBrowser;
   }
 
   /**
