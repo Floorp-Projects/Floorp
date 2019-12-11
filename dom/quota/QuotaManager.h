@@ -614,6 +614,14 @@ class QuotaManager final : public BackgroundThreadObject {
   // it is only ever touched on the IO thread.
   nsDataHashtable<nsCStringHashKey, bool> mValidOrigins;
 
+  // A hash table that the first result of the initalization per origin per
+  // persistent/temporary storage is reported or not.
+  // The key is the recorded origin and the data represent the reported
+  // persistence type. The first bit indicates if the telemetry for the
+  // persistent origin is reported and the second bit indicates if the telemetry
+  // for the temporary origin is reported.
+  nsDataHashtable<nsCStringHashKey, uint8_t> mOriginInitializationsAttempted;
+
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.
   AutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
