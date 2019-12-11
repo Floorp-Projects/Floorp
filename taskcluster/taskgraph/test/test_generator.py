@@ -107,6 +107,7 @@ class TestGenerator(unittest.TestCase):
             'target_tasks_method': 'test_method',
             'try_mode': None,
             'try_task_config': {},
+            'tasks_for': 'hg-push',
         })
         parameters.update(params)
 
