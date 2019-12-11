@@ -35,7 +35,7 @@ jobs:
         name: maybe-release-firefox
         shipping-product: firefox
         worker:
-            phase: push_firefox
+            phase: ship_firefox
         treeherder:
             platform: firefox-release/opt
 
@@ -43,6 +43,6 @@ jobs:
         name: maybe-release-devedition
         shipping-product: devedition
         worker:
-            phase: push_devedition
+            phase: ship_devedition
         treeherder:
             platform: devedition-release/opt
