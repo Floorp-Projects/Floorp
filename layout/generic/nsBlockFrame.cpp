@@ -167,6 +167,53 @@ static bool LineHasVisibleInlineContent(nsLineBox* aLine) {
   return false;
 }
 
+/**
+ * Iterates through the frame's in-flow children and
+ * unions the visual overflow of all text frames which
+ * participate in the line aFrame belongs to.
+ * If a child of aFrame is not a text frame,
+ * we recurse with the child as the aFrame argument.
+ * If aFrame isn't a line participant, we skip it entirely
+ * and return an empty rect.
+ * The resulting nsRect is offset relative to the parent of aFrame.
+ */
+static nsRect GetFrameTextArea(nsIFrame* aFrame,
+                               nsDisplayListBuilder* aBuilder) {
+  nsRect textArea;
+  if (aFrame->IsTextFrame()) {
+    textArea = aFrame->GetVisualOverflowRect();
+  } else if (aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    for (nsIFrame* kid : aFrame->PrincipalChildList()) {
+      nsRect kidTextArea = GetFrameTextArea(kid, aBuilder);
+      textArea.OrWith(kidTextArea);
+    }
+  }
+  // add aFrame's position to keep textArea relative to aFrame's parent
+  return textArea + aFrame->GetPosition();
+}
+
+/**
+ * Iterates through the line's children and
+ * unions the visual overflow of all text frames.
+ * GetFrameTextArea unions and returns the visual overflow
+ * from all line-participating text frames within the given child.
+ * The nsRect returned from GetLineTextArea is offset
+ * relative to the given line.
+ */
+static nsRect GetLineTextArea(nsLineBox* aLine,
+                              nsDisplayListBuilder* aBuilder) {
+  nsRect textArea;
+  nsIFrame* kid = aLine->mFirstChild;
+  int32_t n = aLine->GetChildCount();
+  while (n-- > 0) {
+    nsRect kidTextArea = GetFrameTextArea(kid, aBuilder);
+    textArea.OrWith(kidTextArea);
+    kid = kid->GetNextSibling();
+  }
+
+  return textArea;
+}
+
 #ifdef DEBUG
 #  include "nsBlockDebugFlags.h"
 
@@ -6943,7 +6990,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         lastYMost = lineArea.YMost();
         if (lineInLine && shouldDrawBackplate &&
             LineHasVisibleInlineContent(line)) {
-          nsRect lineBackplate = lineArea + aBuilder->ToReferenceFrame(this);
+          nsRect lineBackplate = GetLineTextArea(line, aBuilder) +
+                                 aBuilder->ToReferenceFrame(this);
           if (curBackplateArea.IsEmpty()) {
             curBackplateArea = lineBackplate;
           } else {
