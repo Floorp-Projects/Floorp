@@ -4789,8 +4789,8 @@ XDRBufferObject* XDRBufferObject::create(JSContext* cx,
 void XDRBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
   XDRBufferObject* buf = &obj->as<XDRBufferObject>();
   if (buf->hasData()) {
-    fop->free_(buf, buf->data(), buf->data()->length(),
-               MemoryUse::XDRBufferElements);
+    fop->delete_(buf, buf->data(), buf->data()->length(),
+                 MemoryUse::XDRBufferElements);
   }
 }
 
