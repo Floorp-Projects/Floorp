@@ -5079,7 +5079,7 @@ class ConnectionPool::ConnectionRunnable : public Runnable {
 };
 
 class ConnectionPool::IdleConnectionRunnable final : public ConnectionRunnable {
-  bool mNeedsCheckpoint;
+  const bool mNeedsCheckpoint;
 
  public:
   IdleConnectionRunnable(DatabaseInfo* aDatabaseInfo, bool aNeedsCheckpoint)
