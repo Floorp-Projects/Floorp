@@ -296,7 +296,7 @@ class BaselineTryNoteFilter {
     BaselineFrame* frame = frame_.baselineFrame();
 
     uint32_t numValueSlots = frame_.baselineFrameNumValueSlots();
-    MOZ_ASSERT(numValueSlots >= frame->script()->nfixed());
+    MOZ_RELEASE_ASSERT(numValueSlots >= frame->script()->nfixed());
 
     uint32_t currDepth = numValueSlots - frame->script()->nfixed();
     return note->stackDepth <= currDepth;
