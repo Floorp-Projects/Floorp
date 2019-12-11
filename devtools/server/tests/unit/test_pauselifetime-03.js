@@ -42,7 +42,7 @@ function test_pause_frame() {
       ok(false, "bogusRequest should throw");
     } catch (e) {
       ok(true, "bogusRequest thrown");
-      Assert.ok(!!e.match(/unrecognizedPacketType/));
+      Assert.ok(!!e.message.match(/unrecognizedPacketType/));
     }
     Assert.ok(objectFront.valid);
 
@@ -55,7 +55,7 @@ function test_pause_frame() {
         ok(false, "bogusRequest should throw");
       } catch (e) {
         ok(true, "bogusRequest thrown");
-        Assert.ok(!!e.match(/noSuchActor/));
+        Assert.ok(!!e.message.match(/noSuchActor/));
       }
       Assert.ok(!objectFront.valid);
       threadFrontTestFinished();

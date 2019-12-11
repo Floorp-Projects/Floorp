@@ -93,7 +93,7 @@ async function _targetFromURL(client, id, type, chrome) {
     try {
       front = await client.mainRoot.getTab({ outerWindowID: id });
     } catch (ex) {
-      if (ex.startsWith("Protocol error (noTab)")) {
+      if (ex.message.startsWith("Protocol error (noTab)")) {
         throw new Error(
           `targetFromURL, tab with outerWindowID '${id}' doesn't exist`
         );
