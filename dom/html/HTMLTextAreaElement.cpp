@@ -235,6 +235,7 @@ nsFrameSelection* HTMLTextAreaElement::GetConstFrameSelection() {
 }
 
 nsresult HTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(mState);
   return mState->BindToFrame(aFrame);
 }

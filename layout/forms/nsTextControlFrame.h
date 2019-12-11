@@ -41,8 +41,17 @@ class nsTextControlFrame final : public nsContainerFrame,
                               nsPresContext* aPresContext);
   virtual ~nsTextControlFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  /**
+   * DestroyFrom() causes preparing to destroy editor and that may cause
+   * running selection listeners of specllchecker selection and document
+   * state listeners.  Not sure whether the former does something or not,
+   * but nobody should run content script.  The latter is currently only
+   * FinderHighlighter to clean up its fields at destruction.  Thus, the
+   * latter won't run content script too.  Therefore, this won't run
+   * unsafe script.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DestroyFrom(
+      nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() override {
     return do_QueryFrame(PrincipalChildList().FirstChild());
