@@ -1080,6 +1080,7 @@ enum class TextControlAction {
   SetRangeText,
   SetSelectionRange,
   SetValue,
+  UnbindFromFrame,
   Unlink,
 };
 
@@ -1545,7 +1546,7 @@ class PrepareEditorEvent : public Runnable {
     aState.mValueTransferInProgress = true;
   }
 
-  NS_IMETHOD Run() override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (NS_WARN_IF(!mState)) {
       return NS_ERROR_NULL_POINTER;
     }
@@ -1572,6 +1573,9 @@ class PrepareEditorEvent : public Runnable {
 };
 
 nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
+  MOZ_ASSERT(
+      !nsContentUtils::IsSafeToRunScript(),
+      "TextControlState::BindToFrame() has to be called with script blocker");
   NS_ASSERTION(aFrame, "The frame to bind to should be valid");
   if (!aFrame) {
     return NS_ERROR_INVALID_ARG;
@@ -2398,6 +2402,9 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
   if (aFrame && aFrame != mBoundFrame) {
     return;
   }
+
+  AutoTextControlHandlingState handlingUnbindFromFrame(
+      *this, TextControlAction::UnbindFromFrame);
 
   // We need to start storing the value outside of the editor if we're not
   // going to use it anymore, so retrieve it for now.

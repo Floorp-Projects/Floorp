@@ -2260,6 +2260,7 @@ nsFrameSelection* HTMLInputElement::GetConstFrameSelection() {
 }
 
 nsresult HTMLInputElement::BindToFrame(nsTextControlFrame* aFrame) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   TextControlState* state = GetEditorState();
   if (state) {
     return state->BindToFrame(aFrame);

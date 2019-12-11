@@ -126,6 +126,7 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
   /**
    * Binds a frame to the text control.  This is performed when a frame
    * is created for the content node.
+   * Be aware, this must be called with script blocker.
    */
   virtual nsresult BindToFrame(nsTextControlFrame* aFrame) = 0;
 
@@ -133,7 +134,7 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
    * Unbinds a frame from the text control.  This is performed when a frame
    * belonging to a content node is destroyed.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void UnbindFromFrame(
+  MOZ_CAN_RUN_SCRIPT virtual void UnbindFromFrame(
       nsTextControlFrame* aFrame) = 0;
 
   /**

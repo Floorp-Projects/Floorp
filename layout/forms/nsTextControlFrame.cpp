@@ -402,6 +402,7 @@ nsTextControlFrame::CreateEmptyAnonymousDivWithTextNode(
 
 nsresult nsTextControlFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(mContent, "We should have a content!");
 
   AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
