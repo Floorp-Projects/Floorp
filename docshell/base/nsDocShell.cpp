@@ -994,8 +994,8 @@ nsresult nsDocShell::DispatchToTabGroup(
   if (win->GetDocGroup()) {
     return win->GetDocGroup()->Dispatch(aCategory, runnable.forget());
   }
-  RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
-  return tabGroup->Dispatch(aCategory, runnable.forget());
+
+  return SchedulerGroup::Dispatch(aCategory, runnable.forget());
 }
 
 NS_IMETHODIMP
