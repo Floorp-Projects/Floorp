@@ -764,6 +764,9 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
  * Can be used to determine if a new paragraph should be started.
  */
 bool HTMLEditor::NodeIsBlockStatic(const nsINode& aElement) {
+  if (!aElement.IsElement()) {
+    return false;
+  }
   // We want to treat these as block nodes even though nsHTMLElement says
   // they're not.
   if (aElement.IsAnyOfHTMLElements(

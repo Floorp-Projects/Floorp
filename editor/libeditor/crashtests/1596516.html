@@ -1,0 +1,18 @@
+<html>
+<head>
+    <script>
+      function start () {
+        const italic = document.createElementNS('http://www.w3.org/1999/xhtml', 'i')
+        italic.dir = ''
+        document.documentElement.contentEditable = 'true'
+        const selection = document.getSelection()
+        const range = selection.getRangeAt(0)
+        const attribute = italic.attributes.getNamedItem('dir')
+        range.setEnd(attribute, (2361162229 % attribute.childNodes))
+        document.queryCommandState('heading')
+      }
+
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+</head>
+</html>
