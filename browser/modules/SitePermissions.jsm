@@ -966,10 +966,6 @@ var gPermissionObject = {
     exactHostMatch: true,
   },
 
-  xr: {
-    exactHostMatch: true,
-  },
-
   "focus-tab-by-prompt": {
     exactHostMatch: true,
     states: [SitePermissions.UNKNOWN, SitePermissions.ALLOW],
