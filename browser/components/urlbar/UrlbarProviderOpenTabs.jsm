@@ -126,13 +126,13 @@ class ProviderOpenTabs extends UrlbarProvider {
    * @param {string} url Address of the tab
    * @param {integer} userContextId Containers user context id
    */
-  registerOpenTab(url, userContextId = 0) {
+  async registerOpenTab(url, userContextId = 0) {
     if (!this.openTabs.has(userContextId)) {
       this.openTabs.set(userContextId, []);
     }
     this.openTabs.get(userContextId).push(url);
     if (this._db) {
-      addToMemoryTable(this._db, url, userContextId);
+      await addToMemoryTable(this._db, url, userContextId);
     }
   }
 
@@ -141,14 +141,14 @@ class ProviderOpenTabs extends UrlbarProvider {
    * @param {string} url Address of the tab
    * @param {integer} userContextId Containers user context id
    */
-  unregisterOpenTab(url, userContextId = 0) {
+  async unregisterOpenTab(url, userContextId = 0) {
     let openTabs = this.openTabs.get(userContextId);
     if (openTabs) {
       let index = openTabs.indexOf(url);
       if (index != -1) {
         openTabs.splice(index, 1);
         if (this._db) {
-          removeFromMemoryTable(this._db, url, userContextId);
+          await removeFromMemoryTable(this._db, url, userContextId);
         }
       }
     }

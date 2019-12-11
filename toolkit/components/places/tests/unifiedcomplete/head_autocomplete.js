@@ -408,15 +408,15 @@ var addBookmark = async function(aBookmarkObj) {
   }
 };
 
-function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
+async function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   for (let i = 0; i < aCount; i++) {
-    UrlbarProviderOpenTabs.registerOpenTab(aUri.spec, aUserContextId);
+    await UrlbarProviderOpenTabs.registerOpenTab(aUri.spec, aUserContextId);
   }
 }
 
-function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
+async function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   for (let i = 0; i < aCount; i++) {
-    UrlbarProviderOpenTabs.unregisterOpenTab(aUri.spec, aUserContextId);
+    await UrlbarProviderOpenTabs.unregisterOpenTab(aUri.spec, aUserContextId);
   }
 }
 

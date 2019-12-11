@@ -168,6 +168,10 @@ class ProvidersManager {
     // Apply tokenization.
     UrlbarTokenizer.tokenize(queryContext);
 
+    // If there's a single source, we are in restriction mode.
+    if (queryContext.sources && queryContext.sources.length == 1) {
+      queryContext.restrictSource = queryContext.sources[0];
+    }
     // Providers can use queryContext.sources to decide whether they want to be
     // invoked or not.
     updateSourcesIfEmpty(queryContext);
