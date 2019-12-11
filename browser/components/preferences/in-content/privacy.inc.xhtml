@@ -776,6 +776,30 @@
                 " />
       </hbox>
     </hbox>
+
+    <hbox id="xrSettingsRow" align="center" role="group" aria-labelledby="xrPermissionsLabel">
+      <description flex="1">
+        <image class="xr-icon permission-icon" />
+        <separator orient="vertical" class="thin"/>
+        <label id="xrPermissionsLabel" data-l10n-id="permissions-xr"/>
+      </description>
+      <hbox pack="end">
+        <button id="xrSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-xr-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-site-xr-window.title,
+                  permissions-site-xr-desc,
+                  permissions-site-xr-disable-label,
+                  permissions-site-xr-disable-desc,
+                " />
+      </hbox>
+    </hbox>
   </vbox>
 
   <separator flex="1"/>
