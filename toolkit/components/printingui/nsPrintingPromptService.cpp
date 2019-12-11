@@ -20,9 +20,9 @@
 #  include "nsPrintProgressParams.h"
 
 static const char* kPrintProgressDialogURL =
-    "chrome://global/content/printProgress.xul";
+    "chrome://global/content/printProgress.xhtml";
 static const char* kPrtPrvProgressDialogURL =
-    "chrome://global/content/printPreviewProgress.xul";
+    "chrome://global/content/printPreviewProgress.xhtml";
 #endif
 
 using namespace mozilla;

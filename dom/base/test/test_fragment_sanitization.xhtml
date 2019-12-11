@@ -53,7 +53,7 @@ async function testFrame(frame, html, expected = html) {
 }
 
 add_task(async function test_fragment_sanitization() {
-  const XUL_URL = "chrome://global/content/win.xul";
+  const XUL_URL = "chrome://global/content/win.xhtml";
   const HTML_URL = "chrome://mochitests/content/chrome/dom/base/test/file_empty.html";
 
   const HTML = '<a onclick="foo()" href="javascript:foo"><script>bar()<\/script>Meh.</a><a href="http://foo/"></a>';

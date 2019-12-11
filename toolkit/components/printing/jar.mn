@@ -6,12 +6,12 @@ toolkit.jar:
 #ifndef XP_MACOSX
 #ifdef XP_WIN
    content/global/printPageSetup.js                 (content/printPageSetup.js)
-   content/global/printPageSetup.xul                (content/printPageSetup.xul)
+   content/global/printPageSetup.xhtml              (content/printPageSetup.xhtml)
 #endif
    content/global/printPreviewProgress.js           (content/printPreviewProgress.js)
-   content/global/printPreviewProgress.xul          (content/printPreviewProgress.xul)
+   content/global/printPreviewProgress.xhtml        (content/printPreviewProgress.xhtml)
    content/global/printProgress.js                  (content/printProgress.js)
-   content/global/printProgress.xul                 (content/printProgress.xul)
+   content/global/printProgress.xhtml               (content/printProgress.xhtml)
 #endif
    content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
    content/global/printUtils.js                     (content/printUtils.js)

@@ -207,7 +207,7 @@ function onProfilesDblClick(aEvent) {
 // invoke the createProfile Wizard
 function CreateProfileWizard() {
   window.openDialog(
-    "chrome://mozapps/content/profile/createProfileWizard.xul",
+    "chrome://mozapps/content/profile/createProfileWizard.xhtml",
     "",
     "centerscreen,chrome,modal,titlebar",
     gProfileService,

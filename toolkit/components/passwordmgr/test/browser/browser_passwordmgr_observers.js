@@ -12,7 +12,7 @@ add_task(async function test() {
       "init"
     );
     let pmDialog = window.openDialog(
-      "chrome://passwordmgr/content/passwordManager.xul",
+      "chrome://passwordmgr/content/passwordManager.xhtml",
       "Toolkit:PasswordManager",
       ""
     );
