@@ -685,6 +685,11 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   DoesWindowSupportProtectedMedia();
 #endif
 
+  void NotifyContentBlockingEvent(
+      uint32_t aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aHintURI,
+      const nsTArray<nsCString>& aTrackingFullHashes,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason);
+
  protected:
   virtual ~BrowserChild();
 
