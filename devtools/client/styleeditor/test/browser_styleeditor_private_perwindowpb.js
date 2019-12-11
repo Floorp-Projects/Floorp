@@ -15,8 +15,7 @@ const TEST_URL =
 
 add_task(async function() {
   info("Opening a new private window");
-  const win = OpenBrowserWindow({ private: true });
-  await waitForDelayedStartupFinished(win);
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   info("Clearing the browser cache");
   Services.cache2.clear();
@@ -72,16 +71,5 @@ function checkDiskCacheFor(host) {
       /* Do walk entries */
       true
     );
-  });
-}
-
-function waitForDelayedStartupFinished(win) {
-  return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subject, topic) {
-      if (win == subject) {
-        Services.obs.removeObserver(observer, topic);
-        resolve();
-      }
-    }, "browser-delayed-startup-finished");
   });
 }

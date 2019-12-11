@@ -7,11 +7,6 @@
 const {
   BrowserTestUtils,
 } = require("resource://testing-common/BrowserTestUtils.jsm");
-const Services = require("Services");
-const {
-  waitForDelayedStartupFinished,
-} = require("devtools/client/performance/test/helpers/wait-utils");
-const { gDevTools } = require("devtools/client/framework/devtools");
 
 /**
  * Gets a random integer in between an interval. Used to uniquely identify
@@ -46,16 +41,4 @@ exports.removeTab = function(tab) {
   dump(`Removing tab: ${tab.linkedBrowser.currentURI.spec}.\n`);
 
   BrowserTestUtils.removeTab(tab);
-};
-
-/**
- * Adds a browser window with the provided options.
- */
-exports.addWindow = async function(options) {
-  const { OpenBrowserWindow } = Services.wm.getMostRecentWindow(
-    gDevTools.chromeWindowType
-  );
-  const win = OpenBrowserWindow(options);
-  await waitForDelayedStartupFinished(win);
-  return win;
 };

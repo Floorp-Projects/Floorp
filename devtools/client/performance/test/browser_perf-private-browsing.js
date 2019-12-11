@@ -8,9 +8,6 @@
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const {
-  addWindow,
-} = require("devtools/client/performance/test/helpers/tab-utils");
-const {
   initPerformanceInNewTab,
   teardownToolboxAndRemoveTab,
 } = require("devtools/client/performance/test/helpers/panel-utils");
@@ -37,7 +34,7 @@ add_task(async function() {
 });
 
 async function createPanelInNewWindow(options) {
-  const win = await addWindow(options);
+  const win = await BrowserTestUtils.openNewBrowserWindow(options);
   return createPanelInWindow(options, win);
 }
 
