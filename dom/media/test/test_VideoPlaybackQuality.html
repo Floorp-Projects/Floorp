@@ -20,7 +20,6 @@ function test() {
   ok(vpq.creationTime <= performance.now(), "creationTime should be in the past");
   is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
   is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
-  is(vpq.corruptedVideoFrames, 0, "corruptedVideoFrames should be 0");
 
   var vpq2 = video.getVideoPlaybackQuality();
   ok(vpq !== vpq2, "getVideoPlaybackQuality should return a new object");
@@ -37,14 +36,12 @@ function test() {
     ok(vpq.totalVideoFrames > 0, "totalVideoFrames should be > 0");
     ok(vpq.droppedVideoFrames >= 0, "droppedVideoFrames should be >= 0");
     ok(vpq.droppedVideoFrames <= vpq.totalVideoFrames, "droppedVideoFrames should be <= totalVideoFrames");
-    ok(vpq.corruptedVideoFrames >= 0, "corruptedVideoFrames should be >= 0");
 
     SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", false]]}, function () {
       vpq = video.getVideoPlaybackQuality();
       is(vpq.creationTime, 0, "creationTime should be 0");
       is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
       is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
-      is(vpq.corruptedVideoFrames, 0, "corruptedVideoFrames should be 0");
 
       SimpleTest.finish();
     });
