@@ -82,6 +82,7 @@ class nsWaylandDisplay {
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
   static bool IsDMABufEnabled();
+  static bool IsDMABufBasicEnabled();
 
   // See WindowSurfaceWayland::CacheMode for details.
   int GetRenderingCacheModePref() { return mRenderingCacheModePref; };
@@ -110,6 +111,7 @@ class nsWaylandDisplay {
   bool mExplicitSync;
   static bool mIsDMABufEnabled;
   static int mIsDMABufPrefState;
+  static int mIsDMABufPrefBasicCompositorState;
   static bool mIsDMABufConfigured;
   static int mRenderingCacheModePref;
 };

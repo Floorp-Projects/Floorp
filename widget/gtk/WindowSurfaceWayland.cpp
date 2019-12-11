@@ -562,7 +562,7 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
 
 bool WindowSurfaceWayland::UseDMABufBackend() {
   if (!mUseDMABufInitialized) {
-    mUseDMABuf = nsWaylandDisplay::IsDMABufEnabled();
+    mUseDMABuf = nsWaylandDisplay::IsDMABufBasicEnabled();
     LOGWAYLAND(("WindowSurfaceWayland::UseDMABufBackend DMABuf state %d\n",
                 mUseDMABuf));
     mUseDMABufInitialized = true;
