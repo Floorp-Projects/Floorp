@@ -11,6 +11,7 @@ import json
 import os
 import tempfile
 import zipfile
+import fnmatch
 
 import mozfile
 
@@ -91,6 +92,7 @@ class GeckoProfile(object):
 
     def _save_gecko_profile(self, symbolicator, missing_symbols_zip,
                             profile_path):
+        LOG.info("Symbolicating profile at %s" % profile_path)
         try:
             with open(profile_path, 'r') as profile_file:
                 profile = json.load(profile_file)
@@ -103,20 +105,39 @@ class GeckoProfile(object):
             LOG.critical(
                 "Ran out of memory while trying"
                 " to symbolicate profile {0}"
-                .format(profile_path),
-                exc_info=True
+                .format(profile_path)
             )
         except Exception:
             LOG.critical("Encountered an exception during profile"
                          " symbolication {0}"
-                         .format(profile_path),
-                         exc_info=True)
+                         .format(profile_path))
+
+    def collect_profiles(self):
+        """ Returns all profiles files.
+        """
+        res = []
+        if self.raptor_config.get('browsertime'):
+            topdir = self.raptor_config.get('browsertime_result_dir')
+            for root, dirnames, filenames in os.walk(topdir):
+                for filename in fnmatch.filter(filenames, "geckoProfile*.json"):
+                    res.append(os.path.join(root, filename))
+        else:
+            # Collect all individual profiles that the test
+            # has put into self.gecko_profile_dir.
+            for profile in os.listdir(self.gecko_profile_dir):
+                res.append(os.path.join(self.gecko_profile_dir, profile))
+        return res
 
     def symbolicate(self):
         """
         Symbolicate Gecko profiling data for one pagecycle.
 
         """
+        profiles = self.collect_profiles()
+        if len(profiles) == 0:
+            LOG.error("No profiles collected")
+            return
+
         symbolicator = symbolication.ProfileSymbolicator({
             # Trace-level logging (verbose)
             "enableTracing": 0,
@@ -143,7 +164,7 @@ class GeckoProfile(object):
             "symbolPaths": self.symbol_paths
         })
 
-        if self.raptor_config.get('symbols_path', None) is not None:
+        if self.raptor_config.get('symbols_path') is not None:
             if mozfile.is_url(self.raptor_config['symbols_path']):
                 symbolicator.integrate_symbol_zip_from_url(
                     self.raptor_config['symbols_path']
@@ -166,9 +187,7 @@ class GeckoProfile(object):
             mode = zipfile.ZIP_STORED
 
         with zipfile.ZipFile(self.profile_arcname, 'a', mode) as arc:
-            # Collect all individual profiles that the test
-            # has put into self.gecko_profile_dir.
-            for profile_filename in os.listdir(self.gecko_profile_dir):
+            for profile_filename in profiles:
                 testname = profile_filename
                 if testname.endswith(".profile"):
                     testname = testname[0:-8]
