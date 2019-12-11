@@ -31,7 +31,7 @@ function showResetDialog() {
     reset: false,
   };
   window.openDialog(
-    "chrome://global/content/resetProfile.xhtml",
+    "chrome://global/content/resetProfile.xul",
     null,
     "chrome,modal,centerscreen,titlebar,dialog=yes",
     retVals

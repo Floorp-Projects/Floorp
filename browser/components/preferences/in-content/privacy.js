@@ -1915,7 +1915,7 @@ var gPrivacyPane = {
       return;
     }
     Services.telemetry.recordEvent("pwmgr", "open_management", "preferences");
-    gSubDialog.open("chrome://passwordmgr/content/passwordManager.xhtml");
+    gSubDialog.open("chrome://passwordmgr/content/passwordManager.xul");
   },
 
   /**

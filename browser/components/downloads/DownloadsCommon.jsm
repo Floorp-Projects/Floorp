@@ -632,7 +632,7 @@ var DownloadsCommon = {
           function() {
             if (
               subj.document.documentURI ==
-              "chrome://global/content/commonDialog.xhtml"
+              "chrome://global/content/commonDialog.xul"
             ) {
               Services.ww.unregisterNotification(onOpen);
               let dialog = subj.document.getElementById("commonDialog");
