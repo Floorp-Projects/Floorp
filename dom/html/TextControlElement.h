@@ -199,7 +199,8 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
    * Helpers for value manipulation from SetRangeText.
    */
   virtual void GetValueFromSetRangeText(nsAString& aValue) = 0;
-  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) = 0;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
+      const nsAString& aValue) = 0;
 
   static const int32_t DEFAULT_COLS = 20;
   static const int32_t DEFAULT_ROWS = 1;

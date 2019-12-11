@@ -245,7 +245,7 @@ class HTMLInputElement final : public TextControlElement,
   virtual void InitializeKeyboardEventListeners() override;
   virtual void OnValueChanged(bool aNotify, ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult SetValueFromSetRangeText(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
       const nsAString& aValue) override;
   virtual bool HasCachedSelection() override;
 
@@ -695,22 +695,28 @@ class HTMLInputElement final : public TextControlElement,
   void Select();
 
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
-  void SetSelectionStart(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionStart(const Nullable<uint32_t>& aValue,
+                                            ErrorResult& aRv);
 
   Nullable<uint32_t> GetSelectionEnd(ErrorResult& aRv);
-  void SetSelectionEnd(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionEnd(const Nullable<uint32_t>& aValue,
+                                          ErrorResult& aRv);
 
   void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
-  void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionDirection(const nsAString& aValue,
+                                                ErrorResult& aRv);
 
-  void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
-                         const Optional<nsAString>& direction,
-                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
+      uint32_t aStart, uint32_t aEnd, const Optional<nsAString>& direction,
+      ErrorResult& aRv);
 
-  void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
+                                       ErrorResult& aRv);
 
-  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, SelectionMode aSelectMode, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
+                                       uint32_t aStart, uint32_t aEnd,
+                                       SelectionMode aSelectMode,
+                                       ErrorResult& aRv);
 
   bool Allowdirs() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::allowdirs);

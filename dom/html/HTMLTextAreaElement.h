@@ -101,8 +101,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   virtual void InitializeKeyboardEventListeners() override;
   virtual void OnValueChanged(bool aNotify, ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
+      const nsAString& aValue) override;
   virtual bool HasCachedSelection() override;
 
   // nsIContent
@@ -214,10 +214,13 @@ class HTMLTextAreaElement final : public TextControlElement,
   }
   bool Required() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
 
-  void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
+                                       ErrorResult& aRv);
 
-  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, SelectionMode aSelectMode, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
+                                       uint32_t aStart, uint32_t aEnd,
+                                       SelectionMode aSelectMode,
+                                       ErrorResult& aRv);
 
   void SetRequired(bool aRequired, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::required, aRequired, aError);
@@ -243,8 +246,8 @@ class HTMLTextAreaElement final : public TextControlElement,
    * nsContentUtils::PlatformToDOMLineBreaks().
    */
   bool ValueEquals(const nsAString& aValue) const;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SetValue(const nsAString& aValue, ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetValue(const nsAString& aValue,
+                                            ErrorResult& aError);
 
   uint32_t GetTextLength();
 
@@ -254,16 +257,17 @@ class HTMLTextAreaElement final : public TextControlElement,
 
   void Select();
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aError);
-  void SetSelectionStart(const Nullable<uint32_t>& aSelectionStart,
-                         ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionStart(
+      const Nullable<uint32_t>& aSelectionStart, ErrorResult& aError);
   Nullable<uint32_t> GetSelectionEnd(ErrorResult& aError);
-  void SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
-                       ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionEnd(
+      const Nullable<uint32_t>& aSelectionEnd, ErrorResult& aError);
   void GetSelectionDirection(nsAString& aDirection, ErrorResult& aError);
-  void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aError);
-  void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
-                         const Optional<nsAString>& aDirecton,
-                         ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionDirection(const nsAString& aDirection,
+                                                ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
+      uint32_t aSelectionStart, uint32_t aSelectionEnd,
+      const Optional<nsAString>& aDirecton, ErrorResult& aError);
   nsIControllers* GetControllers(ErrorResult& aError);
   // XPCOM adapter function widely used throughout code, leaving it as is.
   nsresult GetControllers(nsIControllers** aResult);
@@ -275,8 +279,8 @@ class HTMLTextAreaElement final : public TextControlElement,
 
   bool IsInputEventTarget() const { return true; }
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SetUserInput(const nsAString& aValue, nsIPrincipal& aSubjectPrincipal);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetUserInput(
+      const nsAString& aValue, nsIPrincipal& aSubjectPrincipal);
 
  protected:
   virtual ~HTMLTextAreaElement();
