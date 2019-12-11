@@ -239,16 +239,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       (this._contentType.includes("javascript") ||
         this._contentType === "text/wasm")
     ) {
-      // If the source doesn't start at line 1, line numbers in the client will
-      // not match up with those in the source. Pad the text with blank lines to
-      // fix this. This can show up for sources associated with inline scripts
-      // in HTML created via document.write() calls: the script's source line
-      // number is relative to the start of the written HTML, but we show the
-      // source's content by itself.
-      const padding = this._source.startLine
-        ? "\n".repeat(this._source.startLine - 1)
-        : "";
-      return toResolvedContent(padding + this._source.text);
+      return toResolvedContent(this.actualText());
     }
 
     const result = await this.sources.urlContents(
@@ -261,6 +252,37 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     this._contentType = result.contentType;
 
     return result;
+  },
+
+  // Get the actual text of this source, padded so that line numbers will match
+  // up with the source itself.
+  actualText() {
+    // If the source doesn't start at line 1, line numbers in the client will
+    // not match up with those in the source. Pad the text with blank lines to
+    // fix this. This can show up for sources associated with inline scripts
+    // in HTML created via document.write() calls: the script's source line
+    // number is relative to the start of the written HTML, but we show the
+    // source's content by itself.
+    const padding = this._source.startLine
+      ? "\n".repeat(this._source.startLine - 1)
+      : "";
+    return padding + this._source.text;
+  },
+
+  // Return whether the specified fetched contents includes the actual text of
+  // this source in the expected position.
+  contentMatches(fileContents) {
+    const lineBreak = /\r\n?|\n|\u2028|\u2029/;
+    const contentLines = fileContents.content.split(lineBreak);
+    const sourceLines = this._source.text.split(lineBreak);
+    let line = this._source.startLine - 1;
+    for (const sourceLine of sourceLines) {
+      const contentLine = contentLines[line++] || "";
+      if (!contentLine.includes(sourceLine)) {
+        return false;
+      }
+    }
+    return true;
   },
 
   getBreakableLines: async function() {
