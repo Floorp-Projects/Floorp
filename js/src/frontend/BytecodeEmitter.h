@@ -440,8 +440,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitJumpTarget(JumpTarget* target);
   MOZ_MUST_USE bool emitJumpNoFallthrough(JSOp op, JumpList* jump);
   MOZ_MUST_USE bool emitJump(JSOp op, JumpList* jump);
-  MOZ_MUST_USE bool emitBackwardJump(JSOp op, JumpTarget target, JumpList* jump,
-                                     JumpTarget* fallthrough);
   void patchJumpsToTarget(JumpList jump, JumpTarget target);
   MOZ_MUST_USE bool emitJumpTargetAndPatch(JumpList jump);
 
