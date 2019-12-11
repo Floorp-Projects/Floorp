@@ -1516,6 +1516,9 @@ nsFrameSelection* TextControlState::GetConstFrameSelection() {
 }
 
 TextEditor* TextControlState::GetTextEditor() {
+  // Note that if the instance is destroyed in PrepareEditor(), it returns
+  // NS_ERROR_NOT_INITIALIZED so that we don't need to create kungFuDeathGrip
+  // in this hot path.
   if (!mTextEditor && NS_WARN_IF(NS_FAILED(PrepareEditor()))) {
     return nullptr;
   }
@@ -1950,7 +1953,9 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     mSelectionCached = false;
   }
 
-  return rv;
+  return preparingEditor.IsTextControlStateDestroyed()
+             ? NS_ERROR_NOT_INITIALIZED
+             : rv;
 }
 
 void TextControlState::FinishedRestoringSelection() {

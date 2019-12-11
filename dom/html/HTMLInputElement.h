@@ -837,7 +837,7 @@ class HTMLInputElement final : public TextControlElement,
   /**
    * GetEditor() is for webidl bindings.
    */
-  nsIEditor* GetEditor();
+  MOZ_CAN_RUN_SCRIPT nsIEditor* GetEditor();
 
   bool IsInputEventTarget() const { return IsSingleLineTextControl(false); }
 
@@ -1097,7 +1097,7 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT void FreeData();
   TextControlState* GetEditorState() const;
 
-  mozilla::TextEditor* GetTextEditorFromState();
+  MOZ_CAN_RUN_SCRIPT mozilla::TextEditor* GetTextEditorFromState();
 
   /**
    * Manages the internal data storage across type changes.
