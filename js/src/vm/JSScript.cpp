@@ -5702,7 +5702,6 @@ LazyScript* LazyScript::CreateForXDR(
   // LazyScript::enclosingScriptHasEverBeenCompiled relies on the enclosing
   // scope being non-null if we have ever been nested inside non-lazy
   // function.
-  MOZ_ASSERT(!lazy->hasEnclosingScope());
   if (enclosingScope) {
     lazy->setEnclosingScope(enclosingScope);
   }
