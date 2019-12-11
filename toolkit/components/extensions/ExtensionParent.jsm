@@ -1287,7 +1287,7 @@ class HiddenXULWindow {
       triggeringPrincipal: system,
     };
     chromeShell.loadURI(
-      "chrome://extensions/content/dummy.xul",
+      "chrome://extensions/content/dummy.xhtml",
       loadURIOptions
     );
 

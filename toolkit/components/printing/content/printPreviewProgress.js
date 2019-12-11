@@ -104,7 +104,7 @@ function onLoad() {
   }
 
   if (!printProgress) {
-    dump("Invalid argument to printPreviewProgress.xul\n");
+    dump("Invalid argument to printPreviewProgress.xhtml\n");
     window.close();
     return;
   }

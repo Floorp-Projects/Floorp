@@ -2584,7 +2584,7 @@ var gMainPane = {
       };
 
       gSubDialog.open(
-        "chrome://global/content/appPicker.xul",
+        "chrome://global/content/appPicker.xhtml",
         null,
         params,
         onAppSelected

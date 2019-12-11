@@ -21,7 +21,7 @@ add_UITour_task(async function test_resetFirefox() {
           function() {
             if (
               subj.document.documentURI ==
-              "chrome://global/content/resetProfile.xul"
+              "chrome://global/content/resetProfile.xhtml"
             ) {
               Services.ww.unregisterNotification(onOpen);
               ok(true, "Observed search manager window open");

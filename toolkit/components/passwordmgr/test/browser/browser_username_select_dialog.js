@@ -6,7 +6,7 @@
 // Copied from prompt_common.js. TODO: share the code.
 function getSelectDialogDoc() {
   // Trudge through all the open windows, until we find the one
-  // that has selectDialog.xul loaded.
+  // that has selectDialog.xhtml loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
   for (let { docShell } of Services.wm.getEnumerator(null)) {
     var containedDocShells = docShell.getAllDocShellsInSubtree(
@@ -21,7 +21,7 @@ function getSelectDialogDoc() {
       var childDoc = childDocShell.contentViewer.DOMDocument;
 
       if (
-        childDoc.location.href == "chrome://global/content/selectDialog.xul"
+        childDoc.location.href == "chrome://global/content/selectDialog.xhtml"
       ) {
         return childDoc;
       }

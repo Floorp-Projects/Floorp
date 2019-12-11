@@ -18,7 +18,7 @@
 
 using namespace mozilla;
 
-#define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xul"
+#define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xhtml"
 
 namespace {
 StaticRefPtr<nsXULAlerts> gXULAlerts;

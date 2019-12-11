@@ -55,7 +55,7 @@ var ResetProfile = {
       reset: false,
     };
     window.docShell.rootTreeItem.domWindow.openDialog(
-      "chrome://global/content/resetProfile.xul",
+      "chrome://global/content/resetProfile.xhtml",
       null,
       "modal,centerscreen,titlebar",
       params
