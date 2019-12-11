@@ -272,7 +272,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   // XPCOM adapter function widely used throughout code, leaving it as is.
   nsresult GetControllers(nsIControllers** aResult);
 
-  nsIEditor* GetEditor() {
+  MOZ_CAN_RUN_SCRIPT nsIEditor* GetEditor() {
     MOZ_ASSERT(mState);
     return mState->GetTextEditor();
   }

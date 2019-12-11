@@ -162,7 +162,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   bool IsBusy() const { return !!mHandlingState || mValueTransferInProgress; }
 
-  TextEditor* GetTextEditor();
+  MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor();
   TextEditor* GetTextEditorWithoutCreation();
   nsISelectionController* GetSelectionController() const;
   nsFrameSelection* GetConstFrameSelection();
