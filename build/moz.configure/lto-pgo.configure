@@ -35,9 +35,6 @@ js_option('--with-pgo-profile-path',
           help='Path to the directory with unmerged profile data to use during the build',
           nargs=1)
 
-js_option('--enable-cross-pgo',
-          help='Enable PGO on Rust code')
-
 imply_option('MOZ_PGO',
              depends_if('--enable-profile-use')(lambda _: True))
 
