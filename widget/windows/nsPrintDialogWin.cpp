@@ -23,7 +23,7 @@
 #include "nsQueryObject.h"
 
 static const char* kPageSetupDialogURL =
-    "chrome://global/content/printPageSetup.xul";
+    "chrome://global/content/printPageSetup.xhtml";
 
 using namespace mozilla;
 using namespace mozilla::widget;

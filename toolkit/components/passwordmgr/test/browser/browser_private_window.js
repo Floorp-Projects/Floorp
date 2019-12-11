@@ -19,7 +19,7 @@ async function focusWindow(win) {
 
 function getDialogDoc() {
   // Trudge through all the open windows, until we find the one
-  // that has either commonDialog.xul or selectDialog.xul loaded.
+  // that has either commonDialog.xhtml or selectDialog.xhtml loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
   for (let { docShell } of Services.wm.getEnumerator(null)) {
     var containedDocShells = docShell.getAllDocShellsInSubtree(
@@ -34,8 +34,9 @@ function getDialogDoc() {
       }
       var childDoc = childDocShell.contentViewer.DOMDocument;
       if (
-        childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
-        childDoc.location.href != "chrome://global/content/selectDialog.xul"
+        childDoc.location.href !=
+          "chrome://global/content/commonDialog.xhtml" &&
+        childDoc.location.href != "chrome://global/content/selectDialog.xhtml"
       ) {
         continue;
       }

@@ -51,7 +51,7 @@ async function checkExtension() {
           function() {
             if (
               subj.document.documentURI ==
-              "chrome://global/content/resetProfile.xul"
+              "chrome://global/content/resetProfile.xhtml"
             ) {
               Services.ww.unregisterNotification(onOpen);
               Assert.ok(true, "Observed search manager window open");
