@@ -16,6 +16,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskQueue.h"
@@ -86,6 +87,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "../mime/nsMIMEHeaderParamImpl.h"
 #include "nsStandardURL.h"
+#include "DefaultURI.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsJSProtocolHandler.h"
 #include "nsDataHandler.h"
@@ -1839,10 +1841,12 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   // that have notion of hostname, authority and relative URLs. Below we
   // manually check agains set of known protocols schemes until more general
   // solution is in place (See Bug 1569733)
-  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat") ||
-      scheme.EqualsLiteral("ipfs") || scheme.EqualsLiteral("ipns") ||
-      scheme.EqualsLiteral("ssb") || scheme.EqualsLiteral("wtp")) {
-    return NewStandardURI(aSpec, aCharset, aBaseURI, -1, aURI);
+  if (!StaticPrefs::network_url_useDefaultURI()) {
+    if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat") ||
+        scheme.EqualsLiteral("ipfs") || scheme.EqualsLiteral("ipns") ||
+        scheme.EqualsLiteral("ssb") || scheme.EqualsLiteral("wtp")) {
+      return NewStandardURI(aSpec, aCharset, aBaseURI, -1, aURI);
+    }
   }
 
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -1864,8 +1868,20 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
       MOZ_DIAGNOSTIC_ASSERT(newScheme == scheme);
     }
 
+    if (StaticPrefs::network_url_useDefaultURI()) {
+      return NS_MutateURI(new DefaultURI::Mutator())
+          .SetSpec(newSpec)
+          .Finalize(aURI);
+    }
+
     return NS_MutateURI(new nsSimpleURI::Mutator())
         .SetSpec(newSpec)
+        .Finalize(aURI);
+  }
+
+  if (StaticPrefs::network_url_useDefaultURI()) {
+    return NS_MutateURI(new DefaultURI::Mutator())
+        .SetSpec(aSpec)
         .Finalize(aURI);
   }
 

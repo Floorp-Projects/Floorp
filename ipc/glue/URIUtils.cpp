@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BlobURL.h"
+#include "mozilla/net/DefaultURI.h"
 #include "mozilla/net/SubstitutingURL.h"
 #include "mozilla/NullPrincipalURI.h"
 #include "nsComponentManagerUtils.h"
@@ -99,6 +100,10 @@ already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams) {
 
     case URIParams::THostObjectURIParams:
       mutator = new mozilla::dom::BlobURL::Mutator();
+      break;
+
+    case URIParams::TDefaultURIParams:
+      mutator = new mozilla::net::DefaultURI::Mutator();
       break;
 
     default:

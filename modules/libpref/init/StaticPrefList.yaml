@@ -7006,6 +7006,11 @@
   value: true
   mirror: always
 
+# Whether to use the rust implemented DefaultURI for unknown scheme types
+- name: network.url.useDefaultURI
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
