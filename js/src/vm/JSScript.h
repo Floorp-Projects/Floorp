@@ -2104,7 +2104,6 @@ setterLevel:                                                                  \
   }
   void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
 
-  bool hasEnclosingScope() const { return warmUpData_.isEnclosingScope(); }
   Scope* enclosingScope() const {
     MOZ_ASSERT(!warmUpData_.isEnclosingScript(),
                "Enclosing scope is not computed yet");
@@ -3424,7 +3423,7 @@ class LazyScript : public BaseScript {
   // The enclosing JSScript can be GCed later if the enclosing scope is not
   // FunctionScope or ModuleScope.
   bool enclosingScriptHasEverBeenCompiled() const {
-    return hasEnclosingScope();
+    return warmUpData_.isEnclosingScope();
   }
 
   friend class GCMarker;
