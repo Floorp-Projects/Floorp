@@ -12,32 +12,34 @@ registerCleanupFunction(() => {
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
-    await new Promise(function(resolve) {
-      threadFront.once("paused", async function(packet) {
-        const [grip] = packet.frame.arguments;
-        strictEqual(
-          grip.class,
-          "Function",
-          `Grip has expected value for "class" property`
-        );
-        strictEqual(
-          grip.isClassConstructor,
-          true,
-          `Grip has expected value for "isClassConstructor" property`
-        );
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        await threadFront.resume();
-        resolve();
-      });
+    const [grip] = packet.frame.arguments;
+    strictEqual(
+      grip.class,
+      "Function",
+      `Grip has expected value for "class" property`
+    );
+    strictEqual(
+      grip.isClassConstructor,
+      true,
+      `Grip has expected value for "isClassConstructor" property`
+    );
 
-      debuggee.eval(`
-        class MyClass {};
-        stopMe(MyClass);
-
-        function stopMe(arg1) {
-          debugger;
-        }
-      `);
-    });
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(`
+    class MyClass {};
+    stopMe(MyClass);
+
+    function stopMe(arg1) {
+      debugger;
+    }
+  `);
+}

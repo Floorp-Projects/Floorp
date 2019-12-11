@@ -5,25 +5,15 @@
 
 // Test that we get the magic properties on Error objects.
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_object_grip();
-    },
-    { waitForFinish: true }
-  )
-);
-
-function test_object_grip() {
-  gThreadFront.once("paused", async function(packet) {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
     const args = packet.frame.arguments;
 
-    const objClient = gThreadFront.pauseGrip(args[0]);
+    const objClient = threadFront.pauseGrip(args[0]);
     const response = await objClient.getOwnPropertyNames();
     const opn = response.ownPropertyNames;
     Assert.equal(opn.length, 4);
@@ -33,15 +23,16 @@ function test_object_grip() {
     Assert.equal(opn[2], "lineNumber");
     Assert.equal(opn[3], "message");
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     function stopMe(arg1) {
       debugger;
     }.toString()
   );
 
-  gDebuggee.eval("stopMe(new TypeError('error message text'))");
+  debuggee.eval("stopMe(new TypeError('error message text'))");
 }
