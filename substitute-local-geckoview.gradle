@@ -118,6 +118,7 @@ configurations.all { config ->
                         // timestamp already, but let's try to avoid some class of cache
                         // invalidation error while we're here.
                         strategy.cacheDynamicVersionsFor 0, 'seconds'
+                        strategy.cacheChangingModulesFor 0, 'seconds'
                     }
                 }
             }
