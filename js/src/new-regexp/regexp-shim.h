@@ -806,6 +806,49 @@ class JSRegExp : public HeapObject {
   static constexpr int kNoBacktrackLimit = 0;
 };
 
+class Code {
+ public:
+  bool operator!=(Code& other) const;
+
+  Address raw_instruction_start();
+  Address raw_instruction_end();
+  Address address();
+
+  static Code cast(Object object);
+};
+
+// GeneratedCode provides an interface for calling into jit code.
+// It will probably require additional work to hook this up to the
+// arm simulator.
+// Origin:
+// https://github.com/v8/v8/blob/abfbe7687edb5b2dffe0b33b24e0a41bb86a8214/src/execution/simulator.h#L96-L164
+template <typename Return, typename... Args>
+class GeneratedCode {
+ public:
+  using Signature = Return(Args...);
+
+  static GeneratedCode FromCode(Code code);  // TODO: implement
+  Return Call(Args... args) { return fn_ptr_(args...); }
+
+ private:
+  friend class GeneratedCode<Return(Args...)>;
+  Isolate* isolate_;
+  Signature* fn_ptr_;
+  GeneratedCode(Isolate* isolate, Signature* fn_ptr)
+      : isolate_(isolate), fn_ptr_(fn_ptr) {}
+};
+
+// Allow to use {GeneratedCode<ret(arg1, arg2)>} instead of
+// {GeneratedCode<ret, arg1, arg2>}.
+template <typename Return, typename... Args>
+class GeneratedCode<Return(Args...)> : public GeneratedCode<Return, Args...> {
+ public:
+  // Automatically convert from {GeneratedCode<ret, arg1, arg2>} to
+  // {GeneratedCode<ret(arg1, arg2)>}.
+  GeneratedCode(GeneratedCode<Return, Args...> other)
+      : GeneratedCode<Return, Args...>(other.isolate_, other.fn_ptr_) {}
+};
+
 enum class MessageTemplate { kStackOverflow };
 
 class MessageFormatter {
