@@ -108,6 +108,7 @@ const MOZ_JEXL_FILEPATH = "mozjexl";
 
 const { activityStreamProvider: asProvider } = NewTabUtils;
 
+const FXA_ATTACHED_CLIENTS_UPDATE_INTERVAL = 2 * 60 * 60 * 1000; // Two hours
 const FRECENT_SITES_UPDATE_INTERVAL = 6 * 60 * 60 * 1000; // Six hours
 const FRECENT_SITES_IGNORE_BLOCKED = false;
 const FRECENT_SITES_NUM_ITEMS = 25;
@@ -139,6 +140,32 @@ function CachedTargetingGetter(
       const now = Date.now();
       if (now - this._lastUpdated >= updateInterval) {
         this._value = await asProvider[property](options);
+        this._lastUpdated = now;
+      }
+      return this._value;
+    },
+  };
+}
+
+function CacheListAttachedOAuthClients() {
+  return {
+    _lastUpdated: 0,
+    _value: null,
+    expire() {
+      this._lastUpdated = 0;
+      this._value = null;
+    },
+    get() {
+      const now = Date.now();
+      if (now - this._lastUpdated >= FXA_ATTACHED_CLIENTS_UPDATE_INTERVAL) {
+        this._value = new Promise(resolve => {
+          fxAccounts
+            .listAttachedOAuthClients()
+            .then(clients => {
+              resolve(clients);
+            })
+            .catch(() => resolve([]));
+        });
         this._lastUpdated = now;
       }
       return this._value;
@@ -210,6 +237,7 @@ const QueryCache = {
     TotalBookmarksCount: new CachedTargetingGetter("getTotalBookmarksCount"),
     CheckBrowserNeedsUpdate: new CheckBrowserNeedsUpdate(),
     RecentBookmarks: new CachedTargetingGetter("getRecentBookmarks"),
+    ListAttachedOAuthClients: new CacheListAttachedOAuthClients(),
   },
 };
 
@@ -518,17 +546,8 @@ const TargetingGetters = {
     );
   },
   get attachedFxAOAuthClients() {
-    // Explicitly catch error objects e.g.  NO_ACCOUNT triggered when
-    // setting FXA_USERNAME_PREF from tests
     return this.usesFirefoxSync
-      ? new Promise(resolve => {
-          fxAccounts
-            .listAttachedOAuthClients()
-            .then(clients => {
-              resolve(clients);
-            })
-            .catch(() => resolve([]));
-        })
+      ? QueryCache.queries.ListAttachedOAuthClients.get()
       : [];
   },
   get platformName() {
