@@ -416,7 +416,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
           Rooted<WasmGlobalObject*> global(gCx,
                                            &propObj->as<WasmGlobalObject>());
           if (global->type() != ValType::I64) {
-            lastReturnVal = global->value(gCx);
+            global->value(gCx, &lastReturnVal);
           }
         }
       }
