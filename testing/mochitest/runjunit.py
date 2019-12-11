@@ -119,7 +119,6 @@ class JUnitTestRunner(MochitestDesktop):
         if self.fillCertificateDB(self.options):
             self.log.error("Certificate integration failed")
 
-        self.device.mkdir(self.remote_profile, parents=True)
         self.device.push(self.profile.profile, self.remote_profile)
         self.log.debug("profile %s -> %s" %
                        (str(self.profile.profile), str(self.remote_profile)))
