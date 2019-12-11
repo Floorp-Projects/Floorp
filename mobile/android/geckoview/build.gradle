@@ -359,6 +359,10 @@ android.libraryVariants.all { variant ->
 apply plugin: 'maven-publish'
 
 version = computeVersionNumber()
+if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+    // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+    version = "${version}-SNAPSHOT"
+}
 
 publishing {
     publications {
