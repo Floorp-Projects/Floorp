@@ -193,9 +193,9 @@ add_task(async function testInsertCSS_cleanup() {
     return [computedStyle.backgroundColor, computedStyle.color];
   };
 
-  const appliedStyles = await SpecialPowers.spawn(
+  const appliedStyles = await ContentTask.spawn(
     tab.linkedBrowser,
-    [],
+    null,
     getTabContentComputedStyle
   );
 
@@ -212,9 +212,9 @@ add_task(async function testInsertCSS_cleanup() {
 
   await extension.unload();
 
-  const unloadedStyles = await SpecialPowers.spawn(
+  const unloadedStyles = await ContentTask.spawn(
     tab.linkedBrowser,
-    [],
+    null,
     getTabContentComputedStyle
   );
 

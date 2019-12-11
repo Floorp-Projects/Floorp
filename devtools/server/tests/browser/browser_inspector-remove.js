@@ -14,13 +14,10 @@ add_task(async function testRemoveSubtree() {
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     function ignoreNode(node) {
       // Duplicate the walker logic to skip blank nodes...
-      return (
-        node.nodeType === content.Node.TEXT_NODE &&
-        !/[^\s]/.test(node.nodeValue)
-      );
+      return node.nodeType === Node.TEXT_NODE && !/[^\s]/.test(node.nodeValue);
     }
 
     let nextSibling = content.document.querySelector("#longlist").nextSibling;
@@ -57,9 +54,9 @@ add_task(async function testRemoveSubtree() {
   const onMutation = waitForMutation(walker, isChildList);
   const siblings = await walker.removeNode(longlist);
 
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [[siblings.previousSibling.actorID, siblings.nextSibling.actorID]],
+    [siblings.previousSibling.actorID, siblings.nextSibling.actorID],
     function([previousActorID, nextActorID]) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"

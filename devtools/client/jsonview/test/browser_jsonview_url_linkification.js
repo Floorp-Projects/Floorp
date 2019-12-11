@@ -64,7 +64,7 @@ async function testLinkNavigation({
 }) {
   const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
 
-  SpecialPowers.spawn(browser, [[urlText || url, url, clickLabel]], args => {
+  ContentTask.spawn(browser, [urlText || url, url, clickLabel], args => {
     const [expectedURLText, expectedURL, shouldClickLabel] = args;
     const { document } = content;
 

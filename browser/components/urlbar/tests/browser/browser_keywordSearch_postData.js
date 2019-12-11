@@ -57,7 +57,7 @@ add_task(async function() {
           "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs"
         );
 
-        let textContent = await SpecialPowers.spawn(browser, [], async () => {
+        let textContent = await ContentTask.spawn(browser, null, async () => {
           return content.document.body.textContent;
         });
 

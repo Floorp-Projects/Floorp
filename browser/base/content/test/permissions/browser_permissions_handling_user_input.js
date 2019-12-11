@@ -15,7 +15,7 @@ function assertShown(task) {
       "popupshown"
     );
 
-    await SpecialPowers.spawn(browser, [], task);
+    await ContentTask.spawn(browser, null, task);
 
     await popupshown;
 
@@ -30,7 +30,7 @@ function assertNotShown(task) {
       "popupshown"
     );
 
-    await SpecialPowers.spawn(browser, [], task);
+    await ContentTask.spawn(browser, null, task);
 
     let sawPrompt = await Promise.race([
       popupshown.then(() => true),

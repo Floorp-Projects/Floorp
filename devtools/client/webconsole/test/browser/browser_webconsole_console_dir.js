@@ -12,7 +12,7 @@ add_task(async function() {
   logAllStoreChanges(hud);
 
   info("console.dir on an array");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.dir([1, 2, { a: "a", b: "b" }]);
   });
   let dirMessageNode = await waitFor(() =>
@@ -52,7 +52,7 @@ add_task(async function() {
     res["item-" + (i + 1).toString().padStart(3, "0")] = i + 1;
     return res;
   }, {});
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [obj], function(data) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, obj, function(data) {
     content.wrappedJSObject.console.dir(data);
   });
   dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));

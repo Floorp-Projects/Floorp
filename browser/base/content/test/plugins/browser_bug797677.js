@@ -44,7 +44,7 @@ add_task(async function() {
   );
 
   // simple cpows
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     let plugin = content.document.getElementById("plugin");
     ok(plugin, "plugin should be in the page");
   });

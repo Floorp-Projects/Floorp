@@ -41,9 +41,9 @@ add_task(async function test() {
 
     // Convert the login object to a plain JS object for passing across process boundaries.
     login = LoginHelper.loginToVanillaObject(login);
-    await SpecialPowers.spawn(
+    await ContentTask.spawn(
       tab.linkedBrowser,
-      [{ login, usernameRequested }],
+      { login, usernameRequested },
       async ({ login: addedLogin, usernameRequested: aUsernameRequested }) => {
         const { LoginFormFactory } = ChromeUtils.import(
           "resource://gre/modules/LoginFormFactory.jsm"
@@ -80,7 +80,7 @@ add_task(async function test() {
     );
 
     let processedPromise = listenForTestNotification("FormSubmit");
-    SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    ContentTask.spawn(tab.linkedBrowser, null, () => {
       content.document.getElementById("form-basic").submit();
     });
     await processedPromise;

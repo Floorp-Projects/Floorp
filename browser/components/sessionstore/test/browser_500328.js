@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 async function checkState(browser) {
-  await SpecialPowers.spawn(browser, [], () => {
+  await ContentTask.spawn(browser, null, () => {
     // Go back and then forward, and make sure that the state objects received
     // from the popState event are as we expect them to be.
     //
@@ -17,8 +17,8 @@ async function checkState(browser) {
   });
 
   // Now go back.  This should trigger the popstate event handler.
-  let popstatePromise = SpecialPowers.spawn(browser, [], async () => {
-    let event = await ContentTaskUtils.waitForEvent(content, "popstate", true);
+  let popstatePromise = ContentTask.spawn(browser, null, async () => {
+    let event = await ContentTaskUtils.waitForEvent(this, "popstate", true);
     ok(event.state, "Event should have a state property.");
 
     is(content.testState, "foo", "testState after going back");
@@ -41,13 +41,13 @@ async function checkState(browser) {
 
   // Ensure that the message manager has processed the previous task before
   // going back to prevent racing with it in non-e10s mode.
-  await SpecialPowers.spawn(browser, [], () => {});
+  await ContentTask.spawn(browser, null, () => {});
   browser.goBack();
 
   await popstatePromise;
 
-  popstatePromise = SpecialPowers.spawn(browser, [], async () => {
-    let event = await ContentTaskUtils.waitForEvent(content, "popstate", true);
+  popstatePromise = ContentTask.spawn(browser, null, async () => {
+    let event = await ContentTaskUtils.waitForEvent(this, "popstate", true);
 
     // When content fires a PopStateEvent and we observe it from a chrome event
     // listener (as we do here, and, thankfully, nowhere else in the tree), the
@@ -73,7 +73,7 @@ async function checkState(browser) {
 
   // Ensure that the message manager has processed the previous task before
   // going forward to prevent racing with it in non-e10s mode.
-  await SpecialPowers.spawn(browser, [], () => {});
+  await ContentTask.spawn(browser, null, () => {});
   browser.goForward();
   await popstatePromise;
 }
@@ -103,7 +103,7 @@ add_task(async function test() {
         history.pushState({ obj2: 2 }, "title-obj2", "?page2");
         history.replaceState({ obj3: /^a$/ }, "title-obj3");
       }
-      await SpecialPowers.spawn(browser, [], contentTest);
+      await ContentTask.spawn(browser, null, contentTest);
       await TabStateFlusher.flush(browser);
 
       state = ss.getTabState(gBrowser.getTabForBrowser(browser));

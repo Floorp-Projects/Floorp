@@ -83,7 +83,7 @@ var startPicker = async function(toolbox, skipFocus) {
   if (!skipFocus) {
     // By default make sure the content window is focused since the picker may not focus
     // the content window by default.
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
       content.focus();
     });
   }

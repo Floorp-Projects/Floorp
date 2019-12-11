@@ -12,7 +12,7 @@ add_task(async function testReload({ Page }) {
   await Page.reload();
   await loaded;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     ok(!content.docShell.isForceReloading, "Document is not force-reloaded");
   });
 });
@@ -26,7 +26,7 @@ add_task(async function testReloadIgnoreCache({ Page }) {
   await Page.reload({ ignoreCache: true });
   await loaded;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     ok(content.docShell.isForceReloading, "Document is force-reloaded");
   });
 });

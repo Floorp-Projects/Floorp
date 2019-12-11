@@ -69,7 +69,7 @@ function check_submit_incomplete(tab, crash) {
   browser.addEventListener("CrashSubmitSucceeded", csp_onsuccess, true);
   browser.addEventListener("CrashSubmitFailed", csp_fail, true);
 
-  SpecialPowers.spawn(browser, [crash.id], id => {
+  ContentTask.spawn(browser, crash.id, id => {
     const submitButton = content.document
       .getElementById(id)
       .getElementsByClassName("submit-button")[0];

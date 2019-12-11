@@ -11,7 +11,7 @@ const { AppMenuNotifications } = ChromeUtils.import(
 );
 
 function waitForDocshellActivated() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     // Setting docshell activated/deactivated will trigger visibility state
     // changes to relevant state ("visible" or "hidden"). AFAIK, there is no
     // such event notifying docshell is being activated, so I use
@@ -95,7 +95,7 @@ add_task(async function testFullscreen() {
     PanelUI.notificationPanel,
     "popuphidden"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async () => {
     content.document.documentElement.requestFullscreen();
   });
   await popuphiddenPromise;
@@ -110,7 +110,7 @@ add_task(async function testFullscreen() {
     PanelUI.notificationPanel,
     "popupshown"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async () => {
     content.document.exitFullscreen();
   });
   await popupshownPromise;
