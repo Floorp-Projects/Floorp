@@ -134,8 +134,8 @@ class PromptParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "Prompt:Open": {
-        const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
-        const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
+        const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
+        const SELECT_DIALOG = "chrome://global/content/selectDialog.xul";
 
         let topPrincipal =
           browsingContext.top.currentWindowGlobal.documentPrincipal;

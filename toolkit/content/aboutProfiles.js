@@ -200,7 +200,7 @@ function display(profileData) {
   div.appendChild(sep);
 }
 
-// This is called from the createProfileWizard.xhtml dialog.
+// This is called from the createProfileWizard.xul dialog.
 function CreateProfile(profile) {
   // The wizard created a profile, just make it the default.
   defaultProfile(profile);
@@ -209,7 +209,7 @@ function CreateProfile(profile) {
 function createProfileWizard() {
   // This should be rewritten in HTML eventually.
   window.docShell.rootTreeItem.domWindow.openDialog(
-    "chrome://mozapps/content/profile/createProfileWizard.xhtml",
+    "chrome://mozapps/content/profile/createProfileWizard.xul",
     "",
     "centerscreen,chrome,modal,titlebar",
     ProfileService,

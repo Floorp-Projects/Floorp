@@ -7,7 +7,7 @@ geckoview.jar:
 
   content/config.xhtml
   content/config.js
-% override chrome://global/content/config.xhtml chrome://geckoview/content/config.xhtml
+% override chrome://global/content/config.xul chrome://geckoview/content/config.xhtml
 
   content/ErrorPageEventHandler.js
   content/geckoview.xul

@@ -1085,7 +1085,7 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (!param) {
         blockAboutPage(manager, "about:logins", true);
-        gBlockedChromePages.push("passwordManager.xhtml");
+        gBlockedChromePages.push("passwordManager.xul");
         setAndLockPref("pref.privacy.disable_button.view_passwords", true);
       }
       setAndLockPref("signon.rememberSignons", param);
@@ -1774,7 +1774,7 @@ function blockAboutPage(manager, feature, neededOnContentProcess = false) {
   gBlockedChromePages.push(fileName);
   if (feature == "about:config") {
     // Hide old page until it is removed
-    gBlockedChromePages.push("config.xhtml");
+    gBlockedChromePages.push("config.xul");
   }
 }
 
