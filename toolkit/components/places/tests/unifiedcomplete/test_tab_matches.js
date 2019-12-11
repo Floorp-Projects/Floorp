@@ -20,10 +20,10 @@ add_task(async function test_tab_matches() {
       title: "foobar.org - much better than ABC, definitely better than XYZ",
     },
   ]);
-  addOpenPages(uri1, 1);
+  await addOpenPages(uri1, 1);
   // Pages that cannot be registered in history.
-  addOpenPages(uri3, 1);
-  addOpenPages(uri4, 1);
+  await addOpenPages(uri3, 1);
+  await addOpenPages(uri4, 1);
 
   info("two results, normal result is a tab match");
   await check_autocomplete({
@@ -57,7 +57,7 @@ add_task(async function test_tab_matches() {
   });
 
   info("three results, both normal results are tab matches");
-  addOpenPages(uri2, 1);
+  await addOpenPages(uri2, 1);
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
@@ -76,7 +76,7 @@ add_task(async function test_tab_matches() {
   });
 
   info("a container tab is not visible in 'switch to tab'");
-  addOpenPages(uri5, 1, /* userContextId: */ 3);
+  await addOpenPages(uri5, 1, /* userContextId: */ 3);
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
@@ -137,7 +137,7 @@ add_task(async function test_tab_matches() {
   info(
     "three results, both normal results are tab matches, one has multiple tabs"
   );
-  addOpenPages(uri2, 5);
+  await addOpenPages(uri2, 5);
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
@@ -217,7 +217,7 @@ add_task(async function test_tab_matches() {
   });
 
   info("tab match search with restriction character");
-  addOpenPages(uri1, 1);
+  await addOpenPages(uri1, 1);
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
     searchParam: "enable-actions",
@@ -236,6 +236,16 @@ add_task(async function test_tab_matches() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("mozilla", { heuristic: true }),
+      makeSwitchToTabMatch("about:mozilla"),
+    ],
+  });
+
+  info("tab match with not-addable pages, no boundary search");
+  await check_autocomplete({
+    search: "ut:mo",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("ut:mo", { heuristic: true }),
       makeSwitchToTabMatch("about:mozilla"),
     ],
   });

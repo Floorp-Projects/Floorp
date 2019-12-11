@@ -559,18 +559,18 @@ class UrlbarQueryContext {
       );
     }
 
-    if (
-      options.providers &&
-      (!Array.isArray(options.providers) || !options.providers.length)
-    ) {
-      throw new Error(`Invalid providers list`);
+    if (options.providers) {
+      if (!Array.isArray(options.providers) || !options.providers.length) {
+        throw new Error(`Invalid providers list`);
+      }
+      this.providers = options.providers;
     }
 
-    if (
-      options.sources &&
-      (!Array.isArray(options.sources) || !options.sources.length)
-    ) {
-      throw new Error(`Invalid sources list`);
+    if (options.sources) {
+      if (!Array.isArray(options.sources) || !options.sources.length) {
+        throw new Error(`Invalid sources list`);
+      }
+      this.sources = options.sources;
     }
 
     this.lastResultCount = 0;

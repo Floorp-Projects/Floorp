@@ -238,7 +238,7 @@ add_task(async function test_localtab_matches_override() {
   // Setup Places to think the tab is open locally.
   let uri = NetUtil.newURI("http://foo.com/");
   await PlacesTestUtils.addVisits([{ uri, title: "An Example" }]);
-  addOpenPages(uri, 1);
+  await addOpenPages(uri, 1);
 
   await check_autocomplete({
     search: "ex",

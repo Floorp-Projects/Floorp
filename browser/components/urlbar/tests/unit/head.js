@@ -43,13 +43,17 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
  *          required options.
  */
 function createContext(searchString = "foo", properties = {}) {
-  let context = new UrlbarQueryContext({
-    allowAutofill: UrlbarPrefs.get("autoFill"),
-    isPrivate: true,
-    maxResults: UrlbarPrefs.get("maxRichResults"),
-    searchString,
-  });
-  return Object.assign(context, properties);
+  return new UrlbarQueryContext(
+    Object.assign(
+      {
+        allowAutofill: UrlbarPrefs.get("autoFill"),
+        isPrivate: true,
+        maxResults: UrlbarPrefs.get("maxRichResults"),
+        searchString,
+      },
+      properties
+    )
+  );
 }
 
 /**

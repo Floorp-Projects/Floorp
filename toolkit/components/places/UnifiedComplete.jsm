@@ -454,6 +454,15 @@ XPCOMUtils.defineLazyGetter(this, "typeToBehaviorMap", () => {
   ]);
 });
 
+XPCOMUtils.defineLazyGetter(this, "sourceToBehaviorMap", () => {
+  return new Map([
+    [UrlbarUtils.RESULT_SOURCE.HISTORY, "history"],
+    [UrlbarUtils.RESULT_SOURCE.BOOKMARKS, "bookmark"],
+    [UrlbarUtils.RESULT_SOURCE.TABS, "openpage"],
+    [UrlbarUtils.RESULT_SOURCE.SEARCH, "search"],
+  ]);
+});
+
 // Helper functions
 
 /**
@@ -721,7 +730,28 @@ function Search(
     }
   }
 
-  this._searchTokens = this.filterTokens(tokens);
+  // The behavior can be set through:
+  // 1. a specific restrictSource in the QueryContext
+  // 2. typed restriction tokens
+  if (
+    queryContext &&
+    queryContext.restrictSource &&
+    sourceToBehaviorMap.has(queryContext.restrictSource)
+  ) {
+    this._searchTokens = tokens;
+    this._behavior = 0;
+    this.setBehavior("restrict");
+    this.setBehavior(sourceToBehaviorMap.get(queryContext.restrictSource));
+  } else {
+    this._searchTokens = this.filterTokens(tokens);
+  }
+
+  // Set the right JavaScript behavior based on our preference.  Note that the
+  // preference is whether or not we should filter JavaScript, and the
+  // behavior is if we should search it or not.
+  if (!UrlbarPrefs.get("filter.javascript")) {
+    this.setBehavior("javascript");
+  }
 
   // The heuristic token is the first filtered search token, but only when it's
   // actually the first thing in the search string.  If a prefix or restriction
@@ -894,12 +924,6 @@ Search.prototype = {
           this.setBehavior("bookmark");
         }
       }
-    }
-    // Set the right JavaScript behavior based on our preference.  Note that the
-    // preference is whether or not we should filter JavaScript, and the
-    // behavior is if we should search it or not.
-    if (!UrlbarPrefs.get("filter.javascript")) {
-      this.setBehavior("javascript");
     }
     return filtered;
   },
@@ -1157,7 +1181,7 @@ Search.prototype = {
     }
     queries.push(this._searchQuery);
 
-    // Finally run all the other queries.
+    // Finally run all the remaining queries.
     for (let [query, params] of queries) {
       await conn.executeCached(query, params, this._onResultRow.bind(this));
       if (!this.pending) {
@@ -1194,7 +1218,11 @@ Search.prototype = {
       this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
-      for (let [query, params] of [this._adaptiveQuery, this._searchQuery]) {
+      let queries = [this._adaptiveQuery, this._searchQuery];
+      if (this.hasBehavior("openpage")) {
+        queries.unshift(this._switchToTabQuery);
+      }
+      for (let [query, params] of queries) {
         await conn.executeCached(query, params, this._onResultRow.bind(this));
         if (!this.pending) {
           return;
