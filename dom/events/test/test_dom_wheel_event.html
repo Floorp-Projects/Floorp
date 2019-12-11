@@ -69,7 +69,7 @@ function* prepareScrollUnits()
     result = aEvent.detail;
     aEvent.preventDefault();
   }
-  window.addEventListener("MozMousePixelScroll", handler, true);
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
   yield sendWheelAndWait(10, 10,
                          { deltaMode: WheelEvent.DOM_DELTA_LINE,
@@ -663,9 +663,9 @@ function* testEventOrder()
     pushEvent(aEvent, true);
   }
 
-  window.addEventListener("wheel", handler, true);
-  window.addEventListener("DOMMouseScroll", handler, true);
-  window.addEventListener("MozMousePixelScroll", handler, true);
+  window.addEventListener("wheel", handler, { capture: true, passive: false });
+  window.addEventListener("DOMMouseScroll", handler, { capture: true, passive: false });
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
   SpecialPowers.addSystemEventListener(window, "wheel", systemHandler, true);
   SpecialPowers.addSystemEventListener(window, "DOMMouseScroll", systemHandler, true);
@@ -802,8 +802,11 @@ function runTest()
     ["mousewheel.with_shift.delta_multiplier_z", 100],
     ["mousewheel.with_win.delta_multiplier_x", 100],
     ["mousewheel.with_win.delta_multiplier_y", 100],
-    ["mousewheel.with_win.delta_multiplier_z", 100]]},
-    continueTest);
+    ["mousewheel.with_win.delta_multiplier_z", 100],
+    // TODO: Need to add passive to SpecialPowers.addSystemEventListener
+    // somehow.
+    ["dom.event.default_to_passive_wheel_listeners", false],
+  ]}, continueTest);
 }
 </script>
 </pre>

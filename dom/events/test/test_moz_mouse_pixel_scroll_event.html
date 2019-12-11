@@ -62,7 +62,7 @@ function* prepareScrollUnits()
     aEvent.preventDefault();
     setTimeout(runTest, 0);
   }
-  window.addEventListener("MozMousePixelScroll", handler, true);
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
   yield waitForAllPaints(function () { setTimeout(runTest, 0); });
 
@@ -1287,7 +1287,7 @@ function* doTests()
     }
   }
 
-  window.addEventListener("MozMousePixelScroll", handler, true);
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
   for (var i = 0; i < kTests.length; i++) {
     currentTest = kTests[i];
