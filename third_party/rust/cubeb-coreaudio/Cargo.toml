@@ -2,6 +2,7 @@
 name = "cubeb-coreaudio"
 version = "0.1.0"
 authors = ["Chun-Min Chang <chun.m.chang@gmail.com>", "Paul Adenot <paul@paul.cx>"]
+license = "ISC"
 
 [lib]
 crate-type = ["staticlib", "rlib"]

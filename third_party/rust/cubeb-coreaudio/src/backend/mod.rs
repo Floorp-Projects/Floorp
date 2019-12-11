@@ -2439,6 +2439,10 @@ impl<'ctx> CoreStreamData<'ctx> {
     }
 
     fn start_audiounits(&self) -> Result<()> {
+        // Only allowed to be called after the stream is initialized
+        // and before the stream is destroyed.
+        assert!(!self.input_unit.is_null() || !self.output_unit.is_null());
+
         if !self.input_unit.is_null() {
             start_audiounit(self.input_unit)?;
         }
@@ -3379,30 +3383,27 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn destroy(&mut self) {
-        // Call stop_audiounits to avoid potential data race. If there is a running data callback,
-        // which locks a mutex inside CoreAudio framework, then this call will block the current
-        // thread until the callback is finished since this call asks to lock a mutex inside
-        // CoreAudio framework that is used by the data callback.
-        if !self.shutdown.load(Ordering::SeqCst) {
-            self.core_stream_data.stop_audiounits();
-            *self.shutdown.get_mut() = true;
-        }
-
         *self.destroy_pending.get_mut() = true;
 
         let queue = self.context.serial_queue;
-        let mutexed_stm = Arc::new(Mutex::new(self));
-        let also_mutexed_stm = Arc::clone(&mutexed_stm);
+
+        let stream_ptr = self as *const AudioUnitStream;
         // Execute close in serial queue to avoid collision
         // with reinit when un/plug devices
         sync_dispatch(queue, move || {
-            let mut stm_guard = also_mutexed_stm.lock().unwrap();
-            stm_guard.destroy_internal();
+            // Call stop_audiounits to avoid potential data race. If there is a running data callback,
+            // which locks a mutex inside CoreAudio framework, then this call will block the current
+            // thread until the callback is finished since this call asks to lock a mutex inside
+            // CoreAudio framework that is used by the data callback.
+            if !self.shutdown.load(Ordering::SeqCst) {
+                self.core_stream_data.stop_audiounits();
+                *self.shutdown.get_mut() = true;
+            }
+
+            self.destroy_internal();
         });
 
-        let stm_guard = mutexed_stm.lock().unwrap();
-        let stm_ptr = *stm_guard as *const AudioUnitStream;
-        cubeb_log!("Cubeb stream ({:p}) destroyed successful.", stm_ptr);
+        cubeb_log!("Cubeb stream ({:p}) destroyed successful.", stream_ptr);
     }
 }
 
@@ -3417,7 +3418,18 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         *self.shutdown.get_mut() = false;
         *self.draining.get_mut() = false;
 
-        self.core_stream_data.start_audiounits()?;
+        // Execute start in serial queue to avoid racing with destroy or reinit.
+        let queue = self.context.serial_queue;
+        let mut result = Err(Error::error());
+        let started = &mut result;
+        let stream = &self;
+        sync_dispatch(queue, move || {
+            *started = stream.core_stream_data.start_audiounits();
+        });
+
+        if result.is_err() {
+            return result;
+        }
 
         self.notify_state_changed(State::Started);
 
@@ -3430,7 +3442,12 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     fn stop(&mut self) -> Result<()> {
         *self.shutdown.get_mut() = true;
 
-        self.core_stream_data.stop_audiounits();
+        // Execute stop in serial queue to avoid racing with destroy or reinit.
+        let queue = self.context.serial_queue;
+        let stream = &self;
+        sync_dispatch(queue, move || {
+            stream.core_stream_data.stop_audiounits();
+        });
 
         self.notify_state_changed(State::Stopped);
 
