@@ -98,8 +98,6 @@ static void TraverseInnerLazyScriptsForLazyScript(
     }
 
     LazyScript* lazyScript = fun->lazyScript();
-    MOZ_ASSERT(lazyScript->hasEnclosingScope() ||
-               lazyScript->hasEnclosingLazyScript());
     MOZ_ASSERT_IF(lazyScript->hasEnclosingLazyScript(),
                   lazyScript->enclosingLazyScript() == enclosingLazyScript);
 

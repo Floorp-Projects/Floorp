@@ -133,8 +133,6 @@ static JSScript* DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript) {
 
   // JSFunction::getOrCreateScript requires the enclosing script not to be
   // lazified.
-  MOZ_ASSERT(lazyScript->hasEnclosingLazyScript() ||
-             lazyScript->hasEnclosingScope());
   if (lazyScript->hasEnclosingLazyScript()) {
     Rooted<LazyScript*> enclosingLazyScript(cx,
                                             lazyScript->enclosingLazyScript());
