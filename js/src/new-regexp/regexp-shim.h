@@ -21,6 +21,7 @@
 
 #include "js/Value.h"
 #include "new-regexp/util/vector.h"
+#include "new-regexp/util/zone.h"
 #include "vm/NativeObject.h"
 
 // Forward declaration of classes
@@ -178,6 +179,23 @@ class AllStatic {
  public:
   AllStatic() = delete;
 #endif
+};
+
+// Superclass for classes managed with new and delete.
+// In irregexp, this is only AlternativeGeneration (in regexp-compiler.cc)
+// Compare:
+// https://github.com/v8/v8/blob/7b3332844212d78ee87a9426f3a6f7f781a8fbfa/src/utils/allocation.cc#L88-L96
+class Malloced {
+ public:
+  static void* operator new(size_t size) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    void* result = js_malloc(size);
+    if (!result) {
+      oomUnsafe.crash("Irregexp Malloced shim");
+    }
+    return result;
+  }
+  static void operator delete(void* p) { js_free(p); }
 };
 
 constexpr int32_t KB = 1024;
