@@ -217,10 +217,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
   int16_t CompareBoundaryPoints(uint16_t aHow, nsRange& aOther,
                                 ErrorResult& aErr);
   int16_t ComparePoint(nsINode& aContainer, uint32_t aOffset,
-                       ErrorResult& aErr) {
-    return ComparePoint(RawRangeBoundary(&aContainer, aOffset), aErr);
-  }
-  int16_t ComparePoint(const RawRangeBoundary& aPoint, ErrorResult& aErr);
+                       ErrorResult& aErr) const;
   void DeleteContents(ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> ExtractContents(
       ErrorResult& aErr);
@@ -234,10 +231,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
   bool IsPointInRange(nsINode& aContainer, uint32_t aOffset,
-                      ErrorResult& aErr) {
-    return IsPointInRange(RawRangeBoundary(&aContainer, aOffset), aErr);
-  }
-  bool IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aErr);
+                      ErrorResult& aErr) const;
   void ToString(nsAString& aReturn, ErrorResult& aErr);
   void Detach();
 
@@ -320,6 +314,12 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   RangeBoundariesAndRoot DetermineNewRangeBoundariesAndRootOnCharacterDataMerge(
       nsIContent* aContent, const CharacterDataChangeInfo& aInfo) const;
+
+  // @return true iff the range is positioned, aContainer belongs to the same
+  //         document as the range, aContainer is a DOCUMENT_TYPE_NODE and
+  //         aOffset doesn't exceed aContainer's length.
+  bool IsPointComparableToRange(const nsINode& aContainer, uint32_t aOffset,
+                                ErrorResult& aErrorResult) const;
 
  public:
   /**
