@@ -17,13 +17,20 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
+// A general on/off for Firefox dmabuf support. When it set dmabuf is
+// configured.
 #define DMABUF_PREF "widget.wayland_dmabuf_backend.enabled"
+// Enables dmabuf backend for basic software compositor, i.e. we can
+// write our gfx data directly to GPU. Used for testing purposes only
+// as it's slower than shm backend due to missing dmabuf modifiers.
+#define DMABUF_BASIC_PREF "widget.wayland_dmabuf_basic_compositor.enabled"
 // See WindowSurfaceWayland::RenderingCacheMode for details.
 #define CACHE_MODE_PREF "widget.wayland_cache_mode"
 
 bool nsWaylandDisplay::mIsDMABufEnabled = false;
 // -1 mean the pref was not loaded yet
 int nsWaylandDisplay::mIsDMABufPrefState = -1;
+int nsWaylandDisplay::mIsDMABufPrefBasicCompositorState = -1;
 bool nsWaylandDisplay::mIsDMABufConfigured = false;
 int nsWaylandDisplay::mRenderingCacheModePref = -1;
 
@@ -397,6 +404,8 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     // so load all Wayland prefs here.
     if (mIsDMABufPrefState == -1) {
       mIsDMABufPrefState = Preferences::GetBool(DMABUF_PREF, false);
+      mIsDMABufPrefBasicCompositorState =
+          Preferences::GetBool(DMABUF_BASIC_PREF, false);
     }
     if (mRenderingCacheModePref == -1) {
       mRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
@@ -467,6 +476,10 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
 
   mIsDMABufEnabled = true;
   return true;
+}
+
+bool nsWaylandDisplay::IsDMABufBasicEnabled() {
+  return IsDMABufEnabled() && mIsDMABufPrefBasicCompositorState;
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;
