@@ -29,7 +29,7 @@ class Process:
 
 @mock.patch("mozprocess.processhandler.ProcessHandlerMixin.Process", new=Process)
 @mock.patch("mozproxy.backends.mitm.tooltool_download", new=mock.DEFAULT)
-@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy", lambda x: True)
+@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 def test_mitm(*args):
     bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
@@ -60,7 +60,7 @@ def test_mitm(*args):
 
 @mock.patch("mozprocess.processhandler.ProcessHandlerMixin.Process", new=Process)
 @mock.patch("mozproxy.backends.mitm.tooltool_download", new=mock.DEFAULT)
-@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy", lambda x: True)
+@mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 def test_playback_setup_failed(*args):
     class SetupFailed(Exception):
         pass
