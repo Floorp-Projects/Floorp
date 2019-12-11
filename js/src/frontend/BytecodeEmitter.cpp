@@ -6255,8 +6255,9 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  JumpTarget tryStart;
-  if (!emitJumpTarget(&tryStart)) {
+  LoopControl loopInfo(this, StatementKind::YieldStar);
+
+  if (!loopInfo.emitLoopHead(this, Nothing())) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
@@ -6558,15 +6559,11 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
-  {
-    // goto tryStart;
-    JumpList beq;
-    JumpTarget breakTarget;
-    if (!emitBackwardJump(JSOP_GOTO, tryStart, &beq, &breakTarget)) {
-      //            [stack] NEXT ITER RESULT
-      return false;
-    }
+  if (!emitJump(JSOP_GOTO, &loopInfo.continues)) {
+    //              [stack] NEXT ITER RESULT
+    return false;
   }
+
   bytecodeSection().setStackDepth(savedDepthTemp);
   if (!ifReturnDone.emitEnd()) {
     return false;
@@ -6654,7 +6651,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   //                [stack] NEXT ITER RESULT
 
-  // if (!result.done) goto tryStart;
+  // if (result.done) break;
   if (!emit1(JSOP_DUP)) {
     //              [stack] NEXT ITER RESULT RESULT
     return false;
@@ -6663,14 +6660,19 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT DONE
     return false;
   }
-  // if (!DONE) goto tryStart;
-  {
-    JumpList beq;
-    JumpTarget breakTarget;
-    if (!emitBackwardJump(JSOP_IFEQ, tryStart, &beq, &breakTarget)) {
-      //            [stack] NEXT ITER RESULT
-      return false;
-    }
+  if (!emitJump(JSOP_IFNE, &loopInfo.breaks)) {
+    //              [stack] NEXT ITER RESULT
+    return false;
+  }
+
+  if (!loopInfo.emitContinueTarget(this)) {
+    //              [stack] NEXT ITER RESULT
+    return false;
+  }
+
+  if (!loopInfo.emitLoopEnd(this, JSOP_GOTO, JSTRY_LOOP)) {
+    //              [stack] NEXT ITER RESULT
+    return false;
   }
 
   // result.value

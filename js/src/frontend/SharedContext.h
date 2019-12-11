@@ -43,13 +43,15 @@ enum class StatementKind : uint8_t {
   Class,
 
   // Used only by BytecodeEmitter.
-  Spread
+  Spread,
+  YieldStar,
 };
 
 static inline bool StatementKindIsLoop(StatementKind kind) {
   return kind == StatementKind::ForLoop || kind == StatementKind::ForInLoop ||
          kind == StatementKind::ForOfLoop || kind == StatementKind::DoLoop ||
-         kind == StatementKind::WhileLoop || kind == StatementKind::Spread;
+         kind == StatementKind::WhileLoop || kind == StatementKind::Spread ||
+         kind == StatementKind::YieldStar;
 }
 
 static inline bool StatementKindIsUnlabeledBreakTarget(StatementKind kind) {
