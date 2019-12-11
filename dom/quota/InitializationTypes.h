@@ -18,6 +18,13 @@ enum class Initialization {
   None = 0,
   Storage = 1 << 0,
   TemporaryStorage = 1 << 1,
+  DefaultRepository = 1 << 2,
+  TemporaryRepository = 1 << 3,
+  UpgradeStorageFrom0_0To1_0 = 1 << 4,
+  UpgradeStorageFrom1_0To2_0 = 1 << 5,
+  UpgradeStorageFrom2_0To2_1 = 1 << 6,
+  UpgradeStorageFrom2_1To2_2 = 1 << 7,
+  UpgradeStorageFrom2_2To2_3 = 1 << 8,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Initialization)
@@ -41,12 +48,12 @@ class InitializationInfo final {
           mSuccessFunction(aSuccessFunction) {}
 
     ~AutoInitializationAttempt() {
-      if (!(mOwner.mInitializationAttempts & mInitialization)) {
-        mOwner.mInitializationAttempts |= mInitialization;
-        Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                              mOwner.GetInitializationString(mInitialization),
-                              static_cast<uint32_t>(mSuccessFunction()));
+      if (mOwner.InitializationAttempted(mInitialization)) {
+        return;
       }
+
+      mOwner.ReportFirstInitializationAttempt(mInitialization,
+                                              mSuccessFunction());
     }
   };
 
@@ -58,8 +65,17 @@ class InitializationInfo final {
         *this, aInitialization, std::move(aSuccessFunction));
   }
 
+  void RecordFirstInitializationAttempt(const Initialization aInitialization,
+                                        const nsresult aRv) {
+    if (InitializationAttempted(aInitialization)) {
+      return;
+    }
+
+    ReportFirstInitializationAttempt(aInitialization, NS_SUCCEEDED(aRv));
+  }
+
   void AssertInitializationAttempted(Initialization aInitialization) {
-    MOZ_ASSERT(mInitializationAttempts & aInitialization);
+    MOZ_ASSERT(InitializationAttempted(aInitialization));
   }
 
   void ResetInitializationAttempts() {
@@ -74,10 +90,38 @@ class InitializationInfo final {
         return NS_LITERAL_CSTRING("Storage");
       case Initialization::TemporaryStorage:
         return NS_LITERAL_CSTRING("TemporaryStorage");
+      case Initialization::DefaultRepository:
+        return NS_LITERAL_CSTRING("DefaultRepository");
+      case Initialization::TemporaryRepository:
+        return NS_LITERAL_CSTRING("TemporaryRepository");
+      case Initialization::UpgradeStorageFrom0_0To1_0:
+        return NS_LITERAL_CSTRING("UpgradeStorageFrom0_0To1_0");
+      case Initialization::UpgradeStorageFrom1_0To2_0:
+        return NS_LITERAL_CSTRING("UpgradeStorageFrom1_0To2_0");
+      case Initialization::UpgradeStorageFrom2_0To2_1:
+        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_0To2_1");
+      case Initialization::UpgradeStorageFrom2_1To2_2:
+        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_1To2_2");
+      case Initialization::UpgradeStorageFrom2_2To2_3:
+        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_2To2_3");
 
       default:
         MOZ_CRASH("Bad initialization value!");
     }
+  }
+
+  bool InitializationAttempted(const Initialization aInitialization) const {
+    return static_cast<bool>(mInitializationAttempts & aInitialization);
+  }
+
+  void ReportFirstInitializationAttempt(const Initialization aInitialization,
+                                        const bool aSuccess) {
+    MOZ_ASSERT(!InitializationAttempted(aInitialization));
+
+    mInitializationAttempts |= aInitialization;
+    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
+                          GetInitializationString(aInitialization),
+                          static_cast<uint32_t>(aSuccess));
   }
 };
 
