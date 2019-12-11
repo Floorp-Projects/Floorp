@@ -1480,9 +1480,6 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
     return nullptr;
   }
 
-  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
-  win->NotifyVREventListenerAdded();
-
   RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -1510,39 +1507,53 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
 }
 
 void Navigator::FinishGetVRDisplays(bool isWebVRSupportedInwindow, Promise* p) {
-  if (isWebVRSupportedInwindow) {
-    nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
-
-    // Since FinishGetVRDisplays can be called asynchronously after an IPC
-    // response, it's possible that the Window can be torn down before this
-    // call. In that case, the Window's cyclic references to VR objects are
-    // also torn down and should not be recreated via
-    // NotifyVREventListenerAdded.
-    if (!win->IsDying()) {
-      win->NotifyVREventListenerAdded();
-      // We pass mWindow's id to RefreshVRDisplays, so
-      // NotifyVRDisplaysUpdated will be called asynchronously, resolving
-      // the promises in mVRGetDisplaysPromises.
-      if (!VRDisplay::RefreshVRDisplays(win->WindowID())) {
-        // Failed to refresh, reject the promise now
-        p->MaybeRejectWithTypeError(u"Failed to find attached VR displays.");
-      } else {
-        // Succeeded, so cache the promise to resolve later
-        mVRGetDisplaysPromises.AppendElement(p);
-      }
-    } else {
-      // The Window has been torn down, so there is no further work that can
-      // be done.
-      p->MaybeRejectWithTypeError(
-          u"Unable to return VRDisplays for a closed window.");
-    }
-  } else {
+  if (!isWebVRSupportedInwindow) {
     // WebVR in this window is not supported, so resolve the promise
     // with no displays available
     nsTArray<RefPtr<VRDisplay>> vrDisplaysEmpty;
     p->MaybeResolve(vrDisplaysEmpty);
+    return;
   }
+
+  // Since FinishGetVRDisplays can be called asynchronously after an IPC
+  // response, it's possible that the Window can be torn down before this
+  // call. In that case, the Window's cyclic references to VR objects are
+  // also torn down and should not be recreated via
+  // NotifyVREventListenerAdded.
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
+  if (win->IsDying()) {
+    // The Window has been torn down, so there is no further work that can
+    // be done.
+    p->MaybeRejectWithTypeError(
+        u"Unable to return VRDisplays for a closed window.");
+    return;
+  }
+
   mVRGetDisplaysPromises.AppendElement(p);
+  win->RequestXRPermission();
+}
+
+void Navigator::OnXRPermissionRequestAllow() {
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
+
+  // We pass mWindow's id to RefreshVRDisplays, so NotifyVRDisplaysUpdated will
+  // be called asynchronously, resolving the promises in mVRGetDisplaysPromises.
+  if (!VRDisplay::RefreshVRDisplays(win->WindowID())) {
+    for (auto& p : mVRGetDisplaysPromises) {
+      // Failed to refresh, reject the promise now
+      p->MaybeRejectWithTypeError(u"Failed to find attached VR displays.");
+    }
+  }
+}
+
+void Navigator::OnXRPermissionRequestCancel() {
+  nsTArray<RefPtr<VRDisplay>> vrDisplays;
+  for (auto& p : mVRGetDisplaysPromises) {
+    // Resolve the promise with no vr displays when
+    // the user blocks access.
+    p->MaybeResolve(vrDisplays);
+  }
+  mVRGetDisplaysPromises.Clear();
 }
 
 void Navigator::GetActiveVRDisplays(
