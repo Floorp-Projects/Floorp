@@ -324,7 +324,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   bool IsSelectionCached() const;
   SelectionProperties& GetSelectionProperties();
-  void SetSelectionProperties(SelectionProperties& aProps);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionProperties(SelectionProperties& aProps);
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
   // Sync up our selection properties with our editor prior to being destroyed.

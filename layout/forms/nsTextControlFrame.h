@@ -123,8 +123,8 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   //==== BEGIN NSIFORMCONTROLFRAME
   virtual void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsAtom* aName,
-                                   const nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult SetFormProperty(
+      nsAtom* aName, const nsAString& aValue) override;
 
   //==== END NSIFORMCONTROLFRAME
 
@@ -132,8 +132,9 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD_(already_AddRefed<mozilla::TextEditor>)
       GetTextEditor() override;
-  NS_IMETHOD SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
-                               SelectionDirection aDirection = eNone) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
+  SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
+                    SelectionDirection aDirection = eNone) override;
   NS_IMETHOD GetOwnedSelectionController(
       nsISelectionController** aSelCon) override;
   virtual nsFrameSelection* GetOwnedFrameSelection() override;
@@ -300,12 +301,13 @@ class nsTextControlFrame final : public nsContainerFrame,
 
  private:
   // helper methods
-  nsresult SetSelectionInternal(nsINode* aStartNode, uint32_t aStartOffset,
-                                nsINode* aEndNode, uint32_t aEndOffset,
-                                SelectionDirection aDirection = eNone);
-  nsresult SelectAllOrCollapseToEndOfText(bool aSelect);
-  nsresult SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
-                                 SelectionDirection aDirection = eNone);
+  MOZ_CAN_RUN_SCRIPT nsresult SetSelectionInternal(
+      nsINode* aStartNode, uint32_t aStartOffset, nsINode* aEndNode,
+      uint32_t aEndOffset, SelectionDirection aDirection = eNone);
+  MOZ_CAN_RUN_SCRIPT nsresult SelectAllOrCollapseToEndOfText(bool aSelect);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
+                        SelectionDirection aDirection = eNone);
 
   void FinishedInitializer() { DeleteProperty(TextControlInitializer()); }
 

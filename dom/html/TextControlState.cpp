@@ -153,7 +153,7 @@ class RestoreSelectionState : public Runnable {
         mFrame(aFrame),
         mTextControlState(aState) {}
 
-  NS_IMETHOD Run() override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (!mTextControlState) {
       return NS_OK;
     }
@@ -1989,6 +1989,7 @@ void TextControlState::SetSelectionProperties(
   if (mBoundFrame) {
     mBoundFrame->SetSelectionRange(aProps.GetStart(), aProps.GetEnd(),
                                    aProps.GetDirection());
+    // The instance may have already been deleted here.
   } else {
     mSelectionProperties = aProps;
   }
