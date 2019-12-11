@@ -7376,7 +7376,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
   // intializer, and that arrays are marked as non-packed when writing holes
   // to them during initialization.
   bool needStub = false;
-  if (shouldAbortOnPreliminaryGroups(obj)) {
+  if (!obj->isNewArray() || shouldAbortOnPreliminaryGroups(obj)) {
     needStub = true;
   } else if (!obj->resultTypeSet() || obj->resultTypeSet()->unknownObject() ||
              obj->resultTypeSet()->getObjectCount() != 1) {
@@ -7410,11 +7410,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
     return resumeAfter(store);
   }
 
-  return initializeArrayElement(obj, index, value, /* addResumePoint = */ true);
+  return initializeArrayElement(obj->toNewArray(), index, value,
+                                /* addResumePoint = */ true);
 }
 
 AbortReasonOr<Ok> IonBuilder::initializeArrayElement(
-    MDefinition* obj, size_t index, MDefinition* value,
+    MNewArray* obj, size_t index, MDefinition* value,
     bool addResumePointAndIncrementInitializedLength) {
   MConstant* id = MConstant::New(alloc(), Int32Value(index));
   current->add(id);
@@ -7427,7 +7428,7 @@ AbortReasonOr<Ok> IonBuilder::initializeArrayElement(
     current->add(MPostWriteBarrier::New(alloc(), obj, value));
   }
 
-  if (obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) {
+  if (obj->convertDoubleElements()) {
     MInstruction* valueDouble = MToDouble::New(alloc(), value);
     current->add(valueDouble);
     value = valueDouble;
