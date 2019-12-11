@@ -82,6 +82,10 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
   MOZ_ASSERT(pc == nullptr || pc == script->code() ||
              JSOp(*pc) == JSOP_LOOPHEAD);
 
+  // The script must not start with a LOOPHEAD op or the code below would be
+  // wrong. See bug 1602681.
+  MOZ_ASSERT_IF(pc && JSOp(*pc) == JSOP_LOOPHEAD, pc > script->code());
+
   if (pc == script->code()) {
     pc = nullptr;
   }

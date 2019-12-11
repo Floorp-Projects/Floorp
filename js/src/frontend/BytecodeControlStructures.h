@@ -140,7 +140,8 @@ class LoopControl : public BreakableControl {
   // corresponds to the next instruction after JSOP_LOOPHEAD.
   // Can be Nothing() if not available.
   MOZ_MUST_USE bool emitLoopHead(BytecodeEmitter* bce,
-                                 const mozilla::Maybe<uint32_t>& nextPos);
+                                 const mozilla::Maybe<uint32_t>& nextPos,
+                                 SrcNoteType type);
 
   MOZ_MUST_USE bool emitLoopEnd(BytecodeEmitter* bce, JSOp op,
                                 JSTryNoteKind tryNoteKind);

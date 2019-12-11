@@ -5175,11 +5175,7 @@ bool BytecodeEmitter::emitAsyncIterator() {
 bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   LoopControl loopInfo(this, StatementKind::Spread);
 
-  if (!newSrcNote(SRC_FOR_OF)) {
-    return false;
-  }
-
-  if (!loopInfo.emitLoopHead(this, Nothing())) {
+  if (!loopInfo.emitLoopHead(this, Nothing(), SRC_FOR_OF)) {
     //              [stack] NEXT ITER ARR I
     return false;
   }

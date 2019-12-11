@@ -425,6 +425,8 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 
     case Method_Compiled: {
       if (*pc == JSOP_LOOPHEAD) {
+        MOZ_ASSERT(pc > script->code(),
+                   "Prologue vs OSR cases must not be ambiguous");
         BaselineScript* baselineScript = script->baselineScript();
         uint32_t pcOffset = script->pcToOffset(pc);
         *res = baselineScript->nativeCodeForOSREntry(pcOffset);
