@@ -1141,7 +1141,7 @@ def enable_code_coverage(config, tests):
             if 'talos' in test['test-name']:
                 test['max-run-time'] = 7200
                 if 'linux' in test['build-platform']:
-                    test['docker-image'] = {"in-tree": "desktop1604-test"}
+                    test['docker-image'] = {"in-tree": "ubuntu1804-test"}
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--cycles,1')
                 test['mozharness']['extra-options'].append('--add-option')
