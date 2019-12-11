@@ -14,22 +14,32 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioWorkletProcessor, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioWorkletProcessor, mParent, mPort)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioWorkletProcessor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioWorkletProcessor, Release)
 
-AudioWorkletProcessor::AudioWorkletProcessor(nsIGlobalObject* aParent)
-    : mParent(aParent) {}
+AudioWorkletProcessor::AudioWorkletProcessor(nsIGlobalObject* aParent,
+                                             MessagePort* aPort)
+    : mParent(aParent), mPort(aPort) {}
+
+AudioWorkletProcessor::~AudioWorkletProcessor() = default;
 
 /* static */
 already_AddRefed<AudioWorkletProcessor> AudioWorkletProcessor::Constructor(
-    const GlobalObject& aGlobal, const AudioWorkletNodeOptions& aOptions) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+    const GlobalObject& aGlobal, const AudioWorkletNodeOptions& aOptions,
+    ErrorResult& aRv) {
+  nsCOMPtr<WorkletGlobalScope> global =
+      do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
-
+  RefPtr<MessagePort> port = static_cast<AudioWorkletGlobalScope*>(global.get())
+                                 ->TakePortForProcessorCtor();
+  if (!port) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+    return nullptr;
+  }
   RefPtr<AudioWorkletProcessor> audioWorkletProcessor =
-      new AudioWorkletProcessor(global);
+      new AudioWorkletProcessor(global, port);
 
   return audioWorkletProcessor.forget();
 }
@@ -37,11 +47,6 @@ already_AddRefed<AudioWorkletProcessor> AudioWorkletProcessor::Constructor(
 JSObject* AudioWorkletProcessor::WrapObject(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {
   return AudioWorkletProcessor_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-MessagePort* AudioWorkletProcessor::GetPort(ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
 }
 
 }  // namespace dom
