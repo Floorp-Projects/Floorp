@@ -9,7 +9,7 @@
 
 static bool gProfileResetCleanupCompleted = false;
 static const char kResetProgressURL[] =
-    "chrome://global/content/resetProfileProgress.xhtml";
+    "chrome://global/content/resetProfileProgress.xul";
 
 nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
                              nsIToolkitProfile* aOldProfile);
