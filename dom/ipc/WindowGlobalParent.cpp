@@ -291,6 +291,35 @@ const nsAString& WindowGlobalParent::GetRemoteType() {
   return VoidString();
 }
 
+void WindowGlobalParent::NotifyContentBlockingEvent(
+    uint32_t aEvent, nsIRequest* aRequest, bool aBlocked, nsIURI* aURIHint,
+    const nsTArray<nsCString>& aTrackingFullHashes,
+    const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aURIHint);
+  DebugOnly<bool> isCookiesBlockedTracker =
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
+  MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
+  MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
+  MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
+
+  // Return early if this WindowGlobalParent is in process.
+  if (IsInProcess()) {
+    return;
+  }
+
+  nsAutoCString origin;
+  nsContentUtils::GetASCIIOrigin(aURIHint, origin);
+
+  Maybe<uint32_t> event = GetContentBlockingLog()->RecordLogParent(
+      origin, aEvent, aBlocked, aReason, aTrackingFullHashes);
+
+  if (event) {
+    // Notify the OnContentBlockingEvent.
+  }
+}
+
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     const nsAString& aName, ErrorResult& aRv) {
   if (!CanSend()) {
