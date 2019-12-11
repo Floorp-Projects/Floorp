@@ -159,35 +159,67 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ) {
-        if (ext.supportActions) {
-            // We currently have to install the global action handler before we
-            // install the extension which is why this is done here directly.
-            // This code can be removed from the engine once the new GV addon
-            // management API lands. Then the global handlers will be invoked
-            // with the latest state whenever they are registered:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
-            ext.registerActionHandler(object : ActionHandler {
-                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
-                    webExtensionDelegate?.onBrowserActionDefined(extension, action)
-                }
+        val actionHandler = object : ActionHandler {
+            override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+                webExtensionDelegate?.onBrowserActionDefined(extension, action)
+            }
 
-                override fun onToggleBrowserActionPopup(
-                    extension: WebExtension,
-                    action: BrowserAction
-                ): EngineSession? {
-                    val session = GeckoEngineSession(runtime)
-                    return webExtensionDelegate?.onToggleBrowserActionPopup(extension, session, action)
-                }
-            })
+            override fun onToggleBrowserActionPopup(extension: WebExtension, action: BrowserAction): EngineSession? {
+                return webExtensionDelegate?.onToggleBrowserActionPopup(extension, GeckoEngineSession(runtime), action)
+            }
         }
 
-        runtime.registerWebExtension(ext.nativeExtension).then({
-            webExtensionDelegate?.onInstalled(ext)
-            onSuccess(ext)
+        if (ext.isBuiltIn()) {
+            if (ext.supportActions) {
+                // We currently have to install the global action handler before we
+                // install the extension which is why this is done here directly.
+                // This code can be removed from the engine once the new GV addon
+                // management API (specifically installBuiltIn) lands. Then the
+                // global handlers will be invoked with the latest state whenever
+                // they are registered:
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
+                ext.registerActionHandler(actionHandler)
+            }
+
+            // For now we have to use registerWebExtension for builtin extensions until we get the
+            // new installBuiltIn call on the controller: https://bugzilla.mozilla.org/show_bug.cgi?id=1601067
+            runtime.registerWebExtension(ext.nativeExtension).then({
+                webExtensionDelegate?.onInstalled(ext)
+                onSuccess(ext)
+                GeckoResult<Void>()
+            }, { throwable ->
+                onError(ext.id, throwable)
+                GeckoResult<Void>()
+            })
+        } else {
+            runtime.webExtensionController.install(ext.url).then({
+                val installedExtension = GeckoWebExtension(it!!)
+                webExtensionDelegate?.onInstalled(installedExtension)
+                installedExtension.registerActionHandler(actionHandler)
+                onSuccess(installedExtension)
+                GeckoResult<Void>()
+            }, { throwable ->
+                onError(ext.id, throwable)
+                GeckoResult<Void>()
+            })
+        }
+    }
+
+    /**
+     * See [Engine.uninstallWebExtension].
+     */
+    override fun uninstallWebExtension(
+        ext: WebExtension,
+        onSuccess: () -> Unit,
+        onError: (String, Throwable) -> Unit
+    ) {
+        runtime.webExtensionController.uninstall((ext as GeckoWebExtension).nativeExtension).then({
+            webExtensionDelegate?.onUninstalled(ext)
+            onSuccess()
             GeckoResult<Void>()
-        }, {
-            throwable -> onError(ext.id, throwable)
+        }, { throwable ->
+            onError(ext.id, throwable)
             GeckoResult<Void>()
         })
     }
@@ -239,6 +271,20 @@ class GeckoEngine(
             }
         }
 
+        val promptDelegate = object : WebExtensionController.PromptDelegate {
+            override fun onInstallPrompt(ext: org.mozilla.geckoview.WebExtension): GeckoResult<AllowOrDeny>? {
+                return if (webExtensionDelegate.onInstallPermissionRequest(GeckoWebExtension(ext))) {
+                    GeckoResult.ALLOW
+                } else {
+                    GeckoResult.DENY
+                }
+            }
+            // TODO implement onUpdatePrompt:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
+            // https://github.com/mozilla-mobile/android-components/issues/5143
+        }
+
+        runtime.webExtensionController.promptDelegate = promptDelegate
         runtime.webExtensionController.tabDelegate = tabsDelegate
     }
 

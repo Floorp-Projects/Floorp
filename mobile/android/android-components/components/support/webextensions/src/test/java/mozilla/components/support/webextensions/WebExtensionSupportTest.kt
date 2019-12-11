@@ -31,6 +31,7 @@ import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -207,6 +208,44 @@ class WebExtensionSupportTest {
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
         verify(store, times(3)).dispatch(actionCaptor.capture())
         assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
+    }
+
+    @Test
+    fun `reacts to install permission request`() {
+        val store = spy(BrowserStore())
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        // Verify they we confirm the permission request
+        assertTrue(delegateCaptor.value.onInstallPermissionRequest(ext))
+    }
+
+    @Test
+    fun `reacts to extension being uninstalled`() {
+        val store = spy(BrowserStore())
+
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+        whenever(ext.supportActions).thenReturn(true)
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onInstalled(ext)
+        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(WebExtensionState(ext.id, ext.url)))
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+
+        // Verify that we dispatch to the store and mark the extension as uninstalled
+        delegateCaptor.value.onUninstalled(ext)
+        verify(store).dispatch(WebExtensionAction.UninstallWebExtensionAction(ext.id))
+        assertNull(WebExtensionSupport.installedExtensions[ext.id])
     }
 
     @Test

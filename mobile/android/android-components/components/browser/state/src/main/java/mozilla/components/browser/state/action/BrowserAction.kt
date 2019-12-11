@@ -271,6 +271,12 @@ sealed class WebExtensionAction : BrowserAction() {
     data class InstallWebExtensionAction(val extension: WebExtensionState) : WebExtensionAction()
 
     /**
+     * Removes all state of the uninstalled extension from [BrowserState.extensions]
+     * and [TabSessionState.extensionState].
+     */
+    data class UninstallWebExtensionAction(val extensionId: String) : WebExtensionAction()
+
+    /**
      * Updates the [WebExtensionState.enabled] flag.
      */
     data class UpdateWebExtensionEnabledAction(val extensionId: String, val enabled: Boolean) :

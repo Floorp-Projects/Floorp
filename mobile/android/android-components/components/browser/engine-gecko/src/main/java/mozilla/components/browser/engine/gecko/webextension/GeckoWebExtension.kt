@@ -8,6 +8,7 @@ import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.MessageHandler
+import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
@@ -145,10 +146,11 @@ class GeckoWebExtension(
         }
     }
 
-    // Not yet supported in beta
+    // Not yet supported
     override fun registerActionHandler(actionHandler: ActionHandler) = Unit
     override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) = Unit
     override fun hasActionHandler(session: EngineSession) = false
+    override fun getMetadata(): Metadata? = null
 }
 
 /**

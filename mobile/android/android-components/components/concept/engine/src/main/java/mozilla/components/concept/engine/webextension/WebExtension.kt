@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine.webextension
 
+import android.net.Uri
 import mozilla.components.concept.engine.EngineSession
 import org.json.JSONObject
 
@@ -112,6 +113,20 @@ abstract class WebExtension(
      * @return true if an action handler is registered, otherwise false.
      */
     abstract fun hasActionHandler(session: EngineSession): Boolean
+
+    /**
+     * Returns additional information about this extension.
+     *
+     * @return extension [Metadata], or null if the extension isn't
+     * installed and there is no meta data available.
+     */
+    abstract fun getMetadata(): Metadata?
+
+    /**
+     * Checks whether or not this extension is built-in (packaged with the
+     * APK file) or coming from an external source.
+     */
+    fun isBuiltIn(): Boolean = Uri.parse(url).scheme == "resource"
 }
 
 /**
@@ -217,3 +232,68 @@ abstract class Port(val engineSession: EngineSession? = null) {
      */
     abstract fun disconnect()
 }
+
+/**
+ * Provides information about a [WebExtension].
+ */
+data class Metadata(
+    /**
+     * Version string:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version
+     */
+    val version: String,
+
+    /**
+     * Required extension permissions:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions
+     */
+    val permissions: List<String>,
+
+    /**
+     * Required host permissions:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions
+     */
+    val hostPermissions: List<String>,
+
+    /**
+     * Name of the extension:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/name
+     */
+    val name: String?,
+
+    /**
+     * Description of the extension:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/description
+     */
+    val description: String?,
+
+    /**
+     * Name of the extension developer:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/developer
+     */
+    val developerName: String?,
+
+    /**
+     * Url of the developer:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/developer
+     */
+    val developerUrl: String?,
+
+    /**
+     * Url of extension's homepage:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/homepage_url
+     */
+    val homePageUrl: String?,
+
+    /**
+     * Options page:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui
+     */
+    val optionsPageUrl: String?,
+
+    /**
+     * Whether or not the options page should be opened in a new tab:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui#syntax
+     */
+    val openOptionsPageInTab: Boolean?
+)

@@ -26,6 +26,12 @@ internal object WebExtensionReducer {
                     state
                 }
             }
+            is WebExtensionAction.UninstallWebExtensionAction -> {
+                state.copy(
+                    extensions = state.extensions - action.extensionId,
+                    tabs = state.tabs.map { it.copy(extensionState = it.extensionState - action.extensionId) }
+                )
+            }
             is WebExtensionAction.UpdateWebExtensionEnabledAction -> {
                 state.updateWebExtensionState(action.extensionId) {
                     it.copy(enabled = action.enabled)

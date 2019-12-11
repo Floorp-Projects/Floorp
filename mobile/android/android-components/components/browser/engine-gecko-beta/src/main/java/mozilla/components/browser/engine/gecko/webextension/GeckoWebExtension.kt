@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.MessageHandler
+import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.logger.Logger
@@ -218,6 +219,9 @@ class GeckoWebExtension(
         val geckoSession = (session as GeckoEngineSession).geckoSession
         return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
     }
+
+    // Not yet supported
+    override fun getMetadata(): Metadata? = null
 }
 
 /**

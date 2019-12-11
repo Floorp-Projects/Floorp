@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.MessageHandler
+import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.logger.Logger
@@ -38,6 +39,9 @@ class GeckoWebExtension(
 ) : WebExtension(id, url, supportActions) {
 
     private val logger = Logger("GeckoWebExtension")
+
+    constructor(native: GeckoNativeWebExtension) :
+        this(native.id, native.location, true, true, native)
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -217,6 +221,26 @@ class GeckoWebExtension(
     override fun hasActionHandler(session: EngineSession): Boolean {
         val geckoSession = (session as GeckoEngineSession).geckoSession
         return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
+    }
+
+    /**
+     * See [WebExtension.getMetadata].
+     */
+    override fun getMetadata(): Metadata? {
+        return nativeExtension.metaData?.let {
+            Metadata(
+                name = it.name,
+                description = it.description,
+                developerName = it.creatorName,
+                developerUrl = it.creatorUrl,
+                homePageUrl = it.homepageUrl,
+                version = it.version,
+                permissions = it.permissions.toList(),
+                hostPermissions = it.origins.toList(),
+                optionsPageUrl = null, // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+                openOptionsPageInTab = null // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+            )
+        }
     }
 }
 

@@ -21,6 +21,13 @@ interface WebExtensionDelegate {
     fun onInstalled(webExtension: WebExtension) = Unit
 
     /**
+     * Invoked when a web extension was uninstalled successfully.
+     *
+     * @param webExtension The uninstalled extension.
+     */
+    fun onUninstalled(webExtension: WebExtension) = Unit
+
+    /**
      * Invoked when a web extension attempts to open a new tab via
      * browser.tabs.create.
      *
@@ -65,4 +72,14 @@ interface WebExtensionDelegate {
         engineSession: EngineSession,
         action: BrowserAction
     ): EngineSession? = null
+
+    /**
+     * Invoked during installation of a [WebExtension] to confirm the required permissions.
+     *
+     * @param webExtension the extension being installed. The required permissions can be
+     * accessed using [WebExtension.getMetadata] and [Metadata.permissions].
+     * @return whether or not installation should process i.e. the permissions have been
+     * granted.
+     */
+    fun onInstallPermissionRequest(webExtension: WebExtension): Boolean = false
 }

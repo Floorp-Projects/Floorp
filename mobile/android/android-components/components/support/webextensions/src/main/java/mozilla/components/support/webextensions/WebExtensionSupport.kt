@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Provides functionality to make sure web extension related events in the
@@ -34,7 +35,7 @@ object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")
 
     @VisibleForTesting
-    internal val installedExtensions = mutableMapOf<String, WebExtension>()
+    internal val installedExtensions = ConcurrentHashMap<String, WebExtension>()
 
     /**
      * A [Deferred] completed during [initialize] once the state of all
@@ -134,6 +135,18 @@ object WebExtensionSupport {
 
             override fun onInstalled(webExtension: WebExtension) {
                 registerInstalledExtension(store, webExtension)
+            }
+
+            override fun onUninstalled(webExtension: WebExtension) {
+                installedExtensions.remove(webExtension.id)
+                store.dispatch(WebExtensionAction.UninstallWebExtensionAction(webExtension.id))
+            }
+
+            override fun onInstallPermissionRequest(webExtension: WebExtension): Boolean {
+                // Our current installation flow has us approve permissions before we call
+                // install on the engine. Therefore we can just approve the permission request
+                // here during installation.
+                return true
             }
         })
     }
