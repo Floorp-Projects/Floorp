@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CompatibilityApp component renders zero issues 1`] = `
+<div
+  className="compatibility-app theme-sidebar inspector-tabpanel"
+>
+  <div
+    className="devtools-sidepanel-no-result"
+  >
+    No compatibility issues found.
+  </div>
+</div>
+`;
