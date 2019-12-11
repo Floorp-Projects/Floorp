@@ -566,37 +566,32 @@ this.ASRouterTargeting = {
 
   ERROR_TYPES: {
     MALFORMED_EXPRESSION: "MALFORMED_EXPRESSION",
+    ATTRIBUTE_ERROR: "JEXL_ATTRIBUTE_GETTER_ERROR",
     OTHER_ERROR: "OTHER_ERROR",
   },
 
   // Combines the getter properties of two objects without evaluating them
-  combineContexts(contextA = {}, contextB = {}) {
-    const sameProperty = Object.keys(contextA).find(p =>
-      Object.keys(contextB).includes(p)
-    );
-    if (sameProperty) {
-      Cu.reportError(
-        `Property ${sameProperty} exists in both contexts and is overwritten.`
-      );
-    }
+  combineContexts(contextA = {}, contextB = {}, onError) {
+    return {
+      get: (obj, prop) => {
+        try {
+          return contextA[prop] || contextB[prop];
+        } catch (error) {
+          onError(this.ERROR_TYPES.ATTRIBUTE_ERROR, error, prop);
+        }
 
-    const context = {};
-    Object.defineProperties(
-      context,
-      Object.getOwnPropertyDescriptors(contextA)
-    );
-    Object.defineProperties(
-      context,
-      Object.getOwnPropertyDescriptors(contextB)
-    );
-
-    return context;
+        return null;
+      },
+    };
   },
 
-  isMatch(filterExpression, customContext) {
+  isMatch(filterExpression, customContext, onError) {
     return FilterExpressions.eval(
       filterExpression,
-      this.combineContexts(this.Environment, customContext)
+      new Proxy(
+        {},
+        this.combineContexts(customContext, this.Environment, onError)
+      )
     );
   },
 
@@ -671,7 +666,7 @@ this.ASRouterTargeting = {
           return result.value;
         }
       }
-      result = await this.isMatch(message.targeting, context);
+      result = await this.isMatch(message.targeting, context, onError);
       if (shouldCache) {
         jexlEvaluationCache.set(message.targeting, {
           timestamp: Date.now(),
@@ -689,11 +684,6 @@ this.ASRouterTargeting = {
       result = false;
     }
     return result;
-  },
-
-  _getCombinedContext(trigger, context) {
-    const triggerContext = trigger ? trigger.context : {};
-    return this.combineContexts(context, triggerContext);
   },
 
   _isMessageMatch(message, trigger, context, onError, shouldCache = false) {
@@ -731,7 +721,10 @@ this.ASRouterTargeting = {
     returnAll = false,
   }) {
     const sortedMessages = getSortedMessages(messages, { ordered });
-    const combinedContext = this._getCombinedContext(trigger, context);
+    const combinedContext = new Proxy(
+      {},
+      this.combineContexts(trigger && trigger.context, context, onError)
+    );
     const matching = returnAll ? [] : null;
 
     const isMatch = candidate =>
