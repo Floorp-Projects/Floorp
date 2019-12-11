@@ -87,7 +87,7 @@ mochitest-harness:
     worker:
         by-platform:
             linux64.*:
-                docker-image: {in-tree: "desktop1604-test"}
+                docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
     run:
         using: run-task
@@ -229,7 +229,7 @@ reftest-harness:
     worker:
         by-platform:
             linux64.*:
-                docker-image: {in-tree: "desktop1604-test"}
+                docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
     run:
         using: run-task
