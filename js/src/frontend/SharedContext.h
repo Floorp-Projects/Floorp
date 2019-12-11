@@ -675,8 +675,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void setFieldInitializers(FieldInitializers fi) {
     if (hasObject()) {
-      MOZ_ASSERT(function()->lazyScript());
-      function()->lazyScript()->setFieldInitializers(fi);
+      MOZ_ASSERT(function()->baseScript());
+      function()->baseScript()->setFieldInitializers(fi);
       return;
     }
     MOZ_ASSERT(lazyScriptData());
