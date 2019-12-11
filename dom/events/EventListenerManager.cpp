@@ -661,24 +661,10 @@ bool EventListenerManager::ListenerCanHandle(const Listener* aListener,
   return aListener->mEventMessage == aEventMessage;
 }
 
-static bool DefaultToPassiveTouchListeners() {
-  static bool sDefaultToPassiveTouchListeners = false;
-  static bool sIsPrefCached = false;
-
-  if (!sIsPrefCached) {
-    sIsPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sDefaultToPassiveTouchListeners,
-        "dom.event.default_to_passive_touch_listeners");
-  }
-
-  return sDefaultToPassiveTouchListeners;
-}
-
 void EventListenerManager::MaybeMarkPassive(EventMessage aMessage,
                                             EventListenerFlags& aFlags) {
   if ((aMessage == eTouchStart || aMessage == eTouchMove) && mIsMainThreadELM &&
-      DefaultToPassiveTouchListeners()) {
+      StaticPrefs::dom_event_default_to_passive_touch_listeners()) {
     nsCOMPtr<nsINode> node;
     nsCOMPtr<nsPIDOMWindowInner> win;
     if ((win = GetTargetAsInnerWindow()) ||
