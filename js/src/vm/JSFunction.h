@@ -700,7 +700,7 @@ class JSFunction : public js::NativeObject {
   JSScript* existingScript() {
     MOZ_ASSERT(isInterpreted());
     if (isInterpretedLazy()) {
-      JSFunction* canonicalFunction = lazyScript()->function();
+      JSFunction* canonicalFunction = baseScript()->function();
       JSScript* script = canonicalFunction->nonLazyScript();
 
       clearLazyScript();
@@ -758,11 +758,11 @@ class JSFunction : public js::NativeObject {
   js::Scope* enclosingScope() const { return baseScript()->enclosingScope(); }
 
   void setEnclosingScope(js::Scope* enclosingScope) {
-    lazyScript()->setEnclosingScope(enclosingScope);
+    baseScript()->setEnclosingScope(enclosingScope);
   }
 
   void setEnclosingLazyScript(js::LazyScript* enclosingScript) {
-    lazyScript()->setEnclosingLazyScript(enclosingScript);
+    baseScript()->setEnclosingLazyScript(enclosingScript);
   }
 
   js::GeneratorKind generatorKind() const {
