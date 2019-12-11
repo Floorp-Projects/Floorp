@@ -6,25 +6,26 @@ var gTestRoot = getRootDirectory(gTestPath).replace(
   "http://mochi.test:8888/"
 );
 
-function refresh() {
+async function refresh() {
   EventUtils.synthesizeKey("R", { accelKey: true });
 }
 
-function forceRefresh() {
+async function forceRefresh() {
   EventUtils.synthesizeKey("R", { accelKey: true, shiftKey: true });
 }
 
-function frameScript() {
-  function eventHandler(event) {
-    sendAsyncMessage("test:event", { type: event.type, detail: event.detail });
-  }
+async function done() {
+  // unregister window actors
+  ChromeUtils.unregisterWindowActor("ForceRefresh");
+  let tab = gBrowser.selectedTab;
+  let tabBrowser = gBrowser.getBrowserForTab(tab);
+  await ContentTask.spawn(tabBrowser, null, async function() {
+    const swr = await content.navigator.serviceWorker.getRegistration();
+    await swr.unregister();
+  });
 
-  // These are tab-local, so no need to unregister them.
-  addEventListener("base-load", eventHandler, true, true);
-  addEventListener("base-register", eventHandler, true, true);
-  addEventListener("base-sw-ready", eventHandler, true, true);
-  addEventListener("cached-load", eventHandler, true, true);
-  addEventListener("cached-failure", eventHandler, true, true);
+  BrowserTestUtils.removeTab(tab);
+  executeSoon(finish);
 }
 
 function test() {
@@ -40,88 +41,45 @@ function test() {
         ["browser.cache.memory.enable", false],
       ],
     },
-    function() {
+    async function() {
+      // create ForceRefreseh window actor
+      const { ForceRefreshParent } = ChromeUtils.import(
+        getRootDirectory(gTestPath) + "ForceRefreshParent.jsm"
+      );
+
+      // setup helper functions for ForceRefreshParent
+      ForceRefreshParent.SimpleTest = SimpleTest;
+      ForceRefreshParent.refresh = refresh;
+      ForceRefreshParent.forceRefresh = forceRefresh;
+      ForceRefreshParent.done = done;
+
+      // setup window actor options
+      let windowActorOptions = {
+        parent: {
+          moduleURI: getRootDirectory(gTestPath) + "ForceRefreshParent.jsm",
+        },
+        child: {
+          moduleURI: getRootDirectory(gTestPath) + "ForceRefreshChild.jsm",
+          events: {
+            "base-register": { capture: true, wantUntrusted: true },
+            "base-sw-ready": { capture: true, wantUntrusted: true },
+            "base-load": { capture: true, wantUntrusted: true },
+            "cached-load": { capture: true, wantUntrusted: true },
+            "cached-failure": { capture: true, wantUntrusted: true },
+          },
+        },
+        allFrames: true,
+      };
+
+      // register ForceRefresh window actors
+      ChromeUtils.registerWindowActor("ForceRefresh", windowActorOptions);
+
+      // create a new tab and load test url
       var url = gTestRoot + "browser_base_force_refresh.html";
       var tab = BrowserTestUtils.addTab(gBrowser);
       var tabBrowser = gBrowser.getBrowserForTab(tab);
       gBrowser.selectedTab = tab;
-
-      tab.linkedBrowser.messageManager.loadFrameScript(
-        "data:,(" + encodeURIComponent(frameScript) + ")()",
-        true
-      );
-      BrowserTestUtils.loadURI(gBrowser, url);
-
-      async function done() {
-        tab.linkedBrowser.messageManager.removeMessageListener(
-          "test:event",
-          eventHandler
-        );
-
-        await ContentTask.spawn(tabBrowser, null, async function() {
-          const swr = await content.navigator.serviceWorker.getRegistration();
-          await swr.unregister();
-        });
-
-        BrowserTestUtils.removeTab(tab);
-        executeSoon(finish);
-      }
-
-      var maxCacheLoadCount = 3;
-      var cachedLoadCount = 0;
-      var baseLoadCount = 0;
-
-      function eventHandler(msg) {
-        if (msg.data.type === "base-load") {
-          baseLoadCount += 1;
-          if (cachedLoadCount === maxCacheLoadCount) {
-            is(
-              baseLoadCount,
-              2,
-              "cached load should occur before second base load"
-            );
-            return done();
-          }
-          if (baseLoadCount !== 1) {
-            ok(false, "base load without cached load should only occur once");
-            return done();
-          }
-        } else if (msg.data.type === "base-register") {
-          ok(
-            !cachedLoadCount,
-            "cached load should not occur before base register"
-          );
-          is(baseLoadCount, 1, "register should occur after first base load");
-        } else if (msg.data.type === "base-sw-ready") {
-          ok(
-            !cachedLoadCount,
-            "cached load should not occur before base ready"
-          );
-          is(baseLoadCount, 1, "ready should occur after first base load");
-          refresh();
-        } else if (msg.data.type === "cached-load") {
-          ok(
-            cachedLoadCount < maxCacheLoadCount,
-            "cached load should not occur too many times"
-          );
-          is(baseLoadCount, 1, "cache load occur after first base load");
-          cachedLoadCount += 1;
-          if (cachedLoadCount < maxCacheLoadCount) {
-            return refresh();
-          }
-          forceRefresh();
-        } else if (msg.data.type === "cached-failure") {
-          ok(false, "failure: " + msg.data.detail);
-          done();
-        }
-
-        return;
-      }
-
-      tab.linkedBrowser.messageManager.addMessageListener(
-        "test:event",
-        eventHandler
-      );
+      await BrowserTestUtils.loadURI(gBrowser, url);
     }
   );
 }

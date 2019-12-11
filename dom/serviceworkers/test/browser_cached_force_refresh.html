@@ -21,11 +21,7 @@ function is(actual, expected, msg) {
 }
 
 function fail(err) {
-  var custom = new CustomEvent('cached-failure', {
-    bubbles: true,
-    detail: err
-  });
-  document.dispatchEvent(custom);
+  window.dispatchEvent(new Event("cached-failure", { bubbles: true, detail: err }));
 }
 
 function getUncontrolledClients(sw) {
@@ -41,7 +37,7 @@ function getUncontrolledClients(sw) {
 }
 
 addEventListener('load', function(event) {
-  if (!navigator.serviceWorker.controller) {
+  if (!navigator.serviceWorker.controller) {  
     return fail(window.location.href + ' is not controlled!');
   }
 
@@ -52,8 +48,7 @@ addEventListener('load', function(event) {
          'client url should match current window');
       is(clientList[0].frameType, 'top-level',
          'client should be a top-level window');
-      var custom = new Event('cached-load', { bubbles: true });
-      document.dispatchEvent(custom);
+      window.dispatchEvent(new Event('cached-load', { bubbles: true }));
     })
     .catch(function(err) {
       fail(err);

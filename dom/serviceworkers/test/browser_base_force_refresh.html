@@ -13,17 +13,14 @@ addEventListener('load', function(event) {
     if (!swr) {
       return;
     }
-    var custom = new Event('base-register', { bubbles: true });
-    document.dispatchEvent(custom);
+    window.dispatchEvent(new Event("base-register", { bubbles: true }));
   });
 
   navigator.serviceWorker.ready.then(function() {
-    var custom = new Event('base-sw-ready', { bubbles: true });
-    document.dispatchEvent(custom);
+    window.dispatchEvent(new Event("base-sw-ready", { bubbles: true }));
   });
 
-  var custom = new Event('base-load', { bubbles: true });
-  document.dispatchEvent(custom);
+  window.dispatchEvent(new Event("base-load", { bubbles: true }));
 });
 </script>
 </body>
