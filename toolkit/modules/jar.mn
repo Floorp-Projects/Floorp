@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-  content/global/win.xul               (win.xul)
+  content/global/win.xhtml               (win.xhtml)

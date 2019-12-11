@@ -1,7 +1,7 @@
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
-const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
+const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xhtml";
 
 var doc;
 var pwmgr;

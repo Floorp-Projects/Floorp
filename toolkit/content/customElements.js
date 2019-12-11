@@ -770,7 +770,7 @@
   // For now, don't load any elements in the extension dummy document.
   // We will want to load <browser> when that's migrated (bug 1441935).
   const isDummyDocument =
-    document.documentURI == "chrome://extensions/content/dummy.xul";
+    document.documentURI == "chrome://extensions/content/dummy.xhtml";
   if (!isDummyDocument) {
     for (let script of [
       "chrome://global/content/elements/arrowscrollbox.js",
