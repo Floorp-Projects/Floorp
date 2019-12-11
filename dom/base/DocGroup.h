@@ -85,9 +85,6 @@ class DocGroup final {
 
   AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
 
-  // Ensure that it's valid to access the DocGroup at this time.
-  void ValidateAccess() const { mTabGroup->ValidateAccess(); }
-
   // Return a pointer that can be continually checked to see if access to this
   // DocGroup is valid. This pointer should live at least as long as the
   // DocGroup.

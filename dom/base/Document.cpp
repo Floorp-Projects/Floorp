@@ -6886,17 +6886,6 @@ bool Document::RemoveObserver(nsIDocumentObserver* aObserver) {
 }
 
 void Document::BeginUpdate() {
-  // If the document is going away, then it's probably okay to do things to it
-  // in the wrong DocGroup. We're unlikely to run JS or do anything else
-  // observable at this point. We reach this point when cycle collecting a
-  // <link> element and the unlink code removes a style sheet.
-  //
-  // TODO(emilio): Style updates are gone, can this happen now?
-  if (mDocGroup && !mIsGoingAway && !mInUnlinkOrDeletion &&
-      !mIgnoreDocGroupMismatches) {
-    mDocGroup->ValidateAccess();
-  }
-
   ++mUpdateNestLevel;
   nsContentUtils::AddScriptBlocker();
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this));
@@ -9688,11 +9677,6 @@ EventListenerManager* Document::GetExistingListenerManager() const {
 }
 
 void Document::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
-  if (mDocGroup && aVisitor.mEvent->mMessage != eVoidEvent &&
-      !mIgnoreDocGroupMismatches) {
-    mDocGroup->ValidateAccess();
-  }
-
   aVisitor.mCanHandle = true;
   // FIXME! This is a hack to make middle mouse paste working also in Editor.
   // Bug 329119

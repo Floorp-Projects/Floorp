@@ -123,20 +123,16 @@ void SchedulerGroup::MarkVsyncReceived() {
 /* static */
 void SchedulerGroup::MarkVsyncRan() { gEarliestUnprocessedVsync = 0; }
 
-MOZ_THREAD_LOCAL(bool) SchedulerGroup::sTlsValidatingAccess;
+SchedulerGroup::SchedulerGroup() : mIsRunning(false) {}
 
-SchedulerGroup::SchedulerGroup() : mIsRunning(false) {
-  if (NS_IsMainThread()) {
-    sTlsValidatingAccess.infallibleInit();
-  }
-}
-
+/* static */
 nsresult SchedulerGroup::DispatchWithDocGroup(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
     dom::DocGroup* aDocGroup) {
   return LabeledDispatch(aCategory, std::move(aRunnable), aDocGroup);
 }
 
+/* static */
 nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable) {
   return LabeledDispatch(aCategory, std::move(aRunnable), nullptr);
@@ -212,13 +208,14 @@ SchedulerGroup* SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget) {
   return target->Dispatcher();
 }
 
+/* static */
 nsresult SchedulerGroup::LabeledDispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
     dom::DocGroup* aDocGroup) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
     RefPtr<Runnable> internalRunnable =
-        new Runnable(runnable.forget(), this, aDocGroup);
+        new Runnable(runnable.forget(), aDocGroup);
     return InternalUnlabeledDispatch(aCategory, internalRunnable.forget());
   }
   return UnlabeledDispatch(aCategory, runnable.forget());
@@ -252,22 +249,10 @@ nsresult SchedulerGroup::InternalUnlabeledDispatch(
   return rv;
 }
 
-/* static */
-void SchedulerGroup::SetValidatingAccess(ValidationType aType) {
-  bool validating = aType == StartValidation;
-  sTlsValidatingAccess.set(validating);
-
-  dom::AutoJSAPI jsapi;
-  jsapi.Init();
-  js::EnableAccessValidation(jsapi.cx(), validating);
-}
-
 SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-                                   SchedulerGroup* aGroup,
                                    dom::DocGroup* aDocGroup)
     : mozilla::Runnable("SchedulerGroup::Runnable"),
       mRunnable(std::move(aRunnable)),
-      mGroup(aGroup),
       mDocGroup(aDocGroup) {}
 
 dom::DocGroup* SchedulerGroup::Runnable::DocGroup() const { return mDocGroup; }
@@ -291,15 +276,10 @@ SchedulerGroup::Runnable::GetName(nsACString& aName) {
 NS_IMETHODIMP
 SchedulerGroup::Runnable::Run() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  nsresult result = mRunnable->Run();
-
   // The runnable's destructor can have side effects, so try to execute it in
   // the scope of the TabGroup.
-  mRunnable = nullptr;
-
-  mGroup->SetValidatingAccess(EndValidation);
-  return result;
+  nsCOMPtr<nsIRunnable> runnable(mRunnable.forget());
+  return runnable->Run();
 }
 
 NS_IMETHODIMP

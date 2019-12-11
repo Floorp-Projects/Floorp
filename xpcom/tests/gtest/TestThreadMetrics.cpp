@@ -20,24 +20,6 @@
 using namespace mozilla;
 using mozilla::Runnable;
 
-class MockSchedulerGroup : public SchedulerGroup {
- public:
-  explicit MockSchedulerGroup(mozilla::dom::DocGroup* aDocGroup)
-      : mDocGroup(aDocGroup) {}
-  NS_INLINE_DECL_REFCOUNTING(MockSchedulerGroup);
-
-  MOCK_METHOD1(SetValidatingAccess, void(ValidationType aType));
-  mozilla::dom::DocGroup* DocGroup() { return mDocGroup; }
-
- protected:
-  virtual ~MockSchedulerGroup() = default;
-
- private:
-  mozilla::dom::DocGroup* mDocGroup;
-};
-
-typedef testing::NiceMock<MockSchedulerGroup> MSchedulerGroup;
-
 /* Timed runnable which simulates some execution time
  * and can run a nested runnable.
  */
@@ -87,7 +69,6 @@ class ThreadMetrics : public ::testing::Test {
     RefPtr<dom::Document> doc;
     RefPtr<dom::TabGroup> tabGroup = new dom::TabGroup(false);
     mDocGroup = tabGroup->AddDocument(key, doc);
-    mSchedulerGroup = new MSchedulerGroup(mDocGroup);
     mCounter = mDocGroup->GetPerformanceCounter();
     mThreadMgr = do_GetService("@mozilla.org/thread-manager;1");
     mOther = DispatchCategory(TaskCategory::Other).GetValue();
@@ -109,8 +90,7 @@ class ThreadMetrics : public ::testing::Test {
     ProcessAllEvents();
     nsCOMPtr<nsIRunnable> runnable =
         new TimedRunnable(aExecutionTime1, aExecutionTime2, aSubExecutionTime);
-    runnable = new SchedulerGroup::Runnable(runnable.forget(), mSchedulerGroup,
-                                            mDocGroup);
+    runnable = new SchedulerGroup::Runnable(runnable.forget(), mDocGroup);
     return mDocGroup->Dispatch(TaskCategory::Other, runnable.forget());
   }
 
@@ -118,7 +98,6 @@ class ThreadMetrics : public ::testing::Test {
 
   uint32_t mOther;
   bool mOldPref;
-  RefPtr<MSchedulerGroup> mSchedulerGroup;
   RefPtr<mozilla::dom::DocGroup> mDocGroup;
   RefPtr<mozilla::PerformanceCounter> mCounter;
   nsCOMPtr<nsIThreadManager> mThreadMgr;
