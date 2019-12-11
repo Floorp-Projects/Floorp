@@ -5297,7 +5297,7 @@ class ConnectionPool::TransactionInfo final {
   nsTArray<TransactionInfo*> mBlockingOrdered;
 
  public:
-  DatabaseInfo* mDatabaseInfo;
+  DatabaseInfo* const mDatabaseInfo;
   const nsID mBackgroundChildLoggingId;
   const nsCString mDatabaseId;
   const uint64_t mTransactionId;
@@ -5309,7 +5309,7 @@ class ConnectionPool::TransactionInfo final {
   bool mRunning;
 
 #ifdef DEBUG
-  bool mFinished;
+  FlippedOnce<false> mFinished;
 #endif
 
   TransactionInfo(DatabaseInfo* aDatabaseInfo,
@@ -11348,8 +11348,7 @@ void ConnectionPool::Finish(uint64_t aTransactionId,
   Dispatch(aTransactionId, wrapper);
 
 #ifdef DEBUG
-  MOZ_ASSERT(!transactionInfo->mFinished);
-  transactionInfo->mFinished = true;
+  transactionInfo->mFinished.Flip();
 #endif
 }
 
@@ -12381,12 +12380,7 @@ ConnectionPool::TransactionInfo::TransactionInfo(
       mLoggingSerialNumber(aLoggingSerialNumber),
       mObjectStoreNames(aObjectStoreNames),
       mIsWriteTransaction(aIsWriteTransaction),
-      mRunning(false)
-#ifdef DEBUG
-      ,
-      mFinished(false)
-#endif
-{
+      mRunning(false) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseInfo);
   aDatabaseInfo->mConnectionPool->AssertIsOnOwningThread();
