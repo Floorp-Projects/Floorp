@@ -524,6 +524,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         if attributes.get('unittest_suite') != 'raptor':
             return False
         try_name = attributes.get('raptor_try_name')
+
         # Run chrome and chromium on all platforms available
         if '-chrome' in try_name:
             return True
@@ -537,7 +538,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             return True
         if 'raptor-speedometer' in try_name \
                 and 'pgo' in platform \
-                and ('-fenix-power' in try_name or '-fennec68-power' in try_name):
+                and ('-fenix' in try_name or '-fennec68' in try_name):
             return True
 
         # Run the following tests on android geckoview
