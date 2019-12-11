@@ -59,7 +59,7 @@
                  onselect="gPermissionManager.onPermissionSelect();"/>
   </vbox>
 
-  <hbox class="actionButtons" flex="1">
+  <hbox class="actionButtons">
     <button id="removePermission" disabled="true"
             data-l10n-id="permissions-remove"
             icon="remove"
@@ -70,7 +70,7 @@
             oncommand="gPermissionManager.onAllPermissionsDelete();"/>
   </hbox>
   <spacer flex="1"/>
-  <hbox class="actionButtons" pack="end" flex="1">
+  <hbox class="actionButtons" pack="end">
     <button oncommand="window.close();" icon="close"
             data-l10n-id="permissions-button-cancel" />
     <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
