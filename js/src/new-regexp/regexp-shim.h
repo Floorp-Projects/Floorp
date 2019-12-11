@@ -30,7 +30,10 @@
 namespace v8 {
 namespace internal {
 
+class Heap;
 class Isolate;
+class RegExpMatchInfo;
+class RegExpStack;
 
 }  // namespace internal
 }  // namespace v8
@@ -804,6 +807,78 @@ class JSRegExp : public HeapObject {
   static constexpr int kFlagCount = 6;
 
   static constexpr int kNoBacktrackLimit = 0;
+};
+
+class Histogram {
+ public:
+  inline void AddSample(int sample) {}
+};
+
+class Counters {
+ public:
+  Histogram* regexp_backtracks() { return &regexp_backtracks_; }
+
+ private:
+  Histogram regexp_backtracks_;
+};
+
+#define PROFILE(isolate, call) \
+  do {                         \
+  } while (false);
+
+enum class AllocationType : uint8_t {
+  kYoung,  // Allocate in the nursery
+  kOld,    // Allocate in the tenured heap
+};
+
+using StackGuard = Isolate;
+using Factory = Isolate;
+
+class Isolate {
+ public:
+  //********** Isolate code **********//
+  RegExpStack* regexp_stack() const { return regexp_stack_; }
+  bool has_pending_exception() { return cx()->isExceptionPending(); }
+  void StackOverflow() { js::ReportOverRecursed(cx()); }
+
+  unibrow::Mapping<unibrow::Ecma262UnCanonicalize>* jsregexp_uncanonicalize();
+  unibrow::Mapping<unibrow::Ecma262Canonicalize>*
+  regexp_macro_assembler_canonicalize();
+  unibrow::Mapping<unibrow::CanonicalizationRange>* jsregexp_canonrange();
+
+  // An empty stub for telemetry we don't support
+  void IncreaseTotalRegexpCodeGenerated(int size) {}
+
+  Counters* counters() { return &counters_; }
+
+  //********** Factory code **********//
+  inline Factory* factory() { return this; }
+
+  Handle<ByteArray> NewByteArray(
+      int length, AllocationType allocation = AllocationType::kYoung);
+  MOZ_MUST_USE MaybeHandle<String> NewStringFromOneByte(
+      const Vector<const uint8_t>& str,
+      AllocationType allocation = AllocationType::kYoung);
+
+  // Allocates a fixed array initialized with undefined values.
+  Handle<FixedArray> NewFixedArray(
+      int length, AllocationType allocation = AllocationType::kYoung);
+
+  template <typename Char>
+  Handle<String> InternalizeString(const Vector<const Char>& str);
+
+  //********** Stack guard code **********//
+  inline StackGuard* stack_guard() { return this; }
+  Object HandleInterrupts() {
+    return Object(JS::BooleanValue(cx()->handleInterrupt()));
+  }
+
+  JSContext* cx() const { return cx_; }
+
+ private:
+  JSContext* cx_;
+  RegExpStack* regexp_stack_;
+  Counters counters_;
 };
 
 class Code {
