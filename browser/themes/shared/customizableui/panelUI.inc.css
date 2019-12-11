@@ -1904,8 +1904,9 @@ panelview[mainview] #PanelUI-whatsNew-content {
 }
 
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {
-  padding-inline-end: 46px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 #PanelUI-whatsNew .whatsNew-message-icon {
@@ -1918,6 +1919,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #PanelUI-whatsNew .whatsNew-message-title,
 #protections-popup-message .whatsNew-message-title {
+  padding-inline-end: 46px;
   font-size: 1.3em;
   font-weight: 600;
   line-height: 1.4em;
