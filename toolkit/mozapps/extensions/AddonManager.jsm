@@ -3422,10 +3422,9 @@ var AddonManagerInternal = {
         });
       }
 
-      if (AbuseReporter.getOpenDialog()) {
-        return Promise.reject({
-          message: "An abuse report is already in progress",
-        });
+      let existingDialog = AbuseReporter.getOpenDialog();
+      if (existingDialog) {
+        existingDialog.close();
       }
 
       const dialog = await AbuseReporter.openDialog(id, "amo", target).catch(
