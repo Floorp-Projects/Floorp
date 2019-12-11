@@ -3,20 +3,6 @@
 const URL = BASE_URL + "autocomplete_basic.html";
 const PRIVACY_PREF_URL = "about:preferences#privacy";
 
-async function expectWarningText(browser, expectedText) {
-  const {
-    autoCompletePopup: { richlistbox: itemsBox },
-  } = browser;
-  const warningBox = itemsBox.querySelector(
-    ".autocomplete-richlistitem:last-child"
-  )._warningTextBox;
-
-  await BrowserTestUtils.waitForCondition(() => {
-    return warningBox.textContent == expectedText;
-  }, `Waiting for expected warning text: ${expectedText}, Got ${warningBox.textContent}`);
-  ok(true, `Got expected warning text: ${expectedText}`);
-}
-
 add_task(async function setup_storage() {
   await saveAddress(TEST_ADDRESS_2);
   await saveAddress(TEST_ADDRESS_3);
