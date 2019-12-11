@@ -10,6 +10,7 @@
 #include "GfxInfoBase.h"
 
 #include "GfxDriverInfo.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::NewArrayObject
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
@@ -1240,7 +1241,7 @@ nsresult GfxInfoBase::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
 
 NS_IMETHODIMP
 GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult) {
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
 
   nsresult rv = FindMonitors(aCx, array);
   if (NS_FAILED(rv)) {
@@ -1267,7 +1268,7 @@ template <typename T>
 static inline bool AppendJSElement(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                    const T& aValue) {
   uint32_t index;
-  if (!JS_GetArrayLength(aCx, aObj, &index)) {
+  if (!JS::GetArrayLength(aCx, aObj, &index)) {
     return false;
   }
   return JS_SetElement(aCx, aObj, index, aValue);
@@ -1305,7 +1306,7 @@ nsresult GfxInfoBase::GetFeatureLog(JSContext* aCx,
   }
   aOut.setObject(*containerObj);
 
-  JS::Rooted<JSObject*> featureArray(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> featureArray(aCx, JS::NewArrayObject(aCx, 0));
   if (!featureArray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1337,7 +1338,7 @@ nsresult GfxInfoBase::GetFeatureLog(JSContext* aCx,
     }
   });
 
-  JS::Rooted<JSObject*> fallbackArray(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> fallbackArray(aCx, JS::NewArrayObject(aCx, 0));
   if (!fallbackArray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1374,7 +1375,7 @@ nsresult GfxInfoBase::GetFeatureLog(JSContext* aCx,
 bool GfxInfoBase::BuildFeatureStateLog(JSContext* aCx,
                                        const FeatureState& aFeature,
                                        JS::MutableHandle<JS::Value> aOut) {
-  JS::Rooted<JSObject*> log(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> log(aCx, JS::NewArrayObject(aCx, 0));
   if (!log) {
     return false;
   }
@@ -1458,7 +1459,7 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
 
 nsresult GfxInfoBase::GetActiveCrashGuards(JSContext* aCx,
                                            JS::MutableHandle<JS::Value> aOut) {
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

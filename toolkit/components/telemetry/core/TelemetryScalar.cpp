@@ -9,6 +9,7 @@
 #include "geckoview/streaming/GeckoViewStreamingTelemetry.h"
 #include "ipc/TelemetryComms.h"
 #include "ipc/TelemetryIPCAccumulator.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/JSONWriter.h"
@@ -3423,7 +3424,7 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
     if (JS_HasProperty(cx, scalarDef, "stores", &hasProperty) && hasProperty) {
       bool isArray = false;
       if (!JS_GetProperty(cx, scalarDef, "stores", &value) ||
-          !JS_IsArrayObject(cx, value, &isArray) || !isArray) {
+          !JS::IsArrayObject(cx, value, &isArray) || !isArray) {
         JS_ReportErrorASCII(cx, "Invalid 'stores' for scalar %s.",
                             PromiseFlatCString(fullName).get());
         return NS_ERROR_FAILURE;
@@ -3431,7 +3432,7 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
 
       JS::RootedObject arrayObj(cx, &value.toObject());
       uint32_t storesLength = 0;
-      if (!JS_GetArrayLength(cx, arrayObj, &storesLength)) {
+      if (!JS::GetArrayLength(cx, arrayObj, &storesLength)) {
         JS_ReportErrorASCII(cx,
                             "Can't get 'stores' array length for scalar %s.",
                             PromiseFlatCString(fullName).get());

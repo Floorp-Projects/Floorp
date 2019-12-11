@@ -11,6 +11,7 @@
 #include "mozilla/dom/indexedDB/Key.h"
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/ArrayBuffer.h"
 
 // TODO: This PrintTo overload is defined in dom/media/gtest/TestGroupId.cpp.
@@ -108,7 +109,7 @@ static JSObject& ExpectArrayObject(JSContext* const aContext,
   EXPECT_TRUE(aValue.get().isObject());
   auto&& value = JS::RootedValue(aContext, aValue.get());
   bool rv;
-  EXPECT_TRUE(JS_IsArrayObject(aContext, value, &rv));
+  EXPECT_TRUE(JS::IsArrayObject(aContext, value, &rv));
   EXPECT_TRUE(rv);
   return value.toObject();
 }
@@ -294,7 +295,7 @@ static void CheckArray(JSContext* const context,
       JS::RootedObject(context, &ExpectArrayObject(context, arrayValue));
 
   uint32_t actualLength;
-  EXPECT_TRUE(JS_GetArrayLength(context, actualArray, &actualLength));
+  EXPECT_TRUE(JS::GetArrayLength(context, actualArray, &actualLength));
   EXPECT_EQ(expectedLength, actualLength);
   for (size_t i = 0; i < expectedLength; ++i) {
     JS::RootedValue element(static_cast<JSContext*>(context));
@@ -306,7 +307,7 @@ static void CheckArray(JSContext* const context,
 
 static JS::RootedValue CreateArrayBufferArray(
     JSContext* const context, const std::vector<nsCString>& elements) {
-  auto* const array = JS_NewArrayObject(context, elements.size());
+  auto* const array = JS::NewArrayObject(context, elements.size());
   auto&& arrayObject = JS::RootedObject{context, array};
 
   for (size_t i = 0; i < elements.size(); ++i) {
@@ -358,7 +359,7 @@ static JS::RootedValue CreateStringValue(JSContext* const context,
 
 static JS::RootedValue CreateStringArray(
     JSContext* const context, const std::vector<nsString>& elements) {
-  auto* const array = JS_NewArrayObject(context, elements.size());
+  auto* const array = JS::NewArrayObject(context, elements.size());
   auto&& arrayObject = JS::RootedObject{context, array};
 
   for (size_t i = 0; i < elements.size(); ++i) {

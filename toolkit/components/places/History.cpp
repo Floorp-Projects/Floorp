@@ -37,6 +37,7 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
@@ -187,12 +188,12 @@ nsresult GetJSArrayFromJSValue(JS::Handle<JS::Value> aValue, JSContext* aCtx,
   if (aValue.isObjectOrNull()) {
     JS::Rooted<JSObject*> val(aCtx, aValue.toObjectOrNull());
     bool isArray;
-    if (!JS_IsArrayObject(aCtx, val, &isArray)) {
+    if (!JS::IsArrayObject(aCtx, val, &isArray)) {
       return NS_ERROR_UNEXPECTED;
     }
     if (isArray) {
       _array.set(val);
-      (void)JS_GetArrayLength(aCtx, _array, _arrayLength);
+      (void)JS::GetArrayLength(aCtx, _array, _arrayLength);
       NS_ENSURE_ARG(*_arrayLength > 0);
       return NS_OK;
     }
@@ -201,7 +202,7 @@ nsresult GetJSArrayFromJSValue(JS::Handle<JS::Value> aValue, JSContext* aCtx,
   // Build a temporary array to store this one item so the code below can
   // just loop.
   *_arrayLength = 1;
-  _array.set(JS_NewArrayObject(aCtx, 0));
+  _array.set(JS::NewArrayObject(aCtx, 0));
   NS_ENSURE_TRUE(_array, NS_ERROR_OUT_OF_MEMORY);
 
   bool rc = JS_DefineElement(aCtx, _array, 0, aValue, 0);
@@ -2092,7 +2093,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       if (!visitsVal.isPrimitive()) {
         visits = visitsVal.toObjectOrNull();
         bool isArray;
-        if (!JS_IsArrayObject(aCtx, visits, &isArray)) {
+        if (!JS::IsArrayObject(aCtx, visits, &isArray)) {
           return NS_ERROR_UNEXPECTED;
         }
         if (!isArray) {
@@ -2104,7 +2105,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
 
     uint32_t visitsLength = 0;
     if (visits) {
-      (void)JS_GetArrayLength(aCtx, visits, &visitsLength);
+      (void)JS::GetArrayLength(aCtx, visits, &visitsLength);
     }
     NS_ENSURE_ARG(visitsLength > 0);
 

@@ -1135,14 +1135,17 @@ class CGHeaders(CGWrapper):
                 headerSet = declareIncludes
             else:
                 headerSet = bindingHeaders
-            # Strip off outer layers and add headers they might (conservatively:
-            # only nullable non-pointer types need Nullable.h, and only
-            # sequences outside unions require ForOfIterator.h) require.
+            # Strip off outer layers and add headers they might require.  (This
+            # is conservative: only nullable non-pointer types need Nullable.h;
+            # only sequences outside unions need ForOfIterator.h; only functions
+            # that return, and attributes that are, sequences in interfaces need
+            # Array.h, &c.)
             unrolled = t
             while True:
                 if unrolled.nullable():
                     headerSet.add("mozilla/dom/Nullable.h")
                 elif unrolled.isSequence():
+                    bindingHeaders.add("js/Array.h")
                     bindingHeaders.add("js/ForOfIterator.h")
                 else:
                     break
@@ -6861,7 +6864,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             """
 
             uint32_t length = ${result}.Length();
-            JS::Rooted<JSObject*> returnArray(cx, JS_NewArrayObject(cx, length));
+            JS::Rooted<JSObject*> returnArray(cx, JS::NewArrayObject(cx, length));
             if (!returnArray) {
               $*{exceptionCode}
             }

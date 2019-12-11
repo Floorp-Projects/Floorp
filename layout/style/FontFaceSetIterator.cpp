@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/FontFaceSetIterator.h"
 
+#include "js/Array.h"  // JS::NewArrayObject
+
 namespace mozilla {
 namespace dom {
 
@@ -61,7 +63,7 @@ void FontFaceSetIterator::Next(JSContext* aCx,
     values[1].set(value);
 
     JS::Rooted<JSObject*> array(aCx);
-    array = JS_NewArrayObject(aCx, values);
+    array = JS::NewArrayObject(aCx, values);
     if (array) {
       aResult.mValue.setObject(*array);
     }

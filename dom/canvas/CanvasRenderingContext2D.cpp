@@ -65,6 +65,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::GetArrayLength
 #include "js/Conversions.h"
 #include "js/HeapAPI.h"
 #include "js/Warnings.h"  // JS::WarnASCII
@@ -1899,7 +1900,7 @@ static void MatrixToJSObject(JSContext* aCx, const Matrix& aMatrix,
 static bool ObjectToMatrix(JSContext* aCx, JS::Handle<JSObject*> aObj,
                            Matrix& aMatrix, ErrorResult& aError) {
   uint32_t length;
-  if (!JS_GetArrayLength(aCx, aObj, &length) || length != 6) {
+  if (!JS::GetArrayLength(aCx, aObj, &length) || length != 6) {
     // Not an array-like thing or wrong size
     aError.Throw(NS_ERROR_INVALID_ARG);
     return false;

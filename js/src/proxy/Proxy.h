@@ -9,6 +9,7 @@
 
 #include "NamespaceImports.h"
 
+#include "js/Array.h"  // JS::IsArrayAnswer
 #include "js/Class.h"
 
 namespace js {

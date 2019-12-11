@@ -39,6 +39,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferData,GetArrayBuffer{ByteLength,Data}}
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
@@ -3504,7 +3505,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
         if (cls == ESClass::Array) {
           // Convert each element of the array by calling ImplicitConvert.
           uint32_t sourceLength;
-          if (!JS_GetArrayLength(cx, valObj, &sourceLength) ||
+          if (!JS::GetArrayLength(cx, valObj, &sourceLength) ||
               targetLength != size_t(sourceLength)) {
             MOZ_ASSERT(!funObj);
             return ArrayLengthMismatch(cx, targetLength, targetType,
@@ -5791,7 +5792,7 @@ bool StructType::Create(JSContext* cx, unsigned argc, Value* vp) {
     if (!arr) {
       isArray = false;
     } else {
-      if (!JS_IsArrayObject(cx, arr, &isArray)) {
+      if (!JS::IsArrayObject(cx, arr, &isArray)) {
         return false;
       }
     }
@@ -5815,7 +5816,7 @@ bool StructType::DefineInternal(JSContext* cx, JSObject* typeObj_,
   RootedObject fieldsObj(cx, fieldsObj_);
 
   uint32_t len;
-  MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, fieldsObj, &len));
+  MOZ_ALWAYS_TRUE(JS::GetArrayLength(cx, fieldsObj, &len));
 
   // Get the common prototype for CData objects of this type from
   // ctypes.CType.prototype.
@@ -6070,7 +6071,7 @@ bool StructType::Define(JSContext* cx, unsigned argc, Value* vp) {
   if (!arg.isObject()) {
     isArray = false;
   } else {
-    if (!JS_IsArrayObject(cx, arg, &isArray)) {
+    if (!JS::IsArrayObject(cx, arg, &isArray)) {
       return false;
     }
   }
@@ -6211,7 +6212,7 @@ JSObject* StructType::BuildFieldsArray(JSContext* cx, JSObject* obj) {
       return nullptr;
   }
 
-  RootedObject fieldsProp(cx, JS_NewArrayObject(cx, fieldsVec));
+  RootedObject fieldsProp(cx, JS::NewArrayObject(cx, fieldsVec));
   if (!fieldsProp) {
     return nullptr;
   }
@@ -6729,7 +6730,7 @@ bool FunctionType::Create(JSContext* cx, unsigned argc, Value* vp) {
     if (!args[2].isObject()) {
       isArray = false;
     } else {
-      if (!JS_IsArrayObject(cx, args[2], &isArray)) {
+      if (!JS::IsArrayObject(cx, args[2], &isArray)) {
         return false;
       }
     }
@@ -6741,7 +6742,7 @@ bool FunctionType::Create(JSContext* cx, unsigned argc, Value* vp) {
     arrayObj = &args[2].toObject();
 
     uint32_t len;
-    MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, arrayObj, &len));
+    MOZ_ALWAYS_TRUE(JS::GetArrayLength(cx, arrayObj, &len));
 
     if (!argTypes.resize(len)) {
       JS_ReportOutOfMemory(cx);
@@ -7092,7 +7093,7 @@ bool FunctionType::ArgTypesGetter(JSContext* cx, const JS::CallArgs& args) {
       vec[i].setObject(*fninfo->mArgTypes[i]);
     }
 
-    argTypes = JS_NewArrayObject(cx, vec);
+    argTypes = JS::NewArrayObject(cx, vec);
     if (!argTypes) {
       return false;
     }

@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "jsfriendapi.h"
+#include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{{Create,Release}MappedArrayBufferContents,DetachArrayBuffer,GetArrayBuffer{ByteLength,Data},Is{,Detached,Mapped}ArrayBufferObject,NewMappedArrayBufferWithContents,StealArrayBufferContents}
 #include "js/StructuredClone.h"
 #include "jsapi-tests/tests.h"
@@ -167,7 +168,7 @@ bool TestTransferObject() {
   }
 
   JS::RootedObject obj(
-      cx, JS_NewArrayObject(cx, JS::HandleValueArray::subarray(argv, 0, 1)));
+      cx, JS::NewArrayObject(cx, JS::HandleValueArray::subarray(argv, 0, 1)));
   CHECK(obj);
   JS::RootedValue transferable(cx, JS::ObjectValue(*obj));
 

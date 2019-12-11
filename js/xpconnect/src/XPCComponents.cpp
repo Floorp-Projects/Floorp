@@ -15,6 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"
 #include "js/SavedFrameAPI.h"
@@ -1582,7 +1583,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
 
   RootedObject propertyList(cx, &aPropertyList.toObject());
   bool isArray;
-  if (NS_WARN_IF(!JS_IsArrayObject(cx, propertyList, &isArray))) {
+  if (NS_WARN_IF(!JS::IsArrayObject(cx, propertyList, &isArray))) {
     return NS_ERROR_FAILURE;
   }
   if (NS_WARN_IF(!isArray)) {

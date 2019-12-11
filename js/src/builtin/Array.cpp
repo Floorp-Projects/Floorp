@@ -46,6 +46,7 @@
 #include "vm/Caches-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/IsGivenTypeObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -4518,4 +4519,56 @@ bool js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx,
 
   MOZ_ASSERT(JSID_IS_ATOM(shape->propidRaw(), cx->names().length));
   return true;
+}
+
+JS_PUBLIC_API JSObject* JS::NewArrayObject(JSContext* cx,
+                                           const HandleValueArray& contents) {
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(contents);
+
+  return NewDenseCopiedArray(cx, contents.length(), contents.begin());
+}
+
+JS_PUBLIC_API JSObject* JS::NewArrayObject(JSContext* cx, size_t length) {
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  return NewDenseFullyAllocatedArray(cx, length);
+}
+
+JS_PUBLIC_API bool JS::IsArrayObject(JSContext* cx, Handle<JSObject*> obj,
+                                     bool* isArray) {
+  return IsGivenTypeObject(cx, obj, ESClass::Array, isArray);
+}
+
+JS_PUBLIC_API bool JS::IsArrayObject(JSContext* cx, Handle<Value> value,
+                                     bool* isArray) {
+  if (!value.isObject()) {
+    *isArray = false;
+    return true;
+  }
+
+  Rooted<JSObject*> obj(cx, &value.toObject());
+  return IsArrayObject(cx, obj, isArray);
+}
+
+JS_PUBLIC_API bool JS::GetArrayLength(JSContext* cx, Handle<JSObject*> obj,
+                                      uint32_t* lengthp) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(obj);
+
+  return GetLengthProperty(cx, obj, lengthp);
+}
+
+JS_PUBLIC_API bool JS::SetArrayLength(JSContext* cx, Handle<JSObject*> obj,
+                                      uint32_t length) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(obj);
+
+  return SetLengthProperty(cx, obj, length);
 }
