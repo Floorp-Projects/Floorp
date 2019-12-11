@@ -698,17 +698,31 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
           SyncedTabs.sortTabClientsByLastUsed(clients);
           let fragment = doc.createDocumentFragment();
 
+          let clientNumber = 0;
           for (let client of clients) {
             // add a menu separator for all clients other than the first.
             if (fragment.lastElementChild) {
               let separator = doc.createXULElement("menuseparator");
               fragment.appendChild(separator);
             }
+            // We add the client's elements to a container, and indicate which
+            // element labels it.
+            let labelId = `synced-tabs-client-${clientNumber++}`;
+            let container = doc.createXULElement("vbox");
+            container.classList.add("PanelUI-remotetabs-clientcontainer");
+            container.setAttribute("role", "group");
+            container.setAttribute("aria-labelledby", labelId);
             if (paginationInfo && paginationInfo.clientId == client.id) {
-              this._appendClient(client, fragment, paginationInfo.maxTabs);
+              this._appendClient(
+                client,
+                container,
+                labelId,
+                paginationInfo.maxTabs
+              );
             } else {
-              this._appendClient(client, fragment);
+              this._appendClient(client, container, labelId);
             }
+            fragment.appendChild(container);
           }
           this._tabsList.appendChild(fragment);
           PanelView.forNode(
@@ -746,10 +760,11 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       appendTo.appendChild(messageLabel);
       return messageLabel;
     },
-    _appendClient(client, attachFragment, maxTabs = this.TABS_PER_PAGE) {
-      let doc = attachFragment.ownerDocument;
+    _appendClient(client, container, labelId, maxTabs = this.TABS_PER_PAGE) {
+      let doc = container.ownerDocument;
       // Create the element for the remote client.
       let clientItem = doc.createXULElement("label");
+      clientItem.setAttribute("id", labelId);
       clientItem.setAttribute("itemtype", "client");
       let window = doc.defaultView;
       clientItem.setAttribute(
@@ -758,13 +773,10 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       );
       clientItem.textContent = client.name;
 
-      attachFragment.appendChild(clientItem);
+      container.appendChild(clientItem);
 
       if (!client.tabs.length) {
-        let label = this._appendMessageLabel(
-          "notabsforclientlabel",
-          attachFragment
-        );
+        let label = this._appendMessageLabel("notabsforclientlabel", container);
         label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
       } else {
         // If this page will display all tabs, show no additional buttons.
@@ -786,7 +798,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         }
         for (let tab of client.tabs) {
           let tabEnt = this._createTabElement(doc, tab);
-          attachFragment.appendChild(tabEnt);
+          container.appendChild(tabEnt);
         }
         if (hasNextPage) {
           let showAllEnt = this._createShowMoreElement(
@@ -794,7 +806,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
             client.id,
             nextPageIsLastPage ? Infinity : maxTabs + this.TABS_PER_PAGE
           );
-          attachFragment.appendChild(showAllEnt);
+          container.appendChild(showAllEnt);
         }
       }
     },
