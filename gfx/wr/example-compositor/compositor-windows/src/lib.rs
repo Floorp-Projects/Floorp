@@ -22,7 +22,12 @@ pub struct Window {
 
 // C99 functions that do the compositor work
 extern {
-    fn com_dc_create_window(width: i32, height: i32, enable_compositor: bool) -> *mut Window;
+    fn com_dc_create_window(
+        width: i32,
+        height: i32,
+        enable_compositor: bool,
+        sync_mode: i32,
+    ) -> *mut Window;
     fn com_dc_destroy_window(window: *mut Window);
     fn com_dc_tick(window: *mut Window) -> bool;
     fn com_dc_get_proc_address(name: *const c_char) -> *const c_void;
@@ -69,9 +74,14 @@ extern {
     fn com_dc_end_transaction(window: *mut Window);
 }
 
-pub fn create_window(width: i32, height: i32, enable_compositor: bool) -> *mut Window {
+pub fn create_window(
+    width: i32,
+    height: i32,
+    enable_compositor: bool,
+    sync_mode: i32,
+) -> *mut Window {
     unsafe {
-        com_dc_create_window(width, height, enable_compositor)
+        com_dc_create_window(width, height, enable_compositor, sync_mode)
     }
 }
 

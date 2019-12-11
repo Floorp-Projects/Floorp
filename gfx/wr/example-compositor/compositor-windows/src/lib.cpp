@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <map>
 #include <vector>
+#include <dwmapi.h>
 
 #define EGL_EGL_PROTOTYPES 1
 #define EGL_EGLEXT_PROTOTYPES 1
@@ -22,6 +23,16 @@
 #include "GLES/gl.h"
 #include "GLES/glext.h"
 #include "GLES3/gl3.h"
+
+#define NUM_QUERIES 2
+
+enum SyncMode {
+    None = 0,
+    Swap = 1,
+    Commit = 2,
+    Flush = 3,
+    Query = 4,
+};
 
 // The OS compositor representation of a picture cache tile.
 struct Tile {
@@ -44,12 +55,15 @@ struct Window {
     HINSTANCE hInstance;
     bool enable_compositor;
     RECT client_rect;
+    SyncMode sync_mode;
 
     // Main interfaces to D3D11 and DirectComposition
     ID3D11Device *pD3D11Device;
     IDCompositionDesktopDevice *pDCompDevice;
     IDCompositionTarget *pDCompTarget;
     IDXGIDevice *pDXGIDevice;
+    ID3D11Query *pQueries[NUM_QUERIES];
+    int current_query;
 
     // ANGLE interfaces that wrap the D3D device
     EGLDeviceEXT EGLDevice;
@@ -134,12 +148,13 @@ static LRESULT CALLBACK WndProc(
 }
 
 extern "C" {
-    Window *com_dc_create_window(int width, int height, bool enable_compositor) {
+    Window *com_dc_create_window(int width, int height, bool enable_compositor, SyncMode sync_mode) {
         // Create a simple Win32 window
         Window *window = new Window;
         window->hInstance = GetModuleHandle(NULL);
         window->enable_compositor = enable_compositor;
         window->mEGLImage = EGL_NO_IMAGE;
+        window->sync_mode = sync_mode;
 
         WNDCLASSEX wcex = { sizeof(WNDCLASSEX) };
         wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -167,9 +182,16 @@ extern "C" {
         UINT window_width = static_cast<UINT>(ceil(float(window_rect.right - window_rect.left) * dpiX / 96.f));
         UINT window_height = static_cast<UINT>(ceil(float(window_rect.bottom - window_rect.top) * dpiY / 96.f));
 
+        LPCWSTR name;
+        if (enable_compositor) {
+            name = L"example-compositor (DirectComposition)";
+        } else {
+            name = L"example-compositor (Simple)";
+        }
+
         window->hWnd = CreateWindow(
             CLASS_NAME,
-            L"DirectComposition Demo Application",
+            name,
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -200,6 +222,15 @@ extern "C" {
             nullptr
         );
         assert(SUCCEEDED(hr));
+
+        D3D11_QUERY_DESC query_desc;
+        memset(&query_desc, 0, sizeof(query_desc));
+        query_desc.Query = D3D11_QUERY_EVENT;
+        for (int i=0 ; i < NUM_QUERIES ; ++i) {
+            hr = window->pD3D11Device->CreateQuery(&query_desc, &window->pQueries[i]);
+            assert(SUCCEEDED(hr));
+        }
+        window->current_query = 0;
 
         hr = window->pD3D11Device->QueryInterface(&window->pDXGIDevice);
         assert(SUCCEEDED(hr));
@@ -330,6 +361,9 @@ extern "C" {
         eglTerminate(window->EGLDisplay);
         eglReleaseDeviceANGLE(window->EGLDevice);
 
+        for (int i=0 ; i < NUM_QUERIES ; ++i) {
+            window->pQueries[i]->Release();
+        }
         window->pRoot->Release();
         window->pVisualDebug->Release();
         window->pD3D11Device->Release();
@@ -361,8 +395,36 @@ extern "C" {
     void com_dc_swap_buffers(Window *window) {
         // If not using DC mode, then do a normal EGL swap buffers.
         if (window->fb_surface != EGL_NO_SURFACE) {
-            eglSwapInterval(window->EGLDisplay, 0);
+            switch (window->sync_mode) {
+                case SyncMode::None:
+                    eglSwapInterval(window->EGLDisplay, 0);
+                    break;
+                case SyncMode::Swap:
+                    eglSwapInterval(window->EGLDisplay, 1);
+                    break;
+                default:
+                    assert(false);  // unexpected vsync mode for simple compositor.
+                    break;
+            }
+
             eglSwapBuffers(window->EGLDisplay, window->fb_surface);
+        } else {
+            switch (window->sync_mode) {
+                case SyncMode::None:
+                    break;
+                case SyncMode::Commit:
+                    window->pDCompDevice->WaitForCommitCompletion();
+                    break;
+                case SyncMode::Flush:
+                    DwmFlush();
+                    break;
+                case SyncMode::Query:
+                    // todo!!!!
+                    break;
+                default:
+                    assert(false);  // unexpected vsync mode for native compositor
+                    break;
+            }
         }
     }
 
