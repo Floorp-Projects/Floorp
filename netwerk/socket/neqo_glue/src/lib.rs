@@ -201,6 +201,16 @@ pub extern "C" fn neqo_http3conn_close(conn: &mut NeqoHttp3Conn, error: u64) {
     conn.conn.close(Instant::now(), error, "");
 }
 
+fn is_excluded_header(name: &str) -> bool {
+    if (name == "connection") || (name == "host") || (name == "keep-alive") ||
+        (name == "proxy-connection") || (name == "te") || (name == "transfer-encoding") ||
+        (name == "upgrade") || (name == "sec-websocket-key") {
+        true
+    } else {
+        false
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_fetch(
     conn: &mut NeqoHttp3Conn,
@@ -230,6 +240,9 @@ pub extern "C" fn neqo_http3conn_fetch(
                 }
                 let hdr_str: Vec<_> = elem.splitn(2, ":").collect();
                 let name = hdr_str[0].trim().to_lowercase();
+                if is_excluded_header(&name) {
+                    continue;
+                }
                 let value = if hdr_str.len() > 1 {
                     String::from(hdr_str[1].trim())
                 } else {
