@@ -6328,7 +6328,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
   const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
       Initialization::Storage,
-      [& self = *this]() { return !!self.mStorageConnection; });
+      [& self = *this] { return static_cast<bool>(self.mStorageConnection); });
 
   nsCOMPtr<nsIFile> storageFile;
   nsresult rv = NS_NewLocalFile(mBasePath, false, getter_AddRefs(storageFile));
@@ -6992,7 +6992,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
   const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
       Initialization::TemporaryStorage,
-      [& self = *this]() { return self.mTemporaryStorageInitialized; });
+      [& self = *this] { return self.mTemporaryStorageInitialized; });
 
   nsresult rv;
 
