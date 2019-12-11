@@ -442,7 +442,8 @@ class UrlbarView {
       this._rows.firstElementChild &&
       this.input.focused &&
       this.input.value &&
-      this._queryContext.searchString == this.input.value
+      this._queryContext.searchString == this.input.value &&
+      this.input.getAttribute("pageproxystate") != "valid"
     ) {
       // In some cases where we can move across tabs with an open panel.
       if (!this.isOpen) {
@@ -451,6 +452,7 @@ class UrlbarView {
       this.input.startQuery({
         autofillIgnoresSelection: true,
         searchString: this.input.value,
+        allowAutofill: this._queryContext.allowAutofill,
       });
       return true;
     }

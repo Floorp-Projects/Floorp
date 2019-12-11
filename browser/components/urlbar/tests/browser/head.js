@@ -35,3 +35,13 @@ registerCleanupFunction(async () => {
   // to do it within each test.
   await UrlbarTestUtils.promisePopupClose(window);
 });
+
+async function selectAndPaste(str, win = window) {
+  await SimpleTest.promiseClipboardChange(str, () => {
+    clipboardHelper.copyString(str);
+  });
+  win.gURLBar.select();
+  win.document.commandDispatcher
+    .getControllerForCommand("cmd_paste")
+    .doCommand("cmd_paste");
+}

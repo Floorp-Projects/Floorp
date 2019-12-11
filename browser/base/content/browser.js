@@ -2824,11 +2824,11 @@ function focusAndSelectUrlBar() {
 function openLocation(event) {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
     focusAndSelectUrlBar();
-    if (
-      !gURLBar.view.maybeReopen() &&
-      gURLBar.openViewOnFocusForCurrentTab &&
-      !gURLBar.view.isOpen
-    ) {
+    // We don't want to reopen or requery if the view is open.
+    if (gURLBar.view.isOpen) {
+      return;
+    }
+    if (!gURLBar.view.maybeReopen() && gURLBar.openViewOnFocusForCurrentTab) {
       gURLBar.startQuery({ event });
     }
     return;
