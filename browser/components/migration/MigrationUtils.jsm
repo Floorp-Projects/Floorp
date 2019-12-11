@@ -996,7 +996,7 @@ var MigrationUtils = Object.freeze({
 
     Services.ww.openWindow(
       aOpener,
-      "chrome://browser/content/migration/migration.xul",
+      "chrome://browser/content/migration/migration.xhtml",
       "_blank",
       features,
       params
@@ -1018,7 +1018,7 @@ var MigrationUtils = Object.freeze({
    *        browser selected, if it could be detected and if there is a
    *        migrator for it, or with the first option selected as a fallback
    *        (The first option is hardcoded to be the most common browser for
-   *         the OS we run on.  See migration.xul).
+   *         the OS we run on.  See migration.xhtml).
    * @param [optional] aProfileToMigrate
    *        If set, the migration wizard will import from the profile indicated.
    * @throws if aMigratorKey is invalid or if it points to a non-existent

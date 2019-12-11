@@ -68,7 +68,7 @@ class TestWindows(PuppeteerMixin, MarionetteTestCase):
         def open_by_js(_):
             with self.marionette.using_context('chrome'):
                 self.marionette.execute_script("""
-                  window.open('chrome://browser/content/safeMode.xul', '_blank',
+                  window.open('chrome://browser/content/safeMode.xhtml', '_blank',
                               'chrome,centerscreen,resizable=no');
                 """)
 

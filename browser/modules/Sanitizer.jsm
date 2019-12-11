@@ -123,7 +123,7 @@ var Sanitizer = {
         : parentWindow;
     Services.ww.openWindow(
       win,
-      "chrome://browser/content/sanitize.xul",
+      "chrome://browser/content/sanitize.xhtml",
       "Sanitize",
       "chrome,titlebar,dialog,centerscreen,modal",
       null

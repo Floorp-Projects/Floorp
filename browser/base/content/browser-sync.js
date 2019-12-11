@@ -168,7 +168,7 @@ var gSync = {
       return;
     }
     // We start with every menuitem hidden (except for the "setup sync" state),
-    // so that we don't need to init the sync UI on windows like pageInfo.xul
+    // so that we don't need to init the sync UI on windows like pageInfo.xhtml
     // (see bug 1384856).
     // maybeUpdateUIState() also optimizes for this - if we should be in the
     // "setup sync" state, that function assumes we are already in it and

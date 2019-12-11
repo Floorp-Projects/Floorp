@@ -44,7 +44,7 @@ async function checkExtension(isPrivate = false) {
           function() {
             if (
               subj.document.documentURI ==
-              "chrome://browser/content/sanitize.xul"
+              "chrome://browser/content/sanitize.xhtml"
             ) {
               Services.ww.unregisterNotification(onOpen);
               Assert.ok(true, "Observed Clear Recent History window open");

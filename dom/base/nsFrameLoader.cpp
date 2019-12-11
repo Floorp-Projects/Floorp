@@ -2552,7 +2552,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
             specIgnoringRef.EqualsLiteral(
                 "chrome://mozapps/content/extensions/aboutaddons.html") ||
             specIgnoringRef.EqualsLiteral(
-                "chrome://browser/content/webext-panels.xul"))) {
+                "chrome://browser/content/webext-panels.xhtml"))) {
         return false;
       }
     }

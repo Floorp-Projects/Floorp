@@ -124,7 +124,7 @@ function searchHistory(aInput) {
   }
 
   // call load() on the tree manually
-  // instead of setting the place attribute in historySidebar.xul
+  // instead of setting the place attribute in historySidebar.xhtml
   // otherwise, we will end up calling load() twice
   gHistoryTree.load(query, options);
 

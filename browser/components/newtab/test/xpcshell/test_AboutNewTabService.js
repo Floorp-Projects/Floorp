@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
 const DOWNLOADS_URL =
-  "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
+  "chrome://browser/content/downloads/contentAreaDownloadsView.xhtml";
 const SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
 const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";

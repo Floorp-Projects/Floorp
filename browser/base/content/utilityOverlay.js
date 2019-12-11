@@ -991,7 +991,7 @@ function openAboutDialog() {
     features += "centerscreen,dependent,dialog=no";
   }
 
-  window.openDialog("chrome://browser/content/aboutDialog.xul", "", features);
+  window.openDialog("chrome://browser/content/aboutDialog.xhtml", "", features);
 }
 
 function openPreferences(paneID, extraArgs) {
