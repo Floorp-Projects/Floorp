@@ -502,6 +502,18 @@ class DisallowJavascriptExecution {
   js::AutoAssertNoContentJS nojs_;
 };
 
+enum class MessageTemplate { kStackOverflow };
+
+class MessageFormatter {
+ public:
+  static const char* TemplateString(MessageTemplate index) {
+    switch (index) {
+      case MessageTemplate::kStackOverflow:
+        return "too much recursion";
+    }
+  }
+};
+
 // Origin: https://github.com/v8/v8/blob/master/src/codegen/label.h
 class Label {
  public:
