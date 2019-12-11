@@ -26,7 +26,7 @@ else()
     add_definitions(-Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof)
   endif()
   add_definitions(-fPIC -fno-rtti)
-  add_definitions(-std=c++14)
+  add_definitions(-std=gnu++17)
   add_definitions(-include $ENV{DEP_MOZJS_OUTDIR}/js/src/js-confdefs.h)
 endif()
 
