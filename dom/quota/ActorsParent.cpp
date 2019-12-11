@@ -4446,6 +4446,11 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       rv = InitializeRepository(type);
+      mInitializationInfo.RecordFirstInitializationAttempt(
+          type == PERSISTENCE_TYPE_DEFAULT
+              ? Initialization::DefaultRepository
+              : Initialization::TemporaryRepository,
+          rv);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         RECORD_IN_NIGHTLY(statusKeeper, rv);
 #ifndef NIGHTLY_BUILD
@@ -6458,14 +6463,24 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       while (storageVersion != kStorageVersion) {
         if (storageVersion == 0) {
           rv = UpgradeStorageFrom0_0To1_0(connection);
+          mInitializationInfo.RecordFirstInitializationAttempt(
+              Initialization::UpgradeStorageFrom0_0To1_0, rv);
         } else if (storageVersion == MakeStorageVersion(1, 0)) {
           rv = UpgradeStorageFrom1_0To2_0(connection);
+          mInitializationInfo.RecordFirstInitializationAttempt(
+              Initialization::UpgradeStorageFrom1_0To2_0, rv);
         } else if (storageVersion == MakeStorageVersion(2, 0)) {
           rv = UpgradeStorageFrom2_0To2_1(connection);
+          mInitializationInfo.RecordFirstInitializationAttempt(
+              Initialization::UpgradeStorageFrom2_0To2_1, rv);
         } else if (storageVersion == MakeStorageVersion(2, 1)) {
           rv = UpgradeStorageFrom2_1To2_2(connection);
+          mInitializationInfo.RecordFirstInitializationAttempt(
+              Initialization::UpgradeStorageFrom2_1To2_2, rv);
         } else if (storageVersion == MakeStorageVersion(2, 2)) {
           rv = UpgradeStorageFrom2_2To2_3(connection);
+          mInitializationInfo.RecordFirstInitializationAttempt(
+              Initialization::UpgradeStorageFrom2_2To2_3, rv);
         } else {
           NS_WARNING(
               "Unable to initialize storage, no upgrade path is "
