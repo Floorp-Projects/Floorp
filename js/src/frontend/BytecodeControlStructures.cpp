@@ -97,15 +97,23 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
 
 bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op,
                               JSTryNoteKind tryNoteKind) {
-  JumpList beq;
-  if (!bce->emitBackwardJump(op, head_, &beq, &breakTarget_)) {
+  JumpList jump;
+  if (!bce->emitJumpNoFallthrough(op, &jump)) {
+    return false;
+  }
+  bce->patchJumpsToTarget(jump, head_);
+
+  // Create a fallthrough for closing iterators, and as a target for break
+  // statements.
+  JumpTarget breakTarget;
+  if (!bce->emitJumpTarget(&breakTarget)) {
     return false;
   }
   if (!patchBreaks(bce)) {
     return false;
   }
   if (!bce->addTryNote(tryNoteKind, bce->bytecodeSection().stackDepth(),
-                       headOffset(), breakTargetOffset())) {
+                       headOffset(), breakTarget.offset)) {
     return false;
   }
   return true;
