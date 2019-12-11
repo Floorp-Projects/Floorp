@@ -1838,7 +1838,7 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     return;
   }
 
-  UniqueCERTCertList certList(FindNonCACertificatesWithPrivateKeys());
+  UniqueCERTCertList certList(FindClientCertificatesWithPrivateKeys());
   if (!certList) {
     return;
   }
@@ -1848,10 +1848,6 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   mRV = CERT_FilterCertListByCANames(
       certList.get(), caNamesStringPointers.Length(),
       caNamesStringPointers.Elements(), certUsageSSLClient);
-  if (mRV != SECSuccess) {
-    return;
-  }
-  mRV = CERT_FilterCertListByUsage(certList.get(), certUsageSSLClient, false);
   if (mRV != SECSuccess) {
     return;
   }
