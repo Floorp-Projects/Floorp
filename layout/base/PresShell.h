@@ -1164,7 +1164,7 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool HasHandledUserInput() const { return mHasHandledUserInput; }
 
-  void FireResizeEvent();
+  MOZ_CAN_RUN_SCRIPT void FireResizeEvent();
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
 
