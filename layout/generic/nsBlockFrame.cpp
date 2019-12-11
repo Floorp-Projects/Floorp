@@ -4545,7 +4545,12 @@ void nsBlockFrame::SplitFloat(BlockReflowInput& aState, nsIFrame* aFloat,
   }
 
   aState.AppendPushedFloatChain(nextInFlow);
-  aState.mReflowStatus.SetOverflowIncomplete();
+  if (MOZ_LIKELY(!HasAnyStateBits(NS_BLOCK_FLOAT_MGR)) ||
+      MOZ_UNLIKELY(IS_TRUE_OVERFLOW_CONTAINER(this))) {
+    aState.mReflowStatus.SetOverflowIncomplete();
+  } else {
+    aState.mReflowStatus.SetIncomplete();
+  }
 }
 
 static nsFloatCache* GetLastFloat(nsLineBox* aLine) {
