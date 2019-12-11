@@ -35,6 +35,12 @@ async function assertSitesListed(blocked) {
   let categoryItem = document.getElementById(
     "protections-popup-category-tracking-protection"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let trackersView = document.getElementById("protections-popup-trackersView");
   let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");

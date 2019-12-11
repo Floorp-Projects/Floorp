@@ -128,7 +128,24 @@ async function testSubview(hasException) {
   let categoryItem = document.getElementById(
     "protections-popup-category-cryptominers"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  // We have to wait until the ContentBlockingLog gets updated in the content.
+  // Unfortunately, we need to use the setTimeout here since we don't have an
+  // easy to know whether the log is updated in the content. This should be
+  // removed after the log been removed in the content (Bug 1599046).
+  await new Promise(resolve => {
+    setTimeout(resolve, 500);
+  });
+  /* eslint-enable mozilla/no-arbitrary-setTimeout */
+
   let subview = document.getElementById("protections-popup-cryptominersView");
   let viewShown = BrowserTestUtils.waitForEvent(subview, "ViewShown");
   categoryItem.click();
