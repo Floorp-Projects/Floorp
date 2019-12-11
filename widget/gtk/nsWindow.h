@@ -480,6 +480,11 @@ class nsWindow final : public nsBaseWidget {
   void ClearCachedResources();
   nsIWidgetListener* GetListener();
 
+#ifdef MOZ_WAYLAND
+  void UpdateOpaqueRegionWayland(cairo_region_t* aRegion);
+#endif
+  void UpdateOpaqueRegionGtk(cairo_region_t* aRegion);
+
   void UpdateClientOffsetForCSDWindow();
 
   nsWindow* GetTransientForWindowIfPopup();

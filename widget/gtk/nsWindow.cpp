@@ -4740,14 +4740,42 @@ void nsWindow::UpdateWindowDraggingRegion(
   }
 }
 
-void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
+#ifdef MOZ_WAYLAND
+void nsWindow::UpdateOpaqueRegionWayland(cairo_region_t* aRegion) {
+  wl_surface* surface = moz_gtk_widget_get_wl_surface(GTK_WIDGET(mShell));
+  if (!surface) {
+    return;
+  }
+
+  GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(mShell));
+  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
+
+  wl_region* wl_region = nullptr;
+  if (aRegion) {
+    struct wl_compositor* compositor = waylandDisplay->GetCompositor();
+    wl_region = wl_compositor_create_region(compositor);
+    int n_rects = cairo_region_num_rectangles(aRegion);
+    for (int i = 0; i < n_rects; i++) {
+      cairo_rectangle_int_t rect;
+      cairo_region_get_rectangle(aRegion, i, &rect);
+      wl_region_add(wl_region, rect.x, rect.y, rect.width, rect.height);
+    }
+  }
+
+  wl_surface_set_opaque_region(surface, wl_region);
+  if (wl_region) {
+    wl_region_destroy(wl_region);
+  }
+}
+#endif
+
+void nsWindow::UpdateOpaqueRegionGtk(cairo_region_t* aRegion) {
   // Available as of GTK 3.10+
   static auto sGdkWindowSetOpaqueRegion =
       (void (*)(GdkWindow*, cairo_region_t*))dlsym(
           RTLD_DEFAULT, "gdk_window_set_opaque_region");
 
-  LOG(("nsWindow::UpdateOpaqueRegion [%p]\n", (void*)this));
-  if (!sGdkWindowSetOpaqueRegion) {
+  if (MOZ_UNLIKELY(!sGdkWindowSetOpaqueRegion)) {
     LOG(("    gdk_window_set_opaque_region is not available!\n"));
     return;
   }
@@ -4755,38 +4783,39 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
   GdkWindow* window = (mCSDSupportLevel == CSD_SUPPORT_CLIENT)
                           ? gtk_widget_get_window(mShell)
                           : mGdkWindow;
+  if (gdk_window_get_window_type(window) == GDK_WINDOW_TOPLEVEL) {
+    (*sGdkWindowSetOpaqueRegion)(window, aRegion);
+  }
+}
 
-  // gdk_window_set_opaque_region() work for toplevel Gdk windows only.
+void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
+  LOG(("nsWindow::UpdateOpaqueRegion [%p]\n", (void*)this));
+
   // Also don't set shape mask if we use transparency bitmap.
-  if (gdk_window_get_window_type(window) != GDK_WINDOW_TOPLEVEL ||
-      mTransparencyBitmapForTitlebar) {
-    LOG(("    disabled due to %s\n", mTransparencyBitmapForTitlebar
-                                         ? "transparency bitmap"
-                                         : "non-toplevel window"));
+  if (mTransparencyBitmapForTitlebar) {
+    LOG(("    disabled due to transparency bitmap\n"));
     return;
   }
+
+  cairo_region_t* region = nullptr;
 
   // We don't tweak opaque regions for non-toplevel windows (popup, panels etc.)
   // as they can be transparent by gecko.
   if (mWindowType != eWindowType_toplevel) {
     LOG(("    setting for non-toplevel window\n"));
-    if (aOpaqueRegion.IsEmpty()) {
-      (*sGdkWindowSetOpaqueRegion)(mGdkWindow, nullptr);
-    } else {
-      cairo_region_t* region = cairo_region_create();
+    if (!aOpaqueRegion.IsEmpty()) {
+      region = cairo_region_create();
       for (auto iter = aOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
         const LayoutDeviceIntRect& r = iter.Get();
         cairo_rectangle_int_t rect = {r.x, r.y, r.width, r.height};
         cairo_region_union_rectangle(region, &rect);
       }
-      (*sGdkWindowSetOpaqueRegion)(window, region);
-      cairo_region_destroy(region);
     }
   } else {
     // Gecko does not use transparent toplevel windows (see Bug 1469716),
     // however we need to make it transparent to draw round corners of
     // Gtk titlebar.
-    cairo_region_t* region = cairo_region_create();
+    region = cairo_region_create();
 
     GtkBorder decorationSize = {0, 0, 0, 0};
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT &&
@@ -4823,7 +4852,18 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
       };
       cairo_region_subtract_rectangle(region, &rect);
     }
-    (*sGdkWindowSetOpaqueRegion)(window, region);
+  }
+
+  if (mIsX11Display) {
+    UpdateOpaqueRegionGtk(region);
+  }
+#ifdef MOZ_WAYLAND
+  else {
+    UpdateOpaqueRegionWayland(region);
+  }
+#endif
+
+  if (region) {
     cairo_region_destroy(region);
   }
 }

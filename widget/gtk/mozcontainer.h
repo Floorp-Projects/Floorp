@@ -113,6 +113,7 @@ void moz_container_scale_changed(MozContainer* container,
                                  GtkAllocation* aAllocation);
 void moz_container_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
+wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */
