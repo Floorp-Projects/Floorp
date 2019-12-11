@@ -68,17 +68,17 @@ function spawnWithObserver(browser, observerFunc, func) {
     "});",
   ].join("\n");
 
-  return SpecialPowers.spawn(browser, [], new Function(source));
+  return ContentTask.spawn(browser, null, new Function(source));
 }
 
 function waitForResolve(browser) {
-  return SpecialPowers.spawn(browser, [], function() {
+  return ContentTask.spawn(browser, null, function() {
     return content._promise;
   });
 }
 
 async function consoleAPISanityTest(browser) {
-  await SpecialPowers.spawn(browser, [], function() {
+  await ContentTask.spawn(browser, null, function() {
     let win = XPCNativeWrapper.unwrap(content.window);
 
     ok(win.console, "we have a console attached");

@@ -70,7 +70,7 @@ const SEARCH_ENGINE_DETAILS = [
 ];
 
 function promiseContentSearchReady(browser) {
-  return SpecialPowers.spawn(browser, [], async function(args) {
+  return ContentTask.spawn(browser, {}, async function(args) {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.wrappedJSObject.gContentSearchController &&
@@ -164,13 +164,13 @@ async function testSearchEngine(engineDetails) {
       searchURL: base.replace("{code}", engineDetails.codes.newTab),
       async preTest(tab) {
         let browser = tab.linkedBrowser;
-        BrowserTestUtils.loadURI(browser, "about:newtab");
-        await BrowserTestUtils.browserLoaded(browser, false, "about:newtab");
+        await BrowserTestUtils.loadURI(browser, "about:newtab");
+        await BrowserTestUtils.browserLoaded(browser);
 
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+        await ContentTask.spawn(tab.linkedBrowser, {}, async function(args) {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";

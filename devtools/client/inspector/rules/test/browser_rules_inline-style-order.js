@@ -43,9 +43,7 @@ add_task(async function() {
 
     const onStyleMutation = waitForStyleModification(inspector);
     const onRuleRefreshed = inspector.once("rule-view-refreshed");
-    await SpecialPowers.spawn(browser, [{ name, value }], async function(
-      change
-    ) {
+    await ContentTask.spawn(browser, { name, value }, async function(change) {
       content.document.querySelector("div").style[change.name] = change.value;
     });
     await Promise.all([onStyleMutation, onRuleRefreshed]);

@@ -43,7 +43,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     info("Setting focus on the browser.");
     browser.focus();
 
-    await SpecialPowers.spawn(browser, [], () => {
+    await ContentTask.spawn(browser, null, () => {
       content.scrollTo(0, 0);
     });
 

@@ -11,15 +11,13 @@
  */
 function test_ntp_theme(browser, theme, isBrightText) {
   Services.ppmm.sharedData.flush();
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     browser,
-    [
-      {
-        isBrightText,
-        background: hexToCSS(theme.colors.ntp_background),
-        color: hexToCSS(theme.colors.ntp_text),
-      },
-    ],
+    {
+      isBrightText,
+      background: hexToCSS(theme.colors.ntp_background),
+      color: hexToCSS(theme.colors.ntp_text),
+    },
     function({ isBrightText, background, color }) {
       let doc = content.document;
       ok(
@@ -55,14 +53,12 @@ function test_ntp_theme(browser, theme, isBrightText) {
  */
 function test_ntp_default_theme(browser) {
   Services.ppmm.sharedData.flush();
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     browser,
-    [
-      {
-        background: hexToCSS("#F9F9FA"),
-        color: hexToCSS("#0C0C0D"),
-      },
-    ],
+    {
+      background: hexToCSS("#F9F9FA"),
+      color: hexToCSS("#0C0C0D"),
+    },
     function({ background, color }) {
       let doc = content.document;
       ok(

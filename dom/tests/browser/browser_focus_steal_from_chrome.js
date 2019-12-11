@@ -85,13 +85,13 @@ add_task(async function() {
         ok(true, "Test1: Both of the tabs are loaded");
 
         // Confirm that the contents should be able to steal focus from content.
-        await SpecialPowers.spawn(fg, [test], test => {
+        await ContentTask.spawn(fg, test, test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 is(
                   Services.focus.focusedElement,
@@ -109,13 +109,13 @@ add_task(async function() {
           });
         });
 
-        await SpecialPowers.spawn(bg, [test], test => {
+        await ContentTask.spawn(bg, test, test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,
@@ -160,13 +160,13 @@ add_task(async function() {
         ok(true, "Test2: Both of the tabs are loaded");
 
         // Confirm that the contents should be able to steal focus from content.
-        await SpecialPowers.spawn(fg, [test], test => {
+        await ContentTask.spawn(fg, test, test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,
@@ -184,13 +184,13 @@ add_task(async function() {
           });
         });
 
-        await SpecialPowers.spawn(bg, [test], test => {
+        await ContentTask.spawn(bg, test, test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,

@@ -33,7 +33,7 @@ function promiseWindowClosed(window) {
  */
 function openNotification(aBrowser, fn, timeout) {
   info(`openNotification: ${fn}`);
-  return SpecialPowers.spawn(aBrowser, [[fn, timeout]], async function([
+  return ContentTask.spawn(aBrowser, [fn, timeout], async function([
     contentFn,
     contentTimeout,
   ]) {
@@ -60,7 +60,7 @@ function openNotification(aBrowser, fn, timeout) {
 }
 
 function closeNotification(aBrowser) {
-  return SpecialPowers.spawn(aBrowser, [], function() {
+  return ContentTask.spawn(aBrowser, null, function() {
     content.wrappedJSObject._notification.close();
   });
 }

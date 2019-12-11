@@ -61,7 +61,7 @@ async function getBadgeEl(inspector) {
 }
 
 async function toggleScrollableClass() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.document.querySelector("#wrapper").classList.toggle("no-scroll");
   });
 }

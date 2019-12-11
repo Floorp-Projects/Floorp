@@ -29,16 +29,12 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: TESTROOT }, async function(
     browser
   ) {
-    await SpecialPowers.spawn(browser, [URI], async function(URI) {
+    await ContentTask.spawn(browser, URI, async function(URI) {
       content.location.href = URI;
 
-      let loaded = ContentTaskUtils.waitForEvent(
-        docShell.chromeEventHandler,
-        "load",
-        true
-      );
+      let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
       let installTriggered = ContentTaskUtils.waitForEvent(
-        docShell.chromeEventHandler,
+        this,
         "InstallTriggered",
         true,
         null,

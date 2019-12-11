@@ -29,13 +29,12 @@ add_task(async function() {
   await TabStateFlusher.flush(browser);
 
   // Set a new title.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener(
-        "DOMTitleChanged",
-        () => resolve(),
-        { once: true }
-      );
+      addEventListener("DOMTitleChanged", function onTitleChanged() {
+        removeEventListener("DOMTitleChanged", onTitleChanged);
+        resolve();
+      });
 
       content.document.title = "new title";
     });

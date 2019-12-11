@@ -81,7 +81,7 @@ add_task(async function testTempPermissionSubframes() {
     });
 
     // Request a permission.
-    await SpecialPowers.spawn(browser, [uri.host], async function(host0) {
+    await ContentTask.spawn(browser, uri.host, async function(host0) {
       let frame = content.document.getElementById("frame");
 
       await content.SpecialPowers.spawn(frame, [host0], async function(host) {

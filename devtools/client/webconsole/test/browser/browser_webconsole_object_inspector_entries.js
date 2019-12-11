@@ -13,7 +13,7 @@ add_task(async function() {
 
   logAllStoreChanges(hud);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(
       "oi-entries-test",
       new Map(Array.from({ length: 20 }).map((el, i) => [Symbol(i), i])),

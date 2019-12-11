@@ -89,9 +89,9 @@ add_task(async function test_edit_username() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        await SpecialPowers.spawn(
+        await ContentTask.spawn(
           browser,
-          [testCase.usernameInPage],
+          testCase.usernameInPage,
           async function(usernameInPage) {
             let doc = content.document;
             doc

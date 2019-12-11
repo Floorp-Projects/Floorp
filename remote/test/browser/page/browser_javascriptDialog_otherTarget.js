@@ -34,7 +34,7 @@ add_task(async function(client) {
   });
 
   info("Trigger an alert in the second page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.alert("test");
   });
 

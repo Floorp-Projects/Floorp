@@ -37,7 +37,7 @@ add_task(async function blockMixedActiveContentTest() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   gTestBrowser = gBrowser.getBrowserForTab(tab);
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     is(
       docShell.hasMixedDisplayContentBlocked,
       false,
@@ -72,7 +72,7 @@ add_task(async function blockMixedActiveContentTest() {
   gBrowser.reload();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     is(
       docShell.hasMixedDisplayContentBlocked,
       true,
@@ -107,7 +107,7 @@ add_task(async function overrideMCB() {
   gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await ContentTask.spawn(gTestBrowser, null, function() {
     is(
       docShell.hasMixedDisplayContentLoaded,
       true,

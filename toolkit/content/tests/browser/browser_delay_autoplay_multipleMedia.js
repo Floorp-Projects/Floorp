@@ -18,7 +18,7 @@ function check_autoplay_audio_onplay() {
     autoPlay.pause();
     autoPlay.play();
 
-    content.setTimeout(() => {
+    setTimeout(() => {
       ok(true, "Doesn't receive play event when media was blocked.");
       autoPlay.onplay = null;
       resolve();
@@ -56,12 +56,12 @@ add_task(async function block_multiple_media() {
   await waitForTabBlockEvent(tab, true);
 
   info("- autoplay media should be blocked -");
-  await SpecialPowers.spawn(browser, [], check_autoplay_audio_onplay);
+  await ContentTask.spawn(browser, null, check_autoplay_audio_onplay);
 
   info("- non-autoplay can't start playback when the tab is blocked -");
-  await SpecialPowers.spawn(
+  await ContentTask.spawn(
     browser,
-    [],
+    null,
     play_nonautoplay_audio_should_be_blocked
   );
 

@@ -20,7 +20,7 @@ add_task(async function() {
 
   haveChanged = waitForFavicon(extraTab.linkedBrowser, TEST_ROOT + "moz.png");
 
-  SpecialPowers.spawn(extraTab.linkedBrowser, [], function() {
+  ContentTask.spawn(extraTab.linkedBrowser, null, function() {
     let ev = new content.CustomEvent("PleaseChangeFavicon", {});
     content.dispatchEvent(ev);
   });

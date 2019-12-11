@@ -296,7 +296,7 @@ add_task(async function testPermissionShortcuts() {
 
     async function tryKey(desc, expectedValue) {
       await EventUtils.synthesizeAndWaitKey("c", { accelKey: true });
-      let result = await SpecialPowers.spawn(browser, [], function() {
+      let result = await ContentTask.spawn(browser, null, function() {
         return {
           keydowns: content.wrappedJSObject.gKeyDowns,
           keypresses: content.wrappedJSObject.gKeyPresses,
