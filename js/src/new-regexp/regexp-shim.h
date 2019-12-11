@@ -166,6 +166,98 @@ inline uint64_t CountTrailingZeros(uint64_t value) {
 }  // namespace bits
 }  // namespace base
 
+namespace unibrow {
+
+using uchar = unsigned int;
+
+// Origin:
+// https://github.com/v8/v8/blob/1f1e4cdb04c75eab77adbecd5f5514ddc3eb56cf/src/strings/unicode.h#L133-L150
+class Latin1 {
+ public:
+  static const uint16_t kMaxChar = 0xff;
+
+  // Convert the character to Latin-1 case equivalent if possible.
+  static inline uint16_t TryConvertToLatin1(uint16_t c) {
+    // "GREEK CAPITAL LETTER MU" case maps to "MICRO SIGN".
+    // "GREEK SMALL LETTER MU" case maps to "MICRO SIGN".
+    if (c == 0x039C || c == 0x03BC) {
+      return 0xB5;
+    }
+    // "LATIN CAPITAL LETTER Y WITH DIAERESIS" case maps to "LATIN SMALL LETTER
+    // Y WITH DIAERESIS".
+    if (c == 0x0178) {
+      return 0xFF;
+    }
+    return c;
+  }
+};
+
+// Origin:
+// https://github.com/v8/v8/blob/b4bfbce6f91fc2cc72178af42bb3172c5f5eaebb/src/strings/unicode.h#L99-L131
+class Utf16 {
+ public:
+  static inline bool IsLeadSurrogate(int code) {
+    return js::unicode::IsLeadSurrogate(code);
+  }
+  static inline bool IsTrailSurrogate(int code) {
+    return js::unicode::IsTrailSurrogate(code);
+  }
+  static inline uint16_t LeadSurrogate(uint32_t char_code) {
+    return js::unicode::LeadSurrogate(char_code);
+  }
+  static inline uint16_t TrailSurrogate(uint32_t char_code) {
+    return js::unicode::TrailSurrogate(char_code);
+  }
+  static inline uint32_t CombineSurrogatePair(char16_t lead, char16_t trail) {
+    return js::unicode::UTF16Decode(lead, trail);
+  }
+  static const uchar kMaxNonSurrogateCharCode = 0xffff;
+};
+
+// A cache used in case conversion.  It caches the value for characters
+// that either have no mapping or map to a single character independent
+// of context.  Characters that map to more than one character or that
+// map differently depending on context are always looked up.
+// Origin:
+// https://github.com/v8/v8/blob/b4bfbce6f91fc2cc72178af42bb3172c5f5eaebb/src/strings/unicode.h#L64-L88
+template <class T, int size = 256>
+class Mapping {
+ public:
+  inline Mapping() = default;
+  int get(uchar c, uchar n, uchar* result);
+
+ private:
+  friend class Test;
+  int CalculateValue(uchar c, uchar n, uchar* result);
+  struct CacheEntry {
+    inline CacheEntry() : code_point_(kNoChar), offset_(0) {}
+    inline CacheEntry(uchar code_point, signed offset)
+        : code_point_(code_point), offset_(offset) {}
+    uchar code_point_;
+    signed offset_;
+    static const int kNoChar = (1 << 21) - 1;
+  };
+  static const int kSize = size;
+  static const int kMask = kSize - 1;
+  CacheEntry entries_[kSize];
+};
+
+// Origin:
+// https://github.com/v8/v8/blob/b4bfbce6f91fc2cc72178af42bb3172c5f5eaebb/src/strings/unicode.h#L241-L252
+struct Ecma262Canonicalize {
+  static const int kMaxWidth = 1;
+  static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
+};
+struct Ecma262UnCanonicalize {
+  static const int kMaxWidth = 1;
+  static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
+};
+struct CanonicalizationRange {
+  static const int kMaxWidth = 1;
+  static int Convert(uchar c, uchar n, uchar* result, bool* allow_caching_ptr);
+};
+
+}  // namespace unibrow
 
 namespace internal {
 
