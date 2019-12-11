@@ -142,7 +142,6 @@
       this.removeAttribute("image");
       this.removeAttribute("title");
       this.removeAttribute("text");
-      this.removeAttribute("displayurl");
     }
 
     _onOverflow() {
@@ -411,12 +410,9 @@
       this.setAttribute("type", type);
 
       let displayUrl = this._unescapeUrl(originalUrl);
-      this.setAttribute("displayurl", displayUrl);
 
       // Show the domain as the title if we don't have a title.
-      let titleLooksLikeUrl = false;
       if (!title) {
-        titleLooksLikeUrl = true;
         try {
           let uri = Services.io.newURI(originalUrl);
           // Not all valid URLs have a domain.
@@ -427,12 +423,6 @@
         if (!title) {
           title = displayUrl;
         }
-      }
-
-      if (titleLooksLikeUrl) {
-        this._titleText.setAttribute("lookslikeurl", "true");
-      } else {
-        this._titleText.removeAttribute("lookslikeurl");
       }
 
       if (Array.isArray(title)) {
