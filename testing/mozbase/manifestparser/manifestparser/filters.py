@@ -336,9 +336,7 @@ class chunk_by_runtime(InstanceFilter):
             manifest = normsep(test['manifest_relpath'])
         return manifest
 
-    def __call__(self, tests, values):
-        tests = list(tests)
-
+    def get_chunked_manifests(self, tests):
         # Find runtimes for all relevant manifests.
         manifests = set(self.get_manifest(t) for t in tests)
         runtimes = [(self.runtimes[m], m) for m in manifests if m in self.runtimes]
@@ -365,6 +363,11 @@ class chunk_by_runtime(InstanceFilter):
         # Sort one last time so we typically get chunks ordered from fastest to
         # slowest.
         chunks.sort(key=lambda x: (x[0], len(x[1])))
+        return chunks
+
+    def __call__(self, tests, values):
+        tests = list(tests)
+        chunks = self.get_chunked_manifests(tests)
         runtime, this_manifests = chunks[self.this_chunk - 1]
         log("Cumulative test runtime is around {} minutes (average is {} minutes)".format(
             round(runtime / 60), round(sum([c[0] for c in chunks]) / (60 * len(chunks)))))

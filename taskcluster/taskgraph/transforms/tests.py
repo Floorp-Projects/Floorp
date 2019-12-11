@@ -20,9 +20,22 @@ for example - use `all_tests.py` instead.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
+import json
 import logging
 import os
 
+from manifestparser.filters import chunk_by_runtime
+from mozbuild.schedules import INCLUSIVE_COMPONENTS
+from mozbuild.util import memoize
+from moztest.resolve import TestResolver, TestManifestLoader, TEST_SUITES
+from voluptuous import (
+    Any,
+    Optional,
+    Required,
+    Exclusive,
+)
+
+from taskgraph import GECKO
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -38,16 +51,7 @@ from taskgraph.util.taskcluster import (
     get_artifact_path,
     get_index_url,
 )
-from mozbuild.schedules import INCLUSIVE_COMPONENTS
-
 from taskgraph.util.perfile import perfile_number_of_chunks
-
-from voluptuous import (
-    Any,
-    Optional,
-    Required,
-    Exclusive,
-)
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -420,7 +424,10 @@ test_description_schema = Schema({
             bool),
     },
 
-    # The current chunk; this is filled in by `all_kinds.py`
+    # The set of test manifests to run.
+    Optional('test-manifests'): [basestring],
+
+    # The current chunk (if chunking is enabled).
     Optional('this-chunk'): int,
 
     # os user groups for test task workers; required scopes, will be
@@ -1261,11 +1268,86 @@ def split_e10s(config, tests):
             yield test
 
 
+CHUNK_SUITES_BLACKLIST = (
+    'awsy',
+    'cppunittest',
+    'crashtest',
+    'firefox-ui-functional-local',
+    'firefox-ui-functional-remote',
+    'geckoview-junit',
+    'gtest',
+    'jittest',
+    'jsreftest',
+    'marionette',
+    'mochitest-a11y',
+    'mochitest-browser-chrome',
+    'mochitest-browser-chrome-screenshots',
+    'mochitest-chrome',
+    'mochitest-devtools-chrome',
+    'mochitest-devtools-webreplay',
+    'mochitest-media',
+    'mochitest-plain',
+    'mochitest-plain-gpu',
+    'mochitest-remote',
+    'mochitest-valgrind-plain',
+    'mochitest-webgl1-core',
+    'mochitest-webgl1-ext',
+    'mochitest-webgl2-core',
+    'mochitest-webgl2-ext',
+    'raptor',
+    'reftest',
+    'reftest-gpu',
+    'reftest-no-accel',
+    'talos',
+    'telemetry-tests-client',
+    'test-coverage',
+    'test-coverage-wpt',
+    'test-verify',
+    'test-verify-gpu',
+    'test-verify-wpt',
+    'web-platform-tests',
+    'web-platform-tests-reftests',
+    'web-platform-tests-wdspec',
+    'xpcshell',
+)
+"""These suites will be chunked at test runtime rather than here in the taskgraph."""
+
+
 @transforms.add
 def split_chunks(config, tests):
     """Based on the 'chunks' key, split tests up into chunks by duplicating
     them and assigning 'this-chunk' appropriately and updating the treeherder
     symbol."""
+    resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
+
+    @memoize
+    def get_runtimes(platform):
+        base = os.path.join(GECKO, 'testing', 'runtimes', 'manifest-runtimes-{}.json')
+        for key in ('android', 'windows'):
+            if key in platform:
+                path = base.format(key)
+                break
+        else:
+            path = base.format('unix')
+
+        with open(path, 'r') as fh:
+            return json.load(fh)
+
+    @memoize
+    def get_tests(flavor, subsuite):
+        return list(resolver.resolve_tests(flavor=flavor, subsuite=subsuite))
+
+    @memoize
+    def get_chunked_manifests(flavor, subsuite, platform, chunks):
+        tests = get_tests(flavor, subsuite)
+        return [
+            c[1] for c in chunk_by_runtime(
+                None,
+                chunks,
+                get_runtimes(platform)
+            ).get_chunked_manifests(tests)
+        ]
+
     for test in tests:
         if test['suite'].startswith('test-verify') or \
            test['suite'].startswith('test-coverage'):
@@ -1285,19 +1367,35 @@ def split_chunks(config, tests):
             if test['chunks'] > maximum_number_verify_chunks:
                 test['chunks'] = maximum_number_verify_chunks
 
-        if test['chunks'] <= 1:
-            test['this-chunk'] = 1
-            yield test
-            continue
+        chunked_manifests = None
+        if test['suite'] not in CHUNK_SUITES_BLACKLIST:
+            suite_definition = TEST_SUITES.get(test['suite'], {})
+            chunked_manifests = get_chunked_manifests(
+                suite_definition['build_flavor'],
+                suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
+                test['test-platform'],
+                test['chunks'],
+            )
 
-        for this_chunk in range(1, test['chunks'] + 1):
+        for i in range(test['chunks']):
+            this_chunk = i + 1
+
             # copy the test and update with the chunk number
             chunked = copy.deepcopy(test)
             chunked['this-chunk'] = this_chunk
 
-            # add the chunk number to the TH symbol
-            chunked['treeherder-symbol'] = add_suffix(
-                chunked['treeherder-symbol'], this_chunk)
+            if chunked_manifests is not None:
+                manifests = sorted(chunked_manifests[i])
+                if not manifests:
+                    raise Exception(
+                        'Chunking algorithm yielded no manifests for chunk {} of {} on {}'.format(
+                            this_chunk, test['test-name'], test['test-platform']))
+                chunked['test-manifests'] = manifests
+
+            if test['chunks'] > 1:
+                # add the chunk number to the TH symbol
+                chunked['treeherder-symbol'] = add_suffix(
+                    chunked['treeherder-symbol'], this_chunk)
 
             yield chunked
 
@@ -1497,6 +1595,7 @@ def make_job_description(config, tests):
             'build_type': attr_build_type,
             'test_platform': test['test-platform'],
             'test_chunk': str(test['this-chunk']),
+            'test_manifests': test.get('test-manifests'),
             attr_try_name: try_name,
         })
 
