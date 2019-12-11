@@ -54,13 +54,13 @@ where
         F: FnOnce(),
     {
         // Retake the leaked closure.
-        let closure: Box<F> = unsafe { Box::from_raw(unboxed_closure as *mut F) };
+        let closure = unsafe { Box::from_raw(unboxed_closure as *mut F) };
         // Execute the closure.
         (*closure)();
-        // closure is released after finishiing this function call.
+        // closure is released after finishing this function call.
     }
 
-    let closure: Box<F> = Box::new(closure); // Allocate closure on heap.
+    let closure = Box::new(closure); // Allocate closure on heap.
     let executor: dispatch_function_t = Some(closure_executer::<F>);
 
     (
