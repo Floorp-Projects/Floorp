@@ -25,6 +25,7 @@ use std::ptr;
 use std::ops;
 use std::marker::PhantomData;
 use std::fmt::Write;
+use std::mem;
 
 extern "C" {
   fn Gecko_StrictFileOriginPolicy() -> bool;
@@ -238,6 +239,11 @@ pub extern "C" fn mozurl_fragment(url: &MozURL) -> SpecSlice {
 }
 
 #[no_mangle]
+pub extern "C" fn mozurl_spec_no_ref(url: &MozURL) -> SpecSlice {
+  (&url[..Position::AfterQuery]).into()
+}
+
+#[no_mangle]
 pub extern "C" fn mozurl_has_fragment(url: &MozURL) -> bool {
   url.fragment().is_some()
 }
@@ -249,6 +255,11 @@ pub extern "C" fn mozurl_directory(url: &MozURL) -> SpecSlice {
   } else {
     url.path().into()
   }
+}
+
+#[no_mangle]
+pub extern "C" fn mozurl_prepath(url: &MozURL) -> SpecSlice {
+  (&url[..Position::BeforePath]).into()
 }
 
 fn get_origin(url: &MozURL) -> Option<String> {
@@ -418,7 +429,7 @@ pub extern "C" fn mozurl_set_port_no(url: &mut MozURL, new_port: i32) -> nsresul
   }
 
   let port = match new_port {
-    new if new < 0 || u16::max_value() as i32 > new => None,
+    new if new < 0 || u16::max_value() as i32 <= new => None,
     new if Some(new as u16) == default_port(url.scheme()) => None,
     new => Some(new as u16),
   };
@@ -448,6 +459,12 @@ pub extern "C" fn mozurl_set_fragment(url: &mut MozURL, fragment: &nsACString) -
   let fragment = try_or_malformed!(str::from_utf8(fragment));
   quirks::set_hash(url, fragment);
   NS_OK
+}
+
+#[no_mangle]
+pub extern "C" fn mozurl_sizeof(url: &MozURL) -> usize {
+  debug_assert_mut!(url);
+  mem::size_of::<MozURL>() + url.as_str().len()
 }
 
 #[no_mangle]

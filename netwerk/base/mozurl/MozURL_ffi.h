@@ -55,9 +55,11 @@ MozURLSpecSlice mozurl_filepath(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_path(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_query(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_fragment(const mozilla::net::MozURL*);
+MozURLSpecSlice mozurl_spec_no_ref(const mozilla::net::MozURL*);
 
 bool mozurl_has_fragment(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_directory(const mozilla::net::MozURL*);
+MozURLSpecSlice mozurl_prepath(const mozilla::net::MozURL*);
 void mozurl_origin(const mozilla::net::MozURL*, nsACString* aResult);
 nsresult mozurl_base_domain(const mozilla::net::MozURL*, nsACString* aResult);
 
@@ -86,6 +88,8 @@ nsresult mozurl_set_pathname(mozilla::net::MozURL* aUrl,
 nsresult mozurl_set_query(mozilla::net::MozURL* aUrl, const nsACString* aQuery);
 nsresult mozurl_set_fragment(mozilla::net::MozURL* aUrl,
                              const nsACString* aFragment);
+
+size_t mozurl_sizeof(const mozilla::net::MozURL*);
 
 // Utility function for parsing IPv6 addresses, used by nsStandardURL.h
 //
