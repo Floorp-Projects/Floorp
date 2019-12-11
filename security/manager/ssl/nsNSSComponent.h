@@ -36,7 +36,7 @@ namespace psm {
 
 MOZ_MUST_USE
 ::already_AddRefed<mozilla::psm::SharedCertVerifier> GetDefaultCertVerifier();
-UniqueCERTCertList FindNonCACertificatesWithPrivateKeys();
+UniqueCERTCertList FindClientCertificatesWithPrivateKeys();
 
 }  // namespace psm
 }  // namespace mozilla
