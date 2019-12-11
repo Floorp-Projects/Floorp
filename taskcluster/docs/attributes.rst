@@ -216,10 +216,11 @@ real toolchain job name in the toolchains list for build jobs.
 always_target
 =============
 
-Tasks with this attribute will be included in the ``target_task_graph`` regardless
-of any target task filtering that occurs. When a task is included in this manner
-(i.e it otherwise would have been filtered out), it will be considered for
-optimization even if the ``optimize_target_tasks`` parameter is False.
+Tasks with this attribute will be included in the ``target_task_graph`` if
+``parameters["tasks_for"]`` is ``hg-push``, regardless of any target task
+filtering that occurs. When a task is included in this manner (i.e it otherwise
+would have been filtered out), it will be considered for optimization even if
+the ``optimize_target_tasks`` parameter is False.
 
 This is meant to be used for tasks which a developer would almost always want to
 run. Typically these tasks will be short running and have a high risk of causing
