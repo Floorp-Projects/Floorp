@@ -1638,7 +1638,10 @@ static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
       }
       continue;
     }
-    if (type != in->type()) {
+
+    if (type == in->type()) {
+      convertibleToFloat32 = convertibleToFloat32 && in->canProduceFloat32();
+    } else {
       if (convertibleToFloat32 && in->type() == MIRType::Float32) {
         // If we only saw definitions that can be converted into Float32 before
         // and encounter a Float32 value, promote previous values to Float32
@@ -1647,7 +1650,7 @@ static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
                  IsTypeRepresentableAsDouble(in->type())) {
         // Specialize phis with int32 and double operands as double.
         type = MIRType::Double;
-        convertibleToFloat32 &= in->canProduceFloat32();
+        convertibleToFloat32 = convertibleToFloat32 && in->canProduceFloat32();
       } else {
         return MIRType::Value;
       }
@@ -1825,6 +1828,9 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
           // Convert int32 operands to double.
           replacement = MToDouble::New(alloc(), in);
         } else if (phiType == MIRType::Float32) {
+          MOZ_ASSERT(in->canProduceFloat32() ||
+                     (in->resultTypeSet() && in->resultTypeSet()->empty()));
+
           if (in->type() == MIRType::Int32 || in->type() == MIRType::Double) {
             replacement = MToFloat32::New(alloc(), in);
           } else {
