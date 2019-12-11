@@ -35,6 +35,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "JsWindowActorTransport",
+  "devtools/shared/transport/js-window-actor-transport",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "WorkerThreadWorkerDebuggerTransport",
   "devtools/shared/transport/worker-transport",
   true
@@ -331,6 +337,13 @@ var DebuggerServer = {
     return this._onConnection(transport, prefix, true);
   },
 
+  connectToParentWindowActor(prefix, devtoolsFrameActor) {
+    this._checkInit();
+    const transport = new JsWindowActorTransport(devtoolsFrameActor, prefix);
+
+    return this._onConnection(transport, prefix, true);
+  },
+
   /**
    * Check if the server is running in the child process.
    */
@@ -398,7 +411,7 @@ var DebuggerServer = {
   },
 
   /**
-   * Live list of all currenctly attached child's message managers.
+   * Live list of all currently attached child's message managers.
    */
   _childMessageManagers: new Set(),
 
