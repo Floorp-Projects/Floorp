@@ -250,3 +250,5 @@ jobs:
         parent: debian9-base
     system-symbols-mac:
         symbol: I(system-symbols-mac)
+    system-symbols-win:
+        symbol: I(system-symbols-win)
