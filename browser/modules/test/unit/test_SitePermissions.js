@@ -28,7 +28,6 @@ add_task(async function testPermissionsListing() {
     "shortcuts",
     "persistent-storage",
     "storage-access",
-    "xr",
   ];
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
@@ -185,7 +184,6 @@ add_task(async function testExactHostMatch() {
     "microphone",
     "screen",
     "geo",
-    "xr",
     "persistent-storage",
   ];
   if (RESIST_FINGERPRINTING_ENABLED) {
