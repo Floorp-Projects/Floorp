@@ -53,5 +53,20 @@ std::ostream& operator<<(std::ostream& os, const AsUC32& c) {
 DisallowJavascriptExecution::DisallowJavascriptExecution(Isolate* isolate)
     : nojs_(isolate->cx()) {}
 
+// TODO: Map flags to jitoptions
+bool FLAG_correctness_fuzzer_suppressions = false;
+bool FLAG_enable_regexp_unaligned_accesses = false;
+bool FLAG_harmony_regexp_sequence = false;
+bool FLAG_regexp_interpret_all = false;
+bool FLAG_regexp_mode_modifiers = false;
+bool FLAG_regexp_optimization = false;
+bool FLAG_regexp_peephole_optimization = false;
+bool FLAG_regexp_possessive_quantifier = false;
+bool FLAG_regexp_tier_up = false;
+bool FLAG_trace_regexp_assembler = false;
+bool FLAG_trace_regexp_bytecodes = false;
+bool FLAG_trace_regexp_parser = false;
+bool FLAG_trace_regexp_peephole_optimization = false;
+
 }  // namespace internal
 }  // namespace v8
