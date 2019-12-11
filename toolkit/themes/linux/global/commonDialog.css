@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#iconContainer {
-  -moz-box-pack: center;
-  min-height: 55px; /* maximum icon height + icon margin */
-  min-width: 58px; /* maximum icon width + icon margin */
+#infoContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #infoIcon {
+  justify-self: center;
   max-width: 48px;
   max-height: 48px;
   margin: 3px 5px 4px;
