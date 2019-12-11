@@ -186,7 +186,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
-  LazyScript* lazy = fun->lazyScript();
+  BaseScript* lazy = fun->baseScript();
   if (lazy->isDerivedClassConstructor()) {
     setDerivedClassConstructor();
   }

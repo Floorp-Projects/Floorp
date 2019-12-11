@@ -8385,9 +8385,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
       JSFunction* fun = si.abstractScope().canonicalFunction();
       if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         const FieldInitializers& fieldInitializers =
-            fun->isInterpretedLazy()
-                ? fun->lazyScript()->getFieldInitializers()
-                : fun->nonLazyScript()->getFieldInitializers();
+            fun->baseScript()->getFieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
         return fieldInitializers;
       }
