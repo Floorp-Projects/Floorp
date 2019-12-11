@@ -88,5 +88,9 @@ addA11YPanelTask(
     const doc = panel.panelWin.document;
     const propertiesTree = doc.querySelector(".tree");
     is(doc.activeElement, propertiesTree, "Properties list must be focused.");
+    ok(
+      isVisible(doc.querySelector(".treeTable .treeRow.selected")),
+      "Selected row is visible."
+    );
   }
 );
