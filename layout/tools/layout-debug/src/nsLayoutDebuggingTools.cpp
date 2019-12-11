@@ -123,11 +123,9 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
 
   printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
 
-  // The setup is the similar as setupPrintMode() in reftest-content.js except
-  // we set the paper size by using US letter size 8.5 x 11 inches, so the page
-  // area is larger and easier read when debugging real web pages.
-  printSettings->SetPaperWidth(8.5);
-  printSettings->SetPaperHeight(11);
+  // Use the same setup as setupPrintMode() in reftest-content.js.
+  printSettings->SetPaperWidth(5);
+  printSettings->SetPaperHeight(3);
 
   nsIntMargin unwriteableMargin(0, 0, 0, 0);
   printSettings->SetUnwriteableMarginInTwips(unwriteableMargin);
