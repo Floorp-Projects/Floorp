@@ -1308,6 +1308,7 @@ function getScriptData(id) {
     url: script.url,
     format: script.format,
     mainOffset: script.mainOffset,
+    childScripts: script.getChildScripts().map(s => gScripts.getId(s)),
   };
 }
 
