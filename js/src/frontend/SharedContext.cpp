@@ -301,21 +301,23 @@ void FunctionBox::initWithEnclosingScope(JSFunction* fun) {
 
 void FunctionBox::setEnclosingScopeForInnerLazyFunction(
     const AbstractScope& enclosingScope) {
-  MOZ_ASSERT(isLazyFunctionWithoutEnclosingScope());
-
   // For lazy functions inside a function which is being compiled, we cache
   // the incomplete scope object while compiling, and store it to the
   // LazyScript once the enclosing script successfully finishes compilation
   // in FunctionBox::finish.
+  MOZ_ASSERT(!enclosingScope_);
   enclosingScope_ = enclosingScope;
 }
 
 void FunctionBox::finish() {
-  if (!isLazyFunctionWithoutEnclosingScope()) {
-    return;
+  if (isInterpretedLazy()) {
+    // Lazy inner functions need to record their enclosing scope for when they
+    // eventually are compiled.
+    function()->setEnclosingScope(enclosingScope_.maybeScope());
+  } else {
+    // Non-lazy inner functions don't use the enclosingScope_ field.
+    MOZ_ASSERT(!enclosingScope_);
   }
-  MOZ_ASSERT(enclosingScope_);
-  function()->setEnclosingScope(enclosingScope_.maybeScope());
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
