@@ -661,20 +661,41 @@ bool EventListenerManager::ListenerCanHandle(const Listener* aListener,
   return aListener->mEventMessage == aEventMessage;
 }
 
+static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
+  if (aMessage == eTouchStart || aMessage == eTouchMove) {
+    return StaticPrefs::dom_event_default_to_passive_touch_listeners();
+  }
+  if (aMessage == eWheel || aMessage == eLegacyMouseLineOrPageScroll ||
+      aMessage == eLegacyMousePixelScroll) {
+    return StaticPrefs::dom_event_default_to_passive_wheel_listeners();
+  }
+  return false;
+}
+
+static bool IsRootEventTaget(EventTarget* aTarget) {
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget)) {
+    return true;
+  }
+  nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
+  if (!node) {
+    return false;
+  }
+  Document* doc = node->OwnerDoc();
+  return node == doc || node == doc->GetRootElement() || node == doc->GetBody();
+}
+
 void EventListenerManager::MaybeMarkPassive(EventMessage aMessage,
                                             EventListenerFlags& aFlags) {
-  if ((aMessage == eTouchStart || aMessage == eTouchMove) && mIsMainThreadELM &&
-      StaticPrefs::dom_event_default_to_passive_touch_listeners()) {
-    nsCOMPtr<nsINode> node;
-    nsCOMPtr<nsPIDOMWindowInner> win;
-    if ((win = GetTargetAsInnerWindow()) ||
-        ((node = do_QueryInterface(mTarget)) &&
-         (node == node->OwnerDoc() ||
-          node == node->OwnerDoc()->GetRootElement() ||
-          node == node->OwnerDoc()->GetBody()))) {
-      aFlags.mPassive = true;
-    }
+  if (!mIsMainThreadELM) {
+    return;
   }
+  if (!IsDefaultPassiveWhenOnRoot(aMessage)) {
+    return;
+  }
+  if (!IsRootEventTaget(mTarget)) {
+    return;
+  }
+  aFlags.mPassive = true;
 }
 
 void EventListenerManager::AddEventListenerByType(
