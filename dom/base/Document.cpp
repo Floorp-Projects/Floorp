@@ -5934,7 +5934,7 @@ already_AddRefed<PresShell> Document::CreatePresShell(
 
   AssertNoStaleServoDataIn(*this);
 
-  RefPtr<PresShell> presShell = new PresShell;
+  RefPtr<PresShell> presShell = new PresShell(this);
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = presShell;
 
@@ -5943,7 +5943,7 @@ already_AddRefed<PresShell> Document::CreatePresShell(
     FillStyleSet();
   }
 
-  presShell->Init(this, aContext, aViewManager);
+  presShell->Init(aContext, aViewManager);
 
   if (hadStyleSheets) {
     // Gaining a shell causes changes in how media queries are evaluated, so
