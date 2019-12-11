@@ -34,14 +34,6 @@ job-defaults:
     notify:
         email:
             by-project:
-                try:
-                    subject: 'Iris Firefox {chunk} has completed a test run for a patch on (try)'
-                    message: A team member has submitted a patch to try and the results are in.
-                    link:
-                        text: Treeherder Job
-                        href: '{th_root}jobs?repo={project}&revision={head_rev}{tiers}{filterstring}'
-                    on-reasons: [any]
-                    emails: [iris@mozilla.com]
                 mozilla-central:
                     subject: 'Iris Firefox {chunk} tests failed (mozilla-central)'
                     message: This calls for an action from the QA Automation team. Use the link to view it on Treeherder.
