@@ -594,6 +594,160 @@ class DisallowJavascriptExecution {
   js::AutoAssertNoContentJS nojs_;
 };
 
+// Origin:
+// https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L83-L474
+class String : public HeapObject {
+ private:
+  JSString* str() const { return value_.toString(); }
+
+ public:
+  operator JSString*() const { return str(); }
+
+  // Max char codes.
+  static const int32_t kMaxOneByteCharCode = unibrow::Latin1::kMaxChar;
+  static const uint32_t kMaxOneByteCharCodeU = unibrow::Latin1::kMaxChar;
+  static const int kMaxUtf16CodeUnit = 0xffff;
+  static const uc32 kMaxCodePoint = 0x10ffff;
+
+  MOZ_ALWAYS_INLINE int length() const { return str()->length(); }
+  uint16_t Get(uint32_t index);
+  bool IsFlat() { return str()->isLinear(); };
+
+  // These are only used in V8 functions that I want to rewrite.
+  // TODO: Rewrite those functions and delete this
+  bool IsConsString();
+  bool IsExternalString();
+  bool IsExternalOneByteString();
+  bool IsExternalTwoByteString();
+  bool IsSeqString();
+  bool IsSeqOneByteString();
+  bool IsSeqTwoByteString();
+  bool IsSlicedString();
+  bool IsThinString();
+
+  // Origin:
+  // https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L95-L152
+  class FlatContent {
+   public:
+    FlatContent(JSLinearString* string, const DisallowHeapAllocation& no_gc)
+        : string_(string), no_gc_(no_gc) {}
+    inline bool IsOneByte() const { return string_->hasLatin1Chars(); }
+    inline bool IsTwoByte() const { return !string_->hasLatin1Chars(); }
+
+    Vector<const uint8_t> ToOneByteVector() const {
+      MOZ_ASSERT(IsOneByte());
+      return Vector<const uint8_t>(string_->latin1Chars(no_gc_),
+                                   string_->length());
+    }
+    Vector<const uc16> ToUC16Vector() const;
+    // TODO: twoByteChars returns char16_t*, but uc16 is uint16_t, which is
+    // not compatible :( :( :(
+    // {
+    //   MOZ_ASSERT(IsTwoByte());
+    //   return Vector<const uc16>(string_->twoByteChars(no_gc_),
+    //   string_->length());
+    // }
+   private:
+    const JSLinearString* string_;
+    const JS::AutoAssertNoGC& no_gc_;
+  };
+  FlatContent GetFlatContent(const DisallowHeapAllocation& no_gc) {
+    MOZ_ASSERT(IsFlat());
+    return FlatContent(&str()->asLinear(), no_gc);
+  }
+
+  static Handle<String> Flatten(Isolate* isolate, Handle<String> string);
+
+  inline static String cast(Object object) {
+    String s;
+    s.value_ = JS::StringValue(JS::Value(object).toString());
+    return s;
+  }
+
+  inline static bool IsOneByteRepresentationUnderneath(String string) {
+    return string.str()->hasLatin1Chars();
+  }
+  inline bool IsOneByteRepresentation() const {
+    return str()->hasLatin1Chars();
+  }
+
+  std::unique_ptr<char[]> ToCString();
+
+  template <typename Char>
+  Vector<const Char> GetCharVector(const DisallowHeapAllocation& no_gc);
+};
+
+// A flat string reader provides random access to the contents of a
+// string independent of the character width of the string.  The handle
+// must be valid as long as the reader is being used.
+// Origin:
+// https://github.com/v8/v8/blob/84f3877c15bc7f8956d21614da4311337525a3c8/src/objects/string.h#L807-L825
+class MOZ_STACK_CLASS FlatStringReader {
+ public:
+  FlatStringReader(JSAtom* string) : string_(string) {}
+  int length() { return string_->length(); }
+
+  inline char16_t Get(size_t index) {
+    return string_->latin1OrTwoByteChar(index);
+  }
+
+ private:
+  JSAtom* string_;
+  JS::AutoCheckCannotGC nogc;
+};
+
+//////////////////////////////////////////////////
+// TODO: Refactor NativeRegExpMacroAssembler and delete all of these:
+class ConsString : public String {
+ public:
+  String first();
+  String second();
+
+  static ConsString cast(Object object);
+};
+class ExternalOneByteString : public String {
+ public:
+  const uint8_t* GetChars();
+  static ExternalOneByteString cast(Object object);
+};
+class ExternalTwoByteString : public String {
+ public:
+  const uc16* GetChars();
+  static ExternalTwoByteString cast(Object object);
+};
+class SeqOneByteString : public String {
+ public:
+  uint8_t* GetChars(const DisallowHeapAllocation& no_gc);
+  static SeqOneByteString cast(Object object);
+};
+class SeqTwoByteString : public String {
+ public:
+  uc16* GetChars(const DisallowHeapAllocation& no_gc);
+  static SeqTwoByteString cast(Object object);
+
+  static constexpr size_t kMaxCharsSize = JSString::MAX_LENGTH * 2;
+};
+class SlicedString : public String {
+ public:
+  String parent();
+  int offset();
+  static SlicedString cast(Object object);
+};
+class ThinString : public String {
+ public:
+  String actual();
+  static ThinString cast(Object object);
+};
+class StringShape {
+ public:
+  explicit StringShape(const String s);
+  bool IsCons();
+  bool IsSliced();
+  bool IsThin();
+};
+// End of "TODO: Delete all of these"
+//////////////////////////////////////////////////
+
 enum class MessageTemplate { kStackOverflow };
 
 class MessageFormatter {
