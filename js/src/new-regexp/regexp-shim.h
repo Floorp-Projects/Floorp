@@ -20,6 +20,7 @@
 #include <algorithm>
 
 #include "js/Value.h"
+#include "vm/NativeObject.h"
 
 // Forward declaration of classes
 namespace v8 {
@@ -298,6 +299,80 @@ inline int HexValue(uc32 c) {
   if (static_cast<unsigned>(c) <= 5) return c + 10;
   return -1;
 }
+
+// V8::Object ~= JS::Value
+class Object {
+ public:
+  // The default object constructor in V8 stores a nullptr,
+  // which has its low bit clear and is interpreted as Smi(0).
+  constexpr Object() : value_(JS::Int32Value(0)) {}
+
+  // Conversions to/from SpiderMonkey types
+  constexpr Object(JS::Value value) : value_(value) {}
+  operator JS::Value() const { return value_; }
+
+  // Used in regexp-macro-assembler.cc and regexp-interpreter.cc to
+  // check the return value of isolate->stack_guard()->HandleInterrupts()
+  // In V8, this will be either an exception object or undefined.
+  // In SM, we store the exception in the context, so we can use our normal
+  // idiom: return false iff we are throwing an exception.
+  inline bool IsException(Isolate*) const { return !value_.toBoolean(); }
+
+  // SpiderMonkey tries to avoid leaking the internal representation of its
+  // objects. V8 is not so strict. These functions are used when calling /
+  // being called by native code: objects are converted to Addresses for the
+  // call, then cast back to objects on the other side.
+  // We might be able to upstream a patch that eliminates the need for these.
+  Object(Address bits);
+  Address ptr() const;
+
+ protected:
+  JS::Value value_;
+};
+
+class Smi : public Object {
+ public:
+  static Smi FromInt(int32_t value) {
+    Smi smi;
+    smi.value_ = JS::Int32Value(value);
+    return smi;
+  }
+  static inline int32_t ToInt(const Object object) {
+    return JS::Value(object).toInt32();
+  }
+};
+
+// V8::HeapObject ~= JSObject
+class HeapObject : public Object {
+public:
+  // Only used for bookkeeping of total code generated in regexp-compiler.
+  // We may be able to refactor this away.
+  int Size() const;
+};
+
+// A fixed-size array with Objects (aka Values) as element types
+// Implemented as a wrapper around a regular native object with dense elements.
+class FixedArray : public HeapObject {
+ public:
+  inline void set(uint32_t index, Object value) {
+    JS::Value(*this).toObject().as<js::NativeObject>().setDenseElement(index,
+                                                                       value);
+  }
+};
+
+// A fixed-size array of bytes.
+// TODO: figure out the best implementation for this. Uint8Array might work,
+// but it's not currently visible outside of TypedArrayObject.cpp.
+class ByteArray : public HeapObject {
+ public:
+  uint8_t get(uint32_t index);
+  void set(uint32_t index, uint8_t val);
+  uint32_t length();
+  byte* GetDataStartAddress();
+  byte* GetDataEndAddress();
+
+  static ByteArray cast(Object object);
+};
 
 // RAII Guard classes
 
