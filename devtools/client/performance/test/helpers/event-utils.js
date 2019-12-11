@@ -82,13 +82,6 @@ exports.times = function(target, eventName, receiveCount, options = {}) {
 };
 
 /**
- * Like `once`, but for observer notifications.
- */
-exports.observeOnce = function(notificationName, options = {}) {
-  return exports.observeTimes(notificationName, 1, options);
-};
-
-/**
  * Like `times`, but for observer notifications.
  * Possible options: `expectedSubject`
  */
