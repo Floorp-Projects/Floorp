@@ -16,6 +16,7 @@
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 
+#include "InitializationTypes.h"
 #include "Client.h"
 #include "PersistenceType.h"
 
@@ -632,6 +633,8 @@ class QuotaManager final : public BackgroundThreadObject {
   AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypes;
   AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypesExceptLS;
 
+  InitializationInfo mInitializationInfo;
+
   nsString mBasePath;
   nsString mIndexedDBPath;
   nsString mStoragePath;
@@ -642,8 +645,6 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   int64_t mNextDirectoryLockId;
-  bool mStorageInitializationAttempted;
-  bool mTemporaryStorageInitializationAttempted;
   bool mTemporaryStorageInitialized;
   bool mCacheUsable;
 };

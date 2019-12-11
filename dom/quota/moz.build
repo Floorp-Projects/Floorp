@@ -39,6 +39,7 @@ EXPORTS.mozilla.dom.quota += [
     'CheckedUnsafePtr.h',
     'Client.h',
     'FileStreams.h',
+    'InitializationTypes.h',
     'MemoryOutputStream.h',
     'OriginScope.h',
     'PersistenceType.h',
