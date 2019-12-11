@@ -21,6 +21,7 @@
 
 #include "jit/Label.h"
 #include "js/Value.h"
+#include "new-regexp/util/flags.h"
 #include "new-regexp/util/vector.h"
 #include "new-regexp/util/zone.h"
 #include "vm/NativeObject.h"
@@ -747,6 +748,63 @@ class StringShape {
 };
 // End of "TODO: Delete all of these"
 //////////////////////////////////////////////////
+
+class JSRegExp : public HeapObject {
+ public:
+  // ******************************************************
+  // Methods that are called from inside the implementation
+  // ******************************************************
+  void TierUpTick();
+  bool MarkedForTierUp() const;
+
+  Object Code(bool is_latin1) const;
+  Object Bytecode(bool is_latin1) const;
+
+  uint32_t BacktrackLimit() const;
+
+  static JSRegExp cast(Object object);
+
+  // ******************************
+  // Static constants
+  // ******************************
+
+  // Meaning of Type:
+  // NOT_COMPILED: Initial value. No data has been stored in the JSRegExp yet.
+  // ATOM: A simple string to match against using an indexOf operation.
+  // IRREGEXP: Compiled with Irregexp.
+  enum Type { NOT_COMPILED, ATOM, IRREGEXP };
+
+  // Maximum number of captures allowed.
+  static constexpr int kMaxCaptures = 1 << 16;
+
+  // **************************************************
+  // JSRegExp::Flags
+  // **************************************************
+
+  struct FlagShiftBit {
+    static constexpr int kGlobal = 0;
+    static constexpr int kIgnoreCase = 1;
+    static constexpr int kMultiline = 2;
+    static constexpr int kSticky = 3;
+    static constexpr int kUnicode = 4;
+    static constexpr int kDotAll = 5;
+    static constexpr int kInvalid = 6;
+  };
+  enum Flag : uint8_t {
+    kNone = 0,
+    kGlobal = 1 << FlagShiftBit::kGlobal,
+    kIgnoreCase = 1 << FlagShiftBit::kIgnoreCase,
+    kMultiline = 1 << FlagShiftBit::kMultiline,
+    kSticky = 1 << FlagShiftBit::kSticky,
+    kUnicode = 1 << FlagShiftBit::kUnicode,
+    kDotAll = 1 << FlagShiftBit::kDotAll,
+    kInvalid = 1 << FlagShiftBit::kInvalid,  // Not included in FlagCount.
+  };
+  using Flags = base::Flags<Flag>;
+  static constexpr int kFlagCount = 6;
+
+  static constexpr int kNoBacktrackLimit = 0;
+};
 
 enum class MessageTemplate { kStackOverflow };
 
