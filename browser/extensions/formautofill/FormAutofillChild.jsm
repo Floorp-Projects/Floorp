@@ -49,7 +49,7 @@ class FormAutofillChild extends JSWindowActorChild {
     AutoCompleteChild.addPopupStateListener(this);
   }
 
-  willDestroy() {
+  didDestroy() {
     AutoCompleteChild.removePopupStateListener(this);
   }
 
