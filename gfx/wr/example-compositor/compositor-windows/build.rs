@@ -21,4 +21,5 @@ fn main() {
     println!("cargo:rustc-link-lib=libGLESv2");
     println!("cargo:rustc-link-lib=dcomp");
     println!("cargo:rustc-link-lib=d3d11");
+    println!("cargo:rustc-link-lib=dwmapi");
 }
