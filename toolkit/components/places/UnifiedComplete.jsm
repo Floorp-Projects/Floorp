@@ -359,7 +359,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesSearchAutocompleteProvider:
     "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
@@ -638,8 +640,10 @@ function makeActionUrl(type, params) {
  *        An nsIAutoCompleteSearch.
  * @param prohibitSearchSuggestions
  *        Whether search suggestions are allowed for this search.
- * @param [optional] previousResult
+ * @param {Object} [previousResult]
  *        The result object from the previous search. if available.
+ * @param {UrlbarQueryContext} [queryContext]
+ *        The query context, undefined for legacy consumers.
  */
 function Search(
   searchString,
@@ -647,7 +651,8 @@ function Search(
   autocompleteListener,
   autocompleteSearch,
   prohibitSearchSuggestions,
-  previousResult
+  previousResult,
+  queryContext
 ) {
   // We want to store the original string for case sensitive searches.
   this._originalSearchString = searchString;
@@ -666,23 +671,31 @@ function Search(
     ? UrlbarPrefs.get("defaultBehavior")
     : UrlbarPrefs.get("emptySearchDefaultBehavior");
 
-  let params = new Set(searchParam.split(" "));
-  this._enableActions = params.has("enable-actions");
-  this._disablePrivateActions = params.has("disable-private-actions");
-  this._inPrivateWindow = params.has("private-window");
-  this._prohibitAutoFill = params.has("prohibit-autofill");
-
-  // Extract the max-results param.
-  let maxResults = searchParam.match(REGEXP_MAX_RESULTS);
-  this._maxResults = maxResults
-    ? parseInt(maxResults[1])
-    : UrlbarPrefs.get("maxRichResults");
-
-  // Extract the user-context-id param.
-  let userContextId = searchParam.match(REGEXP_USER_CONTEXT_ID);
-  this._userContextId = userContextId
-    ? parseInt(userContextId[1], 10)
-    : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+  if (queryContext) {
+    this._enableActions = true;
+    this._inPrivateWindow = queryContext.isPrivate;
+    this._disablePrivateActions =
+      this._inPrivateWindow && !PrivateBrowsingUtils.permanentPrivateBrowsing;
+    this._prohibitAutoFill = !queryContext.allowAutofill;
+    this._maxResults = queryContext.maxResults;
+    this._userContextId = queryContext.userContextId;
+  } else {
+    let params = new Set(searchParam.split(" "));
+    this._enableActions = params.has("enable-actions");
+    this._disablePrivateActions = params.has("disable-private-actions");
+    this._inPrivateWindow = params.has("private-window");
+    this._prohibitAutoFill = params.has("prohibit-autofill");
+    // Extract the max-results param.
+    let maxResults = searchParam.match(REGEXP_MAX_RESULTS);
+    this._maxResults = maxResults
+      ? parseInt(maxResults[1])
+      : UrlbarPrefs.get("maxRichResults");
+    // Extract the user-context-id param.
+    let userContextId = searchParam.match(REGEXP_USER_CONTEXT_ID);
+    this._userContextId = userContextId
+      ? parseInt(userContextId[1], 10)
+      : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+  }
 
   // Use the original string here, not the stripped one, so the tokenizer can
   // properly recognize token types.
@@ -2860,9 +2873,52 @@ UnifiedComplete.prototype = {
     PreloadedSiteStorage.populate(json);
   },
 
+  /**
+   * This is a wrapper around startSearch, with a better interface towards
+   * Quantum Bar. Long term this provider should be migrated to new separate
+   * providers and this won't be necessary
+   * @param {UrlbarQueryContext} queryContext
+   *        The context for the current search.
+   * @param {Function} onAutocompleteResult
+   *        A callback to notify each result to.
+   */
+  startQuery(queryContext, onAutocompleteResult) {
+    let deferred = PromiseUtils.defer();
+    let listener = {
+      onSearchResult(_, result) {
+        let done =
+          [
+            Ci.nsIAutoCompleteResult.RESULT_IGNORED,
+            Ci.nsIAutoCompleteResult.RESULT_FAILURE,
+            Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
+            Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+          ].includes(result.searchResult) || result.errorDescription;
+        onAutocompleteResult(result);
+        if (done) {
+          deferred.resolve();
+        }
+      },
+    };
+    this.startSearch(
+      queryContext.searchString,
+      "",
+      null,
+      listener,
+      queryContext
+    );
+    this._deferred = deferred;
+    return this._deferred.promise;
+  },
+
   // nsIAutoCompleteSearch
 
-  startSearch(searchString, searchParam, acPreviousResult, listener) {
+  startSearch(
+    searchString,
+    searchParam,
+    acPreviousResult,
+    listener,
+    queryContext
+  ) {
     // Stop the search in case the controller has not taken care of it.
     if (this._currentSearch) {
       this.stopSearch();
@@ -2892,10 +2948,13 @@ UnifiedComplete.prototype = {
     // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
 
     // Extract the insert-method param if it exists.
-    let insertMethod = searchParam.match(REGEXP_INSERT_METHOD);
-    insertMethod = insertMethod
-      ? parseInt(insertMethod[1])
-      : UrlbarPrefs.get("insertMethod");
+    let insertMethod = UrlbarUtils.INSERTMETHOD.APPEND;
+    if (!queryContext) {
+      insertMethod = searchParam.match(REGEXP_INSERT_METHOD);
+      insertMethod = insertMethod
+        ? parseInt(insertMethod[1])
+        : UrlbarPrefs.get("insertMethod");
+    }
 
     let previousResult = null;
     if (
@@ -2923,7 +2982,8 @@ UnifiedComplete.prototype = {
       listener,
       this,
       prohibitSearchSuggestions,
-      previousResult
+      previousResult,
+      queryContext
     ));
     this.getDatabaseHandle()
       .then(conn => search.execute(conn))
@@ -2941,6 +3001,9 @@ UnifiedComplete.prototype = {
   stopSearch() {
     if (this._currentSearch) {
       this._currentSearch.stop();
+    }
+    if (this._deferred) {
+      this._deferred.resolve();
     }
     // Don't notify since we are canceling this search.  This also means we
     // won't fire onSearchComplete for this search.
