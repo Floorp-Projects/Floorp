@@ -18,7 +18,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
@@ -88,68 +87,24 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * Starts querying.
    * @param {object} queryContext The query context object
    * @param {function} addCallback Callback invoked by the provider to add a new
-   *        match.
+   *        result.
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
     logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
-
-    // Supported search params are:
-    //  * "enable-actions": default to true.
-    //  * "disable-private-actions": set for private windows, if not in permanent
-    //    private browsing mode. ()
-    //  * "private-window": the search is taking place in a private window.
-    //  * "prohibit-autofill": disable autofill, i.e., the first (heuristic)
-    //    result should never be an autofill result.
-    //  * "user-context-id:#": the userContextId to use.
-    let params = ["enable-actions"];
-    params.push(`max-results:${queryContext.maxResults}`);
-    // This is necessary because we insert matches one by one, thus we don't
-    // want UnifiedComplete to reuse results.
-    params.push(`insert-method:${UrlbarUtils.INSERTMETHOD.APPEND}`);
-    if (queryContext.isPrivate) {
-      params.push("private-window");
-      if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
-        params.push("disable-private-actions");
-      }
-    }
-    if (queryContext.userContextId) {
-      params.push(`user-context-id:${queryContext.userContextId}}`);
-    }
-    if (!queryContext.allowAutofill) {
-      params.push("prohibit-autofill");
-    }
-
     let urls = new Set();
-    await new Promise(resolve => {
-      let listener = {
-        onSearchResult(_, result) {
-          let { done, matches } = convertResultToMatches(
-            queryContext,
-            result,
-            urls
-          );
-          for (let match of matches) {
-            addCallback(UrlbarProviderUnifiedComplete, match);
-          }
-          if (done) {
-            delete this._resolveSearch;
-            resolve();
-          }
-        },
-      };
-      this._resolveSearch = resolve;
-      unifiedComplete.startSearch(
-        queryContext.searchString,
-        params.join(" "),
-        null, // previousResult
-        listener
+    await unifiedComplete.wrappedJSObject.startQuery(queryContext, acResult => {
+      let results = convertLegacyAutocompleteResult(
+        queryContext,
+        acResult,
+        urls
       );
+      for (let result of results) {
+        addCallback(this, result);
+      }
     });
-
-    // We are done.
     this.queries.delete(queryContext);
   }
 
@@ -162,71 +117,64 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     // This doesn't properly support being used concurrently by multiple fields.
     this.queries.delete(queryContext);
     unifiedComplete.stopSearch();
-    if (this._resolveSearch) {
-      this._resolveSearch();
-    }
   }
 }
 
 var UrlbarProviderUnifiedComplete = new ProviderUnifiedComplete();
 
 /**
- * Convert from a nsIAutocompleteResult to a list of new matches.
- * Note that at every call we get the full set of matches, included the
- * previously returned ones, and new matches may be inserted in the middle.
+ * Convert from a nsIAutocompleteResult to a list of results.
+ * Note that at every call we get the full set of results, included the
+ * previously returned ones, and new results may be inserted in the middle.
  * This means we could sort these wrongly, the muxer should take care of it.
  * In any case at least we're sure there's just one heuristic result and it
  * comes first.
  *
  * @param {UrlbarQueryContext} context the query context.
- * @param {object} result an nsIAutocompleteResult
+ * @param {object} acResult an nsIAutocompleteResult
  * @param {set} urls a Set containing all the found urls, used to discard
- *        already added matches.
- * @returns {object} { matches: {array}, done: {boolean} }
+ *        already added results.
+ * @returns {array} converted results
  */
-function convertResultToMatches(context, result, urls) {
-  let matches = [];
-  let done =
-    [
-      Ci.nsIAutoCompleteResult.RESULT_IGNORED,
-      Ci.nsIAutoCompleteResult.RESULT_FAILURE,
-      Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
-      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-    ].includes(result.searchResult) || result.errorDescription;
-
-  for (let i = 0; i < result.matchCount; ++i) {
-    // First, let's check if we already added this match.
-    // nsIAutocompleteResult always contains all of the matches, includes ones
+function convertLegacyAutocompleteResult(context, acResult, urls) {
+  let results = [];
+  for (let i = 0; i < acResult.matchCount; ++i) {
+    // First, let's check if we already added this result.
+    // nsIAutocompleteResult always contains all of the results, includes ones
     // we may have added already. This means we'll end up adding things in the
     // wrong order here, but that's a task for the UrlbarMuxer.
-    let url = result.getFinalCompleteValueAt(i);
+    let url = acResult.getFinalCompleteValueAt(i);
     if (urls.has(url)) {
       continue;
     }
     urls.add(url);
-    let style = result.getStyleAt(i);
+    let style = acResult.getStyleAt(i);
     let isHeuristic = i == 0 && style.includes("heuristic");
-    let match = makeUrlbarResult(context.tokens, {
+    let result = makeUrlbarResult(context.tokens, {
       url,
-      icon: result.getImageAt(i),
+      icon: acResult.getImageAt(i),
       style,
-      comment: result.getCommentAt(i),
+      comment: acResult.getCommentAt(i),
       firstToken: context.tokens[0],
       isHeuristic,
     });
     // Should not happen, but better safe than sorry.
-    if (!match) {
+    if (!result) {
       continue;
     }
-    // Manage autofill for the first match.
-    if (isHeuristic && style.includes("autofill") && result.defaultIndex == 0) {
-      let autofillValue = result.getValueAt(i);
+    // Manage autofill for the first result.
+    if (
+      isHeuristic &&
+      style.includes("autofill") &&
+      acResult.defaultIndex == 0
+    ) {
+      let autofillValue = acResult.getValueAt(i);
       if (
         autofillValue
           .toLocaleLowerCase()
           .startsWith(context.searchString.toLocaleLowerCase())
       ) {
-        match.autofill = {
+        result.autofill = {
           value:
             context.searchString +
             autofillValue.substring(context.searchString.length),
@@ -235,16 +183,16 @@ function convertResultToMatches(context, result, urls) {
         };
       }
     }
-    match.heuristic = isHeuristic;
-    matches.push(match);
+    result.heuristic = isHeuristic;
+    results.push(result);
   }
-  return { matches, done };
+  return results;
 }
 
 /**
  * Creates a new UrlbarResult from the provided data.
  * @param {array} tokens the search tokens.
- * @param {object} info includes properties from the legacy match.
+ * @param {object} info includes properties from the legacy result.
  * @returns {object} an UrlbarResult
  */
 function makeUrlbarResult(tokens, info) {

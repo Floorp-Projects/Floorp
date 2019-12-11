@@ -574,7 +574,9 @@ class UrlbarQueryContext {
     }
 
     this.lastResultCount = 0;
-    this.userContextId = options.userContextId;
+    this.userContextId =
+      options.userContextId ||
+      Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
   }
 
   /**
