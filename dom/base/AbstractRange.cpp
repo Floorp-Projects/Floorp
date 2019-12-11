@@ -107,7 +107,10 @@ nsresult AbstractRange::SetStartAndEndInternal(
     // XXX: Offsets - handle this more efficiently.
     // If the end offset is less than the start offset, this should be
     // collapsed at the end offset.
-    if (aStartBoundary.Offset() > aEndBoundary.Offset()) {
+    if (*aStartBoundary.Offset(
+            RangeBoundaryBase<SPT, SRT>::OffsetFilter::kValidOffsets) >
+        *aEndBoundary.Offset(
+            RangeBoundaryBase<EPT, ERT>::OffsetFilter::kValidOffsets)) {
       aRange->DoSetRange(aEndBoundary, aEndBoundary, newStartRoot);
     } else {
       aRange->DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
