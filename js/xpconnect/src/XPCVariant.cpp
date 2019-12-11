@@ -11,6 +11,7 @@
 #include "xpcprivate.h"
 
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/Wrapper.h"
 
 using namespace JS;
@@ -188,7 +189,7 @@ bool XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
       jsobj = &val.toObject();
 
       bool isArray;
-      if (!JS_IsArrayObject(cx, jsobj, &isArray)) {
+      if (!JS::IsArrayObject(cx, jsobj, &isArray)) {
         return false;
       }
 
@@ -318,8 +319,8 @@ bool XPCVariant::InitializeData(JSContext* cx) {
   uint32_t len;
 
   bool isArray;
-  if (!JS_IsArrayObject(cx, jsobj, &isArray) ||
-      (isArray && !JS_GetArrayLength(cx, jsobj, &len))) {
+  if (!JS::IsArrayObject(cx, jsobj, &isArray) ||
+      (isArray && !JS::GetArrayLength(cx, jsobj, &len))) {
     return false;
   }
 
@@ -650,7 +651,7 @@ bool XPCVariant::VariantDataToJS(JSContext* cx, nsIVariant* variant,
       return success;
     }
     case nsIDataType::VTYPE_EMPTY_ARRAY: {
-      JSObject* array = JS_NewArrayObject(cx, 0);
+      JSObject* array = JS::NewArrayObject(cx, 0);
       if (!array) {
         return false;
       }

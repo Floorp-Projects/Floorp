@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength
 #include "mozilla/FloatingPoint.h"
 #include "nsLayoutUtils.h"
 
@@ -121,7 +122,7 @@ nsresult JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
   if (!patternArray.isPrimitive()) {
     JS::Rooted<JSObject*> obj(cx, patternArray.toObjectOrNull());
     uint32_t length;
-    if (!JS_GetArrayLength(cx, obj, &length)) {
+    if (!JS::GetArrayLength(cx, obj, &length)) {
       // Not an array-like thing
       return NS_ERROR_INVALID_ARG;
     } else if (length > MAX_NUM_DASHES) {

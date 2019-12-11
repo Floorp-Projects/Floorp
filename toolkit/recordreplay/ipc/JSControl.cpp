@@ -9,6 +9,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
@@ -1273,7 +1274,7 @@ static bool RecordReplay_FindScriptHits(JSContext* aCx, unsigned aArgc,
     chunk = chunk->mPrevious;
   }
 
-  JSObject* array = JS_NewArrayObject(aCx, values);
+  JSObject* array = JS::NewArrayObject(aCx, values);
   if (!array) {
     return false;
   }
@@ -1353,7 +1354,7 @@ static bool RecordReplay_FindChangeFrames(JSContext* aCx, unsigned aArgc,
     }
   }
 
-  JSObject* array = JS_NewArrayObject(aCx, values);
+  JSObject* array = JS::NewArrayObject(aCx, values);
   if (!array) {
     return false;
   }

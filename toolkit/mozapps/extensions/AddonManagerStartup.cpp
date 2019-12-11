@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::IsArrayObject
 #include "js/ArrayBuffer.h"
 #include "js/JSON.h"
 #include "js/TracingAPI.h"
@@ -779,7 +780,7 @@ AddonManagerStartup::RegisterChrome(nsIURI* manifestURI,
                                     nsIJSRAIIHelper** result) {
   auto IsArray = [cx](JS::HandleValue val) -> bool {
     bool isArray;
-    return JS_IsArrayObject(cx, val, &isArray) && isArray;
+    return JS::IsArrayObject(cx, val, &isArray) && isArray;
   };
 
   NS_ENSURE_ARG_POINTER(manifestURI);

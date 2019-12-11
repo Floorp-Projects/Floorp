@@ -18,6 +18,7 @@
 #endif
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
@@ -1178,7 +1179,7 @@ nsresult mozJSComponentLoader::ExtractExports(
   }
 
   bool isArray;
-  if (!JS_IsArrayObject(cx, symbols, &isArray)) {
+  if (!JS::IsArrayObject(cx, symbols, &isArray)) {
     return NS_ERROR_FAILURE;
   }
   if (!isArray) {
@@ -1190,7 +1191,7 @@ nsresult mozJSComponentLoader::ExtractExports(
   // Iterate over symbols array, installing symbols on targetObj:
 
   uint32_t symbolCount = 0;
-  if (!JS_GetArrayLength(cx, symbolsObj, &symbolCount)) {
+  if (!JS::GetArrayLength(cx, symbolsObj, &symbolCount)) {
     return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_ARRAY_LENGTH, aInfo);
   }
 

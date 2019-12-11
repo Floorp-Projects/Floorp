@@ -14,6 +14,7 @@
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TypedArray.h"
 #include "jsapi.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -362,7 +363,7 @@ MOZ_MUST_USE bool ToJSValue(JSContext* aCx, T* aArguments, size_t aLength,
       return false;
     }
   }
-  JSObject* arrayObj = JS_NewArrayObject(aCx, v);
+  JSObject* arrayObj = JS::NewArrayObject(aCx, v);
   if (!arrayObj) {
     return false;
   }

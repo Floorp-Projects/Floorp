@@ -6,6 +6,7 @@
 #include "WebGL2Context.h"
 
 #include "GLContext.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/RefPtr.h"
 #include "WebGLBuffer.h"
@@ -165,7 +166,7 @@ void WebGL2Context::GetActiveUniforms(
 
   const auto& count = uniformIndices.Length();
 
-  JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, count));
+  JS::Rooted<JSObject*> array(cx, JS::NewArrayObject(cx, count));
   UniquePtr<GLint[]> samples(new GLint[count]);
   if (!array || !samples) {
     ErrorOutOfMemory("Failed to allocate buffers.");

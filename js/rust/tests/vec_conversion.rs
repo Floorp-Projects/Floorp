@@ -23,7 +23,7 @@ fn assert_is_array(cx: *mut js::jsapi::root::JSContext,
                    val: js::jsapi::root::JS::HandleValue) {
     let mut is_array = false;
     assert!(unsafe {
-        js::jsapi::root::JS_IsArrayObject(cx, val, &mut is_array as *mut _)
+        js::jsapi::root::JS::IsArrayObject(cx, val, &mut is_array as *mut _)
     });
     assert!(is_array);
 }

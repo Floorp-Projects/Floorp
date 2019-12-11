@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/JSON.h"
 #include "jsapi.h"
 #include "mozilla/PresShell.h"
@@ -903,13 +904,13 @@ static void SetElementAsObject(JSContext* aCx, Element* aElement,
 
     // For Multiple Selects Element
     bool isArray = false;
-    JS_IsArrayObject(aCx, aObject, &isArray);
+    JS::IsArrayObject(aCx, aObject, &isArray);
     if (!isArray) {
       return;
     }
     JS::Rooted<JSObject*> arrayObj(aCx, &aObject.toObject());
     uint32_t arrayLength = 0;
-    if (!JS_GetArrayLength(aCx, arrayObj, &arrayLength)) {
+    if (!JS::GetArrayLength(aCx, arrayObj, &arrayLength)) {
       JS_ClearPendingException(aCx);
       return;
     }

@@ -7,6 +7,7 @@
 #include "nsXULAppAPI.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/ContextOptions.h"
@@ -931,7 +932,7 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
    * Create arguments early and define it to root it, so it's safe from any
    * GC calls nested below, and so it is available to -f <file> arguments.
    */
-  argsObj = JS_NewArrayObject(cx, 0);
+  argsObj = JS::NewArrayObject(cx, 0);
   if (!argsObj) {
     return 1;
   }

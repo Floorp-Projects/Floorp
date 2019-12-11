@@ -86,6 +86,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
+#include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
 #include "js/BuildId.h"      // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CharacterEncoding.h"
@@ -6698,7 +6699,7 @@ static bool DisableSingleStepProfiling(JSContext* cx, unsigned argc,
     }
   }
 
-  JSObject* array = JS_NewArrayObject(cx, elems);
+  JSObject* array = JS::NewArrayObject(cx, elems);
   if (!array) {
     return false;
   }
@@ -7955,7 +7956,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
       return false;
     }
 
-    RootedObject result(cx, JS_NewArrayObject(cx, log.length()));
+    RootedObject result(cx, JS::NewArrayObject(cx, log.length()));
     if (!result) {
       return false;
     }
@@ -10097,7 +10098,7 @@ static bool BindScriptArgs(JSContext* cx, OptionParser* op) {
 
   MultiStringRange msr = op->getMultiStringArg("scriptArgs");
   RootedObject scriptArgs(cx);
-  scriptArgs = JS_NewArrayObject(cx, 0);
+  scriptArgs = JS::NewArrayObject(cx, 0);
   if (!scriptArgs) {
     return false;
   }

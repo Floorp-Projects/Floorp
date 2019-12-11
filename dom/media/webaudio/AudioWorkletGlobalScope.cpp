@@ -10,6 +10,7 @@
 #include "AudioNodeTrack.h"
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/AudioWorkletProcessor.h"
 #include "mozilla/dom/MessagePort.h"
@@ -153,8 +154,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    TypeError and abort these steps.
    */
   bool isArray = false;
-  if (!JS_IsArrayObject(aCx, descriptors, &isArray)) {
-    // I would assume isArray won't be set to true if JS_IsArrayObject
+  if (!JS::IsArrayObject(aCx, descriptors, &isArray)) {
+    // I would assume isArray won't be set to true if JS::IsArrayObject
     // failed, but just in case, force it to false
     isArray = false;
     JS_ClearPendingException(aCx);
@@ -233,7 +234,7 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 
   JS::Rooted<JSObject*> aDescriptorsArray(aCx, &aDescriptors.toObject());
   uint32_t length = 0;
-  if (!JS_GetArrayLength(aCx, aDescriptorsArray, &length)) {
+  if (!JS::GetArrayLength(aCx, aDescriptorsArray, &length)) {
     aRv.NoteJSContextException(aCx);
     return AudioParamDescriptorMap();
   }

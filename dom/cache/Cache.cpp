@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/Cache.h"
 
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/Promise.h"
@@ -128,7 +129,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     responseList.SetCapacity(mRequestList.Length());
 
     bool isArray;
-    if (NS_WARN_IF(!JS_IsArrayObject(aCx, aValue, &isArray) || !isArray)) {
+    if (NS_WARN_IF(!JS::IsArrayObject(aCx, aValue, &isArray) || !isArray)) {
       Fail();
       return;
     }
@@ -136,7 +137,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
     uint32_t length;
-    if (NS_WARN_IF(!JS_GetArrayLength(aCx, obj, &length))) {
+    if (NS_WARN_IF(!JS::GetArrayLength(aCx, obj, &length))) {
       Fail();
       return;
     }
