@@ -29,7 +29,6 @@ from aiohttp import ClientSession, ClientTimeout
 from aiohttp.connector import TCPConnector
 import argparse
 import asyncio
-import sys
 import os
 import shutil
 import logging
@@ -271,9 +270,15 @@ async def dump_module(
     sym_srv = SYM_SRV.format(symcache)
 
     if has_code:
-        cmd = f"{dump_syms} {code_file} --code-id {code_id} --store {output} --symbol-server '{sym_srv}' --verbose error"
+        cmd = (
+            f"{dump_syms} {code_file} --code-id {code_id} "
+            f"--store {output} --symbol-server '{sym_srv}' --verbose error"
+        )
     else:
-        cmd = f"{dump_syms} {filename} --debug-id {debug_id} --store {output} --symbol-server '{sym_srv}' --verbose error"
+        cmd = (
+            f"{dump_syms} {filename} --debug-id {debug_id} "
+            f"--store {output} --symbol-server '{sym_srv}' --verbose error"
+        )
 
     err = await run_command(cmd)
 
@@ -284,7 +289,8 @@ async def dump_module(
 
     if not has_code and not await check_x86_file(output_path):
         # PDB for 32 bits contains everything we need (symbols + stack unwind info)
-        # But PDB for 64 bits don't contain stack unwind info (they're in the binary (.dll/.exe) itself).
+        # But PDB for 64 bits don't contain stack unwind info
+        # (they're in the binary (.dll/.exe) itself).
         # So here we're logging because we've a PDB (64 bits) without its DLL/EXE
         if code_file and code_id:
             log.debug(f"x86_64 binary {code_file}/{code_id} required")
@@ -499,8 +505,10 @@ def main():
         )
 
     log.info(
-        f"{stats_collect['is_there']} already present, {stats_skipped['blacklist']} in blacklist, {stats_skipped['skiplist']} skipped, {stats_collect['no_pdb']} not found, "
-        f"{stats_dump['dump_error']} processed with errors, {stats_dump['no_bin']} processed but with no binaries (x86_64)"
+        f"{stats_collect['is_there']} already present, {stats_skipped['blacklist']} in blacklist, "
+        f"{stats_skipped['skiplist']} skipped, {stats_collect['no_pdb']} not found, "
+        f"{stats_dump['dump_error']} processed with errors, "
+        f"{stats_dump['no_bin']} processed but with no binaries (x86_64)"
     )
     log.info("Finished, exiting")
 
