@@ -51,8 +51,13 @@ class MOZ_STACK_CLASS ContentEventHandler {
     bool Collapsed() const { return mStart == mEnd && IsPositioned(); }
     nsINode* GetStartContainer() const { return mStart.Container(); }
     nsINode* GetEndContainer() const { return mEnd.Container(); }
-    uint32_t StartOffset() const { return mStart.Offset(); }
-    uint32_t EndOffset() const { return mEnd.Offset(); }
+    uint32_t StartOffset() const {
+      return *mStart.Offset(
+          RangeBoundary::OffsetFilter::kValidOrInvalidOffsets);
+    }
+    uint32_t EndOffset() const {
+      return *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets);
+    }
     nsIContent* StartRef() const { return mStart.Ref(); }
     nsIContent* EndRef() const { return mEnd.Ref(); }
 
