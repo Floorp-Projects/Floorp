@@ -567,9 +567,11 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
         nsCOMPtr<nsINode> node = returnRange->GetStartContainer();
         while (node) {
           nsCOMPtr<nsIEditor> editor;
-          if (auto input = HTMLInputElement::FromNode(node)) {
+          if (RefPtr<HTMLInputElement> input =
+                  HTMLInputElement::FromNode(node)) {
             editor = input->GetEditor();
-          } else if (auto textarea = HTMLTextAreaElement::FromNode(node)) {
+          } else if (RefPtr<HTMLTextAreaElement> textarea =
+                         HTMLTextAreaElement::FromNode(node)) {
             editor = textarea->GetEditor();
           } else {
             node = node->GetParentNode();
