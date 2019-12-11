@@ -1740,7 +1740,11 @@ var UITour = {
       // A recent device list is fine, but if we don't even have that we should
       // wait for it to be fetched.
       if (!devices) {
-        await fxAccounts.device.refreshDeviceList();
+        try {
+          await fxAccounts.device.refreshDeviceList();
+        } catch (ex) {
+          log.warn("failed to fetch device list", ex);
+        }
         devices = fxAccounts.device.recentDeviceList;
       }
       if (devices) {
@@ -1757,7 +1761,7 @@ var UITour = {
           }, {});
       }
 
-      // Each of the "browser services" - currently only "sync" is supported.
+      // Each of the "browser services" - currently only "sync" is supported
       result.browserServices = {};
       let hasSync = Services.prefs.prefHasUserValue("services.sync.username");
       if (hasSync) {
@@ -1778,19 +1782,26 @@ var UITour = {
           ),
         };
       }
-      // Each of the "account services", which we turn into a map keyed by ID.
-      let attachedClients = await fxAccounts.listAttachedOAuthClients();
-      result.accountServices = attachedClients
-        .filter(c => !!c.id)
-        .reduce((accum, c) => {
-          accum[c.id] = {
-            id: c.id,
-            lastAccessedWeeksAgo: c.lastAccessedDaysAgo
-              ? Math.floor(c.lastAccessedDaysAgo / 7)
-              : null,
-          };
-          return accum;
-        }, {});
+      try {
+        // Each of the "account services", which we turn into a map keyed by ID.
+        let attachedClients = await fxAccounts.listAttachedOAuthClients();
+        result.accountServices = attachedClients
+          .filter(c => !!c.id)
+          .reduce((accum, c) => {
+            accum[c.id] = {
+              id: c.id,
+              lastAccessedWeeksAgo: c.lastAccessedDaysAgo
+                ? Math.floor(c.lastAccessedDaysAgo / 7)
+                : null,
+            };
+            return accum;
+          }, {});
+      } catch (ex) {
+        log.warn("Failed to build the attached clients list", ex);
+      }
+      // We check the account state last because it's possible any of the above
+      // calls transitioned it from good -> bad.
+      result.accountStateOK = await fxAccounts.hasLocalSession();
       this.sendPageCallback(aBrowser, aCallbackID, result);
     })().catch(err => {
       log.error(err);
