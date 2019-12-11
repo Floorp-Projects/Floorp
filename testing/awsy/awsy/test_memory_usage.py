@@ -103,7 +103,7 @@ class TestMemoryUsage(AwsyTestCase):
             'binary': self._binary,
             'run_local': self._run_local,
             'app': 'firefox',
-            'host': 'localhost',
+            'host': '127.0.0.1',
             'ignore_mitmdump_exit_failure': True,
         }
 

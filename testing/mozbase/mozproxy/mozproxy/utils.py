@@ -12,6 +12,7 @@ import gzip
 import os
 import signal
 import sys
+import socket
 from six.moves.urllib.request import urlretrieve
 
 try:
@@ -213,3 +214,12 @@ def download_file_from_url(url, local_dest, extract=False):
 
     extract_archive(local_dest, os.path.dirname(local_dest), typ)
     return True
+
+
+def get_available_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("", 0))
+    s.listen(1)
+    port = s.getsockname()[1]
+    s.close()
+    return port

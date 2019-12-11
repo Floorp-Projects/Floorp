@@ -263,6 +263,9 @@ either Raptor or browsertime."""
         # if 'alert_on' was provided in the test INI, add to our config for results/output
         self.config['subtest_alert_on'] = test.get('alert_on')
 
+        if test.get('playback') is not None and self.playback is None:
+            self.start_playback(test)
+
         if test.get("preferences") is not None:
             self.set_browser_test_prefs(test['preferences'])
 
@@ -430,7 +433,7 @@ class PerftestDesktop(Perftest):
 
         if test.get('playback', False):
             pb_args = [
-                '--proxy-server=127.0.0.1:8080',
+                '--proxy-server=%s:%d' % (self.playback.host, self.playback.port),
                 '--proxy-bypass-list=localhost;127.0.0.1',
                 '--ignore-certificate-errors',
             ]
@@ -636,7 +639,7 @@ class Browsertime(Perftest):
             test['test_url'] = test['test_url'].replace('<host>', self.benchmark.host)
             test['test_url'] = test['test_url'].replace('<port>', self.benchmark.port)
 
-        if test.get('playback') is not None:
+        if test.get('playback') is not None and self.playback is None:
             self.start_playback(test)
 
         # TODO: geckodriver/chromedriver from tasks.
@@ -668,6 +671,7 @@ class Browsertime(Perftest):
         # if we were using a playback tool, stop it
         if self.playback is not None:
             self.playback.stop()
+            self.playback = None
 
     def check_for_crashes(self):
         super(Browsertime, self).check_for_crashes()
@@ -949,6 +953,7 @@ class Raptor(Perftest):
 
         if self.playback is not None:
             self.playback.stop()
+            self.playback = None
 
         self.remove_raptor_webext()
 
@@ -1173,9 +1178,6 @@ class RaptorDesktop(PerftestDesktop, Raptor):
 
             if test['browser_cycle'] == 1:
 
-                if test.get('playback') is not None:
-                    self.start_playback(test)
-
                 if self.config['host'] not in ('localhost', '127.0.0.1'):
                     self.delete_proxy_settings_from_profile()
 
@@ -1199,9 +1201,6 @@ class RaptorDesktop(PerftestDesktop, Raptor):
 
     def __run_test_warm(self, test, timeout):
         self.run_test_setup(test)
-
-        if test.get('playback') is not None:
-            self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             self.delete_proxy_settings_from_profile()
@@ -1322,19 +1321,20 @@ class RaptorAndroid(PerftestAndroid, Raptor):
         tcp_port = "tcp:{}".format(port)
         self.device.create_socket_connection('reverse', tcp_port, tcp_port)
 
-    def set_reverse_ports(self, is_benchmark=False):
-        # Make services running on the host available to the device
+    def set_reverse_ports(self):
         if self.config['host'] in ('localhost', '127.0.0.1'):
             LOG.info("making the raptor control server port available to device")
             self.set_reverse_port(self.control_server.port)
 
-        if self.config['host'] in ('localhost', '127.0.0.1'):
-            LOG.info("making the raptor playback server port available to device")
-            self.set_reverse_port(8080)
+            if self.playback:
+                LOG.info("making the raptor playback server port available to device")
+                self.set_reverse_port(self.playback.port)
 
-        if is_benchmark and self.config['host'] in ('localhost', '127.0.0.1'):
-            LOG.info("making the raptor benchmarks server port available to device")
-            self.set_reverse_port(self.benchmark_port)
+            if self.benchmark:
+                LOG.info("making the raptor benchmarks server port available to device")
+                self.set_reverse_port(self.benchmark_port)
+        else:
+            LOG.info("Reverse port forwarding is uded only on local devices")
 
     def setup_adb_device(self):
         if self.device is None:
@@ -1390,10 +1390,10 @@ class RaptorAndroid(PerftestAndroid, Raptor):
         LOG.info("setting profile prefs to turn on the android app proxy")
         proxy_prefs = {}
         proxy_prefs["network.proxy.type"] = 1
-        proxy_prefs["network.proxy.http"] = self.config['host']
-        proxy_prefs["network.proxy.http_port"] = 8080
-        proxy_prefs["network.proxy.ssl"] = self.config['host']
-        proxy_prefs["network.proxy.ssl_port"] = 8080
+        proxy_prefs["network.proxy.http"] = self.playback.host
+        proxy_prefs["network.proxy.http_port"] = self.playback.port
+        proxy_prefs["network.proxy.ssl"] = self.playback.host
+        proxy_prefs["network.proxy.ssl_port"] = self.playback.port
         proxy_prefs["network.proxy.no_proxies_on"] = self.config['host']
         self.profile.set_preferences(proxy_prefs)
 
@@ -1507,9 +1507,7 @@ class RaptorAndroid(PerftestAndroid, Raptor):
 
     def run_test_setup(self, test):
         super(RaptorAndroid, self).run_test_setup(test)
-
-        is_benchmark = test.get('type') == "benchmark"
-        self.set_reverse_ports(is_benchmark=is_benchmark)
+        self.set_reverse_ports()
 
     def run_test_teardown(self, test):
         LOG.info('removing reverse socket connections')
@@ -1583,7 +1581,6 @@ class RaptorAndroid(PerftestAndroid, Raptor):
 
             if test['browser_cycle'] == 1:
                 if test.get('playback') is not None:
-                    self.start_playback(test)
 
                     # an ssl cert db has now been created in the profile; copy it out so we
                     # can use the same cert db in future test cycles / browser restarts
@@ -1645,9 +1642,6 @@ class RaptorAndroid(PerftestAndroid, Raptor):
                  "page cycles" % test['name'])
 
         self.run_test_setup(test)
-
-        if test.get('playback') is not None:
-            self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             self.delete_proxy_settings_from_profile()
