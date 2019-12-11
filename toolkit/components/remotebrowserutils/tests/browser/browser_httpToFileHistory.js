@@ -2,9 +2,9 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-const RESPONSE_PROCESS_SELECTION_PREF =
-  "browser.tabs.remote.useHTTPResponseProcessSelection";
 const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
+const LINKED_WEB_IN_FILE_PREF =
+  "browser.tabs.remote.allowLinkedWebInFileUriProcess";
 const FISSION_PREF = "fission.autostart";
 const HISTORY = [
   { url: httpURL("dummy_page.html") },
@@ -121,19 +121,20 @@ async function runTest() {
   });
 }
 
-add_task(async function prefDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[RESPONSE_PROCESS_SELECTION_PREF, false]],
+if (!SpecialPowers.useRemoteSubframes) {
+  add_task(async function prefNotSet() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[DOCUMENT_CHANNEL_PREF, false]],
+    });
+    await runTest();
+    await SpecialPowers.popPrefEnv();
   });
-  await runTest();
-});
+}
 
 add_task(async function prefEnabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [RESPONSE_PROCESS_SELECTION_PREF, true],
-      [DOCUMENT_CHANNEL_PREF, true],
-    ],
+    set: [[DOCUMENT_CHANNEL_PREF, true], [LINKED_WEB_IN_FILE_PREF, false]],
   });
   await runTest();
+  await SpecialPowers.popPrefEnv();
 });

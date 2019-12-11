@@ -289,7 +289,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.separateFileUriProcess", true],
-      ["browser.tabs.remote.useHTTPResponseProcessSelection", false],
+      ["browser.tabs.documentChannel", false],
       ["dom.ipc.processCount.file", 2],
     ],
   });
