@@ -32,6 +32,7 @@ XPCOM_MANIFESTS += [
 
 EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
+    'AntiTrackingIPCUtils.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
     'URLDecorationStripper.h',
