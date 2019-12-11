@@ -318,7 +318,7 @@ jobs:
         worker-type: terraform-packet/gecko-t-linux  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
-            docker-image: {in-tree: desktop1604-test}
+            docker-image: {in-tree: ubuntu1804-test}
             privileged: true  # for access to /dev/kvm for hw accel in the emulator
             artifacts:
                 - type: directory
@@ -358,7 +358,7 @@ jobs:
         worker-type: terraform-packet/gecko-t-linux  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
-            docker-image: {in-tree: desktop1604-test}
+            docker-image: {in-tree: ubuntu1804-test}
             privileged: true  # for access to /dev/kvm for hw accel in the emulator
             artifacts:
                 - type: directory
