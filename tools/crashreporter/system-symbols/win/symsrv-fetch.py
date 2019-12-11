@@ -287,6 +287,10 @@ async def dump_module(
         log.error(err)
         return 1
 
+    if not os.path.exists(output_path):
+        log.error(f"Could not find file {output_path} after running {cmd}")
+        return 1
+
     if not has_code and not await check_x86_file(output_path):
         # PDB for 32 bits contains everything we need (symbols + stack unwind info)
         # But PDB for 64 bits don't contain stack unwind info
