@@ -232,7 +232,7 @@ class HTMLInputElement final : public TextControlElement,
     return GetEditorState();
   }
   virtual nsresult BindToFrame(nsTextControlFrame* aFrame) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void UnbindFromFrame(
+  MOZ_CAN_RUN_SCRIPT virtual void UnbindFromFrame(
       nsTextControlFrame* aFrame) override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult CreateEditor() override;
   virtual void UpdateOverlayTextVisibility(bool aNotify) override;
