@@ -10,48 +10,51 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const [grip] = packet.frame.arguments;
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      eval_code,
+      threadFront
+    );
 
-        const objectFront = threadFront.pauseGrip(grip);
+    const [grip] = packet.frame.arguments;
 
-        // Checks the result of enumProperties.
-        let response = await objectFront.enumProperties({});
-        await check_enum_properties(response);
+    const objectFront = threadFront.pauseGrip(grip);
 
-        // Checks the result of enumSymbols.
-        response = await objectFront.enumSymbols();
-        await check_enum_symbols(response);
+    // Checks the result of enumProperties.
+    let response = await objectFront.enumProperties({});
+    await check_enum_properties(response);
 
-        await threadFront.resume();
-        resolve();
-      });
+    // Checks the result of enumSymbols.
+    response = await objectFront.enumSymbols();
+    await check_enum_symbols(response);
 
+    await threadFront.resume();
+
+    function eval_code() {
       debuggee.eval(
         function stopMe(arg1) {
           debugger;
         }.toString()
       );
+
       debuggee.eval(`
-      var obj = Array.from({length: 10})
-        .reduce((res, _, i) => {
-          res["property_" + i + "_key"] = "property_" + i + "_value";
-          res[Symbol("symbol_" + i)] = "symbol_" + i + "_value";
-          return res;
-        }, {});
+        var obj = Array.from({length: 10})
+          .reduce((res, _, i) => {
+            res["property_" + i + "_key"] = "property_" + i + "_value";
+            res[Symbol("symbol_" + i)] = "symbol_" + i + "_value";
+            return res;
+          }, {});
 
-      obj[Symbol()] = "first unnamed symbol";
-      obj[Symbol()] = "second unnamed symbol";
-      obj[Symbol.iterator] = function* () {
-        yield 1;
-        yield 2;
-      };
+        obj[Symbol()] = "first unnamed symbol";
+        obj[Symbol()] = "second unnamed symbol";
+        obj[Symbol.iterator] = function* () {
+          yield 1;
+          yield 2;
+        };
 
-      stopMe(obj);
-    `);
-    });
+        stopMe(obj);
+      `);
+    }
 
     async function check_enum_properties(iterator) {
       equal(iterator.count, 10, "iterator.count has the expected value");

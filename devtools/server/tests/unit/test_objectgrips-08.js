@@ -10,33 +10,38 @@ registerCleanupFunction(() => {
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const args = packet.frame.arguments;
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        Assert.equal(args[0].class, "Object");
+    const args = packet.frame.arguments;
 
-        const objClient = threadFront.pauseGrip(args[0]);
-        const response = await objClient.getPrototypeAndProperties();
-        const { a, b, c, d, e, f, g } = response.ownProperties;
-        testPropertyType(a, "Infinity");
-        testPropertyType(b, "-Infinity");
-        testPropertyType(c, "NaN");
-        testPropertyType(d, "-0");
-        testPropertyType(e, "BigInt");
-        testPropertyType(f, "BigInt");
-        testPropertyType(g, "BigInt");
+    Assert.equal(args[0].class, "Object");
 
-        await threadFront.resume();
-        resolve();
-      });
+    const objClient = threadFront.pauseGrip(args[0]);
+    const response = await objClient.getPrototypeAndProperties();
+    const { a, b, c, d, e, f, g } = response.ownProperties;
+    testPropertyType(a, "Infinity");
+    testPropertyType(b, "-Infinity");
+    testPropertyType(c, "NaN");
+    testPropertyType(d, "-0");
+    testPropertyType(e, "BigInt");
+    testPropertyType(f, "BigInt");
+    testPropertyType(g, "BigInt");
 
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-      debuggee.eval(`stopMe({
+    await threadFront.resume();
+  })
+);
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+  debuggee.eval(
+    `stopMe({
       a: Infinity,
       b: -Infinity,
       c: NaN,
@@ -44,10 +49,9 @@ add_task(
       e: 1n,
       f: -2n,
       g: 0n,
-      })`);
-    });
-  })
-);
+    })`
+  );
+}
 
 function testPropertyType(prop, expectedType) {
   Assert.equal(prop.configurable, true);

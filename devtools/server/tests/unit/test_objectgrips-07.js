@@ -14,53 +14,52 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const [f, s, ne, e] = packet.frame.arguments;
-        const [
-          fClient,
-          sClient,
-          neClient,
-          eClient,
-        ] = packet.frame.arguments.map(a => threadFront.pauseGrip(a));
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        Assert.ok(!f.extensible);
-        Assert.ok(!fClient.isExtensible);
+    const [f, s, ne, e] = packet.frame.arguments;
+    const [fClient, sClient, neClient, eClient] = packet.frame.arguments.map(
+      a => threadFront.pauseGrip(a)
+    );
 
-        Assert.ok(!s.extensible);
-        Assert.ok(!sClient.isExtensible);
+    Assert.ok(!f.extensible);
+    Assert.ok(!fClient.isExtensible);
 
-        Assert.ok(!ne.extensible);
-        Assert.ok(!neClient.isExtensible);
+    Assert.ok(!s.extensible);
+    Assert.ok(!sClient.isExtensible);
 
-        Assert.ok(e.extensible);
-        Assert.ok(eClient.isExtensible);
+    Assert.ok(!ne.extensible);
+    Assert.ok(!neClient.isExtensible);
 
-        await threadFront.resume();
-        resolve();
-      });
+    Assert.ok(e.extensible);
+    Assert.ok(eClient.isExtensible);
 
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-      /* eslint-disable no-undef */
-      debuggee.eval(
-        "(" +
-          function() {
-            const f = {};
-            Object.freeze(f);
-            const s = {};
-            Object.seal(s);
-            const ne = {};
-            Object.preventExtensions(ne);
-            stopMe(f, s, ne, {});
-          } +
-          "())"
-      );
-      /* eslint-enable no-undef */
-    });
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+  /* eslint-disable no-undef */
+  debuggee.eval(
+    "(" +
+      function() {
+        const f = {};
+        Object.freeze(f);
+        const s = {};
+        Object.seal(s);
+        const ne = {};
+        Object.preventExtensions(ne);
+        stopMe(f, s, ne, {});
+      } +
+      "())"
+  );
+  /* eslint-enable no-undef */
+}
