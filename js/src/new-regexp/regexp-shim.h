@@ -20,6 +20,7 @@
 #include <algorithm>
 
 #include "js/Value.h"
+#include "new-regexp/util/vector.h"
 #include "vm/NativeObject.h"
 
 // Forward declaration of classes
