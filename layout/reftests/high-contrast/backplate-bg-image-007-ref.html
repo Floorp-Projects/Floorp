@@ -8,11 +8,12 @@
       font: 20px Ahem;
     }
     button, input {
+      font: 20px Ahem;
       border: 0px;
       /* This forces non-native styling */
     }
     .std {
-      background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjAxHK4kRQAAABpJREFUOMtjZBCu%2F89AAWAcNWDUgFEDhosBAObLGSGp9PphAAAAAElFTkSuQmCC");
+      background-image: linear-gradient(blue, blue);
       height: 500px;
     }
     .fake-backplate {
@@ -23,14 +24,14 @@
 </head>
 <body>
     <div class="std">
-    <div class="fake-backplate">
-    <button><div class="fake-backplate">XXXXX</div></button>XXXXX<br>
-    </div>
-    <div class="fake-backplate">
+    <button><span class="fake-backplate">ppppp</span></button><span class="fake-backplate">ppppp</span><br>
     <form>
       <input>
     </form>
-    </div>
+    <br>
+    <span class="fake-backplate">ppppp<!-- no whitespace
+    --><button><span class="fake-backplate">ppppp</span></button><!-- no whitespace
+    -->ppppp</span>
     </div>
 </body>
 </html>
