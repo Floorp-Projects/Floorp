@@ -26,6 +26,8 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 #    'invalid.pem',
 #    'longOID.pem',
 #    'md5-ee.pem',
+#    'pgo-ca-all-usages.pem',
+#    'pgo-ca-regular-usages.pem',
 #    'revoked.pem',
 #    'ssl-ee.pem',
 #    'unknown-issuer.pem',
