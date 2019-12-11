@@ -32,6 +32,11 @@ branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 
+[source."https://github.com/djg/cubeb-pulse-rs"]
+git = "https://github.com/djg/cubeb-pulse-rs"
+replace-with = "vendored-sources"
+rev = "f9eb50b87328b5ebdc4a310f9e0f445ee89aa9df"
+
 [source."https://github.com/bytecodealliance/cranelift"]
 git = "https://github.com/bytecodealliance/cranelift"
 replace-with = "vendored-sources"
