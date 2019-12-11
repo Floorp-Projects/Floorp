@@ -52,7 +52,6 @@ DIRS += [
     'search',
     'sessionstore',
     'shell',
-    'ssb',
     'syncedtabs',
     'uitour',
     'urlbar',

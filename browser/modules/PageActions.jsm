@@ -36,11 +36,6 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteSpecificBrowserService",
-  "resource:///modules/SiteSpecificBrowserService.jsm"
-);
 
 const ACTION_ID_BOOKMARK = "bookmark";
 const ACTION_ID_PIN_TAB = "pinTab";
@@ -1281,20 +1276,6 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       browserPageActions(panelViewNode).sendToDevice.onShowingSubview(
         panelViewNode
       );
-    },
-  });
-}
-
-if (SiteSpecificBrowserService.isEnabled) {
-  gBuiltInActions.push({
-    id: "launchSSB",
-    // Hardcoded for now. Localization tracked in bug 1602528.
-    title: "Launch Site Specific Browser",
-    onLocationChange(browserWindow) {
-      browserPageActions(browserWindow).launchSSB.updateState();
-    },
-    onCommand(event, buttonNode) {
-      browserPageActions(buttonNode).launchSSB.onCommand(event, buttonNode);
     },
   });
 }
