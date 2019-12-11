@@ -1178,41 +1178,16 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get popupOptions() {
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "third-party-cookies";
     return {
+      learnMoreURL,
       displayURI: false,
       name: this.prettifyHostPort(this.principal.URI),
       secondName: this.prettifyHostPort(this.topLevelPrincipal.URI),
       escAction: "buttoncommand",
     };
-  },
-
-  onShown() {
-    let document = this.browser.ownerDocument;
-    let label = gBrowserBundle.formatStringFromName(
-      "storageAccess.description.label",
-      [this.prettifyHostPort(this.request.principal.URI), "<>"]
-    );
-    let parts = label.split("<>");
-    if (parts.length == 1) {
-      parts.push("");
-    }
-    let map = {
-      "storage-access-perm-label": parts[0],
-      "storage-access-perm-learnmore": gBrowserBundle.GetStringFromName(
-        "storageAccess.description.learnmore"
-      ),
-      "storage-access-perm-endlabel": parts[1],
-    };
-    for (let id in map) {
-      let str = map[id];
-      document.getElementById(id).textContent = str;
-    }
-    let learnMoreURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "third-party-cookies";
-    document.getElementById(
-      "storage-access-perm-learnmore"
-    ).href = learnMoreURL;
   },
 
   get notificationID() {
@@ -1224,7 +1199,7 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get message() {
-    return gBrowserBundle.formatStringFromName("storageAccess.message", [
+    return gBrowserBundle.formatStringFromName("storageAccess2.message", [
       "<>",
       "{}",
     ]);
