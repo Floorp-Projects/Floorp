@@ -2,4 +2,4 @@
 
 # AC_AUTH_METHOD
 
-`typealias AC_AUTH_METHOD = `[`Method`](../mozilla.components.concept.engine.prompt/-prompt-request/-authentication/-method/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L45)
+`typealias AC_AUTH_METHOD = `[`Method`](../mozilla.components.concept.engine.prompt/-prompt-request/-authentication/-method/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L47)

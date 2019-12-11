@@ -24,11 +24,10 @@ providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
 
 | Name | Summary |
 |---|---|
-| [onBooleanScalar](on-boolean-scalar.md) | `fun onBooleanScalar(metric: <ERROR CLASS><`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onHistogram](on-histogram.md) | `fun onHistogram(metric: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onLongScalar](on-long-scalar.md) | `fun onLongScalar(metric: <ERROR CLASS><`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onStringScalar](on-string-scalar.md) | `fun onStringScalar(metric: <ERROR CLASS><`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTelemetryReceived](on-telemetry-received.md) | `fun onTelemetryReceived(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onBooleanScalar](on-boolean-scalar.md) | `fun onBooleanScalar(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onHistogram](on-histogram.md) | `fun onHistogram(metric: `[`Histogram`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Histogram.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onLongScalar](on-long-scalar.md) | `fun onLongScalar(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onStringScalar](on-string-scalar.md) | `fun onStringScalar(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

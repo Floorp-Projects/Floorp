@@ -2,7 +2,7 @@
 
 # GeckoEngine
 
-`class GeckoEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L45)
+`class GeckoEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L54)
 
 Gecko-based implementation of Engine interface.
 
@@ -41,9 +41,6 @@ Gecko-based implementation of Engine interface.
 
 | Name | Summary |
 |---|---|
-| [listInstalledWebExtensions](../../mozilla.components.concept.engine/-engine/list-installed-web-extensions.md) | `open fun listInstalledWebExtensions(onSuccess: (`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`>) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Lists the currently installed web extensions in this engine. |
-| [registerWebNotificationDelegate](../../mozilla.components.concept.engine/-engine/register-web-notification-delegate.md) | `open fun registerWebNotificationDelegate(webNotificationDelegate: `[`WebNotificationDelegate`](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers a [WebNotificationDelegate](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md) to be notified of engine events related to web notifications |
-| [registerWebPushDelegate](../../mozilla.components.concept.engine/-engine/register-web-push-delegate.md) | `open fun registerWebPushDelegate(webPushDelegate: `[`WebPushDelegate`](../../mozilla.components.concept.engine.webpush/-web-push-delegate/index.md)`): `[`WebPushHandler`](../../mozilla.components.concept.engine.webpush/-web-push-handler/index.md)<br>Registers a [WebPushDelegate](../../mozilla.components.concept.engine.webpush/-web-push-delegate/index.md) to be notified of engine events related to web extensions. |
 | [warmUp](../../mozilla.components.concept.engine/-engine/warm-up.md) | `open fun warmUp(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Makes sure all required engine initialization logic is executed. The details are specific to individual implementations, but the following must be true: |
 
 ### Extension Functions
