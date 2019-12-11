@@ -138,7 +138,8 @@ class BrowsingContextTargetFront extends TargetMixin(
       response = await super.detach();
     } catch (e) {
       console.warn(
-        `Error while detaching the browsing context target front: ${e.message}`
+        "Error while detaching the browsing context target front:",
+        e
       );
     }
 
