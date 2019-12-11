@@ -234,11 +234,22 @@ add_task(async function test_tabSwitch() {
   });
   await check_autofill();
 
+  info("Check we don't rerun a search if the shortcut is used on an open view");
+  EventUtils.synthesizeKey("KEY_Backspace", {}, win);
+  Assert.ok(win.gURLBar.view.isOpen, "The view should be open");
+  Assert.equal(win.gURLBar.value, "e", "The value should be the typed one");
+  win.document.getElementById("Browser:OpenLocation").doCommand();
+  // A search should not run here, so there's nothing to wait for.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.ok(win.gURLBar.view.isOpen, "The view should be open");
+  Assert.equal(win.gURLBar.value, "e", "The value should not change");
+
   await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_tabSwitch_pageproxystate() {
-  info("Switching tabs on valid pageproxystate executes the right search.");
+  info("Switching tabs on valid pageproxystate doesn't reopen.");
 
   info("Adding some visits for the empty panel");
   await PlacesTestUtils.addVisits([
@@ -280,19 +291,15 @@ add_task(async function test_tabSwitch_pageproxystate() {
   });
   await UrlbarTestUtils.promiseSearchComplete(win);
 
-  info("Switchng to the second tab should not the search");
+  info("Switcihng to the second tab should not reopen the search");
   await UrlbarTestUtils.promisePopupClose(win, async () => {
     await BrowserTestUtils.switchTab(win.gBrowser, tab2);
   });
   await checkPanelRemainsClosed(win);
 
-  info("Switchng to the first tab reopens the non-empty search");
-  await UrlbarTestUtils.promisePopupOpen(win, async () => {
-    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
-  });
-  await UrlbarTestUtils.promiseSearchComplete(win);
-  result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
-  Assert.equal(result.url, "about:robots");
+  info("Switching to the first tab should not reopen the search");
+  await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  await checkPanelRemainsClosed(win);
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -334,6 +341,55 @@ add_task(async function test_tabSwitch_emptySearch() {
   info("Switching to the second tab should not reopen the view");
   await BrowserTestUtils.switchTab(win.gBrowser, tab2);
   await checkPanelRemainsClosed(win);
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_pageproxystate_valid() {
+  info("Focusing on valid pageproxystate should not reopen the view.");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  info("Search for a full url and confirm it with Enter");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "about:robots",
+    fireInputEvent: true,
+  });
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    win.gBrowser.selectedBrowser
+  );
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await loadedPromise;
+
+  Assert.ok(!win.gURLBar.focused, "The urlbar should not be focused");
+  info("Focus the urlbar");
+  win.document.getElementById("Browser:OpenLocation").doCommand();
+
+  await checkPanelRemainsClosed(win);
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_allowAutofill() {
+  info("Check we respect allowAutofill from the last search");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    await selectAndPaste("e", win);
+  });
+  Assert.equal(win.gURLBar.value, "e", "Should not autofill");
+  let context = await win.gURLBar.lastQueryContextPromise;
+  Assert.equal(context.allowAutofill, false, "Check initial allowAutofill");
+  await UrlbarTestUtils.promisePopupClose(win);
+
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    win.document.getElementById("Browser:OpenLocation").doCommand();
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  Assert.equal(win.gURLBar.value, "e", "Should not autofill");
+  context = await win.gURLBar.lastQueryContextPromise;
+  Assert.equal(context.allowAutofill, false, "Check reopened allowAutofill");
 
   await BrowserTestUtils.closeWindow(win);
 });

@@ -5,16 +5,6 @@
 
 "use strict";
 
-async function paste(str) {
-  await SimpleTest.promiseClipboardChange(str, () => {
-    clipboardHelper.copyString(str);
-  });
-  gURLBar.select();
-  document.commandDispatcher
-    .getControllerForCommand("cmd_paste")
-    .doCommand("cmd_paste");
-}
-
 add_task(async function test() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
@@ -37,7 +27,7 @@ add_task(async function test() {
   Assert.equal(gURLBar.selectionEnd, "example.com/".length);
 
   // Now paste.
-  await paste("ex");
+  await selectAndPaste("ex");
 
   // Nothing should have been autofilled.
   await UrlbarTestUtils.promiseSearchComplete(window);
