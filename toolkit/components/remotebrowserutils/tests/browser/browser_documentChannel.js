@@ -10,22 +10,19 @@ const FILE_DUMMY = fileURL("dummy_page.html");
 const DATA_URL = "data:text/html,Hello%2C World!";
 const DATA_STRING = "Hello, World!";
 
-const RESPONSE_PROCESS_SELECTION_PREF =
-  "browser.tabs.remote.useHTTPResponseProcessSelection";
 const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
+const LINKED_WEB_IN_FILE_PREF =
+  "browser.tabs.remote.allowLinkedWebInFileUriProcess";
 
 async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [RESPONSE_PROCESS_SELECTION_PREF, true],
-      [DOCUMENT_CHANNEL_PREF, true],
-    ],
+    set: [[DOCUMENT_CHANNEL_PREF, true], [LINKED_WEB_IN_FILE_PREF, false]],
   });
 }
 
 async function unsetPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[RESPONSE_PROCESS_SELECTION_PREF, false]],
+    set: [[DOCUMENT_CHANNEL_PREF, false], [LINKED_WEB_IN_FILE_PREF, true]],
   });
 }
 
@@ -237,7 +234,7 @@ async function testLoadAndRedirect(
 add_task(async function test_disabled() {
   if (gFissionBrowser) {
     info(
-      `Skipping test. Cannot disable ${RESPONSE_PROCESS_SELECTION_PREF} with Fission.`
+      `Skipping test. Cannot disable ${DOCUMENT_CHANNEL_PREF} with Fission.`
     );
     return;
   }

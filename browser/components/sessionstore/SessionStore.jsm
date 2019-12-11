@@ -2645,21 +2645,9 @@ var SessionStoreInternal = {
 
     let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
     let { useRemoteSubframes } = topDocShell.QueryInterface(Ci.nsILoadContext);
-    if (!useRemoteSubframes) {
-      if (
-        !E10SUtils.useHttpResponseProcessSelection() &&
-        !E10SUtils.useCrossOriginOpenerPolicy()
-      ) {
-        debug(
-          `[process-switch]: response process selection disabled - ignoring`
-        );
-        return;
-      }
-
-      if (cp != Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-        debug(`[process-switch]: remote subframes disabled - ignoring`);
-        return;
-      }
+    if (!useRemoteSubframes && cp != Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+      debug(`[process-switch]: remote subframes disabled - ignoring`);
+      return;
     }
 
     // Get principal for a document already loaded in the BrowsingContext.
