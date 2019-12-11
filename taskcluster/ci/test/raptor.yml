@@ -1039,3 +1039,21 @@ browsertime-speedometer:
     mozharness:
         extra-options:
             - --browsertime
+
+browsertime-tp6-1-profiling:
+    description: "Raptor (browsertime) tp6-1 with Gecko Profiling"
+    raptor-test: raptor-tp6-1
+    run-on-projects: ['integration', 'try']
+    apps: ["firefox"]
+    variants: ["fission"]
+    cold:
+        by-app:
+            firefox: true
+            default: false
+    treeherder-symbol: Btime-Prof(tp6-1-p)
+    max-run-time: 3000
+    tier: 3
+    mozharness:
+        extra-options:
+            - --browsertime
+            - --gecko-profile
