@@ -56,8 +56,8 @@ function test_thread_lifetime() {
       try {
         await objFront2
           .request({ to: pauseGrip.actor, type: "bogusRequest" })
-          .catch(function(response) {
-            Assert.ok(!!response.match(/noSuchActor/));
+          .catch(function(error) {
+            Assert.ok(!!error.message.match(/noSuchActor/));
             gThreadFront.resume().then(function() {
               threadFrontTestFinished();
             });
