@@ -149,7 +149,7 @@ extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
  * record to request importation of modules.
  *
  * The result is a JavaScript array of object values.  To extract the individual
- * values use only JS_GetArrayLength and JS_GetElement with indices 0 to length
+ * values use only JS::GetArrayLength and JS_GetElement with indices 0 to length
  * - 1.
  *
  * The element values are objects with the following properties:

@@ -10,6 +10,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/PropertySpec.h"
@@ -810,7 +811,7 @@ bool SandboxProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
 
 bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
   uint32_t length;
-  bool ok = JS_GetArrayLength(cx, obj, &length);
+  bool ok = JS::GetArrayLength(cx, obj, &length);
   NS_ENSURE_TRUE(ok, false);
   for (uint32_t i = 0; i < length; i++) {
     RootedValue nameValue(cx);
@@ -1371,7 +1372,7 @@ static bool GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
   MOZ_ASSERT(out);
   uint32_t length;
 
-  if (!JS_GetArrayLength(cx, arrayObj, &length)) {
+  if (!JS::GetArrayLength(cx, arrayObj, &length)) {
     return false;
   }
   if (!length) {
@@ -1702,7 +1703,7 @@ bool SandboxOptions::ParseGlobalProperties() {
 
   RootedObject ctors(mCx, &value.toObject());
   bool isArray;
-  if (!JS_IsArrayObject(mCx, ctors, &isArray)) {
+  if (!JS::IsArrayObject(mCx, ctors, &isArray)) {
     return false;
   }
   if (!isArray) {
@@ -1829,7 +1830,7 @@ nsresult nsXPCComponents_utils_Sandbox::CallOrConstruct(
   } else if (args[0].isObject()) {
     RootedObject obj(cx, &args[0].toObject());
     bool isArray;
-    if (!JS_IsArrayObject(cx, obj, &isArray)) {
+    if (!JS::IsArrayObject(cx, obj, &isArray)) {
       ok = false;
     } else if (isArray) {
       if (options.userContextId != 0) {

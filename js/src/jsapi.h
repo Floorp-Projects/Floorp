@@ -1605,41 +1605,6 @@ extern JS_PUBLIC_API bool JS_AlreadyHasOwnElement(JSContext* cx,
                                                   JS::HandleObject obj,
                                                   uint32_t index, bool* foundp);
 
-extern JS_PUBLIC_API JSObject* JS_NewArrayObject(
-    JSContext* cx, const JS::HandleValueArray& contents);
-
-extern JS_PUBLIC_API JSObject* JS_NewArrayObject(JSContext* cx, size_t length);
-
-/**
- * On success, returns true, setting |*isArray| to true if |value| is an Array
- * object or a wrapper around one, or to false if not.  Returns false on
- * failure.
- *
- * This method returns true with |*isArray == false| when passed an ES6 proxy
- * whose target is an Array, or when passed a revoked proxy.
- */
-extern JS_PUBLIC_API bool JS_IsArrayObject(JSContext* cx, JS::HandleValue value,
-                                           bool* isArray);
-
-/**
- * On success, returns true, setting |*isArray| to true if |obj| is an Array
- * object or a wrapper around one, or to false if not.  Returns false on
- * failure.
- *
- * This method returns true with |*isArray == false| when passed an ES6 proxy
- * whose target is an Array, or when passed a revoked proxy.
- */
-extern JS_PUBLIC_API bool JS_IsArrayObject(JSContext* cx, JS::HandleObject obj,
-                                           bool* isArray);
-
-extern JS_PUBLIC_API bool JS_GetArrayLength(JSContext* cx,
-                                            JS::Handle<JSObject*> obj,
-                                            uint32_t* lengthp);
-
-extern JS_PUBLIC_API bool JS_SetArrayLength(JSContext* cx,
-                                            JS::Handle<JSObject*> obj,
-                                            uint32_t length);
-
 namespace JS {
 
 /**

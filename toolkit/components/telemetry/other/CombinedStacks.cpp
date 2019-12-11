@@ -7,6 +7,7 @@
 #include "CombinedStacks.h"
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/HangAnnotations.h"
 
 namespace mozilla {
@@ -131,7 +132,7 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
     return nullptr;
   }
 
-  JS::Rooted<JSObject*> moduleArray(cx, JS_NewArrayObject(cx, 0));
+  JS::Rooted<JSObject*> moduleArray(cx, JS::NewArrayObject(cx, 0));
   if (!moduleArray) {
     return nullptr;
   }
@@ -147,7 +148,7 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
     const Telemetry::ProcessedStack::Module& module =
         stacks.GetModule(moduleIndex);
 
-    JS::Rooted<JSObject*> moduleInfoArray(cx, JS_NewArrayObject(cx, 0));
+    JS::Rooted<JSObject*> moduleInfoArray(cx, JS::NewArrayObject(cx, 0));
     if (!moduleInfoArray) {
       return nullptr;
     }
@@ -174,7 +175,7 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
     }
   }
 
-  JS::Rooted<JSObject*> reportArray(cx, JS_NewArrayObject(cx, 0));
+  JS::Rooted<JSObject*> reportArray(cx, JS::NewArrayObject(cx, 0));
   if (!reportArray) {
     return nullptr;
   }
@@ -186,7 +187,7 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
   const size_t length = stacks.GetStackCount();
   for (size_t i = 0; i < length; ++i) {
     // Represent call stack PCs as (module index, offset) pairs.
-    JS::Rooted<JSObject*> pcArray(cx, JS_NewArrayObject(cx, 0));
+    JS::Rooted<JSObject*> pcArray(cx, JS::NewArrayObject(cx, 0));
     if (!pcArray) {
       return nullptr;
     }
@@ -199,7 +200,7 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
     const uint32_t pcCount = stack.size();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
       const Telemetry::ProcessedStack::Frame& frame = stack[pcIndex];
-      JS::Rooted<JSObject*> framePair(cx, JS_NewArrayObject(cx, 0));
+      JS::Rooted<JSObject*> framePair(cx, JS::NewArrayObject(cx, 0));
       if (!framePair) {
         return nullptr;
       }

@@ -11,6 +11,7 @@
 #include "platform.h"
 #include "ProfilerParent.h"
 
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/JSON.h"
 #include "js/Value.h"
 #include "mozilla/dom/Promise.h"
@@ -662,7 +663,7 @@ nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
                                             aSymbolTable.mBuffer.Elements()));
 
             if (addrsArray && indexArray && bufferArray) {
-              JS::RootedObject tuple(cx, JS_NewArrayObject(cx, 3));
+              JS::RootedObject tuple(cx, JS::NewArrayObject(cx, 3));
               JS_SetElement(cx, tuple, 0, addrsArray);
               JS_SetElement(cx, tuple, 1, indexArray);
               JS_SetElement(cx, tuple, 2, bufferArray);

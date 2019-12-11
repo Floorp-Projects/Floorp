@@ -19,6 +19,7 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/Class.h"
 #include "js/Date.h"
 #include "js/StructuredClone.h"
@@ -963,7 +964,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
   }
 
   bool isArray;
-  if (NS_WARN_IF(!JS_IsArrayObject(aCx, val, &isArray))) {
+  if (NS_WARN_IF(!JS::IsArrayObject(aCx, val, &isArray))) {
     IDB_REPORT_INTERNAL_ERR();
     aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return;
@@ -971,7 +972,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
   if (isArray) {
     JS::Rooted<JSObject*> array(aCx, &val.toObject());
     uint32_t arrayLength;
-    if (NS_WARN_IF(!JS_GetArrayLength(aCx, array, &arrayLength))) {
+    if (NS_WARN_IF(!JS::GetArrayLength(aCx, array, &arrayLength))) {
       IDB_REPORT_INTERNAL_ERR();
       aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return;

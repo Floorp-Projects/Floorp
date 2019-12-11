@@ -123,6 +123,7 @@ EXPORTS += [
 EXPORTS.js += [
     '../public/AllocationRecording.h',
     '../public/AllocPolicy.h',
+    '../public/Array.h',
     '../public/ArrayBuffer.h',
     '../public/BinASTFormat.h',
     '../public/BuildId.h',

@@ -3,6 +3,7 @@
 #include "jsapi.h"
 
 #include "gc/Barrier.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "vm/JSFunction.h"
 
 FRAGMENT(Root, null) {
@@ -31,7 +32,7 @@ FRAGMENT(Root, HeapSlot) {
   JS::Rooted<JS::Value> plinth(
       cx, JS::StringValue(JS_NewStringCopyZ(cx, "plinth")));
   JS::Rooted<JSObject*> array(
-      cx, JS_NewArrayObject(cx, JS::HandleValueArray(plinth)));
+      cx, JS::NewArrayObject(cx, JS::HandleValueArray(plinth)));
 
   breakpoint();
 

@@ -44,6 +44,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
+#include "js/Array.h"        // JS::GetArrayLength, JS::IsArrayObject
 #include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
 #include "js/Date.h"
 #include "js/GCHashTable.h"
@@ -1027,7 +1028,7 @@ bool JSStructuredCloneWriter::parseTransferable() {
   JSContext* cx = context();
   RootedObject array(cx, &transferable.toObject());
   bool isArray;
-  if (!JS_IsArrayObject(cx, array, &isArray)) {
+  if (!JS::IsArrayObject(cx, array, &isArray)) {
     return false;
   }
   if (!isArray) {
@@ -1035,7 +1036,7 @@ bool JSStructuredCloneWriter::parseTransferable() {
   }
 
   uint32_t length;
-  if (!JS_GetArrayLength(cx, array, &length)) {
+  if (!JS::GetArrayLength(cx, array, &length)) {
     return false;
   }
 
@@ -1438,7 +1439,7 @@ bool JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls) {
   // Write the header for obj.
   if (cls == ESClass::Array) {
     uint32_t length = 0;
-    if (!JS_GetArrayLength(context(), obj, &length)) {
+    if (!JS::GetArrayLength(context(), obj, &length)) {
       return false;
     }
 

@@ -8,6 +8,7 @@
 #include "nsMacSharingService.h"
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "nsCocoaUtils.h"
 #include "mozilla/MacStringHelpers.h"
 
@@ -99,7 +100,7 @@ nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSC
                                                   JS::MutableHandleValue aResult) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
   NSURL* url = [NSURL URLWithString:nsCocoaUtils::ToNSString(aPageUrl)];
 
   NSArray* sharingService =

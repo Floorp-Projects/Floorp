@@ -7,6 +7,7 @@
 #include "UntrustedModules.h"
 
 #include "core/TelemetryCommon.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RDDChild.h"
@@ -122,7 +123,7 @@ template <typename T, size_t N, typename AllocPolicy, typename Converter,
 static bool VectorToJSArray(JSContext* cx, JS::MutableHandleObject aRet,
                             const Vector<T, N, AllocPolicy>& aContainer,
                             Converter&& aElementConverter, Args&&... aArgs) {
-  JS::RootedObject arr(cx, JS_NewArrayObject(cx, 0));
+  JS::RootedObject arr(cx, JS::NewArrayObject(cx, 0));
   if (!arr) {
     return false;
   }
@@ -393,7 +394,7 @@ static nsresult GetUntrustedModuleLoadEventsJSValue(
   IndexMap indexMap;
   uint32_t curModulesArrayIdx = 0;
 
-  JS::RootedObject modulesArray(aCx, JS_NewArrayObject(aCx, 0));
+  JS::RootedObject modulesArray(aCx, JS::NewArrayObject(aCx, 0));
   if (!modulesArray) {
     return NS_ERROR_FAILURE;
   }

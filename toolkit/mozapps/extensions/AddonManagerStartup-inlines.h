@@ -7,6 +7,7 @@
 #define AddonManagerStartup_inlines_h
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "nsJSUtils.h"
 
 #include "mozilla/Maybe.h"
@@ -190,12 +191,12 @@ class MOZ_STACK_CLASS ArrayIter : public BaseIter<ArrayIter, ArrayIterElem> {
   ArrayIter(JSContext* cx, JS::HandleObject object)
       : BaseIter(cx, object), mLength(0) {
     bool isArray;
-    if (!JS_IsArrayObject(cx, object, &isArray) || !isArray) {
+    if (!JS::IsArrayObject(cx, object, &isArray) || !isArray) {
       JS_ClearPendingException(cx);
       return;
     }
 
-    if (!JS_GetArrayLength(cx, object, &mLength)) {
+    if (!JS::GetArrayLength(cx, object, &mLength)) {
       JS_ClearPendingException(cx);
     }
   }

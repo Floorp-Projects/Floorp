@@ -40,6 +40,7 @@
 #include "xpcpublic.h"
 
 #include "jsapi.h"
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/PropertySpec.h"
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
@@ -728,7 +729,7 @@ nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
     }
   }
 
-  JS::Rooted<JSObject*> array(cx, ::JS_NewArrayObject(cx, args));
+  JS::Rooted<JSObject*> array(cx, JS::NewArrayObject(cx, args));
   if (!array) {
     return NS_ERROR_FAILURE;
   }

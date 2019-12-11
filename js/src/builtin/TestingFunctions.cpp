@@ -45,6 +45,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
+#include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
@@ -904,7 +905,7 @@ static bool WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject jsOffsets(cx, JS_NewArrayObject(cx, offsets.length()));
+  RootedObject jsOffsets(cx, JS::NewArrayObject(cx, offsets.length()));
   if (!jsOffsets) {
     return false;
   }
@@ -2002,7 +2003,7 @@ static bool EnsureLinearString(JSContext* cx, unsigned argc, Value* vp) {
 static bool RepresentativeStringArray(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedObject array(cx, JS_NewArrayObject(cx, 0));
+  RootedObject array(cx, JS::NewArrayObject(cx, 0));
   if (!array) {
     return false;
   }
@@ -4746,7 +4747,7 @@ static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
 
   auto& queue = cx->runtime()->gc.marker.markQueue.get();
 
-  RootedObject result(cx, JS_NewArrayObject(cx, queue.length()));
+  RootedObject result(cx, JS::NewArrayObject(cx, queue.length()));
   if (!result) {
     return false;
   }
@@ -5029,7 +5030,7 @@ static JSObject* ConvertRegExpTreeToObject(JSContext* cx, LifoAlloc& alloc,
                             JSContext* cx, HandleObject obj, const char* name,
                             const irregexp::RegExpTreeVector& nodes) {
     size_t len = nodes.length();
-    RootedObject array(cx, JS_NewArrayObject(cx, len));
+    RootedObject array(cx, JS::NewArrayObject(cx, len));
     if (!array) {
       return false;
     }
@@ -5052,7 +5053,7 @@ static JSObject* ConvertRegExpTreeToObject(JSContext* cx, LifoAlloc& alloc,
                             JSContext* cx, HandleObject obj, const char* name,
                             const irregexp::CharacterRangeVector& ranges) {
     size_t len = ranges.length();
-    RootedObject array(cx, JS_NewArrayObject(cx, len));
+    RootedObject array(cx, JS::NewArrayObject(cx, len));
     if (!array) {
       return false;
     }
@@ -5093,7 +5094,7 @@ static JSObject* ConvertRegExpTreeToObject(JSContext* cx, LifoAlloc& alloc,
                       JSContext* cx, HandleObject obj, const char* name,
                       const irregexp::TextElementVector& elements) {
     size_t len = elements.length();
-    RootedObject array(cx, JS_NewArrayObject(cx, len));
+    RootedObject array(cx, JS::NewArrayObject(cx, len));
     if (!array) {
       return false;
     }

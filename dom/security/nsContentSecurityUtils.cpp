@@ -18,6 +18,7 @@
 #  include <wininet.h>
 #endif
 
+#include "js/Array.h"  // JS::GetArrayLength
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -82,7 +83,7 @@ nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
   // Now we know we have a result, and we need to extract it so we can read it.
   uint32_t length;
   JS::RootedObject regexResultObj(cx, &regexResult.toObject());
-  if (!JS_GetArrayLength(cx, regexResultObj, &length)) {
+  if (!JS::GetArrayLength(cx, regexResultObj, &length)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   MOZ_LOG(sCSMLog, LogLevel::Verbose, ("Regex Matched %i strings", length));

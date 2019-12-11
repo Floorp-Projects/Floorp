@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Array.h"  // JS::NewArrayObject
 #include "jsapi-tests/tests.h"
 
 static int callCount = 0;
@@ -33,7 +34,7 @@ BEGIN_TEST(testAddPropertyHook) {
   JS_InitClass(cx, global, obj, &AddPropertyClass, nullptr, 0, nullptr, nullptr,
                nullptr, nullptr);
 
-  obj = JS_NewArrayObject(cx, 0);
+  obj = JS::NewArrayObject(cx, 0);
   CHECK(obj);
   JS::RootedValue arr(cx, JS::ObjectValue(*obj));
 

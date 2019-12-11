@@ -11,6 +11,7 @@
 
 #include "jsfriendapi.h"
 
+#include "js/Array.h"  // JS::IsArrayAnswer
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 

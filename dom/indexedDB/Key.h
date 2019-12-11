@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/indexedDB/IDBResult.h"
 
+#include "js/Array.h"  // JS::GetArrayLength
 #include "js/RootingAPI.h"
 #include "jsapi.h"
 #include "mozilla/ErrorResult.h"
@@ -195,7 +196,7 @@ class Key {
       ArrayConversionPolicy&& aPolicy, ErrorResult& aRv) {
     // 1. Let `len` be ? ToLength( ? Get(`input`, "length")).
     uint32_t len;
-    if (!JS_GetArrayLength(aCx, aObject, &len)) {
+    if (!JS::GetArrayLength(aCx, aObject, &len)) {
       aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return Exception;
     }

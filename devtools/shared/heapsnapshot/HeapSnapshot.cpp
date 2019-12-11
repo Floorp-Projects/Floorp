@@ -9,6 +9,7 @@
 #include <google/protobuf/io/gzip_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/Debug.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNodeBreadthFirst.h"
@@ -631,7 +632,7 @@ void HeapSnapshot::ComputeShortestPaths(JSContext* cx, uint64_t start,
         }
       }
 
-      RootedObject pathObj(cx, JS_NewArrayObject(cx, pathValues));
+      RootedObject pathObj(cx, JS::NewArrayObject(cx, pathValues));
       return pathObj && paths.append(ObjectValue(*pathObj));
     });
 
@@ -640,7 +641,7 @@ void HeapSnapshot::ComputeShortestPaths(JSContext* cx, uint64_t start,
       return;
     }
 
-    JS::RootedObject pathsArray(cx, JS_NewArrayObject(cx, paths));
+    JS::RootedObject pathsArray(cx, JS::NewArrayObject(cx, paths));
     if (NS_WARN_IF(!pathsArray)) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;

@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/Symbol.h"
 #include "jsapi-tests/tests.h"
 
@@ -12,7 +13,7 @@ BEGIN_TEST(testInformalValueTypeName) {
   JS::RootedValue v1(cx, JS::ObjectOrNullValue(JS_NewPlainObject(cx)));
   CHECK(strcmp(JS::InformalValueTypeName(v1), "Object") == 0);
 
-  JS::RootedValue v2(cx, JS::ObjectOrNullValue(JS_NewArrayObject(cx, 0)));
+  JS::RootedValue v2(cx, JS::ObjectOrNullValue(JS::NewArrayObject(cx, 0)));
   CHECK(strcmp(JS::InformalValueTypeName(v2), "Array") == 0);
 
   JS::RootedValue v3(cx, JS::StringValue(JS_GetEmptyString(cx)));

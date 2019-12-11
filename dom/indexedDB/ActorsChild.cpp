@@ -19,6 +19,7 @@
 #include "IDBTransaction.h"
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
+#include "js/Array.h"  // JS::NewArrayObject, JS::SetArrayLength
 #include <mozIIPCBlobInputStream.h>
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -401,7 +402,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
   nsresult GetResult(JSContext* aCx,
                      const nsTArray<StructuredCloneReadInfo>* aCloneInfos,
                      JS::MutableHandle<JS::Value> aResult) {
-    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+    JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!array)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -410,7 +411,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     if (!aCloneInfos->IsEmpty()) {
       const uint32_t count = aCloneInfos->Length();
 
-      if (NS_WARN_IF(!JS_SetArrayLength(aCx, array, count))) {
+      if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
         IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
@@ -449,7 +450,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
 
   nsresult GetResult(JSContext* aCx, const nsTArray<Key>* aKeys,
                      JS::MutableHandle<JS::Value> aResult) {
-    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
+    JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!array)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -458,7 +459,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     if (!aKeys->IsEmpty()) {
       const uint32_t count = aKeys->Length();
 
-      if (NS_WARN_IF(!JS_SetArrayLength(aCx, array, count))) {
+      if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
         IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }

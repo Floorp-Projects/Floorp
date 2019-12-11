@@ -7,6 +7,7 @@
 #include "core/TelemetryCommon.h"
 #include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
@@ -111,11 +112,11 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
   EXPECT_FALSE(aSnapshot.isNullOrUndefined())
       << "Event snapshot must not be null/undefined.";
   bool isArray = false;
-  EXPECT_TRUE(JS_IsArrayObject(aCx, aSnapshot, &isArray) && isArray)
+  EXPECT_TRUE(JS::IsArrayObject(aCx, aSnapshot, &isArray) && isArray)
       << "The snapshot must be an array.";
   JS::RootedObject arrayObj(aCx, &aSnapshot.toObject());
   uint32_t arrayLength = 0;
-  EXPECT_TRUE(JS_GetArrayLength(aCx, arrayObj, &arrayLength))
+  EXPECT_TRUE(JS::GetArrayLength(aCx, arrayObj, &arrayLength))
       << "Array must have a length.";
   EXPECT_TRUE(arrayLength > 0) << "Array must have at least one element.";
 
@@ -123,11 +124,11 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
     JS::Rooted<JS::Value> element(aCx);
     EXPECT_TRUE(JS_GetElement(aCx, arrayObj, arrayIdx, &element))
         << "Must be able to get element.";
-    EXPECT_TRUE(JS_IsArrayObject(aCx, element, &isArray) && isArray)
+    EXPECT_TRUE(JS::IsArrayObject(aCx, element, &isArray) && isArray)
         << "Element must be an array.";
     JS::RootedObject eventArray(aCx, &element.toObject());
     uint32_t eventLength;
-    EXPECT_TRUE(JS_GetArrayLength(aCx, eventArray, &eventLength))
+    EXPECT_TRUE(JS::GetArrayLength(aCx, eventArray, &eventLength))
         << "Event array must have a length.";
     EXPECT_TRUE(eventLength >= 4)
         << "Event array must have at least 4 elements (timestamp, category, "
@@ -211,11 +212,11 @@ void GetEncodedOriginStrings(
 
   JS::RootedObject prioDataObj(aCx, &snapshot.toObject());
   bool isArray = false;
-  ASSERT_TRUE(JS_IsArrayObject(aCx, prioDataObj, &isArray) && isArray)
+  ASSERT_TRUE(JS::IsArrayObject(aCx, prioDataObj, &isArray) && isArray)
   << "The metric's origins must be in an array.";
 
   uint32_t length = 0;
-  ASSERT_TRUE(JS_GetArrayLength(aCx, prioDataObj, &length));
+  ASSERT_TRUE(JS::GetArrayLength(aCx, prioDataObj, &length));
   ASSERT_TRUE(length > 0)
   << "Length of returned array must greater than 0";
 

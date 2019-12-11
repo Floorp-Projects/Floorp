@@ -614,7 +614,7 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
 impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: JS::MutableHandleValue) {
-        rooted!(in(cx) let js_array = JS_NewArrayObject1(cx, self.len() as libc::size_t));
+        rooted!(in(cx) let js_array = JS::NewArrayObject1(cx, self.len() as libc::size_t));
         assert!(!js_array.handle().is_null());
 
         rooted!(in(cx) let mut val = UndefinedValue());

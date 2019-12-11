@@ -7,6 +7,7 @@
 #include "AudioWorkletNode.h"
 
 #include "AudioParamMap.h"
+#include "js/Array.h"  // JS::{Get,Set}ArrayLength, JS::NewArrayLength
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
@@ -184,15 +185,15 @@ static bool PrepareArray(JSContext* aCx, const T& aElements,
   if (aArray) {
     // Attempt to reuse.
     uint32_t oldLength;
-    if (JS_GetArrayLength(aCx, aArray, &oldLength) &&
-        (oldLength == length || JS_SetArrayLength(aCx, aArray, length)) &&
+    if (JS::GetArrayLength(aCx, aArray, &oldLength) &&
+        (oldLength == length || JS::SetArrayLength(aCx, aArray, length)) &&
         SetArrayElements(aCx, aElements, aArray)) {
       return true;
     }
     // Script may have frozen the array.  Try again with a new Array.
     JS_ClearPendingException(aCx);
   }
-  JSObject* array = JS_NewArrayObject(aCx, length);
+  JSObject* array = JS::NewArrayObject(aCx, length);
   if (NS_WARN_IF(!array)) {
     return false;
   }

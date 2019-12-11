@@ -100,6 +100,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/IsGivenTypeObject-inl.h"  // js::IsGivenTypeObject
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSScript-inl.h"
@@ -3128,69 +3129,6 @@ JS_PUBLIC_API void JS_InitReservedSlot(JSObject* obj, uint32_t index, void* ptr,
 JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data, size_t nbytes,
                                   JS::MemoryUse use) {
   InitObjectPrivate(&obj->as<NativeObject>(), data, nbytes, js::MemoryUse(use));
-}
-
-JS_PUBLIC_API JSObject* JS_NewArrayObject(
-    JSContext* cx, const JS::HandleValueArray& contents) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  cx->check(contents);
-  return NewDenseCopiedArray(cx, contents.length(), contents.begin());
-}
-
-JS_PUBLIC_API JSObject* JS_NewArrayObject(JSContext* cx, size_t length) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  return NewDenseFullyAllocatedArray(cx, length);
-}
-
-inline bool IsGivenTypeObject(JSContext* cx, JS::HandleObject obj,
-                              const ESClass& typeClass, bool* isType) {
-  cx->check(obj);
-
-  ESClass cls;
-  if (!GetBuiltinClass(cx, obj, &cls)) {
-    return false;
-  }
-
-  *isType = cls == typeClass;
-  return true;
-}
-
-JS_PUBLIC_API bool JS_IsArrayObject(JSContext* cx, JS::HandleObject obj,
-                                    bool* isArray) {
-  return IsGivenTypeObject(cx, obj, ESClass::Array, isArray);
-}
-
-JS_PUBLIC_API bool JS_IsArrayObject(JSContext* cx, JS::HandleValue value,
-                                    bool* isArray) {
-  if (!value.isObject()) {
-    *isArray = false;
-    return true;
-  }
-
-  RootedObject obj(cx, &value.toObject());
-  return JS_IsArrayObject(cx, obj, isArray);
-}
-
-JS_PUBLIC_API bool JS_GetArrayLength(JSContext* cx, HandleObject obj,
-                                     uint32_t* lengthp) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(obj);
-  return GetLengthProperty(cx, obj, lengthp);
-}
-
-JS_PUBLIC_API bool JS_SetArrayLength(JSContext* cx, HandleObject obj,
-                                     uint32_t length) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(obj);
-  return SetLengthProperty(cx, obj, length);
 }
 
 JS_PUBLIC_API bool JS::IsMapObject(JSContext* cx, JS::HandleObject obj,
