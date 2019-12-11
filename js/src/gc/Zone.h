@@ -74,10 +74,10 @@ class MOZ_NON_TEMPORARY_CLASS ExternalStringCache {
 
 class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
   struct Entry {
-    JSScript* script;
+    BaseScript* script;
     JSString* string;
 
-    void set(JSScript* scriptArg, JSString* stringArg) {
+    void set(BaseScript* scriptArg, JSString* stringArg) {
       script = scriptArg;
       string = stringArg;
     }
@@ -92,8 +92,8 @@ class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
   FunctionToStringCache() { purge(); }
   void purge() { mozilla::PodArrayZero(entries_); }
 
-  MOZ_ALWAYS_INLINE JSString* lookup(JSScript* script) const;
-  MOZ_ALWAYS_INLINE void put(JSScript* script, JSString* string);
+  MOZ_ALWAYS_INLINE JSString* lookup(BaseScript* script) const;
+  MOZ_ALWAYS_INLINE void put(BaseScript* script, JSString* string);
 };
 
 }  // namespace js

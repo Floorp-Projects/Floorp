@@ -822,7 +822,7 @@ static JSObject* CreateFunctionPrototype(JSContext* cx, JSProtoKey key) {
       gc::AllocKind::FUNCTION, SingletonObject);
 }
 
-JSString* js::FunctionToStringCache::lookup(JSScript* script) const {
+JSString* js::FunctionToStringCache::lookup(BaseScript* script) const {
   for (size_t i = 0; i < NumEntries; i++) {
     if (entries_[i].script == script) {
       return entries_[i].string;
@@ -831,7 +831,7 @@ JSString* js::FunctionToStringCache::lookup(JSScript* script) const {
   return nullptr;
 }
 
-void js::FunctionToStringCache::put(JSScript* script, JSString* string) {
+void js::FunctionToStringCache::put(BaseScript* script, JSString* string) {
   for (size_t i = NumEntries - 1; i > 0; i--) {
     entries_[i] = entries_[i - 1];
   }
@@ -841,10 +841,6 @@ void js::FunctionToStringCache::put(JSScript* script, JSString* string) {
 
 JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
                                bool isToSource) {
-  if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun)) {
-    return nullptr;
-  }
-
   if (IsAsmJSModule(fun)) {
     return AsmJSModuleToString(cx, fun, isToSource);
   }
@@ -852,17 +848,8 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     return AsmJSFunctionToString(cx, fun);
   }
 
-  RootedScript script(cx);
-  if (fun->hasScript()) {
-    script = fun->nonLazyScript();
-  }
-
-  // Default class constructors are self-hosted, but have their source
-  // objects overridden to refer to the span of the class statement or
-  // expression. Non-default class constructors are never self-hosted. So,
-  // all class constructors always have source.
-  bool haveSource = fun->isInterpreted() &&
-                    (fun->isClassConstructor() || !fun->isSelfHostedBuiltin());
+  // Self-hosted built-ins should not expose their source code.
+  bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
 
   // If we're in toSource mode, put parentheses around lambda functions so
   // that eval returns lambda, not function statement.
@@ -870,7 +857,8 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
       haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
   if (haveSource) {
-    if (!ScriptSource::loadSource(cx, script->scriptSource(), &haveSource)) {
+    if (!ScriptSource::loadSource(cx, fun->baseScript()->scriptSource(),
+                                  &haveSource)) {
       return nullptr;
     }
   }
@@ -878,11 +866,13 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
   // Fast path for the common case, to avoid StringBuffer overhead.
   if (!addParentheses && haveSource) {
     FunctionToStringCache& cache = cx->zone()->functionToStringCache();
-    if (JSString* str = cache.lookup(script)) {
+    if (JSString* str = cache.lookup(fun->baseScript())) {
       return str;
     }
 
-    size_t start = script->toStringStart(), end = script->toStringEnd();
+    BaseScript* script = fun->baseScript();
+    size_t start = script->toStringStart();
+    size_t end = script->toStringEnd();
     JSString* str =
         (end - start <= ScriptSource::SourceDeflateLimit)
             ? script->scriptSource()->substring(cx, start, end)
@@ -891,7 +881,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
       return nullptr;
     }
 
-    cache.put(script, str);
+    cache.put(fun->baseScript(), str);
     return str;
   }
 
@@ -903,7 +893,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
   }
 
   if (haveSource) {
-    if (!script->appendSourceDataForToString(cx, out)) {
+    if (!fun->baseScript()->appendSourceDataForToString(cx, out)) {
       return nullptr;
     }
   } else if (!isToSource) {
