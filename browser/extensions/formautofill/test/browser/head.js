@@ -178,6 +178,25 @@ async function sleep(ms = 500) {
 async function focusAndWaitForFieldsIdentified(browser, selector) {
   info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
+
+  const { FormAutofillParent } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm"
+  );
+
+  // If the input is previously focused, no more notifications will be
+  // sent as the notification goes along with focus event.
+  let fieldsIdentifiedPromiseResolver;
+  let fieldsIdentifiedObserver = {
+    fieldsIdentified() {
+      fieldsIdentifiedPromiseResolver();
+    },
+  };
+
+  let fieldsIdentifiedPromise = new Promise(resolve => {
+    fieldsIdentifiedPromiseResolver = resolve;
+    FormAutofillParent.addMessageObserver(fieldsIdentifiedObserver);
+  });
+
   const { previouslyFocused, previouslyIdentified } = await ContentTask.spawn(
     browser,
     { selector },
@@ -198,34 +217,24 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
     }
   );
 
+  // Only wait for the fields identified notification if the
+  // focus was not previously assigned to the input.
+  if (previouslyFocused) {
+    fieldsIdentifiedPromiseResolver();
+  } else {
+    info("!previouslyFocused");
+  }
+
   if (previouslyIdentified) {
     info("previouslyIdentified");
     return;
   }
 
-  // Once the input is previously focused, no more notifications will be
-  // sent as the notification goes along with focus event.
-  /*
-  if (!previouslyFocused) {
-    // XXXndeakin Disabling this doesn't seem to cause the test to fail,
-    // but it is easier to re-enable in the next patch.
-    info("!previouslyFocused");
-    await new Promise(resolve => {
-      Services.mm.addMessageListener(
-        "FormAutofill:FieldsIdentified",
-        function onIdentified() {
-          Services.mm.removeMessageListener(
-            "FormAutofill:FieldsIdentified",
-            onIdentified
-          );
-          resolve();
-        }
-      );
-    });
-    info("FieldsIdentified");
-  }
-  */
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
+  await fieldsIdentifiedPromise;
+  info("FieldsIdentified");
+  FormAutofillParent.removeMessageObserver(fieldsIdentifiedObserver);
+
   await sleep();
   await ContentTask.spawn(browser, {}, async function() {
     const { FormLikeFactory } = ChromeUtils.import(
@@ -283,17 +292,16 @@ async function closePopup(browser) {
   await expectPopupClose(browser);
 }
 
+function emulateMessageToBrowser(name, data) {
+  let actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+    "FormAutofill"
+  );
+  return actor.receiveMessage({ name, data });
+}
+
 function getRecords(data) {
   info(`expecting record retrievals: ${data.collectionName}`);
-  return new Promise(resolve => {
-    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(
-      result
-    ) {
-      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
-      resolve(result.data);
-    });
-    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", data);
-  });
+  return emulateMessageToBrowser("FormAutofill:GetRecords", data);
 }
 
 function getAddresses() {
@@ -304,31 +312,35 @@ function getCreditCards() {
   return getRecords({ collectionName: "creditCards" });
 }
 
-function saveAddress(address) {
+async function saveAddress(address) {
   info("expecting address saved");
-  Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", { address });
-  return TestUtils.topicObserved("formautofill-storage-changed");
+  let observePromise = TestUtils.topicObserved("formautofill-storage-changed");
+  await emulateMessageToBrowser("FormAutofill:SaveAddress", { address });
+  await observePromise;
 }
 
-function saveCreditCard(creditcard) {
+async function saveCreditCard(creditcard) {
   info("expecting credit card saved");
   let creditcardClone = Object.assign({}, creditcard);
-  Services.cpmm.sendAsyncMessage("FormAutofill:SaveCreditCard", {
+  let observePromise = TestUtils.topicObserved("formautofill-storage-changed");
+  await emulateMessageToBrowser("FormAutofill:SaveCreditCard", {
     creditcard: creditcardClone,
   });
-  return TestUtils.topicObserved("formautofill-storage-changed");
+  await observePromise;
 }
 
-function removeAddresses(guids) {
+async function removeAddresses(guids) {
   info("expecting address removed");
-  Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses", { guids });
-  return TestUtils.topicObserved("formautofill-storage-changed");
+  let observePromise = TestUtils.topicObserved("formautofill-storage-changed");
+  await emulateMessageToBrowser("FormAutofill:RemoveAddresses", { guids });
+  await observePromise;
 }
 
-function removeCreditCards(guids) {
+async function removeCreditCards(guids) {
   info("expecting credit card removed");
-  Services.cpmm.sendAsyncMessage("FormAutofill:RemoveCreditCards", { guids });
-  return TestUtils.topicObserved("formautofill-storage-changed");
+  let observePromise = TestUtils.topicObserved("formautofill-storage-changed");
+  await emulateMessageToBrowser("FormAutofill:RemoveCreditCards", { guids });
+  await observePromise;
 }
 
 function getNotification(index = 0) {

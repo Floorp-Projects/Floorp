@@ -4,117 +4,116 @@
 
 "use strict";
 
-let FormAutofillParent;
+let FormAutofillStatus;
 
 add_task(async function setup() {
-  ({ FormAutofillParent } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillParent.jsm",
-    null
+  ({ FormAutofillStatus } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm"
   ));
 });
 
 add_task(async function test_activeStatus_init() {
-  let formAutofillParent = new FormAutofillParent();
-  sinon.spy(formAutofillParent, "_updateStatus");
+  sinon.spy(FormAutofillStatus, "updateStatus");
 
   // Default status is null before initialization
-  Assert.equal(formAutofillParent._active, null);
+  Assert.equal(FormAutofillStatus._active, null);
   Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), undefined);
 
-  await formAutofillParent.init();
+  FormAutofillStatus.init();
   // init shouldn't call updateStatus since that requires storage which will
   // lead to startup time regressions.
-  Assert.equal(formAutofillParent._updateStatus.called, false);
+  Assert.equal(FormAutofillStatus.updateStatus.called, false);
   Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), undefined);
 
   // Initialize profile storage
-  await formAutofillParent.formAutofillStorage.initialize();
+  await FormAutofillStatus.formAutofillStorage.initialize();
   // Upon first initializing profile storage, status should be computed.
-  Assert.equal(formAutofillParent._updateStatus.called, true);
+  Assert.equal(FormAutofillStatus.updateStatus.called, true);
   Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), false);
 
-  formAutofillParent._uninit();
+  FormAutofillStatus.uninit();
 });
 
 add_task(async function test_activeStatus_observe() {
-  let formAutofillParent = new FormAutofillParent();
-  sinon.stub(formAutofillParent, "_computeStatus");
-  sinon.spy(formAutofillParent, "_onStatusChanged");
+  FormAutofillStatus.init();
+  sinon.stub(FormAutofillStatus, "computeStatus");
+  sinon.spy(FormAutofillStatus, "onStatusChanged");
 
   // _active = _computeStatus() => No need to trigger _onStatusChanged
-  formAutofillParent._active = true;
-  formAutofillParent._computeStatus.returns(true);
-  formAutofillParent.observe(
+  FormAutofillStatus._active = true;
+  FormAutofillStatus.computeStatus.returns(true);
+  FormAutofillStatus.observe(
     null,
     "nsPref:changed",
     "extensions.formautofill.addresses.enabled"
   );
-  formAutofillParent.observe(
+  FormAutofillStatus.observe(
     null,
     "nsPref:changed",
     "extensions.formautofill.creditCards.enabled"
   );
-  Assert.equal(formAutofillParent._onStatusChanged.called, false);
+  Assert.equal(FormAutofillStatus.onStatusChanged.called, false);
 
-  // _active != _computeStatus() => Need to trigger _onStatusChanged
-  formAutofillParent._computeStatus.returns(false);
-  formAutofillParent._onStatusChanged.resetHistory();
-  formAutofillParent.observe(
+  // _active != computeStatus() => Need to trigger onStatusChanged
+  FormAutofillStatus.computeStatus.returns(false);
+  FormAutofillStatus.onStatusChanged.resetHistory();
+  FormAutofillStatus.observe(
     null,
     "nsPref:changed",
     "extensions.formautofill.addresses.enabled"
   );
-  formAutofillParent.observe(
+  FormAutofillStatus.observe(
     null,
     "nsPref:changed",
     "extensions.formautofill.creditCards.enabled"
   );
-  Assert.equal(formAutofillParent._onStatusChanged.called, true);
+  Assert.equal(FormAutofillStatus.onStatusChanged.called, true);
 
   // profile changed => Need to trigger _onStatusChanged
   await Promise.all(
     ["add", "update", "remove", "reconcile"].map(async event => {
-      formAutofillParent._computeStatus.returns(!formAutofillParent._active);
-      formAutofillParent._onStatusChanged.resetHistory();
-      await formAutofillParent.observe(
+      FormAutofillStatus.computeStatus.returns(!FormAutofillStatus._active);
+      FormAutofillStatus.onStatusChanged.resetHistory();
+      await FormAutofillStatus.observe(
         null,
         "formautofill-storage-changed",
         event
       );
-      Assert.equal(formAutofillParent._onStatusChanged.called, true);
+      Assert.equal(FormAutofillStatus.onStatusChanged.called, true);
     })
   );
 
-  // profile metadata updated => No need to trigger _onStatusChanged
-  formAutofillParent._computeStatus.returns(!formAutofillParent._active);
-  formAutofillParent._onStatusChanged.resetHistory();
-  await formAutofillParent.observe(
+  // profile metadata updated => No need to trigger onStatusChanged
+  FormAutofillStatus.computeStatus.returns(!FormAutofillStatus._active);
+  FormAutofillStatus.onStatusChanged.resetHistory();
+  await FormAutofillStatus.observe(
     null,
     "formautofill-storage-changed",
     "notifyUsed"
   );
-  Assert.equal(formAutofillParent._onStatusChanged.called, false);
+  Assert.equal(FormAutofillStatus.onStatusChanged.called, false);
+
+  FormAutofillStatus.computeStatus.restore();
 });
 
 add_task(async function test_activeStatus_computeStatus() {
-  let formAutofillParent = new FormAutofillParent();
   registerCleanupFunction(function cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
   });
 
   sinon.stub(
-    formAutofillParent.formAutofillStorage.addresses,
+    FormAutofillStatus.formAutofillStorage.addresses,
     "getSavedFieldNames"
   );
-  formAutofillParent.formAutofillStorage.addresses.getSavedFieldNames.returns(
+  FormAutofillStatus.formAutofillStorage.addresses.getSavedFieldNames.returns(
     new Set()
   );
   sinon.stub(
-    formAutofillParent.formAutofillStorage.creditCards,
+    FormAutofillStatus.formAutofillStorage.creditCards,
     "getSavedFieldNames"
   );
-  formAutofillParent.formAutofillStorage.creditCards.getSavedFieldNames.returns(
+  FormAutofillStatus.formAutofillStorage.creditCards.getSavedFieldNames.returns(
     new Set()
   );
 
@@ -124,7 +123,7 @@ add_task(async function test_activeStatus_computeStatus() {
     "extensions.formautofill.creditCards.enabled",
     true
   );
-  Assert.equal(formAutofillParent._computeStatus(), false);
+  Assert.equal(FormAutofillStatus.computeStatus(), false);
 
   // pref is disabled and profile is empty.
   Services.prefs.setBoolPref(
@@ -135,17 +134,17 @@ add_task(async function test_activeStatus_computeStatus() {
     "extensions.formautofill.creditCards.enabled",
     false
   );
-  Assert.equal(formAutofillParent._computeStatus(), false);
+  Assert.equal(FormAutofillStatus.computeStatus(), false);
 
-  formAutofillParent.formAutofillStorage.addresses.getSavedFieldNames.returns(
+  FormAutofillStatus.formAutofillStorage.addresses.getSavedFieldNames.returns(
     new Set(["given-name"])
   );
-  formAutofillParent.observe(null, "formautofill-storage-changed", "add");
+  FormAutofillStatus.observe(null, "formautofill-storage-changed", "add");
 
   // pref is enabled and profile is not empty.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
-  Assert.equal(formAutofillParent._computeStatus(), true);
+  Assert.equal(FormAutofillStatus.computeStatus(), true);
 
   // pref is partial enabled and profile is not empty.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
@@ -153,7 +152,7 @@ add_task(async function test_activeStatus_computeStatus() {
     "extensions.formautofill.creditCards.enabled",
     false
   );
-  Assert.equal(formAutofillParent._computeStatus(), true);
+  Assert.equal(FormAutofillStatus.computeStatus(), true);
   Services.prefs.setBoolPref(
     "extensions.formautofill.addresses.enabled",
     false
@@ -162,7 +161,7 @@ add_task(async function test_activeStatus_computeStatus() {
     "extensions.formautofill.creditCards.enabled",
     true
   );
-  Assert.equal(formAutofillParent._computeStatus(), true);
+  Assert.equal(FormAutofillStatus.computeStatus(), true);
 
   // pref is disabled and profile is not empty.
   Services.prefs.setBoolPref(
@@ -173,5 +172,5 @@ add_task(async function test_activeStatus_computeStatus() {
     "extensions.formautofill.creditCards.enabled",
     false
   );
-  Assert.equal(formAutofillParent._computeStatus(), false);
+  Assert.equal(FormAutofillStatus.computeStatus(), false);
 });
