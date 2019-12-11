@@ -11,15 +11,12 @@
     width: max-content;
   }
   .std {
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjAxHK4kRQAAABpJREFUOMtjZBCu%2F89AAWAcNWDUgFEDhosBAObLGSGp9PphAAAAAElFTkSuQmCC);
+    background-image: linear-gradient(blue, blue);
     padding: 15px;
   }
   .relpos {
     position: relative;
     left: 20px;
-  }
-  .negZ {
-    z-index: -1;
   }
   .ib {
     display: inline-block;
@@ -27,7 +24,10 @@
   </style>
 </head>
 <body>
-<div><span class="std relpos ib negZ" style="visibility: hidden;">
-<div class="fake-backplate">XXXXX XXXXX</div></span><span>XXXXX XXXXX</span>
-</div>
+  <span class="std ib">
+    <span class="relpos">
+      <span class="fake-backplate" style="color:transparent;">ppppp ppppp</span>
+    </span>
+  </span>
+  <span>ppppp ppppp</span>
 </body>
