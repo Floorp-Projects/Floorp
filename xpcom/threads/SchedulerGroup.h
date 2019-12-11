@@ -56,59 +56,16 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
   // "background" state.
   virtual bool IsBackground() const { return false; }
 
-  // This function returns true if it's currently safe to run code associated
-  // with this SchedulerGroup. It will return true either if we're inside an
-  // unlabeled runnable or if we're inside a runnable labeled with this
-  // SchedulerGroup.
-  bool IsSafeToRun() const { return !sTlsValidatingAccess.get() || mIsRunning; }
-
-  // This function returns true if it's currently safe to run unlabeled code
-  // with no known SchedulerGroup. It will only return true if we're inside an
-  // unlabeled runnable.
-  static bool IsSafeToRunUnlabeled() { return !sTlsValidatingAccess.get(); }
-
-  // Ensure that it's valid to access the TabGroup at this time.
-  void ValidateAccess() const { MOZ_ASSERT(IsSafeToRun()); }
-
-  enum EnqueueStatus {
-    NewlyQueued,
-    AlreadyQueued,
-  };
-
-  // Records that this SchedulerGroup had an event enqueued in some
-  // queue. Returns whether the SchedulerGroup was already in a queue before
-  // EnqueueEvent() was called.
-  EnqueueStatus EnqueueEvent() {
-    mEventCount++;
-    return mEventCount == 1 ? NewlyQueued : AlreadyQueued;
-  }
-
-  enum DequeueStatus {
-    StillQueued,
-    NoLongerQueued,
-  };
-
-  // Records that this SchedulerGroup had an event dequeued from some
-  // queue. Returns whether the SchedulerGroup is still in a queue after
-  // DequeueEvent() returns.
-  DequeueStatus DequeueEvent() {
-    mEventCount--;
-    return mEventCount == 0 ? NoLongerQueued : StillQueued;
-  }
-
   class Runnable final : public mozilla::Runnable, public nsIRunnablePriority {
    public:
-    Runnable(already_AddRefed<nsIRunnable>&& aRunnable, SchedulerGroup* aGroup,
+    Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
              dom::DocGroup* aDocGroup);
 
-    SchedulerGroup* Group() const { return mGroup; }
     dom::DocGroup* DocGroup() const;
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     NS_IMETHOD GetName(nsACString& aName) override;
 #endif
-
-    bool IsBackground() const { return mGroup->IsBackground(); }
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRUNNABLE
@@ -122,15 +79,14 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
     ~Runnable() = default;
 
     nsCOMPtr<nsIRunnable> mRunnable;
-    RefPtr<SchedulerGroup> mGroup;
     RefPtr<dom::DocGroup> mDocGroup;
   };
   friend class Runnable;
 
   bool* GetValidAccessPtr() { return &mIsRunning; }
 
-  virtual nsresult Dispatch(TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable);
+  static nsresult Dispatch(TaskCategory aCategory,
+                           already_AddRefed<nsIRunnable>&& aRunnable);
 
   virtual nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
@@ -152,12 +108,6 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
   void SetIsRunning(bool aIsRunning) { mIsRunning = aIsRunning; }
   bool IsRunning() const { return mIsRunning; }
 
-  enum ValidationType {
-    StartValidation,
-    EndValidation,
-  };
-  static void SetValidatingAccess(ValidationType aType);
-
   struct EpochQueueEntry {
     nsCOMPtr<nsIRunnable> mRunnable;
     uintptr_t mEpochNumber;
@@ -173,9 +123,9 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
   }
 
  protected:
-  nsresult DispatchWithDocGroup(TaskCategory aCategory,
-                                already_AddRefed<nsIRunnable>&& aRunnable,
-                                dom::DocGroup* aDocGroup);
+  static nsresult DispatchWithDocGroup(
+      TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
+      dom::DocGroup* aDocGroup);
 
   static nsresult InternalUnlabeledDispatch(
       TaskCategory aCategory, already_AddRefed<Runnable>&& aRunnable);
@@ -193,17 +143,15 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
   // function returns |dispatcher|.
   static SchedulerGroup* FromEventTarget(nsIEventTarget* aEventTarget);
 
-  nsresult LabeledDispatch(TaskCategory aCategory,
-                           already_AddRefed<nsIRunnable>&& aRunnable,
-                           dom::DocGroup* aDocGroup);
+  static nsresult LabeledDispatch(TaskCategory aCategory,
+                                  already_AddRefed<nsIRunnable>&& aRunnable,
+                                  dom::DocGroup* aDocGroup);
 
   void CreateEventTargets(bool aNeedValidation);
 
   // Shuts down this dispatcher. If aXPCOMShutdown is true, invalidates this
   // dispatcher.
   void Shutdown(bool aXPCOMShutdown);
-
-  static MOZ_THREAD_LOCAL(bool) sTlsValidatingAccess;
 
   bool mIsRunning;
 
