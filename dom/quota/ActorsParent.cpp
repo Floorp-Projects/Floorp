@@ -199,6 +199,13 @@ const char kResourceOriginPrefix[] = "resource://";
 constexpr auto kStorageTelemetryKey = NS_LITERAL_CSTRING("Storage");
 constexpr auto kTempStorageTelemetryKey =
     NS_LITERAL_CSTRING("TemporaryStorage");
+constexpr auto kPersistentOriginTelemetryKey =
+    NS_LITERAL_CSTRING("PersistentOrigin");
+constexpr auto kTemporaryOriginTelemetryKey =
+    NS_LITERAL_CSTRING("TemporaryOrigin");
+
+const uint8_t kEnsurePersistentOriginIsIinitializedSet = 1;
+const uint8_t kEnsureTemporaryOriginIsInitializedSet = 2;
 
 #define INDEXEDDB_DIRECTORY_NAME "indexedDB"
 #define STORAGE_DIRECTORY_NAME "storage"
@@ -6846,9 +6853,24 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
   MOZ_ASSERT(aCreated);
   MOZ_ASSERT(mStorageConnection);
 
+  nsresult rv = NS_OK;
+
+  auto autoReportTelemetry = MakeScopeExit([&]() {
+    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
+                          kPersistentOriginTelemetryKey,
+                          static_cast<uint32_t>(NS_SUCCEEDED(rv)));
+  });
+
+  auto& entry = mOriginInitializationsAttempted.GetOrInsert(aOrigin);
+  if (entry & kEnsurePersistentOriginIsIinitializedSet) {
+    autoReportTelemetry.release();
+  } else {
+    entry |= kEnsurePersistentOriginIsIinitializedSet;
+  }
+
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT, aOrigin,
-                                      getter_AddRefs(directory));
+  rv = GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT, aOrigin,
+                             getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6856,7 +6878,7 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
   if (mInitializedOrigins.Contains(aOrigin)) {
     directory.forget(aDirectory);
     *aCreated = false;
-    return NS_OK;
+    return rv;
   }
 
   bool created;
@@ -6897,7 +6919,7 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
 
   directory.forget(aDirectory);
   *aCreated = created;
-  return NS_OK;
+  return rv;
 }
 
 nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
@@ -6911,10 +6933,25 @@ nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(mTemporaryStorageInitialized);
 
+  nsresult rv = NS_OK;
+
+  auto autoReportTelemetry = MakeScopeExit([&]() {
+    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
+                          kTemporaryOriginTelemetryKey,
+                          static_cast<uint32_t>(NS_SUCCEEDED(rv)));
+  });
+
+  auto& entry = mOriginInitializationsAttempted.GetOrInsert(aOrigin);
+  if (entry & kEnsureTemporaryOriginIsInitializedSet) {
+    autoReportTelemetry.release();
+  } else {
+    entry |= kEnsureTemporaryOriginIsInitializedSet;
+  }
+
   // Get directory for this origin and persistence type.
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                      getter_AddRefs(directory));
+  rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                             getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6941,7 +6978,7 @@ nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
 
   directory.forget(aDirectory);
   *aCreated = created;
-  return NS_OK;
+  return rv;
 }
 
 nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
@@ -7032,6 +7069,7 @@ void QuotaManager::ShutdownStorage() {
     }
 
     mTemporaryStorageInitializationAttempted = false;
+    mOriginInitializationsAttempted.Clear();
 
     ReleaseIOThreadObjects();
 
