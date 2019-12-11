@@ -82,6 +82,18 @@ describe("Searching in grips", () => {
       expect(getVisibleMessages(store.getState()).length).toEqual(0);
     });
   });
+
+  describe("Reverse search", () => {
+    it("reverse matches on value grips", () => {
+      store.dispatch(actions.filterTextSet("-red"));
+      expect(getVisibleMessages(store.getState()).length).toEqual(5);
+    });
+
+    it("reverse matches on file name", () => {
+      store.dispatch(actions.filterTextSet("-test-console-api.html:1:35"));
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
+    });
+  });
 });
 
 function prepareBaseStore() {
