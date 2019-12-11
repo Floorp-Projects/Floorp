@@ -87,7 +87,7 @@ def view_gecko_profile(ffox_bin):
         LOG_GECKO.info("unable to find the view-gecko-profile tool, cannot launch it")
         return
 
-    command = ['python',
+    command = [sys.executable,
                view_gp,
                '-b', ffox_bin,
                '-p', profile_zip]

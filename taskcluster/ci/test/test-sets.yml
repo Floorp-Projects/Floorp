@@ -313,6 +313,7 @@ raptor-fetch-chromium:
 browsertime:
     - browsertime-tp6
     - browsertime-speedometer
+    - browsertime-tp6-1-profiling
 
 # Raptor desktop power tests
 # (requires Intel Power Gadget to be pre-installed)
