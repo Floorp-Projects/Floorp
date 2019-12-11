@@ -163,6 +163,42 @@ inline Vector<const char> CStrVector(const char* data) {
 }
 
 }  // namespace internal
+
+namespace base {
+
+// SmallVector uses inline storage first, and reallocates when full.
+// It is basically equivalent to js::Vector, and is implemented
+// as a thin wrapper.
+// V8's implementation: https://github.com/v8/v8/blob/master/src/base/small-vector.h
+template <typename T, size_t kSize>
+class SmallVector {
+public:
+  inline bool empty() const { return inner_.empty(); }
+  inline const T& back() const { return inner_.back(); }
+  inline void pop_back() { inner_.popBack(); };
+  template <typename... Args>
+  inline void emplace_back(Args&&... args) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!inner_.emplaceBack(args...)) {
+      oomUnsafe.crash("Irregexp SmallVector emplace_back");
+    }
+  };
+  inline size_t size() const { return inner_.length(); }
+  inline const T& at(size_t index) const { return inner_[index]; }
+
+  void resize_no_init(size_t new_size) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!inner_.resizeUninitialized(new_size)) {
+      oomUnsafe.crash("Irregexp SmallVector resize");
+    }
+  }
+private:
+  js::Vector<T, kSize, js::SystemAllocPolicy> inner_;
+};
+
+
+} // namespace base
+
 }  // namespace v8
 
 #endif  // V8_UTIL_VECTOR_H_
