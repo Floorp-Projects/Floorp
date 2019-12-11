@@ -213,12 +213,11 @@ partial interface Navigator {
   GamepadServiceTest requestGamepadServiceTest();
 };
 
-// https://immersive-web.github.io/webvr/spec/1.1/#interface-navigator
 partial interface Navigator {
-  [Throws, SecureContext, Pref="dom.vr.enabled"]
+  [Throws, Pref="dom.vr.enabled"]
   Promise<sequence<VRDisplay>> getVRDisplays();
   // TODO: Use FrozenArray once available. (Bug 1236777)
-  [SecureContext, Frozen, Cached, Pure, Pref="dom.vr.enabled"]
+  [Frozen, Cached, Pure, Pref="dom.vr.enabled"]
   readonly attribute sequence<VRDisplay> activeVRDisplays;
   [ChromeOnly, Pref="dom.vr.enabled"]
   readonly attribute boolean isWebVRContentDetected;
