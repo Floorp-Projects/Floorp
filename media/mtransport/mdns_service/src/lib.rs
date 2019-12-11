@@ -263,6 +263,7 @@ impl MDNSService {
         let socket = socket.into_udp_socket();
         socket.set_multicast_loop_v4(true)?;
         socket.set_read_timeout(Some(time::Duration::from_millis(10)))?;
+        socket.set_write_timeout(Some(time::Duration::from_millis(10)))?;
         for addr in addrs {
             if let Err(err) = socket.join_multicast_v4(&mdns_addr, &addr) {
                 warn!(
@@ -327,7 +328,7 @@ impl MDNSService {
                     Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
                         break;
                     }
-                    _ => {}
+                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
                 }
                 if pending_queries.len() < 50 {
                     let mut queries: Vec<Query> = Vec::new();
@@ -369,7 +370,7 @@ impl MDNSService {
                 for hostname in expired {
                     if let Some(mut query) = pending_queries.remove(&hostname) {
                         query.attempts += 1;
-                        if query.attempts < 2 {
+                        if query.attempts < 3 {
                             query.timestamp = now;
                             unsent_queries.push_back(query);
                         } else {
@@ -653,6 +654,9 @@ mod tests {
         socket.set_multicast_loop_v4(true).unwrap();
         socket
             .set_read_timeout(Some(time::Duration::from_millis(10)))
+            .unwrap();
+        socket
+            .set_write_timeout(Some(time::Duration::from_millis(10)))
             .unwrap();
         socket
             .join_multicast_v4(&std::net::Ipv4Addr::new(224, 0, 0, 251), &addr)
