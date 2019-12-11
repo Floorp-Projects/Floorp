@@ -54,7 +54,10 @@ class FormAutofillChild extends JSWindowActorChild {
   }
 
   popupStateChanged(messageName, data, target) {
-    if (!this.contentWindow) {
+    let docShell;
+    try {
+      docShell = this.docShell;
+    } catch (ex) {
       AutoCompleteChild.removePopupStateListener(this);
       return;
     }
@@ -63,8 +66,7 @@ class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
-    const doc = this.document;
-    const { chromeEventHandler } = doc.ownerGlobal.docShell;
+    const { chromeEventHandler } = docShell;
 
     switch (messageName) {
       case "FormAutoComplete:PopupClosed": {
