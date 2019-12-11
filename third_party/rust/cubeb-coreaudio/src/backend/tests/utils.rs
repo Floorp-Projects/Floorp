@@ -980,10 +980,9 @@ where
     unsafe { OPS.destroy.unwrap()(context) }
 }
 
-// Note: The in-out stream initializeed with different device will create an aggregate_device and
-//       result in firing device-collection-changed callbacks. Run in-out streams with tests
-//       capturing device-collection-changed callbacks may cause troubles. See more details in the
-//       comments for test_create_blank_aggregate_device.
+// The in-out stream initializeed with different device will create an aggregate_device and
+// result in firing device-collection-changed callbacks. Run in-out streams with tests
+// capturing device-collection-changed callbacks may cause troubles.
 pub fn test_ops_stream_operation<F>(
     name: &'static str,
     input_device: ffi::cubeb_devid,
@@ -1078,4 +1077,136 @@ fn test_get_raw_stream<F>(
     stream.core_stream_data = CoreStreamData::new(&stream, None, None);
 
     operation(&mut stream);
+}
+
+pub fn test_get_stream_with_default_callbacks_by_type<F>(
+    name: &'static str,
+    stm_type: StreamType,
+    input_device: Option<AudioObjectID>,
+    output_device: Option<AudioObjectID>,
+    data: *mut c_void,
+    operation: F,
+) where
+    F: FnOnce(&mut AudioUnitStream),
+{
+    let mut input_params = get_dummy_stream_params(Scope::Input);
+    let mut output_params = get_dummy_stream_params(Scope::Output);
+
+    let in_params = if stm_type.contains(StreamType::INPUT) {
+        &mut input_params as *mut ffi::cubeb_stream_params
+    } else {
+        ptr::null_mut()
+    };
+    let out_params = if stm_type.contains(StreamType::OUTPUT) {
+        &mut output_params as *mut ffi::cubeb_stream_params
+    } else {
+        ptr::null_mut()
+    };
+    let in_device = if let Some(id) = input_device {
+        id as ffi::cubeb_devid
+    } else {
+        ptr::null_mut()
+    };
+    let out_device = if let Some(id) = output_device {
+        id as ffi::cubeb_devid
+    } else {
+        ptr::null_mut()
+    };
+
+    test_ops_stream_operation_with_default_callbacks(
+        name,
+        in_device,
+        in_params,
+        out_device,
+        out_params,
+        data,
+        |stream| {
+            let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+            operation(stm);
+        },
+    );
+}
+
+bitflags! {
+    pub struct StreamType: u8 {
+        const INPUT = 0b01;
+        const OUTPUT = 0b10;
+        const DUPLEX = Self::INPUT.bits | Self::OUTPUT.bits;
+    }
+}
+
+fn get_dummy_stream_params(scope: Scope) -> ffi::cubeb_stream_params {
+    // The stream format for input and output must be same.
+    const STREAM_FORMAT: u32 = ffi::CUBEB_SAMPLE_FLOAT32NE;
+
+    // Make sure the parameters meet the requirements of AudioUnitContext::stream_init
+    // (in the comments).
+    let mut stream_params = ffi::cubeb_stream_params::default();
+    stream_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+    let (format, rate, channels, layout) = match scope {
+        Scope::Input => (STREAM_FORMAT, 48000, 1, ffi::CUBEB_LAYOUT_MONO),
+        Scope::Output => (STREAM_FORMAT, 44100, 2, ffi::CUBEB_LAYOUT_STEREO),
+    };
+    stream_params.format = format;
+    stream_params.rate = rate;
+    stream_params.channels = channels;
+    stream_params.layout = layout;
+    stream_params
+}
+
+fn test_ops_stream_operation_with_default_callbacks<F>(
+    name: &'static str,
+    input_device: ffi::cubeb_devid,
+    input_stream_params: *mut ffi::cubeb_stream_params,
+    output_device: ffi::cubeb_devid,
+    output_stream_params: *mut ffi::cubeb_stream_params,
+    data: *mut c_void,
+    operation: F,
+) where
+    F: FnOnce(*mut ffi::cubeb_stream),
+{
+    test_ops_stream_operation(
+        name,
+        input_device,
+        input_stream_params,
+        output_device,
+        output_stream_params,
+        4096, // TODO: Get latency by get_min_latency instead ?
+        Some(data_callback),
+        Some(state_callback),
+        data,
+        operation,
+    );
+
+    extern "C" fn state_callback(
+        stream: *mut ffi::cubeb_stream,
+        _user_ptr: *mut c_void,
+        state: ffi::cubeb_state,
+    ) {
+        assert!(!stream.is_null());
+        assert_ne!(state, ffi::CUBEB_STATE_ERROR);
+    }
+
+    extern "C" fn data_callback(
+        stream: *mut ffi::cubeb_stream,
+        _user_ptr: *mut c_void,
+        _input_buffer: *const c_void,
+        output_buffer: *mut c_void,
+        nframes: i64,
+    ) -> i64 {
+        assert!(!stream.is_null());
+
+        // Feed silence data to output buffer
+        if !output_buffer.is_null() {
+            let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+            let channels = stm.core_stream_data.output_stream_params.channels();
+            let samples = nframes as usize * channels as usize;
+            let sample_size = cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
+            unsafe {
+                ptr::write_bytes(output_buffer, 0, samples * sample_size);
+            }
+        }
+
+        nframes
+    }
 }
