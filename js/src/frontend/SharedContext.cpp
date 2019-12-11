@@ -193,9 +193,6 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   if (lazy->needsHomeObject()) {
     setNeedsHomeObject();
   }
-
-  enclosingScope_ = AbstractScope(fun->enclosingScope());
-
   if (lazy->bindingsAccessedDynamically()) {
     setBindingsAccessedDynamically();
   }
@@ -209,8 +206,6 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   toStringEnd = lazy->toStringEnd();
   startLine = lazy->lineno();
   startColumn = lazy->column();
-
-  initWithEnclosingScope(enclosingScope_.maybeScope(), fun);
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
@@ -279,8 +274,10 @@ void FunctionBox::initFieldInitializer(ParseContext* enclosing,
   needsThisTDZChecks_ = hasHeritage == HasHeritage::Yes;
 }
 
-void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
-                                         JSFunction* fun) {
+void FunctionBox::initWithEnclosingScope(JSFunction* fun) {
+  Scope* enclosingScope = fun->enclosingScope();
+  MOZ_ASSERT(enclosingScope);
+
   if (!isArrow()) {
     allowNewTarget_ = true;
     allowSuperProperty_ = fun->allowSuperProperty();
@@ -298,6 +295,8 @@ void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
   }
 
   computeInWith(enclosingScope);
+
+  enclosingScope_ = AbstractScope(enclosingScope);
 }
 
 void FunctionBox::setEnclosingScopeForInnerLazyFunction(
