@@ -769,8 +769,9 @@ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
   return false;
 }
 
-PresShell::PresShell()
-    : mViewManager(nullptr),
+PresShell::PresShell(Document* aDocument)
+    : mDocument(aDocument),
+      mViewManager(nullptr),
       mFrameManager(nullptr),
       mAutoWeakFrames(nullptr),
 #ifdef ACCESSIBILITY
@@ -839,6 +840,7 @@ PresShell::PresShell()
       mForceUseLegacyNonPrimaryDispatch(false),
       mInitializedWithClickEventDispatchingBlacklist(false) {
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::PresShell this=%p", this));
+  MOZ_ASSERT(aDocument);
 
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = MakeUnique<ReflowCountMgr>();
@@ -909,18 +911,15 @@ PresShell::~PresShell() {
  * Note this can't be merged into our constructor because caret initialization
  * calls AddRef() on us.
  */
-void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
-                     nsViewManager* aViewManager) {
-  MOZ_ASSERT(aDocument, "null ptr");
+void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
   MOZ_ASSERT(aPresContext, "null ptr");
   MOZ_ASSERT(aViewManager, "null ptr");
-  MOZ_ASSERT(!mDocument, "already initialized");
+  MOZ_ASSERT(!mViewManager, "already initialized");
 
-  if (!aDocument || !aPresContext || !aViewManager || mDocument) {
+  if (!mDocument || !aPresContext || !aViewManager || mViewManager) {
     return;
   }
 
-  mDocument = aDocument;
   mViewManager = aViewManager;
 
   // mDocument is now set.  It might have a display document whose "need layout/
@@ -4335,8 +4334,6 @@ void PresShell::ReconstructFrames() {
     // Nothing to do here
     return;
   }
-
-  RefPtr<PresShell> kungFuDeathGrip(this);
 
   // Have to make sure that the content notifications are flushed before we
   // start messing with the frame model; otherwise we can get content doubling.
