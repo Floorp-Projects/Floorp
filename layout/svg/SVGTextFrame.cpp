@@ -4649,6 +4649,12 @@ void SVGTextFrame::DoTextPathLayout() {
       // The index of the cluster or ligature group's first character.
       uint32_t i = it.TextElementCharIndex();
 
+      // The index of the next character of the cluster or ligature.
+      // We track this as we loop over the characters below so that we
+      // can detect undisplayed characters and append entries into
+      // partialAdvances for them.
+      uint32_t j = i + 1;
+
       MOZ_ASSERT(!mPositions[i].mClusterOrLigatureGroupMiddle);
 
       gfxFloat sign = it.TextRun()->IsRightToLeft() ? -1.0 : 1.0;
@@ -4660,6 +4666,13 @@ void SVGTextFrame::DoTextPathLayout() {
       gfxFloat partialAdvance = it.GetAdvance(context);
       partialAdvances.AppendElement(partialAdvance);
       while (it.Next()) {
+        // Append entries for any undisplayed characters the CharIterator
+        // skipped over.
+        MOZ_ASSERT(j <= it.TextElementCharIndex());
+        while (j < it.TextElementCharIndex()) {
+          partialAdvances.AppendElement(partialAdvance);
+          ++j;
+        }
         // This loop may end up outside of the current text path, but
         // that's OK; we'll consider any complete cluster or ligature
         // group that begins inside the text path as being affected
@@ -4674,8 +4687,12 @@ void SVGTextFrame::DoTextPathLayout() {
         partialAdvances.AppendElement(partialAdvance);
       }
 
-      // The index after the entire cluster or ligature group.
-      uint32_t j = it.TextElementCharIndex();
+      // Any final undisplayed characters the CharIterator skipped over.
+      MOZ_ASSERT(j <= it.TextElementCharIndex());
+      while (j < it.TextElementCharIndex()) {
+        partialAdvances.AppendElement(partialAdvance);
+        ++j;
+      }
 
       gfxFloat halfAdvance =
           partialAdvances.LastElement() / mFontSizeScaleFactor / 2.0;
