@@ -34,7 +34,7 @@ add_task(async function() {
   await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.logNode("h1");
   });
 

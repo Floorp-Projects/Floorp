@@ -18,9 +18,9 @@ function open_subdialog_and_test_generic_start_state(
   let domcontentloadedFnStr = domcontentloadedFn
     ? "(" + domcontentloadedFn.toString() + ")()"
     : "";
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     browser,
-    [{ url, domcontentloadedFnStr }],
+    { url, domcontentloadedFnStr },
     async function(args) {
       let rv = { acceptCount: 0 };
       let win = content.window;
@@ -101,22 +101,22 @@ async function close_subdialog_and_test_generic_end_state(
   options
 ) {
   let getDialogsCount = () => {
-    return SpecialPowers.spawn(
+    return ContentTask.spawn(
       browser,
-      [],
+      null,
       () => content.window.gSubDialog._dialogs.length
     );
   };
   let getStackChildrenCount = () => {
-    return SpecialPowers.spawn(
+    return ContentTask.spawn(
       browser,
-      [],
+      null,
       () => content.window.gSubDialog._dialogStack.children.length
     );
   };
-  let dialogclosingPromise = SpecialPowers.spawn(
+  let dialogclosingPromise = ContentTask.spawn(
     browser,
-    [{ closingButton, acceptCount }],
+    { closingButton, acceptCount },
     async function(expectations) {
       let win = content.window;
       let subdialog = win.gSubDialog._topDialog;
@@ -170,7 +170,7 @@ async function close_subdialog_and_test_generic_end_state(
   if (options && options.runClosingFnOutsideOfContentTask) {
     await closingFn();
   } else {
-    SpecialPowers.spawn(browser, [], closingFn);
+    ContentTask.spawn(browser, null, closingFn);
   }
 
   await dialogclosingPromise;
@@ -205,7 +205,7 @@ add_task(
       tab.linkedBrowser,
       "DOMTitleChanged"
     );
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTask.spawn(tab.linkedBrowser, null, async function() {
       let dialog = content.window.gSubDialog._topDialog;
       let dialogWin = dialog._frame.contentWindow;
       let dialogTitleElement = dialog._titleElement;
@@ -225,7 +225,7 @@ add_task(
     info("waiting for DOMTitleChanged event");
     await domtitlechangedPromise;
 
-    SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    ContentTask.spawn(tab.linkedBrowser, null, async function() {
       let dialogTitleElement =
         content.window.gSubDialog._topDialog._titleElement;
       Assert.equal(
@@ -274,7 +274,7 @@ add_task(async function check_reopening_dialog() {
     gDialogURL2
   );
 
-  SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let win = content.window;
     let dialogs = win.gSubDialog._dialogs;
     let lowerDialog = dialogs[0];
@@ -456,7 +456,7 @@ add_task(async function escape_should_close_dialog() {
 add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let frameStyle = content.window.gSubDialog._topDialog._frame.style;
     Assert.equal(
       frameStyle.width,
@@ -505,7 +505,7 @@ add_task(
       }
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [oldHeight], async function(
+    await ContentTask.spawn(tab.linkedBrowser, oldHeight, async function(
       contentOldHeight
     ) {
       let frame = content.window.gSubDialog._topDialog._frame;
@@ -552,7 +552,7 @@ add_task(async function dialog_too_tall_should_get_reduced_in_height() {
     }
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let frame = content.window.gSubDialog._topDialog._frame;
     Assert.equal(
       frame.style.width,
@@ -586,7 +586,7 @@ add_task(
       }
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTask.spawn(tab.linkedBrowser, null, async function() {
       let frame = content.window.gSubDialog._topDialog._frame;
       Assert.ok(
         frame.style.width.endsWith("px"),

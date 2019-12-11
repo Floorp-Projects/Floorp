@@ -1,13 +1,11 @@
 async function idbCheckFunc() {
-  let factory, console;
+  let factory;
   try {
     // in a worker, this resolves directly.
     factory = indexedDB;
-    console = self.console;
   } catch (ex) {
     // in a frame-script, we need to pierce "content"
     factory = content.indexedDB;
-    console = content.console;
   }
   try {
     console.log("opening db");
@@ -77,7 +75,6 @@ const workerScriptBlob = new Blob([workerScript]);
  * idbCheckFunc and return the result to us.
  */
 async function workerCheckDeployer({ srcBlob, workerType }) {
-  const { console } = content;
   let worker, port;
   const url = content.URL.createObjectURL(srcBlob);
   if (workerType === "dedicated") {
@@ -110,31 +107,27 @@ async function workerCheckDeployer({ srcBlob, workerType }) {
 }
 
 function checkTabWindowIDB(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], idbCheckFunc);
+  return ContentTask.spawn(tab.linkedBrowser, null, idbCheckFunc);
 }
 
 async function checkTabDedicatedWorkerIDB(tab) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     tab.linkedBrowser,
-    [
-      {
-        srcBlob: workerScriptBlob,
-        workerType: "dedicated",
-      },
-    ],
+    {
+      srcBlob: workerScriptBlob,
+      workerType: "dedicated",
+    },
     workerCheckDeployer
   );
 }
 
 async function checkTabSharedWorkerIDB(tab) {
-  return SpecialPowers.spawn(
+  return ContentTask.spawn(
     tab.linkedBrowser,
-    [
-      {
-        srcBlob: workerScriptBlob,
-        workerType: "shared",
-      },
-    ],
+    {
+      srcBlob: workerScriptBlob,
+      workerType: "shared",
+    },
     workerCheckDeployer
   );
 }

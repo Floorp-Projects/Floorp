@@ -21,7 +21,7 @@ add_task(async function() {
 
   info("Play a transition by adding the expand class, wait for mutations");
   let onMutations = expectMutationEvents(animations, 2);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     const el = content.document.querySelector(".all-transitions");
     el.classList.add("expand");
   });
@@ -37,7 +37,7 @@ add_task(async function() {
 
   info("Play the transition back by removing the class, wait for mutations");
   onMutations = expectMutationEvents(animations, 4);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     const el = content.document.querySelector(".all-transitions");
     el.classList.remove("expand");
   });

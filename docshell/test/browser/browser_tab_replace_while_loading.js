@@ -15,7 +15,7 @@ add_task(async function test_window_open_about_blank() {
   );
 
   info("Opening about:blank using a click");
-  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
+  await ContentTask.spawn(firstTab.linkedBrowser, "", async function() {
     content.document.querySelector("#open").click();
   });
 
@@ -29,7 +29,7 @@ add_task(async function test_window_open_about_blank() {
 
   info("Asserting document is visible");
   let tab = win.gBrowser.selectedTab;
-  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, "", async function() {
     is(
       content.document.visibilityState,
       "visible",
@@ -57,13 +57,11 @@ add_task(async function test_detach_loading_page() {
 
   info("Wait for content document to be created");
   await BrowserTestUtils.waitForCondition(async function() {
-    return SpecialPowers.spawn(
-      slowLoadingTab.linkedBrowser,
-      [URL],
-      async function(url) {
-        return content.document.documentURI == url;
-      }
-    );
+    return ContentTask.spawn(slowLoadingTab.linkedBrowser, URL, async function(
+      url
+    ) {
+      return content.document.documentURI == url;
+    });
   });
 
   info("Detaching tab");
@@ -73,7 +71,7 @@ add_task(async function test_detach_loading_page() {
 
   info("Asserting document is visible");
   let tab = win.gBrowser.selectedTab;
-  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
+  await ContentTask.spawn(tab.linkedBrowser, "", async function() {
     is(content.document.readyState, "loading");
     is(content.document.visibilityState, "visible");
   });

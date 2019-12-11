@@ -104,7 +104,7 @@ add_task(async function test_navigated_window() {
     async function test_available(browser) {
       let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await ContentTask.spawn(browser, null, async function() {
         await content.wrappedJSObject.openWindow();
       });
 
@@ -114,13 +114,13 @@ add_task(async function test_navigated_window() {
         gBrowser.getBrowserForTab(tab)
       );
 
-      SpecialPowers.spawn(browser, [], async function() {
+      ContentTask.spawn(browser, null, async function() {
         content.wrappedJSObject.navigate();
       });
 
       await loadPromise;
 
-      let available = await SpecialPowers.spawn(browser, [], async function() {
+      let available = await ContentTask.spawn(browser, null, async function() {
         return content.wrappedJSObject.check();
       });
 

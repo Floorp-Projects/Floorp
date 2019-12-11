@@ -19,7 +19,7 @@ add_task(async function() {
     messages: [{ text: "19" }],
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.doLogs(20);
   });
 

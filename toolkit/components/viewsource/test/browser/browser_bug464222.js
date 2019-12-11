@@ -4,9 +4,9 @@ const source =
 add_task(async function() {
   let viewSourceTab = await openDocumentSelect(source, "a");
 
-  let href = await SpecialPowers.spawn(
+  let href = await ContentTask.spawn(
     viewSourceTab.linkedBrowser,
-    [],
+    {},
     async function() {
       return content.document.querySelectorAll("a[href]")[0].href;
     }

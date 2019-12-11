@@ -10,6 +10,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
+
 var Preferences = {
   init(libDir) {
     let panes = [
@@ -55,18 +59,14 @@ let prefHelper = async function(primary, customFn = null) {
   let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
 
   // close any dialog that might still be open
-  await selectedBrowser.ownerGlobal.SpecialPowers.spawn(
-    selectedBrowser,
-    [],
-    async function() {
-      // Check that gSubDialog is defined on the content window
-      // and that there is an open dialog to close
-      if (!content.window.gSubDialog || !content.window.gSubDialog._topDialog) {
-        return;
-      }
-      content.window.gSubDialog.close();
+  await ContentTask.spawn(selectedBrowser, null, async function() {
+    // Check that gSubDialog is defined on the content window
+    // and that there is an open dialog to close
+    if (!content.window.gSubDialog || !content.window.gSubDialog._topDialog) {
+      return;
     }
-  );
+    content.window.gSubDialog.close();
+  });
 
   let readyPromise = null;
   if (selectedBrowser.currentURI.specIgnoringRef == "about:preferences") {
@@ -109,78 +109,50 @@ function paintPromise(browserWindow) {
 }
 
 async function browsingGroup(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("browsingGroup").scrollIntoView();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("browsingGroup").scrollIntoView();
+  });
 }
 
 async function cacheGroup(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("cacheGroup").scrollIntoView();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("cacheGroup").scrollIntoView();
+  });
 }
 
 async function DNTDialog(aBrowser) {
-  return aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      const button = content.document.getElementById("doNotTrackSettings");
-      if (!button) {
-        return {
-          todo: "The dialog may have exited before we could click the button",
-        };
-      }
-      button.click();
-      return undefined;
+  return ContentTask.spawn(aBrowser, null, async function() {
+    const button = content.document.getElementById("doNotTrackSettings");
+    if (!button) {
+      return {
+        todo: "The dialog may have exited before we could click the button",
+      };
     }
-  );
+    button.click();
+    return undefined;
+  });
 }
 
 async function connectionDialog(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("connectionSettings").click();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("connectionSettings").click();
+  });
 }
 
 async function clearRecentHistoryDialog(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("clearHistoryButton").click();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("clearHistoryButton").click();
+  });
 }
 
 async function certManager(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("viewCertificatesButton").click();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("viewCertificatesButton").click();
+  });
 }
 
 async function deviceManager(aBrowser) {
-  await aBrowser.ownerGlobal.SpecialPowers.spawn(
-    aBrowser,
-    [],
-    async function() {
-      content.document.getElementById("viewSecurityDevicesButton").click();
-    }
-  );
+  await ContentTask.spawn(aBrowser, null, async function() {
+    content.document.getElementById("viewSecurityDevicesButton").click();
+  });
 }

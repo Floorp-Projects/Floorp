@@ -20,7 +20,7 @@ async function openTabAndSetupStorage(url) {
   const content = await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     /**
      * Get all windows including frames recursively.
      *
@@ -59,7 +59,7 @@ async function openTabAndSetupStorage(url) {
 }
 
 async function clearStorage() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     /**
      * Get all windows including frames recursively.
      *

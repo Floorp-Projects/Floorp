@@ -30,7 +30,7 @@ add_task(async function testShiftEvents(client) {
   await withModifier(Input, "Shift", "shift", "Tab");
   events = await getEvents();
   checkEvent(events[1], "keydown", "Tab", "shift", true);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const input = content.document.querySelector("input");
     isnot(input, content.document.activeElement, "input should lose focus");
   });
@@ -101,7 +101,7 @@ add_task(async function testShiftClick(client) {
 });
 
 async function getEvents() {
-  const events = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  const events = await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     return content.eval("allEvents");
   });
   info(`Events: ${JSON.stringify(events)}`);
@@ -109,7 +109,7 @@ async function getEvents() {
 }
 
 async function resetEvents() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.eval("resetEvents()");
     const events = content.eval("allEvents");
     is(events.length, 0, "List of events should be empty");

@@ -34,7 +34,7 @@ add_task(async function() {
   const eventWait = gUI.once("store-objects-edit");
 
   info("telling content to close the db");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     const win = content.wrappedJSObject;
     await win.closeDb();
   });

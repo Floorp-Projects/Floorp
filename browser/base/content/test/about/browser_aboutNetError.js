@@ -70,7 +70,7 @@ add_task(async function resetToDefaultConfig() {
     TLS12_PAGE
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -124,7 +124,7 @@ add_task(async function checkLearnMoreLink() {
 
   const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
-  await SpecialPowers.spawn(browser, [baseURL], function(_baseURL) {
+  await ContentTask.spawn(browser, baseURL, function(_baseURL) {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -176,7 +176,7 @@ add_task(async function checkEnable10() {
     TLS10_PAGE
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -227,7 +227,7 @@ add_task(async function dontOffer10WhenAlreadyEnabled() {
   info("Loading and waiting for the net error");
   await pageLoaded;
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await ContentTask.spawn(browser, null, async function() {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),

@@ -17,7 +17,7 @@ async function lsCheckFunc() {
 }
 
 function checkTabWindowLS(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], lsCheckFunc);
+  return ContentTask.spawn(tab.linkedBrowser, null, lsCheckFunc);
 }
 
 add_task(async function() {

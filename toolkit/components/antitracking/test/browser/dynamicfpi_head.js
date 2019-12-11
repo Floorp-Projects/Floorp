@@ -55,14 +55,12 @@ this.DynamicFPIHelper = {
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
-      await SpecialPowers.spawn(
+      await ContentTask.spawn(
         browser,
-        [
-          {
-            page: TEST_4TH_PARTY_STORAGE_PAGE,
-            callback: callback.toString(),
-          },
-        ],
+        {
+          page: TEST_4TH_PARTY_STORAGE_PAGE,
+          callback: callback.toString(),
+        },
         async obj => {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");

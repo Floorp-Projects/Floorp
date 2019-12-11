@@ -35,7 +35,7 @@ add_task(async function() {
   // The easiest way to get the actual path is to request it from the content
   // process.
   const browser = gBrowser.selectedBrowser;
-  const actualPath = await SpecialPowers.spawn(browser, [], () => {
+  const actualPath = await ContentTask.spawn(browser, null, () => {
     return content.document.location.href;
   });
 

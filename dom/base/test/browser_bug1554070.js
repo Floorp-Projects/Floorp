@@ -18,7 +18,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   function click() {
-    return SpecialPowers.spawn(browser, [], () => {
+    return ContentTask.spawn(browser, null, () => {
       let anchor = content.document.querySelector("a");
       anchor.click();
     });
@@ -37,10 +37,8 @@ add_task(async function() {
 
   // Click the link in file_bug1554070_2.html. It should open example.org in
   // a new tab.
-  await Promise.all([
-    click(),
-    BrowserTestUtils.waitForNewTab(gBrowser, URL2, true),
-  ]);
+  await click();
+  await BrowserTestUtils.waitForNewTab(gBrowser, URL2, true);
   is(gBrowser.tabs.length, 3, "got new tab");
   is(gBrowser.currentURI.spec, URL2, "loaded example.org");
 

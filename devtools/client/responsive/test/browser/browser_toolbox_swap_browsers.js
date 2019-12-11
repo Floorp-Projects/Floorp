@@ -9,7 +9,7 @@ const TEST_URL = "http://example.com/";
 
 function getServerConnections(browser) {
   ok(browser.isRemoteBrowser, "Content browser is remote");
-  return SpecialPowers.spawn(browser, [], async function() {
+  return ContentTask.spawn(browser, {}, async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );

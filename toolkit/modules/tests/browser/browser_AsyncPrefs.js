@@ -127,7 +127,7 @@ if (gMultiProcessBrowser) {
       gBrowser.selectedBrowser.isRemoteBrowser,
       "Should actually run this in child process"
     );
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], runTest);
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, runTest);
     resetPrefs();
   });
 }

@@ -56,7 +56,7 @@ add_task(async function() {
   await promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
   await promiseTabLoad(prefTab, "about:preferences");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
     Assert.ok(!!plugin, "plugin is loaded");
@@ -86,7 +86,7 @@ add_task(async function() {
     );
     await ppromise;
 
-    await SpecialPowers.spawn(pluginTab.linkedBrowser, [], async function() {
+    await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       Assert.ok(
@@ -103,7 +103,7 @@ add_task(async function() {
     );
     await ppromise;
 
-    await SpecialPowers.spawn(pluginTab.linkedBrowser, [], async function() {
+    await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       Assert.ok(

@@ -46,7 +46,7 @@ async function openPage(enableDialogs) {
     async function(browser) {
       // Load the content script in the frame.
       let methodName = enableDialogs ? "enableDialogs" : "disableDialogs";
-      await SpecialPowers.spawn(browser, [methodName], async function(name) {
+      await ContentTask.spawn(browser, methodName, async function(name) {
         const { Services } = ChromeUtils.import(
           "resource://gre/modules/Services.jsm"
         );
