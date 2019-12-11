@@ -68,7 +68,7 @@ add_task(async function checkDragForbiddenURL() {
     // examples. In general we trust that function, we pick some testcases to
     // ensure we disallow dropping trimmed text.
     for (let url of [
-      "chrome://browser/content/aboutDialog.xul",
+      "chrome://browser/content/aboutDialog.xhtml",
       "file:///",
       "javascript:",
       "javascript:void(0)",

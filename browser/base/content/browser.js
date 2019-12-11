@@ -3240,7 +3240,7 @@ function BrowserPageInfo(
 
   // We didn't find a matching window, so open a new one.
   return openDialog(
-    "chrome://browser/content/pageinfo/pageInfo.xul",
+    "chrome://browser/content/pageinfo/pageInfo.xhtml",
     "",
     "chrome,toolbar,dialog=no,resizable",
     args

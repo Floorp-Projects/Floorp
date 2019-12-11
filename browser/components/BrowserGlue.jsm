@@ -165,8 +165,8 @@ let ACTORS = {
       "about:newtab",
       "about:welcome",
       "chrome://browser/content/syncedtabs/sidebar.xhtml",
-      "chrome://browser/content/places/historySidebar.xul",
-      "chrome://browser/content/places/bookmarksSidebar.xul",
+      "chrome://browser/content/places/historySidebar.xhtml",
+      "chrome://browser/content/places/bookmarksSidebar.xhtml",
     ],
   },
 
@@ -1147,7 +1147,7 @@ BrowserGlue.prototype = {
     if (Services.appinfo.inSafeMode) {
       Services.ww.openWindow(
         null,
-        "chrome://browser/content/safeMode.xul",
+        "chrome://browser/content/safeMode.xhtml",
         "_blank",
         "chrome,centerscreen,modal,resizable=no",
         null
@@ -1918,7 +1918,7 @@ BrowserGlue.prototype = {
 
       Services.ww.openWindow(
         win,
-        "chrome://browser/content/newInstall.xul",
+        "chrome://browser/content/newInstall.xhtml",
         "_blank",
         "chrome,modal,resizable=no,centerscreen",
         null

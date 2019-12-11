@@ -49,7 +49,8 @@ function promiseIndicatorWindow() {
         "load",
         function() {
           if (
-            win.location.href !== "chrome://browser/content/webrtcIndicator.xul"
+            win.location.href !==
+            "chrome://browser/content/webrtcIndicator.xhtml"
           ) {
             info("ignoring a window with this url: " + win.location.href);
             return;
