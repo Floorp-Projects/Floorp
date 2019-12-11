@@ -1073,10 +1073,11 @@ nsresult TextInputListener::UpdateTextInputCommands(
  *****************************************************************************/
 
 enum class TextControlAction {
-  PrepareEditor,
   CommitComposition,
-  SetValue,
+  PrepareEditor,
+  SetRangeText,
   SetSelectionRange,
+  SetValue,
 };
 
 class MOZ_STACK_CLASS AutoTextControlHandlingState {
@@ -1092,8 +1093,8 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
    * Generic constructor.  If TextControlAction does not require additional
    * data, must use this constructor.
    */
-  AutoTextControlHandlingState(TextControlState& aTextControlState,
-                               TextControlAction aTextControlAction)
+  MOZ_CAN_RUN_SCRIPT AutoTextControlHandlingState(
+      TextControlState& aTextControlState, TextControlAction aTextControlAction)
       : mParent(aTextControlState.mHandlingState),
         mTextControlState(aTextControlState),
         mTextCtrlElement(aTextControlState.mTextCtrlElement),
@@ -1117,11 +1118,10 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
    * must be specified and the creator should check whether we succeeded to
    * allocate memory for line breaker conversion.
    */
-  AutoTextControlHandlingState(TextControlState& aTextControlState,
-                               TextControlAction aTextControlAction,
-                               const nsAString& aSettingValue,
-                               const nsAString* aOldValue, uint32_t aFlags,
-                               ErrorResult& aRv)
+  MOZ_CAN_RUN_SCRIPT AutoTextControlHandlingState(
+      TextControlState& aTextControlState, TextControlAction aTextControlAction,
+      const nsAString& aSettingValue, const nsAString* aOldValue,
+      uint32_t aFlags, ErrorResult& aRv)
       : mParent(aTextControlState.mHandlingState),
         mTextControlState(aTextControlState),
         mTextCtrlElement(aTextControlState.mTextCtrlElement),
@@ -2113,6 +2113,7 @@ void TextControlState::SetSelectionStart(const Nullable<uint32_t>& aStart,
   }
 
   SetSelectionRange(start, end, dir, aRv);
+  // The instance may have already been deleted here.
 }
 
 void TextControlState::SetSelectionEnd(const Nullable<uint32_t>& aEnd,
@@ -2134,6 +2135,7 @@ void TextControlState::SetSelectionEnd(const Nullable<uint32_t>& aEnd,
   }
 
   SetSelectionRange(start, end, dir, aRv);
+  // The instance may have already been deleted here.
 }
 
 static void DirectionToName(nsITextControlFrame::SelectionDirection dir,
@@ -2192,6 +2194,7 @@ void TextControlState::SetSelectionDirection(const nsAString& aDirection,
   }
 
   SetSelectionRange(start, end, dir, aRv);
+  // The instance may have already been deleted here.
 }
 
 static nsITextControlFrame::SelectionDirection
@@ -2212,6 +2215,7 @@ void TextControlState::SetSelectionRange(uint32_t aSelectionStart,
       DirectionStringToSelectionDirection(aDirection);
 
   SetSelectionRange(aSelectionStart, aSelectionEnd, dir, aRv);
+  // The instance may have already been deleted here.
 }
 
 void TextControlState::SetRangeText(const nsAString& aReplacement,
@@ -2224,6 +2228,7 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
 
   SetRangeText(aReplacement, start, end, SelectionMode::Preserve, aRv,
                Some(start), Some(end));
+  // The instance may have already been deleted here.
 }
 
 void TextControlState::SetRangeText(const nsAString& aReplacement,
@@ -2235,6 +2240,9 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
+
+  AutoTextControlHandlingState handlingSetRangeText(
+      *this, TextControlAction::SetRangeText);
 
   nsAutoString value;
   mTextCtrlElement->GetValueFromSetRangeText(value);
@@ -2263,7 +2271,8 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
 
   MOZ_ASSERT(aStart <= aEnd);
   value.Replace(aStart, aEnd - aStart, aReplacement);
-  nsresult rv = mTextCtrlElement->SetValueFromSetRangeText(value);
+  nsresult rv =
+      MOZ_KnownLive(mTextCtrlElement)->SetValueFromSetRangeText(value);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -2301,6 +2310,7 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
   }
 
   SetSelectionRange(selectionStart, selectionEnd, Optional<nsAString>(), aRv);
+  // The instance may have already been deleted here.
 }
 
 HTMLInputElement* TextControlState::GetParentNumberControl(
