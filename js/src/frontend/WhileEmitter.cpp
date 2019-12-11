@@ -42,11 +42,7 @@ bool WhileEmitter::emitCond(const Maybe<uint32_t>& whilePos,
 
   loopInfo_.emplace(bce_, StatementKind::WhileLoop);
 
-  if (!bce_->newSrcNote(SRC_WHILE)) {
-    return false;
-  }
-
-  if (!loopInfo_->emitLoopHead(bce_, condPos)) {
+  if (!loopInfo_->emitLoopHead(bce_, condPos, SRC_WHILE)) {
     return false;
   }
 

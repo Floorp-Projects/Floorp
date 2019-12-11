@@ -67,11 +67,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& condPos) {
     }
   }
 
-  if (!bce_->newSrcNote(SRC_FOR)) {
-    return false;
-  }
-
-  if (!loopInfo_->emitLoopHead(bce_, condPos)) {
+  if (!loopInfo_->emitLoopHead(bce_, condPos, SRC_FOR)) {
     //            [stack]
     return false;
   }
