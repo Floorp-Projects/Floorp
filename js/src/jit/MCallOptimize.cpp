@@ -806,7 +806,7 @@ IonBuilder::InliningResult IonBuilder::inlineArray(CallInfo& callInfo,
 
   MOZ_TRY(jsop_newarray(templateObject, initLength));
 
-  MDefinition* array = current->peek(-1);
+  MNewArray* array = current->peek(-1)->toNewArray();
   if (callInfo.argc() >= 2) {
     for (uint32_t i = 0; i < initLength; i++) {
       if (!alloc().ensureBallast()) {
