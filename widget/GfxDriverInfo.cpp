@@ -221,9 +221,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     case IntelHD3000:
       APPEND_DEVICE(0x0126);
       break;
-    case IntelHD520:
-      APPEND_DEVICE(0x1916);
-      break;
     case IntelMobileHDGraphics:
       APPEND_DEVICE(0x0046); /* IntelMobileHDGraphics */
       break;
