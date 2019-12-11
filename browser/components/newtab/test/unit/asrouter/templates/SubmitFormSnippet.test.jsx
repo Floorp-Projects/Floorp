@@ -178,7 +178,7 @@ describe("SubmitFormSnippet", () => {
       wrapper.find(".ASRouterButton").simulate("click");
 
       assert.equal(
-        wrapper.props().sendUserActionTelemetry.firstCall.args[0].value,
+        wrapper.props().sendUserActionTelemetry.firstCall.args[0].event_context,
         "scene1-button-learn-more"
       );
     });
@@ -195,7 +195,7 @@ describe("SubmitFormSnippet", () => {
       wrapper.find("form").simulate("submit");
 
       assert.equal(
-        wrapper.props().sendUserActionTelemetry.firstCall.args[0].value,
+        wrapper.props().sendUserActionTelemetry.firstCall.args[0].event_context,
         "conversion-subscribe-activation"
       );
     });
@@ -215,7 +215,8 @@ describe("SubmitFormSnippet", () => {
       await wrapper.instance().handleSubmit({ preventDefault: sandbox.stub() });
 
       assert.equal(
-        wrapper.props().sendUserActionTelemetry.secondCall.args[0].value,
+        wrapper.props().sendUserActionTelemetry.secondCall.args[0]
+          .event_context,
         "subscribe-success"
       );
     });
@@ -249,7 +250,8 @@ describe("SubmitFormSnippet", () => {
       await wrapper.instance().handleSubmit({ preventDefault: sandbox.stub() });
 
       assert.equal(
-        wrapper.props().sendUserActionTelemetry.secondCall.args[0].value,
+        wrapper.props().sendUserActionTelemetry.secondCall.args[0]
+          .event_context,
         "subscribe-error"
       );
     });
