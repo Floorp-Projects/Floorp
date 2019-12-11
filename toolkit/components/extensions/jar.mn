@@ -4,7 +4,7 @@
 
 toolkit.jar:
 % content extensions %content/extensions/
-    content/extensions/dummy.xul
+    content/extensions/dummy.xhtml
     content/extensions/ext-browser-content.js
     content/extensions/ext-toolkit.json
     content/extensions/parent/ext-activityLog.js (parent/ext-activityLog.js)

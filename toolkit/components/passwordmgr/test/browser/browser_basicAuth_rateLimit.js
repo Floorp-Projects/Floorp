@@ -5,7 +5,7 @@
 // This tests that the basic auth dialog can not be used for DOS attacks
 // and that the protections are reset on user-initiated navigation/reload.
 
-const PROMPT_URL = "chrome://global/content/commonDialog.xul";
+const PROMPT_URL = "chrome://global/content/commonDialog.xhtml";
 function promiseAuthWindowShown() {
   return new Promise(resolve => {
     let listener = {
