@@ -802,8 +802,36 @@ void nsRange::ParentChainChanged(nsIContent* aContent) {
   DoSetRange(mStart, mEnd, newRoot);
 }
 
-bool nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
-  uint16_t compareResult = ComparePoint(aPoint, aRv);
+bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
+                                       uint32_t aOffset,
+                                       ErrorResult& aErrorResult) const {
+  // our range is in a good state?
+  if (!mIsPositioned) {
+    aErrorResult.Throw(NS_ERROR_NOT_INITIALIZED);
+    return false;
+  }
+
+  if (!aContainer.IsInclusiveDescendantOf(mRoot)) {
+    aErrorResult.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
+    return false;
+  }
+
+  if (aContainer.NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
+    aErrorResult.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return false;
+  }
+
+  if (aOffset > aContainer.Length()) {
+    aErrorResult.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return false;
+  }
+
+  return true;
+}
+
+bool nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset,
+                             ErrorResult& aRv) const {
+  uint16_t compareResult = ComparePoint(aContainer, aOffset, aRv);
   // If the node isn't in the range's document, it clearly isn't in the range.
   if (aRv.ErrorCodeIs(NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
     aRv.SuppressException();
@@ -813,41 +841,21 @@ bool nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   return compareResult == 0;
 }
 
-int16_t nsRange::ComparePoint(const RawRangeBoundary& aPoint,
-                              ErrorResult& aRv) {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    // FYI: Shouldn't reach this case if it's called by JS.  Therefore, it's
-    //      okay to warn.
-    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+int16_t nsRange::ComparePoint(nsINode& aContainer, uint32_t aOffset,
+                              ErrorResult& aRv) const {
+  if (!IsPointComparableToRange(aContainer, aOffset, aRv)) {
     return 0;
   }
 
-  // our range is in a good state?
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return 0;
-  }
+  const RawRangeBoundary point{&aContainer, aOffset};
 
-  if (!aPoint.Container()->IsInclusiveDescendantOf(mRoot)) {
-    aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
-    return 0;
-  }
+  MOZ_ASSERT(point.IsSetAndValid());
 
-  if (aPoint.Container()->NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-    return 0;
-  }
-
-  if (aPoint.Offset() > aPoint.Container()->Length()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return 0;
-  }
-
-  int32_t cmp = nsContentUtils::ComparePoints(aPoint, mStart);
+  const int32_t cmp = nsContentUtils::ComparePoints(point, mStart);
   if (cmp <= 0) {
     return cmp;
   }
-  if (nsContentUtils::ComparePoints(mEnd, aPoint) == -1) {
+  if (nsContentUtils::ComparePoints(mEnd, point) == -1) {
     return 1;
   }
 
