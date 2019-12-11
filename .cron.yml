@@ -253,3 +253,13 @@ jobs:
           - mozilla-esr68
       when:
           - {minute: 45}
+
+    - name: system-symbols
+      job:
+          type: decision-task
+          treeherder-symbol: system-symbols
+          target-tasks-method: system_symbols
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 0}
