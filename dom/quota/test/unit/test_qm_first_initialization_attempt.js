@@ -43,7 +43,7 @@ const testcases = [
     },
     async settingForForcingInitFailure() {
       // We need to initialize storage before creating the metadata directory.
-      // If we don't do that, the storage/ directory created for the metadata
+      // If we don't do that, the storage directory created for the metadata
       // directory would trigger storage upgrades (from version 0 to current
       // version) which would fail due to the metadata directory entry being
       // a directory (not a file).
@@ -58,6 +58,119 @@ const testcases = [
     expectedResult: {
       initFailure: [1, 0],
       initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "PersistentOrigin",
+    testingInitFunction: [
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example1.com"),
+          "persistent"
+        );
+      },
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example2.com"),
+          "persistent"
+        );
+      },
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example3.com"),
+          "default"
+        );
+      },
+    ],
+    get originFiles() {
+      return [
+        getRelativeFile("storage/permanent/https+++example1.com"),
+        getRelativeFile("storage/permanent/https+++example2.com"),
+        getRelativeFile("storage/default/https+++example3.com"),
+      ];
+    },
+    async settingForForcingInitFailure() {
+      // We need to initialize temporary storage before creating the origin
+      // file. If we don't do that, the initialization would fail while
+      // initializating the temporary storage.
+      let request = initTemporaryStorage();
+      await requestFinished(request);
+
+      for (let originFile of this.originFiles) {
+        originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
+      }
+    },
+    removeSetting() {
+      for (let originFile of this.originFiles) {
+        originFile.remove(false);
+      }
+    },
+    expectedResult: {
+      // Only the first init results for (persistent, example1.com) and
+      // (persistent, example2.com) should be reported.
+      initFailure: [2, 0],
+      initFailureThenSuccess: [2, 2, 0],
+    },
+  },
+  {
+    key: "TemporaryOrigin",
+    testingInitFunction: [
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example.com"),
+          "temporary"
+        );
+      },
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example.com"),
+          "default"
+        );
+      },
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example1.com"),
+          "default"
+        );
+      },
+      function() {
+        return initStorageAndOrigin(
+          getPrincipal("https://example2.com"),
+          "persistent"
+        );
+      },
+    ],
+    get originFiles() {
+      return [
+        getRelativeFile("storage/temporary/https+++example.com"),
+        getRelativeFile("storage/default/https+++example.com"),
+        getRelativeFile("storage/default/https+++example1.com"),
+        getRelativeFile("storage/permanent/https+++example2.com"),
+      ];
+    },
+    async settingForForcingInitFailure() {
+      // We need to initialize temporary storage before creating the origin
+      // file. If we don't do that, the initialization would fail while
+      // initializating the temporary storage.
+      let request = initTemporaryStorage();
+      await requestFinished(request);
+
+      for (let originFile of this.originFiles) {
+        originFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
+      }
+    },
+    removeSetting() {
+      for (let originFile of this.originFiles) {
+        originFile.remove(false);
+      }
+    },
+    expectedResult: {
+      // Only the first result of EnsureTemporaryOriginIsInitialized per origin
+      // should be reported. Thus, only the results for
+      // (temporary, example.com), and (default, example1.com) should be
+      // reported.
+      initFailure: [2, 0],
+      initFailureThenSuccess: [2, 2, 0],
     },
   },
 ];
@@ -110,12 +223,18 @@ async function testSteps() {
       // The steps below verify we should get the result of the first attempt
       // for the initialization.
       for (let i = 0; i < 2; ++i) {
-        request = testcase.testingInitFunction();
-        try {
-          await requestFinished(request);
-          ok(expectedInitResult, msg);
-        } catch (ex) {
-          ok(!expectedInitResult, msg);
+        const iterableInitFunc =
+          typeof testcase.testingInitFunction[Symbol.iterator] === "function"
+            ? testcase.testingInitFunction
+            : [testcase.testingInitFunction];
+        for (let initFunc of iterableInitFunc) {
+          request = initFunc();
+          try {
+            await requestFinished(request);
+            ok(expectedInitResult, msg);
+          } catch (ex) {
+            ok(!expectedInitResult, msg);
+          }
         }
       }
 
