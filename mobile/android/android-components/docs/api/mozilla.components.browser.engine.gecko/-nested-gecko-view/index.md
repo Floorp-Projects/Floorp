@@ -2,7 +2,7 @@
 
 # NestedGeckoView
 
-`open class NestedGeckoView : `[`GeckoView`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoView.html)`, NestedScrollingChild` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/NestedGeckoView.kt#L27)
+`open class NestedGeckoView : `[`GeckoView`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoView.html)`, NestedScrollingChild` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/NestedGeckoView.kt#L26)
 
 geckoView that supports nested scrolls (for using in a CoordinatorLayout).
 
