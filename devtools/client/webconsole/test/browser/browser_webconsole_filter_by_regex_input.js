@@ -58,6 +58,15 @@ add_task(async function() {
     [MESSAGES[1], MESSAGES[2], MESSAGES[3], MESSAGES[4], MESSAGES[5]],
     5
   );
+
+  info("Filter out messages that do not contain query strings");
+  await setFilterInput(hud, "-/\\?([^=&]+=[^=&]+&?)*\\//", MESSAGES[2]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(
+    filteredNodes,
+    [MESSAGES[0], MESSAGES[1], MESSAGES[4], MESSAGES[5]],
+    2
+  );
 });
 
 async function setFilterInput(hud, value, lastMessage) {
