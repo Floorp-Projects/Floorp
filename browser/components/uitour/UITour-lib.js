@@ -470,6 +470,10 @@ if (typeof Mozilla == "undefined") {
    * @typedef {Object} Mozilla.UITour.Configuration.FxA
    * @property {Boolean} setup - Whether FxA is setup on this device. If false,
    *    no other properties will exist.
+   * @property {Boolean} accountStateOK - Whether the FxA account state is OK.
+   *    If false, it probably means the account is unverified or the user has
+   *    changed their password on another device and needs to update it here.
+   *    In that case many other properties will not exist.
    * @property {Number} [numOtherDevices] - Number of devices connected to this
    *    account, not counting this device.
    * @property {Object.<String, Number>} [numDevicesByType] - A count of devices

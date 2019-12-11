@@ -35,10 +35,12 @@ add_UITour_task(async function test_no_sync_no_devices() {
     ];
   });
   sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+  sandbox.stub(fxAccounts, "hasLocalSession").resolves(true);
 
   let result = await getConfigurationPromise("fxa");
   Assert.deepEqual(result, {
     setup: true,
+    accountStateOK: true,
     numOtherDevices: 0,
     numDevicesByType: {},
     accountServices: {},
@@ -87,10 +89,12 @@ add_UITour_task(async function test_no_sync_many_devices() {
     ];
   });
   sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+  sandbox.stub(fxAccounts, "hasLocalSession").resolves(true);
 
   let result = await getConfigurationPromise("fxa");
   Assert.deepEqual(result, {
     setup: true,
+    accountStateOK: true,
     accountServices: {},
     browserServices: {},
     numOtherDevices: 5,
@@ -133,11 +137,13 @@ add_UITour_task(async function test_no_sync_no_cached_devices() {
   });
 
   sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+  sandbox.stub(fxAccounts, "hasLocalSession").resolves(true);
   let rdlStub = sandbox.stub(fxAccounts.device, "refreshDeviceList").resolves();
 
   let result = await getConfigurationPromise("fxa");
   Assert.deepEqual(result, {
     setup: true,
+    accountStateOK: true,
     accountServices: {},
     browserServices: {},
     numOtherDevices: 1,
@@ -155,6 +161,7 @@ add_UITour_task(async function test_account_clients() {
     .stub(fxAccounts, "getSignedInUser")
     .returns({ email: "foo@example.com" });
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => []);
+  sandbox.stub(fxAccounts, "hasLocalSession").resolves(false);
   sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([
     {
       id: "802d56ef2a9af9fa",
@@ -176,6 +183,7 @@ add_UITour_task(async function test_account_clients() {
   ]);
   Assert.deepEqual(await getConfigurationPromise("fxa"), {
     setup: true,
+    accountStateOK: false,
     numOtherDevices: 0,
     numDevicesByType: {},
     accountServices: {
@@ -204,6 +212,7 @@ add_UITour_task(async function test_sync() {
     .returns({ email: "foo@example.com" });
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => []);
   sandbox.stub(fxAccounts, "listAttachedOAuthClients").resolves([]);
+  sandbox.stub(fxAccounts, "hasLocalSession").resolves(true);
   Services.prefs.setCharPref("services.sync.username", "tests@mozilla.org");
   Services.prefs.setIntPref("services.sync.clients.devices.desktop", 4);
   Services.prefs.setIntPref("services.sync.clients.devices.mobile", 5);
@@ -211,6 +220,7 @@ add_UITour_task(async function test_sync() {
 
   Assert.deepEqual(await getConfigurationPromise("fxa"), {
     setup: true,
+    accountStateOK: true,
     numOtherDevices: 0,
     numDevicesByType: {},
     accountServices: {},
