@@ -138,6 +138,206 @@ const testcases = [
       initFailureThenSuccess: [2, 2, 0],
     },
   },
+  {
+    // Tests for upgrade functions are sligthy different from others because
+    // it's impossible to run the testing function in the success cases twice
+    // without calling reset().
+
+    key: "UpgradeStorageFrom0_0To1_0",
+    initFunction: init,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    initSetting() {
+      let db = getRelativeFile("storage.sqlite");
+      if (db.exists()) {
+        // Remove the storage.sqlite to test the code path for version0_0To1_0
+        db.remove(false);
+      }
+    },
+    async breakInit() {
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "UpgradeStorageFrom1_0To2_0",
+    initFunction: init,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    initSetting() {
+      // The zipped file contins only one storage:
+      // - storage.sqlite
+      // To make it become the profile in the test, we need:
+      // 1. Get the storage.sqlite from a clean profile.
+      // 2. Make the version of it to 1_0 version by
+      //    sqlite3 PROFILE/storage.sqlite "PRAGMA user_version = 65536;"
+      installPackage("version2_0upgrade_profile");
+    },
+    async breakInit() {
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "UpgradeStorageFrom2_0To2_1",
+    initFunction: init,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    initSetting() {
+      installPackage("version2_1upgrade_profile");
+    },
+    async breakInit() {
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "UpgradeStorageFrom2_1To2_2",
+    initFunction: init,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    initSetting() {
+      installPackage("version2_2upgrade_profile");
+    },
+    async breakInit() {
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "UpgradeStorageFrom2_2To2_3",
+    initFunction: init,
+    initArgs: [[]],
+    initSetting() {
+      // Reuse the version2_1 storage.sqlite to test the code path for 2_2To2_3
+      // upgrade
+      installPackage("version2_2upgrade_profile");
+    },
+    async breakInit() {
+      // The zipped file contins only one storage:
+      // - storage.sqlite
+      // To make it become the profile in the test, we need:
+      // 1. Get the storage.sqlite from a clean profile.
+      // 2. Make the version of it to 2_2 version by
+      //    sqlite3 PROFILE/storage.sqlite "PRAGMA user_version = 131074;"
+      // 3. Make it broken by creating the table in the upgrading function by
+      //    sqlite3 PROFILE/storage.sqlite "CREATE TABLE database ( \
+      //      "cache_version INTEGER NOT NULL DEFAULT 0);"
+      installPackage("broken2_2_profile");
+    },
+    unbreakInit() {
+      let db = getRelativeFile("storage.sqlite");
+      db.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "DefaultRepository",
+    initFunction: initTemporaryStorage,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    async initSetting() {
+      // Create a valid file/directtory in the target repository is needed.
+      // Otherwise, we can not test the code path.
+      let originDir = getRelativeFile("storage/default/https+++example1.com/");
+
+      if (!originDir.exists()) {
+        originDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+      }
+    },
+    async breakInit() {
+      let request = init();
+      await requestFinished(request);
+
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
+    key: "TemporaryRepository",
+    initFunction: initTemporaryStorage,
+    initArgs: [[]],
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/temporary/https+++example.com/.metadata-v2"
+      );
+    },
+    async initSetting() {
+      let originDir = getRelativeFile(
+        "storage/temporary/https+++example1.com/"
+      );
+
+      if (!originDir.exists()) {
+        originDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+      }
+    },
+    async breakInit() {
+      let request = init();
+      await requestFinished(request);
+
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    unbreakInit() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
 ];
 
 function verifyResult(histogram, key, expectedResult) {
@@ -177,6 +377,10 @@ async function testSteps() {
           "the init " +
           (expectedInitResult ? "succeeds" : "fails")
       );
+
+      if (testcase.initSetting) {
+        await testcase.initSetting();
+      }
 
       if (!expectedInitResult) {
         await testcase.breakInit();
