@@ -29,7 +29,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-var EXPORTED_SYMBOLS = ["formAutofillParent"];
+var EXPORTED_SYMBOLS = ["FormAutofillParent", "FormAutofillStatus"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -63,26 +63,10 @@ const {
   CREDITCARDS_COLLECTION_NAME,
 } = FormAutofillUtils;
 
-function FormAutofillParent() {
-  // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
-  // Once storage is loaded we need to update saved field names and inform content processes.
-  XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
-    let { formAutofillStorage } = ChromeUtils.import(
-      "resource://formautofill/FormAutofillStorage.jsm"
-    );
-    log.debug("Loading formAutofillStorage");
+let gMessageObservers = new Set();
 
-    formAutofillStorage.initialize().then(() => {
-      // Update the saved field names to compute the status and update child processes.
-      this._updateSavedFieldNames();
-    });
-
-    return formAutofillStorage;
-  });
-}
-
-FormAutofillParent.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+let FormAutofillStatus = {
+  _initialized: false,
 
   /**
    * Cache of the Form Autofill status (considering preferences and storage).
@@ -90,46 +74,22 @@ FormAutofillParent.prototype = {
   _active: null,
 
   /**
-   * The status of Form Autofill's initialization.
+   * Initializes observers and registers the message handler.
    */
-  _initialized: false,
-
-  /**
-   * Exposes the status of Form Autofill's initialization. It can be used to
-   * determine whether Form Autofill is available for current users.
-   *
-   * @returns {boolean} Whether FormAutofillParent is initialized.
-   */
-  get initialized() {
-    return this._initialized;
-  },
-
-  /**
-   * Initializes FormAutofillStorage and registers the message handler.
-   */
-  async init() {
+  init() {
     if (this._initialized) {
       return;
     }
     this._initialized = true;
 
     Services.obs.addObserver(this, "privacy-pane-loaded");
-    Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
-    Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
-    Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
-    Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.ppmm.addMessageListener("FormAutofill:OpenPreferences", this);
-    Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
 
-    // Only listen to credit card related messages if it is available
+    // Only listen to credit card related preference if it is available
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      Services.ppmm.addMessageListener("FormAutofill:SaveCreditCard", this);
-      Services.ppmm.addMessageListener("FormAutofill:RemoveCreditCards", this);
-      Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
       Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     }
 
@@ -137,6 +97,99 @@ FormAutofillParent.prototype = {
       this.injectElements(win.document);
     }
     Services.wm.addListener(this);
+  },
+
+  /**
+   * Uninitializes FormAutofillStatus. This is for testing only.
+   *
+   * @private
+   */
+  uninit() {
+    gFormAutofillStorage._saveImmediately();
+
+    if (!this._initialized) {
+      return;
+    }
+    this._initialized = false;
+
+    this._active = null;
+
+    Services.obs.removeObserver(this, "privacy-pane-loaded");
+    Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
+    Services.wm.removeListener(this);
+
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
+      Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
+    }
+  },
+
+  get formAutofillStorage() {
+    return gFormAutofillStorage;
+  },
+
+  /**
+   * Broadcast the status to frames when the form autofill status changes.
+   */
+  onStatusChanged() {
+    log.debug("onStatusChanged: Status changed to", this._active);
+    Services.ppmm.sharedData.set("FormAutofill:enabled", this._active);
+    // Sync autofill enabled to make sure the value is up-to-date
+    // no matter when the new content process is initialized.
+    Services.ppmm.sharedData.flush();
+  },
+
+  /**
+   * Query preference and storage status to determine the overall status of the
+   * form autofill feature.
+   *
+   * @returns {boolean} whether form autofill is active (enabled and has data)
+   */
+  computeStatus() {
+    const savedFieldNames = Services.ppmm.sharedData.get(
+      "FormAutofill:savedFieldNames"
+    );
+
+    return (
+      (Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF) ||
+        Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF)) &&
+      savedFieldNames &&
+      savedFieldNames.size > 0
+    );
+  },
+
+  /**
+   * Update the status and trigger onStatusChanged, if necessary.
+   */
+  updateStatus() {
+    log.debug("updateStatus");
+    let wasActive = this._active;
+    this._active = this.computeStatus();
+    if (this._active !== wasActive) {
+      this.onStatusChanged();
+    }
+  },
+
+  updateSavedFieldNames() {
+    log.debug("updateSavedFieldNames");
+
+    let savedFieldNames;
+    // Don't access the credit cards store unless it is enabled.
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
+      savedFieldNames = new Set([
+        ...gFormAutofillStorage.addresses.getSavedFieldNames(),
+        ...gFormAutofillStorage.creditCards.getSavedFieldNames(),
+      ]);
+    } else {
+      savedFieldNames = gFormAutofillStorage.addresses.getSavedFieldNames();
+    }
+
+    Services.ppmm.sharedData.set(
+      "FormAutofill:savedFieldNames",
+      savedFieldNames
+    );
+    Services.ppmm.sharedData.flush();
+
+    this.updateStatus();
   },
 
   injectElements(doc) {
@@ -180,7 +233,7 @@ FormAutofillParent.prototype = {
 
       case "nsPref:changed": {
         // Observe pref changes and update _active cache if status is changed.
-        this._updateStatus();
+        this.updateStatus();
         break;
       }
 
@@ -190,110 +243,66 @@ FormAutofillParent.prototype = {
           break;
         }
 
-        this._updateSavedFieldNames();
+        this.updateSavedFieldNames();
         break;
       }
 
       default: {
         throw new Error(
-          `FormAutofillParent: Unexpected topic observed: ${topic}`
+          `FormAutofillStatus: Unexpected topic observed: ${topic}`
         );
       }
     }
   },
+};
 
-  /**
-   * Broadcast the status to frames when the form autofill status changes.
-   */
-  _onStatusChanged() {
-    log.debug("_onStatusChanged: Status changed to", this._active);
-    Services.ppmm.sharedData.set("FormAutofill:enabled", this._active);
-    // Sync autofill enabled to make sure the value is up-to-date
-    // no matter when the new content process is initialized.
-    Services.ppmm.sharedData.flush();
-  },
+// Lazily load the storage JSM to avoid disk I/O until absolutely needed.
+// Once storage is loaded we need to update saved field names and inform content processes.
+XPCOMUtils.defineLazyGetter(this, "gFormAutofillStorage", () => {
+  let { formAutofillStorage } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillStorage.jsm"
+  );
+  log.debug("Loading formAutofillStorage");
 
-  /**
-   * Query preference and storage status to determine the overall status of the
-   * form autofill feature.
-   *
-   * @returns {boolean} whether form autofill is active (enabled and has data)
-   */
-  _computeStatus() {
-    const savedFieldNames = Services.ppmm.sharedData.get(
-      "FormAutofill:savedFieldNames"
-    );
+  formAutofillStorage.initialize().then(() => {
+    // Update the saved field names to compute the status and update child processes.
+    FormAutofillStatus.updateSavedFieldNames();
+  });
 
-    return (
-      (Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF) ||
-        Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF)) &&
-      savedFieldNames &&
-      savedFieldNames.size > 0
-    );
-  },
+  return formAutofillStorage;
+});
 
-  /**
-   * Update the status and trigger _onStatusChanged, if necessary.
-   */
-  _updateStatus() {
-    log.debug("_updateStatus");
-    let wasActive = this._active;
-    this._active = this._computeStatus();
-    if (this._active !== wasActive) {
-      this._onStatusChanged();
-    }
-  },
+class FormAutofillParent extends JSWindowActorParent {
+  constructor() {
+    super();
+    FormAutofillStatus.init();
+  }
+
+  static addMessageObserver(observer) {
+    gMessageObservers.add(observer);
+  }
+
+  static removeMessageObserver(observer) {
+    gMessageObservers.delete(observer);
+  }
 
   /**
    * Handles the message coming from FormAutofillContent.
    *
    * @param   {string} message.name The name of the message.
    * @param   {object} message.data The data of the message.
-   * @param   {nsIFrameMessageManager} message.target Caller's message manager.
    */
-  async receiveMessage({ name, data, target }) {
+  async receiveMessage({ name, data }) {
     switch (name) {
       case "FormAutofill:InitStorage": {
-        await this.formAutofillStorage.initialize();
+        await gFormAutofillStorage.initialize();
         break;
       }
       case "FormAutofill:GetRecords": {
-        await this._getRecords(data, target);
-        break;
-      }
-      case "FormAutofill:SaveAddress": {
-        if (data.guid) {
-          await this.formAutofillStorage.addresses.update(
-            data.guid,
-            data.address
-          );
-        } else {
-          await this.formAutofillStorage.addresses.add(data.address);
-        }
-        break;
-      }
-      case "FormAutofill:SaveCreditCard": {
-        if (!(await OSKeyStore.ensureLoggedIn())) {
-          log.warn("User canceled encryption login");
-          return;
-        }
-        await this.formAutofillStorage.creditCards.add(data.creditcard);
-        break;
-      }
-      case "FormAutofill:RemoveAddresses": {
-        data.guids.forEach(guid =>
-          this.formAutofillStorage.addresses.remove(guid)
-        );
-        break;
-      }
-      case "FormAutofill:RemoveCreditCards": {
-        data.guids.forEach(guid =>
-          this.formAutofillStorage.creditCards.remove(guid)
-        );
-        break;
+        return FormAutofillParent._getRecords(data);
       }
       case "FormAutofill:OnFormSubmit": {
-        await this._onFormSubmit(data, target);
+        await this._onFormSubmit(data);
         break;
       }
       case "FormAutofill:OpenPreferences": {
@@ -312,46 +321,66 @@ FormAutofillParent.prototype = {
           }
           log.warn("User canceled encryption login");
         }
-        target.sendAsyncMessage("FormAutofill:DecryptedString", string);
+        return string;
+      }
+      case "FormAutofill:UpdateWarningMessage":
+        this.notifyMessageObservers("updateWarningNote", data);
+        break;
+
+      case "FormAutofill:FieldsIdentified":
+        this.notifyMessageObservers("fieldsIdentified", data);
+        break;
+
+      // The remaining Save and Remove messages are invoked only by tests.
+      case "FormAutofill:SaveAddress": {
+        if (data.guid) {
+          await gFormAutofillStorage.addresses.update(data.guid, data.address);
+        } else {
+          await gFormAutofillStorage.addresses.add(data.address);
+        }
+        break;
+      }
+      case "FormAutofill:SaveCreditCard": {
+        if (!(await OSKeyStore.ensureLoggedIn())) {
+          log.warn("User canceled encryption login");
+          return undefined;
+        }
+        await gFormAutofillStorage.creditCards.add(data.creditcard);
+        break;
+      }
+      case "FormAutofill:RemoveAddresses": {
+        data.guids.forEach(guid => gFormAutofillStorage.addresses.remove(guid));
+        break;
+      }
+      case "FormAutofill:RemoveCreditCards": {
+        data.guids.forEach(guid =>
+          gFormAutofillStorage.creditCards.remove(guid)
+        );
         break;
       }
     }
-  },
 
-  /**
-   * Uninitializes FormAutofillParent. This is for testing only.
-   *
-   * @private
-   */
-  _uninit() {
-    this.formAutofillStorage._saveImmediately();
+    return undefined;
+  }
 
-    Services.ppmm.removeMessageListener("FormAutofill:InitStorage", this);
-    Services.ppmm.removeMessageListener("FormAutofill:GetRecords", this);
-    Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
-    Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.obs.removeObserver(this, "privacy-pane-loaded");
-    Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
-    Services.wm.removeListener(this);
-
-    if (FormAutofill.isAutofillCreditCardsAvailable) {
-      Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);
-      Services.ppmm.removeMessageListener(
-        "FormAutofill:RemoveCreditCards",
-        this
-      );
-      Services.ppmm.removeMessageListener(
-        "FormAutofill:GetDecryptedString",
-        this
-      );
-      Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
+  notifyMessageObservers(callbackName, data) {
+    for (let observer of gMessageObservers) {
+      try {
+        if (callbackName in observer) {
+          observer[callbackName](data);
+        }
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
     }
-  },
+  }
 
   /**
    * Get the records from profile store and return results back to content
    * process. It will decrypt the credit card number and append
    * "cc-number-decrypted" to each record if OSKeyStore isn't set.
+   *
+   * This is static as a unit test calls this.
    *
    * @private
    * @param  {string} data.collectionName
@@ -360,20 +389,16 @@ FormAutofillParent.prototype = {
    *         The typed string for filtering out the matched records.
    * @param  {string} data.info
    *         The input autocomplete property's information.
-   * @param  {nsIFrameMessageManager} target
-   *         Content's message manager.
    */
-  async _getRecords({ collectionName, searchString, info }, target) {
-    let collection = this.formAutofillStorage[collectionName];
+  static async _getRecords({ collectionName, searchString, info }) {
+    let collection = gFormAutofillStorage[collectionName];
     if (!collection) {
-      target.sendAsyncMessage("FormAutofill:Records", []);
-      return;
+      return [];
     }
 
     let recordsInCollection = await collection.getAll();
     if (!info || !info.fieldName || !recordsInCollection.length) {
-      target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
-      return;
+      return recordsInCollection;
     }
 
     let isCC = collectionName == CREDITCARDS_COLLECTION_NAME;
@@ -382,8 +407,7 @@ FormAutofillParent.prototype = {
       recordsInCollection = recordsInCollection.filter(
         record => !!record["cc-number"]
       );
-      target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
-      return;
+      return recordsInCollection;
     }
 
     let records = [];
@@ -416,37 +440,14 @@ FormAutofillParent.prototype = {
       records.push(record);
     }
 
-    target.sendAsyncMessage("FormAutofill:Records", records);
-  },
+    return records;
+  }
 
-  _updateSavedFieldNames() {
-    log.debug("_updateSavedFieldNames");
-
-    let savedFieldNames;
-    // Don't access the credit cards store unless it is enabled.
-    if (FormAutofill.isAutofillCreditCardsAvailable) {
-      savedFieldNames = new Set([
-        ...this.formAutofillStorage.addresses.getSavedFieldNames(),
-        ...this.formAutofillStorage.creditCards.getSavedFieldNames(),
-      ]);
-    } else {
-      savedFieldNames = this.formAutofillStorage.addresses.getSavedFieldNames();
-    }
-
-    Services.ppmm.sharedData.set(
-      "FormAutofill:savedFieldNames",
-      savedFieldNames
-    );
-    Services.ppmm.sharedData.flush();
-
-    this._updateStatus();
-  },
-
-  async _onAddressSubmit(address, target, timeStartedFillingMS) {
+  async _onAddressSubmit(address, browser, timeStartedFillingMS) {
     let showDoorhanger = null;
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
-      let originalAddress = await this.formAutofillStorage.addresses.get(
+      let originalAddress = await gFormAutofillStorage.addresses.get(
         address.guid
       );
       for (let field in address.record) {
@@ -456,7 +457,7 @@ FormAutofillParent.prototype = {
       }
 
       if (
-        !(await this.formAutofillStorage.addresses.mergeIfPossible(
+        !(await gFormAutofillStorage.addresses.mergeIfPossible(
           address.guid,
           address.record,
           true
@@ -471,11 +472,11 @@ FormAutofillParent.prototype = {
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
           const state = await FormAutofillDoorhanger.show(
-            target,
+            browser,
             "updateAddress",
             description
           );
-          let changedGUIDs = await this.formAutofillStorage.addresses.mergeToStorage(
+          let changedGUIDs = await gFormAutofillStorage.addresses.mergeToStorage(
             address.record,
             true
           );
@@ -483,25 +484,25 @@ FormAutofillParent.prototype = {
             case "create":
               if (!changedGUIDs.length) {
                 changedGUIDs.push(
-                  await this.formAutofillStorage.addresses.add(address.record)
+                  await gFormAutofillStorage.addresses.add(address.record)
                 );
               }
               break;
             case "update":
               if (!changedGUIDs.length) {
-                await this.formAutofillStorage.addresses.update(
+                await gFormAutofillStorage.addresses.update(
                   address.guid,
                   address.record,
                   true
                 );
                 changedGUIDs.push(address.guid);
               } else {
-                this.formAutofillStorage.addresses.remove(address.guid);
+                gFormAutofillStorage.addresses.remove(address.guid);
               }
               break;
           }
           changedGUIDs.forEach(guid =>
-            this.formAutofillStorage.addresses.notifyUsed(guid)
+            gFormAutofillStorage.addresses.notifyUsed(guid)
           );
         };
         // Address should be updated
@@ -515,7 +516,7 @@ FormAutofillParent.prototype = {
           "autofill",
           timeStartedFillingMS
         );
-        this.formAutofillStorage.addresses.notifyUsed(address.guid);
+        gFormAutofillStorage.addresses.notifyUsed(address.guid);
         // Address is merged successfully
         Services.telemetry.scalarAdd(
           "formautofill.addresses.fill_type_autofill",
@@ -523,16 +524,16 @@ FormAutofillParent.prototype = {
         );
       }
     } else {
-      let changedGUIDs = await this.formAutofillStorage.addresses.mergeToStorage(
+      let changedGUIDs = await gFormAutofillStorage.addresses.mergeToStorage(
         address.record
       );
       if (!changedGUIDs.length) {
         changedGUIDs.push(
-          await this.formAutofillStorage.addresses.add(address.record)
+          await gFormAutofillStorage.addresses.add(address.record)
         );
       }
       changedGUIDs.forEach(guid =>
-        this.formAutofillStorage.addresses.notifyUsed(guid)
+        gFormAutofillStorage.addresses.notifyUsed(guid)
       );
       this._recordFormFillingTime("address", "manual", timeStartedFillingMS);
 
@@ -545,7 +546,7 @@ FormAutofillParent.prototype = {
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
           const state = await FormAutofillDoorhanger.show(
-            target,
+            browser,
             "firstTimeUse",
             description
           );
@@ -553,7 +554,7 @@ FormAutofillParent.prototype = {
             return;
           }
 
-          target.ownerGlobal.openPreferences("privacy-address-autofill");
+          browser.ownerGlobal.openPreferences("privacy-address-autofill");
         };
       } else {
         // We want to exclude the first time form filling.
@@ -564,9 +565,9 @@ FormAutofillParent.prototype = {
       }
     }
     return showDoorhanger;
-  },
+  }
 
-  async _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
+  async _onCreditCardSubmit(creditCard, browser, timeStartedFillingMS) {
     // Updates the used status for shield/heartbeat to recognize users who have
     // used Credit Card Autofill.
     let setUsedStatus = status => {
@@ -593,7 +594,7 @@ FormAutofillParent.prototype = {
       // Indicate that the user has used Credit Card Autofill to fill in a form.
       setUsedStatus(3);
 
-      let originalCCData = await this.formAutofillStorage.creditCards.get(
+      let originalCCData = await gFormAutofillStorage.creditCards.get(
         creditCard.guid
       );
       let recordUnchanged = true;
@@ -612,7 +613,7 @@ FormAutofillParent.prototype = {
       }
 
       if (recordUnchanged) {
-        this.formAutofillStorage.creditCards.notifyUsed(creditCard.guid);
+        gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
         // Add probe to record credit card autofill(without modification).
         Services.telemetry.scalarAdd(
           "formautofill.creditCards.fill_type_autofill",
@@ -650,11 +651,11 @@ FormAutofillParent.prototype = {
     }
 
     // Early return if it's a duplicate data
-    let dupGuid = await this.formAutofillStorage.creditCards.getDuplicateGuid(
+    let dupGuid = await gFormAutofillStorage.creditCards.getDuplicateGuid(
       creditCard.record
     );
     if (dupGuid) {
-      this.formAutofillStorage.creditCards.notifyUsed(dupGuid);
+      gFormAutofillStorage.creditCards.notifyUsed(dupGuid);
       return false;
     }
 
@@ -673,7 +674,7 @@ FormAutofillParent.prototype = {
       let name = creditCard.record["cc-name"];
       const description = await CreditCard.getLabel({ name, number });
       const state = await FormAutofillDoorhanger.show(
-        target,
+        browser,
         creditCard.guid ? "updateCreditCard" : "addCreditCard",
         description
       );
@@ -697,7 +698,7 @@ FormAutofillParent.prototype = {
       let changedGUIDs = [];
       if (creditCard.guid) {
         if (state == "update") {
-          await this.formAutofillStorage.creditCards.update(
+          await gFormAutofillStorage.creditCards.update(
             creditCard.guid,
             creditCard.record,
             true
@@ -705,28 +706,28 @@ FormAutofillParent.prototype = {
           changedGUIDs.push(creditCard.guid);
         } else if ("create") {
           changedGUIDs.push(
-            await this.formAutofillStorage.creditCards.add(creditCard.record)
+            await gFormAutofillStorage.creditCards.add(creditCard.record)
           );
         }
       } else {
         changedGUIDs.push(
-          ...(await this.formAutofillStorage.creditCards.mergeToStorage(
+          ...(await gFormAutofillStorage.creditCards.mergeToStorage(
             creditCard.record
           ))
         );
         if (!changedGUIDs.length) {
           changedGUIDs.push(
-            await this.formAutofillStorage.creditCards.add(creditCard.record)
+            await gFormAutofillStorage.creditCards.add(creditCard.record)
           );
         }
       }
       changedGUIDs.forEach(guid =>
-        this.formAutofillStorage.creditCards.notifyUsed(guid)
+        gFormAutofillStorage.creditCards.notifyUsed(guid)
       );
     };
-  },
+  }
 
-  async _onFormSubmit(data, target) {
+  async _onFormSubmit(data) {
     let {
       profile: { address, creditCard },
       timeStartedFillingMS,
@@ -741,18 +742,24 @@ FormAutofillParent.prototype = {
       timeStartedFillingMS = null;
     }
 
+    let browser = this.manager.browsingContext.top.embedderElement;
+    if (browser && browser.outerBrowser) {
+      // Responsive design mode check
+      browser = browser.outerBrowser;
+    }
+
     // Transmit the telemetry immediately in the meantime form submitted, and handle these pending
     // doorhangers at a later.
     await Promise.all(
       [
         await Promise.all(
           address.map(addrRecord =>
-            this._onAddressSubmit(addrRecord, target, timeStartedFillingMS)
+            this._onAddressSubmit(addrRecord, browser, timeStartedFillingMS)
           )
         ),
         await Promise.all(
           creditCard.map(ccRecord =>
-            this._onCreditCardSubmit(ccRecord, target, timeStartedFillingMS)
+            this._onCreditCardSubmit(ccRecord, browser, timeStartedFillingMS)
           )
         ),
       ]
@@ -770,7 +777,8 @@ FormAutofillParent.prototype = {
           })()
         )
     );
-  },
+  }
+
   /**
    * Set the probes for the filling time with specific filling type and form type.
    *
@@ -790,7 +798,5 @@ FormAutofillParent.prototype = {
       "FORM_FILLING_REQUIRED_TIME_MS"
     );
     histogram.add(`${formType}-${fillingType}`, Date.now() - startedFillingMS);
-  },
-};
-
-var formAutofillParent = new FormAutofillParent();
+  }
+}
