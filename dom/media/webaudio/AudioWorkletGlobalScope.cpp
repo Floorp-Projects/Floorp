@@ -369,5 +369,9 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
   return true;
 }
 
+RefPtr<MessagePort> AudioWorkletGlobalScope::TakePortForProcessorCtor() {
+  return std::move(mPortForProcessor);
+}
+
 }  // namespace dom
 }  // namespace mozilla
