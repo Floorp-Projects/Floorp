@@ -9419,11 +9419,8 @@ void nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
           "scroll frame should always implement nsIAnonymousContentCreator");
       creator->AppendAnonymousContentTo(aElements, 0);
     }
-
     if (nsCanvasFrame* canvasFrame = presShell->GetCanvasFrame()) {
-      if (Element* container = canvasFrame->GetCustomContentContainer()) {
-        aElements.AppendElement(container);
-      }
+      canvasFrame->AppendAnonymousContentTo(aElements, 0);
     }
   }
 
