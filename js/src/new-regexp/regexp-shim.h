@@ -394,6 +394,83 @@ class ByteArray : public HeapObject {
   static ByteArray cast(Object object);
 };
 
+// Like Handles in SM, V8 handles are references to marked pointers.
+// Unlike SM, where Rooted pointers are created individually on the
+// stack, the target of a V8 handle lives in a HandleScope.
+// HandleScopes are created on the stack and register themselves with
+// the isolate (~= JSContext). Whenever a Handle is created, the
+// outermost HandleScope is retrieved from the isolate, and a new root
+// is created in that HandleScope. The Handle remains valid for the
+// lifetime of the HandleScope.
+class HandleScope {
+ public:
+  HandleScope(Isolate* isolate);
+};
+
+// Origin:
+// https://github.com/v8/v8/blob/5792f3587116503fc047d2f68c951c72dced08a5/src/handles/handles.h#L88-L171
+template <typename T>
+class Handle {
+ public:
+  Handle();
+  Handle(T object, Isolate* isolate);
+
+  // Constructor for handling automatic up casting.
+  template <typename S, typename = typename std::enable_if<
+                            std::is_convertible<S*, T*>::value>::type>
+  /*inline*/ Handle(Handle<S> handle);
+
+  template <typename S>
+  /*inline*/ static const Handle<T> cast(Handle<S> that);
+
+  T* operator->() const;
+  T operator*() const;
+
+  bool is_null() const;
+
+  Address address();
+
+ private:
+  template <typename>
+  friend class Handle;
+  template <typename>
+  friend class MaybeHandle;
+};
+
+// A Handle can be converted into a MaybeHandle. Converting a MaybeHandle
+// into a Handle requires checking that it does not point to nullptr.  This
+// ensures nullptr checks before use.
+//
+// Also note that Handles do not provide default equality comparison or hashing
+// operators on purpose. Such operators would be misleading, because intended
+// semantics is ambiguous between Handle location and object identity.
+// Origin:
+// https://github.com/v8/v8/blob/5792f3587116503fc047d2f68c951c72dced08a5/src/handles/maybe-handles.h#L15-L78
+template <typename T>
+class MaybeHandle final {
+ public:
+  MaybeHandle() = default;
+
+  // Constructor for handling automatic up casting from Handle.
+  // Ex. Handle<JSArray> can be passed when MaybeHandle<Object> is expected.
+  template <typename S, typename = typename std::enable_if<
+                            std::is_convertible<S*, T*>::value>::type>
+  MaybeHandle(Handle<S> handle);
+
+  /*inline*/ Handle<T> ToHandleChecked() const;
+
+  // Convert to a Handle with a type that can be upcasted to.
+  template <typename S>
+  /*inline*/ bool ToHandle(Handle<S>* out) const;
+};
+
+// From v8/src/handles/handles-inl.h
+
+template <typename T>
+inline Handle<T> handle(T object, Isolate* isolate) {
+  return Handle<T>(object, isolate);
+}
+
 // RAII Guard classes
 
 class DisallowHeapAllocation {
