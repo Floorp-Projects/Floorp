@@ -26,11 +26,11 @@ def extract_dmg(dmg_path, dest):
 
 
 def get_update_packages():
-    for i in xrange(16):
+    for i in range(16):
         logging.info("get_update_packages: page " + str(i))
         url = (
-            "https://km.support.apple.com/kb/index?page=downloads_browse&sort=recency&facet=all&category=PF6&locale=en_US&offset=%d"
-            % i
+            "https://km.support.apple.com/kb/index?page=downloads_browse&sort=recency"
+            "&facet=all&category=PF6&locale=en_US&offset=%d" % i
         )
         res = requests.get(url)
         if res.status_code != 200:
@@ -46,7 +46,7 @@ def get_update_packages():
                 if "fileurl" in d:
                     yield d["fileurl"]
                 else:
-                    log.warn("No fileurl in download!")
+                    logging.warn("No fileurl in download!")
 
 
 def fetch_url_to_file(url, download_dir):

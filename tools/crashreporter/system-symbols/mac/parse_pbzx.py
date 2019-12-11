@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # v2 pbzx stream handler
-# My personal writeup on the differences here: https://gist.github.com/pudquick/29fcfe09c326a9b96cf5
+# My personal writeup on the differences here:
+# https://gist.github.com/pudquick/29fcfe09c326a9b96cf5
 #
-# Pure python reimplementation of .cpio.xz content extraction from pbzx file payload originally here:
+# Pure python reimplementation of .cpio.xz content extraction from pbzx file
+# payload originally here:
 # http://www.tonymacx86.com/general-help/135458-pbzx-stream-parser.html
 #
 # Cleaned up C version (as the basis for my code) here, thanks to Pepijn Bruienne / @bruienne
 # https://gist.github.com/bruienne/029494bbcfb358098b41
 
-import struct, sys
+import struct
+import sys
 
 
 def seekread(f, offset=None, length=0, relative=True):
-    if offset != None:
+    if offset is not None:
         # offset provided, let's seek
         f.seek(offset, [0, 1, 2][relative])
     if length != 0:
@@ -42,7 +45,8 @@ def parse_pbzx(pbzx_path):
         f_length = struct.unpack(">Q", f_length)[0]
         xzmagic = seekread(f, length=6)
         if xzmagic != "\xfd7zXZ\x00":
-            # This isn't xz content, this is actually _raw decompressed cpio_ chunk of 16MB in size...
+            # This isn't xz content, this is actually _raw decompressed cpio_
+            # chunk of 16MB in size...
             # Let's back up ...
             seekread(f, offset=-6, length=0)
             # ... and split it out ...
@@ -52,7 +56,8 @@ def parse_pbzx(pbzx_path):
             g = open(decomp_out, "wb")
             g.write(f_content)
             g.close()
-            # Now to start the next section, which should hopefully be .xz (we'll just assume it is ...)
+            # Now to start the next section, which should hopefully be .xz
+            # (we'll just assume it is ...)
             xar_f.close()
             section += 1
             new_out = "%s.part%02d.cpio.xz" % (pbzx_path, section)
@@ -70,7 +75,7 @@ def parse_pbzx(pbzx_path):
     try:
         f.close()
         xar_f.close()
-    except:
+    except BaseException:
         pass
 
 

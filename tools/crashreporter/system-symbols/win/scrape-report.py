@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import csv
+import json
 import logging
 import os
 import requests
@@ -34,8 +35,9 @@ def fetch_missing_symbols_from_crash(file_or_crash):
             crash_id = urlparse.urlparse(file_or_crash).path.split("/")[-1]
         else:
             crash_id = file_or_crash
-        url = "https://crash-stats.mozilla.com/api/ProcessedCrash/?crash_id={crash_id}&datatype=processed".format(
-            crash_id=crash_id
+        url = (
+            "https://crash-stats.mozilla.com/api/ProcessedCrash/"
+            "?crash_id={crash_id}&datatype=processed".format(crash_id=crash_id)
         )
         log.info("Fetching missing symbols from crash: %s" % url)
         r = requests.get(url)
