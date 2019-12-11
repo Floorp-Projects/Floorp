@@ -57,7 +57,7 @@
                  onselect="gSitePermissionsManager.onPermissionSelect();"/>
   </vbox>
 
-  <hbox class="actionButtons" flex="1">
+  <hbox class="actionButtons">
     <button id="removePermission" disabled="true"
             data-l10n-id="permissions-remove"
             icon="remove"
@@ -79,7 +79,7 @@
             class="extension-controlled-button accessory-button"
             data-l10n-id="disable-extension"/>
   </hbox>
-  <hbox class="actionButtons" pack="end" flex="1">
+  <hbox class="actionButtons" pack="end">
     <button oncommand="window.close();" icon="close" id="cancel"
             data-l10n-id="permissions-button-cancel" />
     <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
