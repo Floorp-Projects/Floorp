@@ -874,7 +874,7 @@ class HTMLInputElement final : public TextControlElement,
   bool HasBeenTypePassword() { return mHasBeenTypePassword; }
 
  protected:
-  virtual ~HTMLInputElement();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual ~HTMLInputElement();
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
@@ -1094,7 +1094,7 @@ class HTMLInputElement final : public TextControlElement,
    */
   bool DoesAutocompleteApply() const;
 
-  void FreeData();
+  MOZ_CAN_RUN_SCRIPT void FreeData();
   TextControlState* GetEditorState() const;
 
   mozilla::TextEditor* GetTextEditorFromState();
