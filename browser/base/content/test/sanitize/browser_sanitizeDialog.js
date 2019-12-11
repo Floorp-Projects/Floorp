@@ -778,7 +778,7 @@ WindowHelper.prototype = {
 
     Services.ww.openWindow(
       browserWin,
-      "chrome://browser/content/sanitize.xul",
+      "chrome://browser/content/sanitize.xhtml",
       "SanitizeDialog",
       "chrome,titlebar,dialog,centerscreen,modal",
       null

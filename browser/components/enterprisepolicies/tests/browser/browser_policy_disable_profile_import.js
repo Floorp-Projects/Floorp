@@ -5,7 +5,7 @@
 async function openLibrary() {
   return new Promise(resolve => {
     let library = window.openDialog(
-      "chrome://browser/content/places/places.xul",
+      "chrome://browser/content/places/places.xhtml",
       "",
       "chrome,toolbar=yes,dialog=no,resizable"
     );

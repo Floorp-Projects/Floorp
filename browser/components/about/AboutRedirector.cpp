@@ -109,7 +109,7 @@ static const RedirEntry kRedirMap[] = {
      "chrome://browser/content/preferences/in-content/preferences.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
     {"downloads",
-     "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
+     "chrome://browser/content/downloads/contentAreaDownloadsView.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
     {"reader", "chrome://global/content/reader/aboutReader.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |

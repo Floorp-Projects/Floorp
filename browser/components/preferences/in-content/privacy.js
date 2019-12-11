@@ -1342,7 +1342,7 @@ var gPrivacyPane = {
     }
 
     gSubDialog.open(
-      "chrome://browser/content/sanitize.xul",
+      "chrome://browser/content/sanitize.xhtml",
       "resizable=no",
       null,
       () => {

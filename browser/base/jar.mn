@@ -6,7 +6,7 @@ browser.jar:
 
         content/browser/aboutDialog-appUpdater.js     (content/aboutDialog-appUpdater.js)
         content/browser/aboutDialog-appUpdater-legacy.js     (content/aboutDialog-appUpdater-legacy.js)
-*       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
+*       content/browser/aboutDialog.xhtml                    (content/aboutDialog.xhtml)
         content/browser/aboutDialog.js                (content/aboutDialog.js)
         content/browser/aboutDialog.css               (content/aboutDialog.css)
         content/browser/aboutRestartRequired.js       (content/aboutRestartRequired.js)
@@ -79,7 +79,7 @@ browser.jar:
         content/browser/defaultthemes/5.icon.jpg      (content/defaultthemes/5.icon.jpg)
         content/browser/defaultthemes/5.preview.jpg   (content/defaultthemes/5.preview.jpg)
         content/browser/history-swipe-arrow.svg       (content/history-swipe-arrow.svg)
-*       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
+*       content/browser/pageinfo/pageInfo.xhtml       (content/pageinfo/pageInfo.xhtml)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
         content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
@@ -89,8 +89,8 @@ browser.jar:
         content/browser/static-robot.png              (content/static-robot.png)
         content/browser/safeMode.css                  (content/safeMode.css)
         content/browser/safeMode.js                   (content/safeMode.js)
-        content/browser/safeMode.xul                  (content/safeMode.xul)
-        content/browser/sanitize.xul                  (content/sanitize.xul)
+        content/browser/safeMode.xhtml                (content/safeMode.xhtml)
+        content/browser/sanitize.xhtml                (content/sanitize.xhtml)
         content/browser/sanitizeDialog.js             (content/sanitizeDialog.js)
         content/browser/sanitizeDialog.css            (content/sanitizeDialog.css)
         content/browser/contentSearchUI.js            (content/contentSearchUI.js)
@@ -101,7 +101,7 @@ browser.jar:
         content/browser/tabbrowser-tabs.js            (content/tabbrowser-tabs.js)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/webext-panels.js              (content/webext-panels.js)
-*       content/browser/webext-panels.xul             (content/webext-panels.xul)
+*       content/browser/webext-panels.xhtml           (content/webext-panels.xhtml)
         content/browser/nsContextMenu.js              (content/nsContextMenu.js)
         content/browser/contentTheme.js               (content/contentTheme.js)
 #ifdef XP_MACOSX
@@ -110,7 +110,7 @@ browser.jar:
         content/browser/nonbrowser-mac.js             (content/nonbrowser-mac.js)
 #endif
 #ifndef XP_MACOSX
-*       content/browser/webrtcIndicator.xul           (content/webrtcIndicator.xul)
+*       content/browser/webrtcIndicator.xhtml           (content/webrtcIndicator.xhtml)
         content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)
 #endif
 # the following files are browser-specific overrides
@@ -118,7 +118,7 @@ browser.jar:
 % override chrome://global/content/license.html chrome://browser/content/license.html
         content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
         content/browser/blockedSite.js                  (content/blockedSite.js)
-        content/browser/newInstall.xul                (content/newInstall.xul)
+        content/browser/newInstall.xhtml                (content/newInstall.xhtml)
         content/browser/newInstall.js                 (content/newInstall.js)
         content/browser/newInstallPage.html           (content/newInstallPage.html)
         content/browser/newInstallPage.js             (content/newInstallPage.js)

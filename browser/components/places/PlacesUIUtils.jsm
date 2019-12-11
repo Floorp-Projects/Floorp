@@ -310,8 +310,8 @@ var PlacesUIUtils = {
       !("hiddenRows" in aInfo) || !aInfo.hiddenRows.includes("folderPicker");
     // Use a different chrome url to persist different sizes.
     let dialogURL = hasFolderPicker
-      ? "chrome://browser/content/places/bookmarkProperties2.xul"
-      : "chrome://browser/content/places/bookmarkProperties.xul";
+      ? "chrome://browser/content/places/bookmarkProperties2.xhtml"
+      : "chrome://browser/content/places/bookmarkProperties.xhtml";
 
     let features = "centerscreen,chrome,modal,resizable=yes";
 

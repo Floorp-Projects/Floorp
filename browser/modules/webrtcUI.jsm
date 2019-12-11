@@ -1332,7 +1332,8 @@ function removePrompt(aBrowser, aCallId) {
 
 function getGlobalIndicator() {
   if (AppConstants.platform != "macosx") {
-    const INDICATOR_CHROME_URI = "chrome://browser/content/webrtcIndicator.xul";
+    const INDICATOR_CHROME_URI =
+      "chrome://browser/content/webrtcIndicator.xhtml";
     const features = "chrome,dialog=yes,titlebar=no,popup=yes";
 
     return Services.ww.openWindow(

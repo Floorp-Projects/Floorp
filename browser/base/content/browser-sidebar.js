@@ -17,7 +17,7 @@ var SidebarUI = {
           title: document
             .getElementById("sidebar-switcher-bookmarks")
             .getAttribute("label"),
-          url: "chrome://browser/content/places/bookmarksSidebar.xul",
+          url: "chrome://browser/content/places/bookmarksSidebar.xhtml",
           menuId: "menu_bookmarksSidebar",
           buttonId: "sidebar-switcher-bookmarks",
         },
@@ -28,7 +28,7 @@ var SidebarUI = {
           title: document
             .getElementById("sidebar-switcher-history")
             .getAttribute("label"),
-          url: "chrome://browser/content/places/historySidebar.xul",
+          url: "chrome://browser/content/places/historySidebar.xhtml",
           menuId: "menu_historySidebar",
           buttonId: "sidebar-switcher-history",
           triggerButtonId: "appMenuViewHistorySidebar",

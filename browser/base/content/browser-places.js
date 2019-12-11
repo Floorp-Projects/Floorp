@@ -608,7 +608,7 @@ var PlacesCommandHook = {
     if (!organizer || organizer.closed) {
       // No currently open places window, so open one with the specified mode.
       openDialog(
-        "chrome://browser/content/places/places.xul",
+        "chrome://browser/content/places/places.xhtml",
         "",
         "chrome,toolbar=yes,dialog=no,resizable",
         item

@@ -31,9 +31,9 @@ const TYPE_BOOKMARK = 1;
 
 const TEST_URL = "http://www.example.com/";
 
-const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xul";
+const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xhtml";
 const DIALOG_URL_MINIMAL_UI =
-  "chrome://browser/content/places/bookmarkProperties2.xul";
+  "chrome://browser/content/places/bookmarkProperties2.xhtml";
 
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"
