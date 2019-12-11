@@ -10,10 +10,11 @@ import tarfile
 import functools
 import tempfile
 import shutil
+import time
 
 from condprof import check_install  # NOQA
 from condprof import progress
-from condprof.util import download_file, TASK_CLUSTER, get_logger, ArchiveNotFound
+from condprof.util import download_file, TASK_CLUSTER, LOG, ERROR, ArchiveNotFound
 from condprof.changelog import Changelog
 
 
@@ -27,6 +28,8 @@ CHANGELOG_LINK = (
 )
 DIRECT_LINK = "https://taskcluster-artifacts.net/%(task_id)s/0/public/condprof/"
 CONDPROF_CACHE = "~/.condprof-cache"
+RETRIES = 3
+RETRY_PAUSE = 30
 
 
 class ProfileNotFoundError(Exception):
@@ -40,7 +43,7 @@ def get_profile(
     customization="default",
     task_id=None,
     download_cache=True,
-    repo="mozilla-central"
+    repo="mozilla-central",
 ):
     """Extract a conditioned profile in the target directory.
 
@@ -53,7 +56,7 @@ def get_profile(
         "scenario": scenario,
         "customization": customization,
         "task_id": task_id,
-        "repo": repo
+        "repo": repo,
     }
     filename = ARTIFACT_NAME % params
     if task_id is None:
@@ -70,39 +73,56 @@ def get_profile(
             os.makedirs(download_dir)
 
     downloaded_archive = os.path.join(download_dir, filename)
-    get_logger().msg("Getting %s" % url)
-    try:
-        archive = download_file(url, target=downloaded_archive)
-    except ArchiveNotFound:
-        raise ProfileNotFoundError(url)
+    retries = 0
 
-    try:
-        with tarfile.open(archive, "r:gz") as tar:
-            get_logger().msg("Extracting the tarball content in %s" % target_dir)
-            size = len(list(tar))
-            with progress.Bar(expected_size=size) as bar:
+    while retries < RETRIES:
+        try:
+            LOG("Getting %s" % url)
+            try:
+                archive = download_file(url, target=downloaded_archive)
+            except ArchiveNotFound:
+                raise ProfileNotFoundError(url)
 
-                def _extract(self, *args, **kw):
-                    if not TASK_CLUSTER:
-                        bar.show(bar.last_progress + 1)
-                    return self.old(*args, **kw)
+            try:
+                with tarfile.open(archive, "r:gz") as tar:
+                    LOG("Extracting the tarball content in %s" % target_dir)
+                    size = len(list(tar))
+                    with progress.Bar(expected_size=size) as bar:
 
-                tar.old = tar.extract
-                tar.extract = functools.partial(_extract, tar)
-                tar.extractall(target_dir)
-    except (OSError, tarfile.ReadError) as e:
-        raise ProfileNotFoundError(str(e))
-    finally:
-        if not download_cache:
-            shutil.rmtree(download_dir)
-    get_logger().msg("Success, we have a profile to work with")
-    return target_dir
+                        def _extract(self, *args, **kw):
+                            if not TASK_CLUSTER:
+                                bar.show(bar.last_progress + 1)
+                            return self.old(*args, **kw)
+
+                        tar.old = tar.extract
+                        tar.extract = functools.partial(_extract, tar)
+                        tar.extractall(target_dir)
+            except (OSError, tarfile.ReadError) as e:
+                raise ProfileNotFoundError(str(e))
+            finally:
+                if not download_cache:
+                    shutil.rmtree(download_dir)
+            LOG("Success, we have a profile to work with")
+            return target_dir
+        except Exception:
+            ERROR("Failed to get the profile.")
+            retries += 1
+            if os.path.exists(downloaded_archive):
+                try:
+                    os.remove(downloaded_archive)
+                except Exception:
+                    ERROR("Could not remove the file")
+            time.sleep(RETRY_PAUSE)
+
+    # If we reach that point, it means all attempts failed
+    ERROR("All attempt failed")
+    raise ProfileNotFoundError(url)
 
 
 def read_changelog(platform, repo="mozilla-central"):
     params = {"platform": platform, "repo": repo}
     changelog_url = CHANGELOG_LINK % params
-    get_logger().msg("Getting %s" % changelog_url)
+    LOG("Getting %s" % changelog_url)
     download_dir = tempfile.mkdtemp()
     downloaded_changelog = os.path.join(download_dir, "changelog.json")
     try:

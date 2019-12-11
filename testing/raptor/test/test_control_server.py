@@ -5,6 +5,7 @@ import os
 import requests
 import sys
 import mock
+import shutil
 
 try:
     from http.server import HTTPServer  # py3
@@ -23,6 +24,16 @@ from raptor.results import RaptorResultsHandler
 
 
 set_default_logger(StructuredLogger('test_control_server'))
+
+
+def clear_cache():
+    # remove the condprof download cache
+    from condprof.client import CONDPROF_CACHE  # noqa
+    if os.path.exists(CONDPROF_CACHE):
+        shutil.rmtree(CONDPROF_CACHE)
+
+
+clear_cache()
 
 
 def test_start_and_stop():
