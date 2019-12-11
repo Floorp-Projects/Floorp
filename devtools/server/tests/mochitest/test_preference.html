@@ -83,7 +83,7 @@ function runTests() {
         () => ok(false, "getCharPref should've thrown for an undefined preference"),
         (ex) => {
           is(
-            ex,
+            ex.message,
             "Protocol error (unknownError): preference is not of the right type: test.undefined",
             "getCharPref should throw an exception with the preference name"
           );

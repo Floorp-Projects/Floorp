@@ -48,7 +48,7 @@ async function test_object_grip(debuggee, threadFront) {
     await method.apply(obj, []);
     Assert.ok(false, "expected exception");
   } catch (err) {
-    Assert.ok(!!err.match(/debugee object is not callable/));
+    Assert.ok(!!err.message.match(/debugee object is not callable/));
   }
 }
 

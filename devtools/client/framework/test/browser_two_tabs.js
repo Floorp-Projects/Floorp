@@ -64,7 +64,10 @@ async function checkGetTabFailures(client) {
     await client.mainRoot.getTab({ tabId: -999 });
     ok(false, "getTab unexpectedly succeed with a wrong tabId");
   } catch (error) {
-    is(error, "Protocol error (noTab): Unable to find tab with tabId '-999'");
+    is(
+      error.message,
+      "Protocol error (noTab): Unable to find tab with tabId '-999'"
+    );
   }
 
   try {
@@ -72,7 +75,7 @@ async function checkGetTabFailures(client) {
     ok(false, "getTab unexpectedly succeed with a wrong outerWindowID");
   } catch (error) {
     is(
-      error,
+      error.message,
       "Protocol error (noTab): Unable to find tab with outerWindowID '-999'"
     );
   }
