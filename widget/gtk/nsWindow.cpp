@@ -3453,8 +3453,17 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     }
   }
 
-  if (mDrawInTitlebar && mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
-    UpdateClientOffsetForCSDWindow();
+  if (mDrawInTitlebar) {
+    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+      UpdateClientOffsetForCSDWindow();
+    }
+    if (mTransparencyBitmapForTitlebar) {
+      if (mSizeState == nsSizeMode_Normal && !mIsTiled) {
+        UpdateTitlebarTransparencyBitmap();
+      } else {
+        ClearTransparencyBitmap();
+      }
+    }
   }
 }
 
@@ -6933,7 +6942,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   mDrawInTitlebar = aState;
 
   if (mTransparencyBitmapForTitlebar) {
-    if (mDrawInTitlebar && mSizeState == nsSizeMode_Normal) {
+    if (mDrawInTitlebar && mSizeState == nsSizeMode_Normal && !mIsTiled) {
       UpdateTitlebarTransparencyBitmap();
     } else {
       ClearTransparencyBitmap();
