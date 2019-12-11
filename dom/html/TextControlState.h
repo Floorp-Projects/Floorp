@@ -141,7 +141,9 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   static TextControlState* Construct(TextControlElement* aOwningElement);
 
-  static void Shutdown();
+  // Note that this does not run script actually because of `sHasShutDown`
+  // is set to true before calling `DeleteOrCacheForReuse()`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void Shutdown();
 
   /**
    * Destroy() deletes the instance immediately or later.
@@ -350,27 +352,28 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   //
   // XXXbz This should really take uint32_t, but none of our guts (either the
   // frame or our cached selection state) work with uint32_t at the moment...
-  void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
-                         nsITextControlFrame::SelectionDirection aDirection,
-                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
+      uint32_t aStart, uint32_t aEnd,
+      nsITextControlFrame::SelectionDirection aDirection, ErrorResult& aRv);
 
   // Set the selection range, but with an optional string for the direction.
   // This will convert aDirection to an nsITextControlFrame::SelectionDirection
   // and then call our other SetSelectionRange overload.
-  void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
-                         const dom::Optional<nsAString>& aDirection,
-                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
+      uint32_t aSelectionStart, uint32_t aSelectionEnd,
+      const dom::Optional<nsAString>& aDirection, ErrorResult& aRv);
 
   // Set the selection start.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart
   // setter.
-  void SetSelectionStart(const dom::Nullable<uint32_t>& aStart,
-                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionStart(
+      const dom::Nullable<uint32_t>& aStart, ErrorResult& aRv);
 
   // Set the selection end.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionend
   // setter.
-  void SetSelectionEnd(const dom::Nullable<uint32_t>& aEnd, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionEnd(const dom::Nullable<uint32_t>& aEnd,
+                                          ErrorResult& aRv);
 
   // Get the selection direction as a string.  This implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
@@ -380,18 +383,20 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   // Set the selection direction.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
   // setter.
-  void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetSelectionDirection(const nsAString& aDirection,
+                                                ErrorResult& aRv);
 
   // Set the range text.  This basically implements
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-setrangetext
-  void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
+                                       ErrorResult& aRv);
   // The last two arguments are -1 if we don't know our selection range;
   // otherwise they're the start and end of our selection range.
-  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, dom::SelectionMode aSelectMode,
-                    ErrorResult& aRv,
-                    const Maybe<uint32_t>& aSelectionStart = Nothing(),
-                    const Maybe<uint32_t>& aSelectionEnd = Nothing());
+  MOZ_CAN_RUN_SCRIPT void SetRangeText(
+      const nsAString& aReplacement, uint32_t aStart, uint32_t aEnd,
+      dom::SelectionMode aSelectMode, ErrorResult& aRv,
+      const Maybe<uint32_t>& aSelectionStart = Nothing(),
+      const Maybe<uint32_t>& aSelectionEnd = Nothing());
 
   void UpdateEditableState(bool aNotify) {
     if (auto* root = GetRootNode()) {
