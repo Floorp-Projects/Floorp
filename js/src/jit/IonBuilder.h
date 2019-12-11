@@ -611,6 +611,10 @@ class IonBuilder : public MIRGenerator,
       TypedObjectPrediction objTypeReprs, MDefinition* value,
       TypedObjectPrediction elemTypeReprs, uint32_t elemSize);
 
+  AbortReasonOr<Ok> initArrayElemTryFastPath(bool* emitted, MDefinition* obj,
+                                             MDefinition* id,
+                                             MDefinition* value);
+
   AbortReasonOr<Ok> initArrayElementFastPath(
       MNewArray* obj, MDefinition* id, MDefinition* value,
       bool addResumePointAndIncrementInitializedLength);
