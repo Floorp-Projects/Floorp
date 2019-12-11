@@ -2818,11 +2818,11 @@ class PresShell final : public nsStubDocumentObserver,
 
   // These are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
-  // mDocument should've never been cleared nor swapped with another instance
-  // while PresShell instance is alive so that it's safe to call their can-run-
-  // script methods without local RefPtr variables.
+  // mDocument and mPresContext should've never been cleared nor swapped with
+  // another instance while PresShell instance is alive so that it's safe to
+  // call their can-run- script methods without local RefPtr variables.
   RefPtr<Document> const mDocument;
-  RefPtr<nsPresContext> mPresContext;
+  RefPtr<nsPresContext> const mPresContext;
   // The document's style set owns it but we maintain a ref, may be null.
   RefPtr<StyleSheet> mPrefStyleSheet;
   UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
