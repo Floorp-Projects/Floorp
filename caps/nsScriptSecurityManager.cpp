@@ -147,6 +147,9 @@ class nsAutoInPrincipalDomainOriginSetter {
 uint32_t nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin;
 
 static nsresult GetOriginFromURI(nsIURI* aURI, nsACString& aOrigin) {
+  if (!aURI) {
+    return NS_ERROR_NULL_POINTER;
+  }
   if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin > 1) {
     // Allow a single recursive call to GetPrincipalDomainOrigin, since that
     // might be happening on a different principal from the first call.  But
@@ -180,14 +183,15 @@ static nsresult GetOriginFromURI(nsIURI* aURI, nsACString& aOrigin) {
 
 static nsresult GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
                                          nsACString& aOrigin) {
+  aOrigin.Truncate();
   nsCOMPtr<nsIURI> uri;
   aPrincipal->GetDomain(getter_AddRefs(uri));
-  if (!uri) {
-    aPrincipal->GetURI(getter_AddRefs(uri));
+  nsresult rv = GetOriginFromURI(uri, aOrigin);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
   }
-  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
-
-  return GetOriginFromURI(uri, aOrigin);
+  // If there is no Domain fallback to the Principals Origin
+  return aPrincipal->GetOriginNoSuffix(aOrigin);
 }
 
 inline void SetPendingExceptionASCII(JSContext* cx, const char* aMsg) {
@@ -507,15 +511,6 @@ nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
     return NS_ERROR_DOM_BAD_URI;
   }
   return NS_OK;
-}
-
-/*static*/
-uint32_t nsScriptSecurityManager::HashPrincipalByOrigin(
-    nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetDomain(getter_AddRefs(uri));
-  if (!uri) aPrincipal->GetURI(getter_AddRefs(uri));
-  return SecurityHashURI(uri);
 }
 
 NS_IMETHODIMP
