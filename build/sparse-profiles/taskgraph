@@ -46,6 +46,12 @@ glob:**/*.configure
 # are all somewhere in "tooltool-manifests" directories.
 glob:**/tooltool-manifests/**
 
+# For test chunking
+glob:**/*.ini
+glob:**/*.list
+path:testing/mozbase/manifestparser
+path:testing/runtimes
+
 # For scheduling android-gradle-dependencies.
 path:mobile/android/config/
 glob:**/*.gradle

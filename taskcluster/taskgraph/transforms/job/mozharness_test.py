@@ -4,7 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
+import os
+
 from voluptuous import Required
+
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import (
     configure_taskdesc_for_run,
@@ -19,8 +23,6 @@ from taskgraph.transforms.tests import (
 from taskgraph.transforms.job.common import (
     support_vcs_checkout,
 )
-import json
-import os
 
 VARIANTS = [
     'nightly',
@@ -182,8 +184,11 @@ def mozharness_test_on_docker(config, job, taskdesc):
     ]
     command.extend(mozharness.get('extra-options', []))
 
+    if test.get('test-manifests'):
+        env['MOZHARNESS_TEST_PATHS'] = json.dumps({test['suite']: test['test-manifests']})
+
     # TODO: remove the need for run['chunked']
-    if mozharness.get('chunked') or test['chunks'] > 1:
+    elif mozharness.get('chunked') or test['chunks'] > 1:
         command.append('--total-chunk={}'.format(test['chunks']))
         command.append('--this-chunk={}'.format(test['this-chunk']))
 
@@ -362,8 +367,11 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     if mozharness.get('include-blob-upload-branch'):
         mh_command.append('--blob-upload-branch=' + config.params['project'])
 
+    if test.get('test-manifests'):
+        env['MOZHARNESS_TEST_PATHS'] = json.dumps({test['suite']: test['test-manifests']})
+
     # TODO: remove the need for run['chunked']
-    if mozharness.get('chunked') or test['chunks'] > 1:
+    elif mozharness.get('chunked') or test['chunks'] > 1:
         mh_command.append('--total-chunk={}'.format(test['chunks']))
         mh_command.append('--this-chunk={}'.format(test['this-chunk']))
 
@@ -480,8 +488,11 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         command.append('--blob-upload-branch=' + config.params['project'])
     command.extend(mozharness.get('extra-options', []))
 
+    if test.get('test-manifests'):
+        env['MOZHARNESS_TEST_PATHS'] = json.dumps({test['suite']: test['test-manifests']})
+
     # TODO: remove the need for run['chunked']
-    if mozharness.get('chunked') or test['chunks'] > 1:
+    elif mozharness.get('chunked') or test['chunks'] > 1:
         command.append('--total-chunk={}'.format(test['chunks']))
         command.append('--this-chunk={}'.format(test['this-chunk']))
 
