@@ -1606,6 +1606,7 @@ security.ui.protectionspopup:
       How many times the protections panel was opened.
     expiry_version: "75"
     notification_emails:
+      - ewright@mozilla.com
       - nhnt11@mozilla.com
       - jhofmann@mozilla.com
       - chsiang@mozilla.com
@@ -1630,9 +1631,11 @@ security.ui.protectionspopup:
       "subview_settings",
       "settings",
       "full_report",
+      "milestone_message",
     ]
     bug_numbers:
       - 1560327
+      - 1602015
     description: >
       User interaction by click events in the protections panel.
     expiry_version: "75"
