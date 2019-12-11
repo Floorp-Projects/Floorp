@@ -7931,8 +7931,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       if (propVal->is<FunctionNode>() &&
           propVal->as<FunctionNode>().funbox()->needsHomeObject()) {
-        MOZ_ASSERT(propVal->as<FunctionNode>().funbox()->allowSuperProperty());
-
         if (!pe.emitInitHomeObject()) {
           //        [stack] CTOR? OBJ CTOR? KEY? FUN
           return false;

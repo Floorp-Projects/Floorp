@@ -1757,7 +1757,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   LazyScriptCreationData data(cx_);
   if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
-                pc_->innerFunctionBoxesForLazy, pc_->sc()->strict())) {
+                 pc_->innerFunctionBoxesForLazy, pc_->sc()->strict())) {
     return false;
   }
 
@@ -2609,6 +2609,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   funbox->initFromLazyFunction(fun);
+  MOZ_ASSERT(fun->lazyScript()->hasEnclosingLazyScript());
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 
@@ -3069,6 +3070,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     return null();
   }
   funbox->initFromLazyFunction(fun);
+  funbox->initWithEnclosingScope(fun);
 
   Directives newDirectives = directives;
   SourceParseContext funpc(this, funbox, &newDirectives);

@@ -304,8 +304,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               JSAtom* explicitName, FunctionFlags flags);
 
-  void initWithEnclosingScope(Scope* enclosingScope, JSFunction* fun);
-
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind, bool isArrow,
                                      bool allowSuperProperty);
@@ -460,6 +458,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void initFromLazyFunction(JSFunction* fun);
   void initStandaloneFunction(Scope* enclosingScope);
+
+  void initWithEnclosingScope(JSFunction* fun);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      Handle<FunctionCreationData> fun,
