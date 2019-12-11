@@ -143,7 +143,7 @@ const UNSAFE_IMPL_SYNC_TYPES: &'static [&'static str] = &[
 /// Flags passed through bindgen directly to Clang.
 const EXTRA_CLANG_FLAGS: &'static [&'static str] = &[
     "-x", "c++",
-    "-std=gnu++14",
+    "-std=gnu++17",
     "-fno-sized-deallocation",
     "-fno-aligned-new",
     "-DRUST_BINDGEN",
