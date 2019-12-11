@@ -233,30 +233,59 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       val.set(Val(ValType::AnyRef, tmp));
       return true;
     }
-    case ValType::Ref:
-    case ValType::NullRef:
     case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+      if (HasI64BigIntSupport(cx)) {
+        BigInt* bigint = ToBigInt(cx, v);
+        if (!bigint) {
+          return false;
+        }
+        val.set(Val(BigInt::toUint64(bigint)));
+        return true;
+      }
+#endif
+      break;
+    }
+    case ValType::Ref:
+    case ValType::NullRef: {
       break;
     }
   }
   MOZ_CRASH("unexpected import value type, caller must guard");
 }
 
-static Value ToJSValue(const Val& val) {
+static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
   switch (val.type().code()) {
     case ValType::I32:
-      return Int32Value(val.i32());
+      out.setInt32(val.i32());
+      return true;
     case ValType::F32:
-      return JS::CanonicalizedDoubleValue(double(val.f32()));
+      out.setDouble(JS::CanonicalizeNaN(double(val.f32())));
+      return true;
     case ValType::F64:
-      return JS::CanonicalizedDoubleValue(val.f64());
+      out.setDouble(JS::CanonicalizeNaN(val.f64()));
+      return true;
     case ValType::FuncRef:
-      return UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref()));
+      out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
+      return true;
     case ValType::AnyRef:
-      return UnboxAnyRef(val.ref());
+      out.set(UnboxAnyRef(val.ref()));
+      return true;
+    case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+      if (HasI64BigIntSupport(cx)) {
+        BigInt* bi = BigInt::createFromInt64(cx, val.i64());
+        if (!bi) {
+          return false;
+        }
+        out.setBigInt(bi);
+        return true;
+      }
+#endif
+      break;
+    }
     case ValType::Ref:
     case ValType::NullRef:
-    case ValType::I64:
       break;
   }
   MOZ_CRASH("unexpected type when translating to a JS value");
@@ -387,8 +416,22 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           obj->val(&val);
         } else {
           if (IsNumberType(global.type())) {
-            if (!v.isNumber()) {
-              return ThrowBadImportType(cx, import.field.get(), "Number");
+            if (HasI64BigIntSupport(cx)) {
+              if (global.type() == ValType::I64 && v.isNumber()) {
+                return ThrowBadImportType(cx, import.field.get(), "BigInt");
+              }
+              if (global.type() != ValType::I64 && !v.isNumber()) {
+                return ThrowBadImportType(cx, import.field.get(), "Number");
+              }
+            } else {
+              if (!v.isNumber()) {
+                return ThrowBadImportType(cx, import.field.get(), "Number");
+              }
+              if (global.type() == ValType::I64) {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                         JSMSG_WASM_BAD_I64_LINK);
+                return false;
+              }
             }
           } else {
             MOZ_ASSERT(global.type().isReference());
@@ -396,12 +439,6 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null");
             }
-          }
-
-          if (global.type() == ValType::I64) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_BAD_I64_LINK);
-            return false;
           }
 
           if (global.isMutable()) {
@@ -2646,6 +2683,11 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     globalType = ValType::F32;
   } else if (StringEqualsLiteral(typeLinearStr, "f64")) {
     globalType = ValType::F64;
+#ifdef ENABLE_WASM_BIGINT
+  } else if (HasI64BigIntSupport(cx) &&
+             StringEqualsLiteral(typeLinearStr, "i64")) {
+    globalType = ValType::I64;
+#endif
 #ifdef ENABLE_WASM_REFTYPES
   } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "funcref")) {
@@ -2721,9 +2763,15 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
     case ValType::F64:
     case ValType::FuncRef:
     case ValType::AnyRef:
-      args.rval().set(args.thisv().toObject().as<WasmGlobalObject>().value(cx));
-      return true;
+      return args.thisv().toObject().as<WasmGlobalObject>().value(cx,
+                                                                  args.rval());
     case ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+      if (HasI64BigIntSupport(cx)) {
+        return args.thisv().toObject().as<WasmGlobalObject>().value(
+            cx, args.rval());
+      }
+#endif
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_I64_TYPE);
       return false;
@@ -2755,7 +2803,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (global->type() == ValType::I64) {
+  if (global->type() == ValType::I64 && !HasI64BigIntSupport(cx)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_I64_TYPE);
     return false;
@@ -2792,8 +2840,16 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
       }
       break;
     }
-    case ValType::I64:
+    case ValType::I64: {
+#ifdef ENABLE_WASM_BIGINT
+      MOZ_ASSERT(HasI64BigIntSupport(cx),
+                 "expected BigInt support for setting I64 global");
+      cell->i64 = val.get().i64();
+      break;
+#else
       MOZ_CRASH("unexpected i64 when setting global's value");
+#endif
+    }
     case ValType::Ref:
       MOZ_CRASH("Ref NYI");
     case ValType::NullRef:
@@ -2859,11 +2915,10 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
   MOZ_CRASH("unexpected Global type");
 }
 
-Value WasmGlobalObject::value(JSContext* cx) const {
-  // ToJSValue crashes on I64; this is desirable.
+bool WasmGlobalObject::value(JSContext* cx, MutableHandleValue out) {
   RootedVal result(cx);
   val(&result);
-  return ToJSValue(result.get());
+  return ToJSValue(cx, result.get(), out);
 }
 
 WasmGlobalObject::Cell* WasmGlobalObject::cell() const {
