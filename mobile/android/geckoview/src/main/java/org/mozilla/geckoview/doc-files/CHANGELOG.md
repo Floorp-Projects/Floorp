@@ -62,6 +62,8 @@ exclude: true
   accept a JSON object instead of a Map. Said object also includes the
   application name that was previously passed as the fourth argument to the
   method, which was thus removed.
+- Added WebXR device access permission support, [`PERMISSION_PERSISTENT_XR`][72.24].
+  ([bug 1599927]({{bugzilla}}1599927))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -86,6 +88,7 @@ exclude: true
 [72.21]: {{javadoc_uri}}/WebExtension.Icon.html
 [72.22]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAGS_STREAM_FAILURE_TEST
 [72.23]: {{javadoc_uri}}/CrashReporter#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
+[72.24]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_XR
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
