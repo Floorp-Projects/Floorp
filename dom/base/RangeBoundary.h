@@ -53,6 +53,8 @@ class RangeBoundaryBase {
                                           uint32_t);
   friend void ImplCycleCollectionUnlink(RangeBoundary&);
 
+  static const uint32_t kFallbackOffset = 0;
+
  public:
   RangeBoundaryBase(nsINode* aContainer, nsIContent* aRef)
       : mParent(aContainer), mRef(aRef) {
@@ -138,13 +140,35 @@ class RangeBoundaryBase {
     return mRef;
   }
 
+  enum class OffsetFilter { kValidOffsets, kValidOrInvalidOffsets };
+
+  /**
+   * @return maybe an offset, depending on aOffsetFilter. If it is:
+   *         kValidOffsets: if the offset is valid, it, Nothing{} otherwise.
+   *         kValidOrInvalidOffsets: the internally stored offset, even if
+   *                                 invalid, or if not available, a defined
+   *                                 default value. That is, always some value.
+   */
+  Maybe<uint32_t> Offset(const OffsetFilter aOffsetFilter) const {
+    switch (aOffsetFilter) {
+      case OffsetFilter::kValidOffsets: {
+        return IsSetAndValid() ? Some(Offset()) : Nothing();
+      }
+      case OffsetFilter::kValidOrInvalidOffsets: {
+        return Some(Offset());
+      }
+    }
+  }
+
+  // TODO(mbrodesser): merge into the other Offset() method once all callers are
+  // switched to it.
   uint32_t Offset() const {
     if (mOffset.isSome()) {
       return mOffset.value();
     }
 
     if (!mParent) {
-      return 0;
+      return kFallbackOffset;
     }
 
     MOZ_ASSERT(mRef);
@@ -236,6 +260,9 @@ class RangeBoundaryBase {
 
   mutable mozilla::Maybe<uint32_t> mOffset;
 };
+
+template <typename ParentType, typename RefType>
+const uint32_t RangeBoundaryBase<ParentType, RefType>::kFallbackOffset;
 
 inline void ImplCycleCollectionUnlink(RangeBoundary& aField) {
   ImplCycleCollectionUnlink(aField.mParent);
