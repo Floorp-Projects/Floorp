@@ -10,49 +10,51 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const args = packet.frame.arguments;
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        Assert.equal(args[0].class, "Object");
+    const args = packet.frame.arguments;
 
-        const objectFront = threadFront.pauseGrip(args[0]);
-        const {
-          ownProperties,
-          prototype,
-        } = await objectFront.getPrototypeAndProperties();
-        Assert.equal(ownProperties.x.configurable, true);
-        Assert.equal(ownProperties.x.enumerable, true);
-        Assert.equal(ownProperties.x.writable, true);
-        Assert.equal(ownProperties.x.value, 10);
+    Assert.equal(args[0].class, "Object");
 
-        Assert.equal(ownProperties.y.configurable, true);
-        Assert.equal(ownProperties.y.enumerable, true);
-        Assert.equal(ownProperties.y.writable, true);
-        Assert.equal(ownProperties.y.value, "kaiju");
+    const objectFront = threadFront.pauseGrip(args[0]);
+    const {
+      ownProperties,
+      prototype,
+    } = await objectFront.getPrototypeAndProperties();
+    Assert.equal(ownProperties.x.configurable, true);
+    Assert.equal(ownProperties.x.enumerable, true);
+    Assert.equal(ownProperties.x.writable, true);
+    Assert.equal(ownProperties.x.value, 10);
 
-        Assert.equal(ownProperties.a.configurable, true);
-        Assert.equal(ownProperties.a.enumerable, true);
-        Assert.equal(ownProperties.a.get.getGrip().type, "object");
-        Assert.equal(ownProperties.a.get.getGrip().class, "Function");
-        Assert.equal(ownProperties.a.set.type, "undefined");
+    Assert.equal(ownProperties.y.configurable, true);
+    Assert.equal(ownProperties.y.enumerable, true);
+    Assert.equal(ownProperties.y.writable, true);
+    Assert.equal(ownProperties.y.value, "kaiju");
 
-        Assert.ok(prototype != undefined);
+    Assert.equal(ownProperties.a.configurable, true);
+    Assert.equal(ownProperties.a.enumerable, true);
+    Assert.equal(ownProperties.a.get.getGrip().type, "object");
+    Assert.equal(ownProperties.a.get.getGrip().class, "Function");
+    Assert.equal(ownProperties.a.set.type, "undefined");
 
-        const { ownPropertyNames } = await prototype.getOwnPropertyNames();
-        Assert.ok(ownPropertyNames.toString != undefined);
+    Assert.ok(prototype != undefined);
 
-        await threadFront.resume();
-        resolve();
-      });
+    const { ownPropertyNames } = await prototype.getOwnPropertyNames();
+    Assert.ok(ownPropertyNames.toString != undefined);
 
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-      debuggee.eval("stopMe({ x: 10, y: 'kaiju', get a() { return 42; } })");
-    });
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+  debuggee.eval("stopMe({ x: 10, y: 'kaiju', get a() { return 42; } })");
+}

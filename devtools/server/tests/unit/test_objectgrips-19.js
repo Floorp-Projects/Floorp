@@ -36,17 +36,15 @@ add_task(
       },
     ];
     for (const data of tests) {
-      await new Promise(function(resolve) {
-        threadFront.once("paused", async function(packet) {
-          const [grip] = packet.frame.arguments;
-          check_wrapped_primitive_grip(grip, data);
-
-          await threadFront.resume();
-          resolve();
-        });
-        debuggee.primitive = data.value;
+      debuggee.primitive = data.value;
+      const packet = await executeOnNextTickAndWaitForPause(() => {
         debuggee.eval("stopMe(Object(primitive));");
-      });
+      }, threadFront);
+
+      const [grip] = packet.frame.arguments;
+      check_wrapped_primitive_grip(grip, data);
+
+      await threadFront.resume();
     }
   })
 );

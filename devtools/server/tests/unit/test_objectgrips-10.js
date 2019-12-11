@@ -4,30 +4,21 @@
 
 "use strict";
 
-var gDebuggee;
-var gThreadFront;
-
 // Test that closures can be inspected.
 
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_object_grip();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_object_grip() {
-  gThreadFront.once("paused", async function(packet) {
     const environment = await packet.frame.getEnvironment();
     const person = environment.bindings.variables.person;
 
     Assert.equal(person.value.class, "Object");
 
-    const personFront = gThreadFront.pauseGrip(person.value);
+    const personFront = threadFront.pauseGrip(person.value);
     const { ownProperties } = await personFront.getPrototypeAndProperties();
     Assert.equal(ownProperties.getName.value.getGrip().class, "Function");
     Assert.equal(ownProperties.getAge.value.getGrip().class, "Function");
@@ -49,12 +40,13 @@ function test_object_grip() {
     bindings = await response.scope.bindings();
     Assert.equal(bindings.variables.foo.value, 10);
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
+function evalCode(debuggee) {
   /* eslint-disable */
-  gDebuggee.eval(
+  debuggee.eval(
     "(" +
       function() {
         var PersonFactory = function(name, age) {

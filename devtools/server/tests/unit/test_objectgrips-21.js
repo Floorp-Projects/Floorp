@@ -222,100 +222,99 @@ async function test_unsafe_grips(
     }.toString()
   );
   for (let data of tests) {
-    await new Promise(function(resolve) {
-      threadFront.once("paused", async function(packet) {
-        const [objGrip, inheritsGrip] = packet.frame.arguments;
-        for (const grip of [objGrip, inheritsGrip]) {
-          const isUnsafe = grip === objGrip;
-          // If `isUnsafe` is true, the parameters in `data` will be used to assert
-          // against `objGrip`, the grip of the object `obj` created by the test.
-          // Otherwise, the grip will refer to `inherits`, an ordinary object which
-          // inherits from `obj`. Then all checks are hardcoded because in every test
-          // all methods are expected to work the same on `inheritsGrip`.
+    data = { ...defaults, ...data };
 
-          check_grip(grip, data, isUnsafe);
-
-          let objClient = threadFront.pauseGrip(grip);
-          let response, slice;
-
-          response = await objClient.getPrototypeAndProperties();
-          check_properties(response.ownProperties, data, isUnsafe);
-          check_symbols(response.ownSymbols, data, isUnsafe);
-          check_prototype(response.prototype, data, isUnsafe);
-
-          response = await objClient.enumProperties({
-            ignoreIndexedProperties: true,
-          });
-          slice = await response.slice(0, response.count);
-          check_properties(slice.ownProperties, data, isUnsafe);
-
-          response = await objClient.enumProperties({});
-          slice = await response.slice(0, response.count);
-          check_properties(slice.ownProperties, data, isUnsafe);
-
-          response = await objClient.getOwnPropertyNames();
-          check_property_names(response.ownPropertyNames, data, isUnsafe);
-
-          response = await objClient.getProperty("x");
-          check_property(response.descriptor, data, isUnsafe);
-
-          response = await objClient.enumSymbols();
-          slice = await response.slice(0, response.count);
-          check_symbol_names(slice.ownSymbols, data, isUnsafe);
-
-          response = await objClient.getProperty(Symbol.for("x"));
-          check_symbol(response.descriptor, data, isUnsafe);
-
-          response = await objClient.getPrototype();
-          check_prototype(response.prototype, data, isUnsafe);
-
-          response = await objClient.getDisplayString();
-          check_display_string(response.displayString, data, isUnsafe);
-
-          if (data.isFunction && isUnsafe) {
-            // For function-related methods, the object front checks that the class
-            // of the grip is "Function", and if it's not, the method in object.js
-            // is not called. But some tests have a grip with a class that is not
-            // "Function" (e.g. it's "Proxy") but the DebuggerObject has a "Function"
-            // class because the object is callable (despite not being a Function object).
-            // So the grip class is changed in order to test the object.js method.
-            grip.class = "Function";
-            objClient = threadFront.pauseGrip(grip);
-            try {
-              response = await objClient.getParameterNames();
-              ok(
-                true,
-                "getParameterNames passed. DebuggerObject.class is 'Function'" +
-                  "on the object actor"
-              );
-            } catch (e) {
-              ok(
-                false,
-                "getParameterNames failed. DebuggerObject.class may not be" +
-                  " 'Function' on the object actor"
-              );
-            }
-          }
-        }
-
-        await threadFront.resume();
-        resolve();
-      });
-
-      data = { ...defaults, ...data };
-
-      // Run the code and test the results.
-      const sandbox = Cu.Sandbox(systemPrincipal);
-      Object.assign(sandbox, { Services, systemPrincipal, Cu });
-      sandbox.eval(data.code);
-      debuggee.obj = sandbox.obj;
-      const inherits = `Object.create(obj, {
+    // Run the code and test the results.
+    const sandbox = Cu.Sandbox(systemPrincipal);
+    Object.assign(sandbox, { Services, systemPrincipal, Cu });
+    sandbox.eval(data.code);
+    debuggee.obj = sandbox.obj;
+    const inherits = `Object.create(obj, {
         x: {value: 1},
         [Symbol.for("x")]: {value: 2}
       })`;
-      debuggee.eval(`stopMe(obj, ${inherits});`);
-      ok(sandbox.eval(data.afterTest), "Check after test passes");
-    });
+
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => debuggee.eval(`stopMe(obj, ${inherits});`),
+      threadFront
+    );
+
+    const [objGrip, inheritsGrip] = packet.frame.arguments;
+    for (const grip of [objGrip, inheritsGrip]) {
+      const isUnsafe = grip === objGrip;
+      // If `isUnsafe` is true, the parameters in `data` will be used to assert
+      // against `objGrip`, the grip of the object `obj` created by the test.
+      // Otherwise, the grip will refer to `inherits`, an ordinary object which
+      // inherits from `obj`. Then all checks are hardcoded because in every test
+      // all methods are expected to work the same on `inheritsGrip`.
+      check_grip(grip, data, isUnsafe);
+
+      let objClient = threadFront.pauseGrip(grip);
+      let response, slice;
+
+      response = await objClient.getPrototypeAndProperties();
+      check_properties(response.ownProperties, data, isUnsafe);
+      check_symbols(response.ownSymbols, data, isUnsafe);
+      check_prototype(response.prototype, data, isUnsafe);
+
+      response = await objClient.enumProperties({
+        ignoreIndexedProperties: true,
+      });
+      slice = await response.slice(0, response.count);
+      check_properties(slice.ownProperties, data, isUnsafe);
+
+      response = await objClient.enumProperties({});
+      slice = await response.slice(0, response.count);
+      check_properties(slice.ownProperties, data, isUnsafe);
+
+      response = await objClient.getOwnPropertyNames();
+      check_property_names(response.ownPropertyNames, data, isUnsafe);
+
+      response = await objClient.getProperty("x");
+      check_property(response.descriptor, data, isUnsafe);
+
+      response = await objClient.enumSymbols();
+      slice = await response.slice(0, response.count);
+      check_symbol_names(slice.ownSymbols, data, isUnsafe);
+
+      response = await objClient.getProperty(Symbol.for("x"));
+      check_symbol(response.descriptor, data, isUnsafe);
+
+      response = await objClient.getPrototype();
+      check_prototype(response.prototype, data, isUnsafe);
+
+      response = await objClient.getDisplayString();
+      check_display_string(response.displayString, data, isUnsafe);
+
+      if (data.isFunction && isUnsafe) {
+        // For function-related methods, the object front checks that the class
+        // of the grip is "Function", and if it's not, the method in object.js
+        // is not called. But some tests have a grip with a class that is not
+        // "Function" (e.g. it's "Proxy") but the DebuggerObject has a "Function"
+        // class because the object is callable (despite not being a Function object).
+        // So the grip class is changed in order to test the object.js method.
+        grip.class = "Function";
+        objClient = threadFront.pauseGrip(grip);
+        try {
+          response = await objClient.getParameterNames();
+          ok(
+            true,
+            "getParameterNames passed. DebuggerObject.class is 'Function'" +
+              "on the object actor"
+          );
+        } catch (e) {
+          ok(
+            false,
+            "getParameterNames failed. DebuggerObject.class may not be" +
+              " 'Function' on the object actor"
+          );
+        }
+      }
+    }
+
+    await threadFront.resume();
+
+    ok(sandbox.eval(data.afterTest), "Check after test passes");
   }
 }
 

@@ -8,29 +8,32 @@ const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(
 );
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client, targetFront }) => {
-    await new Promise(resolve => {
-      threadFront.on("paused", function(packet) {
-        Assert.equal(threadFront.state, "paused");
-        // Reach around the protocol to check that the debuggee is in the state
-        // we expect.
-        Assert.ok(debuggee.a);
-        Assert.ok(!debuggee.b);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        Assert.equal(xpcInspector.eventLoopNestLevel, 1);
+    Assert.equal(threadFront.state, "paused");
+    // Reach around the protocol to check that the debuggee is in the state
+    // we expect.
+    Assert.ok(debuggee.a);
+    Assert.ok(!debuggee.b);
 
-        threadFront.resume().then(resolve);
-      });
+    Assert.equal(xpcInspector.eventLoopNestLevel, 1);
 
-      Cu.evalInSandbox(
-        "var a = true; var b = false; debugger; var b = true;",
-        debuggee
-      );
+    await threadFront.resume();
 
-      // Now make sure that we've run the code after the debugger statement...
-      Assert.ok(debuggee.b);
-    });
+    // Now make sure that we've run the code after the debugger statement...
+    Assert.ok(debuggee.b);
 
     Assert.equal(xpcInspector.eventLoopNestLevel, 0);
   })
 );
+
+function evalCode(debuggee) {
+  Cu.evalInSandbox(
+    "var a = true; var b = false; debugger; var b = true;",
+    debuggee
+  );
+}

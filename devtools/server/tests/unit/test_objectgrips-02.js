@@ -10,40 +10,42 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const args = packet.frame.arguments;
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        Assert.equal(args[0].class, "Object");
+    const args = packet.frame.arguments;
 
-        const objectFront = threadFront.pauseGrip(args[0]);
-        const response = await objectFront.getPrototype();
-        Assert.ok(response.prototype != undefined);
+    Assert.equal(args[0].class, "Object");
 
-        const protoFront = response.prototype;
-        const { ownPropertyNames } = await protoFront.getOwnPropertyNames();
-        Assert.equal(ownPropertyNames.length, 2);
-        Assert.equal(ownPropertyNames[0], "b");
-        Assert.equal(ownPropertyNames[1], "c");
+    const objectFront = threadFront.pauseGrip(args[0]);
+    const response = await objectFront.getPrototype();
+    Assert.ok(response.prototype != undefined);
 
-        await threadFront.resume();
-        resolve();
-      });
+    const protoFront = response.prototype;
+    const { ownPropertyNames } = await protoFront.getOwnPropertyNames();
+    Assert.equal(ownPropertyNames.length, 2);
+    Assert.equal(ownPropertyNames[0], "b");
+    Assert.equal(ownPropertyNames[1], "c");
 
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-      debuggee.eval(
-        function Constr() {
-          this.a = 1;
-        }.toString()
-      );
-      debuggee.eval(
-        "Constr.prototype = { b: true, c: 'foo' }; var o = new Constr(); stopMe(o)"
-      );
-    });
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+  debuggee.eval(
+    function Constr() {
+      this.a = 1;
+    }.toString()
+  );
+  debuggee.eval(
+    "Constr.prototype = { b: true, c: 'foo' }; var o = new Constr(); stopMe(o)"
+  );
+}

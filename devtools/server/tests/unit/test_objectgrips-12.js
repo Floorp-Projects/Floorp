@@ -14,17 +14,14 @@ var gDebuggee;
 var gThreadFront;
 
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_display_string();
-    },
-    { waitForFinish: true }
-  )
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    gThreadFront = threadFront;
+    gDebuggee = debuggee;
+    await test_display_string();
+  })
 );
 
-function test_display_string() {
+async function test_display_string() {
   const testCases = [
     {
       input: "new Boolean(true)",
@@ -141,28 +138,30 @@ function test_display_string() {
 
   PromiseTestUtils.expectUncaughtRejection(/Error/);
 
-  gThreadFront.once("paused", function(packet) {
-    const args = packet.frame.arguments;
+  const inputs = testCases.map(({ input }) => input).join(",");
 
-    (async function loop() {
-      const objClient = gThreadFront.pauseGrip(args.pop());
-      const response = await objClient.getDisplayString();
-      Assert.equal(response.displayString, testCases.pop().output);
-      if (args.length) {
-        loop();
-      } else {
-        await gThreadFront.resume();
-        threadFrontTestFinished();
-      }
-    })();
-  });
+  const packet = await executeOnNextTickAndWaitForPause(
+    () => evalCode(inputs),
+    gThreadFront
+  );
 
+  const args = packet.frame.arguments;
+
+  while (args.length) {
+    const objClient = gThreadFront.pauseGrip(args.pop());
+    const response = await objClient.getDisplayString();
+    Assert.equal(response.displayString, testCases.pop().output);
+  }
+
+  await gThreadFront.resume();
+}
+
+function evalCode(inputs) {
   gDebuggee.eval(
     function stopMe(arg1) {
       debugger;
     }.toString()
   );
 
-  const inputs = testCases.map(({ input }) => input).join(",");
   gDebuggee.eval("stopMe(" + inputs + ")");
 }

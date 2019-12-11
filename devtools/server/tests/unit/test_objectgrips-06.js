@@ -14,41 +14,43 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const obj1 = packet.frame.arguments[0];
-        Assert.ok(obj1.sealed);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        const obj1Client = threadFront.pauseGrip(obj1);
-        Assert.ok(obj1Client.isSealed);
+    const obj1 = packet.frame.arguments[0];
+    Assert.ok(obj1.sealed);
 
-        const obj2 = packet.frame.arguments[1];
-        Assert.ok(!obj2.sealed);
+    const obj1Client = threadFront.pauseGrip(obj1);
+    Assert.ok(obj1Client.isSealed);
 
-        const obj2Client = threadFront.pauseGrip(obj2);
-        Assert.ok(!obj2Client.isSealed);
+    const obj2 = packet.frame.arguments[1];
+    Assert.ok(!obj2.sealed);
 
-        await threadFront.resume();
-        resolve();
-      });
+    const obj2Client = threadFront.pauseGrip(obj2);
+    Assert.ok(!obj2Client.isSealed);
 
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-      /* eslint-disable no-undef */
-      debuggee.eval(
-        "(" +
-          function() {
-            const obj1 = {};
-            Object.seal(obj1);
-            stopMe(obj1, {});
-          } +
-          "())"
-      );
-      /* eslint-enable no-undef */
-    });
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+  /* eslint-disable no-undef */
+  debuggee.eval(
+    "(" +
+      function() {
+        const obj1 = {};
+        Object.seal(obj1);
+        stopMe(obj1, {});
+      } +
+      "())"
+  );
+  /* eslint-enable no-undef */
+}

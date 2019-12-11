@@ -63,8 +63,8 @@ function evaluateTestCode(debuggee) {
                        "  delete this.a;\n" +     // line0 + 4
                        "  foo(true);\n" +         // line0 + 5
                        "}\n" +                    // line0 + 6
-                       "debugger;\n" +            // line1 + 7
-                       "foo();\n",                // line1 + 8
+                       "debugger;\n" +            // line0 + 7
+                       "foo();\n",                // line0 + 8
                        debuggee);
       /* eslint-enable */
   if (!done) {
