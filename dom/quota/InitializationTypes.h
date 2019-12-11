@@ -42,10 +42,10 @@ class InitializationInfo final {
    public:
     AutoInitializationAttempt(InitializationInfo& aOwner,
                               const Initialization aInitialization,
-                              const SuccessFunction&& aSuccessFunction)
+                              SuccessFunction&& aSuccessFunction)
         : mOwner(aOwner),
           mInitialization(aInitialization),
-          mSuccessFunction(aSuccessFunction) {}
+          mSuccessFunction(std::move(aSuccessFunction)) {}
 
     ~AutoInitializationAttempt() {
       if (mOwner.InitializationAttempted(mInitialization)) {
@@ -74,7 +74,7 @@ class InitializationInfo final {
     ReportFirstInitializationAttempt(aInitialization, NS_SUCCEEDED(aRv));
   }
 
-  void AssertInitializationAttempted(Initialization aInitialization) {
+  void AssertInitializationAttempted(const Initialization aInitialization) {
     MOZ_ASSERT(InitializationAttempted(aInitialization));
   }
 
@@ -84,7 +84,8 @@ class InitializationInfo final {
 
  private:
   // TODO: Use constexpr here once bug 1594094 is addressed.
-  nsLiteralCString GetInitializationString(Initialization aInitialization) {
+  static nsLiteralCString GetInitializationString(
+      const Initialization aInitialization) {
     switch (aInitialization) {
       case Initialization::Storage:
         return NS_LITERAL_CSTRING("Storage");
