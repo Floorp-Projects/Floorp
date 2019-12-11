@@ -22,7 +22,7 @@ class VideoPlaybackQuality final : public nsWrapperCache {
 
   VideoPlaybackQuality(HTMLMediaElement* aElement,
                        DOMHighResTimeStamp aCreationTime, uint32_t aTotalFrames,
-                       uint32_t aDroppedFrames, uint32_t aCorruptedFrames);
+                       uint32_t aDroppedFrames);
 
   HTMLMediaElement* GetParentObject() const;
 
@@ -35,8 +35,6 @@ class VideoPlaybackQuality final : public nsWrapperCache {
 
   uint32_t DroppedVideoFrames() const { return mDroppedFrames; }
 
-  uint32_t CorruptedVideoFrames() const { return mCorruptedFrames; }
-
  private:
   ~VideoPlaybackQuality() {}
 
@@ -44,7 +42,6 @@ class VideoPlaybackQuality final : public nsWrapperCache {
   DOMHighResTimeStamp mCreationTime;
   uint32_t mTotalFrames;
   uint32_t mDroppedFrames;
-  uint32_t mCorruptedFrames;
 };
 
 }  // namespace dom

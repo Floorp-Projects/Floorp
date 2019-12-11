@@ -17,13 +17,11 @@ namespace dom {
 VideoPlaybackQuality::VideoPlaybackQuality(HTMLMediaElement* aElement,
                                            DOMHighResTimeStamp aCreationTime,
                                            uint32_t aTotalFrames,
-                                           uint32_t aDroppedFrames,
-                                           uint32_t aCorruptedFrames)
+                                           uint32_t aDroppedFrames)
     : mElement(aElement),
       mCreationTime(aCreationTime),
       mTotalFrames(aTotalFrames),
-      mDroppedFrames(aDroppedFrames),
-      mCorruptedFrames(aCorruptedFrames) {}
+      mDroppedFrames(aDroppedFrames) {}
 
 HTMLMediaElement* VideoPlaybackQuality::GetParentObject() const {
   return mElement;
