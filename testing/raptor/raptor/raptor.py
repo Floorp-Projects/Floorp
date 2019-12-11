@@ -107,7 +107,7 @@ either Raptor or browsertime."""
                  symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
                  interrupt_handler=None, e10s=True, enable_webrender=False,
-                 results_handler_class=RaptorResultsHandler, with_conditioned_profile=False,
+                 results_handler_class=RaptorResultsHandler, no_conditioned_profile=False,
                  extra_prefs={}, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
@@ -133,10 +133,21 @@ either Raptor or browsertime."""
             'enable_control_server_wait': memory_test or cpu_test,
             'e10s': e10s,
             'enable_webrender': enable_webrender,
-            'with_conditioned_profile': with_conditioned_profile,
+            'no_conditioned_profile': no_conditioned_profile,
             'enable_fission': extra_prefs.get('fission.autostart', False),
             'extra_prefs': extra_prefs
         }
+
+        self.firefox_android_apps = FIREFOX_ANDROID_APPS
+        # See bug 1582757; until we support aarch64 conditioned-profile builds, fall back
+        # to mozrunner-created profiles
+        # only use conditioned profiles on Firefox desktop for now;
+        # see bug 1597711 for GeckoView/Android support
+        self.no_condprof = ((self.config['platform'] == 'win'
+                             and self.config['processor'] == 'aarch64') or
+                            (self.config['app'] in self.firefox_android_apps) or
+                            self.config['no_conditioned_profile'])
+
         # We can never use e10s on fennec
         if self.config['app'] == 'fennec':
             self.config['e10s'] = False
@@ -154,7 +165,6 @@ either Raptor or browsertime."""
         self.device = None
         self.profile_class = profile_class or app
         self.conditioned_profile_dir = None
-        self.firefox_android_apps = FIREFOX_ANDROID_APPS
         self.interrupt_handler = interrupt_handler
         self.results_handler = results_handler_class(**self.config)
 
@@ -171,12 +181,6 @@ either Raptor or browsertime."""
             self.post_startup_delay = min(self.post_startup_delay, 3000)
             LOG.info("debug-mode enabled, reducing post-browser startup pause to %d ms"
                      % self.post_startup_delay)
-
-        if self.config['with_conditioned_profile']:
-            self.post_startup_delay = 0
-            LOG.info("Using conditioned profile; setting post-startup-delay to: {}"
-                     .format(self.post_startup_delay))
-
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
         self.build_browser_profile()
@@ -189,15 +193,15 @@ either Raptor or browsertime."""
         temp_download_dir = tempfile.mkdtemp()
         LOG.info("Making temp_download_dir from inside get_conditioned_profile {}"
                  .format(temp_download_dir))
+        # call condprof's client API to yield our platform-specific
+        # conditioned-profile binary
         platform = get_current_platform()
-        cond_prof_target_dir = get_profile(temp_download_dir, platform, "cold")
-        LOG.info("temp_download_dir is: {}".format(temp_download_dir))
-        LOG.info("cond_prof_target_dir is: {}".format(cond_prof_target_dir))
-
+        cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
+        # now get the full directory path to our fetched conditioned profile
         self.conditioned_profile_dir = os.path.join(temp_download_dir, cond_prof_target_dir)
         if not os.path.exists(cond_prof_target_dir):
             LOG.critical("Can't find target_dir {}, from get_profile()"
-                         "temp_download_dir {}, platform {}, cold"
+                         "temp_download_dir {}, platform {}, settled"
                          .format(cond_prof_target_dir, temp_download_dir, platform))
             raise OSError
 
@@ -208,15 +212,12 @@ either Raptor or browsertime."""
         return self.conditioned_profile_dir
 
     def build_browser_profile(self):
-        # if --with-conditioned-profile was passed in via the commandline,
-        # we need to fetch and use a conditioned profile
-        if self.config['with_conditioned_profile']:
-            self.get_conditioned_profile()
-            self.profile = create_profile(self.profile_class, profile=self.conditioned_profile_dir)
-        else:
-            # have mozprofile create a new profile for us
+        if self.no_condprof:
             self.profile = create_profile(self.profile_class)
-
+        else:
+            self.get_conditioned_profile()
+            # use mozprofile to create a profile for us, from our conditioned profile's path
+            self.profile = create_profile(self.profile_class, profile=self.conditioned_profile_dir)
         # Merge extra profile data from testing/profiles
         with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
             base_profiles = json.load(fh)['raptor']
@@ -726,7 +727,8 @@ class Browsertime(Perftest):
                                '-vv',
                                '--resultDir', self.results_handler.result_dir_for_test(test)]
 
-        if self.config['with_conditioned_profile']:
+        # have browsertime use our newly-created conditioned-profile path
+        if not self.no_condprof:
             self.profile.profile = self.conditioned_profile_dir
 
         if self.config['gecko_profile']:
@@ -899,7 +901,7 @@ class Raptor(Perftest):
             power_test=self.config.get('power_test'),
             cpu_test=self.config.get('cpu_test'),
             memory_test=self.config.get('memory_test'),
-            with_conditioned_profile=self.config['with_conditioned_profile'],
+            no_conditioned_profile=self.config['no_conditioned_profile'],
             extra_prefs=self.config.get('extra_prefs')
         )
         browser_name, browser_version = self.get_browser_meta()
@@ -1809,7 +1811,6 @@ def main(args=sys.argv[1:]):
                           intent=args.intent,
                           interrupt_handler=SignalHandler(),
                           enable_webrender=args.enable_webrender,
-                          with_conditioned_profile=args.with_conditioned_profile,
                           extra_prefs=args.extra_prefs or {}
                           )
 
