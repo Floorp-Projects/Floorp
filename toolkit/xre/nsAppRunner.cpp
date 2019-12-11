@@ -1796,7 +1796,7 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
 }
 
 static const char kProfileManagerURL[] =
-    "chrome://mozapps/content/profile/profileSelection.xul";
+    "chrome://mozapps/content/profile/profileSelection.xhtml";
 
 static ReturnAbortOnError ShowProfileManager(
     nsIToolkitProfileService* aProfileSvc, nsINativeAppSupport* aNative) {
@@ -2184,7 +2184,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
 }
 
 static const char kProfileDowngradeURL[] =
-    "chrome://mozapps/content/profile/profileDowngrade.xul";
+    "chrome://mozapps/content/profile/profileDowngrade.xhtml";
 
 static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
                                          nsINativeAppSupport* aNative,

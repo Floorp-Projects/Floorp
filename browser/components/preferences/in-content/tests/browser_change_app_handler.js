@@ -47,7 +47,7 @@ add_task(async function() {
 
   let chooseItem = list.menupopup.querySelector(".choose-app-item");
   let dialogLoadedPromise = promiseLoadSubDialog(
-    "chrome://global/content/appPicker.xul"
+    "chrome://global/content/appPicker.xhtml"
   );
   let cmdEvent = win.document.createEvent("xulcommandevent");
   cmdEvent.initCommandEvent(

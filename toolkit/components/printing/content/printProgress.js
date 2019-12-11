@@ -177,7 +177,7 @@ function onLoad() {
   }
 
   if (!printProgress) {
-    dump("Invalid argument to printProgress.xul\n");
+    dump("Invalid argument to printProgress.xhtml\n");
     window.close();
     return;
   }

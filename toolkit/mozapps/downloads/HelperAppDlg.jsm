@@ -1185,7 +1185,7 @@ nsUnknownContentTypeDialog.prototype = {
       params.handlerApp = null;
 
       this.mDialog.openDialog(
-        "chrome://global/content/appPicker.xul",
+        "chrome://global/content/appPicker.xhtml",
         null,
         "chrome,modal,centerscreen,titlebar,dialog=yes",
         params

@@ -2,7 +2,7 @@
 
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 
-const PM_URL = "chrome://passwordmgr/content/passwordManager.xul";
+const PM_URL = "chrome://passwordmgr/content/passwordManager.xhtml";
 const PREF_MANAGEMENT_URI = "signon.management.overrideURI";
 
 var passwordsDialog;

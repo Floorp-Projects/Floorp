@@ -2053,7 +2053,7 @@ var BrowserTestUtils = {
    */
   async promiseAlertDialogOpen(
     buttonAction,
-    uri = "chrome://global/content/commonDialog.xul",
+    uri = "chrome://global/content/commonDialog.xhtml",
     func
   ) {
     let win = await this.domWindowOpened(null, async win => {
@@ -2091,7 +2091,7 @@ var BrowserTestUtils = {
    */
   async promiseAlertDialog(
     buttonAction,
-    uri = "chrome://global/content/commonDialog.xul",
+    uri = "chrome://global/content/commonDialog.xhtml",
     func
   ) {
     let win = await this.promiseAlertDialogOpen(buttonAction, uri, func);

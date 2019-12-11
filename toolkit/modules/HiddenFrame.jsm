@@ -11,7 +11,7 @@ const { PromiseUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const XUL_PAGE = "chrome://global/content/win.xul";
+const XUL_PAGE = "chrome://global/content/win.xhtml";
 
 const gAllHiddenFrames = new Set();
 

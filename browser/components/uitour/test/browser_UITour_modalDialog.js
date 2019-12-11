@@ -70,7 +70,7 @@ function getDialogDoc() {
 
       // ok(true, "Got window: " + childDoc.location.href);
       if (
-        childDoc.location.href == "chrome://global/content/commonDialog.xul"
+        childDoc.location.href == "chrome://global/content/commonDialog.xhtml"
       ) {
         return childDoc;
       }

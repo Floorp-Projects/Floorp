@@ -29,7 +29,7 @@ function promiseDialogOpened() {
 
         let win = xulWin.docShell.domWindow;
         waitForFocus(() => {
-          if (win.location == "chrome://global/content/commonDialog.xul") {
+          if (win.location == "chrome://global/content/commonDialog.xhtml") {
             resolve(win);
           } else {
             reject();
