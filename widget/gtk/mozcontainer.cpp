@@ -77,10 +77,6 @@ static void moz_container_allocate_child(MozContainer* container,
                                          MozContainerChild* child);
 static MozContainerChild* moz_container_get_child(MozContainer* container,
                                                   GtkWidget* child);
-#ifdef MOZ_WAYLAND
-static wl_surface* moz_container_get_gtk_container_surface(
-    MozContainer* container);
-#endif
 
 /* public methods */
 
@@ -161,7 +157,7 @@ void moz_container_move(MozContainer* container, int dx, int dy) {
   // wl_subsurface_set_position is actually property of parent surface
   // which is effective when parent surface is commited.
   wl_surface* parent_surface =
-      moz_container_get_gtk_container_surface(container);
+      moz_gtk_widget_get_wl_surface(GTK_WIDGET(container));
   if (parent_surface) {
     wl_subsurface_set_position(container->subsurface, container->subsurface_dx,
                                container->subsurface_dy);
@@ -232,16 +228,15 @@ void moz_container_add_initial_draw_callback(
   container->initial_draw_cbs.push_back(initial_draw_cb);
 }
 
-static wl_surface* moz_container_get_gtk_container_surface(
-    MozContainer* container) {
+wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget) {
   static auto sGdkWaylandWindowGetWlSurface = (wl_surface * (*)(GdkWindow*))
       dlsym(RTLD_DEFAULT, "gdk_wayland_window_get_wl_surface");
 
-  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  GdkWindow* window = gtk_widget_get_window(aWidget);
   wl_surface* surface = sGdkWaylandWindowGetWlSurface(window);
 
-  LOGWAYLAND(("%s [%p] wl_surface %p ID %d\n", __FUNCTION__, (void*)container,
-              (void*)surface,
+  LOGWAYLAND(("moz_gtk_widget_get_wl_surface [%p] wl_surface %p ID %d\n",
+              (void*)aWidget, (void*)surface,
               surface ? wl_proxy_get_id((struct wl_proxy*)surface) : -1));
 
   return surface;
@@ -276,7 +271,7 @@ static const struct wl_callback_listener moz_container_frame_listener = {
 static void moz_container_request_parent_frame_callback(
     MozContainer* container) {
   wl_surface* gtk_container_surface =
-      moz_container_get_gtk_container_surface(container);
+      moz_gtk_widget_get_wl_surface(GTK_WIDGET(container));
   int gtk_container_surface_id =
       gtk_container_surface
           ? wl_proxy_get_id((struct wl_proxy*)gtk_container_surface)
@@ -582,7 +577,7 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     struct wl_compositor* compositor = waylandDisplay->GetCompositor();
     container->surface = wl_compositor_create_surface(compositor);
     wl_surface* parent_surface =
-        moz_container_get_gtk_container_surface(container);
+        moz_gtk_widget_get_wl_surface(GTK_WIDGET(container));
     if (!container->surface || !parent_surface) {
       return nullptr;
     }
