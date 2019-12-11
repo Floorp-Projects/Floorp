@@ -19,6 +19,7 @@
 
 #include <algorithm>
 
+#include "jit/Label.h"
 #include "js/Value.h"
 #include "new-regexp/util/vector.h"
 #include "new-regexp/util/zone.h"
@@ -422,6 +423,27 @@ class DisallowJavascriptExecution {
 
  private:
   js::AutoAssertNoContentJS nojs_;
+};
+
+// Origin: https://github.com/v8/v8/blob/master/src/codegen/label.h
+class Label {
+ public:
+  Label() : inner_(js::jit::Label()) {}
+
+  operator js::jit::Label*() { return &inner_; }
+
+  void Unuse() { inner_.reset(); }
+
+  bool is_linked() { return inner_.used(); }
+  bool is_bound() { return inner_.bound(); }
+  bool is_unused() { return !inner_.used() && !inner_.bound(); }
+
+  int pos() { return inner_.offset(); }
+  void link_to(int pos) { inner_.use(pos); }
+  void bind_to(int pos) { inner_.bind(pos); }
+
+ private:
+  js::jit::Label inner_;
 };
 
 }  // namespace internal
