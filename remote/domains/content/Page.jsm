@@ -6,12 +6,23 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const { ContentProcessDomain } = ChromeUtils.import(
   "chrome://remote/content/domains/ContentProcessDomain.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { UnsupportedError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
 );
 
 const {
@@ -26,12 +37,19 @@ class Page extends ContentProcessDomain {
 
     this.enabled = false;
     this.lifecycleEnabled = false;
+    // script id => { source, worldName }
+    this.scriptsToEvaluateOnLoad = new Map();
+    this.worldsToEvaluateOnLoad = new Set();
 
     this._onFrameNavigated = this._onFrameNavigated.bind(this);
+    this._onScriptLoaded = this._onScriptLoaded.bind(this);
+
+    this.contextObserver.on("script-loaded", this._onScriptLoaded);
   }
 
   destructor() {
     this.setLifecycleEventsEnabled({ enabled: false });
+    this.contextObserver.off("script-loaded", this._onScriptLoaded);
     this.disable();
 
     super.destructor();
@@ -124,7 +142,33 @@ class Page extends ContentProcessDomain {
     };
   }
 
-  addScriptToEvaluateOnNewDocument() {}
+  /**
+   * Enqueues given script to be evaluated in every frame upon creation
+   *
+   * If `worldName` is specified, creates an execution context with the given name
+   * and evaluates given script in it.
+   *
+   * At this time, queued scripts do not get evaluated, hence `source` is marked as
+   * "unsupported".
+   *
+   * @param {Object} options
+   * @param {string} options.source (not supported)
+   * @param {string=} options.worldName
+   * @return {string} Page.ScriptIdentifier
+   */
+  addScriptToEvaluateOnNewDocument(options = {}) {
+    const { source, worldName } = options;
+    if (worldName) {
+      this.worldsToEvaluateOnLoad.add(worldName);
+    }
+    const identifier = uuidGen
+      .generateUUID()
+      .toString()
+      .slice(1, -1);
+    this.scriptsToEvaluateOnLoad.set(identifier, { worldName, source });
+
+    return { identifier };
+  }
 
   /**
    * Creates an isolated world for the given frame.
@@ -184,6 +228,20 @@ class Page extends ContentProcessDomain {
         url,
       },
     });
+  }
+
+  _onScriptLoaded(name) {
+    const Runtime = this.session.domains.get("Runtime");
+    for (const world of this.worldsToEvaluateOnLoad) {
+      Runtime._onContextCreated("context-created", {
+        windowId: this.content.windowUtils.currentInnerWindowID,
+        window: this.content,
+        isDefault: false,
+        contextName: world,
+        contextType: "isolated",
+      });
+    }
+    // TODO evaluate each onNewDoc script in the appropriate world
   }
 
   emitLifecycleEvent(frameId, loaderId, name, timestamp) {

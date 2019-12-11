@@ -80,6 +80,10 @@ class ContextObserver {
         this.emit("context-destroyed", { frameId });
         this.emit("frame-navigated", { frameId, window });
         this.emit("context-created", { windowId: id, window });
+        // Delay script-loaded to allow context cleanup to happen first
+        Services.tm.dispatchToMainThread(() => {
+          this.emit("script-loaded");
+        });
         break;
       case "pageshow":
         // `persisted` is true when this is about a page being resurected from BF Cache
@@ -89,6 +93,7 @@ class ContextObserver {
         // XXX(ochameau) we might have to emit FrameNavigate here to properly handle BF Cache
         // scenario in Page domain events
         this.emit("context-created", { windowId: id, window });
+        this.emit("script-loaded");
         break;
 
       case "pagehide":
