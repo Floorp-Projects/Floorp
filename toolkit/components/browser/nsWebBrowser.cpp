@@ -472,6 +472,17 @@ nsWebBrowser::GetInProcessChildAt(int32_t aIndex,
   return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+nsWebBrowser::FindChildWithName(const nsAString& aName, bool aRecurse,
+                                bool aSameType, nsIDocShellTreeItem* aRequestor,
+                                nsIDocShellTreeItem* aOriginalRequestor,
+                                nsIDocShellTreeItem** aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = nullptr;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIWebNavigation
 //*****************************************************************************
