@@ -65,8 +65,6 @@ https://trac.torproject.org/projects/tor/ticket/15757
         "VideoPlaybackQuality.totalVideoFrames should be spoofed if fingerprinting resistance is enabled");
     is(playbackQuality.droppedVideoFrames, parseInt(currentTime * SPOOFED_FRAMES_PER_SECOND * dropRate, 10),
         "VideoPlaybackQuality.droppedVideoFrames should be spoofed if fingerprinting resistance is enabled");
-    is(playbackQuality.corruptedVideoFrames, 0,
-        "VideoPlaybackQuality.corruptedVideoFrames should be 0 if fingerprinting resistance is enabled");
   }
 
   function startTest(test, token) {
