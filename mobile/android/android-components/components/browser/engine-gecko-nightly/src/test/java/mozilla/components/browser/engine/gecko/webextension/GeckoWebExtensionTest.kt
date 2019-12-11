@@ -15,6 +15,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -25,7 +26,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.WebExtension
 
 @RunWith(AndroidJUnit4::class)
@@ -282,5 +285,81 @@ class GeckoWebExtensionTest {
         // the actions by simulating a click.
         actionCaptor.value.onClick()
         verify(nativeBrowserAction).click()
+    }
+
+    @Test
+    fun `all metadata fields are mapped correctly`() {
+        val extensionWithoutMetadata = GeckoWebExtension(WebExtension("url", "id", WebExtension.Flags.NONE))
+        assertNull(extensionWithoutMetadata.getMetadata())
+
+        val metaDataBundle = GeckoBundle()
+        metaDataBundle.putStringArray("permissions", arrayOf("p1", "p2"))
+        metaDataBundle.putStringArray("origins", arrayOf("o1", "o2"))
+        metaDataBundle.putString("description", "desc")
+        metaDataBundle.putString("version", "1.0")
+        metaDataBundle.putString("creatorName", "developer1")
+        metaDataBundle.putString("creatorURL", "https://developer1.dev")
+        metaDataBundle.putString("homepageURL", "https://mozilla.org")
+        metaDataBundle.putString("name", "myextension")
+        metaDataBundle.putString("optionsPageUrl", "")
+        metaDataBundle.putBoolean("openOptionsPageInTab", false)
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        bundle.putBundle("metaData", metaDataBundle)
+
+        val nativeWebExtension = MockWebExtension(bundle)
+        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension)
+        val metadata = extensionWithMetadata.getMetadata()
+        assertNotNull(metadata!!)
+        assertEquals("1.0", metadata.version)
+        assertEquals(listOf("p1", "p2"), metadata.permissions)
+        assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
+        assertEquals("desc", metadata.description)
+        assertEquals("developer1", metadata.developerName)
+        assertEquals("https://developer1.dev", metadata.developerUrl)
+        assertEquals("https://mozilla.org", metadata.homePageUrl)
+        assertEquals("myextension", metadata.name)
+        assertNull(metadata.optionsPageUrl)
+        assertNull(metadata.openOptionsPageInTab)
+    }
+
+    @Test
+    fun `nullable metadata fields `() {
+        val extensionWithoutMetadata = GeckoWebExtension(WebExtension("url", "id", WebExtension.Flags.NONE))
+        assertNull(extensionWithoutMetadata.getMetadata())
+
+        val metaDataBundle = GeckoBundle()
+        metaDataBundle.putStringArray("permissions", arrayOf("p1", "p2"))
+        metaDataBundle.putStringArray("origins", arrayOf("o1", "o2"))
+        metaDataBundle.putString("version", "1.0")
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        bundle.putBundle("metaData", metaDataBundle)
+
+        val nativeWebExtension = MockWebExtension(bundle)
+        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension)
+        val metadata = extensionWithMetadata.getMetadata()
+        assertNotNull(metadata!!)
+        assertEquals("1.0", metadata.version)
+        assertEquals(listOf("p1", "p2"), metadata.permissions)
+        assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
+        assertNull(metadata.description)
+        assertNull(metadata.developerName)
+        assertNull(metadata.developerUrl)
+        assertNull(metadata.homePageUrl)
+        assertNull(metadata.name)
+        assertNull(metadata.optionsPageUrl)
+        assertNull(metadata.openOptionsPageInTab)
+    }
+
+    @Test
+    fun `isBuiltIn depends on URI scheme`() {
+        val builtInExtension = GeckoWebExtension(WebExtension("resource://url", "id", WebExtension.Flags.NONE))
+        assertTrue(builtInExtension.isBuiltIn())
+
+        val externalExtension = GeckoWebExtension(WebExtension("https://url", "id", WebExtension.Flags.NONE))
+        assertFalse(externalExtension.isBuiltIn())
     }
 }

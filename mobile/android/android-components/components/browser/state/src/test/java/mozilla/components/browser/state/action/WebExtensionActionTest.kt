@@ -40,6 +40,46 @@ class WebExtensionActionTest {
     }
 
     @Test
+    fun `UninstallWebExtension - Removes all state of the uninstalled extension`() {
+        val tab1 = createTab("url")
+        val tab2 = createTab("url")
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(tab1, tab2)
+            )
+        )
+
+        assertTrue(store.state.extensions.isEmpty())
+
+        val extension1 = WebExtensionState("id1", "url")
+        val extension2 = WebExtensionState("i2", "url")
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension1)).joinBlocking()
+
+        assertFalse(store.state.extensions.isEmpty())
+        assertEquals(extension1, store.state.extensions.values.first())
+
+        val mockedBrowserAction = mock<WebExtensionBrowserAction>()
+        store.dispatch(WebExtensionAction.UpdateBrowserAction(extension1.id, mockedBrowserAction)).joinBlocking()
+        assertEquals(mockedBrowserAction, store.state.extensions.values.first().browserAction)
+
+        store.dispatch(WebExtensionAction.UpdateTabBrowserAction(tab1.id, extension1.id, mockedBrowserAction))
+            .joinBlocking()
+        val extensionsTab1 = store.state.tabs.first().extensionState
+        assertEquals(mockedBrowserAction, extensionsTab1.values.first().browserAction)
+
+        store.dispatch(WebExtensionAction.UpdateTabBrowserAction(tab2.id, extension2.id, mockedBrowserAction))
+                .joinBlocking()
+        val extensionsTab2 = store.state.tabs.last().extensionState
+        assertEquals(mockedBrowserAction, extensionsTab2.values.last().browserAction)
+
+        store.dispatch(WebExtensionAction.UninstallWebExtensionAction(extension1.id)).joinBlocking()
+        assertTrue(store.state.extensions.isEmpty())
+        assertTrue(store.state.tabs.first().extensionState.isEmpty())
+        assertFalse(store.state.tabs.last().extensionState.isEmpty())
+        assertEquals(mockedBrowserAction, extensionsTab2.values.last().browserAction)
+    }
+
+    @Test
     fun `UpdateGlobalBrowserAction - Updates a browser action of an existing WebExtensionState on the BrowserState`() {
         val store = BrowserStore()
         val mockedBrowserAction = mock<WebExtensionBrowserAction>()
