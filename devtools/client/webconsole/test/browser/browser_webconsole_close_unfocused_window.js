@@ -14,7 +14,7 @@ add_task(async function() {
   const tab1 = await addTab(TEST_URI, { window });
 
   info("Open a second window");
-  const win2 = await openNewBrowserWindow();
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
 
   info("Add a test tab in the second window");
   const tab2 = await addTab(TEST_URI, { window: win2 });

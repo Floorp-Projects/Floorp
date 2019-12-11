@@ -100,7 +100,7 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
  *         Resolves to the toolbox.
  */
 async function openNewWindowAndConsole(url) {
-  const win = await openNewBrowserWindow();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
   const tab = await addTab(url, { window: win });
   win.gBrowser.selectedTab = tab;
   const hud = await openConsole(tab);
@@ -896,26 +896,6 @@ function overrideOpenLink(fn) {
     }
   });
   return Promise.race([onOpenLink, onTimeout]);
-}
-
-/**
- * Open a new browser window and return a promise that resolves when the new window has
- * fired the "browser-delayed-startup-finished" event.
- *
- * @param {Object} options: An options object that will be passed to OpenBrowserWindow.
- * @returns Promise
- *          A Promise that resolves when the window is ready.
- */
-function openNewBrowserWindow(options) {
-  const win = OpenBrowserWindow(options);
-  return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subject, topic) {
-      if (win == subject) {
-        Services.obs.removeObserver(observer, topic);
-        resolve(win);
-      }
-    }, "browser-delayed-startup-finished");
-  });
 }
 
 /**
