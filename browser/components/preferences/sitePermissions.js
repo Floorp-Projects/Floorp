@@ -25,12 +25,6 @@ const sitePermissionsL10n = {
     disableLabel: "permissions-site-location-disable-label",
     disableDescription: "permissions-site-location-disable-desc",
   },
-  xr: {
-    window: "permissions-site-xr-window",
-    description: "permissions-site-xr-desc",
-    disableLabel: "permissions-site-xr-disable-label",
-    disableDescription: "permissions-site-xr-disable-desc",
-  },
   camera: {
     window: "permissions-site-camera-window",
     description: "permissions-site-camera-desc",

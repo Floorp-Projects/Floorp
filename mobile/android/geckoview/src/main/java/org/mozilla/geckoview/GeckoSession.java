@@ -792,8 +792,6 @@ public class GeckoSession implements Parcelable {
                         type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
                     } else if ("persistent-storage".equals(typeString)) {
                         type = PermissionDelegate.PERMISSION_PERSISTENT_STORAGE;
-                    } else if ("xr".equals(typeString)) {
-                        type = PermissionDelegate.PERMISSION_XR;
                     } else if ("midi".equals(typeString)) {
                         // We can get this from WPT and presumably other content, but Gecko
                         // doesn't support Web MIDI.
@@ -4962,12 +4960,6 @@ public class GeckoSession implements Parcelable {
         int PERMISSION_PERSISTENT_STORAGE = 2;
 
         /**
-         * Permission for using the WebXR API.
-         * See: https://www.w3.org/TR/webxr
-         */
-        int PERMISSION_XR = 3;
-
-        /**
          * Callback interface for notifying the result of a permission request.
          */
         interface Callback {
@@ -5018,7 +5010,6 @@ public class GeckoSession implements Parcelable {
          *             PERMISSION_GEOLOCATION
          *             PERMISSION_DESKTOP_NOTIFICATION
          *             PERMISSION_PERSISTENT_STORAGE
-         *             PERMISSION_XR
          * @param callback Callback interface.
          */
         @UiThread
@@ -5216,8 +5207,7 @@ public class GeckoSession implements Parcelable {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({PermissionDelegate.PERMISSION_GEOLOCATION,
-            PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION,
-            PermissionDelegate.PERMISSION_XR})
+            PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION})
     /* package */ @interface Permission {}
 
     /**

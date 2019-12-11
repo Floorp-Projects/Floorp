@@ -31,7 +31,7 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     ORIGIN
   );
-  let ids = ["geo", "camera", "xr"];
+  let ids = ["geo", "camera"];
 
   for (let id of ids) {
     await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(
