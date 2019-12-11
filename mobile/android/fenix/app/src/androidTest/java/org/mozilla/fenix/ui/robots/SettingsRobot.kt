@@ -156,8 +156,8 @@ private fun assertEnhancedTrackingProtectionValue() = onView(ViewMatchers.withTe
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertLoginsButton() {
-    TestHelper.scrollToElementByText("Passwords")
-    onView(ViewMatchers.withText("Passwords"))
+    TestHelper.scrollToElementByText("Logins and passwords")
+    onView(ViewMatchers.withText("Logins and passwords"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

@@ -109,6 +109,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
+        updatePreferenceVisibilityForFeatureFlags()
     }
 
     override fun onResume() {
@@ -167,8 +168,6 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             context!!,
             requireComponents.backgroundServices.accountManager.accountProfile()
         )
-
-        updatePreferenceVisibilityForFeatureFlags()
     }
 
     private fun updatePreferenceVisibilityForFeatureFlags() {

@@ -67,7 +67,7 @@
             app:isPreferenceVisible="false"
             android:icon="@drawable/ic_login"
             android:key="@string/pref_key_passwords"
-            android:title="@string/preferences_passwords" />
+            android:title="@string/preferences_passwords_logins_and_passwords" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
             android:key="@string/pref_key_add_private_browsing_shortcut"
