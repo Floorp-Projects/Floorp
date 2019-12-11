@@ -348,27 +348,37 @@ abstract class AbstractFetchDownloadService : Service() {
      *
      * Encapsulates different behaviour depending on the SDK version.
      */
-    @Suppress("Deprecation")
     internal fun useFileStream(
         download: DownloadState,
         append: Boolean,
         block: (OutputStream) -> Unit
     ) {
-        // Update the file name to ensure it doesn't collide with one already on disk]
-        val downloadWithUniqueName = download.fileName?.let {
+        val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
+        downloadJobs[download.id]?.state = downloadWithUniqueFileName
+
+        if (SDK_INT >= Build.VERSION_CODES.Q) {
+            useFileStreamScopedStorage(downloadWithUniqueFileName, block)
+        } else {
+            useFileStreamLegacy(downloadWithUniqueFileName, append, block)
+        }
+    }
+
+    /**
+     * Returns an updated [DownloadState] with a unique fileName if the file is not being appended
+     */
+    @Suppress("Deprecation")
+    internal fun makeUniqueFileNameIfNecessary(
+        download: DownloadState,
+        append: Boolean
+    ): DownloadState {
+        if (append) { return download }
+
+        return download.fileName?.let {
             download.copy(fileName = DownloadUtils.uniqueFileName(
                 Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
                 it
             ))
         } ?: download
-
-        downloadJobs[download.id]?.state = downloadWithUniqueName
-
-        if (SDK_INT >= Build.VERSION_CODES.Q) {
-            useFileStreamScopedStorage(downloadWithUniqueName, block)
-        } else {
-            useFileStreamLegacy(downloadWithUniqueName, append, block)
-        }
     }
 
     @TargetApi(Build.VERSION_CODES.Q)
