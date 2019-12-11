@@ -53,6 +53,7 @@ class AccessibilityTree extends Component {
     this.onReorder = this.onReorder.bind(this);
     this.onTextChange = this.onTextChange.bind(this);
     this.renderValue = this.renderValue.bind(this);
+    this.scrollSelectedRowIntoView = this.scrollSelectedRowIntoView.bind(this);
   }
 
   /**
@@ -64,6 +65,11 @@ class AccessibilityTree extends Component {
     accessibilityWalker.on("reorder", this.onReorder);
     accessibilityWalker.on("name-change", this.onNameChange);
     accessibilityWalker.on("text-change", this.onTextChange);
+
+    window.on(
+      EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED,
+      this.scrollSelectedRowIntoView
+    );
     return null;
   }
 
@@ -71,10 +77,7 @@ class AccessibilityTree extends Component {
     // When filtering is toggled, make sure that the selected row remains in
     // view.
     if (this.props.filtered !== prevProps.filtered) {
-      const selected = document.querySelector(".treeTable .treeRow.selected");
-      if (selected) {
-        scrollIntoView(selected, { center: true });
-      }
+      this.scrollSelectedRowIntoView();
     }
 
     window.emit(EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED);
@@ -88,6 +91,11 @@ class AccessibilityTree extends Component {
     accessibilityWalker.off("reorder", this.onReorder);
     accessibilityWalker.off("name-change", this.onNameChange);
     accessibilityWalker.off("text-change", this.onTextChange);
+
+    window.off(
+      EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED,
+      this.scrollSelectedRowIntoView
+    );
   }
 
   /**
@@ -100,6 +108,25 @@ class AccessibilityTree extends Component {
   onReorder(accessibleFront) {
     if (this.props.accessibles.has(accessibleFront.actorID)) {
       this.props.dispatch(fetchChildren(accessibleFront));
+    }
+  }
+
+  scrollSelectedRowIntoView() {
+    const { treeview } = this.refs;
+    if (!treeview) {
+      return;
+    }
+
+    const treeEl = treeview.treeRef.current;
+    if (!treeEl) {
+      return;
+    }
+
+    const selected = treeEl.ownerDocument.querySelector(
+      ".treeTable .treeRow.selected"
+    );
+    if (selected) {
+      scrollIntoView(selected, { center: true });
     }
   }
 
@@ -190,6 +217,7 @@ class AccessibilityTree extends Component {
     const className = filtered ? "filtered" : undefined;
 
     return TreeView({
+      ref: "treeview",
       object: accessibilityWalker,
       mode: MODE.SHORT,
       provider: new Provider(accessibles, filtered, dispatch),
