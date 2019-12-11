@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteSpecificBrowserService",
-  "resource:///modules/SiteSpecificBrowserService.jsm"
-);
-
 var BrowserPageActions = {
   /**
    * The main page action button in the urlbar (DOM node)
@@ -1088,24 +1082,6 @@ BrowserPageActions.pinTab = {
     } else {
       gBrowser.pinTab(gBrowser.selectedTab);
     }
-  },
-};
-
-// SiteSpecificBrowser
-BrowserPageActions.launchSSB = {
-  updateState() {
-    let action = PageActions.actionForID("launchSSB");
-    let browser = gBrowser.selectedBrowser;
-    action.setDisabled(!browser.currentURI.schemeIs("https"), window);
-  },
-
-  onCommand(event, buttonNode) {
-    if (!gBrowser.currentURI.schemeIs("https")) {
-      return;
-    }
-
-    SiteSpecificBrowserService.launchFromURI(gBrowser.currentURI);
-    gBrowser.removeTab(gBrowser.selectedTab, { closeWindowWithLastTab: false });
   },
 };
 
