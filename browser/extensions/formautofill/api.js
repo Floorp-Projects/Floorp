@@ -171,11 +171,17 @@ this.formautofill = class extends ExtensionAPI {
     AutoCompleteParent.addPopupStateListener(onMaybeOpenPopup);
 
     formAutofillParent.init().catch(Cu.reportError);
-    Services.mm.loadFrameScript(
-      "chrome://formautofill/content/FormAutofillFrameScript.js",
-      true,
-      true
-    );
+
+    ChromeUtils.registerWindowActor("FormAutofill", {
+      child: {
+        moduleURI: "resource://formautofill/FormAutofillChild.jsm",
+        events: {
+          focusin: {},
+          DOMFormBeforeSubmit: {},
+        },
+      },
+      allFrames: true,
+    });
   }
 
   onShutdown(isAppShutdown) {
@@ -193,6 +199,8 @@ this.formautofill = class extends ExtensionAPI {
         this.autofillManifest
       );
     }
+
+    ChromeUtils.unregisterWindowActor("FormAutofill");
 
     AutoCompleteParent.removePopupStateListener(onMaybeOpenPopup);
 

@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Form Autofill frame script.
- */
-
 "use strict";
 
-/* eslint-env mozilla/frame-script */
+var EXPORTED_SYMBOLS = ["FormAutofillChild"];
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
@@ -40,18 +36,34 @@ ChromeUtils.defineModuleGetter(
 /**
  * Handles content's interactions for the frame.
  */
-var FormAutofillFrameScript = {
-  _nextHandleElement: null,
-  _alreadyDOMContentLoaded: false,
-  _hasDOMContentLoadedHandler: false,
-  _hasPendingTask: false,
+class FormAutofillChild extends JSWindowActorChild {
+  constructor() {
+    super();
 
-  popupStateListener(messageName, data, target) {
-    if (!content || !FormAutofill.isAutofillEnabled) {
+    this._nextHandleElement = null;
+    this._alreadyDOMContentLoaded = false;
+    this._hasDOMContentLoadedHandler = false;
+    this._hasPendingTask = false;
+    this.testListener = null;
+
+    AutoCompleteChild.addPopupStateListener(this);
+  }
+
+  willDestroy() {
+    AutoCompleteChild.removePopupStateListener(this);
+  }
+
+  popupStateChanged(messageName, data, target) {
+    if (!this.contentWindow) {
+      AutoCompleteChild.removePopupStateListener(this);
       return;
     }
 
-    const doc = target.document;
+    if (!FormAutofill.isAutofillEnabled) {
+      return;
+    }
+
+    const doc = this.document;
     const { chromeEventHandler } = doc.ownerGlobal.docShell;
 
     switch (messageName) {
@@ -76,7 +88,7 @@ var FormAutofillFrameScript = {
         break;
       }
     }
-  },
+  }
 
   _doIdentifyAutofillFields() {
     if (this._hasPendingTask) {
@@ -88,22 +100,12 @@ var FormAutofillFrameScript = {
       FormAutofillContent.identifyAutofillFields(this._nextHandleElement);
       this._hasPendingTask = false;
       this._nextHandleElement = null;
-      // This is for testing purpose only which sends a message to indicate that the
+      // This is for testing purpose only which sends a notification to indicate that the
       // form has been identified, and ready to open popup.
-      sendAsyncMessage("FormAutofill:FieldsIdentified");
+      this.sendAsyncMessage("FormAutofill:FieldsIdentified");
       FormAutofillContent.updateActiveInput();
     });
-  },
-
-  init() {
-    addEventListener("focusin", this);
-    addEventListener("DOMFormBeforeSubmit", this);
-    addEventListener("unload", this, { once: true });
-    addMessageListener("FormAutofill:PreviewProfile", this);
-    addMessageListener("FormAutofill:ClearForm", this);
-
-    AutoCompleteChild.addPopupStateListener(this.popupStateListener);
-  },
+  }
 
   handleEvent(evt) {
     if (!evt.isTrusted) {
@@ -123,16 +125,12 @@ var FormAutofillFrameScript = {
         }
         break;
       }
-      case "unload": {
-        AutoCompleteChild.removePopupStateListener(this.popupStateListener);
-        break;
-      }
 
       default: {
         throw new Error("Unexpected event type");
       }
     }
-  },
+  }
 
   onFocusIn(evt) {
     FormAutofillContent.updateActiveInput();
@@ -160,7 +158,7 @@ var FormAutofillFrameScript = {
     }
 
     this._doIdentifyAutofillFields();
-  },
+  }
 
   /**
    * Handle the DOMFormBeforeSubmit event.
@@ -174,14 +172,14 @@ var FormAutofillFrameScript = {
     }
 
     FormAutofillContent.formSubmitted(formElement);
-  },
+  }
 
   receiveMessage(message) {
     if (!FormAutofill.isAutofillEnabled) {
       return;
     }
 
-    const doc = content.document;
+    const doc = this.document;
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
@@ -193,7 +191,5 @@ var FormAutofillFrameScript = {
         break;
       }
     }
-  },
-};
-
-FormAutofillFrameScript.init();
+  }
+}

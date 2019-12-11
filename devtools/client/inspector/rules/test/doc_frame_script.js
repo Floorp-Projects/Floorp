@@ -105,7 +105,7 @@ function waitForSuccess(validatorFn) {
       if (fn()) {
         resolve();
       } else {
-        setTimeout(() => wait(fn), 200);
+        content.setTimeout(() => wait(fn), 200);
       }
     }
     wait(validatorFn);
