@@ -245,6 +245,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
 
   if (previouslyIdentified) {
     info("previouslyIdentified");
+    FormAutofillParent.removeMessageObserver(fieldsIdentifiedObserver);
     return;
   }
 
