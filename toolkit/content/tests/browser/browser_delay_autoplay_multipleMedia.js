@@ -18,7 +18,7 @@ function check_autoplay_audio_onplay() {
     autoPlay.pause();
     autoPlay.play();
 
-    setTimeout(() => {
+    content.setTimeout(() => {
       ok(true, "Doesn't receive play event when media was blocked.");
       autoPlay.onplay = null;
       resolve();
