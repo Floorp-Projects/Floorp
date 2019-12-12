@@ -50,6 +50,9 @@
 #define IMPORT_FUNC(x) static decltype(x) * api_##x;
 JACK_API_VISIT(IMPORT_FUNC);
 
+#define JACK_DEFAULT_IN "JACK capture"
+#define JACK_DEFAULT_OUT "JACK playback"
+
 static const int MAX_STREAMS = 16;
 static const int MAX_CHANNELS  = 8;
 static const int FIFO_SIZE = 4096 * sizeof(float);
@@ -743,8 +746,10 @@ cbjack_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
-  if (input_device || output_device)
+  if ((input_device && input_device != JACK_DEFAULT_IN) ||
+      (output_device && output_device != JACK_DEFAULT_OUT)) {
     return CUBEB_ERROR_NOT_SUPPORTED;
+  }
 
   // Loopback is unsupported
   if ((input_stream_params && (input_stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK)) ||
@@ -967,8 +972,8 @@ cbjack_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const devic
   if (*device == NULL)
     return CUBEB_ERROR;
 
-  const char * j_in = "JACK capture";
-  const char * j_out = "JACK playback";
+  const char * j_in = JACK_DEFAULT_IN;
+  const char * j_out = JACK_DEFAULT_OUT;
   const char * empty = "";
 
   if (stm->devs == DUPLEX) {
@@ -996,9 +1001,6 @@ cbjack_stream_device_destroy(cubeb_stream * /*stream*/,
   free(device);
   return CUBEB_OK;
 }
-
-#define JACK_DEFAULT_IN "JACK capture"
-#define JACK_DEFAULT_OUT "JACK playback"
 
 static int
 cbjack_enumerate_devices(cubeb * context, cubeb_device_type type,
