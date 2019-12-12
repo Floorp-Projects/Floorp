@@ -392,6 +392,10 @@ stack > *|* {
   min-height: 0;
 }
 
+legacy-stack {
+  display: -moz-stack;
+}
+
 /********** tabbox *********/
 
 tabbox {

@@ -36,16 +36,6 @@ body {
   -moz-user-select: text;
 }
 
-/*
-  The stack has some very tall content but it shouldn't be taller than the
-  viewport (and we know the tall content will still be accessible via scrollbars
-  regardless if the stack has a shorter height). So we use min-height: 0 to allow
-  the stack to be smaller than its content height so it can fit the viewport size.
-*/
-#preferences-stack {
-  min-height: 0;
-}
-
 .main-content {
   padding-top: 0;
 }
