@@ -816,29 +816,23 @@ NS_IMETHODIMP
 nsThread::AsyncShutdown() {
   LOG(("THRD(%p) async shutdown\n", this));
 
-  // XXX If we make this warn, then we hit that warning at xpcom shutdown while
-  //     shutting down a thread in a thread pool.  That happens b/c the thread
-  //     in the thread pool is already shutdown by the thread manager.
-  if (!mThread) {
-    return NS_OK;
-  }
-
-  return !!ShutdownInternal(/* aSync = */ false) ? NS_OK : NS_ERROR_UNEXPECTED;
+  ShutdownInternal(/* aSync = */ false);
+  return NS_OK;
 }
 
 nsThreadShutdownContext* nsThread::ShutdownInternal(bool aSync) {
   MOZ_ASSERT(mEvents);
   MOZ_ASSERT(mEventTarget);
-  MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread != PR_GetCurrentThread());
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
     return nullptr;
   }
 
-  // Prevent multiple calls to this method
+  // Prevent multiple calls to this method.
   if (!mShutdownRequired.compareExchange(true, false)) {
     return nullptr;
   }
+  MOZ_ASSERT(mThread);
 
   MaybeRemoveFromThreadList();
 
@@ -906,15 +900,10 @@ NS_IMETHODIMP
 nsThread::Shutdown() {
   LOG(("THRD(%p) sync shutdown\n", this));
 
-  // XXX If we make this warn, then we hit that warning at xpcom shutdown while
-  //     shutting down a thread in a thread pool.  That happens b/c the thread
-  //     in the thread pool is already shutdown by the thread manager.
-  if (!mThread) {
-    return NS_OK;
-  }
-
   nsThreadShutdownContext* maybeContext = ShutdownInternal(/* aSync = */ true);
-  if (!maybeContext) return NS_ERROR_UNEXPECTED;
+  if (!maybeContext) {
+    return NS_OK;  // The thread has already shut down.
+  }
 
   NotNull<nsThreadShutdownContext*> context = WrapNotNull(maybeContext);
 
