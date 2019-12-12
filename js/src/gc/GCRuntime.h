@@ -32,6 +32,7 @@ class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class FinalizationGroupObject;
 class VerifyPreTracer;
+class WeakRefObject;
 class ZoneAllocator;
 
 namespace gc {
@@ -248,6 +249,7 @@ class ZoneList {
 };
 
 void SweepFinalizationGroups(GCParallelTask* task);
+void SweepWeakRefs(GCParallelTask* task);
 
 class GCRuntime {
   friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
@@ -550,6 +552,12 @@ class GCRuntime {
 
   void mergeRealms(JS::Realm* source, JS::Realm* target);
 
+  // WeakRefs
+  bool registerWeakRef(HandleObject target, HandleObject weakRef);
+  bool unregisterWeakRef(JSContext* cx, JSObject* target,
+                         js::WeakRefObject* weakRef);
+  void traceKeptObjects(JSTracer* trc);
+
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
@@ -693,6 +701,8 @@ class GCRuntime {
   void sweepFinalizationGroups(Zone* zone);
   friend void SweepFinalizationGroups(GCParallelTask* task);
   void queueFinalizationGroupForCleanup(FinalizationGroupObject* group);
+  void sweepWeakRefs(Zone* zone);
+  friend void SweepWeakRefs(GCParallelTask* task);
   IncrementalProgress endSweepingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
   IncrementalProgress sweepTypeInformation(JSFreeOp* fop, SliceBudget& budget);

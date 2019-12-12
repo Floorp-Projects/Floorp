@@ -127,7 +127,8 @@
   REAL(WasmMemory, OCLASP(WasmMemory))                                        \
   REAL(WasmTable, OCLASP(WasmTable))                                          \
   REAL(WasmGlobal, OCLASP(WasmGlobal))                                        \
-  REAL(FinalizationGroup, OCLASP(FinalizationGroup))
+  REAL(FinalizationGroup, OCLASP(FinalizationGroup))                          \
+  REAL(WeakRef, OCLASP(WeakRef))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \

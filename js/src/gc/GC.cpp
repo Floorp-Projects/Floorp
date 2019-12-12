@@ -2102,6 +2102,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   sweepTypesAfterCompacting(zone);
   sweepFinalizationGroups(zone);
+  sweepWeakRefs(zone);
   zone->sweepWeakMaps();
   for (auto* cache : zone->weakCaches()) {
     cache->sweep();
@@ -4906,6 +4907,18 @@ void js::gc::SweepFinalizationGroups(GCParallelTask* task) {
   }
 }
 
+void js::gc::SweepWeakRefs(GCParallelTask* task) {
+  for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
+    task->gc->sweepWeakRefs(zone);
+  }
+}
+
+void GCRuntime::sweepWeakRefs(Zone* zone) {
+  auto& map = zone->weakRefMap();
+  map.sweep();
+}
+
 void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
                           AutoLockHelperThreadState& lock) {
   if (!CanUseExtraThreads()) {
@@ -5172,6 +5185,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     AutoRunParallelTask sweepFinalizationGroups(
         this, SweepFinalizationGroups, PhaseKind::SWEEP_FINALIZATION_GROUPS,
         lock);
+    AutoRunParallelTask sweepWeakRefs(this, SweepWeakRefs,
+                                      PhaseKind::SWEEP_WEAKREFS, lock);
 
     WeakCacheTaskVector sweepCacheTasks;
     if (!PrepareWeakCacheTasks(rt, &sweepCacheTasks)) {
