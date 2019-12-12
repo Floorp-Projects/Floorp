@@ -14,6 +14,7 @@ import mozilla.components.support.migration.FennecMigrator
 class MigratingFenixApplication : FenixApplication() {
     val migrator by lazy {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
+            .migrateSettings()
             .migrateOpenTabs(this.components.core.sessionManager)
             .migrateHistory(this.components.core.historyStorage)
             .migrateBookmarks(this.components.core.bookmarksStorage)
