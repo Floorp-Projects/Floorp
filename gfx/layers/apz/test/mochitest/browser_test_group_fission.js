@@ -36,6 +36,7 @@ add_task(async function test_main() {
       setup(win) {
         win.document.addEventListener("wheel", e => e.preventDefault(), {
           once: true,
+          passive: false,
         });
       },
     },
