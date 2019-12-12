@@ -37,10 +37,7 @@ export function removeSourceActor(item: SourceActor) {
 }
 export function removeSourceActors(items: Array<SourceActor>) {
   return function({ dispatch }: ThunkArgs) {
-    dispatch({
-      type: "REMOVE_SOURCE_ACTORS",
-      items,
-    });
+    dispatch({ type: "REMOVE_SOURCE_ACTORS", items });
   };
 }
 

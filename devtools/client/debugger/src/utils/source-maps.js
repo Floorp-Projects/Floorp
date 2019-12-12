@@ -95,5 +95,13 @@ export async function mapLocation(
 }
 
 export function isOriginalSource(source: ?Source) {
-  return source && isOriginalId(source.id);
+  if (!source) {
+    return false;
+  }
+
+  if (!source.hasOwnProperty("isOriginal")) {
+    throw new Error("source must have an isOriginal property");
+  }
+
+  return source.isOriginal;
 }

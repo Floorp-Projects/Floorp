@@ -29,7 +29,8 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             },
             {
@@ -45,7 +46,8 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             }
           ]
@@ -85,7 +87,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             },
             {
@@ -101,7 +104,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             },
             {
@@ -117,7 +121,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             }
           ]
@@ -157,7 +162,8 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                 \\"introductionUrl\\": null,
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
-                \\"isExtension\\": false
+                \\"isExtension\\": false,
+                \\"isOriginal\\": false
               }
             }
           ]

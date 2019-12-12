@@ -83,6 +83,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
       introductionType: undefined,
       isExtension: false,
       extensionName: null,
+      isOriginal: true,
     };
 
     dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));

@@ -432,6 +432,7 @@ export type Source = {
   +extensionName: ?string,
   +isExtension: boolean,
   +isWasm: boolean,
+  +isOriginal: boolean,
 };
 
 /**

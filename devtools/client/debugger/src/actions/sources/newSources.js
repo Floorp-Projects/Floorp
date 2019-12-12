@@ -283,6 +283,7 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
         introductionType: undefined,
         isExtension: false,
         extensionName: null,
+        isOriginal: true,
       });
     }
 
@@ -331,6 +332,7 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           isWasm:
             !!supportsWasm(getState()) && source.introductionType === "wasm",
           isExtension: (source.url && isUrlExtension(source.url)) || false,
+          isOriginal: false,
         };
       }
 

@@ -126,7 +126,7 @@ export function getNewSelectedSourceId(state: State, tabList: TabList): string {
     const selectedSource = getSpecificSourceByURL(
       state,
       selectedTab.url,
-      isOriginalId(selectedTab.id)
+      selectedTab.isOriginal
     );
 
     if (selectedSource) {
