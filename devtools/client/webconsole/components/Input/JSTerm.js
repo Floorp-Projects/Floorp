@@ -100,6 +100,8 @@ class JSTerm extends Component {
       editorToggle: PropTypes.func.isRequired,
       // Dismiss the editor onboarding UI.
       editorOnboardingDismiss: PropTypes.func.isRequired,
+      // Set the last JS input value.
+      terminalInputChanged: PropTypes.func.isRequired,
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
@@ -125,6 +127,14 @@ class JSTerm extends Component {
     // as the user is typing.
     // The delay should be small enough to be unnoticed by the user.
     this.autocompleteUpdate = debounce(this.props.autocompleteUpdate, 75, this);
+
+    // Updates to the terminal input which can trigger eager evaluations are
+    // similarly debounced.
+    this.terminalInputChanged = debounce(
+      this.props.terminalInputChanged,
+      75,
+      this
+    );
 
     // Because the autocomplete has a slight delay (75ms), there can be time where the
     // codeMirror completion text is out-of-date, which might lead to issue when the user
@@ -618,6 +628,7 @@ class JSTerm extends Component {
    */
   _setValue(newValue = "") {
     this.lastInputValue = newValue;
+    this.terminalInputChanged(newValue);
 
     if (this.editor) {
       // In order to get the autocomplete popup to work properly, we need to set the
@@ -767,6 +778,7 @@ class JSTerm extends Component {
         this.autocompleteUpdate();
       }
       this.lastInputValue = value;
+      this.terminalInputChanged(value);
     }
   }
 
@@ -1264,6 +1276,8 @@ function mapDispatchToProps(dispatch) {
       dispatch(actions.evaluateExpression(expression)),
     editorToggle: () => dispatch(actions.editorToggle()),
     editorOnboardingDismiss: () => dispatch(actions.editorOnboardingDismiss()),
+    terminalInputChanged: value =>
+      dispatch(actions.terminalInputChanged(value)),
   };
 }
 

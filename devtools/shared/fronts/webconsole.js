@@ -200,6 +200,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       selectedNodeActor: opts.selectedNodeActor,
       selectedObjectActor: opts.selectedObjectActor,
       mapped: opts.mapped,
+      eager: opts.eager,
     };
 
     const { resultID } = await super.evaluateJSAsync(options);

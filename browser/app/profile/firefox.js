@@ -2157,6 +2157,10 @@ pref("devtools.webconsole.filter.netxhr", false);
 // Webconsole autocomplete preference
 pref("devtools.webconsole.input.autocomplete",true);
 
+// Set to true to eagerly show the results of webconsole terminal evaluations
+// when they don't have side effects.
+pref("devtools.webconsole.input.eagerEvaluation", false);
+
 // Browser console filters
 pref("devtools.browserconsole.filter.error", true);
 pref("devtools.browserconsole.filter.warn", true);
