@@ -64,11 +64,11 @@ DocumentOrShadowRoot::~DocumentOrShadowRoot() {
   }
 }
 
-StyleSheetList& DocumentOrShadowRoot::EnsureDOMStyleSheets() {
+StyleSheetList* DocumentOrShadowRoot::StyleSheets() {
   if (!mDOMStyleSheets) {
     mDOMStyleSheets = new StyleSheetList(*this);
   }
-  return *mDOMStyleSheets;
+  return mDOMStyleSheets;
 }
 
 void DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
