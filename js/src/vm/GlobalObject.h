@@ -800,10 +800,8 @@ class GlobalObject : public NativeObject {
                                     HandleAtom name, unsigned nargs,
                                     MutableHandleValue funVal);
 
-  bool hasRegExpStatics() const;
   static RegExpStatics* getRegExpStatics(JSContext* cx,
                                          Handle<GlobalObject*> global);
-  RegExpStatics* getAlreadyCreatedRegExpStatics() const;
 
   static JSObject* getOrCreateThrowTypeError(JSContext* cx,
                                              Handle<GlobalObject*> global);
