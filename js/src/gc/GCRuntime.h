@@ -742,9 +742,11 @@ class GCRuntime {
                                               const AutoLockGC& lock);
   void finishCollection();
 
+#ifdef JS_GC_ZEAL
   void computeNonIncrementalMarkingForValidation(AutoGCSession& session);
   void validateIncrementalMarking();
   void finishMarkingValidation();
+#endif
 
 #ifdef DEBUG
   void checkForCompartmentMismatches();

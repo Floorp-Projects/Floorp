@@ -6,6 +6,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -25,6 +26,7 @@
 #include "gc/ArenaList-inl.h"
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;
@@ -447,6 +449,300 @@ void js::gc::GCRuntime::finishVerifier() {
     js_delete(verifyPreData.ref());
     verifyPreData = nullptr;
   }
+}
+
+struct GCChunkHasher {
+  typedef gc::Chunk* Lookup;
+
+  /*
+   * Strip zeros for better distribution after multiplying by the golden
+   * ratio.
+   */
+  static HashNumber hash(gc::Chunk* chunk) {
+    MOZ_ASSERT(!(uintptr_t(chunk) & gc::ChunkMask));
+    return HashNumber(uintptr_t(chunk) >> gc::ChunkShift);
+  }
+
+  static bool match(gc::Chunk* k, gc::Chunk* l) {
+    MOZ_ASSERT(!(uintptr_t(k) & gc::ChunkMask));
+    MOZ_ASSERT(!(uintptr_t(l) & gc::ChunkMask));
+    return k == l;
+  }
+};
+
+class js::gc::MarkingValidator {
+ public:
+  explicit MarkingValidator(GCRuntime* gc);
+  void nonIncrementalMark(AutoGCSession& session);
+  void validate();
+
+ private:
+  GCRuntime* gc;
+  bool initialized;
+
+  using BitmapMap =
+      HashMap<Chunk*, UniquePtr<ChunkBitmap>, GCChunkHasher, SystemAllocPolicy>;
+  BitmapMap map;
+};
+
+js::gc::MarkingValidator::MarkingValidator(GCRuntime* gc)
+    : gc(gc), initialized(false) {}
+
+void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
+  /*
+   * Perform a non-incremental mark for all collecting zones and record
+   * the results for later comparison.
+   *
+   * Currently this does not validate gray marking.
+   */
+
+  JSRuntime* runtime = gc->rt;
+  GCMarker* gcmarker = &gc->marker;
+
+  gc->waitBackgroundSweepEnd();
+
+  /* Wait for off-thread parsing which can allocate. */
+  HelperThreadState().waitForAllThreads();
+
+  /* Save existing mark bits. */
+  {
+    AutoLockGC lock(gc);
+    for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
+         chunk.next()) {
+      ChunkBitmap* bitmap = &chunk->bitmap;
+      auto entry = MakeUnique<ChunkBitmap>();
+      if (!entry) {
+        return;
+      }
+
+      memcpy((void*)entry->bitmap, (void*)bitmap->bitmap,
+             sizeof(bitmap->bitmap));
+
+      if (!map.putNew(chunk, std::move(entry))) {
+        return;
+      }
+    }
+  }
+
+  /*
+   * Temporarily clear the weakmaps' mark flags for the compartments we are
+   * collecting.
+   */
+
+  WeakMapColors markedWeakMaps;
+
+  /*
+   * For saving, smush all of the keys into one big table and split them back
+   * up into per-zone tables when restoring.
+   */
+  gc::WeakKeyTable savedWeakKeys(SystemAllocPolicy(),
+                                 runtime->randomHashCodeScrambler());
+  if (!savedWeakKeys.init()) {
+    return;
+  }
+
+  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+    if (!WeakMapBase::saveZoneMarkedWeakMaps(zone, markedWeakMaps)) {
+      return;
+    }
+
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    for (gc::WeakKeyTable::Range r = zone->gcWeakKeys().all(); !r.empty();
+         r.popFront()) {
+      if (!savedWeakKeys.put(r.front().key,
+                             std::move(r.front().value))) {
+        oomUnsafe.crash("saving weak keys table for validator");
+      }
+    }
+
+    if (!zone->gcWeakKeys().clear()) {
+      oomUnsafe.crash("clearing weak keys table for validator");
+    }
+  }
+
+  /*
+   * After this point, the function should run to completion, so we shouldn't
+   * do anything fallible.
+   */
+  initialized = true;
+
+  /* Re-do all the marking, but non-incrementally. */
+  js::gc::State state = gc->incrementalState;
+  gc->incrementalState = State::MarkRoots;
+
+  {
+    gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::PREPARE);
+
+    {
+      gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::UNMARK);
+
+      for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+        WeakMapBase::unmarkZone(zone);
+      }
+
+      MOZ_ASSERT(gcmarker->isDrained());
+      gcmarker->reset();
+
+      AutoLockGC lock(gc);
+      for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
+           chunk.next()) {
+        chunk->bitmap.clear();
+      }
+    }
+  }
+
+  {
+    gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::MARK);
+
+    gc->traceRuntimeForMajorGC(gcmarker, session);
+
+    gc->incrementalState = State::Mark;
+    gc->drainMarkStack();
+  }
+
+  gc->incrementalState = State::Sweep;
+  {
+    gcstats::AutoPhase ap1(gc->stats(), gcstats::PhaseKind::SWEEP);
+    gcstats::AutoPhase ap2(gc->stats(), gcstats::PhaseKind::SWEEP_MARK);
+
+    gc->markAllWeakReferences(gcstats::PhaseKind::SWEEP_MARK_WEAK);
+
+    /* Update zone state for gray marking. */
+    for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+      zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
+    }
+
+    AutoSetMarkColor setColorGray(*gcmarker, MarkColor::Gray);
+    gcmarker->setMainStackColor(MarkColor::Gray);
+
+    gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+    gc->markAllWeakReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
+    gc->marker.setMainStackColor(MarkColor::Black);
+
+    /* Restore zone state. */
+    for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+      zone->changeGCState(Zone::MarkBlackAndGray, Zone::MarkBlackOnly);
+    }
+    MOZ_ASSERT(gc->marker.isDrained());
+  }
+
+  /* Take a copy of the non-incremental mark state and restore the original. */
+  {
+    AutoLockGC lock(gc);
+    for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
+         chunk.next()) {
+      ChunkBitmap* bitmap = &chunk->bitmap;
+      ChunkBitmap* entry = map.lookup(chunk)->value().get();
+      mozilla::Swap(*entry, *bitmap);
+    }
+  }
+
+  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+    WeakMapBase::unmarkZone(zone);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!zone->gcWeakKeys().clear()) {
+      oomUnsafe.crash("clearing weak keys table for validator");
+    }
+  }
+
+  WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
+
+  for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty();
+       r.popFront()) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    Zone* zone = gc::TenuredCell::fromPointer(r.front().key)->zone();
+    if (!zone->gcWeakKeys().put(r.front().key,
+                                std::move(r.front().value))) {
+      oomUnsafe.crash("restoring weak keys table for validator");
+    }
+  }
+
+  gc->incrementalState = state;
+}
+
+void js::gc::MarkingValidator::validate() {
+  /*
+   * Validates the incremental marking for a single compartment by comparing
+   * the mark bits to those previously recorded for a non-incremental mark.
+   */
+
+  if (!initialized) {
+    return;
+  }
+
+  gc->waitBackgroundSweepEnd();
+
+  AutoLockGC lock(gc->rt);
+  for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
+    BitmapMap::Ptr ptr = map.lookup(chunk);
+    if (!ptr) {
+      continue; /* Allocated after we did the non-incremental mark. */
+    }
+
+    ChunkBitmap* bitmap = ptr->value().get();
+    ChunkBitmap* incBitmap = &chunk->bitmap;
+
+    for (size_t i = 0; i < ArenasPerChunk; i++) {
+      if (chunk->decommittedArenas.get(i)) {
+        continue;
+      }
+      Arena* arena = &chunk->arenas[i];
+      if (!arena->allocated()) {
+        continue;
+      }
+      if (!arena->zone->isGCSweeping()) {
+        continue;
+      }
+
+      AllocKind kind = arena->getAllocKind();
+      uintptr_t thing = arena->thingsStart();
+      uintptr_t end = arena->thingsEnd();
+      while (thing < end) {
+        auto cell = reinterpret_cast<TenuredCell*>(thing);
+
+        /*
+         * If a non-incremental GC wouldn't have collected a cell, then
+         * an incremental GC won't collect it.
+         */
+        if (bitmap->isMarkedAny(cell)) {
+          MOZ_RELEASE_ASSERT(incBitmap->isMarkedAny(cell));
+        }
+
+        /*
+         * If the cycle collector isn't allowed to collect an object
+         * after a non-incremental GC has run, then it isn't allowed to
+         * collected it after an incremental GC.
+         */
+        if (!bitmap->isMarkedGray(cell)) {
+          MOZ_RELEASE_ASSERT(!incBitmap->isMarkedGray(cell));
+        }
+
+        thing += Arena::thingSize(kind);
+      }
+    }
+  }
+}
+
+void GCRuntime::computeNonIncrementalMarkingForValidation(
+    AutoGCSession& session) {
+  MOZ_ASSERT(!markingValidator);
+  if (isIncremental && hasZealMode(ZealMode::IncrementalMarkingValidator)) {
+    markingValidator = js_new<MarkingValidator>(this);
+  }
+  if (markingValidator) {
+    markingValidator->nonIncrementalMark(session);
+  }
+}
+
+void GCRuntime::validateIncrementalMarking() {
+  if (markingValidator) {
+    markingValidator->validate();
+  }
+}
+
+void GCRuntime::finishMarkingValidation() {
+  js_delete(markingValidator.ref());
+  markingValidator = nullptr;
 }
 
 #endif /* JS_GC_ZEAL */
