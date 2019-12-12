@@ -3160,7 +3160,8 @@ bool nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
     // from anywhere.  This allows editor to insert images from file://
     // into documents that are being edited.
     rv = sSecurityManager->CheckLoadURIWithPrincipal(
-        aLoadingPrincipal, aURI, nsIScriptSecurityManager::ALLOW_CHROME);
+        aLoadingPrincipal, aURI, nsIScriptSecurityManager::ALLOW_CHROME,
+        aLoadingDocument->InnerWindowID());
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -5100,7 +5101,8 @@ void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
   if (sSecurityManager) {
     uint32_t flag = static_cast<uint32_t>(nsIScriptSecurityManager::STANDARD);
     proceed = sSecurityManager->CheckLoadURIWithPrincipal(
-        aContent->NodePrincipal(), aLinkURI, flag);
+        aContent->NodePrincipal(), aLinkURI, flag,
+        aContent->OwnerDoc()->InnerWindowID());
   }
 
   // Only pass off the click event if the script security manager says it's ok.
