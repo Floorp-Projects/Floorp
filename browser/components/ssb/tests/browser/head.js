@@ -27,6 +27,8 @@ async function openSSBFromBrowserWindow(win = window) {
   EventUtils.synthesizeMouseAtCenter(pageActionButton, {}, win);
   await popupShown;
 
+  let expectedUri = win.gBrowser.selectedBrowser.currentURI;
+
   let openItem = doc.getElementById("pageAction-panel-launchSSB");
   Assert.ok(!openItem.disabled, "Open menu item should not be disabled");
   Assert.ok(!openItem.hidden, "Open menu item should not be hidden");
@@ -39,7 +41,7 @@ async function openSSBFromBrowserWindow(win = window) {
   EventUtils.synthesizeMouseAtCenter(openItem, {}, win);
   let ssbwin = await openPromise;
   let browser = ssbwin.document.getElementById("browser");
-  await BrowserTestUtils.browserLoaded(browser, true);
+  await BrowserTestUtils.browserLoaded(browser, true, expectedUri.spec);
   return ssbwin;
 }
 
