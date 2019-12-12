@@ -115,7 +115,7 @@ class ChangesView {
     changesFront.off("clear-changes", this.onClearChanges);
   }
 
-  async onTargetAvailable(type, targetFront, isTopLevel) {
+  async onTargetAvailable({ type, targetFront, isTopLevel }) {
     targetFront.watchFronts(
       "changes",
       this.onChangesFrontAvailable,
@@ -127,7 +127,7 @@ class ChangesView {
     }
   }
 
-  async onTargetDestroyed(type, targetFront, isTopLevel) {
+  async onTargetDestroyed({ type, targetFront, isTopLevel }) {
     targetFront.unwatchFronts(
       "changes",
       this.onChangesFrontAvailable,

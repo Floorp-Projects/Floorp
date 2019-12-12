@@ -248,22 +248,20 @@ class TargetList {
     const targetType = this._getTargetType(targetFront);
 
     // Notify the target front creation listeners
-    this._createListeners.emit(
-      targetType,
-      targetType,
+    this._createListeners.emit(targetType, {
+      type: targetType,
       targetFront,
-      targetFront == this.targetFront
-    );
+      isTopLevel: targetFront == this.targetFront,
+    });
   }
 
   _onTargetDestroyed(targetFront) {
     const targetType = this._getTargetType(targetFront);
-    this._destroyListeners.emit(
-      targetType,
-      targetType,
+    this._destroyListeners.emit(targetType, {
+      type: targetType,
       targetFront,
-      targetFront == this.targetFront
-    );
+      isTopLevel: targetFront == this.targetFront,
+    });
     this._targets.delete(targetFront);
   }
 
@@ -356,7 +354,7 @@ class TargetList {
    *        Callback fired when a target has been just created or was already available.
    *        The function is called with three arguments:
    *        - {String} type: The target type
-   *        - {TargetFront} target: The target Front
+   *        - {TargetFront} targetFront: The target Front
    *        - {Boolean} isTopLevel: Is this target the top level one?
    * @param {Function} onDestroy
    *        Callback fired in case of target front destruction.
@@ -377,13 +375,17 @@ class TargetList {
       }
 
       // Notify about already existing target of these types
-      for (const target of this._targets) {
-        if (this._matchTargetType(type, target)) {
+      for (const targetFront of this._targets) {
+        if (this._matchTargetType(type, targetFront)) {
           try {
             // Ensure waiting for eventual async create listeners
             // which may setup things regarding the existing targets
             // and listen callsite may care about the full initialization
-            await onAvailable(type, target, target == this.targetFront);
+            await onAvailable({
+              type,
+              targetFront,
+              isTopLevel: targetFront == this.targetFront,
+            });
           } catch (e) {
             // Prevent throwing when onAvailable handler throws on one target
             // so that it can try to register the other targets

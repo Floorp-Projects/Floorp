@@ -56,17 +56,17 @@ async function testBrowserFrames(mainRoot) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
-  const onAvailable = (type, newTarget, isTopLevel) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
-      newTarget == target ? isTopLevel : !isTopLevel,
+      targetFront == target ? isTopLevel : !isTopLevel,
       "isTopLevel argument is correct"
     );
-    targets.push(newTarget);
+    targets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onAvailable);
   is(
@@ -129,17 +129,17 @@ async function testTabFrames(mainRoot) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
-  const onAvailable = (type, newTarget, isTopLevel) => {
+  const onAvailable = ({ type, targetFront, isTopLevel }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
-      newTarget == target ? isTopLevel : !isTopLevel,
+      targetFront == target ? isTopLevel : !isTopLevel,
       "isTopLevel argument is correct"
     );
-    targets.push(newTarget);
+    targets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onAvailable);
   is(
