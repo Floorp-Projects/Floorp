@@ -9,6 +9,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../../utils/l10n");
 
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  formatMatcher: "basic",
+  hour12: false,
+});
+
 /**
  * Renders the "Time" column of a WebSocket frame.
  */
@@ -32,13 +37,7 @@ class FrameListColumnTime extends Component {
    */
   formatTime(highResTimeStamp) {
     const timeStamp = Math.floor(highResTimeStamp / 1000);
-    const hoursMinutesSeconds = new Date(timeStamp).toLocaleTimeString(
-      undefined,
-      {
-        formatMatcher: "basic",
-        hour12: false,
-      }
-    );
+    const hoursMinutesSeconds = dateTimeFormat.format(new Date(timeStamp));
     return L10N.getFormatStr(
       "netmonitor.ws.time.format",
       hoursMinutesSeconds,
