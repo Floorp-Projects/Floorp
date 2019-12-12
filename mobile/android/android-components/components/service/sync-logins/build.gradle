@@ -36,6 +36,7 @@ dependencies {
     api project(':concept-sync')
 
     implementation project(':concept-storage')
+    implementation project(':support-sync-telemetry')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
