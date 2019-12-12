@@ -324,14 +324,14 @@ class Preprocessor:
         for cmd, level in (
             ('define', 0),
             ('undef', 0),
-            ('if', sys.maxint),
-            ('ifdef', sys.maxint),
-            ('ifndef', sys.maxint),
+            ('if', sys.maxsize),
+            ('ifdef', sys.maxsize),
+            ('ifndef', sys.maxsize),
             ('else', 1),
             ('elif', 1),
             ('elifdef', 1),
             ('elifndef', 1),
-            ('endif', sys.maxint),
+            ('endif', sys.maxsize),
             ('expand', 0),
             ('literal', 0),
             ('filter', 0),
@@ -730,9 +730,7 @@ class Preprocessor:
         current = dict(self.filters)
         for f in filters:
             current[f] = getattr(self, 'filter_' + f)
-        filterNames = current.keys()
-        filterNames.sort()
-        self.filters = [(fn, current[fn]) for fn in filterNames]
+        self.filters = [(fn, current[fn]) for fn in sorted(current.keys())]
         return
 
     def do_unfilter(self, args):
@@ -741,9 +739,7 @@ class Preprocessor:
         for f in filters:
             if f in current:
                 del current[f]
-        filterNames = current.keys()
-        filterNames.sort()
-        self.filters = [(fn, current[fn]) for fn in filterNames]
+        self.filters = [(fn, current[fn]) for fn in sorted(current.keys())]
         return
 
     # Filters
