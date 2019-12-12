@@ -40,7 +40,7 @@ function test()
       var constructor = this[name];
       var tmp = constructor.name;
       if (tmp !== name)
-        throw "Bad value for "+name+".name: "+uneval(tmp);
+        throw "Bad value for "+name+".name: "+String(tmp);
       instances[i] = new constructor();
     }
 
@@ -48,11 +48,11 @@ function test()
       var instance = instances[i];
       var name = instance.name;
       var constructor = instance.constructor;
-      if (constructor !== this[name])
-        throw "Bad value of (new "+name+").constructor: "+uneval(tmp);
       var tmp = constructor.name;
+      if (constructor !== this[name])
+        throw "Bad value of (new "+name+").constructor: "+String(tmp);
       if (tmp !== name)
-        throw "Bad value for constructor.name: "+uneval(tmp);
+        throw "Bad value for constructor.name: "+String(tmp);
       if (!(instance instanceof Object))
         throw "Bad instanceof Object for "+name;
       if (!(instance instanceof Error))

@@ -10,7 +10,7 @@ function HandlerProxy() {
     return new Proxy({}, {
         get: function (t, key) {
             if (key !== "ownKeys")
-                throw new Error("tried to access handler[" + uneval(key) + "]");
+                throw new Error("tried to access handler[" + String(key) + "]");
             hits++;
             return t => symbols;
         }

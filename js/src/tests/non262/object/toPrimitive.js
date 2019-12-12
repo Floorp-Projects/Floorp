@@ -90,7 +90,7 @@ function doGet(target, propertyName, receiver) {
 var handler = new Proxy({}, {
     get(target, trapName, receiver) {
         if (trapName !== "get")
-            throw `FAIL: system tried to access handler method: ${uneval(trapName)}`;
+            throw `FAIL: system tried to access handler method: ${String(trapName)}`;
         return doGet;
     }
 });

@@ -7,20 +7,20 @@ obj[Symbol.for("moon")] = "sun";
 obj[Symbol("asleep")] = "awake";
 obj[Symbol.iterator] = "List";
 for (var x in obj)
-    throw "FAIL: " + uneval(x);
+    throw "FAIL: " + String(x);
 
 // This includes inherited properties.
 var obj2 = Object.create(obj);
 for (var x in obj2)
-    throw "FAIL: " + uneval(x);
+    throw "FAIL: " + String(x);
 
 // The same goes for proxies.
 var p = new Proxy(obj, {});
 for (var x in p)
-    throw "FAIL: " + uneval(x);
+    throw "FAIL: " + String(x);
 var p2 = new Proxy(obj2, {});
 for (var x in p2)
-    throw "FAIL: " + uneval(x);
+    throw "FAIL: " + String(x);
 
 // Object.keys() and .getOwnPropertyNames() also skip symbols.
 assertEq(Object.keys(obj).length, 0);

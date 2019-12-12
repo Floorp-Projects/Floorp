@@ -293,7 +293,7 @@
       for (var i = 0; i < pa.length; i++) {
         assertEq(typeof pa[i][0], "string", "clone should not have E4X properties " + path);
         if (!isCloneable(a, pa[i])) {
-          throw new Error("non-cloneable clone property " + uneval(pa[i][0]) + " " + path);
+          throw new Error("non-cloneable clone property " + pa[i][0] + " " + path);
         }
       }
 
