@@ -316,12 +316,9 @@ class BrowserParent final : public PBrowserParent,
       const RequestData& aRequestData, const uint32_t aState,
       const Maybe<WebProgressSecurityChangeData>& aSecurityChangeData);
 
-  mozilla::ipc::IPCResult RecvNotifyContentBlockingEvent(
-      const uint32_t& aEvent, const RequestData& aRequestData,
-      const bool aBlocked, nsIURI* aHintURI,
-      nsTArray<nsCString>&& aTrackingFullHashes,
-      const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
-          aReason);
+  mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
+      const Maybe<WebProgressData>& aWebProgressData,
+      const RequestData& aRequestData, const uint32_t& aEvent);
 
   mozilla::ipc::IPCResult RecvNavigationFinished();
 
