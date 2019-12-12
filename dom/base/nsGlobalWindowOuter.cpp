@@ -6806,9 +6806,6 @@ void nsGlobalWindowOuter::SetIsBackground(bool aIsBackground) {
 }
 
 void nsGlobalWindowOuter::SetIsBackgroundInternal(bool aIsBackground) {
-  if (mIsBackground != aIsBackground) {
-    TabGroup()->WindowChangedBackgroundStatus(aIsBackground);
-  }
   mIsBackground = aIsBackground;
 }
 

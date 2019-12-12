@@ -309,9 +309,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // indexedDB counters.
   void TryToCacheTopInnerWindow();
 
-  // Increase/Decrease the number of active IndexedDB transactions/databases for
-  // the decision making of TabGroup scheduling and timeout-throttling.
-  void UpdateActiveIndexedDBTransactionCount(int32_t aDelta);
+  // Increase/Decrease the number of active IndexedDB databases for the
+  // decision making of TabGroup scheduling and timeout-throttling.
   void UpdateActiveIndexedDBDatabaseCount(int32_t aDelta);
 
   // Return true if there is any active IndexedDB databases which could block
