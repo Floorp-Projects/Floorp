@@ -990,7 +990,8 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
 
 nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
                                               nsIURI* aSource, nsIURI* aTarget,
-                                              bool aFromPrivateWindow) {
+                                              bool aFromPrivateWindow,
+                                              uint64_t aInnerWindowID) {
   nsresult rv;
   NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
 
@@ -1024,9 +1025,16 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
   NS_ENSURE_TRUE(error, NS_ERROR_FAILURE);
 
   // using category of "SOP" so we can link to MDN
-  rv = error->Init(message, EmptyString(), EmptyString(), 0, 0,
-                   nsIScriptError::errorFlag, "SOP", aFromPrivateWindow,
-                   true /* From chrome context */);
+  if (aInnerWindowID != 0) {
+    rv = error->InitWithWindowID(message, EmptyString(), EmptyString(), 0, 0,
+                                 nsIScriptError::errorFlag,
+                                 NS_LITERAL_CSTRING("SOP"), aInnerWindowID,
+                                 true /* From chrome context */);
+  } else {
+    rv = error->Init(message, EmptyString(), EmptyString(), 0, 0,
+                     nsIScriptError::errorFlag, "SOP", aFromPrivateWindow,
+                     true /* From chrome context */);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
   console->LogMessage(error);
   return NS_OK;
