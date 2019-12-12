@@ -2951,23 +2951,6 @@ bool js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id,
   return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
 }
 
-bool js::DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                            HandleValue value, unsigned attrs,
-                            ObjectOpResult& result) {
-  RootedId id(cx, NameToId(name));
-  return DefineDataProperty(cx, obj, id, value, attrs, result);
-}
-
-bool js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index,
-                           HandleValue value, unsigned attrs,
-                           ObjectOpResult& result) {
-  RootedId id(cx);
-  if (!IndexToId(cx, index, &id)) {
-    return false;
-  }
-  return DefineDataProperty(cx, obj, id, value, attrs, result);
-}
-
 bool js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
                                 HandleObject getter, HandleObject setter,
                                 unsigned attrs) {

@@ -108,14 +108,6 @@ extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                                JS::Handle<jsid> id, JS::Handle<JS::Value> value,
                                unsigned attrs, JS::ObjectOpResult& result);
 
-extern bool DefineDataProperty(JSContext* cx, JS::Handle<JSObject*> obj,
-                               PropertyName* name, JS::Handle<JS::Value> value,
-                               unsigned attrs, JS::ObjectOpResult& result);
-
-extern bool DefineDataElement(JSContext* cx, JS::Handle<JSObject*> obj,
-                              uint32_t index, JS::Handle<JS::Value> value,
-                              unsigned attrs, JS::ObjectOpResult& result);
-
 extern bool DefineAccessorProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                                    JS::Handle<jsid> id,
                                    JS::Handle<JSObject*> getter,
