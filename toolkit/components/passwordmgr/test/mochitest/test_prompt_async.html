@@ -79,8 +79,10 @@
       }
 
       function promiseProxyErrorLoad(frame) {
-        return TestUtils.waitForCondition(() => {
-          return SpecialPowers.wrap(frame.contentWindow).document.documentURI.includes("proxyConnectFailure");
+        return TestUtils.waitForCondition(async function checkForProxyConnectFailure() {
+          return SpecialPowers.spawn(frame, [], function() {
+            return this.content.document.documentURI.includes("proxyConnectFailure");
+          })
         }, "Waiting for proxyConnectFailure documentURI");
       }
 
@@ -501,7 +503,9 @@
         // the unauthenticated content.
 
         let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
-        SpecialPowers.wrap(iframe1).contentDocument.location.reload();
+        await SpecialPowers.spawn(iframe1, [], function() {
+          this.content.document.location.reload();
+        });
 
         let state = {
           msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
