@@ -1440,10 +1440,6 @@ class Shape : public gc::TenuredCell {
   void fixupDictionaryShapeAfterMovingGC();
   void fixupShapeTreeAfterMovingGC();
 
-  static Shape* fromParentFieldPointer(uintptr_t p) {
-    return reinterpret_cast<Shape*>(p - offsetof(Shape, parent));
-  }
-
   static void staticAsserts() {
     JS_STATIC_ASSERT(offsetof(Shape, base_) ==
                      offsetof(js::shadow::Shape, base));
@@ -1569,14 +1565,6 @@ struct InitialShapeEntry {
     Lookup(const JSClass* clasp, const TaggedProto& proto, uint32_t nfixed,
            uint32_t baseFlags)
         : clasp(clasp), proto(proto), nfixed(nfixed), baseFlags(baseFlags) {}
-
-    explicit Lookup(const InitialShapeEntry& entry)
-        : proto(entry.proto.unbarrieredGet()) {
-      const Shape* shape = entry.shape.unbarrieredGet();
-      clasp = shape->getObjectClass();
-      nfixed = shape->numFixedSlots();
-      baseFlags = shape->getObjectFlags();
-    }
   };
 
   inline InitialShapeEntry();
