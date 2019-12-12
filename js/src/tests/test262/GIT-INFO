@@ -1,7 +1,11 @@
-commit 2213d13a4bbf52f7a14cf7a8a4c1bfad0f935bb1
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Tue Nov 19 08:09:25 2019 -0800
+commit 09380a4ae412e986ea39eb7163f5a6b3e5b04bbc
+Author: Ross Kirsling <rkirsling@gmail.com>
+Date:   Tue Dec 3 13:28:15 2019 -0800
 
-    Merge pull request #2425 from bcoe/optional-chaining-iteration
+    Add test verifying that optional call preserves `this`. (#2436)
     
-    feat(optional-chaining): add tests for IterationStatement
+    * Add test verifying that optional call preserves `this`.
+    
+    * Update test/language/expressions/optional-chaining/optional-call-preserves-this.js
+    
+    Co-Authored-By: Leo Balter <leonardo.balter@gmail.com>
