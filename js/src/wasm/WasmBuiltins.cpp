@@ -580,7 +580,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
 
   for (size_t i = 0; i < fe.funcType().args().length(); i++) {
     HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
-    switch (fe.funcType().args()[i].kind()) {
+    switch (fe.funcType().args()[i].code()) {
       case ValType::I32: {
         int32_t i32;
         if (!ToInt32(cx, arg, &i32)) {
@@ -600,24 +600,15 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
         argv[i] = DoubleValue(dbl);
         break;
       }
-      case ValType::Ref: {
-        switch (fe.funcType().args()[i].refTypeKind()) {
-          case RefType::Any:
-            // Leave Object and Null alone, we will unbox inline.  All we need
-            // to do is convert other values to an Object representation.
-            if (!arg.isObjectOrNull()) {
-              RootedAnyRef result(cx, AnyRef::null());
-              if (!BoxAnyRef(cx, arg, &result)) {
-                return false;
-              }
-              argv[i].setObject(*result.get().asJSObject());
-            }
-            break;
-          case RefType::Func:
-          case RefType::Null:
-          case RefType::TypeIndex:
-            // Guarded against by temporarilyUnsupportedReftypeForEntry()
-            MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
+      case ValType::AnyRef: {
+        // Leave Object and Null alone, we will unbox inline.  All we need to do
+        // is convert other values to an Object representation.
+        if (!arg.isObjectOrNull()) {
+          RootedAnyRef result(cx, AnyRef::null());
+          if (!BoxAnyRef(cx, arg, &result)) {
+            return false;
+          }
+          argv[i].setObject(*result.get().asJSObject());
         }
         break;
       }
@@ -635,7 +626,6 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
       }
 #endif
       default: {
-        // Guarded against by temporarilyUnsupportedReftypeForEntry()
         MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
       }
     }
@@ -820,11 +810,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
           ArgType_Int32,
           {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General});
       return FuncCast(Instance::callImport_anyref, *abiType);
-    case SymbolicAddress::CallImport_NullRef:
-      *abiType = MakeABIFunctionType(
-          ArgType_Int32,
-          {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General});
-      return FuncCast(Instance::callImport_nullref, *abiType);
     case SymbolicAddress::CoerceInPlace_ToInt32:
       *abiType = Args_General1;
       return FuncCast(CoerceInPlace_ToInt32, *abiType);
@@ -1126,7 +1111,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CallImport_F64:
     case SymbolicAddress::CallImport_FuncRef:
     case SymbolicAddress::CallImport_AnyRef:
-    case SymbolicAddress::CallImport_NullRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:  // GenerateImportJitExit
     case SymbolicAddress::CoerceInPlace_ToNumber:
 #if defined(ENABLE_WASM_BIGINT)
@@ -1496,7 +1480,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   }
 
   uint32_t abiType;
-  switch (funcType.ret().ref().kind()) {
+  switch (funcType.ret().ref().code()) {
     case ValType::F32:
       abiType = ArgType_Float32 << RetType_Shift;
       break;
@@ -1512,7 +1496,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   }
 
   for (size_t i = 0; i < args.length(); i++) {
-    switch (args[i].kind()) {
+    switch (args[i].code()) {
       case ValType::F32:
         abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1)));
         break;

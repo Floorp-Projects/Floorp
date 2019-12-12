@@ -6383,7 +6383,7 @@ bool MIonToWasmCall::appendRoots(MRootList& roots) const {
 
 #ifdef DEBUG
 bool MIonToWasmCall::isConsistentFloat32Use(MUse* use) const {
-  return funcExport_.funcType().args()[use->index()].kind() ==
+  return funcExport_.funcType().args()[use->index()].code() ==
          wasm::ValType::F32;
 }
 #endif

@@ -6535,7 +6535,7 @@ static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,
         return LinkFail(cx, "Imported values must be primitives");
       }
 
-      switch (global.varInitImportType().kind()) {
+      switch (global.varInitImportType().code()) {
         case ValType::I32: {
           int32_t i32;
           if (!ToInt32(cx, v, &i32)) {
@@ -6562,7 +6562,10 @@ static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,
           val->emplace(d);
           return true;
         }
-        case ValType::Ref: {
+        case ValType::Ref:
+        case ValType::NullRef:
+        case ValType::AnyRef:
+        case ValType::FuncRef: {
           MOZ_CRASH("not available in asm.js");
         }
       }

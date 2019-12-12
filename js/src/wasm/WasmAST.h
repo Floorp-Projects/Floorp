@@ -121,7 +121,7 @@ class AstValType {
   explicit AstValType(AstRef ref) {
     if (ref.name().empty()) {
       which_ = IsValType;
-      type_ = RefType::fromTypeIndex(ref.index());
+      type_ = ValType(ValType::Ref, ref.index());
     } else {
       which_ = IsAstRef;
       ref_ = ref;
@@ -130,10 +130,7 @@ class AstValType {
 
 #ifdef ENABLE_WASM_GC
   bool isNarrowType() const {
-    if (which_ == IsAstRef) {
-      return true;
-    }
-    return type_ == RefType::any() || type_.isRef();
+    return code() == ValType::AnyRef || code() == ValType::Ref;
   }
 #endif
 
@@ -146,12 +143,12 @@ class AstValType {
   void resolve() {
     MOZ_ASSERT(which_ == IsAstRef);
     which_ = IsValType;
-    type_ = RefType::fromTypeIndex(ref_.index());
+    type_ = ValType(ValType::Ref, ref_.index());
   }
 
-  ValType::Kind code() const {
+  ValType::Code code() const {
     if (which_ == IsValType) {
-      return type_.kind();
+      return type_.code();
     }
     return ValType::Ref;
   }
