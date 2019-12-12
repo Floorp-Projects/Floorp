@@ -1147,11 +1147,10 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
           break;
         case RefType::Func:
         case RefType::Any:
+        case RefType::Null:
           t = GlobalObject::getOrCreateReferenceTypeDescr(
               cx, cx->global(), ReferenceType::TYPE_WASM_ANYREF);
           break;
-        default:
-          MOZ_CRASH("Bad field type");
       }
       break;
   }
