@@ -1560,10 +1560,10 @@ uint16_t nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
   uint16_t flags = 0;
 
   switch (aFrame->StyleUI()->mPointerEvents) {
-    case NS_STYLE_POINTER_EVENTS_NONE:
+    case StylePointerEvents::None:
       break;
-    case NS_STYLE_POINTER_EVENTS_AUTO:
-    case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+    case StylePointerEvents::Auto:
+    case StylePointerEvents::Visiblepainted:
       if (aFrame->StyleVisibility()->IsVisible()) {
         if (!aFrame->StyleSVG()->mFill.kind.IsNone())
           flags |= SVG_HIT_TEST_FILL;
@@ -1573,34 +1573,34 @@ uint16_t nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
           flags |= SVG_HIT_TEST_CHECK_MRECT;
       }
       break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
+    case StylePointerEvents::Visiblefill:
       if (aFrame->StyleVisibility()->IsVisible()) {
         flags |= SVG_HIT_TEST_FILL;
       }
       break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
+    case StylePointerEvents::Visiblestroke:
       if (aFrame->StyleVisibility()->IsVisible()) {
         flags |= SVG_HIT_TEST_STROKE;
       }
       break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLE:
+    case StylePointerEvents::Visible:
       if (aFrame->StyleVisibility()->IsVisible()) {
         flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
       }
       break;
-    case NS_STYLE_POINTER_EVENTS_PAINTED:
+    case StylePointerEvents::Painted:
       if (!aFrame->StyleSVG()->mFill.kind.IsNone()) flags |= SVG_HIT_TEST_FILL;
       if (!aFrame->StyleSVG()->mStroke.kind.IsNone())
         flags |= SVG_HIT_TEST_STROKE;
       if (aFrame->StyleSVG()->mStrokeOpacity) flags |= SVG_HIT_TEST_CHECK_MRECT;
       break;
-    case NS_STYLE_POINTER_EVENTS_FILL:
+    case StylePointerEvents::Fill:
       flags |= SVG_HIT_TEST_FILL;
       break;
-    case NS_STYLE_POINTER_EVENTS_STROKE:
+    case StylePointerEvents::Stroke:
       flags |= SVG_HIT_TEST_STROKE;
       break;
-    case NS_STYLE_POINTER_EVENTS_ALL:
+    case StylePointerEvents::All:
       flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
       break;
     default:

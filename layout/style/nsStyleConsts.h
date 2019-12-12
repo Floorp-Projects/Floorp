@@ -568,16 +568,18 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_LIST_STYLE_POSITION_OUTSIDE 1
 
 // See nsStyleVisibility
-#define NS_STYLE_POINTER_EVENTS_NONE 0
-#define NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED 1
-#define NS_STYLE_POINTER_EVENTS_VISIBLEFILL 2
-#define NS_STYLE_POINTER_EVENTS_VISIBLESTROKE 3
-#define NS_STYLE_POINTER_EVENTS_VISIBLE 4
-#define NS_STYLE_POINTER_EVENTS_PAINTED 5
-#define NS_STYLE_POINTER_EVENTS_FILL 6
-#define NS_STYLE_POINTER_EVENTS_STROKE 7
-#define NS_STYLE_POINTER_EVENTS_ALL 8
-#define NS_STYLE_POINTER_EVENTS_AUTO 9
+enum class StylePointerEvents : uint8_t {
+  None,
+  Visiblepainted,
+  Visiblefill,
+  Visiblestroke,
+  Visible,
+  Painted,
+  Fill,
+  Stroke,
+  All,
+  Auto,
+};
 
 enum class StyleIsolation : uint8_t {
   Auto,
