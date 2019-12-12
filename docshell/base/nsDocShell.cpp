@@ -5676,7 +5676,8 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
     if (NS_SUCCEEDED(rv)) {
       rv = securityManager->CheckLoadURIWithPrincipal(
           aPrincipal, uri,
-          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
+          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT,
+          aInnerWindowID);
 
       if (NS_SUCCEEDED(rv)) {
         bool isjs = true;
