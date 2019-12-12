@@ -283,8 +283,18 @@ function initPage() {
     );
 
     if (isTlsVersionError && !tls10OverrideEnabled) {
+      // security.tls.* prefs may be reset by the user when they
+      // encounter an error, so it's important that this has a
+      // different pref branch.
+      const showOverride = RPMGetBoolPref(
+        "security.certerrors.tls.version.show-override",
+        true
+      );
+
       // This is probably a TLS 1.0 server; offer to re-enable.
-      showTls10Container();
+      if (showOverride) {
+        showTls10Container();
+      }
     } else {
       const hasPrefStyleError = [
         "interrupted", // This happens with subresources that are above the max tls

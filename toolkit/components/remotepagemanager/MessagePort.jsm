@@ -62,6 +62,7 @@ let RPMAccessManager = {
         "security.ssl.errorReporting.automatic",
         "security.ssl.errorReporting.enabled",
         "security.tls.version.enable-deprecated",
+        "security.certerrors.tls.version.show-override",
       ],
       setBoolPref: ["security.ssl.errorReporting.automatic"],
       addToHistogram: ["yes"],
