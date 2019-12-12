@@ -4,8 +4,8 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
-# The `sync.history` and `sync.bookmarks` metrics use the same structure,
-# but must be specified twice. We can't define them once and use
+# `history-sync`, `logins-sync` and `bookmarks-sync` metrics all use the same structure,
+# but must be specified individually. We can't define them once and use
 # `send_in_pings` because the stores might be synced in parallel, and we can't
 # guarantee that a ping for one store would be sent before the others.
 history_sync:
@@ -131,6 +131,132 @@ history_sync:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
     - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+
+logins_sync:
+  uid:
+    type: string
+    description: >
+      The user's hashed Firefox Account ID.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  started_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the passwords sync started.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  finished_at:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the passwords sync finished. This includes the time to
+      download, apply, and upload all records.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  incoming:
+    type: labeled_counter
+    labels:
+      - applied
+      - failed_to_apply
+      - reconciled
+    description: >
+      Records incoming passwords record counts. `applied` is the number of
+      incoming passwords entries that were successfully stored or updated in the
+      local database. `failed_to_apply` is the number of entries that were
+      ignored due to errors. `reconciled` is the number of entries with changes
+      both locally and remotely that were merged.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing:
+    type: labeled_counter
+    labels:
+      - uploaded
+      - failed_to_upload
+    description: >
+      Records outgoing passwords record counts. `uploaded` is the number of
+      records that were successfully sent to the server. `failed_to_upload`
+      is the number of records that weren't uploaded, and will be retried
+      on the next sync.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  outgoing_batches:
+    type: counter
+    description: >
+      Records the number of batches needed to upload all outgoing records. The
+      Sync server has a hard limit on the number of records (and request body
+      bytes) on the number of records that can fit into a single batch, and
+      large syncs may require multiple batches.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
+    expires: never
+    lifetime: ping
+  failure_reason:
+    type: labeled_string
+    labels:
+      - other
+      - unexpected
+      - auth
+    description: >
+      Records why the passwords sync failed: either due to an authentication
+      error, unexpected exception, or other error. The error strings are
+      truncated and sanitized to omit PII, like usernames and passwords.
+    send_in_pings:
+      - logins-sync
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/4556
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5294
+    notification_emails:
+      - sync-core@mozilla.com
     expires: never
     lifetime: ping
 

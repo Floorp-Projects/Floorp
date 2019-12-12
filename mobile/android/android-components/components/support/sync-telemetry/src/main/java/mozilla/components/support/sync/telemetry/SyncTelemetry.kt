@@ -11,6 +11,7 @@ import mozilla.components.service.glean.private.LabeledMetricType
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
+import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 
 const val MAX_FAILURE_REASON_LENGTH = 100
@@ -36,6 +37,58 @@ object SyncTelemetry {
                     return@eachEngine
                 }
                 HistorySync.apply {
+                    val base = BaseGleanSyncPing.fromEngineInfo(ping.uid, engine)
+                    uid.set(base.uid)
+                    startedAt.set(base.startedAt)
+                    finishedAt.set(base.finishedAt)
+                    if (base.applied > 0) {
+                        // Since all Sync ping counters have `lifetime: ping`, and
+                        // we send the ping immediately after, we don't need to
+                        // reset the counters before calling `add`.
+                        incoming["applied"].add(base.applied)
+                    }
+                    if (base.failedToApply > 0) {
+                        incoming["failed_to_apply"].add(base.failedToApply)
+                    }
+                    if (base.reconciled > 0) {
+                        incoming["reconciled"].add(base.reconciled)
+                    }
+                    if (base.uploaded > 0) {
+                        outgoing["uploaded"].add(base.uploaded)
+                    }
+                    if (base.failedToUpload > 0) {
+                        outgoing["failed_to_upload"].add(base.failedToUpload)
+                    }
+                    if (base.outgoingBatches > 0) {
+                        outgoingBatches.add(base.outgoingBatches)
+                    }
+                    base.failureReason?.let {
+                        recordFailureReason(it, failureReason)
+                    }
+                }
+                sendPing()
+            }
+        }
+        return true
+    }
+
+    /**
+     * Processes a passwords-related ping information from the [ping].
+     * @return 'false' if global error was encountered, 'true' otherwise.
+     */
+    @Suppress("ComplexMethod", "NestedBlockDepth")
+    fun processPasswordsPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.loginsSync.send() }): Boolean {
+        ping.syncs.forEach eachSync@{ sync ->
+            sync.failureReason?.let {
+                recordFailureReason(it, LoginsSync.failureReason)
+                sendPing()
+                return false
+            }
+            sync.engines.forEach eachEngine@{ engine ->
+                if (engine.name != "passwords") {
+                    return@eachEngine
+                }
+                LoginsSync.apply {
                     val base = BaseGleanSyncPing.fromEngineInfo(ping.uid, engine)
                     uid.set(base.uid)
                     startedAt.set(base.startedAt)
