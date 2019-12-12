@@ -64,3 +64,11 @@
 # An update watershed was required to update to Firefox 56 for LZMA and SHA384
 # support. This made it possible to delete all of the removal instructions in
 # this file.
+
+# Remove the toplevel chrome.manifest added by bug 1295542.
+#ifndef MOZ_GTK
+  @DIR_MACOS@chrome.manifest
+  #ifdef XP_MACOSX
+    @DIR_RESOURCES@chrome.manifest
+  #endif
+#endif

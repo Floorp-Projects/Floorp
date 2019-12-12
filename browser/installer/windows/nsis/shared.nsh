@@ -969,6 +969,11 @@
 
 ; Removes various directories and files for reasons noted below.
 !macro RemoveDeprecatedFiles
+  ; Remove the toplevel chrome.manifest added by bug 1295542.
+  ${If} ${FileExists} "$INSTDIR\chrome.manifest"
+    Delete "$INSTDIR\chrome.manifest"
+  ${EndIf}
+
   ; Remove talkback if it is present (remove after bug 386760 is fixed)
   ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
     RmDir /r /REBOOTOK "$INSTDIR\extensions\talkback@mozilla.org"
