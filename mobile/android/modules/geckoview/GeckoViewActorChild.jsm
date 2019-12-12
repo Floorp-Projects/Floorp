@@ -19,6 +19,14 @@ class GeckoViewActorChild extends JSWindowActorChild {
       this.docShell.domWindow
     );
   }
+
+  isGeckoViewWindow() {
+    const { chromeFlags } = this.docShell.treeOwner
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebBrowserChrome);
+
+    return (chromeFlags & Ci.nsIWebBrowserChrome.CHROME_GECKOVIEW) !== 0;
+  }
 }
 
 const { debug, warn } = GeckoViewUtils.initLogging("Actor[C]"); // eslint-disable-line no-unused-vars
