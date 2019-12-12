@@ -432,14 +432,26 @@ inline void TraceEdge(JSTracer* trc, JS::TenuredHeap<T>* thingp,
 }
 
 // Edges that are always traced as part of root marking do not require
-// incremental barriers. This function allows for marking non-barriered
-// pointers, but asserts that this happens during root marking.
+// incremental barriers. |JS::UnsafeTraceRoot| overloads allow for marking
+// non-barriered pointers but assert that this happens during root marking.
 //
 // Note that while |edgep| must never be null, it is fine for |*edgep| to be
 // nullptr.
-template <typename T>
-extern JS_PUBLIC_API void UnsafeTraceRoot(JSTracer* trc, T* edgep,
-                                          const char* name);
+#define JS_DECLARE_UNSAFE_TRACE_ROOT(type)                               \
+  extern JS_PUBLIC_API void UnsafeTraceRoot(JSTracer* trc, type* edgep, \
+                                            const char* name);
+
+// Declare edge-tracing function overloads for public GC pointer types.
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(JS_DECLARE_UNSAFE_TRACE_ROOT)
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(JS_DECLARE_UNSAFE_TRACE_ROOT)
+
+// We also require overloads for these purely-internal types.  These overloads
+// ought not be in public headers, and they should use a different name in order
+// to not be *actual* overloads, but for the moment we still declare them here.
+JS_DECLARE_UNSAFE_TRACE_ROOT(js::AbstractGeneratorObject*)
+JS_DECLARE_UNSAFE_TRACE_ROOT(js::SavedFrame*)
+
+#undef JS_DECLARE_UNSAFE_TRACE_ROOT
 
 extern JS_PUBLIC_API void TraceChildren(JSTracer* trc, GCCellPtr thing);
 
