@@ -1,0 +1,14 @@
+<!doctype html>
+<title>is windows-1252</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<p>�etta er k��unarpr�f � staf. Fyrir sum tungum�l sem nota latneska stafi �urfum vi� meira inntak til a� taka �kv�r�unina.</p>
+<script>
+setup({explicit_done:true});
+onload = function() {
+    test(function() {
+        assert_equals(document.characterSet, "windows-1252", 'Expected windows-1252');
+    }, "Check detection result");
+      done();
+};
+</script>

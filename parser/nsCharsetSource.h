@@ -13,8 +13,11 @@ enum {
   kCharsetFromFileURLGuess,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
   kCharsetFromCache,
-  kCharsetFromParentFrame,
-  kCharsetFromAutoDetection,
+  kCharsetFromInitialAutoDetection,
+  kCharsetFromFinalAutoDetection,
+  kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
+                            // to avoid breaking tests. (Also, the HTML spec
+                            // says so.)
   kCharsetFromMetaPrescan,  // this one and smaller: HTML5 Tentative
   kCharsetFromMetaTag,      // this one and greater: HTML5 Confident
   kCharsetFromIrreversibleAutoDetection,

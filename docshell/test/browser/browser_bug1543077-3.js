@@ -10,15 +10,15 @@ function test() {
 
 function afterOpen() {
   is(
-    content.document.documentElement.textContent.indexOf("\u001B"),
+    content.document.documentElement.textContent.indexOf("\u3042"),
     136,
-    "Parent doc should be windows-1252 initially"
+    "Parent doc should be ISO-2022-JP initially"
   );
 
   is(
-    content.frames[0].document.documentElement.textContent.indexOf("\u001B"),
+    content.frames[0].document.documentElement.textContent.indexOf("\u3042"),
     92,
-    "Child doc should be windows-1252 initially"
+    "Child doc should be ISO-2022-JP initially"
   );
 }
 
