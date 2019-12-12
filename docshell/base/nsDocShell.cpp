@@ -12896,9 +12896,10 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
 
   // Call into InternalLoad with the pending channel when it is received.
   cpcl->RegisterCallback(
-      aIdentifier, [self, aHistoryIndex](
-                       nsIChildChannel* aChannel,
-                       nsTArray<net::DocumentChannelRedirect>&& aRedirects) {
+      aIdentifier,
+      [self, aHistoryIndex](nsIChildChannel* aChannel,
+                            nsTArray<net::DocumentChannelRedirect>&& aRedirects,
+                            uint32_t aLoadStateLoadFlags) {
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
           nsCOMPtr<nsIRequest> request = do_QueryInterface(aChannel);
           if (request) {
@@ -12913,6 +12914,7 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
+        loadState->SetLoadFlags(aLoadStateLoadFlags);
 
         if (nsCOMPtr<nsIChannel> channel = do_QueryInterface(aChannel)) {
           nsCOMPtr<nsIURI> previousURI;
