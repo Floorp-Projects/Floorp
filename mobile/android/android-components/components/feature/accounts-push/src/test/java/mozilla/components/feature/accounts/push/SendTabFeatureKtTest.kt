@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sendtab
+package mozilla.components.feature.accounts.push
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -23,25 +23,18 @@ class SendTabFeatureKtTest {
     @Test
     fun `feature register all observers`() = runBlockingTest {
         val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
 
         SendTabFeature(
             accountManager = accountManager,
-            pushFeature = pushFeature,
             onTabsReceived = mock()
         )
 
-        verify(accountManager).register(any(), any(), anyBoolean())
         verify(accountManager).registerForDeviceEvents(any(), any(), anyBoolean())
-
-        verify(pushFeature).registerForPushMessages(any(), any(), any(), anyBoolean())
-        verify(pushFeature).registerForSubscriptions(any(), any(), anyBoolean())
     }
 
     @Test
     fun `feature registers only the device observer`() {
         val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
 
         SendTabFeature(
             accountManager = accountManager,
@@ -51,8 +44,6 @@ class SendTabFeatureKtTest {
         verify(accountManager).registerForDeviceEvents(any(), any(), anyBoolean())
 
         verify(accountManager, never()).register(any(), any(), anyBoolean())
-        verify(pushFeature, never()).registerForPushMessages(any(), any(), any(), anyBoolean())
-        verify(pushFeature, never()).registerForSubscriptions(any(), any(), anyBoolean())
     }
 
     @Test

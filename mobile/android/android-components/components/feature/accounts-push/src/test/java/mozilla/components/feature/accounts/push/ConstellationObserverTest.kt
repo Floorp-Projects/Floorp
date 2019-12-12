@@ -4,7 +4,7 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package mozilla.components.feature.accounts
+package mozilla.components.feature.accounts.push
 
 import android.content.Context
 import mozilla.components.concept.push.PushProcessor

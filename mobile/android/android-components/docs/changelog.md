@@ -18,6 +18,18 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 72.0
     * `browser-engine-gecko-nightly`: GeckoView 73.0
 
+* **feature-accounts**
+  * ⚠️ **This is a breaking change**: Migrated `FxaPushSupportFeature` to the `feature-accounts-push` component.
+
+* **feature-sendtab**
+  * ⚠️ **This is a breaking change**: This component is now deprecated. See `feature-accounts-push`.
+
+* **feature-accounts-push**
+  * 🆕 New component for features that need Firefox Accounts and Push, e.g. Send Tab.
+  * `SendTabFeature` and `SendTabUseCases` have been migrated here.
+  * ⚠️ **This is a breaking change**: `SendTabFeature` no longer takes an instance of `AutoPushFeature`.
+    * `FxaPushSupportFeature` is now needed for integrating Firefox Accounts with Push support.
+
 # 25.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...v25.0.0)
@@ -113,7 +125,7 @@ permalink: /changelog/
 * **support-base**
   * Deprecated `BackHandler` interface. Use the `UserInteractionHandler.onBackPressed` instead.
   * Added generic `UserInteractionHandler` interface for fragments, features and other components that want to handle user interactions such as ‘back’ or 'home' button presses.
-      
+
 # 22.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...master)

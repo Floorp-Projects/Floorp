@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sendtab
+package mozilla.components.feature.accounts.push
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +23,8 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * Contains use cases for sending tabs to devices related to the firefox-accounts.
+ *
+ * See [SendTabFeature] for the ability to receive tabs from other devices.
  *
  * @param accountManager The AccountManager on which we want to retrieve our devices.
  * @param coroutineContext The Coroutine Context on which we want to do the actual sending.

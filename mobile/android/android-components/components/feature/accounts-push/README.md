@@ -9,7 +9,7 @@ Feature component for sending tabs to other devices with a registered FxA Accoun
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
-implementation "org.mozilla.components:feature-sendtab:{latest-version}"
+implementation "org.mozilla.components:feature-accounts-push:{latest-version}"
 ```
 
 ## Usage

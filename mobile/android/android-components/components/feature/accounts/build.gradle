@@ -27,7 +27,6 @@ dependencies {
     implementation Dependencies.androidx_lifecycle_extensions
 
     implementation project(':concept-engine')
-    implementation project(':concept-push')
     implementation project(':feature-tabs')
     implementation project(':service-firefox-accounts')
     implementation project(':support-webextensions')
