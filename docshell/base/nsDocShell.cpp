@@ -10886,8 +10886,8 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       // It's a file:// URI
       nsCOMPtr<nsIPrincipal> principal = document->GetPrincipal();
 
-      if (!principal ||
-          NS_FAILED(principal->CheckMayLoad(newURI, true, false))) {
+      if (!principal || NS_FAILED(principal->CheckMayLoadWithReporting(
+                            newURI, false, document->InnerWindowID()))) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     }
