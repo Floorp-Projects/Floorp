@@ -5,6 +5,7 @@
 
 DevToolsModules(
     'ConfirmDialog.js',
+    'EagerEvaluation.js',
     'EditorToolbar.js',
     'JSTerm.js',
     'ReverseSearchInput.css',

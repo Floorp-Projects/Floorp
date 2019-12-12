@@ -1145,6 +1145,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       url: request.url,
       selectedNodeActor: request.selectedNodeActor,
       selectedObjectActor: request.selectedObjectActor,
+      eager: request.eager,
     };
     const { mapped } = request;
 

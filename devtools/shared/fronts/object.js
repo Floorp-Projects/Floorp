@@ -273,6 +273,10 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
 
     return response;
   }
+
+  get isSyntaxError() {
+    return this._grip.preview && this._grip.preview.name == "SyntaxError";
+  }
 }
 
 /**

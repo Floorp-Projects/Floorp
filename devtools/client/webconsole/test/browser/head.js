@@ -1154,6 +1154,31 @@ function isReverseSearchInputFocused(hud) {
   return document.activeElement == reverseSearchInput && documentIsFocused;
 }
 
+async function waitForEagerEvaluationResult(hud, text) {
+  await waitUntil(() => {
+    const elem = hud.ui.outputNode.querySelector(".eager-evaluation-result");
+    if (elem) {
+      if (text instanceof RegExp) {
+        return text.test(elem.innerText);
+      }
+      return elem.innerText == text;
+    }
+    return false;
+  });
+  ok(true, `Got eager evaluation result ${text}`);
+}
+
+// This just makes sure the eager evaluation result disappears. This will pass
+// even for inputs which eventually have a result because nothing will be shown
+// while the evaluation happens. Waiting here does make sure that a previous
+// input was processed and sent down to the server for evaluating.
+async function waitForNoEagerEvaluationResult(hud) {
+  await waitUntil(() => {
+    return !hud.ui.outputNode.querySelector(".eager-evaluation-result");
+  });
+  ok(true, `Eager evaluation result disappeared`);
+}
+
 /**
  * Selects a node in the inspector.
  *

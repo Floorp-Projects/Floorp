@@ -49,6 +49,7 @@ function configureStore(webConsoleUI, options = {}) {
     options.logLimit || Math.max(getIntPref("devtools.hud.loglimit"), 1);
   const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
   const autocomplete = getBoolPref(PREFS.FEATURES.AUTOCOMPLETE);
+  const eagerEvaluation = getBoolPref(PREFS.FEATURES.EAGER_EVALUATION);
   const groupWarnings = getBoolPref(PREFS.FEATURES.GROUP_WARNINGS);
   const historyCount = getIntPref(PREFS.UI.INPUT_HISTORY_COUNT);
 
@@ -57,6 +58,7 @@ function configureStore(webConsoleUI, options = {}) {
       logLimit,
       sidebarToggle,
       autocomplete,
+      eagerEvaluation,
       historyCount,
       groupWarnings,
     }),

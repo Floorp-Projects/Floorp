@@ -15,6 +15,8 @@ const actionTypes = {
   EDITOR_TOGGLE: "EDITOR_TOGGLE",
   EDITOR_ONBOARDING_DISMISS: "EDITOR_ONBOARDING_DISMISS",
   EVALUATE_EXPRESSION: "EVALUATE_EXPRESSION",
+  SET_TERMINAL_INPUT: "SET_TERMINAL_INPUT",
+  SET_TERMINAL_EAGER_RESULT: "SET_TERMINAL_EAGER_RESULT",
   FILTER_TEXT_SET: "FILTER_TEXT_SET",
   FILTER_TOGGLE: "FILTER_TOGGLE",
   FILTERS_CLEAR: "FILTERS_CLEAR",
@@ -84,6 +86,7 @@ const prefs = {
       // We use the same pref to enable the sidebar on webconsole and browser console.
       SIDEBAR_TOGGLE: "devtools.webconsole.sidebarToggle",
       AUTOCOMPLETE: "devtools.webconsole.input.autocomplete",
+      EAGER_EVALUATION: "devtools.webconsole.input.eagerEvaluation",
       GROUP_WARNINGS: "devtools.webconsole.groupWarningMessages",
       BROWSER_TOOLBOX_FISSION: "devtools.browsertoolbox.fission",
     },

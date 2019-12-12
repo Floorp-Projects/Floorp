@@ -15,6 +15,8 @@ const {
   REVERSE_SEARCH_INPUT_CHANGE,
   REVERSE_SEARCH_BACK,
   REVERSE_SEARCH_NEXT,
+  SET_TERMINAL_INPUT,
+  SET_TERMINAL_EAGER_RESULT,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -39,6 +41,9 @@ function getInitialState() {
     reverseSearchEnabled: false,
     currentReverseSearchResults: null,
     currentReverseSearchResultsPosition: null,
+
+    terminalInput: null,
+    terminalEagerResult: null,
   };
 }
 
@@ -61,6 +66,10 @@ function history(state = getInitialState(), action, prefsState) {
       return reverseSearchBack(state);
     case REVERSE_SEARCH_NEXT:
       return reverseSearchNext(state);
+    case SET_TERMINAL_INPUT:
+      return setTerminalInput(state, action.expression);
+    case SET_TERMINAL_EAGER_RESULT:
+      return setTerminalEagerResult(state, action.expression, action.result);
   }
   return state;
 }
@@ -215,6 +224,24 @@ function reverseSearchNext(state) {
     ...state,
     currentReverseSearchResultsPosition: previousPosition,
   };
+}
+
+function setTerminalInput(state, expression) {
+  return {
+    ...state,
+    terminalInput: expression,
+    terminalEagerResult: null,
+  };
+}
+
+function setTerminalEagerResult(state, expression, result) {
+  if (state.terminalInput == expression) {
+    return {
+      ...state,
+      terminalEagerResult: result,
+    };
+  }
+  return state;
 }
 
 exports.history = history;
