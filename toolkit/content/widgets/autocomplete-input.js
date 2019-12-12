@@ -116,7 +116,6 @@
       );
 
       this.valueIsTyped = false;
-      this._textValueSetByCompleteDefault = false;
 
       this._selectionDetails = null;
     }
@@ -254,13 +253,6 @@
     }
 
     set textValue(val) {
-      if (
-        typeof this.onBeforeTextValueSet == "function" &&
-        !this._textValueSetByCompleteDefault
-      ) {
-        val = this.onBeforeTextValueSet(val);
-      }
-
       // "input" event is automatically dispatched by the editor if
       // necessary.
       this._setValueInternal(val, true);
@@ -269,12 +261,6 @@
     }
 
     get textValue() {
-      if (typeof this.onBeforeTextValueGet == "function") {
-        let result = this.onBeforeTextValueGet();
-        if (result) {
-          return result.value;
-        }
-      }
       return this.value;
     }
     /**
@@ -309,12 +295,6 @@
     }
 
     get value() {
-      if (typeof this.onBeforeValueGet == "function") {
-        var result = this.onBeforeValueGet();
-        if (result) {
-          return result.value;
-        }
-      }
       return super.value;
     }
 
@@ -374,11 +354,7 @@
     }
 
     setTextValueWithReason(aValue, aReason) {
-      if (aReason == Ci.nsIAutoCompleteInput.TEXTVALUE_REASON_COMPLETEDEFAULT) {
-        this._textValueSetByCompleteDefault = true;
-      }
       this.textValue = aValue;
-      this._textValueSetByCompleteDefault = false;
     }
 
     selectTextRange(aStartIndex, aEndIndex) {
@@ -636,22 +612,11 @@
         value = this.onBeforeValueSet(value);
       }
 
-      if (
-        typeof this.trimValue == "function" &&
-        !this._textValueSetByCompleteDefault
-      ) {
-        value = this.trimValue(value);
-      }
-
       this.valueIsTyped = false;
       if (isUserInput) {
         super.setUserInput(value);
       } else {
         super.value = value;
-      }
-
-      if (typeof this.formatValue == "function") {
-        this.formatValue();
       }
 
       this.mIgnoreInput = false;
