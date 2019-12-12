@@ -100,11 +100,6 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
   }
 }
 
-bool BaselineFrame::isNonGlobalEvalFrame() const {
-  return isEvalFrame() &&
-         script()->enclosingScope()->as<EvalScope>().isNonGlobal();
-}
-
 bool BaselineFrame::initFunctionEnvironmentObjects(JSContext* cx) {
   return js::InitFunctionEnvironmentObjects(cx, this);
 }

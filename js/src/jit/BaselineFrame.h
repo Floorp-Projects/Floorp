@@ -343,14 +343,6 @@ class BaselineFrame {
   bool isGlobalFrame() const { return script()->isGlobalCode(); }
   bool isModuleFrame() const { return script()->isModule(); }
   bool isEvalFrame() const { return script()->isForEval(); }
-  bool isStrictEvalFrame() const { return isEvalFrame() && script()->strict(); }
-  bool isNonStrictEvalFrame() const {
-    return isEvalFrame() && !script()->strict();
-  }
-  bool isNonGlobalEvalFrame() const;
-  bool isNonStrictDirectEvalFrame() const {
-    return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
-  }
   bool isFunctionFrame() const { return CalleeTokenIsFunction(calleeToken()); }
   bool isDebuggerEvalFrame() const { return false; }
 
