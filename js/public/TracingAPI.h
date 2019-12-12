@@ -8,6 +8,7 @@
 #define js_TracingAPI_h
 
 #include "js/AllocPolicy.h"
+#include "js/GCTypeMacros.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "js/TraceKind.h"
@@ -370,10 +371,28 @@ JS::CallbackTracer* JSTracer::asCallbackTracer() {
 }
 
 namespace js {
+
+class AbstractGeneratorObject;
+class SavedFrame;
+
 namespace gc {
-template <typename T>
-JS_PUBLIC_API void TraceExternalEdge(JSTracer* trc, T* thingp,
-                                     const char* name);
+
+#define JS_DECLARE_TRACE_EXTERNAL_EDGE(type)                               \
+  extern JS_PUBLIC_API void TraceExternalEdge(JSTracer* trc, type* thingp, \
+                                              const char* name);
+
+// Declare edge-tracing function overloads for public GC pointer types.
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(JS_DECLARE_TRACE_EXTERNAL_EDGE)
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(JS_DECLARE_TRACE_EXTERNAL_EDGE)
+
+// We also require overloads for these purely-internal types.  These overloads
+// ought not be in public headers, and they should use a different name in order
+// to not be *actual* overloads, but for the moment we still declare them here.
+JS_DECLARE_TRACE_EXTERNAL_EDGE(AbstractGeneratorObject*)
+JS_DECLARE_TRACE_EXTERNAL_EDGE(SavedFrame*)
+
+#undef JS_DECLARE_TRACE_EXTERNAL_EDGE
+
 }  // namespace gc
 }  // namespace js
 
