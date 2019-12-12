@@ -16,38 +16,62 @@ add_task(async function runTest() {
   target = await TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target, "webconsole");
 
-  await testBottomHost();
-  await testLeftHost();
-  await testRightHost();
-  await testWindowHost();
-  await testToolSelect();
-  await testDestroy();
-  await testRememberHost();
-  await testPreviousHost();
-
+  await runHostTests(gBrowser);
   await toolbox.destroy();
 
   toolbox = target = null;
   gBrowser.removeCurrentTab();
 });
 
-function testBottomHost() {
+// We run the same host switching tests in a private window.
+// See Bug 1581093 for an example of issue specific to private windows.
+add_task(async function runPrivateWindowTest() {
+  info("Create a private window + tab and open the toolbox");
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  const privateBrowser = privateWindow.gBrowser;
+  privateBrowser.selectedTab = BrowserTestUtils.addTab(privateBrowser, URL);
+
+  const tab = privateBrowser.selectedTab;
+  target = await TargetFactory.forTab(tab);
+  toolbox = await gDevTools.showToolbox(target, "webconsole");
+
+  await runHostTests(privateBrowser);
+  await toolbox.destroy();
+
+  toolbox = target = null;
+  await BrowserTestUtils.closeWindow(privateWindow);
+});
+
+async function runHostTests(browser) {
+  await testBottomHost(browser);
+  await testLeftHost(browser);
+  await testRightHost(browser);
+  await testWindowHost(browser);
+  await testToolSelect();
+  await testDestroy(browser);
+  await testRememberHost();
+  await testPreviousHost();
+}
+
+function testBottomHost(browser) {
   checkHostType(toolbox, BOTTOM);
 
   // test UI presence
-  const panel = gBrowser.getPanel();
+  const panel = browser.getPanel();
   const iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
   ok(iframe, "toolbox bottom iframe exists");
 
   checkToolboxLoaded(iframe);
 }
 
-async function testLeftHost() {
+async function testLeftHost(browser) {
   await toolbox.switchHost(LEFT);
   checkHostType(toolbox, LEFT);
 
   // test UI presence
-  const panel = gBrowser.getPanel();
+  const panel = browser.getPanel();
   const bottom = panel.querySelector(".devtools-toolbox-bottom-iframe");
   ok(!bottom, "toolbox bottom iframe doesn't exist");
 
@@ -57,12 +81,12 @@ async function testLeftHost() {
   checkToolboxLoaded(iframe);
 }
 
-async function testRightHost() {
+async function testRightHost(browser) {
   await toolbox.switchHost(RIGHT);
   checkHostType(toolbox, RIGHT);
 
   // test UI presence
-  const panel = gBrowser.getPanel();
+  const panel = browser.getPanel();
   const bottom = panel.querySelector(".devtools-toolbox-bottom-iframe");
   ok(!bottom, "toolbox bottom iframe doesn't exist");
 
@@ -72,11 +96,11 @@ async function testRightHost() {
   checkToolboxLoaded(iframe);
 }
 
-async function testWindowHost() {
+async function testWindowHost(browser) {
   await toolbox.switchHost(WINDOW);
   checkHostType(toolbox, WINDOW);
 
-  const panel = gBrowser.getPanel();
+  const panel = browser.getPanel();
   const sidebar = panel.querySelector(".devtools-toolbox-side-iframe");
   ok(!sidebar, "toolbox sidebar iframe doesn't exist");
 
@@ -92,9 +116,9 @@ async function testToolSelect() {
   await toolbox.selectTool("inspector");
 }
 
-async function testDestroy() {
+async function testDestroy(browser) {
   await toolbox.destroy();
-  target = await TargetFactory.forTab(gBrowser.selectedTab);
+  target = await TargetFactory.forTab(browser.selectedTab);
   toolbox = await gDevTools.showToolbox(target);
 }
 
