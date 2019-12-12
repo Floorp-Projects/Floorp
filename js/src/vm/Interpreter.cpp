@@ -4883,19 +4883,6 @@ bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
   return SetObjectElementOperation(cx, obj, id, value, receiver, strict);
 }
 
-bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
-                          HandleValue value, bool strict, HandleScript script,
-                          jsbytecode* pc) {
-  MOZ_ASSERT(pc);
-  RootedId id(cx);
-  if (!ToPropertyKey(cx, index, &id)) {
-    return false;
-  }
-  RootedValue receiver(cx, ObjectValue(*obj));
-  return SetObjectElementOperation(cx, obj, id, value, receiver, strict, script,
-                                   pc);
-}
-
 bool js::SetObjectElementWithReceiver(JSContext* cx, HandleObject obj,
                                       HandleValue index, HandleValue value,
                                       HandleValue receiver, bool strict) {
