@@ -356,8 +356,9 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
       aStatus == NS_NET_STATUS_WAITING_FOR) {
     NetAddr selfAddr;
     NetAddr peerAddr;
+    bool isTrr = false;
     if (mTransaction) {
-      mTransaction->GetNetworkAddresses(selfAddr, peerAddr);
+      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport =
           do_QueryInterface(aTransport);
