@@ -199,8 +199,11 @@ private fun assertDeveloperToolsHeading() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertRemoteDebug() = onView(ViewMatchers.withText("Remote debugging via USB"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertRemoteDebug() {
+    TestHelper.scrollToElementByText("Remote debugging via USB")
+    onView(ViewMatchers.withText("Remote debugging via USB"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 // ABOUT SECTION
 private fun assertAboutHeading() {
