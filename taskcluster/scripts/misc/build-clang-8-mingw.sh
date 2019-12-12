@@ -27,10 +27,6 @@ CROSS_PREFIX_DIR=$INSTALL_DIR/$machine-w64-mingw32
 
 make_flags="-j$(nproc)"
 
-if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
-  export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
-fi
-
 # This is default value of _WIN32_WINNT. Gecko configure script explicitly sets this,
 # so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
 default_win32_winnt=0x601
