@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include "gc/GCInternals.h"
+#include "gc/GCLock.h"
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
 #include "jit/JitRealm.h"

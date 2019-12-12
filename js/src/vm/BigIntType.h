@@ -14,7 +14,6 @@
 #include "jstypes.h"
 #include "gc/Barrier.h"
 #include "gc/GC.h"
-#include "gc/Heap.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
 #include "js/Result.h"

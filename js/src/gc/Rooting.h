@@ -7,6 +7,7 @@
 #ifndef gc_Rooting_h
 #define gc_Rooting_h
 
+#include "gc/Allocator.h"
 #include "gc/Policy.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
@@ -160,7 +161,7 @@ class FakeMutableHandle
  * which require handle types and are only called in the CanGC case. These
  * allow the calling code to type check.
  */
-enum AllowGC { NoGC = 0, CanGC = 1 };
+
 template <typename T, AllowGC allowGC>
 class MaybeRooted {};
 

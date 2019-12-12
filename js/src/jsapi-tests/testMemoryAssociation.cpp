@@ -8,7 +8,6 @@
 #include "jsapi.h"
 #include "jspubtd.h"
 
-#include "gc/Heap.h"
 #include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 

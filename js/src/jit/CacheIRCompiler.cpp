@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "jslibmath.h"
+#include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
 #include "jit/IonIC.h"

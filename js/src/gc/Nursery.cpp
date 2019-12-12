@@ -18,6 +18,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
+#include "gc/GCLock.h"
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
 #include "jit/JitFrames.h"
