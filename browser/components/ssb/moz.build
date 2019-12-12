@@ -14,3 +14,8 @@ XPCOM_MANIFESTS += [
 EXTRA_JS_MODULES += [
     'SiteSpecificBrowserService.jsm',
 ]
+
+FINAL_TARGET_FILES.actors += [
+    'SiteSpecificBrowserChild.jsm',
+    'SiteSpecificBrowserParent.jsm',
+]

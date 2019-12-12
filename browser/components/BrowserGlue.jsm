@@ -279,6 +279,17 @@ let ACTORS = {
     allFrames: true,
   },
 
+  SiteSpecificBrowser: {
+    parent: {
+      moduleURI: "resource:///actors/SiteSpecificBrowserParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/SiteSpecificBrowserChild.jsm",
+    },
+
+    allFrames: true,
+  },
+
   UITour: {
     parent: {
       moduleURI: "resource:///modules/UITourParent.jsm",
