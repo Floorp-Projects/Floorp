@@ -119,6 +119,17 @@ class RangedPtr {
     checkSanity();
   }
 
+  MOZ_IMPLICIT RangedPtr(const RangedPtr<T>& aOther)
+    : mPtr(aOther.mPtr)
+#ifdef DEBUG
+        ,
+        mRangeStart(aOther.mRangeStart),
+        mRangeEnd(aOther.mRangeEnd)
+#endif
+  {
+    checkSanity();
+  }
+
   T* get() const { return mPtr; }
 
   explicit operator bool() const { return mPtr != nullptr; }
