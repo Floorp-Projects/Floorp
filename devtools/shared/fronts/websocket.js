@@ -73,12 +73,13 @@ class WebSocketFront extends FrontClassWithSpec(webSocketSpec) {
    * the UI for displaying.
    *
    * @private
+   * @param number httpChannelId
    * @param boolean wasClean
    * @param number code
    * @param string reason
    */
-  async _onWebSocketClosed(wasClean, code, reason) {
-    this.emit("webSocketClosed", wasClean, code, reason);
+  async _onWebSocketClosed(httpChannelId, wasClean, code, reason) {
+    this.emit("webSocketClosed", httpChannelId, wasClean, code, reason);
   }
 
   /**

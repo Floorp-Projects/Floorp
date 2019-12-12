@@ -22,9 +22,10 @@ const webSocketSpec = generateActorSpec({
     },
     serverWebSocketClosed: {
       type: "webSocketClosed",
-      wasClean: Arg(0, "boolean"),
-      code: Arg(1, "number"),
-      reason: Arg(2, "string"),
+      httpChannelId: Arg(0, "number"),
+      wasClean: Arg(1, "boolean"),
+      code: Arg(2, "number"),
+      reason: Arg(3, "string"),
     },
     serverFrameReceived: {
       type: "frameReceived",

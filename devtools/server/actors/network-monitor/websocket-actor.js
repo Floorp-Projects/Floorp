@@ -90,9 +90,10 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
   webSocketMessageAvailable(webSocketSerialID, data, messageType) {},
 
   webSocketClosed(webSocketSerialID, wasClean, code, reason) {
-    this.connections.delete(webSocketSerialID);
+    const httpChannelId = this.connections.get(webSocketSerialID);
 
-    this.emit("serverWebSocketClosed", wasClean, code, reason);
+    this.connections.delete(webSocketSerialID);
+    this.emit("serverWebSocketClosed", httpChannelId, wasClean, code, reason);
   },
 
   frameReceived(webSocketSerialID, frame) {

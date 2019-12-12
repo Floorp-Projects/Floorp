@@ -14,6 +14,7 @@ const {
   WS_SET_REQUEST_FILTER_TEXT,
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
+  WS_CLOSE_CONNECTION,
 } = require("../constants");
 
 /**
@@ -49,6 +50,7 @@ function WebSockets(initialState = {}) {
     selectedFrame: null,
     frameDetailsOpen: false,
     currentChannelId: null,
+    closedConnections: new Map(),
     columns: getWebSocketsDefaultColumnsState(),
     ...initialState,
   };
@@ -168,6 +170,18 @@ function resetColumns(state) {
   };
 }
 
+function closeConnection(state, action) {
+  const { httpChannelId, code, reason } = action;
+  const nextState = { ...state };
+
+  nextState.closedConnections.set(httpChannelId, {
+    code,
+    reason,
+  });
+
+  return nextState;
+}
+
 /**
  * Append new item into existing map and return new map.
  */
@@ -206,6 +220,8 @@ function webSockets(state = WebSockets(), action) {
       return toggleColumn(state, action);
     case WS_RESET_COLUMNS:
       return resetColumns(state);
+    case WS_CLOSE_CONNECTION:
+      return closeConnection(state, action);
     default:
       return state;
   }
