@@ -62,6 +62,7 @@ pref("devtools.debugger.map-scopes-enabled", false);
 pref("devtools.debugger.log-actions", false);
 pref("devtools.debugger.log-event-breakpoints", false);
 
+pref("devtools.debugger.features.async-live-stacks", false);
 pref("devtools.debugger.features.wasm", true);
 pref("devtools.debugger.features.shortcuts", true);
 pref("devtools.debugger.features.root", true);

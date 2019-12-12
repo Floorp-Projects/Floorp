@@ -17,6 +17,9 @@ exports.defaultThreadOptions = function() {
     shouldShowOverlay: Services.prefs.getBoolPref(
       "devtools.debugger.features.overlay"
     ),
+    shouldIncludeAsyncLiveFrames: Services.prefs.getBoolPref(
+      "devtools.debugger.features.async-live-stacks"
+    ),
     skipBreakpoints: Services.prefs.getBoolPref(
       "devtools.debugger.skip-pausing"
     ),
