@@ -39,9 +39,11 @@ dependencies {
     implementation project(':concept-storage')
     implementation project(':browser-storage-sync')
     implementation project(':service-firefox-accounts')
+    implementation project(':service-sync-logins')
     implementation project(':support-rustlog')
     implementation project(':support-rusthttp')
     implementation project(':lib-fetch-httpurlconnection')
+    implementation project(':lib-dataprotect')
 
     implementation Dependencies.kotlin_reflect
     implementation Dependencies.androidx_recyclerview
