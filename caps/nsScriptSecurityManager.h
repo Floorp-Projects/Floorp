@@ -102,7 +102,8 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   nsresult CheckLoadURIFlags(nsIURI* aSourceURI, nsIURI* aTargetURI,
                              nsIURI* aSourceBaseURI, nsIURI* aTargetBaseURI,
-                             uint32_t aFlags, bool aFromPrivateWindow);
+                             uint32_t aFlags, bool aFromPrivateWindow,
+                             uint64_t aInnerWindowID);
 
   // Returns the file URI allowlist, initializing it if it has not been
   // initialized.
