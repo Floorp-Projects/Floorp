@@ -2018,17 +2018,6 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
 }
 
 template <typename CharT>
-static UniquePtr<CharT[], JS::FreePolicy> AllocateChars(JSContext* cx,
-                                                        size_t len) {
-  // We're going to null-terminate!
-  auto p = cx->make_pod_array<CharT>(len + 1);
-  if (p) {
-    p[len] = CharT(0);
-  }
-  return p;
-}
-
-template <typename CharT>
 JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars) {
   if (nchars > JSString::MAX_LENGTH) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
