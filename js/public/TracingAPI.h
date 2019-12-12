@@ -452,9 +452,8 @@ namespace js {
 //
 // This method does not check if |*edgep| is non-null before tracing through
 // it, so callers must check any nullable pointer before calling this method.
-template <typename T>
 extern JS_PUBLIC_API void UnsafeTraceManuallyBarrieredEdge(JSTracer* trc,
-                                                           T* edgep,
+                                                           JSObject** edgep,
                                                            const char* name);
 
 // Not part of the public API, but declared here so we can use it in
