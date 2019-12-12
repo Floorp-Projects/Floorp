@@ -153,26 +153,6 @@ interface nsIDocShellTreeItem : nsISupports
 	[binaryname(GetInProcessChildAt)]
 	nsIDocShellTreeItem getChildAt(in long index);
 
-	/*
-	Return the child DocShellTreeItem with the specified name.
-	aName - This is the name of the item that is trying to be found.
-	aRecurse - Is used to tell the function to recurse through children.
-		Note, recursion will only happen through items of the same type.
-	aSameType - If this is set only children of the same type will be returned.
-	aRequestor - This is the docshellTreeItem that is requesting the find.  This
-		parameter is used when recursion is being used to avoid searching the same
-		tree again when a child has asked a parent to search for children.
-	aOriginalRequestor - The original treeitem that made the request, if any.
-    	This is used to ensure that we don't run into cross-site issues.
-
-	Note the search is depth first when recursing.
-	*/
-	nsIDocShellTreeItem findChildWithName(in AString aName,
-	                                      in boolean aRecurse,
-	                                      in boolean aSameType,
-	                                      in nsIDocShellTreeItem aRequestor,
-	                                      in nsIDocShellTreeItem aOriginalRequestor);
-
   /**
    * BrowsingContext associated with the DocShell.
    */
