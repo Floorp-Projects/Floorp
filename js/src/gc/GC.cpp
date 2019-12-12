@@ -1493,8 +1493,7 @@ void GCRuntime::removeBlackRootsTracer(JSTraceDataOp traceOp, void* data) {
 
 void GCRuntime::setGrayRootsTracer(JSTraceDataOp traceOp, void* data) {
   AssertHeapIsIdle();
-  grayRootTracer.op = traceOp;
-  grayRootTracer.data = data;
+  grayRootTracer.ref() = {traceOp, data};
 }
 
 void GCRuntime::clearBlackAndGrayRootTracers() {
@@ -1504,25 +1503,25 @@ void GCRuntime::clearBlackAndGrayRootTracers() {
 }
 
 void GCRuntime::setGCCallback(JSGCCallback callback, void* data) {
-  gcCallback.op = callback;
-  gcCallback.data = data;
+  gcCallback.ref() = {callback, data};
 }
 
 void GCRuntime::callGCCallback(JSGCStatus status) const {
-  MOZ_ASSERT(gcCallback.op);
-  gcCallback.op(rt->mainContextFromOwnThread(), status, gcCallback.data);
+  const auto& callback = gcCallback.ref();
+  MOZ_ASSERT(callback.op);
+  callback.op(rt->mainContextFromOwnThread(), status, callback.data);
 }
 
 void GCRuntime::setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
                                           void* data) {
-  tenuredCallback.op = callback;
-  tenuredCallback.data = data;
+  tenuredCallback.ref() = {callback, data};
 }
 
 void GCRuntime::callObjectsTenuredCallback() {
   JS::AutoSuppressGCAnalysis nogc;
-  if (tenuredCallback.op) {
-    tenuredCallback.op(rt->mainContextFromOwnThread(), tenuredCallback.data);
+  const auto& callback = tenuredCallback.ref();
+  if (callback.op) {
+    callback.op(rt->mainContextFromOwnThread(), callback.data);
   }
 }
 
@@ -1531,14 +1530,18 @@ bool GCRuntime::addFinalizeCallback(JSFinalizeCallback callback, void* data) {
       Callback<JSFinalizeCallback>(callback, data));
 }
 
-void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
-  for (Callback<JSFinalizeCallback>* p = finalizeCallbacks.ref().begin();
-       p < finalizeCallbacks.ref().end(); p++) {
+template <typename F>
+static void EraseCallback(CallbackVector<F>& vector, F callback) {
+  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
     if (p->op == callback) {
-      finalizeCallbacks.ref().erase(p);
-      break;
+      vector.erase(p);
+      return;
     }
   }
+}
+
+void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
+  EraseCallback(finalizeCallbacks.ref(), callback);
 }
 
 void GCRuntime::callFinalizeCallbacks(JSFreeOp* fop,
@@ -1550,13 +1553,13 @@ void GCRuntime::callFinalizeCallbacks(JSFreeOp* fop,
 
 void GCRuntime::setHostCleanupFinalizationGroupCallback(
     JSHostCleanupFinalizationGroupCallback callback, void* data) {
-  hostCleanupFinalizationGroupCallback = {callback, data};
+  hostCleanupFinalizationGroupCallback.ref() = {callback, data};
 }
 
 void GCRuntime::callHostCleanupFinalizationGroupCallback(
     FinalizationGroupObject* group) {
   JS::AutoSuppressGCAnalysis nogc;
-  auto& callback = hostCleanupFinalizationGroupCallback;
+  const auto& callback = hostCleanupFinalizationGroupCallback.ref();
   if (callback.op) {
     callback.op(group, callback.data);
   }
@@ -1570,12 +1573,7 @@ bool GCRuntime::addWeakPointerZonesCallback(JSWeakPointerZonesCallback callback,
 
 void GCRuntime::removeWeakPointerZonesCallback(
     JSWeakPointerZonesCallback callback) {
-  for (auto& p : updateWeakPointerZonesCallbacks.ref()) {
-    if (p.op == callback) {
-      updateWeakPointerZonesCallbacks.ref().erase(&p);
-      break;
-    }
-  }
+  EraseCallback(updateWeakPointerZonesCallbacks.ref(), callback);
 }
 
 void GCRuntime::callWeakPointerZonesCallbacks() const {
@@ -1593,12 +1591,7 @@ bool GCRuntime::addWeakPointerCompartmentCallback(
 
 void GCRuntime::removeWeakPointerCompartmentCallback(
     JSWeakPointerCompartmentCallback callback) {
-  for (auto& p : updateWeakPointerCompartmentCallbacks.ref()) {
-    if (p.op == callback) {
-      updateWeakPointerCompartmentCallbacks.ref().erase(&p);
-      break;
-    }
-  }
+  EraseCallback(updateWeakPointerCompartmentCallbacks.ref(), callback);
 }
 
 void GCRuntime::callWeakPointerCompartmentCallbacks(
@@ -1620,15 +1613,15 @@ JS::GCNurseryCollectionCallback GCRuntime::setNurseryCollectionCallback(
 
 JS::DoCycleCollectionCallback GCRuntime::setDoCycleCollectionCallback(
     JS::DoCycleCollectionCallback callback) {
-  auto prior = gcDoCycleCollectionCallback;
-  gcDoCycleCollectionCallback =
-      Callback<JS::DoCycleCollectionCallback>(callback, nullptr);
+  const auto prior = gcDoCycleCollectionCallback.ref();
+  gcDoCycleCollectionCallback.ref() = {callback, nullptr};
   return prior.op;
 }
 
 void GCRuntime::callDoCycleCollectionCallback(JSContext* cx) {
-  if (gcDoCycleCollectionCallback.op) {
-    gcDoCycleCollectionCallback.op(cx);
+  const auto& callback = gcDoCycleCollectionCallback.ref();
+  if (callback.op) {
+    callback.op(cx);
   }
 }
 
@@ -6845,7 +6838,7 @@ class js::gc::AutoCallGCCallbacks {
 };
 
 void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
-  if (!gcCallback.op) {
+  if (!gcCallback.ref().op) {
     return;
   }
 

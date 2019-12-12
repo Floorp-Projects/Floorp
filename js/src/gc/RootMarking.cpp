@@ -449,8 +449,9 @@ void GCRuntime::traceEmbeddingGrayRoots(JSTracer* trc) {
   // The analysis doesn't like the function pointer below.
   JS::AutoSuppressGCAnalysis nogc;
 
-  if (JSTraceDataOp op = grayRootTracer.op) {
-    (*op)(trc, grayRootTracer.data);
+  const auto& callback = grayRootTracer.ref();
+  if (JSTraceDataOp op = callback.op) {
+    (*op)(trc, callback.data);
   }
 }
 
