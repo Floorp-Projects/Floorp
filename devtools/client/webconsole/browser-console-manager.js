@@ -163,7 +163,7 @@ class BrowserConsoleManager {
       PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
     );
     const title = fissionSupport
-      ? `💥 Fission Browser Console 💥`
+      ? l10n.getStr("multiProcessBrowserConsole.title")
       : l10n.getStr("browserConsole.title");
     win.document.title = title;
     return win;
