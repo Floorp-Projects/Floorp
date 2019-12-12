@@ -907,7 +907,7 @@ class ProcessedMediaTrack : public MediaTrack {
    * (including if there is no input track), this track automatically
    * enters the ended state.
    */
-  void QueueSetAutoend(bool aAutoend);
+  virtual void QueueSetAutoend(bool aAutoend);
 
   ProcessedMediaTrack* AsProcessedTrack() override { return this; }
 
