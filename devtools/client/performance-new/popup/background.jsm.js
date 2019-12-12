@@ -93,6 +93,16 @@ const lazyPreferenceManagement = requireLazy(() => {
   return preferenceManagementModule;
 });
 
+const lazyRecordingUtils = requireLazy(() => {
+  const { require } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
+
+  /** @type {import("devtools/shared/performance-new/recording-utils")} */
+  const recordingUtils = require("devtools/shared/performance-new/recording-utils");
+  return recordingUtils;
+});
+
 /**
  * This Map caches the symbols from the shared libraries.
  * @type {Map<string, { path: string, debugPath: string }>}
@@ -185,8 +195,7 @@ function startProfiler() {
   } = translatePreferencesToState(getRecordingPreferencesFromBrowser());
 
   // Get the active BrowsingContext ID from browser.
-  const getActiveBrowsingContextID = lazyBrowserModule()
-    .getActiveBrowsingContextID;
+  const { getActiveBrowsingContextID } = lazyRecordingUtils();
   const activeBrowsingContextID = getActiveBrowsingContextID();
 
   Services.profiler.StartProfiler(
