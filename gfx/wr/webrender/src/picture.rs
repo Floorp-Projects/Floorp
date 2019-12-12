@@ -188,6 +188,7 @@ struct PictureInfo {
     _spatial_node_index: SpatialNodeIndex,
 }
 
+/// Picture-caching state to keep between scenes.
 pub struct PictureCacheState {
     /// The tiles retained by this picture cache.
     pub tiles: FastHashMap<TileOffset, Tile>,
@@ -199,6 +200,14 @@ pub struct PictureCacheState {
     root_transform: TransformKey,
     /// The current tile size in device pixels
     current_tile_size: DeviceIntSize,
+    /// Various allocations we want to avoid re-doing.
+    allocations: PictureCacheRecycledAllocations,
+}
+
+pub struct PictureCacheRecycledAllocations {
+    old_tiles: FastHashMap<TileOffset, Tile>,
+    old_opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
+    compare_cache: FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
 }
 
 /// Stores a list of cached picture tiles that are retained
@@ -1669,6 +1678,18 @@ impl TileCacheInstance {
             self.spatial_nodes = prev_state.spatial_nodes;
             self.opacity_bindings = prev_state.opacity_bindings;
             self.current_tile_size = prev_state.current_tile_size;
+
+            fn recycle_map<K: std::cmp::Eq + std::hash::Hash, V>(
+                dest: &mut FastHashMap<K, V>,
+                src: FastHashMap<K, V>,
+            ) {
+                if dest.capacity() < src.capacity() {
+                    *dest = src;
+                }
+            }
+            recycle_map(&mut self.old_tiles, prev_state.allocations.old_tiles);
+            recycle_map(&mut self.old_opacity_bindings, prev_state.allocations.old_opacity_bindings);
+            recycle_map(&mut self.compare_cache, prev_state.allocations.compare_cache);
         }
 
         // Only evaluate what tile size to use fairly infrequently, so that we don't end
@@ -3121,6 +3142,11 @@ impl PicturePrimitive {
                         opacity_bindings: tile_cache.opacity_bindings,
                         root_transform: tile_cache.root_transform,
                         current_tile_size: tile_cache.current_tile_size,
+                        allocations: PictureCacheRecycledAllocations {
+                            old_tiles: tile_cache.old_tiles,
+                            old_opacity_bindings: tile_cache.old_opacity_bindings,
+                            compare_cache: tile_cache.compare_cache,
+                        },
                     },
                 );
             }
