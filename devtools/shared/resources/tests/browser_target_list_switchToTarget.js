@@ -46,17 +46,17 @@ async function testSwitchToTarget(client) {
   const secondTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
 
   const frameTargets = [];
-  const onFrameAvailable = (type, newTarget, isTopLevel) => {
+  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
-      newTarget == target ? isTopLevel : !isTopLevel,
+      targetFront == target ? isTopLevel : !isTopLevel,
       "isTopLevel argument is correct"
     );
-    frameTargets.push(newTarget);
+    frameTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
 

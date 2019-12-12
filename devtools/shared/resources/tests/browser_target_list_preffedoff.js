@@ -53,22 +53,22 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   );
 
   const processTargets = [];
-  const onProcessAvailable = (type, newTarget, isTopLevel) => {
-    processTargets.push(newTarget);
+  const onProcessAvailable = ({ type, targetFront, isTopLevel }) => {
+    processTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
   is(processTargets.length, 0, "We get no process when preffed-off");
   targetList.unwatchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
 
   const frameTargets = [];
-  const onFrameAvailable = (type, newTarget, isTopLevel) => {
+  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(isTopLevel, "We are only notified about the top level target");
-    frameTargets.push(newTarget);
+    frameTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
   is(
@@ -110,22 +110,22 @@ async function testPreffedOffTab(mainRoot) {
   is(frames[0], target, "The target is the top level one via getAllTargets");
 
   const processTargets = [];
-  const onProcessAvailable = newTarget => {
-    processTargets.push(newTarget);
+  const onProcessAvailable = ({ type, targetFront }) => {
+    processTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
   is(processTargets.length, 0, "We get no process when preffed-off");
   targetList.unwatchTargets([TargetList.TYPES.PROCESS], onProcessAvailable);
 
   const frameTargets = [];
-  const onFrameAvailable = (type, newTarget, isTopLevel) => {
+  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(isTopLevel, "We are only notified about the top level target");
-    frameTargets.push(newTarget);
+    frameTargets.push(targetFront);
   };
   await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
   is(

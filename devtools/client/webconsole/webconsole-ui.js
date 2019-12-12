@@ -346,7 +346,7 @@ class WebConsoleUI {
    *        to an URL which has to be loaded in a distinct process.
    *        A new top level target is created.
    */
-  async _onTargetAvailable(type, targetFront, isTopLevel) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     // This is a top level target. It may update on process switches
     // when navigating to another domain.
     if (isTopLevel) {
@@ -379,7 +379,7 @@ class WebConsoleUI {
    * @private
    * See _onTargetAvailable for param's description.
    */
-  _onTargetDestroyed(type, targetFront, isTopLevel) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     if (isTopLevel) {
       this.proxy.disconnect();
       this.proxy = null;

@@ -628,7 +628,7 @@ Toolbox.prototype = {
    * This method will be called for the top-level target, as well as any potential
    * additional targets we may care about.
    */
-  async _onTargetAvailable(type, targetFront, isTopLevel) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     if (isTopLevel) {
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
@@ -648,7 +648,7 @@ Toolbox.prototype = {
     }
   },
 
-  _onTargetDestroyed(type, targetFront, isTopLevel) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     if (isTopLevel) {
       this.detachTarget();
     } else {
