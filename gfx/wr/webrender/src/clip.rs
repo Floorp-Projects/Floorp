@@ -564,43 +564,74 @@ impl ClipChainInstance {
 /// Maintains a (flattened) list of clips for a given level in the surface level stack.
 #[derive(Debug)]
 pub struct ClipChainLevel {
-    clips: Vec<ClipChainId>,
-    clip_counts: Vec<usize>,
     /// These clips will be handled when compositing this surface into the parent,
     /// and can thus be ignored on the primitives that are drawn as part of this surface.
     shared_clips: Vec<ClipDataHandle>,
-}
 
-impl ClipChainLevel {
-    /// Construct a new level in the active clip chain stack. The viewport
-    /// is used to filter out irrelevant clips.
-    fn new(
-        shared_clips: Vec<ClipDataHandle>,
-    ) -> Self {
-        ClipChainLevel {
-            clips: Vec::new(),
-            clip_counts: Vec::new(),
-            shared_clips,
-        }
-    }
+    /// Index of the first element in ClipChainStack::clip that belongs to this level.
+    first_clip_index: usize,
+    /// Used to sanity check push/pop balance.
+    initial_clip_counts_len: usize,
 }
 
 /// Maintains a stack of clip chain ids that are currently active,
 /// when a clip exists on a picture that has no surface, and is passed
 /// on down to the child primitive(s).
+///
+///
+/// In order to avoid many small vector allocations, all clip chain ids are
+/// stored in a single vector instead of per-level.
+/// Since we only work with the top-most level of the stack, we only need to
+/// know the first index in the clips vector that belongs to each level. The
+/// last index for the top-most level is always the end of the clips array.
+///
+/// Likewise, we push several clip chain ids to the clips array at each
+/// push_clip, and the number of clip chain ids removed during pop_clip
+/// must match. This is done by having a separate stack of clip counts
+/// in the clip-stack rather than per-level to avoid vector allocations.
+///
+/// ```ascii
+///              +----+----+---
+///      levels: |    |    | ...
+///              +----+----+---
+///               |first   \
+///               |         \
+///               |          \
+///              +--+--+--+--+--+--+--
+///       clips: |  |  |  |  |  |  | ...
+///              +--+--+--+--+--+--+--
+///               |     /     /
+///               |    /    /
+///               |   /   /
+///              +--+--+--+--
+/// clip_counts: | 1| 2| 2| ...
+///              +--+--+--+--
+/// ```
 pub struct ClipChainStack {
-    // TODO(gw): Consider using SmallVec, or recycling the clip stacks here.
     /// A stack of clip chain lists. Each time a new surface is pushed,
-    /// a new entry is added to the main stack. Each time a new picture
-    /// without surface is pushed, it adds the picture clip chain to the
-    /// current stack list.
-    pub stack: Vec<ClipChainLevel>,
+    /// a new level is added. Each time a new picture without surface is
+    /// pushed, it adds the picture clip chain to the clips vector in the
+    /// range belonging to the level (always the top-most level, so always
+    /// at the end of the clips array).
+    levels: Vec<ClipChainLevel>,
+    /// The actual stack of clip ids.
+    clips: Vec<ClipChainId>,
+    /// How many clip ids to pop from the vector each time we call pop_clip.
+    clip_counts: Vec<usize>,
 }
 
 impl ClipChainStack {
     pub fn new() -> Self {
         ClipChainStack {
-            stack: vec![ClipChainLevel::new(Vec::new())],
+            levels: vec![
+                ClipChainLevel {
+                    shared_clips: Vec::new(),
+                    first_clip_index: 0,
+                    initial_clip_counts_len: 0,
+                }
+            ],
+            clips: Vec::new(),
+            clip_counts: Vec::new(),
         }
     }
 
@@ -622,7 +653,7 @@ impl ClipChainStack {
             // TODO(gw): We could consider making this a HashSet if it ever shows up in
             //           profiles, but the typical array length is 2-3 elements.
             let mut valid_clip = true;
-            for level in &self.stack {
+            for level in &self.levels {
                 if level.shared_clips.iter().any(|handle| {
                     handle.uid() == clip_uid
                 }) {
@@ -632,22 +663,21 @@ impl ClipChainStack {
             }
 
             if valid_clip {
-                self.stack.last_mut().unwrap().clips.push(current_clip_chain_id);
+                self.clips.push(current_clip_chain_id);
                 clip_count += 1;
             }
 
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        self.stack.last_mut().unwrap().clip_counts.push(clip_count);
+        self.clip_counts.push(clip_count);
     }
 
     /// Pop a clip chain root from the currently active list.
     pub fn pop_clip(&mut self) {
-        let level = self.stack.last_mut().unwrap();
-        let count = level.clip_counts.pop().unwrap();
+        let count = self.clip_counts.pop().unwrap();
         for _ in 0 .. count {
-            level.clips.pop().unwrap();
+            self.clips.pop().unwrap();
         }
     }
 
@@ -657,19 +687,26 @@ impl ClipChainStack {
         &mut self,
         shared_clips: &[ClipDataHandle],
     ) {
-        let level = ClipChainLevel::new(shared_clips.to_vec());
-        self.stack.push(level);
+        let level = ClipChainLevel {
+            shared_clips: shared_clips.to_vec(),
+            first_clip_index: self.clips.len(),
+            initial_clip_counts_len: self.clip_counts.len(),
+        };
+
+        self.levels.push(level);
     }
 
     /// Pop a surface from the clip chain stack
     pub fn pop_surface(&mut self) {
-        let level = self.stack.pop().unwrap();
-        assert!(level.clip_counts.is_empty() && level.clips.is_empty());
+        let level = self.levels.pop().unwrap();
+        assert!(self.clip_counts.len() == level.initial_clip_counts_len);
+        assert!(self.clips.len() == level.first_clip_index);
     }
 
     /// Get the list of currently active clip chains
     pub fn current_clips_array(&self) -> &[ClipChainId] {
-        &self.stack.last().unwrap().clips
+        let first = self.levels.last().unwrap().first_clip_index;
+        &self.clips[first..]
     }
 }
 
