@@ -22,7 +22,7 @@ win64-nasm:
         fetch:
             - nasm-2.14.02
         toolchain:
-            - linux64-clang-8-mingw-x64
+            - linux64-clang-mingw-x64
 
 linux64-nasm:
     description: "nasm linux64 build"
