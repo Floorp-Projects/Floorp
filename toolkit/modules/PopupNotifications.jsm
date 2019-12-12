@@ -1447,31 +1447,6 @@ PopupNotifications.prototype = {
   ) {
     for (let anchorElement of anchorElements) {
       anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
-      // Use the anchorID as a class along with the default icon class as a
-      // fallback if anchorID is not defined in CSS. We always use the first
-      // notifications icon, so in the case of multiple notifications we'll
-      // only use the default icon.
-      if (anchorElement.classList.contains("notification-anchor-icon")) {
-        // remove previous icon classes
-        let className = anchorElement.className.replace(
-          /([-\w]+-notification-icon\s?)/g,
-          ""
-        );
-        if (notifications.length) {
-          // Find the first notification this anchor used for.
-          let notification = notifications[0];
-          for (let n of notifications) {
-            if (n.anchorElement == anchorElement) {
-              notification = n;
-              break;
-            }
-          }
-          // With this notification we can better approximate the most fitting
-          // style.
-          className = notification.anchorID + " " + className;
-        }
-        anchorElement.className = className;
-      }
     }
   },
 
