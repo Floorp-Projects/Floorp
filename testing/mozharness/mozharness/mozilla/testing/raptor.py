@@ -133,11 +133,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Enable the WebRender compositor in Gecko.",
         }],
-        [["--with-conditioned-profile"], {
+        [["--no-conditioned-profile"], {
             "action": "store_true",
-            "dest": "with_conditioned_profile",
+            "dest": "no_conditioned_profile",
             "default": False,
-            "help": "Run using the conditioned profile.",
+            "help": "Run without the conditioned profile.",
         }],
         [["--geckoProfile"], {
             "dest": "gecko_profile",
@@ -517,8 +517,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--cold'])
         if self.config.get('enable_webrender', False):
             options.extend(['--enable-webrender'])
-        if self.config.get('with_conditioned_profile', False):
-            options.extend(['--with-conditioned-profile'])
+        if self.config.get('no_conditioned_profile', False):
+            options.extend(['--no-conditioned-profile'])
         if self.config.get('enable_fission', False):
             options.extend(['--enable-fission'])
         if self.config.get('extra_prefs'):
@@ -566,7 +566,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
         return super(Raptor, self).download_and_extract(
-            suite_categories=['common', 'raptor']
+            suite_categories=['common', 'condprof', 'raptor']
         )
 
     def create_virtualenv(self, **kwargs):

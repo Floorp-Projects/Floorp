@@ -38,6 +38,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "ActorManagerParent",
+  "resource://gre/modules/ActorManagerParent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
@@ -306,6 +311,8 @@ DevToolsStartup.prototype = {
     const isInitialLaunch =
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
+      this._registerDevToolsJsWindowActors();
+
       // Enable devtools for all users on startup (onboarding experiment from Bug 1408969
       // is over).
       Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
@@ -1096,6 +1103,23 @@ DevToolsStartup.prototype = {
       dump("DevTools telemetry entry point failed: " + e + "\n");
     }
     this.recorded = true;
+  },
+
+  _registerDevToolsJsWindowActors() {
+    ActorManagerParent.addActors({
+      DevToolsFrame: {
+        parent: {
+          moduleURI:
+            "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.jsm",
+        },
+        child: {
+          moduleURI:
+            "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm",
+        },
+        allFrames: true,
+      },
+    });
+    ActorManagerParent.flush();
   },
 
   // Used by tests and the toolbox to register the same key shortcuts in toolboxes loaded

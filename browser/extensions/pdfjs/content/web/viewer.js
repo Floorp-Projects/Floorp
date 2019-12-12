@@ -592,7 +592,6 @@ let PDFViewerApplication = {
     if (this.supportsFullscreen) {
       this.pdfPresentationMode = new _pdf_presentation_mode.PDFPresentationMode({
         container,
-        viewer,
         pdfViewer: this.pdfViewer,
         eventBus,
         contextMenuItems: appConfig.fullscreen
@@ -7044,13 +7043,11 @@ const SWIPE_ANGLE_THRESHOLD = Math.PI / 6;
 class PDFPresentationMode {
   constructor({
     container,
-    viewer = null,
     pdfViewer,
     eventBus,
     contextMenuItems = null
   }) {
     this.container = container;
-    this.viewer = viewer || container.firstElementChild;
     this.pdfViewer = pdfViewer;
     this.eventBus = eventBus;
     this.active = false;
@@ -7089,7 +7086,7 @@ class PDFPresentationMode {
   }
 
   request() {
-    if (this.switchInProgress || this.active || !this.viewer.hasChildNodes()) {
+    if (this.switchInProgress || this.active || !this.pdfViewer.pagesCount) {
       return false;
     }
 
@@ -9156,7 +9153,7 @@ class BaseViewer {
       return false;
     }
 
-    if (this.pageNumber < 1 || pageNumber > this.pagesCount) {
+    if (pageNumber < 1 || pageNumber > this.pagesCount) {
       console.error(`${this._name}.isPageVisible: "${pageNumber}" is out of bounds.`);
       return false;
     }

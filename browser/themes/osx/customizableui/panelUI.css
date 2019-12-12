@@ -65,7 +65,7 @@ menu.subviewbutton > .menu-right {
   padding: 0 !important;
 }
 
-#PanelUI-remotetabs-tabslist > label[itemtype="client"] {
+.PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
   padding-inline-start: 6px;
 }
 

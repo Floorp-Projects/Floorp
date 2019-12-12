@@ -30,7 +30,8 @@ class CompilerPreprocessor(Preprocessor):
     # simple "FOO" case.
     VARSUBST = re.compile('(?<!")(?P<VAR>\w+)(?!")', re.U)
     NON_WHITESPACE = re.compile('\S')
-    HAS_FEATURE_OR_BUILTIN = re.compile('(__has_(feature|builtin|attribute|warning))\(([^\)]*)\)')
+    HAS_FEATURE_OR_BUILTIN = re.compile(
+        '(__has_(?:feature|builtin|attribute|warning))\("?([^"\)]*)"?\)')
 
     def __init__(self, *args, **kwargs):
         Preprocessor.__init__(self, *args, **kwargs)
@@ -52,7 +53,9 @@ class CompilerPreprocessor(Preprocessor):
         # around that for __has_feature()-like things.
 
         def normalize_has_feature_or_builtin(expr):
-            return self.HAS_FEATURE_OR_BUILTIN.sub(r'\1\2', expr)
+            return self.HAS_FEATURE_OR_BUILTIN.sub(
+                r'\1\2', expr).replace('-', '_').replace('+', '_')
+
         self.context = self.Context(
             (normalize_has_feature_or_builtin(k), normalize_numbers(v))
             for k, v in context.iteritems()
@@ -98,6 +101,37 @@ class TestCompilerPreprocessor(unittest.TestCase):
         pp.do_include(input)
 
         self.assertEquals(pp.out.getvalue(), '1 . 2 . c "D"')
+
+    def test_normalization(self):
+        pp = CompilerPreprocessor({
+            '__has_attribute(bar)': '1',
+            '__has_warning("-Wc++98-foo")': '1',
+        })
+        pp.out = StringIO()
+        input = StringIO(dedent('''\
+        #if __has_warning("-Wbar")
+        WBAR
+        #endif
+        #if __has_warning("-Wc++98-foo")
+        WFOO
+        #endif
+        #if !__has_warning("-Wc++98-foo")
+        NO_WFOO
+        #endif
+        #if __has_attribute(bar)
+        BAR
+        #else
+        NO_BAR
+        #endif
+        #if !__has_attribute(foo)
+        NO_FOO
+        #endif
+        '''))
+
+        input.name = 'foo'
+        pp.do_include(input)
+
+        self.assertEquals(pp.out.getvalue(), 'WFOO\nBAR\nNO_FOO\n')
 
     def test_condition(self):
         pp = CompilerPreprocessor({

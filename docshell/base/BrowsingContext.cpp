@@ -891,8 +891,9 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
   }
 
   if (!aAccessor && XRE_IsParentProcess()) {
-    Unused << Canonical()->GetCurrentWindowGlobal()->SendLoadURIInChild(
-        aLoadState, aSetNavigating);
+    if (ContentParent* cp = Canonical()->GetContentParent()) {
+      Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
+    }
   } else {
     MOZ_DIAGNOSTIC_ASSERT(aAccessor);
     MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
@@ -920,7 +921,7 @@ nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
   }
 
   bool isActive =
-      aAccessor->GetIsActive() && !mIsActive &&
+      aAccessor && aAccessor->GetIsActive() && !mIsActive &&
       !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
   if (mDocShell) {
     nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(
@@ -941,9 +942,10 @@ nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
     return rv;
   }
 
-  if (!aAccessor && XRE_IsParentProcess()) {
-    Unused << Canonical()->GetCurrentWindowGlobal()->SendInternalLoadInChild(
-        aLoadState, isActive);
+  if (XRE_IsParentProcess()) {
+    if (ContentParent* cp = Canonical()->GetContentParent()) {
+      Unused << cp->SendInternalLoad(this, aLoadState, isActive);
+    }
   } else {
     MOZ_DIAGNOSTIC_ASSERT(aAccessor);
     MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
@@ -973,8 +975,9 @@ void BrowsingContext::DisplayLoadError(const nsAString& aURI) {
                                 PromiseFlatString(aURI).get(), nullptr,
                                 &didDisplayLoadError);
   } else {
-    Unused << Canonical()->GetCurrentWindowGlobal()->SendDisplayLoadError(
-        PromiseFlatString(aURI));
+    if (ContentParent* cp = Canonical()->GetContentParent()) {
+      Unused << cp->SendDisplayLoadError(this, PromiseFlatString(aURI));
+    }
   }
 }
 
@@ -987,6 +990,9 @@ WindowProxyHolder BrowsingContext::GetFrames(ErrorResult& aError) {
 }
 
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
+  if (mIsDiscarded) {
+    return;
+  }
   // FIXME We need to set mClosed, but only once we're sending the
   //       DOMWindowClose event (which happens in the process where the
   //       document for this browsing context is loaded).

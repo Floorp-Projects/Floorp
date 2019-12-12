@@ -58,6 +58,8 @@ function DebuggerServerConnection(prefix, transport, socketListener) {
    * packets to the server whose actors' names all begin with P + "/".
    */
   this._forwardingPrefixes = new Map();
+
+  EventEmitter.decorate(this);
 }
 exports.DebuggerServerConnection = DebuggerServerConnection;
 
@@ -472,7 +474,7 @@ DebuggerServerConnection.prototype = {
     }
     this._actorPool = null;
 
-    EventEmitter.emit(this, "closed", status);
+    this.emit("closed", status, this.prefix);
 
     this._extraPools.forEach(p => p.destroy());
     this._extraPools = null;

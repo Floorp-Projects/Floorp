@@ -1186,6 +1186,8 @@ public class GeckoViewActivity
                 }
                 resId = R.string.request_storage;
                 contentPermissionCallback = new ExamplePersistentStorageCallback(callback, uri);
+            } else if (PERMISSION_XR == type) {
+                resId = R.string.request_xr;
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
                 callback.reject();

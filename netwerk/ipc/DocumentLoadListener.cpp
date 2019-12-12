@@ -149,6 +149,7 @@ bool DocumentLoadListener::Open(
   }
 
   mChannelCreationURI = aLoadState->URI();
+  mLoadStateLoadFlags = aLoadState->LoadFlags();
   return true;
 }
 

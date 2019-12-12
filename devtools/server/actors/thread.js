@@ -2063,6 +2063,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.sources.hasSourceActor(source)
     ) {
       sourceActor = this.sources.getSourceActor(source);
+      sourceActor.resetDebuggeeScripts();
     } else {
       sourceActor = this.sources.createSourceActor(source);
     }
