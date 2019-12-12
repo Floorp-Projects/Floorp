@@ -3140,13 +3140,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     MOZ_ASSERT(*aOutGuardedByQualifiedPref);
     return featureWebRenderQualified;
   }
-#else  // !MOZ_WIDGET_ANDROID
-#  ifndef NIGHTLY_BUILD
-  featureWebRenderQualified.Disable(
-      FeatureStatus::BlockedReleaseChannelAndroid,
-      "Release channel and Android",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_ANDROID"));
-#  endif
 #endif
   return featureWebRenderQualified;
 }
