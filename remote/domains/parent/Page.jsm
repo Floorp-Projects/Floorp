@@ -72,31 +72,37 @@ class Page extends Domain {
     const { browsingContext, window } = this.session.target;
     const scale = window.devicePixelRatio;
 
-    const rect = await this.executeInChild("_viewportRect");
+    const rect = await this.executeInChild("_layoutViewport");
 
-    let canvasWidth = rect.width * scale;
-    let canvasHeight = rect.height * scale;
+    let canvasWidth = rect.clientWidth * scale;
+    let canvasHeight = rect.clientHeight * scale;
 
     // Cap the screenshot size based on maximum allowed canvas sizes.
     // Using higher dimensions would trigger exceptions in Gecko.
     //
     // See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas#Maximum_canvas_size
     if (canvasWidth > MAX_CANVAS_DIMENSION) {
-      rect.width = Math.floor(MAX_CANVAS_DIMENSION / scale);
-      canvasWidth = rect.width * scale;
+      rect.clientWidth = Math.floor(MAX_CANVAS_DIMENSION / scale);
+      canvasWidth = rect.clientWidth * scale;
     }
     if (canvasHeight > MAX_CANVAS_DIMENSION) {
-      rect.height = Math.floor(MAX_CANVAS_DIMENSION / scale);
-      canvasHeight = rect.height * scale;
+      rect.clientHeight = Math.floor(MAX_CANVAS_DIMENSION / scale);
+      canvasHeight = rect.clientHeight * scale;
     }
     // If the area is larger, reduce the height to keep the full width.
     if (canvasWidth * canvasHeight > MAX_CANVAS_AREA) {
-      rect.height = Math.floor(MAX_CANVAS_AREA / (canvasWidth * scale));
-      canvasHeight = rect.height * scale;
+      rect.clientHeight = Math.floor(MAX_CANVAS_AREA / (canvasWidth * scale));
+      canvasHeight = rect.clientHeight * scale;
     }
 
+    const captureRect = new DOMRect(
+      rect.pageX,
+      rect.pageY,
+      rect.clientWidth,
+      rect.clientHeight
+    );
     const snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
-      rect,
+      captureRect,
       scale,
       "rgb(255,255,255)"
     );
@@ -163,6 +169,59 @@ class Page extends Domain {
     // Focus the window, and select the corresponding tab
     await WindowManager.focus(window);
     TabManager.selectTab(tab);
+  }
+
+  /**
+   * Return metrics relating to the layouting of the page.
+   *
+   * The returned object contains the following entries:
+   *
+   * layoutViewport:
+   *     {number} pageX
+   *         Horizontal offset relative to the document (CSS pixels)
+   *     {number} pageY
+   *         Vertical offset relative to the document (CSS pixels)
+   *     {number} clientWidth
+   *         Width (CSS pixels), excludes scrollbar if present
+   *     {number} clientHeight
+   *         Height (CSS pixels), excludes scrollbar if present
+   *
+   * visualViewport:
+   *     {number} offsetX
+   *         Horizontal offset relative to the layout viewport (CSS pixels)
+   *     {number} offsetY
+   *         Vertical offset relative to the layout viewport (CSS pixels)
+   *     {number} pageX
+   *         Horizontal offset relative to the document (CSS pixels)
+   *     {number} pageY
+   *         Vertical offset relative to the document (CSS pixels)
+   *     {number} clientWidth
+   *         Width (CSS pixels), excludes scrollbar if present
+   *     {number} clientHeight
+   *         Height (CSS pixels), excludes scrollbar if present
+   *     {number} scale
+   *         Scale relative to the ideal viewport (size at width=device-width)
+   *     {number} zoom
+   *         Page zoom factor (CSS to device independent pixels ratio)
+   *
+   * contentSize:
+   *     {number} x
+   *         X coordinate
+   *     {number} y
+   *         Y coordinate
+   *     {number} width
+   *         Width of scrollable area
+   *     {number} height
+   *         Height of scrollable area
+   *
+   * @return {Promise}
+   * @resolves {layoutViewport, visualViewport, contentSize}
+   */
+  async getLayoutMetrics() {
+    return {
+      layoutViewport: await this.executeInChild("_layoutViewport"),
+      contentSize: await this.executeInChild("_contentSize"),
+    };
   }
 
   /**

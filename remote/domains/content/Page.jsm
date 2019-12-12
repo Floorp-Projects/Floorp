@@ -91,15 +91,6 @@ class Page extends ContentProcessDomain {
     }
   }
 
-  _viewportRect() {
-    return new DOMRect(
-      this.content.pageXOffset,
-      this.content.pageYOffset,
-      this.content.innerWidth,
-      this.content.innerHeight
-    );
-  }
-
   async navigate({ url, referrer, transitionType, frameId } = {}) {
     if (frameId && frameId != this.content.windowUtils.outerWindowID) {
       throw new UnsupportedError("frameId not supported");
@@ -305,6 +296,44 @@ class Page extends ContentProcessDomain {
 
         break;
     }
+  }
+
+  _contentSize() {
+    const docEl = this.content.document.documentElement;
+
+    return {
+      x: 0,
+      y: 0,
+      width: docEl.scrollWidth,
+      height: docEl.scrollHeight,
+    };
+  }
+
+  _getScrollbarSize() {
+    const scrollbarHeight = {};
+    const scrollbarWidth = {};
+
+    this.content.windowUtils.getScrollbarSize(
+      false,
+      scrollbarWidth,
+      scrollbarHeight
+    );
+
+    return {
+      width: scrollbarWidth.value,
+      height: scrollbarHeight.value,
+    };
+  }
+
+  _layoutViewport() {
+    const scrollbarSize = this._getScrollbarSize();
+
+    return {
+      pageX: this.content.pageXOffset,
+      pageY: this.content.pageYOffset,
+      clientWidth: this.content.innerWidth - scrollbarSize.width,
+      clientHeight: this.content.innerHeight - scrollbarSize.height,
+    };
   }
 }
 

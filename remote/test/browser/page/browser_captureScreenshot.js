@@ -11,18 +11,14 @@ add_task(async function documentSmallerThanViewport({ Page }) {
   ok(!!data, "Screenshot data is not empty");
 
   const scale = await getDevicePixelRatio();
-  const viewportRect = await getViewportRect();
+  const viewport = await getViewportSize();
   const { mimeType, width, height } = await getImageDetails(data);
 
   is(mimeType, "image/png", "Screenshot has correct MIME type");
-  is(
-    width,
-    (viewportRect.width - viewportRect.left) * scale,
-    "Image has expected width"
-  );
+  is(width, (viewport.width - viewport.x) * scale, "Image has expected width");
   is(
     height,
-    (viewportRect.height - viewportRect.top) * scale,
+    (viewport.height - viewport.y) * scale,
     "Image has expected height"
   );
 });
@@ -35,18 +31,19 @@ add_task(async function documentLargerThanViewport({ Page }) {
   ok(!!data, "Screenshot data is not empty");
 
   const scale = await getDevicePixelRatio();
-  const viewportRect = await getViewportRect();
+  const scrollbarSize = await getScrollbarSize();
+  const viewport = await getViewportSize();
   const { mimeType, width, height } = await getImageDetails(data);
 
   is(mimeType, "image/png", "Screenshot has correct MIME type");
   is(
     width,
-    (viewportRect.width - viewportRect.left) * scale,
+    (viewport.width - viewport.x - scrollbarSize.width) * scale,
     "Image has expected width"
   );
   is(
     height,
-    (viewportRect.height - viewportRect.top) * scale,
+    (viewport.height - viewport.y - scrollbarSize.height) * scale,
     "Image has expected height"
   );
 });
@@ -71,12 +68,12 @@ add_task(async function asJPEGFormat({ Page }) {
   ok(!!data, "Screenshot data is not empty");
 
   const scale = await getDevicePixelRatio();
-  const viewportRect = await getViewportRect();
+  const viewport = await getViewportSize();
   const { mimeType, height, width } = await getImageDetails(data);
 
   is(mimeType, "image/jpeg", "Screenshot has correct MIME type");
-  is(width, (viewportRect.width - viewportRect.left) * scale);
-  is(height, (viewportRect.height - viewportRect.top) * scale);
+  is(width, (viewport.width - viewport.x) * scale);
+  is(height, (viewport.height - viewport.y) * scale);
 });
 
 add_task(async function asJPEGFormatAndQuality({ Page }) {
@@ -120,17 +117,17 @@ add_task(async function asJPEGFormatAndQuality({ Page }) {
   );
 
   const scale = await getDevicePixelRatio();
-  const viewportRect = await getViewportRect();
+  const viewport = await getViewportSize();
 
   // Images are all of the same dimension
-  is(infoDefault.width, (viewportRect.width - viewportRect.left) * scale);
-  is(infoDefault.height, (viewportRect.height - viewportRect.top) * scale);
+  is(infoDefault.width, (viewport.width - viewport.x) * scale);
+  is(infoDefault.height, (viewport.height - viewport.y) * scale);
 
-  is(info100.width, (viewportRect.width - viewportRect.left) * scale);
-  is(info100.height, (viewportRect.height - viewportRect.top) * scale);
+  is(info100.width, (viewport.width - viewport.x) * scale);
+  is(info100.height, (viewport.height - viewport.y) * scale);
 
-  is(info10.width, (viewportRect.width - viewportRect.left) * scale);
-  is(info10.height, (viewportRect.height - viewportRect.top) * scale);
+  is(info10.width, (viewport.width - viewport.x) * scale);
+  is(info10.height, (viewport.height - viewport.y) * scale);
 
   // Images of different quality result in different content sizes
   ok(
@@ -197,15 +194,4 @@ function getMimeType(image) {
     default:
       throw new Error("Unknown MIME type");
   }
-}
-
-async function getViewportRect() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    return {
-      left: content.pageXOffset,
-      top: content.pageYOffset,
-      width: content.innerWidth,
-      height: content.innerHeight,
-    };
-  });
 }
