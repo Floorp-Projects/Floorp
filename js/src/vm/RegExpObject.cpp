@@ -1295,15 +1295,6 @@ RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom source,
   return shared;
 }
 
-RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom atom, JSString* opt) {
-  RegExpFlags flags = RegExpFlag::NoFlags;
-  if (opt && !ParseRegExpFlags(cx, opt, &flags)) {
-    return nullptr;
-  }
-
-  return get(cx, atom, flags);
-}
-
 size_t RegExpZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   return set_.sizeOfExcludingThis(mallocSizeOf);
 }
