@@ -55,6 +55,8 @@ class CrashTest {
 
     @Test
     fun crashParent() {
+        Assume.assumeFalse(env.isX86) // Too flaky on x86
+
         messenger.send(Message.obtain(null, RemoteGeckoService.CMD_CRASH_PARENT_NATIVE))
         assertCrashIntent(CrashTestHandler.queue.take(), true)
     }
