@@ -122,6 +122,7 @@ use style::stylesheets::{CounterStyleRule, CssRule, CssRuleType, CssRules, CssRu
 use style::stylesheets::{DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule};
 use style::stylesheets::{KeyframesRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule};
 use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraData};
+use style::stylesheets::{SanitizationData, SanitizationKind};
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
 use style::timer::Timer;
@@ -1509,6 +1510,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
         QuirksMode::NoQuirks,
         0,
         /* use_counters = */ None,
+        /* sanitization_data = */ None,
     ))
     .into_strong()
 }
@@ -1517,7 +1519,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
 /// load data for child sheet loads. It may be null for certain cases where we
 /// know we won't have child loads.
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
+pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     loader: *mut Loader,
     stylesheet: *mut DomStyleSheet,
     load_data: *mut SheetLoadData,
@@ -1528,15 +1530,21 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     quirks_mode: nsCompatibility,
     reusable_sheets: *mut LoaderReusableStyleSheets,
     use_counters: Option<&UseCounters>,
+    sanitization_kind: SanitizationKind,
+    sanitized_output: Option<&mut nsAString>,
 ) -> Strong<RawServoStyleSheetContents> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
-    let input: &str = unsafe { bytes.as_str_unchecked() };
+    let input = bytes.as_str_unchecked();
 
     let reporter = ErrorReporter::new(stylesheet, loader, extra_data);
-    let url_data = unsafe { UrlExtraData::from_ptr_ref(&extra_data) };
+    let url_data = UrlExtraData::from_ptr_ref(&extra_data);
     let loader = if loader.is_null() {
         None
     } else {
+        debug_assert!(
+            sanitized_output.is_none(),
+            "Shouldn't trigger @import loads for sanitization",
+        );
         Some(StylesheetLoader::new(
             loader,
             stylesheet,
@@ -1551,7 +1559,9 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         Some(ref s) => Some(s),
     };
 
-    Arc::new(StylesheetContents::from_str(
+    let mut sanitization_data = SanitizationData::new(sanitization_kind);
+
+    let contents = Arc::new(StylesheetContents::from_str(
         input,
         url_data.clone(),
         mode_to_origin(mode),
@@ -1561,8 +1571,14 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         quirks_mode.into(),
         line_number_offset,
         use_counters,
-    ))
-    .into_strong()
+        sanitization_data.as_mut(),
+    ));
+
+    if let Some(data) = sanitization_data {
+        sanitized_output.unwrap().assign_utf8(data.take().as_bytes());
+    }
+
+    contents.into_strong()
 }
 
 #[no_mangle]
