@@ -256,9 +256,6 @@ class RegExpZone {
 
   RegExpShared* get(JSContext* cx, HandleAtom source, JS::RegExpFlags flags);
 
-  /* Like 'get', but compile 'maybeOpt' (if non-null). */
-  RegExpShared* get(JSContext* cx, HandleAtom source, JSString* maybeOpt);
-
 #ifdef DEBUG
   void clear() { set_.clear(); }
 #endif
