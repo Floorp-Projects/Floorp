@@ -75,12 +75,14 @@ csp_testframe.src = "file_ignore_xfo.html";
 
 // 2) test XFO with CSP_RO
 var csp_ro_testframe = document.getElementById("csp_ro_testframe");
-// If XFO denies framing the neither the onload, nor the onerror
-// event should fire, because we are displaying a about:neterror.
-// The actual error we are detecting within this test comes from
-// the xfo-on-violation-polcy observer.
+// If XFO denies framing the onload event handler should fire. At the
+// moment we are displaying about:blank (in regular mode and the error page
+// if fission is enabled) in case XFO blocks a frame, but after Bug 1601887
+// we are going to display about:neterror, but the onload event should still
+// fire. Please note that for the purpose of this test, the actual error we
+// are detecting comes from the xfo-on-violation-polcy observer.
 csp_ro_testframe.onload = function() {
-  ok(false, "sanity: should not fire onload for csp_ro_testframe");
+  ok(true, "sanity: should not fire onload for csp_ro_testframe");
   checkFinished();
 }
 csp_ro_testframe.onerror = function() {
