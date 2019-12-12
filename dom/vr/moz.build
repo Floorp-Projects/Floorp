@@ -11,14 +11,16 @@ EXPORTS.mozilla.dom += [
     'VRDisplay.h',
     'VRDisplayEvent.h',
     'VREventObserver.h',
-    'VRServiceTest.h'
+    'VRServiceTest.h',
+    'XRPermissionRequest.h',
     ]
 
 UNIFIED_SOURCES = [
     'VRDisplay.cpp',
     'VRDisplayEvent.cpp',
     'VREventObserver.cpp',
-    'VRServiceTest.cpp'
+    'VRServiceTest.cpp',
+    'XRPermissionRequest.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
