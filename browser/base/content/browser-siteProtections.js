@@ -1652,7 +1652,7 @@ var gProtectionsHandler = {
     // priority by the handler.
     // Content blocking events coming after stopping will not be merged, and are
     // sent directly.
-    if (!this._isStoppedState) {
+    if (!this._isStoppedState || !this.anyDetected) {
       return;
     }
 
@@ -1670,10 +1670,15 @@ var gProtectionsHandler = {
     );
   },
 
-  onStateChange(stateFlags) {
+  onStateChange(aWebProgress, stateFlags) {
+    if (!aWebProgress.isTopLevel) {
+      return;
+    }
+
     this._isStoppedState = !!(
       stateFlags & Ci.nsIWebProgressListener.STATE_STOP
     );
+
     this.notifyContentBlockingEvent(gBrowser.securityUI.contentBlockingEvent);
   },
 
@@ -1688,7 +1693,7 @@ var gProtectionsHandler = {
       return;
     }
 
-    let anyDetected = false;
+    this.anyDetected = false;
     let anyBlocking = false;
     this.noTrackersDetectedDescription.hidden = false;
 
@@ -1703,7 +1708,7 @@ var gProtectionsHandler = {
       blocker.activated = blocker.isBlocking(event);
       let detected = blocker.isDetected(event);
       blocker.categoryItem.classList.toggle("notFound", !detected);
-      anyDetected = anyDetected || detected;
+      this.anyDetected = this.anyDetected || detected;
       anyBlocking = anyBlocking || blocker.activated;
     }
 
@@ -1727,13 +1732,13 @@ var gProtectionsHandler = {
     // occurs on the page.  Note that merely allowing the loading of content that
     // we could have blocked does not trigger the appearance of the shield.
     // This state will be overriden later if there's an exception set for this site.
-    this._protectionsPopup.toggleAttribute("detected", anyDetected);
+    this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
     this._protectionsPopup.toggleAttribute("blocking", anyBlocking);
     this._protectionsPopup.toggleAttribute("hasException", hasException);
 
     this._categoryItemOrderInvalidated = true;
 
-    if (anyDetected) {
+    if (this.anyDetected) {
       this.noTrackersDetectedDescription.hidden = true;
 
       if (["showing", "open"].includes(this._protectionsPopup.state)) {
@@ -1768,7 +1773,12 @@ var gProtectionsHandler = {
       this.showNoTrackerTooltipForTPIcon();
     }
 
-    this.notifyContentBlockingEvent(event);
+    // Don't send a content blocking event to CFR for
+    // tab switches since this will already be done via
+    // onStateChange.
+    if (!isSimulated) {
+      this.notifyContentBlockingEvent(event);
+    }
 
     // We report up to one instance of fingerprinting and cryptomining
     // blocking and/or allowing per page load.
