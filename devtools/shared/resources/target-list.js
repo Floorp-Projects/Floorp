@@ -211,6 +211,11 @@ class TargetList {
         this._onTargetDestroyed
       ),
     };
+
+    // Public flag to allow listening for workers even if the fission pref is off
+    // This allows listening for workers in the content toolbox outside of fission contexts
+    // For now, this is only toggled by tests.
+    this.listenForWorkers = false;
   }
 
   _fissionEnabled() {
@@ -295,7 +300,11 @@ class TargetList {
       this._setListening(type, true);
 
       // We only listen for additional target when the fission pref is turned on.
-      if (!this._fissionEnabled()) {
+      // Or we we explicitely ask for workers without the fission pref.
+      if (
+        !this._fissionEnabled() &&
+        !(type == "worker" && this.listenForWorkers)
+      ) {
         continue;
       }
       if (this.legacyImplementation[type]) {
@@ -314,8 +323,13 @@ class TargetList {
         continue;
       }
       this._setListening(type, false);
+
       // We only listen for additional target when the fission pref is turned on.
-      if (!this._fissionEnabled()) {
+      // Or we we explicitely ask for workers without the fission pref.
+      if (
+        !this._fissionEnabled() &&
+        !(type == "worker" && this.listenForWorkers)
+      ) {
         continue;
       }
       if (this.legacyImplementation[type]) {
