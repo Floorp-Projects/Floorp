@@ -3326,7 +3326,7 @@ void gfxPlatform::InitWebRenderConfig() {
 
 void gfxPlatform::InitWebGPUConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
-  feature.SetDefaultFromPref("dom.webgpu.enable", true, false);
+  feature.SetDefaultFromPref("dom.webgpu.enabled", true, false);
 }
 
 void gfxPlatform::InitOMTPConfig() {

@@ -53,8 +53,8 @@ dictionary GPUObjectDescriptorBase {
 // ****************************************************************************
 
 [
-    Pref="dom.webgpu.enable",
-    Exposed=Window,
+    Pref="dom.webgpu.enabled",
+    Exposed=Window
 ]
 interface GPU {
     // May reject with DOMException
@@ -64,7 +64,7 @@ interface GPU {
 
 // Add a "webgpu" member to Navigator/Worker that contains the global instance of a "WebGPU"
 interface mixin GPUProvider {
-    [SameObject, Replaceable, Pref="dom.webgpu.enable", Exposed=Window] readonly attribute GPU gpu;
+    [SameObject, Replaceable, Pref="dom.webgpu.enabled", Exposed=Window] readonly attribute GPU gpu;
 };
 
 enum GPUPowerPreference {
@@ -76,7 +76,7 @@ dictionary GPURequestAdapterOptions {
     GPUPowerPreference powerPreference;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUAdapter {
     readonly attribute DOMString name;
@@ -98,7 +98,7 @@ dictionary GPULimits {
 };
 
 // Device
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUDevice {
     //GPUExtensions getExtensions();
@@ -138,7 +138,7 @@ dictionary GPUDeviceDescriptor {
 // ERROR HANDLING
 // ****************************************************************************
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUDeviceLostInfo {
     readonly attribute DOMString message;
@@ -150,13 +150,13 @@ enum GPUErrorFilter {
     "validation"
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUOutOfMemoryError {
     //constructor();
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUValidationError {
     //constructor(DOMString message);
@@ -179,7 +179,7 @@ partial interface GPUDevice {
 
 // Buffer
 typedef u32 GPUBufferUsageFlags;
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBufferUsage {
     const u32 NONE      = 0x0000;
@@ -199,7 +199,7 @@ dictionary GPUBufferDescriptor {
     required GPUBufferUsageFlags usage;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBuffer {
     //Promise<ArrayBuffer> mapReadAsync();
@@ -273,7 +273,7 @@ enum GPUTextureFormat {
 };
 
 typedef u32 GPUTextureUsageFlags;
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUTextureUsage {
     const u32 NONE              = 0x00;
@@ -294,7 +294,7 @@ dictionary GPUTextureDescriptor {
     required GPUTextureUsageFlags usage;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUTexture {
     //GPUTextureView createView(GPUTextureViewDescriptor descriptor);
@@ -329,7 +329,7 @@ dictionary GPUTextureViewDescriptor : GPUObjectDescriptorBase {
     u32 arrayLayerCount = 1;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUTextureView {
 };
@@ -370,7 +370,7 @@ dictionary GPUSamplerDescriptor : GPUObjectDescriptorBase {
     GPUCompareFunction compare = "never";
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUSampler {
 };
@@ -391,7 +391,7 @@ dictionary GPUPipelineLayoutDescriptor : GPUObjectDescriptorBase {
     required sequence<GPUBindGroupLayout> bindGroupLayouts;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUPipelineLayout {
 };
@@ -399,7 +399,7 @@ GPUPipelineLayout includes GPUObjectBase;
 
 // BindGroupLayout
 typedef u32 GPUShaderStageFlags;
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUShaderStage {
     const u32 NONE = 0;
@@ -431,7 +431,7 @@ dictionary GPUBindGroupLayoutDescriptor : GPUObjectDescriptorBase {
     required sequence<GPUBindGroupLayoutBinding> bindings;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBindGroupLayout {
 };
@@ -456,7 +456,7 @@ dictionary GPUBindGroupDescriptor : GPUObjectDescriptorBase {
     required sequence<GPUBindGroupBinding> bindings;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUBindGroup {
 };
@@ -498,7 +498,7 @@ dictionary GPUBlendDescriptor {
 };
 
 typedef u32 GPUColorWriteFlags;
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUColorWrite {
     const u32 NONE = 0;
@@ -617,7 +617,7 @@ dictionary GPUShaderModuleDescriptor : GPUObjectDescriptorBase {
     required GPUShaderCode code;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUShaderModule {
 };
@@ -638,7 +638,7 @@ dictionary GPUComputePipelineDescriptor : GPUPipelineDescriptorBase {
     required GPUProgrammableStageDescriptor computeStage;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUComputePipeline {
 };
@@ -688,7 +688,7 @@ dictionary GPURenderPipelineDescriptor : GPUPipelineDescriptorBase {
     boolean alphaToCoverageEnabled = false;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderPipeline {
 };
@@ -752,7 +752,7 @@ dictionary GPUImageBitmapCopyView {
 dictionary GPUCommandEncoderDescriptor : GPUObjectDescriptorBase {
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUCommandEncoder {
     //GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
@@ -795,7 +795,7 @@ interface GPUCommandEncoder {
 };
 GPUCommandEncoder includes GPUObjectBase;
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUProgrammablePassEncoder {
     //void setBindGroup(u32 index, GPUBindGroup bindGroup,
@@ -808,7 +808,7 @@ interface GPUProgrammablePassEncoder {
 GPUProgrammablePassEncoder includes GPUObjectBase;
 
 // Render Pass
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderEncoderBase : GPUProgrammablePassEncoder {
     //void setPipeline(GPURenderPipeline pipeline);
@@ -826,7 +826,7 @@ interface GPURenderEncoderBase : GPUProgrammablePassEncoder {
     //void drawIndexedIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderPassEncoder : GPURenderEncoderBase {
     //void setViewport(float x, float y,
@@ -846,7 +846,7 @@ interface GPURenderPassEncoder : GPURenderEncoderBase {
 dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUComputePassEncoder : GPUProgrammablePassEncoder {
     //void setPipeline(GPUComputePipeline pipeline);
@@ -860,7 +860,7 @@ interface GPUComputePassEncoder : GPUProgrammablePassEncoder {
 dictionary GPUCommandBufferDescriptor : GPUObjectDescriptorBase {
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUCommandBuffer {
 };
@@ -873,7 +873,7 @@ dictionary GPURenderBundleEncoderDescriptor : GPUObjectDescriptorBase {
 };
 
 // Render Bundle
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderBundleEncoder : GPURenderEncoderBase {
     //GPURenderBundle finish(optional GPURenderBundleDescriptor descriptor = {});
@@ -882,7 +882,7 @@ interface GPURenderBundleEncoder : GPURenderEncoderBase {
 dictionary GPURenderBundleDescriptor : GPUObjectDescriptorBase {
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderBundle {
 };
@@ -897,7 +897,7 @@ dictionary GPUFenceDescriptor : GPUObjectDescriptorBase {
     u64 initialValue = 0;
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUFence {
     //u64 getCompletedValue();
@@ -906,7 +906,7 @@ interface GPUFence {
 GPUFence includes GPUObjectBase;
 
 // Queue
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUQueue {
     //void submit(sequence<GPUCommandBuffer> buffers);
@@ -916,7 +916,7 @@ interface GPUQueue {
 };
 GPUQueue includes GPUObjectBase;
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUSwapChain {
     //GPUTexture getCurrentTexture();
@@ -929,7 +929,7 @@ dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
     GPUTextureUsageFlags usage = 0x10;  // GPUTextureUsage.OUTPUT_ATTACHMENT
 };
 
-[Pref="dom.webgpu.enable",
+[Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUCanvasContext {
     // Calling configureSwapChain a second time invalidates the previous one,
