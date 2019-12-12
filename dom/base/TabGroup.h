@@ -95,11 +95,6 @@ class TabGroup final : public SchedulerGroup,
 
   Iterator Iter() { return mDocGroups.Iter(); }
 
-  // Returns the size of the set of "similar-origin" DocGroups. To
-  // only consider DocGroups with at least one active document, call
-  // Count with 'aActiveOnly' = true
-  uint32_t Count(bool aActiveOnly = false) const;
-
   const nsTArray<nsPIDOMWindowOuter*>& GetWindows() { return mWindows; }
 
   // This method is always safe to call off the main thread. The nsIEventTarget
