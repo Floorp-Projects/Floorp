@@ -303,6 +303,8 @@ class TrySelect(MachCommandBase):
             kwargs_copy['push'] = False
             kwargs_copy['save'] = None
             kwargs['query'] = self.run(save_query=True, **kwargs_copy)
+            if not kwargs['query']:
+                return
 
         if kwargs.get('paths'):
             kwargs['test_paths'] = kwargs['paths']
