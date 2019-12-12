@@ -633,3 +633,7 @@ Cron-driven tasks that bump l10n-changesets files in-tree, using data from the l
 system-symbols
 --------------
 Generate missing macOS and windows system symbols from crash reports.
+
+system-symbols-upload
+---------------------
+Upload macOS and windows system symbols to tecken.
