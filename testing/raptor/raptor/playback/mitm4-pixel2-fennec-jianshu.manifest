@@ -1,11 +1,10 @@
 [
   {
-    "size": 3640621,
-    "visibility": "public",
-    "digest": "f779e68181cf1d34e3ac9624b3fbf46607827796baf8878588b5651cf3e28ff2b3d26806ac8bbc44e892c06233a6c2e6db598aa6d34ea90a4c3738d429425142",
     "algorithm": "sha512",
+    "digest": "83c6c843cf03c98db5fceb11051643b955c881c1226578697f37b5066f889ac3c090dfd86d298bd11391b47d904ace59b17f7d0fbe4249b8249bf317a2721a90",
     "filename": "mitm4-pixel2-fennec-jianshu.zip",
-    "unpack": true
+    "size": 10055373,
+    "unpack": true,
+    "visibility": "public"
   }
 ]
-
