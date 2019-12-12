@@ -1,7 +1,11 @@
 /* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * The origin of this IDL file is
+ * https://immersive-web.github.io/webvr/spec/1.1/
+ */
 
 enum VREye {
   "left",
@@ -10,6 +14,7 @@ enum VREye {
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRFieldOfView {
   readonly attribute double upDegrees;
@@ -51,6 +56,7 @@ dictionary VRLayer {
  */
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRDisplayCapabilities {
   /**
@@ -93,6 +99,7 @@ interface VRDisplayCapabilities {
  */
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRStageParameters {
   /**
@@ -119,6 +126,7 @@ interface VRStageParameters {
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRPose
 {
@@ -140,6 +148,7 @@ interface VRPose
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRFrameData {
   constructor();
@@ -157,6 +166,7 @@ interface VRFrameData {
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VREyeParameters {
   /**
@@ -181,6 +191,7 @@ interface VREyeParameters {
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
  Exposed=Window]
 interface VRDisplay : EventTarget {
   /**

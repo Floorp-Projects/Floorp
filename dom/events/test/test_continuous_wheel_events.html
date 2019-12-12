@@ -69,7 +69,7 @@ function* prepareScrollUnits()
     result = aEvent.detail;
     aEvent.preventDefault();
   }
-  window.addEventListener("MozMousePixelScroll", handler, true);
+  window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
   yield sendWheelAndWait(10, 10,
                          { deltaMode: WheelEvent.DOM_DELTA_LINE,
@@ -3153,9 +3153,9 @@ function* testContinuousTrustedEvents()
     }
   }
 
-  window.addEventListener("wheel", wheelEventHandler, true);
-  window.addEventListener("DOMMouseScroll", legacyEventHandler, true);
-  window.addEventListener("MozMousePixelScroll", legacyEventHandler, true);
+  window.addEventListener("wheel", wheelEventHandler, { capture: true, passive: false });
+  window.addEventListener("DOMMouseScroll", legacyEventHandler, { capture: true, passive: false });
+  window.addEventListener("MozMousePixelScroll", legacyEventHandler, { capture: true, passive: false });
 
   for (var i = 0; i < kSynthesizedWheelEventTests.length; i++) {
     gScrollableElement.scrollTop = gScrollableElement.scrollBottom = 1000;

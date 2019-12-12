@@ -54,10 +54,11 @@ class TaskQueue : public AbstractThread {
 
  public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     bool aSupportsTailDispatch = false);
+                     bool aSupportsTailDispatch = false,
+                     bool aRetainFlags = false);
 
   TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
-            bool aSupportsTailDispatch = false);
+            bool aSupportsTailDispatch = false, bool aRetainFlags = false);
 
   TaskDispatcher& TailDispatcher() override;
 
@@ -127,8 +128,13 @@ class TaskQueue : public AbstractThread {
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
 
+  typedef struct {
+    nsCOMPtr<nsIRunnable> event;
+    uint32_t flags;
+  } TaskStruct;
+
   // Queue of tasks to run.
-  std::queue<nsCOMPtr<nsIRunnable>> mTasks;
+  std::queue<TaskStruct> mTasks;
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -156,13 +162,13 @@ class TaskQueue : public AbstractThread {
       sCurrentThreadTLS.set(aQueue);
 
       MOZ_ASSERT(mQueue->mRunningThread == nullptr);
-      mQueue->mRunningThread = GetCurrentPhysicalThread();
+      mQueue->mRunningThread = PR_GetCurrentThread();
     }
 
     ~AutoTaskGuard() {
       DrainDirectTasks();
 
-      MOZ_ASSERT(mQueue->mRunningThread == GetCurrentPhysicalThread());
+      MOZ_ASSERT(mQueue->mRunningThread == PR_GetCurrentThread());
       mQueue->mRunningThread = nullptr;
 
       sCurrentThreadTLS.set(mLastCurrentThread);
@@ -175,6 +181,11 @@ class TaskQueue : public AbstractThread {
   };
 
   TaskDispatcher* mTailDispatcher;
+
+  // TaskQueues should specify if they want all tasks to dispatch with their
+  // original flags included, which means the flags will be retained in the
+  // TaskStruct.
+  bool mShouldRetainFlags;
 
   // True if we've dispatched an event to the target to execute events from
   // the queue.

@@ -858,6 +858,10 @@ ReplayDebuggerScript.prototype = {
     return this._data.mainOffset;
   },
 
+  getChildScripts() {
+    return this._data.childScripts.map(id => this._dbg._getScript(id));
+  },
+
   _forward(type, value) {
     return this._dbg._sendRequestMainChild({ type, id: this._data.id, value });
   },
@@ -939,7 +943,6 @@ ReplayDebuggerScript.prototype = {
   get isAsyncFunction() {
     NYI();
   },
-  getChildScripts: NYI,
   getAllOffsets: NYI,
   getBreakpoints: NYI,
   clearAllBreakpoints: NYI,
