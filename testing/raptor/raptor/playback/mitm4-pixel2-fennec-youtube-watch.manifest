@@ -1,11 +1,10 @@
 [
   {
-    "size": 2378051,
-    "visibility": "public",
-    "digest": "d47a21505b3bdd5682458aa037fee0732985631e86ed87eda10154bfcbaf7b4977d1dda5ede1d90fbbced17011a6209409c63ef8f2b4ff871731762a6bebb064",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-youtube-watch.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "89d27ebccdceb5c18a518863c8c236d604ab178dadf5065aefedce7da4138e0f4cc10099f1adbae391c8800c0a487df9ceec8a6f8e0f4798b21c629cf0a70950",
+    "size": 4412413
   }
 ]
-

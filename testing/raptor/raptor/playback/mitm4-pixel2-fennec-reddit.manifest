@@ -1,11 +1,10 @@
 [
   {
-    "size": 2483700,
-    "visibility": "public",
-    "digest": "2e7bb38ed894732634123d865aae0eb001f0dfcac221c2287304bdf4461580729fa6d8f999f3f7ae1db41bfe447d057d0fcee22d5336c9e47268a16f46924be5",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-reddit.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "2ca1b004911121d8758ca50c4de40be3fefa087399f392731dc0476c6ff5e1c2becda3fa39bff28eebd83f05c17c0e808fc1ee0e3124d05cd3ab6ecd8cdfc4fb",
+    "size": 3735532
   }
 ]
-

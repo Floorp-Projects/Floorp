@@ -1,11 +1,10 @@
 [
   {
-    "size": 6489376,
-    "visibility": "public",
-    "digest": "940b65ae76f6f1a11646cd723ef3f13c0a38b9cc1399f428940b2f709adca3305544f90fe6cd960877d0344f391645f567a5d613a6fd95c4b1e83c35da703f31",
     "algorithm": "sha512",
+    "digest": "5531517263cc19ca1fa4528ecd090e23e2014d72d0629f9e55483dc6c18dc0a9e88cf77ee456c8895cdd22e1bd018577fad5c884196b8b09e248e0da4c705d35",
     "filename": "mitm4-pixel2-fennec-allrecipes.zip",
-    "unpack": true
+    "size": 11321993,
+    "unpack": true,
+    "visibility": "public"
   }
 ]
-

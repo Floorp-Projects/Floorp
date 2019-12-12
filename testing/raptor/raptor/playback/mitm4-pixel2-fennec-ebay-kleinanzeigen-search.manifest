@@ -1,11 +1,10 @@
 [
   {
-    "size": 2998587,
-    "visibility": "public",
-    "digest": "2f304158ac4c91333d3c9bb260fad43476db1aa9b66233d2d047fb308b729d70648eef92d0892f70949731ec7927e5548b7825c4ebe537ccc9d53491c0511c73",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-ebay-kleinanzeigen-search.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "6d1f07518941b108b3f4e02b02e5c634bb4a9f4014d49c0c36c24084fa9f2d045b2bc9291d665573dacbdc18c037e79bc5bb2e3a5f6123bd267d6266946d5277",
+    "size": 2891192
   }
 ]
-

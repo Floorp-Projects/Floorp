@@ -1,10 +1,10 @@
 [
   {
-    "size": 2099923,
-    "visibility": "public",
-    "digest": "c685d119d2b8d1101c3328a2d23533598a32ce75d1b01c5576e98f058a3c3edc0ea515c62ea43d0c9342803e8c53548f9d2cad3109360dde398d30d030e8d05a",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-facebook.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "21d0d69fb3d550a72e41859f9bba73cc95e9f02ff94af2ec934e3d3b38f6e976785cc9056731c8b887138ec1e33eca53379be88e3f2dee0d58e0855534107fcd",
+    "size": 4191442
   }
 ]
