@@ -32,6 +32,7 @@
   X(sio_eof)                                 \
   X(sio_getpar)                              \
   X(sio_initpar)                             \
+  X(sio_nfds)                                \
   X(sio_onmove)                              \
   X(sio_open)                                \
   X(sio_pollfd)                              \
@@ -124,6 +125,23 @@ s16_to_float(void *ptr, long nsamp)
     *(--dst) = (1. / 32768) * *(--src);
 }
 
+static const char *
+sndio_get_device()
+{
+#ifndef __OpenBSD__
+  /*
+   * On other platforms default to sndio devices,
+   * so cubebs other backends can be used instead.
+   */
+  const char *dev = getenv("AUDIODEVICE");
+  if (dev == NULL || *dev == '\0')
+	return "snd/0";
+  return dev;
+#else
+  return SIO_DEVANY;
+#endif
+}
+
 static void
 sndio_onmove(void *arg, int delta)
 {
@@ -135,18 +153,23 @@ sndio_onmove(void *arg, int delta)
 static void *
 sndio_mainloop(void *arg)
 {
-#define MAXFDS 8
-  struct pollfd pfds[MAXFDS];
+  struct pollfd *pfds;
   cubeb_stream *s = arg;
   int n, eof = 0, prime, nfds, events, revents, state = CUBEB_STATE_STARTED;
   size_t pstart = 0, pend = 0, rstart = 0, rend = 0;
   long nfr;
+
+  nfds = WRAP(sio_nfds)(s->hdl);
+  pfds = calloc(nfds, sizeof (struct pollfd));
+  if (pfds == NULL)
+	  return NULL;
 
   DPR("sndio_mainloop()\n");
   s->state_cb(s, s->arg, CUBEB_STATE_STARTED);
   pthread_mutex_lock(&s->mtx);
   if (!WRAP(sio_start)(s->hdl)) {
     pthread_mutex_unlock(&s->mtx);
+    free(pfds);
     return NULL;
   }
   DPR("sndio_mainloop(), started\n");
@@ -274,6 +297,7 @@ sndio_mainloop(void *arg)
   s->hwpos = s->swpos;
   pthread_mutex_unlock(&s->mtx);
   s->state_cb(s, s->arg, state);
+  free(pfds);
   return NULL;
 }
 
@@ -281,6 +305,9 @@ sndio_mainloop(void *arg)
 sndio_init(cubeb **context, char const *context_name)
 {
   void * libsndio = NULL;
+  struct sio_hdl *hdl;
+
+  assert(context);
 
 #ifndef DISABLE_LIBSNDIO_DLOPEN
   libsndio = dlopen("libsndio.so.7.0", RTLD_LAZY);
@@ -305,8 +332,17 @@ sndio_init(cubeb **context, char const *context_name)
 #undef LOAD
 #endif
 
+  /* test if sndio works */
+  hdl = WRAP(sio_open)(sndio_get_device(), SIO_PLAY, 1);
+  if (hdl == NULL) {
+    return CUBEB_ERROR;
+  }
+  WRAP(sio_close)(hdl);
+
   DPR("sndio_init(%s)\n", context_name);
-  *context = malloc(sizeof(*context));
+  *context = malloc(sizeof(**context));
+  if (*context == NULL)
+	return CUBEB_ERROR;
   (*context)->libsndio = libsndio;
   (*context)->ops = &sndio_ops;
   (void)context_name;
@@ -377,7 +413,7 @@ sndio_stream_init(cubeb * context,
     goto err;
   }
   s->context = context;
-  s->hdl = WRAP(sio_open)(NULL, s->mode, 1);
+  s->hdl = WRAP(sio_open)(sndio_get_device(), s->mode, 1);
   if (s->hdl == NULL) {
     DPR("sndio_stream_init(), sio_open() failed\n");
     goto err;

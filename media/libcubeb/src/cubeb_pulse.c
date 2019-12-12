@@ -576,6 +576,11 @@ layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
   unsigned int channels_from_layout = cubeb_channel_layout_nb_channels(layout);
   assert(channels_from_layout <= UINT8_MAX);
   cm->channels = (uint8_t) channels_from_layout;
+
+  // Special case single channel center mapping as mono.
+  if (cm->channels == 1 && cm->map[0] == PA_CHANNEL_POSITION_FRONT_CENTER) {
+    cm->map[0] = PA_CHANNEL_POSITION_MONO;
+  }
 }
 
 static void pulse_context_destroy(cubeb * ctx);
@@ -1176,21 +1181,6 @@ pulse_stream_set_volume(cubeb_stream * stm, float volume)
   WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
 
   return CUBEB_OK;
-}
-
-struct sink_input_info_result {
-  pa_cvolume * cvol;
-  pa_threaded_mainloop * mainloop;
-};
-
-static void
-sink_input_info_cb(pa_context * c, pa_sink_input_info const * i, int eol, void * u)
-{
-  struct sink_input_info_result * r = u;
-  if (!eol) {
-    *r->cvol = i->volume;
-  }
-  WRAP(pa_threaded_mainloop_signal)(r->mainloop, 0);
 }
 
 typedef struct {
