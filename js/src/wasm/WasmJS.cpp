@@ -192,7 +192,7 @@ bool wasm::HasCachingSupport(JSContext* cx) {
 
 static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
                                MutableHandleVal val) {
-  switch (targetType.code()) {
+  switch (targetType.kind()) {
     case ValType::I32: {
       int32_t i32;
       if (!ToInt32(cx, v, &i32)) {
@@ -217,22 +217,6 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       val.set(Val(d));
       return true;
     }
-    case ValType::FuncRef: {
-      RootedFunction fun(cx);
-      if (!CheckFuncRefValue(cx, v, &fun)) {
-        return false;
-      }
-      val.set(Val(ValType::FuncRef, FuncRef::fromJSFunction(fun)));
-      return true;
-    }
-    case ValType::AnyRef: {
-      RootedAnyRef tmp(cx, AnyRef::null());
-      if (!BoxAnyRef(cx, v, &tmp)) {
-        return false;
-      }
-      val.set(Val(ValType::AnyRef, tmp));
-      return true;
-    }
     case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
       if (HasI64BigIntSupport(cx)) {
@@ -246,8 +230,28 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
 #endif
       break;
     }
-    case ValType::Ref:
-    case ValType::NullRef: {
+    case ValType::Ref: {
+      switch (targetType.refTypeKind()) {
+        case RefType::Func: {
+          RootedFunction fun(cx);
+          if (!CheckFuncRefValue(cx, v, &fun)) {
+            return false;
+          }
+          val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
+          return true;
+        }
+        case RefType::Any: {
+          RootedAnyRef tmp(cx, AnyRef::null());
+          if (!BoxAnyRef(cx, v, &tmp)) {
+            return false;
+          }
+          val.set(Val(RefType::any(), tmp));
+          return true;
+        }
+        default: {
+          break;
+        }
+      }
       break;
     }
   }
@@ -255,7 +259,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
 }
 
 static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
-  switch (val.type().code()) {
+  switch (val.type().kind()) {
     case ValType::I32:
       out.setInt32(val.i32());
       return true;
@@ -264,12 +268,6 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
       return true;
     case ValType::F64:
       out.setDouble(JS::CanonicalizeNaN(val.f64()));
-      return true;
-    case ValType::FuncRef:
-      out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
-      return true;
-    case ValType::AnyRef:
-      out.set(UnboxAnyRef(val.ref()));
       return true;
     case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
@@ -285,7 +283,16 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
       break;
     }
     case ValType::Ref:
-    case ValType::NullRef:
+      switch (val.type().refTypeKind()) {
+        case RefType::Func:
+          out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
+          return true;
+        case RefType::Any:
+          out.set(UnboxAnyRef(val.ref()));
+          return true;
+        default:
+          break;
+      }
       break;
   }
   MOZ_CRASH("unexpected type when translating to a JS value");
@@ -2532,26 +2539,29 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
     // there's nothing to trace yet.
     return;
   }
-  switch (global->type().code()) {
-    case ValType::FuncRef:
-    case ValType::AnyRef:
-      if (!global->cell()->ref.isNull()) {
-        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-        // barrier is going to have to be more complicated.
-        ASSERT_ANYREF_IS_JSOBJECT;
-        TraceManuallyBarrieredEdge(trc, global->cell()->ref.asJSObjectAddress(),
-                                   "wasm reference-typed global");
-      }
-      break;
+  switch (global->type().kind()) {
     case ValType::I32:
     case ValType::F32:
     case ValType::I64:
     case ValType::F64:
       break;
     case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
+      switch (global->type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          if (!global->cell()->ref.isNull()) {
+            // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+            // barrier is going to have to be more complicated.
+            ASSERT_ANYREF_IS_JSOBJECT;
+            TraceManuallyBarrieredEdge(trc,
+                                       global->cell()->ref.asJSObjectAddress(),
+                                       "wasm reference-typed global");
+          }
+          break;
+        default:
+          MOZ_CRASH("Ref NYI");
+      }
+      break;
   }
 }
 
@@ -2589,7 +2599,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
   }
 
   const Val& val = hval.get();
-  switch (val.type().code()) {
+  switch (val.type().kind()) {
     case ValType::I32:
       cell->i32 = val.i32();
       break;
@@ -2602,22 +2612,24 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
     case ValType::F64:
       cell->f64 = val.f64();
       break;
-    case ValType::FuncRef:
-    case ValType::AnyRef:
-      MOZ_ASSERT(cell->ref.isNull(), "no prebarriers needed");
-      cell->ref = val.ref();
-      if (!cell->ref.isNull()) {
-        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-        // barrier is going to have to be more complicated.
-        ASSERT_ANYREF_IS_JSOBJECT;
-        JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(), nullptr,
-                                   cell->ref.asJSObject());
+    case ValType::Ref:
+      switch (val.type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          MOZ_ASSERT(cell->ref.isNull(), "no prebarriers needed");
+          cell->ref = val.ref();
+          if (!cell->ref.isNull()) {
+            // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+            // barrier is going to have to be more complicated.
+            ASSERT_ANYREF_IS_JSOBJECT;
+            JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(), nullptr,
+                                       cell->ref.asJSObject());
+          }
+          break;
+        default:
+          MOZ_CRASH("Ref NYI");
       }
       break;
-    case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
   }
 
   obj->initReservedSlot(TYPE_SLOT,
@@ -2691,10 +2703,10 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef ENABLE_WASM_REFTYPES
   } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "funcref")) {
-    globalType = ValType::FuncRef;
+    globalType = RefType::func();
   } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "anyref")) {
-    globalType = ValType::AnyRef;
+    globalType = RefType::any();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2708,7 +2720,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   RootedVal globalVal(cx);
 
   // Initialize with default value.
-  switch (globalType.code()) {
+  switch (globalType.kind()) {
     case ValType::I32:
       globalVal = Val(uint32_t(0));
       break;
@@ -2721,16 +2733,18 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     case ValType::F64:
       globalVal = Val(double(0.0));
       break;
-    case ValType::FuncRef:
-      globalVal = Val(ValType::FuncRef, AnyRef::null());
-      break;
-    case ValType::AnyRef:
-      globalVal = Val(ValType::AnyRef, AnyRef::null());
-      break;
     case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
+      switch (globalType.refTypeKind()) {
+        case RefType::Func:
+          globalVal = Val(RefType::func(), AnyRef::null());
+          break;
+        case RefType::Any:
+          globalVal = Val(RefType::any(), AnyRef::null());
+          break;
+        default:
+          MOZ_CRASH("Ref NYI");
+      }
+      break;
   }
 
   // Override with non-undefined value, if provided.
@@ -2757,14 +2771,12 @@ static bool IsGlobal(HandleValue v) {
 
 /* static */
 bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
-  switch (args.thisv().toObject().as<WasmGlobalObject>().type().code()) {
+  switch (args.thisv().toObject().as<WasmGlobalObject>().type().kind()) {
     case ValType::I32:
     case ValType::F32:
     case ValType::F64:
-    case ValType::FuncRef:
-    case ValType::AnyRef:
-      return args.thisv().toObject().as<WasmGlobalObject>().value(cx,
-                                                                  args.rval());
+      args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
+      return true;
     case ValType::I64:
 #ifdef ENABLE_WASM_BIGINT
       if (HasI64BigIntSupport(cx)) {
@@ -2776,9 +2788,16 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
                                JSMSG_WASM_BAD_I64_TYPE);
       return false;
     case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
+      switch (
+          args.thisv().toObject().as<WasmGlobalObject>().type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
+          return true;
+        default:
+          MOZ_CRASH("Ref NYI");
+      }
+      break;
   }
   MOZ_CRASH();
 }
@@ -2815,7 +2834,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
   }
 
   Cell* cell = global->cell();
-  switch (global->type().code()) {
+  switch (global->type().kind()) {
     case ValType::I32:
       cell->i32 = val.get().i32();
       break;
@@ -2825,35 +2844,34 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
     case ValType::F64:
       cell->f64 = val.get().f64();
       break;
-    case ValType::FuncRef:
-    case ValType::AnyRef: {
-      AnyRef prevPtr = cell->ref;
-      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-      // barrier is going to have to be more complicated.
-      ASSERT_ANYREF_IS_JSOBJECT;
-      JSObject::writeBarrierPre(prevPtr.asJSObject());
-      cell->ref = val.get().ref();
-      if (!cell->ref.isNull()) {
-        JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(),
-                                   prevPtr.asJSObject(),
-                                   cell->ref.asJSObject());
-      }
-      break;
-    }
-    case ValType::I64: {
+    case ValType::I64:
 #ifdef ENABLE_WASM_BIGINT
       MOZ_ASSERT(HasI64BigIntSupport(cx),
                  "expected BigInt support for setting I64 global");
       cell->i64 = val.get().i64();
-      break;
-#else
-      MOZ_CRASH("unexpected i64 when setting global's value");
 #endif
-    }
+      break;
     case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
+      switch (global->type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any: {
+          AnyRef prevPtr = cell->ref;
+          // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+          // barrier is going to have to be more complicated.
+          ASSERT_ANYREF_IS_JSOBJECT;
+          JSObject::writeBarrierPre(prevPtr.asJSObject());
+          cell->ref = val.get().ref();
+          if (!cell->ref.isNull()) {
+            JSObject::writeBarrierPost(cell->ref.asJSObjectAddress(),
+                                       prevPtr.asJSObject(),
+                                       cell->ref.asJSObject());
+          }
+          break;
+        }
+        default:
+          MOZ_CRASH("Ref NYI");
+      }
+      break;
   }
 
   args.rval().setUndefined();
@@ -2888,7 +2906,7 @@ bool WasmGlobalObject::isMutable() const {
 
 void WasmGlobalObject::val(MutableHandleVal outval) const {
   Cell* cell = this->cell();
-  switch (type().code()) {
+  switch (type().kind()) {
     case ValType::I32:
       outval.set(Val(uint32_t(cell->i32)));
       return;
@@ -2901,16 +2919,18 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
     case ValType::F64:
       outval.set(Val(cell->f64));
       return;
-    case ValType::FuncRef:
-      outval.set(Val(ValType::FuncRef, cell->ref));
-      return;
-    case ValType::AnyRef:
-      outval.set(Val(ValType::AnyRef, cell->ref));
-      return;
     case ValType::Ref:
-      MOZ_CRASH("Ref NYI");
-    case ValType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
+      switch (type().refTypeKind()) {
+        case RefType::Func:
+          outval.set(Val(RefType::func(), cell->ref));
+          return;
+        case RefType::Any:
+          outval.set(Val(RefType::any(), cell->ref));
+          return;
+        default:
+          MOZ_CRASH("Ref NYI");
+      }
+      break;
   }
   MOZ_CRASH("unexpected Global type");
 }
