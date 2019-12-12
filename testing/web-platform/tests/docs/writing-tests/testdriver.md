@@ -131,7 +131,7 @@ For example, to send the tab key you would send "\uE004".
 
 ### set_permission
 
-Usage: `test-driver.set_permission(descriptor, state, one_realm)`
+Usage: `test_driver.set_permission(descriptor, state, one_realm)`
  * _descriptor_: a
    [PermissionDescriptor](https://w3c.github.io/permissions/#dictdef-permissiondescriptor)
    or derived object
