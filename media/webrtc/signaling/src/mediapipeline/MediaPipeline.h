@@ -32,18 +32,19 @@
 class nsIPrincipal;
 
 namespace mozilla {
+class AudioProxyThread;
+class MediaInputPort;
 class MediaPipelineFilter;
 class MediaTransportHandler;
 class PeerIdentity;
-class AudioProxyThread;
+class ProcessedMediaTrack;
+class SourceMediaTrack;
 class VideoFrameConverter;
 
 namespace dom {
 class MediaStreamTrack;
 struct RTCRTPContributingSourceStats;
 }  // namespace dom
-
-class SourceMediaTrack;
 
 // A class that represents the pipeline of audio and video
 // The dataflow looks like:
@@ -307,6 +308,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 
   // Separate classes to allow ref counting
   class PipelineListener;
+  class PipelineListenerTrackConsumer;
   class VideoFrameFeeder;
 
  protected:
@@ -317,10 +319,18 @@ class MediaPipelineTransmit : public MediaPipeline {
  private:
   const bool mIsVideo;
   const RefPtr<PipelineListener> mListener;
+  // Listens for changes in enabled state on the attached MediaStreamTrack, and
+  // notifies mListener.
+  const nsMainThreadPtrHandle<PipelineListenerTrackConsumer> mTrackConsumer;
   const RefPtr<VideoFrameFeeder> mFeeder;
   RefPtr<AudioProxyThread> mAudioProcessing;
   RefPtr<VideoFrameConverter> mConverter;
   RefPtr<dom::MediaStreamTrack> mDomTrack;
+  // Input port connecting mDomTrack's MediaTrack to mSendTrack.
+  RefPtr<MediaInputPort> mSendPort;
+  // MediaTrack that we send over the network. This allows changing mDomTrack.
+  RefPtr<ProcessedMediaTrack> mSendTrack;
+  // True if we're actively transmitting data to the network. Main thread only.
   bool mTransmitting;
 };
 
