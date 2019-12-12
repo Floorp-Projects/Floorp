@@ -3659,7 +3659,6 @@ class Document : public nsINode,
 
   mozilla::dom::HTMLAllCollection* All();
 
-  static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
   static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(CallerType aCallerType);

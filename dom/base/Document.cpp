@@ -32,7 +32,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_page_load.h"
@@ -13225,14 +13224,6 @@ void Document::RemoteFrameFullscreenReverted() {
   RestorePreviousFullscreenState(std::move(exit));
 }
 
-/* static */
-bool Document::IsUnprefixedFullscreenEnabled(JSContext* aCx,
-                                             JSObject* aObject) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return nsContentUtils::IsSystemCaller(aCx) ||
-         StaticPrefs::full_screen_api_unprefix_enabled();
-}
-
 static bool HasFullscreenSubDocument(Document* aDoc) {
   uint32_t count = CountFullscreenSubDocuments(aDoc);
   NS_ASSERTION(count <= 1,
@@ -13244,15 +13235,10 @@ static bool HasFullscreenSubDocument(Document* aDoc) {
 // in the given document. Returns a static string indicates the reason
 // why it is not enabled otherwise.
 static const char* GetFullscreenError(Document* aDoc, CallerType aCallerType) {
-  bool apiEnabled = StaticPrefs::full_screen_api_enabled();
-  if (apiEnabled && aCallerType == CallerType::System) {
+  if (aCallerType == CallerType::System) {
     // Chrome code can always use the fullscreen API, provided it's not
     // explicitly disabled.
     return nullptr;
-  }
-
-  if (!apiEnabled) {
-    return "FullscreenDeniedDisabled";
   }
 
   if (!aDoc->IsVisible()) {
