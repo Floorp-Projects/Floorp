@@ -367,6 +367,9 @@ struct TilePostUpdateState<'a> {
 
     /// Current configuration and setup for compositing all the picture cache tiles in renderer.
     composite_state: &'a mut CompositeState,
+
+    /// A cache of comparison results to avoid re-computation during invalidation.
+    compare_cache: &'a mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
 }
 
 /// Information about the dependencies of a single primitive instance.
@@ -641,8 +644,7 @@ impl Tile {
     fn update_dirty_rects(
         &mut self,
         ctx: &TilePostUpdateContext,
-        state: &TilePostUpdateState,
-        compare_cache: &mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
+        state: &mut TilePostUpdateState,
         invalidation_reason: &mut Option<InvalidationReason>,
     ) -> PictureRect {
         let mut prim_comparer = PrimitiveComparer::new(
@@ -654,13 +656,12 @@ impl Tile {
         );
 
         let mut dirty_rect = PictureRect::zero();
-
         self.root.update_dirty_rects(
             &self.prev_descriptor.prims,
             &self.current_descriptor.prims,
             &mut prim_comparer,
             &mut dirty_rect,
-            compare_cache,
+            state.compare_cache,
             invalidation_reason,
         );
 
@@ -674,16 +675,15 @@ impl Tile {
     fn update_content_validity(
         &mut self,
         ctx: &TilePostUpdateContext,
-        state: &TilePostUpdateState,
+        state: &mut TilePostUpdateState,
     ) {
         // Check if the contents of the primitives, clips, and
         // other dependencies are the same.
-        let mut compare_cache = FastHashMap::default();
+        state.compare_cache.clear();
         let mut invalidation_reason = None;
         let dirty_rect = self.update_dirty_rects(
             ctx,
             state,
-            &mut compare_cache,
             &mut invalidation_reason,
         );
         if !dirty_rect.is_empty() {
@@ -1499,6 +1499,9 @@ pub struct TileCacheInstance {
     frames_until_size_eval: usize,
     /// The current fractional offset of the cached picture
     fract_offset: PictureVector2D,
+    /// keep around the hash map used as compare_cache to avoid reallocating it each
+    /// frame.
+    compare_cache: FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
 }
 
 impl TileCacheInstance {
@@ -1545,6 +1548,7 @@ impl TileCacheInstance {
             current_tile_size: DeviceIntSize::zero(),
             frames_until_size_eval: 0,
             fract_offset: PictureVector2D::zero(),
+            compare_cache: FastHashMap::default(),
         }
     }
 
@@ -2287,14 +2291,12 @@ impl TileCacheInstance {
         let mut state = TilePostUpdateState {
             resource_cache: frame_state.resource_cache,
             composite_state: frame_state.composite_state,
+            compare_cache: &mut self.compare_cache,
         };
 
         // Step through each tile and invalidate if the dependencies have changed.
         for (key, tile) in self.tiles.iter_mut() {
-            if tile.post_update(
-                &ctx,
-                &mut state,
-            ) {
+            if tile.post_update(&ctx, &mut state) {
                 self.tiles_to_draw.push(*key);
             }
         }
