@@ -2847,17 +2847,6 @@ bool nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
                                     aConsiderOpener);
 }
 
-static bool ItemIsActive(nsIDocShellTreeItem* aItem) {
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = aItem->GetWindow()) {
-    auto* win = nsGlobalWindowOuter::Cast(window);
-    if (!win->GetClosedOuter()) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void nsDocShell::AssertOriginAttributesMatchPrivateBrowsing() {
   // Chrome docshells must not have a private browsing OriginAttribute
   // Content docshells must maintain the equality:
@@ -3178,62 +3167,6 @@ nsDocShell* nsDocShell::GetInProcessChildAt(int32_t aIndex) {
 
   // child may be nullptr here.
   return static_cast<nsDocShell*>(child);
-}
-
-NS_IMETHODIMP
-nsDocShell::FindChildWithName(const nsAString& aName, bool aRecurse,
-                              bool aSameType, nsIDocShellTreeItem* aRequestor,
-                              nsIDocShellTreeItem* aOriginalRequestor,
-                              nsIDocShellTreeItem** aResult) {
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  // if we don't find one, we return NS_OK and a null result
-  *aResult = nullptr;
-
-  if (aName.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
-  while (iter.HasMore()) {
-    nsCOMPtr<nsIDocShellTreeItem> child = do_QueryObject(iter.GetNext());
-    NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-    int32_t childType = child->ItemType();
-
-    if (aSameType && (childType != mItemType)) {
-      continue;
-    }
-
-    bool childNameEquals = false;
-    child->NameEquals(aName, &childNameEquals);
-    if (childNameEquals && ItemIsActive(child) &&
-        CanAccessItem(child, aOriginalRequestor)) {
-      child.swap(*aResult);
-      break;
-    }
-
-    // Only ask it to check children if it is same type
-    if (childType != mItemType) {
-      continue;
-    }
-
-    // Only ask the child if it isn't the requestor
-    if (aRecurse && (aRequestor != child)) {
-      // See if child contains the shell with the given name
-#ifdef DEBUG
-      nsresult rv =
-#endif
-          child->FindChildWithName(aName, true, aSameType,
-                                   static_cast<nsIDocShellTreeItem*>(this),
-                                   aOriginalRequestor, aResult);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "FindChildWithName should not fail here");
-      if (*aResult) {
-        // found it
-        return NS_OK;
-      }
-    }
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
