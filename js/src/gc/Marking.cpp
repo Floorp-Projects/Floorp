@@ -442,8 +442,7 @@ JS_PUBLIC_API void js::UnsafeTraceManuallyBarrieredEdge(JSTracer* trc,
 }
 
 template <typename T>
-JS_PUBLIC_API void JS::UnsafeTraceRoot(JSTracer* trc, T* thingp,
-                                       const char* name) {
+static void UnsafeTraceRootHelper(JSTracer* trc, T* thingp, const char* name) {
   MOZ_ASSERT(thingp);
   js::TraceNullableRoot(trc, thingp, name);
 }
@@ -469,21 +468,21 @@ DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION(SavedFrame*)
 
 #undef DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION
 
-#define INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION(type)                      \
-  template JS_PUBLIC_API void JS::UnsafeTraceRoot<type>(JSTracer*, type*, \
-                                                        const char*);
+#define DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(type)                           \
+  JS_PUBLIC_API void JS::UnsafeTraceRoot(JSTracer* trc, type* thingp, \
+                                         const char* name) { \
+    UnsafeTraceRootHelper(trc, thingp, name); \
+  }
 
-// Instantiate UnsafeTraceRoot for each public GC pointer type.
-JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION)
-JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
-    INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION)
+// Define UnsafeTraceRoot for each public GC pointer type.
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(DEFINE_UNSAFE_TRACE_ROOT_FUNCTION)
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DEFINE_UNSAFE_TRACE_ROOT_FUNCTION)
 
-// Also, for the moment, instantiate UnsafeTraceRoot for internal GC pointer
-// types.
-INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION(AbstractGeneratorObject*)
-INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION(SavedFrame*)
+// Also, for the moment, define UnsafeTraceRoot for internal GC pointer types.
+DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(AbstractGeneratorObject*)
+DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(SavedFrame*)
 
-#undef INSTANTIATE_UNSAFE_TRACE_ROOT_FUNCTION
+#undef DEFINE_UNSAFE_TRACE_ROOT_FUNCTION
 
 namespace js {
 namespace gc {
