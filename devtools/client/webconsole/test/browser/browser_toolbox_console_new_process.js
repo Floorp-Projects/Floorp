@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Test that when the omniscient browser toolbox is used, console messages from
-// newly opened content processes appear.
+// Test that when the multiprocess browser toolbox is used, console messages
+// from newly opened content processes appear.
 
 "use strict";
 

@@ -2980,12 +2980,12 @@ Toolbox.prototype = {
   _refreshHostTitle: function() {
     let title;
 
-    const isOmniscientBrowserToolbox =
+    const isMultiProcessBrowserToolbox =
       this.target.isParentProcess &&
       Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
 
-    if (isOmniscientBrowserToolbox) {
-      title = "💥 Omniscient Browser Toolbox 💥";
+    if (isMultiProcessBrowserToolbox) {
+      title = L10N.getStr("toolbox.multiProcessBrowserToolboxTitle");
     } else if (this.target.name && this.target.name != this.target.url) {
       const url = this.target.isWebExtension
         ? this.target.getExtensionPathName(this.target.url)
