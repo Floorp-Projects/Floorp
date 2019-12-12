@@ -1118,7 +1118,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
   props.isMutable = isMutable;
 
   Rooted<TypeDescr*> t(cx);
-  switch (v.code()) {
+  switch (v.kind()) {
     case ValType::I32:
       t = GlobalObject::getOrCreateScalarTypeDescr(cx, cx->global(),
                                                    Scalar::Int32);
@@ -1140,16 +1140,20 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
                                                    Scalar::Float64);
       break;
     case ValType::Ref:
-      t = GlobalObject::getOrCreateReferenceTypeDescr(
-          cx, cx->global(), ReferenceType::TYPE_OBJECT);
+      switch (v.refTypeKind()) {
+        case RefType::TypeIndex:
+          t = GlobalObject::getOrCreateReferenceTypeDescr(
+              cx, cx->global(), ReferenceType::TYPE_OBJECT);
+          break;
+        case RefType::Func:
+        case RefType::Any:
+          t = GlobalObject::getOrCreateReferenceTypeDescr(
+              cx, cx->global(), ReferenceType::TYPE_WASM_ANYREF);
+          break;
+        default:
+          MOZ_CRASH("Bad field type");
+      }
       break;
-    case ValType::FuncRef:
-    case ValType::AnyRef:
-      t = GlobalObject::getOrCreateReferenceTypeDescr(
-          cx, cx->global(), ReferenceType::TYPE_WASM_ANYREF);
-      break;
-    default:
-      MOZ_CRASH("Bad field type");
   }
   MOZ_ASSERT(t != nullptr);
 
@@ -1208,7 +1212,7 @@ bool Module::makeStructTypeDescrs(
     uint32_t k = 0;
     for (StructField sf : structType.fields_) {
       const ValType& v = sf.type;
-      if (v.code() == ValType::I64) {
+      if (v.kind() == ValType::I64) {
         // TypedObjects don't yet have a notion of int64 fields.  Thus
         // we handle int64 by allocating two adjacent int32 fields, the
         // first of them aligned as for int64.  We mark these fields as

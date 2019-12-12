@@ -13920,20 +13920,24 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   ABIArgGenerator abi;
   for (size_t i = 0; i < lir->numOperands(); i++) {
     MIRType argMir;
-    switch (sig.args()[i].code()) {
+    switch (sig.args()[i].kind()) {
       case wasm::ValType::I32:
       case wasm::ValType::F32:
       case wasm::ValType::F64:
-      case wasm::ValType::AnyRef:
-        // AnyRef is boxed on the JS side, so passed as a pointer here.
         argMir = ToMIRType(sig.args()[i]);
         break;
       case wasm::ValType::I64:
-      case wasm::ValType::Ref:
-      case wasm::ValType::FuncRef:
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
-      case wasm::ValType::NullRef:
-        MOZ_CRASH("NullRef not expressible");
+      case wasm::ValType::Ref:
+        switch (sig.args()[i].refTypeKind()) {
+          case wasm::RefType::Any:
+            // AnyRef is boxed on the JS side, so passed as a pointer here.
+            argMir = ToMIRType(sig.args()[i]);
+            break;
+          default:
+            MOZ_CRASH("unexpected argument type when calling from ion to wasm");
+        }
+        break;
     }
 
     ABIArg arg = abi.next(argMir);
@@ -13974,7 +13978,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
   } else {
     MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-    switch (results[0].code()) {
+    switch (results[0].kind()) {
       case wasm::ValType::I32:
         MOZ_ASSERT(lir->mir()->type() == MIRType::Int32);
         MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
@@ -13987,18 +13991,22 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
         break;
-      case wasm::ValType::AnyRef:
-      case wasm::ValType::FuncRef:
-        // The wasm stubs layer unboxes anything that needs to be unboxed and
-        // leaves it in a Value.  A FuncRef we could in principle leave as a raw
-        // object pointer but for now it complicates the API to do so.
-        MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
-        break;
-      case wasm::ValType::Ref:
       case wasm::ValType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
-      case wasm::ValType::NullRef:
-        MOZ_CRASH("NullRef not expressible");
+      case wasm::ValType::Ref:
+        switch (results[0].refTypeKind()) {
+          case wasm::RefType::Any:
+          case wasm::RefType::Func:
+            // The wasm stubs layer unboxes anything that needs to be unboxed
+            // and leaves it in a Value.  A FuncRef we could in principle leave
+            // as a raw object pointer but for now it complicates the API to do
+            // so.
+            MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
+            break;
+          default:
+            MOZ_CRASH("unexpected return type when calling from ion to wasm");
+        }
+        break;
     }
   }
 

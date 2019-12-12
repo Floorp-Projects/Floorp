@@ -371,7 +371,7 @@ bool DebugState::getGlobal(Instance& instance, uint32_t globalIndex,
 
   if (global.isConstant()) {
     LitVal value = global.constantValue();
-    switch (value.type().code()) {
+    switch (value.type().kind()) {
       case ValType::I32:
         vp.set(Int32Value(value.i32()));
         break;
@@ -396,7 +396,7 @@ bool DebugState::getGlobal(Instance& instance, uint32_t globalIndex,
   if (global.isIndirect()) {
     dataPtr = *static_cast<void**>(dataPtr);
   }
-  switch (global.type().code()) {
+  switch (global.type().kind()) {
     case ValType::I32: {
       vp.set(Int32Value(*static_cast<int32_t*>(dataPtr)));
       break;
