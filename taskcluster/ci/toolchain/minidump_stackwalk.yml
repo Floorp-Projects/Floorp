@@ -61,5 +61,5 @@ win32-minidump-stackwalk:
         arguments: ['mingw32']
     fetches:
         toolchain:
-            - linux64-clang-8-mingw-x86
+            - linux64-clang-mingw-x86
             - mingw32-rust-1.39
