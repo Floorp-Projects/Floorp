@@ -43,7 +43,6 @@ class RenderCompositorANGLE : public RenderCompositor {
   RenderedFrameId EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) final;
   bool WaitForGPU() override;
   RenderedFrameId GetLastCompletedFrameId() final;
-  RenderedFrameId UpdateFrameId() final;
   void Pause() override;
   bool Resume() override;
   void Update() override;

@@ -696,12 +696,6 @@ RenderedFrameId RenderCompositorANGLE::GetLastCompletedFrameId() {
   return mLastCompletedFrameId;
 }
 
-RenderedFrameId RenderCompositorANGLE::UpdateFrameId() {
-  RenderedFrameId frameId = GetNextRenderFrameId();
-  InsertGraphicsCommandsFinishedWaitQuery(frameId);
-  return frameId;
-}
-
 bool RenderCompositorANGLE::IsContextLost() {
   // XXX glGetGraphicsResetStatus sometimes did not work for detecting TDR.
   // Then this function just uses GetDeviceRemovedReason().
