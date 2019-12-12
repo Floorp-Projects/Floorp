@@ -1083,11 +1083,11 @@ class CreateImageBitmapFromBlob final : public CancelableRunnable,
         mCropRect(aCropRect),
         mOriginalCropRect(aCropRect),
         mMainThreadEventTarget(aMainThreadEventTarget),
-        mThread(GetCurrentVirtualThread()) {}
+        mThread(PR_GetCurrentThread()) {}
 
   virtual ~CreateImageBitmapFromBlob() {}
 
-  bool IsCurrentThread() const { return mThread == GetCurrentVirtualThread(); }
+  bool IsCurrentThread() const { return mThread == PR_GetCurrentThread(); }
 
   // Called on the owning thread.
   nsresult StartMimeTypeAndDecodeAndCropBlob();

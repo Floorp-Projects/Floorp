@@ -32,7 +32,7 @@ nsresult NS_FASTCALL NS_TableDrivenQI(void* aThis, REFNSIID aIID,
 }
 
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
-nsAutoOwningThread::nsAutoOwningThread() : mThread(GetCurrentVirtualThread()) {}
+nsAutoOwningThread::nsAutoOwningThread() : mThread(PR_GetCurrentThread()) {}
 
 void nsAutoOwningThread::AssertCurrentThreadOwnsMe(const char* msg) const {
   if (MOZ_UNLIKELY(!IsCurrentThread())) {
@@ -42,6 +42,6 @@ void nsAutoOwningThread::AssertCurrentThreadOwnsMe(const char* msg) const {
 }
 
 bool nsAutoOwningThread::IsCurrentThread() const {
-  return mThread == GetCurrentVirtualThread();
+  return mThread == PR_GetCurrentThread();
 }
 #endif
