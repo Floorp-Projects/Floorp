@@ -1276,11 +1276,7 @@ static MOZ_MUST_USE bool ResolvePromise(JSContext* cx,
 
   // Step 7 of FulfillPromise.
   // Step 8 of RejectPromise.
-  if (reactionsVal.isObject()) {
-    return TriggerPromiseReactions(cx, reactionsVal, state, valueOrReason);
-  }
-
-  return true;
+  return TriggerPromiseReactions(cx, reactionsVal, state, valueOrReason);
 }
 
 // ES2016, 25.4.1.7.
@@ -1532,6 +1528,52 @@ static MOZ_MUST_USE bool RejectMaybeWrappedPromise(JSContext* cx,
   return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected);
 }
 
+// Apply f to a mutable handle on each member of a collection of reactions, like
+// that stored in PromiseSlot_ReactionsOrResult on a pending promise. When the
+// reaction record is wrapped, we pass the wrapper, without dereferencing it. If
+// f returns false, then we stop the iteration immediately and return false.
+// Otherwise, we return true.
+//
+// There are several different representations for collections:
+//
+// - We represent an empty collection of reactions as an 'undefined' value.
+//
+// - We represent a collection containing a single reaction simply as the given
+//   PromiseReactionRecord object, possibly wrapped.
+//
+// - We represent a collection of two or more reactions as a dense array of
+//   possibly-wrapped PromiseReactionRecords.
+//
+template <typename F>
+static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
+  if (reactionsVal.isUndefined()) {
+    return true;
+  }
+
+  RootedObject reactions(cx, &reactionsVal.toObject());
+  RootedObject reaction(cx);
+
+  if (reactions->is<PromiseReactionRecord>() || IsWrapper(reactions) ||
+      JS_IsDeadWrapper(reactions)) {
+    return f(&reactions);
+  }
+
+  HandleNativeObject reactionsList = reactions.as<NativeObject>();
+  uint32_t reactionsCount = reactionsList->getDenseInitializedLength();
+  MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
+
+  for (uint32_t i = 0; i < reactionsCount; i++) {
+    const Value& reactionVal = reactionsList->getDenseElement(i);
+    MOZ_RELEASE_ASSERT(reactionVal.isObject());
+    reaction = &reactionVal.toObject();
+    if (!f(&reaction)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // ES2016, 25.4.1.8.
 static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
                                                  HandleValue reactionsVal,
@@ -1540,28 +1582,9 @@ static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
   MOZ_ASSERT(state == JS::PromiseState::Fulfilled ||
              state == JS::PromiseState::Rejected);
 
-  RootedObject reactions(cx, &reactionsVal.toObject());
-
-  if (reactions->is<PromiseReactionRecord>() || IsWrapper(reactions) ||
-      JS_IsDeadWrapper(reactions)) {
-    return EnqueuePromiseReactionJob(cx, reactions, valueOrReason, state);
-  }
-
-  HandleNativeObject reactionsList = reactions.as<NativeObject>();
-  uint32_t reactionsCount = reactionsList->getDenseInitializedLength();
-  MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
-
-  RootedObject reaction(cx);
-  for (uint32_t i = 0; i < reactionsCount; i++) {
-    const Value& reactionVal = reactionsList->getDenseElement(i);
-    MOZ_RELEASE_ASSERT(reactionVal.isObject());
-    reaction = &reactionVal.toObject();
-    if (!EnqueuePromiseReactionJob(cx, reaction, valueOrReason, state)) {
-      return false;
-    }
-  }
-
-  return true;
+  return ForEachReaction(cx, reactionsVal, [&](MutableHandleObject reaction) {
+    return EnqueuePromiseReactionJob(cx, reaction, valueOrReason, state);
+  });
 }
 
 // Implements PromiseReactionJob optimized for the case when the reaction
@@ -5265,79 +5288,35 @@ bool PromiseObject::dependentPromises(JSContext* cx,
     return true;
   }
 
+  uint32_t valuesIndex = 0;
   RootedValue reactionsVal(cx, reactions());
 
-  // If no reactions are pending, we don't have list and are done.
-  if (reactionsVal.isNullOrUndefined()) {
-    return true;
-  }
+  return ForEachReaction(cx, reactionsVal, [&](MutableHandleObject obj) {
+    if (IsProxy(obj)) {
+      obj.set(UncheckedUnwrap(obj));
+    }
 
-  RootedObject reactionsObj(cx, &reactionsVal.toObject());
-
-  // If only a single reaction exists, it's stored directly instead of in a
-  // list. In that case, `reactionsObj` might be a wrapper, which we can
-  // always safely unwrap.
-  if (IsProxy(reactionsObj)) {
-    reactionsObj = UncheckedUnwrap(reactionsObj);
-    if (JS_IsDeadWrapper(reactionsObj)) {
+    if (JS_IsDeadWrapper(obj)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_DEAD_OBJECT);
       return false;
     }
-    MOZ_RELEASE_ASSERT(reactionsObj->is<PromiseReactionRecord>());
-  }
 
-  if (reactionsObj->is<PromiseReactionRecord>()) {
-    // Not all reactions have a Promise on them.
-    RootedObject promiseObj(
-        cx, reactionsObj->as<PromiseReactionRecord>().promise());
-    if (!promiseObj) {
-      return true;
-    }
-
-    if (!values.growBy(1)) {
-      return false;
-    }
-
-    values[0].setObject(*promiseObj);
-    return true;
-  }
-
-  MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
-  HandleNativeObject reactions = reactionsObj.as<NativeObject>();
-
-  uint32_t len = reactions->getDenseInitializedLength();
-  MOZ_ASSERT(len >= 2);
-
-  uint32_t valuesIndex = 0;
-  Rooted<PromiseReactionRecord*> reaction(cx);
-  for (uint32_t i = 0; i < len; i++) {
-    JSObject* element = &reactions->getDenseElement(i).toObject();
-    if (IsProxy(element)) {
-      element = UncheckedUnwrap(element);
-      if (JS_IsDeadWrapper(element)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_DEAD_OBJECT);
-        return false;
-      }
-    }
-
-    MOZ_RELEASE_ASSERT(element->is<PromiseReactionRecord>());
-    reaction = &element->as<PromiseReactionRecord>();
+    MOZ_RELEASE_ASSERT(obj->is<PromiseReactionRecord>());
+    Rooted<PromiseReactionRecord*> reaction(cx,
+                                            &obj->as<PromiseReactionRecord>());
 
     // Not all reactions have a Promise on them.
     RootedObject promiseObj(cx, reaction->promise());
-    if (!promiseObj) {
-      continue;
-    }
-    if (!values.growBy(1)) {
-      return false;
-    }
+    if (promiseObj) {
+      if (!values.growBy(1)) {
+        return false;
+      }
 
-    values[valuesIndex++].setObject(*promiseObj);
-  }
-
-  return true;
+      values[valuesIndex++].setObject(*promiseObj);
+    }
+    return true;
+  });
 }
 
 /* static */
