@@ -141,10 +141,7 @@ var CharsetMenu = {
     this._ensureDataReady();
     let doc = parent.ownerDocument;
 
-    if (
-      showDetector &&
-      !Services.prefs.getBoolPref("intl.charset.detector.ng.enabled")
-    ) {
+    if (showDetector) {
       let menuNode = doc.createXULElement("menu");
       menuNode.setAttribute(
         "label",

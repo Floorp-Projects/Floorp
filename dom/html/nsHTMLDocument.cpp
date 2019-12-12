@@ -288,8 +288,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
     return;
   }
   if (kCharsetFromParentForced == parentSource ||
-      kCharsetFromUserForced == parentSource ||
-      kCharsetFromUserForcedAutoDetection == parentSource) {
+      kCharsetFromUserForced == parentSource) {
     if (WillIgnoreCharsetOverride() ||
         !IsAsciiCompatible(aEncoding) ||  // if channel said UTF-16
         !IsAsciiCompatible(parentCharset)) {
