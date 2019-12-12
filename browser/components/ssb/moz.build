@@ -6,3 +6,11 @@
 
 JAR_MANIFESTS += ['content/jar.mn']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
+EXTRA_JS_MODULES += [
+    'SiteSpecificBrowserService.jsm',
+]
