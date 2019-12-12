@@ -55,6 +55,7 @@ export type {
   SourcesMap,
   SourcesMapByThread,
   SourceResourceState,
+  SourceResource,
 } from "./sources";
 export type { ActiveSearchType, OrientationType } from "./ui";
 export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
