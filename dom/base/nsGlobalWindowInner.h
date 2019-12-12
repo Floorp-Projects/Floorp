@@ -1297,9 +1297,16 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // The page should not request permission multiple times.
   bool mXRPermissionGranted : 1;
 
+  // True if this was the currently-active inner window for a BrowsingContext at
+  // the time it was discarded.
+  bool mWasCurrentInnerWindow : 1;
+  void SetWasCurrentInnerWindow() { mWasCurrentInnerWindow = true; }
+  bool WasCurrentInnerWindow() const override { return mWasCurrentInnerWindow; }
+
+  bool mHasSeenGamepadInput : 1;
+
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
-  bool mHasSeenGamepadInput;
 
   RefPtr<nsScreen> mScreen;
 

@@ -842,6 +842,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mHasVRDisplayActivateEvents(false),
       mXRPermissionRequestInFlight(false),
       mXRPermissionGranted(false),
+      mWasCurrentInnerWindow(false),
       mHasSeenGamepadInput(false),
       mSuspendDepth(0),
       mFreezeDepth(0),
@@ -2527,19 +2528,13 @@ bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
   auto* bc = GetBrowsingContext();
   MOZ_ASSERT(bc);
 
-  nsPIDOMWindowOuter* outer;
-  // When a BC is discarded, it stops returning outer windows altogether. That
-  // doesn't work for this check, since we still want current inner window to be
-  // treated as current after that point. Simply falling back to `mOuterWindow`
-  // here isn't ideal, since it will start returning true for inner windows
-  // which were current before a remoteness switch once a BrowsingContext has
-  // been discarded, but it's not incorrect in a way which should cause
-  // significant issues.
-  if (!bc->IsDiscarded()) {
-    outer = bc->GetDOMWindow();
-  } else {
-    outer = mOuterWindow;
+  if (bc->IsDiscarded()) {
+    // If our BrowsingContext has been discarded, we consider ourselves
+    // still-current if we were current at the time it was discarded.
+    return mOuterWindow && WasCurrentInnerWindow();
   }
+
+  nsPIDOMWindowOuter* outer = bc->GetDOMWindow();
   return outer && outer->GetCurrentInnerWindow() == this;
 }
 
