@@ -150,7 +150,7 @@ var TestUtils = {
    * @param condition
    *        A condition function that must return true or false. If the
    *        condition ever throws, this is also treated as a false. The
-   *        function can be a generator.
+   *        function can be an async function.
    * @param interval
    *        The time interval to poll the condition function. Defaults
    *        to 100ms.
