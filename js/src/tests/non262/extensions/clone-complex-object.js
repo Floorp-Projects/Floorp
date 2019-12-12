@@ -78,7 +78,7 @@ function compareProperties(a, b, stack, path) {
                 pa.splice(i, 1);
                 i--;
             } else {
-                throw new Error("non-enumerable clone property " + uneval(pa[i][0]) + " " + path);
+                throw new Error("non-enumerable clone property " + propname + " " + path);
             }
         }
     }
