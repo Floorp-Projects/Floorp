@@ -11,3 +11,4 @@
 Gecko-based implementation of [WebExtension](../../mozilla.components.concept.engine.webextension/-web-extension/index.md), wrapping the native web
 extension object provided by GeckoView.
 
+`GeckoWebExtension(native: `[`WebExtension`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html)`)`

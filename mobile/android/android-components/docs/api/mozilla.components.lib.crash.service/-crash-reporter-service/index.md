@@ -2,7 +2,7 @@
 
 # CrashReporterService
 
-`interface CrashReporterService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/CrashReporterService.kt#L12)
+`interface CrashReporterService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/CrashReporterService.kt#L14)
 
 Interface to be implemented by external services that accept crash reports.
 
