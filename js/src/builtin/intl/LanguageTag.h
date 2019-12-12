@@ -28,10 +28,10 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 class JSLinearString;
-class JSString;
-class JSTracer;
+class JS_PUBLIC_API JSString;
+class JS_PUBLIC_API JSTracer;
 
 namespace js {
 
