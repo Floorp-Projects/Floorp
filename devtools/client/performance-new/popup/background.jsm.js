@@ -308,6 +308,42 @@ function revertRecordingPreferences() {
   Services.prefs.clearUserPref(DURATION_PREF);
 }
 
+/**
+ * A simple cache for the default recording preferences.
+ * @type {RecordingStateFromPreferences}
+ */
+let _defaultPrefsForOlderFirefox;
+
+/**
+ * This function contains the canonical defaults for the data store in the
+ * preferences in the user profile. They represent the default values for both
+ * the popup and panel's recording settings.
+ *
+ * NOTE: We don't need that function anymore, because have recording default
+ * values in the all.js file since Firefox 72. But we still keep this to support
+ * older Firefox versions. See Bug 1603415.
+ */
+function getDefaultRecordingPreferencesForOlderFirefox() {
+  if (!_defaultPrefsForOlderFirefox) {
+    _defaultPrefsForOlderFirefox = {
+      entries: 10000000, // ~80mb,
+      // Do not expire markers, let them roll off naturally from the circular buffer.
+      duration: 0,
+      interval: 1000, // 1000µs = 1ms
+      features: ["js", "leaf", "stackwalk"],
+      threads: ["GeckoMain", "Compositor"],
+      objdirs: [],
+    };
+
+    if (AppConstants.platform === "android") {
+      // Java profiling is only meaningful on android.
+      _defaultPrefsForOlderFirefox.features.push("java");
+    }
+  }
+
+  return _defaultPrefsForOlderFirefox;
+}
+
 var EXPORTED_SYMBOLS = [
   "captureProfile",
   "startProfiler",
@@ -319,4 +355,5 @@ var EXPORTED_SYMBOLS = [
   "getRecordingPreferencesFromBrowser",
   "setRecordingPreferencesOnBrowser",
   "revertRecordingPreferences",
+  "getDefaultRecordingPreferencesForOlderFirefox",
 ];
