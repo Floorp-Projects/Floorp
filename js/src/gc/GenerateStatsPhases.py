@@ -143,6 +143,7 @@ PhaseKindGraphRoots = [
             PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
             PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
             PhaseKind("SWEEP_FINALIZATION_GROUPS", "Sweep FinalizationGroups", 74),
+            PhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
             PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
             PhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
             PhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),

@@ -252,6 +252,7 @@ UNIFIED_SOURCES += [
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
     'builtin/WeakMapObject.cpp',
+    'builtin/WeakRefObject.cpp',
     'builtin/WeakSetObject.cpp',
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',

@@ -34,6 +34,7 @@
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
+#include "gc/PublicIterators.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
@@ -1050,6 +1051,9 @@ JS_FRIEND_API void js::StopDrainingJobQueue(JSContext* cx) {
 JS_FRIEND_API void js::RunJobs(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
   cx->jobQueue->runJobs(cx);
+  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    zone->clearKeptObjects();
+  }
 }
 
 JSObject* InternalJobQueue::getIncumbentGlobal(JSContext* cx) {
