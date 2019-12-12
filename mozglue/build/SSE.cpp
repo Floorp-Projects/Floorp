@@ -40,14 +40,6 @@ static bool has_cpuid_bits(unsigned int level, CPUIDRegister reg,
   return (regs[reg] & bits) == bits;
 }
 
-#  if !defined(MOZILLA_PRESUME_AVX)
-static uint64_t xgetbv(uint32_t xcr) {
-  uint32_t eax, edx;
-  __asm__(".byte 0x0f, 0x01, 0xd0" : "=a"(eax), "=d"(edx) : "c"(xcr));
-  return (uint64_t)(edx) << 32 | eax;
-}
-#  endif
-
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
 
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
@@ -64,10 +56,6 @@ static bool has_cpuid_bits(unsigned int level, CPUIDRegister reg,
   __cpuid(regs, level);
   return (unsigned(regs[reg]) & bits) == bits;
 }
-
-#  if !defined(MOZILLA_PRESUME_AVX)
-static uint64_t xgetbv(uint32_t xcr) { return _xgetbv(xcr); }
-#  endif
 
 #elif (defined(__GNUC__) || defined(__SUNPRO_CC)) && \
     (defined(__i386) || defined(__x86_64__))
@@ -194,4 +182,15 @@ bool aes_enabled = has_cpuid_bits(1u, ecx, (1u << 25));
 #endif
 
 }  // namespace sse_private
+
+#ifdef HAVE_CPUID_H
+
+uint64_t xgetbv(uint32_t xcr) {
+  uint32_t eax, edx;
+  __asm__(".byte 0x0f, 0x01, 0xd0" : "=a"(eax), "=d"(edx) : "c"(xcr));
+  return (uint64_t)(edx) << 32 | eax;
+}
+
+#endif
+
 }  // namespace mozilla
