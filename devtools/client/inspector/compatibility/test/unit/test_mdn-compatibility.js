@@ -74,21 +74,6 @@ const TEST_DATA = [
     ],
   },
   {
-    description: "Test for an experimental property",
-    declarations: [{ name: "border-block-color" }],
-    browsers: [FIREFOX_69],
-    expectedIssues: [
-      {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
-        property: "border-block-color",
-        url: "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
-        deprecated: false,
-        experimental: true,
-        unsupportedBrowsers: [],
-      },
-    ],
-  },
-  {
     description: "Test for a property having some issues",
     declarations: [{ name: "font-variant-alternates" }],
     browsers: [FIREFOX_1],
@@ -115,7 +100,7 @@ const TEST_DATA = [
         aliases: ["-moz-user-select"],
         url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
         deprecated: false,
-        experimental: true,
+        experimental: false,
         unsupportedBrowsers: [SAFARI_13],
       },
     ],
@@ -127,17 +112,7 @@ const TEST_DATA = [
       { name: "-webkit-user-select" },
     ],
     browsers: [FIREFOX_69, SAFARI_13],
-    expectedIssues: [
-      {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-        property: "user-select",
-        aliases: ["-moz-user-select", "-webkit-user-select"],
-        url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
-        deprecated: false,
-        experimental: true,
-        unsupportedBrowsers: [],
-      },
-    ],
+    expectedIssues: [],
   },
 ];
 
