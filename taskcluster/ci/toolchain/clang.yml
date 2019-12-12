@@ -86,54 +86,52 @@ linux64-clang-9-cross:
             - linux64-binutils
             - linux64-gcc-7
 
-linux64-clang-9-mingw-x86:
+linux64-clang-8-mingw-x86:
     description: "MinGW-Clang Trunk x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
     run:
-        script: build-clang-mingw.sh
+        script: build-clang-8-mingw.sh
         arguments:
             - 'x86'
-            - 'build/build-clang/clang-9-mingw.json'
+            - 'build/build-clang/clang-8-mingw.json'
         resources:
-            - 'build/build-clang/clang-9-mingw.json'
+            - 'build/build-clang/clang-8-mingw.json'
         toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.xz
     fetches:
         fetch:
-            - clang-9
+            - clang-8
             - mingw-w64
             - libunwind
             - llvm-mingw
             - gcc-9.1.0
         toolchain:
             - linux64-gcc-7
-            - linux64-binutils
 
-linux64-clang-9-mingw-x64:
+linux64-clang-8-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
     run:
-        script: build-clang-mingw.sh
+        script: build-clang-8-mingw.sh
         arguments:
             - 'x64'
-            - 'build/build-clang/clang-9-mingw.json'
+            - 'build/build-clang/clang-8-mingw.json'
         resources:
-            - 'build/build-clang/clang-9-mingw.json'
+            - 'build/build-clang/clang-8-mingw.json'
         toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.xz
     fetches:
         fetch:
-            - clang-9
+            - clang-8
             - mingw-w64
             - libunwind
             - llvm-mingw
             - gcc-9.1.0
         toolchain:
             - linux64-gcc-7
-            - linux64-binutils
 
 linux64-clang-9-android-cross:
     description: "Clang 9 toolchain build"
