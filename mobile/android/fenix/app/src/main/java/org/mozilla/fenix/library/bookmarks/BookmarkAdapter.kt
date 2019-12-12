@@ -25,7 +25,7 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     RecyclerView.Adapter<BookmarkNodeViewHolder>(), SelectionHolder<BookmarkNode> {
 
     private var tree: List<BookmarkNode> = listOf()
-    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal
+    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     override val selectedItems: Set<BookmarkNode> get() = mode.selectedItems
     private var isFirstRun = true
 

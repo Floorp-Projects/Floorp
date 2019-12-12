@@ -21,7 +21,7 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(null)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(null, BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+        assertThat(BookmarkFragmentState(null, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
 
         store.dispatch(BookmarkFragmentAction.Change(tree)).join()
 
@@ -34,7 +34,7 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
 
         store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
 
@@ -47,7 +47,7 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
 
         store.dispatch(BookmarkFragmentAction.Change(tree)).join()
 
@@ -77,7 +77,7 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.Deselect(childItem)).join()
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
     }
 
     @Test
@@ -102,7 +102,7 @@ class BookmarkFragmentStoreTest {
 
     @Test
     fun `deselecting while not in selecting mode does nothing`() = runBlocking {
-        val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal)
+        val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())
         val store = BookmarkFragmentStore(initialState)
 
         store.dispatch(BookmarkFragmentAction.Deselect(item)).join()
@@ -117,12 +117,12 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.DeselectAll).join()
 
-        assertThat(initialState.copy(mode = BookmarkFragmentState.Mode.Normal)).isEqualTo(store.state)
+        assertThat(initialState.copy(mode = BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
     }
 
     @Test
     fun `deselect all bookmarks when none are selected`() = runBlocking {
-        val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal)
+        val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())
         val store = BookmarkFragmentStore(initialState)
 
         store.dispatch(BookmarkFragmentAction.DeselectAll)
@@ -139,7 +139,7 @@ class BookmarkFragmentStoreTest {
 
         store.state.run {
             assertThat(newTree).isEqualTo(tree)
-            assertThat(BookmarkFragmentState.Mode.Normal).isEqualTo(mode)
+            assertThat(BookmarkFragmentState.Mode.Normal()).isEqualTo(mode)
         }
     }
 
@@ -167,6 +167,17 @@ class BookmarkFragmentStoreTest {
         assertFalse(store.state.isLoading)
     }
 
+    @Test
+    fun `switching to Desktop Bookmarks folder sets showMenu state to false`() = runBlocking {
+        val initialState = BookmarkFragmentState(tree)
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.Change(rootFolder)).join()
+
+        assertThat(rootFolder).isEqualTo(store.state.tree)
+        assertThat(BookmarkFragmentState.Mode.Normal(false)).isEqualTo(store.state.mode)
+    }
+
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
     private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1, null, null, null)
     private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, listOf())
@@ -190,5 +201,14 @@ class BookmarkFragmentStoreTest {
         "Mobile",
         null,
         listOf(separator, subfolder)
+    )
+    private val rootFolder = BookmarkNode(
+        BookmarkNodeType.FOLDER,
+        "root________",
+        null,
+        0,
+        "Desktop Bookmarks",
+        null,
+        listOf(subfolder)
     )
 }

@@ -46,12 +46,12 @@ internal class BookmarkAdapterTest {
                 )
             )
         )
-        bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal)
-        bookmarkAdapter.updateData(null, BookmarkFragmentState.Mode.Normal)
+        bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal())
+        bookmarkAdapter.updateData(null, BookmarkFragmentState.Mode.Normal())
         verifyOrder {
-            bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal)
+            bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal())
             bookmarkAdapter.notifyItemRangeInserted(0, 3)
-            bookmarkAdapter.updateData(null, BookmarkFragmentState.Mode.Normal)
+            bookmarkAdapter.updateData(null, BookmarkFragmentState.Mode.Normal())
             bookmarkAdapter.notifyItemRangeRemoved(0, 3)
         }
     }

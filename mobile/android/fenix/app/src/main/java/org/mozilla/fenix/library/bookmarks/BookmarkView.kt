@@ -100,7 +100,7 @@ class BookmarkView(
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_bookmark, container, true)
 
-    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal
+    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     private var tree: BookmarkNode? = null
     private var canGoBack = false
 

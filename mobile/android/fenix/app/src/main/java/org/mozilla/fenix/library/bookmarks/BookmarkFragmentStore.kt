@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -22,13 +23,13 @@ class BookmarkFragmentStore(
  */
 data class BookmarkFragmentState(
     val tree: BookmarkNode?,
-    val mode: Mode = Mode.Normal,
+    val mode: Mode = Mode.Normal(),
     val isLoading: Boolean = true
 ) : State {
     sealed class Mode {
         open val selectedItems = emptySet<BookmarkNode>()
 
-        object Normal : Mode()
+        data class Normal(val showMenu: Boolean = true) : Mode()
         data class Selecting(override val selectedItems: Set<BookmarkNode>) : Mode()
     }
 }
@@ -58,8 +59,10 @@ private fun bookmarkFragmentStateReducer(
             val items = state.mode.selectedItems.filter { it in action.tree }
             state.copy(
                 tree = action.tree,
-                mode = if (items.isEmpty()) {
-                    BookmarkFragmentState.Mode.Normal
+                mode = if (BookmarkRoot.Root.id == action.tree.guid) {
+                    BookmarkFragmentState.Mode.Normal(false)
+                } else if (items.isEmpty()) {
+                    BookmarkFragmentState.Mode.Normal()
                 } else {
                     BookmarkFragmentState.Mode.Selecting(items.toSet())
                 },
@@ -72,14 +75,14 @@ private fun bookmarkFragmentStateReducer(
             val items = state.mode.selectedItems - action.item
             state.copy(
                 mode = if (items.isEmpty()) {
-                    BookmarkFragmentState.Mode.Normal
+                    BookmarkFragmentState.Mode.Normal()
                 } else {
                     BookmarkFragmentState.Mode.Selecting(items)
                 }
             )
         }
         BookmarkFragmentAction.DeselectAll ->
-            state.copy(mode = BookmarkFragmentState.Mode.Normal)
+            state.copy(mode = BookmarkFragmentState.Mode.Normal())
     }
 }
 

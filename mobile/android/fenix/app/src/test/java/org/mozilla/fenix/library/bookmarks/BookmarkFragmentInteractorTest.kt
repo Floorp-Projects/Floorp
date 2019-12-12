@@ -87,7 +87,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `switch between bookmark selection modes`() {
-        interactor.onSelectionModeSwitch(BookmarkFragmentState.Mode.Normal)
+        interactor.onSelectionModeSwitch(BookmarkFragmentState.Mode.Normal())
 
         verify {
             bookmarkController.handleSelectionModeSwitch()

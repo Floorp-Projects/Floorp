@@ -154,8 +154,10 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         when (val mode = bookmarkStore.state.mode) {
-            BookmarkFragmentState.Mode.Normal -> {
-                inflater.inflate(R.menu.bookmarks_menu, menu)
+            is BookmarkFragmentState.Mode.Normal -> {
+                if (mode.showMenu) {
+                    inflater.inflate(R.menu.bookmarks_menu, menu)
+                }
             }
             is BookmarkFragmentState.Mode.Selecting -> {
                 if (mode.selectedItems.any { it.type != BookmarkNodeType.ITEM }) {
