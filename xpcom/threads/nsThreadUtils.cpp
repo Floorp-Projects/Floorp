@@ -531,6 +531,18 @@ nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
                                                            aDispatchFlags);
 }
 
+nsresult NS_CreateBackgroundTaskQueue(const char* aName,
+                                      nsISerialEventTarget** aTarget) {
+  nsCOMPtr<nsISerialEventTarget> target =
+    nsThreadManager::get().CreateBackgroundTaskQueue(aName);
+  if (!target) {
+    return NS_ERROR_FAILURE;
+  }
+
+  target.forget(aTarget);
+  return NS_OK;
+}
+
 // nsAutoLowPriorityIO
 nsAutoLowPriorityIO::nsAutoLowPriorityIO() {
 #if defined(XP_WIN)

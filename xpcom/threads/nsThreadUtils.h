@@ -1700,12 +1700,27 @@ extern mozilla::TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(
  * background thread's lifetime.  Not having to manage your own thread also
  * means less resource usage, as the underlying implementation here can manage
  * spinning up and shutting down threads appropriately.
+ *
+ * NOTE: there is no guarantee that events dispatched via these APIs are run
+ * serially, in dispatch order; several dispatched events may run in parallel.
+ * If you depend on serial execution of dispatched events, you should use
+ * NS_CreateBackgroundTaskQueue instead, and dispatch events to the returned
+ * event target.
  */
 extern nsresult NS_DispatchBackgroundTask(
     already_AddRefed<nsIRunnable> aEvent,
     uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 extern nsresult NS_DispatchBackgroundTask(
     nsIRunnable* aEvent, uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
+
+/**
+ * Obtain a new serial event target that dispatches runnables to a background
+ * thread.  In many cases, this is a straight replacement for creating your
+ * own, private thread, and is generally preferred to creating your own,
+ * private thread.
+ */
+extern nsresult NS_CreateBackgroundTaskQueue(const char* aName,
+                                             nsISerialEventTarget** aTarget);
 
 namespace mozilla {
 
