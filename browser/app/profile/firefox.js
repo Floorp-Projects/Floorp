@@ -320,13 +320,12 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 #ifdef NIGHTLY_BUILD
   // Whether the quantum bar displays design update 1.
   pref("browser.urlbar.update1", true);
-  // Whether we expand the font size when when the urlbar is
-  // focused in design update 1.
-  pref("browser.urlbar.update1.expandTextOnFocus", true);
   // Whether the urlbar should strip https from urls in the view.
   pref("browser.urlbar.update1.view.stripHttps", true);
 #else
   pref("browser.urlbar.update1", false);
+  // Whether we expand the font size when when the urlbar is
+  // focused in design update 1.
   pref("browser.urlbar.update1.expandTextOnFocus", false);
   pref("browser.urlbar.update1.view.stripHttps", false);
 #endif
