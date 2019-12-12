@@ -8,16 +8,17 @@ import { sortBy, uniq } from "lodash";
 import { createSelector } from "reselect";
 import {
   getSources,
-  getSourceInSources,
   getBreakpointsList,
   getSelectedSource,
+  resourceAsSourceBase,
 } from "../selectors";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
+import { makeShallowQuery } from "../utils/resource";
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
 
 import type { Source, Breakpoint } from "../types";
-import type { Selector, SourceResourceState } from "../reducers/types";
+import type { Selector, SourceBase, State } from "../reducers/types";
 
 export type BreakpointSources = Array<{
   source: Source,
@@ -40,36 +41,31 @@ function getBreakpointsForSource(
     );
 }
 
-function findBreakpointSources(
-  sources: SourceResourceState,
-  breakpoints: Breakpoint[],
-  selectedSource: ?Source
-): Source[] {
-  const sourceIds: string[] = uniq(
-    breakpoints.map(bp => getSelectedLocation(bp, selectedSource).sourceId)
-  );
+export const findBreakpointSources = (state: State) => {
+  const breakpoints = getBreakpointsList(state);
+  const sources = getSources(state);
+  const selectedSource = getSelectedSource(state);
+  return queryBreakpointSources(sources, { breakpoints, selectedSource });
+};
 
-  const breakpointSources = sourceIds.reduce((acc, id) => {
-    const source = getSourceInSources(sources, id);
-    if (source && !source.isBlackBoxed) {
-      acc.push(source);
-    }
-    return acc;
-  }, []);
-
-  return sortBy(breakpointSources, (source: Source) => getFilename(source));
-}
+const queryBreakpointSources = makeShallowQuery({
+  filter: (_, { breakpoints, selectedSource }) =>
+    uniq(
+      breakpoints.map(bp => getSelectedLocation(bp, selectedSource).sourceId)
+    ),
+  map: resourceAsSourceBase,
+  reduce: (sources): Array<SourceBase> => {
+    const filtered = sources.filter(source => source && !source.isBlackBoxed);
+    return sortBy(filtered, source => getFilename(source));
+  },
+});
 
 export const getBreakpointSources: Selector<BreakpointSources> = createSelector(
   getBreakpointsList,
-  getSources,
+  findBreakpointSources,
   getSelectedSource,
-  (
-    breakpoints: Breakpoint[],
-    sources: SourceResourceState,
-    selectedSource: ?Source
-  ) =>
-    findBreakpointSources(sources, breakpoints, selectedSource)
+  (breakpoints: Breakpoint[], sources: Source[], selectedSource: ?Source) => {
+    return sources
       .map(source => ({
         source,
         breakpoints: getBreakpointsForSource(
@@ -78,5 +74,6 @@ export const getBreakpointSources: Selector<BreakpointSources> = createSelector(
           breakpoints
         ),
       }))
-      .filter(({ breakpoints: bpSources }) => bpSources.length > 0)
+      .filter(({ breakpoints: bpSources }) => bpSources.length > 0);
+  }
 );
