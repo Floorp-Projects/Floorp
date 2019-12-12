@@ -99,6 +99,7 @@ export type SourceBase = {|
   +extensionName: ?string,
   +isExtension: boolean,
   +isWasm: boolean,
+  +isOriginal: boolean,
 |};
 
 type SourceResource = Resource<{

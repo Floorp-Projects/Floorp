@@ -44,6 +44,7 @@ function makeMockSource(
     isWasm: false,
     extensionName: null,
     isExtension: false,
+    isOriginal: id.includes("originalSource"),
   };
 }
 
@@ -97,6 +98,7 @@ function makeMockWasmSource(): SourceBase {
     isWasm: true,
     extensionName: null,
     isExtension: false,
+    isOriginal: false,
   };
 }
 

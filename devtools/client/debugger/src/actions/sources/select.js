@@ -150,7 +150,7 @@ export function selectLocation(
     if (
       keepContext &&
       selectedSource &&
-      isOriginalId(selectedSource.id) != isOriginalId(location.sourceId)
+      selectedSource.isOriginal != isOriginalId(location.sourceId)
     ) {
       location = await mapLocation(getState(), sourceMaps, location);
       source = getSourceFromId(getState(), location.sourceId);

@@ -9,9 +9,9 @@
  * @module utils/source
  */
 
-import { isOriginalId, isGeneratedId } from "devtools-source-map";
 import { getUnicodeUrl } from "devtools-modules";
 
+import { isOriginalSource } from "../utils/source-maps";
 import { endTruncateStr } from "./utils";
 import { truncateMiddleText } from "../utils/text";
 import { parse as parseURL } from "../utils/url";
@@ -72,7 +72,7 @@ export function shouldBlackbox(source: ?Source) {
     return false;
   }
 
-  if (!features.originalBlackbox && isOriginalId(source.id)) {
+  if (!features.originalBlackbox && isOriginalSource(source)) {
     return false;
   }
 
@@ -511,11 +511,11 @@ export function underRoot(
 export function isOriginal(source: Source) {
   // Pretty-printed sources are given original IDs, so no need
   // for any additional check
-  return isOriginalId(source.id);
+  return isOriginalSource(source);
 }
 
 export function isGenerated(source: Source) {
-  return isGeneratedId(source.id);
+  return !isOriginal(source);
 }
 
 export function getSourceQueryString(source: ?Source) {

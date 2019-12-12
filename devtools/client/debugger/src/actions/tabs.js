@@ -9,8 +9,6 @@
  * @module actions/tabs
  */
 
-import { isOriginalId } from "devtools-source-map";
-
 import { removeDocument } from "../utils/editor";
 import { selectSource } from "./sources";
 
@@ -25,7 +23,7 @@ import type { Source, Context } from "../types";
 
 export function updateTab(source: Source, framework: string): Action {
   const { url, id: sourceId } = source;
-  const isOriginal = isOriginalId(source.id);
+  const isOriginal = source.isOriginal;
 
   return {
     type: "UPDATE_TAB",
@@ -38,7 +36,7 @@ export function updateTab(source: Source, framework: string): Action {
 
 export function addTab(source: Source): Action {
   const { url, id: sourceId } = source;
-  const isOriginal = isOriginalId(source.id);
+  const isOriginal = source.isOriginal;
 
   return {
     type: "ADD_TAB",

@@ -97,6 +97,7 @@ function createSourceObject(
     introductionUrl: props.introductionUrl || null,
     introductionType: props.introductionType || null,
     isExtension: false,
+    isOriginal: filename.includes("originalSource"),
   }: any);
 }
 

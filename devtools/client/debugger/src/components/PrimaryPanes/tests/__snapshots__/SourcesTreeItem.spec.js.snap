@@ -22,6 +22,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -56,6 +57,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -75,6 +77,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -108,6 +111,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -129,6 +133,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -166,6 +171,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -199,6 +205,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -218,6 +225,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -255,6 +263,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -295,6 +304,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "url",
@@ -315,6 +325,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -349,6 +360,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "url",
@@ -371,6 +383,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -408,6 +421,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -447,6 +461,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "url",
@@ -467,6 +482,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -504,6 +520,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -539,6 +556,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "url",
@@ -559,6 +577,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -593,6 +612,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "url",
@@ -615,6 +635,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -652,6 +673,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -686,6 +708,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "url",
@@ -706,6 +729,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -773,6 +797,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -818,6 +843,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -884,6 +910,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -952,6 +979,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -998,6 +1026,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -1065,6 +1094,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -1277,6 +1307,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -1321,6 +1352,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -1386,6 +1418,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -1393,6 +1426,190 @@ Object {
     },
     "threads": Array [
       Object {
+        "name": "Main Thread",
+      },
+    ],
+    "toggleBlackBox": [MockFunction],
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for domain item when a thread is set to root 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="domain/subfolder"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    title=""
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="globe-small"
+    />
+    <span
+      className="label"
+    >
+      folder
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "addCollapseExpandAllOptions": [Function],
+    "context": Object {},
+    "handleDownloadFile": [Function],
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "folder",
+        "path": "domain/subfolder",
+        "type": "directory",
+      },
+      "projectRoot": "server1.conn13.child1/thread19",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "extensionName": null,
+        "id": "server1.conn13.child1/39",
+        "introductionType": undefined,
+        "introductionUrl": null,
+        "isBlackBoxed": false,
+        "isExtension": false,
+        "isOriginal": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "relativeUrl": "http://mdn.com/one.js",
+        "url": "http://mdn.com/one.js",
+      },
+      "threads": Array [
+        Object {
+          "actor": "server1.conn13.child1/thread19",
+          "name": "Main Thread",
+        },
+      ],
+      "toggleBlackBox": [MockFunction],
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "folder",
+              "path": "domain/subfolder",
+              "type": "directory",
+            }
+          }
+          projectRoot="server1.conn13.child1/thread19"
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "extensionName": null,
+              "id": "server1.conn13.child1/39",
+              "introductionType": undefined,
+              "introductionUrl": null,
+              "isBlackBoxed": false,
+              "isExtension": false,
+              "isOriginal": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "relativeUrl": "http://mdn.com/one.js",
+              "url": "http://mdn.com/one.js",
+            }
+          }
+          threads={
+            Array [
+              Object {
+                "actor": "server1.conn13.child1/thread19",
+                "name": "Main Thread",
+              },
+            ]
+          }
+          toggleBlackBox={[MockFunction]}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+          title=""
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="globe-small"
+          />
+          <span
+            className="label"
+          >
+            folder
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "folder",
+      "path": "domain/subfolder",
+      "type": "directory",
+    },
+    "projectRoot": "server1.conn13.child1/thread19",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "extensionName": null,
+      "id": "server1.conn13.child1/39",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isOriginal": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "http://mdn.com/one.js",
+      "url": "http://mdn.com/one.js",
+    },
+    "threads": Array [
+      Object {
+        "actor": "server1.conn13.child1/thread19",
         "name": "Main Thread",
       },
     ],
@@ -1739,6 +1956,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -1784,6 +2002,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -1850,6 +2069,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -1917,6 +2137,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -1963,6 +2184,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -2030,187 +2252,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
-      "isPrettyPrinted": false,
-      "isWasm": false,
-      "relativeUrl": "http://mdn.com/one.js",
-      "url": "http://mdn.com/one.js",
-    },
-    "threads": Array [
-      Object {
-        "actor": "server1.conn13.child1/thread19",
-        "name": "Main Thread",
-      },
-    ],
-    "toggleBlackBox": [MockFunction],
-  },
-}
-`;
-
-exports[`SourceTreeItem renderItem should show icon for domain item when a thread is set to root 1`] = `
-Object {
-  "component": <div
-    className="node"
-    key="domain/subfolder"
-    onClick={[Function]}
-    onContextMenu={[Function]}
-    title=""
-  >
-    <AccessibleImage
-      className="arrow"
-    />
-    <AccessibleImage
-      className="globe-small"
-    />
-    <span
-      className="label"
-    >
-      folder
-       
-    </span>
-  </div>,
-  "defaultState": null,
-  "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
-    "context": Object {},
-    "handleDownloadFile": [Function],
-    "onClick": [Function],
-    "onContextMenu": [Function],
-    "props": Object {
-      "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
-      "depth": 0,
-      "expanded": false,
-      "focusItem": [MockFunction],
-      "item": Object {
-        "contents": Array [],
-        "name": "folder",
-        "path": "domain/subfolder",
-        "type": "directory",
-      },
-      "projectRoot": "server1.conn13.child1/thread19",
-      "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
-      "setProjectDirectoryRoot": [MockFunction],
-      "source": Object {
-        "extensionName": null,
-        "id": "server1.conn13.child1/39",
-        "introductionType": undefined,
-        "introductionUrl": null,
-        "isBlackBoxed": false,
-        "isExtension": false,
-        "isPrettyPrinted": false,
-        "isWasm": false,
-        "relativeUrl": "http://mdn.com/one.js",
-        "url": "http://mdn.com/one.js",
-      },
-      "threads": Array [
-        Object {
-          "actor": "server1.conn13.child1/thread19",
-          "name": "Main Thread",
-        },
-      ],
-      "toggleBlackBox": [MockFunction],
-    },
-    "refs": Object {},
-    "setState": [Function],
-    "state": null,
-    "updater": Updater {
-      "_callbacks": Array [],
-      "_renderer": ReactShallowRenderer {
-        "_context": Object {},
-        "_element": <SourceTreeItem
-          clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
-          depth={0}
-          expanded={false}
-          focusItem={[MockFunction]}
-          item={
-            Object {
-              "contents": Array [],
-              "name": "folder",
-              "path": "domain/subfolder",
-              "type": "directory",
-            }
-          }
-          projectRoot="server1.conn13.child1/thread19"
-          selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
-          setProjectDirectoryRoot={[MockFunction]}
-          source={
-            Object {
-              "extensionName": null,
-              "id": "server1.conn13.child1/39",
-              "introductionType": undefined,
-              "introductionUrl": null,
-              "isBlackBoxed": false,
-              "isExtension": false,
-              "isPrettyPrinted": false,
-              "isWasm": false,
-              "relativeUrl": "http://mdn.com/one.js",
-              "url": "http://mdn.com/one.js",
-            }
-          }
-          threads={
-            Array [
-              Object {
-                "actor": "server1.conn13.child1/thread19",
-                "name": "Main Thread",
-              },
-            ]
-          }
-          toggleBlackBox={[MockFunction]}
-        />,
-        "_forcedUpdate": false,
-        "_instance": [Circular],
-        "_newState": null,
-        "_rendered": <div
-          className="node"
-          onClick={[Function]}
-          onContextMenu={[Function]}
-          title=""
-        >
-          <AccessibleImage
-            className="arrow"
-          />
-          <AccessibleImage
-            className="globe-small"
-          />
-          <span
-            className="label"
-          >
-            folder
-             
-          </span>
-        </div>,
-        "_rendering": false,
-        "_updater": [Circular],
-      },
-    },
-    Symbol(enzyme.__setState__): [Function],
-  },
-  "props": Object {
-    "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
-    "depth": 0,
-    "expanded": false,
-    "focusItem": [MockFunction],
-    "item": Object {
-      "contents": Array [],
-      "name": "folder",
-      "path": "domain/subfolder",
-      "type": "directory",
-    },
-    "projectRoot": "server1.conn13.child1/thread19",
-    "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
-    "setProjectDirectoryRoot": [MockFunction],
-    "source": Object {
-      "extensionName": null,
-      "id": "server1.conn13.child1/39",
-      "introductionType": undefined,
-      "introductionUrl": null,
-      "isBlackBoxed": false,
-      "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -2278,6 +2320,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -2322,6 +2365,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -2387,6 +2431,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -2444,6 +2489,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": true,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -2464,6 +2510,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": true,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -2497,6 +2544,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": true,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -2519,6 +2567,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": true,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -2575,6 +2624,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": true,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -2595,6 +2645,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": true,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -2653,6 +2704,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "url",
@@ -2673,6 +2725,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -2707,6 +2760,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "url",
@@ -2729,6 +2783,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -2786,6 +2841,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "url",
@@ -2806,6 +2862,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -2843,6 +2900,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -2877,6 +2935,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "url",
@@ -2897,6 +2956,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -2930,6 +2990,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "url",
@@ -2952,6 +3013,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -2989,6 +3051,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -3022,6 +3085,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "url",
@@ -3042,6 +3106,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -3079,6 +3144,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -3115,6 +3181,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -3134,6 +3201,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -3169,6 +3237,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -3190,6 +3259,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -3227,6 +3297,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -3262,6 +3333,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -3281,6 +3353,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",
@@ -3318,6 +3391,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "http://mdn.com/one.js",
@@ -3352,6 +3426,7 @@ Object {
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
+          "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
           "relativeUrl": "url",
@@ -3372,6 +3447,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "http://mdn.com/one.js",
@@ -3405,6 +3481,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "url",
@@ -3427,6 +3504,7 @@ Object {
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
+              "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
               "relativeUrl": "http://mdn.com/one.js",
@@ -3464,6 +3542,7 @@ Object {
                 "introductionUrl": null,
                 "isBlackBoxed": false,
                 "isExtension": false,
+                "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
                 "relativeUrl": "http://mdn.com/one.js",
@@ -3497,6 +3576,7 @@ Object {
         "introductionUrl": null,
         "isBlackBoxed": false,
         "isExtension": false,
+        "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
         "relativeUrl": "url",
@@ -3517,6 +3597,7 @@ Object {
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
+      "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
       "relativeUrl": "http://mdn.com/one.js",

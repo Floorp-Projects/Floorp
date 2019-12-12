@@ -27,6 +27,7 @@ describe("getCallStackFrames selector", () => {
         ]),
         selectedSource: {
           id: "sourceId-originalSource",
+          isOriginal: true,
         },
       };
 
@@ -146,6 +147,7 @@ describe("getCallStackFrames selector", () => {
         ]),
         selectedSource: {
           id: "sourceId-originalSource",
+          isOriginal: true,
         },
       };
 
