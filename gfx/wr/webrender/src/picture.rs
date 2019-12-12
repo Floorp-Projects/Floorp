@@ -1680,16 +1680,34 @@ impl TileCacheInstance {
             self.current_tile_size = prev_state.current_tile_size;
 
             fn recycle_map<K: std::cmp::Eq + std::hash::Hash, V>(
+                ideal_len: usize,
                 dest: &mut FastHashMap<K, V>,
                 src: FastHashMap<K, V>,
             ) {
                 if dest.capacity() < src.capacity() {
-                    *dest = src;
+                    if src.capacity() < 3 * ideal_len {
+                        *dest = src;
+                    } else {
+                        dest.clear();
+                        dest.reserve(ideal_len);
+                    }
                 }
             }
-            recycle_map(&mut self.old_tiles, prev_state.allocations.old_tiles);
-            recycle_map(&mut self.old_opacity_bindings, prev_state.allocations.old_opacity_bindings);
-            recycle_map(&mut self.compare_cache, prev_state.allocations.compare_cache);
+            recycle_map(
+                self.tiles.len(),
+                &mut self.old_tiles,
+                prev_state.allocations.old_tiles,
+            );
+            recycle_map(
+                self.opacity_bindings.len(),
+                &mut self.old_opacity_bindings,
+                prev_state.allocations.old_opacity_bindings,
+            );
+            recycle_map(
+                prev_state.allocations.compare_cache.len(),
+                &mut self.compare_cache,
+                prev_state.allocations.compare_cache,
+            );
         }
 
         // Only evaluate what tile size to use fairly infrequently, so that we don't end
