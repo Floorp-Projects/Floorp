@@ -967,6 +967,9 @@ WindowProxyHolder BrowsingContext::GetFrames(ErrorResult& aError) {
 }
 
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
+  if (mIsDiscarded) {
+    return;
+  }
   // FIXME We need to set mClosed, but only once we're sending the
   //       DOMWindowClose event (which happens in the process where the
   //       document for this browsing context is loaded).
