@@ -459,11 +459,11 @@ OptionsPanel.prototype = {
     ];
 
     // In the Nightly Browser Toolbox, display an option to enable the experimental
-    // Omniscient Browser Toolbox.
+    // Multiprocess Browser Toolbox.
     if (this.target.isParentProcess) {
       prefDefinitions.push({
         pref: "devtools.browsertoolbox.fission",
-        label: "Enable Omniscient Browser Toolbox (⚠ WIP ⚠, needs restart)",
+        label: L10N.getStr("options.enableMultiProcessToolbox"),
         id: "devtools-browsertoolbox-fission",
         parentId: "context-options",
       });
