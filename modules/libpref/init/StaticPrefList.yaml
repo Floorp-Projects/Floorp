@@ -2658,7 +2658,7 @@
   mirror: always
 
 # Is support for the Web GPU API enabled?
-- name: dom.webgpu.enable
+- name: dom.webgpu.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always

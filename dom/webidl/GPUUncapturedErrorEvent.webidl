@@ -8,7 +8,7 @@
  */
 
 [
-    Pref="dom.webgpu.enable",
+    Pref="dom.webgpu.enabled",
     Exposed=Window,
 ]
 interface GPUUncapturedErrorEvent : Event {
