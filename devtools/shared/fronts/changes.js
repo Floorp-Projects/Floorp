@@ -20,6 +20,13 @@ class ChangesFront extends FrontClassWithSpec(changesSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "changesActor";
   }
+
+  async initialize() {
+    // Ensure the corresponding ChangesActor is immediately available and ready to track
+    // changes by calling a method on it. Actors are lazy and won't be created until
+    // actually used.
+    await super.start();
+  }
 }
 
 exports.ChangesFront = ChangesFront;
