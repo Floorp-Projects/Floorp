@@ -59,6 +59,8 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     SitePermissions.ALLOW
   );
 
+  SitePermissions.setForPrincipal(principal, "xr", SitePermissions.ALLOW);
+
   let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
     tab.linkedBrowser
   );
@@ -112,10 +114,20 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
 
+  let xr = permissions.find(({ id }) => id === "xr");
+  Assert.deepEqual(xr, {
+    id: "xr",
+    label: "Access Virtual Reality Devices",
+    state: SitePermissions.ALLOW,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
   SitePermissions.removeFromPrincipal(principal, "cookie");
   SitePermissions.removeFromPrincipal(principal, "popup");
   SitePermissions.removeFromPrincipal(principal, "geo");
   SitePermissions.removeFromPrincipal(principal, "shortcuts");
+
+  SitePermissions.removeFromPrincipal(principal, "xr");
 
   Services.prefs.clearUserPref("permissions.default.shortcuts");
 

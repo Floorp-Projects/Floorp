@@ -438,6 +438,7 @@ struct RedirectToRealChannelArgs {
   uint64_t redirectIdentifier;
   nsIPropertyBag2 properties;
   LastVisitInfo lastVisitInfo;
+  uint32_t loadStateLoadFlags;
 };
 
 struct TimingStructArgs {

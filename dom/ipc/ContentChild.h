@@ -763,6 +763,17 @@ class ContentChild final
       const nsCString& aCategory, const bool& aFromPrivateWindow,
       const uint64_t& aInnerWindowId, const bool& aFromChromeContext);
 
+  mozilla::ipc::IPCResult RecvLoadURI(BrowsingContext* aContext,
+                                      nsDocShellLoadState* aLoadState,
+                                      bool aSetNavigating);
+
+  mozilla::ipc::IPCResult RecvInternalLoad(BrowsingContext* aContext,
+                                           nsDocShellLoadState* aLoadState,
+                                           bool aTakeFocus);
+
+  mozilla::ipc::IPCResult RecvDisplayLoadError(BrowsingContext* aContext,
+                                               const nsAString& aURI);
+
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else

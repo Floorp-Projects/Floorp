@@ -18,6 +18,11 @@ add_task(async function test_geo_permission_prompt() {
   await testPrompt(PermissionUI.GeolocationPermissionPrompt);
 });
 
+// Tests that XRPermissionPrompt works as expected
+add_task(async function test_xr_permission_prompt() {
+  await testPrompt(PermissionUI.XRPermissionPrompt);
+});
+
 // Tests that DesktopNotificationPermissionPrompt works as expected
 add_task(async function test_desktop_notification_permission_prompt() {
   Services.prefs.setBoolPref(

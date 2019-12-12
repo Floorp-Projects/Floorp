@@ -322,6 +322,9 @@ add_task(async function() {
   let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
   let node = tabList.firstElementChild;
   // First entry should be the client with the most-recent tab.
+  is(node.nodeName, "vbox");
+  let currentClient = node;
+  node = node.firstElementChild;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Desktop", "correct client");
   // Next entry is the most-recent tab
@@ -338,26 +341,40 @@ add_task(async function() {
   node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/1");
+  node = node.nextElementSibling;
+  is(node, null, "no more siblings");
 
   // Next is a menuseparator between the clients.
-  node = node.nextElementSibling;
+  node = currentClient.nextElementSibling;
   is(node.nodeName, "menuseparator");
 
-  // Next is the client with 1 tab.
+  // Next is the container for client 2.
   node = node.nextElementSibling;
+  is(node.nodeName, "vbox");
+  currentClient = node;
+
+  // Next is the client with 1 tab.
+  node = node.firstElementChild;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Other Desktop", "correct client");
   // Its single tab
   node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/6");
+  node = node.nextElementSibling;
+  is(node, null, "no more siblings");
 
   // Next is a menuseparator between the clients.
-  node = node.nextElementSibling;
+  node = currentClient.nextElementSibling;
   is(node.nodeName, "menuseparator");
 
-  // Next is the client with no tab.
+  // Next is the container for client 3.
   node = node.nextElementSibling;
+  is(node.nodeName, "vbox");
+  currentClient = node;
+
+  // Next is the client with no tab.
+  node = node.firstElementChild;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Phone", "correct client");
   // There is a single node saying there's no tabs for the client.
@@ -366,7 +383,23 @@ add_task(async function() {
   is(node.getAttribute("itemtype"), "", "node is neither a tab nor a client");
 
   node = node.nextElementSibling;
-  is(node, null, "no more entries");
+  is(node, null, "no more siblings");
+  is(currentClient.nextElementSibling, null, "no more clients");
+
+  // Check accessibility. There should be containers for each client, with an
+  // aria attribute that identifies the client name.
+  let clientContainers = [
+    ...tabList.querySelectorAll("[aria-labelledby]").values(),
+  ];
+  let labelIds = clientContainers.map(container =>
+    container.getAttribute("aria-labelledby")
+  );
+  let labels = labelIds.map(id => document.getElementById(id).textContent);
+  Assert.deepEqual(labels.sort(), [
+    "My Desktop",
+    "My Other Desktop",
+    "My Phone",
+  ]);
 
   let didSync = false;
   let oldDoSync = gSync.doSync;
@@ -432,7 +465,7 @@ add_task(async function() {
 
   function checkTabsPage(tabsShownCount, showMoreLabel) {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-    let node = tabList.firstElementChild;
+    let node = tabList.firstElementChild.firstElementChild;
     is(node.getAttribute("itemtype"), "client", "node is a client entry");
     is(node.textContent, "My Desktop", "correct client");
     for (let i = 0; i < tabsShownCount; i++) {
@@ -467,7 +500,7 @@ add_task(async function() {
 
   async function checkCanOpenURL() {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-    let node = tabList.firstElementChild.nextElementSibling;
+    let node = tabList.firstElementChild.firstElementChild.nextElementSibling;
     let promiseTabOpened = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       SAMPLE_TAB_URL

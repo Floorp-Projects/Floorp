@@ -11,6 +11,7 @@ import logging
 import operator
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -170,7 +171,7 @@ class Doctor(MachCommandBase):
 @CommandProvider
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
-    CLOBBER_CHOICES = ['objdir', 'python']
+    CLOBBER_CHOICES = ['objdir', 'python', 'gradle']
 
     @Command('clobber', category='build',
              description='Clobber the tree (delete the object directory).')
@@ -199,6 +200,9 @@ class Clobber(MachCommandBase):
         version control in well-known Python package directories will be
         deleted. Run the `status` command of your VCS to see if any untracked
         files you haven't committed yet will be deleted.
+
+        The `gradle` target will remove the "gradle" subdirectory of the object
+        directory.
         """
         invalid = set(what) - set(self.CLOBBER_CHOICES)
         if invalid:
@@ -232,6 +236,10 @@ class Clobber(MachCommandBase):
                 cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]',
                        '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
+
+        if 'gradle' in what:
+            shutil.rmtree(mozpath.join(self.topobjdir, 'gradle'))
+
         return ret
 
     @property

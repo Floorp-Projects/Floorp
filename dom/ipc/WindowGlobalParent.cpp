@@ -198,14 +198,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  WindowGlobalParent* wgp = aTargetBC->Canonical()->GetCurrentWindowGlobal();
-  if (!wgp) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Target BrowsingContext has no WindowGlobalParent"));
-    return IPC_OK();
-  }
-
-  Unused << wgp->SendLoadURIInChild(aLoadState, aSetNavigating);
+  aTargetBC->LoadURI(nullptr, aLoadState, aSetNavigating);
   return IPC_OK();
 }
 
@@ -228,17 +221,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  WindowGlobalParent* wgp = aTargetBC->Canonical()->GetCurrentWindowGlobal();
-  if (!wgp) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Target BrowsingContext has no WindowGlobalParent"));
-    return IPC_OK();
-  }
-
-  bool takeFocus =
-      mBrowsingContext->GetIsActive() && !aTargetBC->GetIsActive() &&
-      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
-  Unused << wgp->SendInternalLoadInChild(aLoadState, takeFocus);
+  aTargetBC->InternalLoad(mBrowsingContext, aLoadState, nullptr, nullptr);
   return IPC_OK();
 }
 

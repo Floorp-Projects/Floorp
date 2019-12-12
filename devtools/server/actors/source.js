@@ -191,15 +191,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
   },
 
-  _findDebuggeeScripts(query = null) {
-    query = { ...query };
-    assert(
-      !("url" in query) && !("source" in query),
-      "Debuggee source and URL are set automatically"
-    );
-
-    query.source = this._source;
-    return this.dbg.findScripts(query);
+  get isWasm() {
+    return this._source.introductionType === "wasm";
   },
 
   _getSourceText: async function() {
@@ -207,9 +200,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       content: t,
       contentType: this._contentType,
     });
-    const isWasm = this._source.introductionType === "wasm";
 
-    if (isWasm) {
+    if (this.isWasm) {
       const wasm = this._source.binary;
       const buffer = wasm.buffer;
       assert(
@@ -397,8 +389,49 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return location;
   },
 
-  getBreakpointPositions: async function(query) {
-    const scripts = this._findDebuggeeScripts();
+  // Get all toplevel scripts in the source. Transitive child scripts must be
+  // found by traversing the child script tree.
+  _getTopLevelDebuggeeScripts() {
+    if (this._scripts) {
+      return this._scripts;
+    }
+
+    let scripts = this.dbg.findScripts({ source: this._source });
+
+    if (!this.isWasm) {
+      const topLevel = scripts.filter(script => !script.isFunction);
+      if (topLevel.length) {
+        scripts = topLevel;
+      } else {
+        const allScripts = new Set(scripts);
+
+        for (const script of allScripts) {
+          for (const child of script.getChildScripts()) {
+            allScripts.delete(child);
+          }
+        }
+
+        scripts = [...allScripts];
+      }
+    }
+
+    this._scripts = scripts;
+    return scripts;
+  },
+
+  resetDebuggeeScripts() {
+    this._scripts = null;
+  },
+
+  // Get toplevel scripts which contain all breakpoint positions for the source.
+  // This is different from _scripts if we detected that some scripts have been
+  // GC'ed and reparsed the source contents.
+  _getTopLevelBreakpointPositionScripts() {
+    if (this._breakpointPositionScripts) {
+      return this._breakpointPositionScripts;
+    }
+
+    let scripts = this._getTopLevelDebuggeeScripts();
 
     // We need to find all breakpoint positions, even if scripts associated with
     // this source have been GC'ed. We detect this by looking for a script which
@@ -413,8 +446,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // top level non-function script, but if there is a non-function script then
     // it must be at the top level and will keep all other scripts in the source
     // alive.
-    const isWasm = this._source.introductionType === "wasm";
-    if (!isWasm && !scripts.some(script => !script.isFunction)) {
+    if (!this.isWasm && !scripts.some(script => !script.isFunction)) {
       let newScript;
       try {
         newScript = this._source.reparse();
@@ -424,14 +456,69 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         // parse errors in the refetched contents.
       }
       if (newScript) {
-        scripts.length = 0;
-        function addScripts(script) {
-          scripts.push(script);
-          script.getChildScripts().forEach(addScripts);
-        }
-        addScripts(newScript);
+        scripts = [newScript];
       }
     }
+
+    this._breakpointPositionScripts = scripts;
+    return scripts;
+  },
+
+  // Get all scripts in this source that might include content in the range
+  // specified by the given query.
+  _findDebuggeeScripts(query, forBreakpointPositions) {
+    const scripts = forBreakpointPositions
+      ? this._getTopLevelBreakpointPositionScripts()
+      : this._getTopLevelDebuggeeScripts();
+
+    const {
+      start: { line: startLine = 0, column: startColumn = 0 } = {},
+      end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
+    } = query || {};
+
+    const rv = [];
+    addMatchingScripts(scripts);
+    return rv;
+
+    function scriptMatches(script) {
+      // These tests are approximate, as we can't easily get the script's end
+      // column.
+      const lineCount = script.lineCount;
+
+      if (
+        script.startLine > endLine ||
+        script.startLine + lineCount <= startLine ||
+        (script.startLine == endLine && script.startColumn > endColumn)
+      ) {
+        return false;
+      }
+
+      if (
+        lineCount == 1 &&
+        script.startLine == startLine &&
+        script.startColumn + script.sourceLength <= startColumn
+      ) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function addMatchingScripts(childScripts) {
+      for (const script of childScripts) {
+        if (scriptMatches(script)) {
+          rv.push(script);
+          addMatchingScripts(script.getChildScripts());
+        }
+      }
+    }
+  },
+
+  getBreakpointPositions: async function(query) {
+    const scripts = this._findDebuggeeScripts(
+      query,
+      /* forBreakpoiontPositions */ true
+    );
 
     const positions = [];
     for (const script of scripts) {
@@ -463,15 +550,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       start: { line: startLine = 0, column: startColumn = 0 } = {},
       end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
     } = query || {};
-
-    // This purely a performance boost to avoid needing to build an array
-    // of breakable points for scripts when we know we don't need it.
-    if (
-      script.startLine > endLine ||
-      script.startLine + script.lineCount < startLine
-    ) {
-      return;
-    }
 
     const offsets = script.getPossibleBreakpoints();
     for (const { lineNumber, columnNumber } of offsets) {
@@ -619,7 +697,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (column === undefined) {
       // Find all scripts that match the given source actor and line
       // number.
-      const scripts = this._findDebuggeeScripts({ line }).filter(
+      const query = { start: { line }, end: { line } };
+      const scripts = this._findDebuggeeScripts(query).filter(
         script => !actor.hasScript(script)
       );
 
@@ -665,7 +744,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
       // Find all scripts that match the given source actor, line,
       // and column number.
-      const scripts = this._findDebuggeeScripts({ line, column }).filter(
+      const query = { start: { line, column }, end: { line, column } };
+      const scripts = this._findDebuggeeScripts(query).filter(
         script => !actor.hasScript(script)
       );
 

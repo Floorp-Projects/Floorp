@@ -20,12 +20,13 @@ class ChildProcessChannelListener final {
   NS_INLINE_DECL_REFCOUNTING(ChildProcessChannelListener)
 
   using Callback = std::function<void(
-      nsIChildChannel*, nsTArray<net::DocumentChannelRedirect>&&)>;
+      nsIChildChannel*, nsTArray<net::DocumentChannelRedirect>&&, uint32_t)>;
 
   void RegisterCallback(uint64_t aIdentifier, Callback&& aCallback);
 
   void OnChannelReady(nsIChildChannel* aChannel, uint64_t aIdentifier,
-                      nsTArray<net::DocumentChannelRedirect>&& aRedirects);
+                      nsTArray<net::DocumentChannelRedirect>&& aRedirects,
+                      uint32_t aLoadStateLoadFlags);
 
   static already_AddRefed<ChildProcessChannelListener> GetSingleton();
 
@@ -35,6 +36,7 @@ class ChildProcessChannelListener final {
   struct CallbackArgs {
     nsCOMPtr<nsIChildChannel> mChannel;
     nsTArray<net::DocumentChannelRedirect> mRedirects;
+    uint32_t mLoadStateLoadFlags;
   };
 
   // TODO Backtrack.

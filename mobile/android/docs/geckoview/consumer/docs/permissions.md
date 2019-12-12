@@ -113,9 +113,9 @@ public class GeckoViewActivity extends AppCompatActivity {
 
 ### Content Permissions
 
-Content permissions are requested whenever a site wants access to content that is stored on the device. The content permissions that can be requested through GeckoView are; [`Geolocation`][10], [`Site Notifications`][11] and [`Persistent Storage`][12] access.
+Content permissions are requested whenever a site wants access to content that is stored on the device. The content permissions that can be requested through GeckoView are; [`Geolocation`][10], [`Site Notifications`][11] [`Persistent Storage`][12] and [`XR`][13] access.
 
-When you receive an [`onContentPermissionRequest`][13] call, you will also receive the `GeckoSession` the request was sent from, the URI of the site that requested the permission, as a String, the type of the content permission requested (geolocation, site notification or persistent storage), and a [`Callback`][4] to respond to the request. It is then up to the app to present UI to the user asking for the permissions, and to notify GeckoView of the response via the `Callback`.
+When you receive an [`onContentPermissionRequest`][14] call, you will also receive the `GeckoSession` the request was sent from, the URI of the site that requested the permission, as a String, the type of the content permission requested (geolocation, site notification or persistent storage), and a [`Callback`][4] to respond to the request. It is then up to the app to present UI to the user asking for the permissions, and to notify GeckoView of the response via the `Callback`.
 
 *Please note, in the case of `PERMISSION_DESKTOP_NOTIFICATION` and `PERMISSION_PERSISTENT_STORAGE`, GeckoView does not track accepted permissions and prevent further requests being sent for a particular site. It is therefore up to the calling app to do this if that is the desired behaviour. The code below demonstrates how to track storage permissions by site and track notification permission rejection for the whole app*
 
@@ -145,6 +145,8 @@ private class ExamplePermissionDelegate implements GeckoSession.PermissionDelega
                 return;
             }
             resId = R.string.request_storage;
+        } else if (PERMISSION_XR == type) {
+            resId = R.string.request_xr;
         } else {    // unknown permission type
             callback.reject();
             return;
@@ -183,7 +185,7 @@ private class ExamplePermissionDelegate implements GeckoSession.PermissionDelega
 ### Media Permissions
 Media permissions are requested whenever a site wants access to play or record media from the device's camera and microphone.
 
-When you receive an [`onMediaPermissionRequest`][14] call, you will also receive the `GeckoSession` the request was sent from, the URI of the site that requested the permission, as a String, the list of video devices available, if requesting video, the list of audio devices available, if requesting audio, and a [`MediaCallback`][15] to respond to the request. 
+When you receive an [`onMediaPermissionRequest`][15] call, you will also receive the `GeckoSession` the request was sent from, the URI of the site that requested the permission, as a String, the list of video devices available, if requesting video, the list of audio devices available, if requesting audio, and a [`MediaCallback`][17] to respond to the request. 
 
 It is up to the app to present UI to the user asking for the permissions, and to notify GeckoView of the response via the `MediaCallback`.
 
@@ -280,7 +282,8 @@ To see the `PermissionsDelegate` in action, you can find the full example implem
 [10]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_GEOLOCATION
 [11]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_DESKTOP_NOTIFICATION
 [12]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE
-[13]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-int-org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback-
-[14]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onMediaPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback-
-[15]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.MediaCallback.html
-[16]: https://searchfox.org/mozilla-central/source/mobile/android/geckoview_example/src/main/java/org/mozilla/geckoview_example/GeckoViewActivity.java#686
+[13]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_XR
+[14]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-int-org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback-
+[15]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onMediaPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback-
+[16]: {{ site.url }}{{ site.baseurl }}/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.MediaCallback.html
+[17]: https://searchfox.org/mozilla-central/source/mobile/android/geckoview_example/src/main/java/org/mozilla/geckoview_example/GeckoViewActivity.java#686
