@@ -475,11 +475,6 @@ class ObjectGroup : public gc::TenuredCell {
                                         const JSClass* clasp,
                                         JS::HandleObject obj);
 
-#ifdef DEBUG
-  static bool hasDefaultNewGroup(JSObject* proto, const JSClass* clasp,
-                                 ObjectGroup* group);
-#endif
-
   // Static accessors for ObjectGroupRealm ArrayObjectTable and
   // PlainObjectTable.
 
@@ -619,9 +614,6 @@ class ObjectGroupRealm {
 
   static ObjectGroupRealm& get(const ObjectGroup* group);
   static ObjectGroupRealm& getForNewObject(JSContext* cx);
-
-  void replaceAllocationSiteGroup(JSScript* script, jsbytecode* pc,
-                                  JSProtoKey kind, ObjectGroup* group);
 
   void removeDefaultNewGroup(const JSClass* clasp, TaggedProto proto,
                              JSObject* associated);
