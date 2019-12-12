@@ -47,6 +47,54 @@ add_task(async function content_script_xhr_to_self() {
   await extension.unload();
 });
 
+// XHR/fetch for other file is not allowed, even with file://-permissions.
+add_task(async function content_script_xhr_to_other_file_not_allowed() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["file:///*"],
+      content_scripts: [
+        {
+          matches: ["file:///*"],
+          js: ["content_script.js"],
+        },
+      ],
+    },
+    files: {
+      "content_script.js": async () => {
+        let otherFileUrl = document.URL.replace(
+          "dummy_page.html",
+          "file_sample.html"
+        );
+        let x = new XMLHttpRequest();
+        x.open("GET", otherFileUrl);
+        await new Promise(resolve => {
+          x.onloadend = resolve;
+          x.send();
+        });
+        browser.test.assertEq(0, x.status, "expected error");
+        browser.test.assertEq("", x.responseText, "request should fail");
+
+        // Now with content.XMLHttpRequest.
+        x = new content.XMLHttpRequest();
+        x.open("GET", otherFileUrl);
+        x.onloadend = () => {
+          browser.test.assertEq(0, x.status, "expected error (content)");
+          browser.test.sendMessage("done");
+        };
+        x.send();
+      },
+    },
+  });
+
+  await extension.startup();
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(FILE_DUMMY_URL);
+  await extension.awaitMessage("done");
+  await contentPage.close();
+
+  await extension.unload();
+});
+
 // "file://" permission does not grant access to files in the extension page.
 add_task(async function file_access_from_extension_page_not_allowed() {
   let extension = ExtensionTestUtils.loadExtension({
