@@ -1519,17 +1519,10 @@ impl GpuCacheTexture {
                     return 0
                 }
 
-                let upload_size = rows_dirty * Device::required_upload_size(
-                    DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, 1),
-                    None,
-                    texture.get_format(),
-                    device.optimal_pbo_stride(),
-                );
-
                 let mut uploader = device.upload_texture(
                     texture,
                     buffer,
-                    upload_size,
+                    rows_dirty * MAX_VERTEX_TEXTURE_WIDTH,
                 );
 
                 for (row_index, row) in rows.iter_mut().enumerate() {
@@ -1670,14 +1663,8 @@ impl<T> VertexDataTexture<T> {
         );
 
         debug_assert!(len <= data.capacity(), "CPU copy will read out of bounds");
-        let upload_size = Device::required_upload_size(
-            rect.size,
-            None,
-            self.texture().get_format(),
-            device.optimal_pbo_stride(),
-        );
         device
-            .upload_texture(self.texture(), &self.pbo, upload_size)
+            .upload_texture(self.texture(), &self.pbo, 0)
             .upload(rect, 0, None, None, data.as_ptr(), len);
     }
 
@@ -3467,108 +3454,83 @@ impl Renderer {
                     }
                 }
 
-                for (texture_id, updates) in update_list.updates {
-                    let texture = &self.texture_resolver.texture_cache_map[&texture_id];
-                    let device = &mut self.device;
+                for update in update_list.updates {
+                    let TextureCacheUpdate { id, rect, stride, offset, layer_index, format_override, source } = update;
+                    let texture = &self.texture_resolver.texture_cache_map[&id];
 
-                    // Calculate the total size of buffer required to upload all updates.
-                    let required_size = updates.iter().map(|update| {
-                        // Perform any debug clears now. As this requires a mutable borrow of device,
-                        // it must be done before all the updates which require a TextureUploader.
-                        if let TextureUpdateSource::DebugClear = update.source  {
-                            let draw_target = DrawTarget::from_texture(
+                    let bytes_uploaded = match source {
+                        TextureUpdateSource::Bytes { data } => {
+                            let mut uploader = self.device.upload_texture(
                                 texture,
-                                update.layer_index as usize,
-                                false,
+                                &self.texture_cache_upload_pbo,
+                                0,
                             );
-                            device.bind_draw_target(draw_target);
-                            device.clear_target(
-                                Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
-                                None,
-                                Some(draw_target.to_framebuffer_rect(update.rect.to_i32()))
-                            );
-
-                            0
-                        } else {
-                            Device::required_upload_size(
-                                update.rect.size,
-                                update.stride,
-                                texture.get_format(),
-                                device.optimal_pbo_stride(),
+                            let data = &data[offset as usize ..];
+                            uploader.upload(
+                                rect,
+                                layer_index,
+                                stride,
+                                format_override,
+                                data.as_ptr(),
+                                data.len(),
                             )
                         }
-                    }).sum();
-
-                    if required_size == 0 {
-                        break;
-                    }
-
-                    // For best performance we use a single TextureUploader for all uploads.
-                    // Using individual TextureUploaders was causing performance issues on some drivers
-                    // due to allocating too many PBOs.
-                    let mut uploader = device.upload_texture(
-                        texture,
-                        &self.texture_cache_upload_pbo,
-                        required_size
-                    );
-
-                    for update in updates {
-                        let TextureCacheUpdate { id: _id, rect, stride, offset, layer_index, format_override, source } = update;
-
-                        let bytes_uploaded = match source {
-                            TextureUpdateSource::Bytes { data } => {
-                                let data = &data[offset as usize ..];
-                                uploader.upload(
-                                    rect,
-                                    layer_index,
-                                    stride,
-                                    format_override,
-                                    data.as_ptr(),
-                                    data.len(),
-                                )
-                            }
-                            TextureUpdateSource::External { id, channel_index } => {
-                                let handler = self.external_image_handler
-                                    .as_mut()
-                                    .expect("Found external image, but no handler set!");
-                                // The filter is only relevant for NativeTexture external images.
-                                let dummy_data;
-                                let data = match handler.lock(id, channel_index, ImageRendering::Auto).source {
-                                    ExternalImageSource::RawData(data) => {
-                                        &data[offset as usize ..]
-                                    }
-                                    ExternalImageSource::Invalid => {
-                                        // Create a local buffer to fill the pbo.
-                                        let bpp = texture.get_format().bytes_per_pixel();
-                                        let width = stride.unwrap_or(rect.size.width * bpp);
-                                        let total_size = width * rect.size.height;
-                                        // WR haven't support RGBAF32 format in texture_cache, so
-                                        // we use u8 type here.
-                                        dummy_data = vec![0xFFu8; total_size as usize];
-                                        &dummy_data
-                                    }
-                                    ExternalImageSource::NativeTexture(eid) => {
-                                        panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
-                                    }
-                                };
-                                let size = uploader.upload(
-                                    rect,
-                                    layer_index,
-                                    stride,
-                                    format_override,
-                                    data.as_ptr(),
-                                    data.len()
-                                );
-                                handler.unlock(id, channel_index);
-                                size
-                            }
-                            TextureUpdateSource::DebugClear => {
-                                // DebugClear updates are handled separately.
-                                0
-                            }
-                        };
-                        self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
-                    }
+                        TextureUpdateSource::External { id, channel_index } => {
+                            let mut uploader = self.device.upload_texture(
+                                texture,
+                                &self.texture_cache_upload_pbo,
+                                0,
+                            );
+                            let handler = self.external_image_handler
+                                .as_mut()
+                                .expect("Found external image, but no handler set!");
+                            // The filter is only relevant for NativeTexture external images.
+                            let dummy_data;
+                            let data = match handler.lock(id, channel_index, ImageRendering::Auto).source {
+                                ExternalImageSource::RawData(data) => {
+                                    &data[offset as usize ..]
+                                }
+                                ExternalImageSource::Invalid => {
+                                    // Create a local buffer to fill the pbo.
+                                    let bpp = texture.get_format().bytes_per_pixel();
+                                    let width = stride.unwrap_or(rect.size.width * bpp);
+                                    let total_size = width * rect.size.height;
+                                    // WR haven't support RGBAF32 format in texture_cache, so
+                                    // we use u8 type here.
+                                    dummy_data = vec![0xFFu8; total_size as usize];
+                                    &dummy_data
+                                }
+                                ExternalImageSource::NativeTexture(eid) => {
+                                    panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
+                                }
+                            };
+                            let size = uploader.upload(
+                                rect,
+                                layer_index,
+                                stride,
+                                format_override,
+                                data.as_ptr(),
+                                data.len()
+                            );
+                            handler.unlock(id, channel_index);
+                            size
+                        }
+                        TextureUpdateSource::DebugClear => {
+                            let draw_target = DrawTarget::from_texture(
+                                texture,
+                                layer_index as usize,
+                                false,
+                            );
+                            self.device.bind_draw_target(draw_target);
+                            self.device.clear_target(
+                                Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
+                                None,
+                                Some(draw_target.to_framebuffer_rect(rect.to_i32()))
+                            );
+                            0
+                        }
+                    };
+                    self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
                 }
 
                 if update_list.clears_shared_cache {
