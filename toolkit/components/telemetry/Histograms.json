@@ -14604,28 +14604,6 @@
     "kind": "exponential",
     "description": "Age of files scanned in profile directory in days when determining initial profile age."
   },
-  "ACTIVE_HTTP_DOCGROUPS_PER_TABGROUP": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972, 1468843],
-    "expires_in_version": "67",
-    "kind": "exponential",
-    "high": 50,
-    "n_buckets": 20,
-    "description": "Number of active http:// and https:// doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
-  },
-  "TOTAL_HTTP_DOCGROUPS_PER_TABGROUP": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972, 1468843],
-    "expires_in_version": "67",
-    "kind": "exponential",
-    "high": 50,
-    "n_buckets": 20,
-    "description": "Total number of http:// and https:// doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
-  },
   "QUIRKS_MODE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
