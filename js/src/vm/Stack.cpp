@@ -83,10 +83,6 @@ void InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
 #endif
 }
 
-bool InterpreterFrame::isNonGlobalEvalFrame() const {
-  return isEvalFrame() && script()->bodyScope()->as<EvalScope>().isNonGlobal();
-}
-
 ArrayObject* InterpreterFrame::createRestParameter(JSContext* cx) {
   MOZ_ASSERT(script()->hasRest());
   unsigned nformal = callee().nargs() - 1, nactual = numActualArgs();
