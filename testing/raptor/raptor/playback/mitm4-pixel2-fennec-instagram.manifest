@@ -1,11 +1,10 @@
 [
   {
-    "size":  10623385,
-    "visibility": "public",
-    "digest": "c3ab585ec654c021877de3f69e82a9fa4f0efc1549ec885d3bc3c06aab1f7126ec23be9b207f18efa14b3959e64b123c3ca239e43814503a74e09c69795b111a",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-instagram.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "e3c1870bc833e7a764dc96ba89d08a9800ae7f246c0a1a3851e568102faaf3628b059877d8db155fe872fa5be97119229353e43501e8074276f30685e7d016ff",
+    "size": 8882207
   }
 ]
-

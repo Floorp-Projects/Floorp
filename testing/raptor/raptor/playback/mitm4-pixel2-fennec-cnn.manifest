@@ -1,11 +1,10 @@
 [
   {
-    "size": 6996640,
-    "visibility": "public",
-    "digest": "4e1cb5f2e0b4528208ef807213882e11f2a84c5d30f6193c28476eae9fa8e73c0dfadaa58e567700707291843e66603b891c6ef9a5cd9fdca557b27ac9953741",
     "algorithm": "sha512",
+    "digest": "4fe25fdcd8723ac3ec6a256d7f5bc3579328ae5b10be38d180334c95ca2ead7a87c6fa4340a09e570b97b029bea9b9ace9f95ee974da99ddfe34a4ab126d4412",
     "filename": "mitm4-pixel2-fennec-cnn.zip",
-    "unpack": true
+    "size": 14748578,
+    "unpack": true,
+    "visibility": "public"
   }
 ]
-

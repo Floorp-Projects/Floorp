@@ -1,11 +1,10 @@
 [
   {
-    "size": 3163574,
-    "visibility": "public",
-    "digest": "36635854c27352f24a93c1b14ef833aefd4c0add2bd5a572de3caacd80880e3cb0b9be89b823ebac518c98b2564ac31c4d8d974bcf5a4ce40664f675db550478",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-google-maps.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "8373321f9e2d10ec4c9b2e0952184e06a412f7961f4b767d96054c7af664f321f1f3cc1ba499b8506f9bbcd68e5cf23e19cdf39b8917b6e2039910cb1d8660dd",
+    "size": 6257213
   }
 ]
-

@@ -1,10 +1,10 @@
 [
   {
-    "size": 2900087,
-    "visibility": "public",
-    "digest": "10b6160b719419f49763188bf2ffed506f6e5a59a3b7910c7c4223b39db5e5d03e8adeb62860d1f09c0b10ed501b6cd40245ab148171798f12ce63b1e660512c",
     "algorithm": "sha512",
+    "visibility": "public",
     "filename": "mitm4-pixel2-fennec-amazon-search.zip",
-    "unpack": true
+    "unpack": true,
+    "digest": "959ccc5e79820e868da46997b66eb210d9f78c47019e43a57e09b5014c107141ff2f5df03bc21d1f3d98eec37b228937aa79850c45918df14992c00254d77835",
+    "size": 4873181
   }
 ]
