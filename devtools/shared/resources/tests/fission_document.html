@@ -9,6 +9,11 @@
 <body>
 <p>Test fission iframe</p>
 
-<iframe src="https://example.com/browser/devtools/shared/resources/tests/fission_iframe.html"></iframe>
+<iframe src="http://example.com/browser/devtools/shared/resources/tests/fission_iframe.html"></iframe>
+<script>
+"use strict";
+// eslint-disable-next-line no-unused-vars
+const worker = new Worker("http://example.com/browser/devtools/shared/resources/tests/test_worker.js");
+</script>
 </body>
 </html>
