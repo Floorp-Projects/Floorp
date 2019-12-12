@@ -429,8 +429,8 @@ BasePrincipal::IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin, bool* aRes) {
     return NS_ERROR_UNEXPECTED;
     ;
   }
-  *aRes =
-      NS_SUCCEEDED(ssm->CheckSameOriginURI(prinURI, aURI, aRes, aIsPrivateWin));
+  *aRes = NS_SUCCEEDED(
+      ssm->CheckSameOriginURI(prinURI, aURI, false, aIsPrivateWin));
   return NS_OK;
 }
 
