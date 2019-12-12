@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
-import android.view.Gravity
 import android.view.View
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
@@ -204,6 +203,4 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
             null
         )
     )
-
-    override fun getAppropriateLayoutGravity() = Gravity.TOP
 }

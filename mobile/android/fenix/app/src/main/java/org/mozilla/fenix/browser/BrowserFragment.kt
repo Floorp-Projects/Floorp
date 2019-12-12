@@ -6,7 +6,6 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -195,8 +194,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
         return 0 to toolbarSize
     }
-
-    override fun getAppropriateLayoutGravity() = Gravity.BOTTOM
 
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
         listOf(

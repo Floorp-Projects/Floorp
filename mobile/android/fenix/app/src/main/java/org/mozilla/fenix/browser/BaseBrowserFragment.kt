@@ -596,9 +596,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     protected abstract fun getEngineMargins(): Pair<Int, Int>
 
     /**
-     * Returns the layout [android.view.Gravity] for the quick settings dialog.
+     * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
      */
-    protected abstract fun getAppropriateLayoutGravity(): Int
+    protected fun getAppropriateLayoutGravity(): Int =
+        if (context?.settings()?.shouldUseBottomToolbar == true) Gravity.BOTTOM else Gravity.TOP
 
     protected fun updateLayoutMargins(inFullScreen: Boolean) {
         view?.swipeRefresh?.apply {
