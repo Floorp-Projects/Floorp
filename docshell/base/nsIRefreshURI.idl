@@ -68,10 +68,12 @@ interface nsIRefreshURI : nsISupports {
       * @param aPrincipal The triggeringPrincipal for the refresh load
       *   May be null, in which case the principal of current document will be
       *   applied.
+      * @param aInnerWindowID The window id to use for error reporting.
       * @param aHeader  The meta refresh header string.
       */
     void setupRefreshURIFromHeader(in nsIURI aBaseURI,
                                    in nsIPrincipal principal,
+                                   in unsigned long long aInnerWindowID,
                                    in ACString aHeader);
 
     /**
