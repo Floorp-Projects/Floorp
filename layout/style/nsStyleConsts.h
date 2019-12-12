@@ -97,6 +97,8 @@ enum class StyleDisplay : uint16_t {
                                   StyleDisplayInside::MozGridGroup),
   MozGridLine = StyleDisplayFrom(StyleDisplayOutside::XUL,
                                  StyleDisplayInside::MozGridLine),
+  MozStack =
+      StyleDisplayFrom(StyleDisplayOutside::XUL, StyleDisplayInside::MozStack),
   MozDeck =
       StyleDisplayFrom(StyleDisplayOutside::XUL, StyleDisplayInside::MozDeck),
   MozGroupbox = StyleDisplayFrom(StyleDisplayOutside::XUL,
@@ -266,6 +268,14 @@ enum class StyleShapeSourceType : uint8_t {
   Shape,
   Box,
   Path,  // SVG path function
+};
+
+// -moz-stack-sizing
+enum class StyleStackSizing : uint8_t {
+  Ignore,
+  StretchToFit,
+  IgnoreHorizontal,
+  IgnoreVertical,
 };
 
 // text-justify
