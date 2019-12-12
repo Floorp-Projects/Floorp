@@ -5,7 +5,8 @@
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, waitForDispatch, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
-   testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData */
+   testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData,
+   toggleBlockedUrl */
 
 "use strict";
 
@@ -1152,4 +1153,31 @@ async function waitForDOMIfNeeded(target, selector, expectedLength = 1) {
       });
     }
   });
+}
+
+/**
+ * Helper for blocking or unblocking a request via the list item's context menu.
+ *
+ * @param {Element} element
+ *        Target request list item to be right clicked to bring up its context menu.
+ * @param {Object} monitor
+ *        The netmonitor instance used for retrieving a context menu element.
+ * @param {Object} store
+ *        The redux store (wait-service middleware required).
+ * @param {String} action
+ *        The action, block or unblock, to construct a corresponding context menu id.
+ */
+async function toggleBlockedUrl(element, monitor, store, action = "block") {
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, element);
+  const contextMenuId = `request-list-context-${action}-url`;
+  const contextBlockToggle = getContextMenuItem(monitor, contextMenuId);
+  const onRequestComplete = waitForDispatch(
+    store,
+    "REQUEST_BLOCKING_UPDATE_COMPLETE"
+  );
+  contextBlockToggle.click();
+
+  info(`Wait for selected request to be ${action}ed`);
+  await onRequestComplete;
+  info(`Selected request is now ${action}ed`);
 }
