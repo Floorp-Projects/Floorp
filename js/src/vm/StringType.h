@@ -1290,7 +1290,6 @@ class StaticStrings {
 
   template <typename CharT>
   static bool isStatic(const CharT* chars, size_t len);
-  static bool isStatic(JSAtom* atom);
 
   /* Return null if no static atom exists for the given (chars, length). */
   template <typename Chars>
@@ -1385,10 +1384,6 @@ class StaticStrings {
     MOZ_ASSERT(fitsInSmallChar(c2));
     size_t index = (size_t(toSmallCharArray[c1]) << 6) + toSmallCharArray[c2];
     return length2StaticTable[index];
-  }
-  JSAtom* getLength2(uint32_t u) {
-    MOZ_ASSERT(u < 100);
-    return getLength2('0' + u / 10, '0' + u % 10);
   }
 };
 

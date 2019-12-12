@@ -1312,38 +1312,6 @@ void StaticStrings::trace(JSTracer* trc) {
   }
 }
 
-template <typename CharT>
-/* static */
-bool StaticStrings::isStatic(const CharT* chars, size_t length) {
-  switch (length) {
-    case 1: {
-      char16_t c = chars[0];
-      return c < UNIT_STATIC_LIMIT;
-    }
-    case 2:
-      return fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]);
-    case 3:
-      if ('1' <= chars[0] && chars[0] <= '9' && '0' <= chars[1] &&
-          chars[1] <= '9' && '0' <= chars[2] && chars[2] <= '9') {
-        int i =
-            (chars[0] - '0') * 100 + (chars[1] - '0') * 10 + (chars[2] - '0');
-
-        return unsigned(i) < INT_STATIC_LIMIT;
-      }
-      return false;
-    default:
-      return false;
-  }
-}
-
-/* static */
-bool StaticStrings::isStatic(JSAtom* atom) {
-  AutoCheckCannotGC nogc;
-  return atom->hasLatin1Chars()
-             ? isStatic(atom->latin1Chars(nogc), atom->length())
-             : isStatic(atom->twoByteChars(nogc), atom->length());
-}
-
 bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
   RootedLinearString linearString(cx, s->ensureLinear(cx));
   if (!linearString) {
