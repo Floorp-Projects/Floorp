@@ -15,6 +15,7 @@
 #include <stdint.h>   // uint32_t
 
 #include "jsapi.h"  // JS_EnsureLinearString, JS_GC, JS_Get{Latin1,TwoByte}LinearStringChars, JS_GetStringLength, JS_ValueToFunction
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate{,DontInflate}
 #include "js/CompileOptions.h"            // JS::CompileOptions
@@ -33,8 +34,8 @@
 using mozilla::ArrayLength;
 using mozilla::Utf8Unit;
 
-struct JSContext;
-class JSString;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSString;
 
 template <typename Unit>
 using Source = js::UniquePtr<Unit[], JS::FreePolicy>;
