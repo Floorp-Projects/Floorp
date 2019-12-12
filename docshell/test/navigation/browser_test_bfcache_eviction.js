@@ -59,7 +59,7 @@ add_task(async function() {
             "History listener got called after a content viewer was evicted"
           );
           legacySHistory.removeSHistoryListener(historyListener);
-          delete content._testListener;
+          delete window._testListener;
           // 6. Resolve the promise when we got our 'content viewer evicted' event
           testDone.resolve();
         },
@@ -70,7 +70,7 @@ add_task(async function() {
       };
       legacySHistory.addSHistoryListener(historyListener);
       // Keep the weak shistory listener alive
-      content._testListener = historyListener;
+      window._testListener = historyListener;
     }
 
     // 4. Open a second tab
