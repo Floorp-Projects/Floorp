@@ -903,22 +903,6 @@ void js::ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v) {
   }
 }
 
-void js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg) {
-  char argbuf[11];
-  UniqueChars bytes;
-
-  SprintfLiteral(argbuf, "%u", arg);
-  if (IsFunctionObject(v)) {
-    RootedAtom name(cx, v.toObject().as<JSFunction>().explicitName());
-    bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, name);
-    if (!bytes) {
-      return;
-    }
-  }
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_MISSING_FUN_ARG,
-                           argbuf, bytes ? bytes.get() : "");
-}
-
 bool js::ReportValueErrorFlags(JSContext* cx, unsigned flags,
                                const unsigned errorNumber, int spindex,
                                HandleValue v, HandleString fallback,
@@ -1474,14 +1458,6 @@ bool JSContext::inAtomsZone() const { return zone_->isAtomsZone(); }
 void JSContext::trace(JSTracer* trc) {
   cycleDetectorVector().trace(trc);
   geckoProfiler().trace(trc);
-}
-
-void* JSContext::stackLimitAddressForJitCode(JS::StackKind kind) {
-#ifdef JS_SIMULATOR
-  return addressOfSimulatorStackLimit();
-#else
-  return stackLimitAddress(kind);
-#endif
 }
 
 uintptr_t JSContext::stackLimitForJitCode(JS::StackKind kind) {

@@ -302,10 +302,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
   JSFreeOp* defaultFreeOp() { return &defaultFreeOp_.ref(); }
-  void* stackLimitAddress(JS::StackKind kind) {
-    return &nativeStackLimit[kind];
-  }
-  void* stackLimitAddressForJitCode(JS::StackKind kind);
   uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
   uintptr_t stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
@@ -1109,8 +1105,6 @@ extern void ReportIsNotDefined(JSContext* cx, HandleId id);
  * Report an attempt to access the property of a null or undefined value (v).
  */
 extern void ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v);
-
-extern void ReportMissingArg(JSContext* cx, js::HandleValue v, unsigned arg);
 
 /*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as
