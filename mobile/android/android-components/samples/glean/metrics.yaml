@@ -57,7 +57,7 @@ test:
     description: >
       Testing StringList ping
     send_in_pings:
-      - test_string_list
+      - test-string-list
     lifetime: user
     bugs:
       - https://bugzilla.mozilla.org/123456789
@@ -72,7 +72,7 @@ test:
     description: >
       Testing counter
     send_in_pings:
-      - test_string_list
+      - test-string-list
     lifetime: user
     bugs:
       - https://bugzilla.mozilla.org/123456789
