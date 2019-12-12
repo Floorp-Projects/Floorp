@@ -8,7 +8,6 @@ external_dirs = []
 
 DIRS += [
     'lgpllibs',
-    'rlbox',
     'sqlite',
 ]
 if not CONFIG['MOZ_SYSTEM_JPEG']:
