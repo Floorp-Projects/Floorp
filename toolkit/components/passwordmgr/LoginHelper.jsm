@@ -52,7 +52,10 @@ this.LoginHelper = {
     );
     this.debug = Services.prefs.getBoolPref("signon.debug");
     this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
-    this.storageEnabled = Services.prefs.getBoolPref("signon.storeSignons");
+    this.storageEnabled = Services.prefs.getBoolPref(
+      "signon.storeSignons",
+      true
+    );
     this.formlessCaptureEnabled = Services.prefs.getBoolPref(
       "signon.formlessCapture.enabled"
     );
