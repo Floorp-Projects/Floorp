@@ -71,11 +71,6 @@ class ArrayBufferViewObject : public NativeObject {
 
   void notifyBufferDetached();
 
-  // By construction we only need unshared variants here.  See
-  // comments in ArrayBufferObject.cpp.
-  uint8_t* dataPointerUnshared(const JS::AutoRequireNoGC&);
-  void setDataPointerUnshared(uint8_t* data);
-
   void initDataPointer(SharedMem<uint8_t*> viewData) {
     // Install a pointer to the buffer location that corresponds
     // to offset zero within the typed array.
