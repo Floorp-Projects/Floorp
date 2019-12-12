@@ -238,7 +238,6 @@ RESULT_OMNIJAR.update({
             if p.startswith('app/chrome/addons/addon2/')
         ))
     },
-    'app/chrome.manifest': [],
 })
 
 RESULT_OMNIJAR['omni.foo'].update({
