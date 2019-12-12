@@ -295,8 +295,7 @@ class FocusWindowRunnable final : public Runnable {
   }
 };
 
-nsresult CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope,
-                    uint64_t aWindowID) {
+nsresult CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
 
@@ -306,9 +305,8 @@ nsresult CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope,
     return rv;
   }
 
-  return aPrincipal->CheckMayLoadWithReporting(
-      scopeURI,
-      /* allowIfInheritsPrincipal = */ false, aWindowID);
+  return aPrincipal->CheckMayLoad(scopeURI, /* report = */ true,
+                                  /* allowIfInheritsPrincipal = */ false);
 }
 }  // anonymous namespace
 
@@ -2077,7 +2075,7 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable {
 
   bool MainThreadRun() override {
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
-    mRv = CheckScope(principal, mScope, mWorkerPrivate->WindowID());
+    mRv = CheckScope(principal, mScope);
 
     if (NS_FAILED(mRv)) {
       return true;
@@ -2122,13 +2120,7 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
       return nullptr;
     }
 
-    uint64_t windowID = 0;
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal);
-    if (win) {
-      windowID = win->WindowID();
-    }
-
-    aRv = CheckScope(principal, NS_ConvertUTF16toUTF8(aScope), windowID);
+    aRv = CheckScope(principal, NS_ConvertUTF16toUTF8(aScope));
     if (NS_WARN_IF(aRv.Failed())) {
       aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;

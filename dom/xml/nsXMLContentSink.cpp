@@ -685,9 +685,8 @@ nsresult nsXMLContentSink::MaybeProcessXSLTLink(
 
   // Do security check
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  rv = secMan->CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), url,
-                                         nsIScriptSecurityManager::ALLOW_CHROME,
-                                         mDocument->InnerWindowID());
+  rv = secMan->CheckLoadURIWithPrincipal(
+      mDocument->NodePrincipal(), url, nsIScriptSecurityManager::ALLOW_CHROME);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo =

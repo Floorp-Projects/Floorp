@@ -904,19 +904,19 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // Check that the uri is ok to load
   uint32_t flags = loadInfo->CheckLoadURIFlags();
   rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-      mRequestingPrincipal, uri, flags, loadInfo->GetInnerWindowID());
+      mRequestingPrincipal, uri, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (originalURI != uri) {
     rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-        mRequestingPrincipal, originalURI, flags, loadInfo->GetInnerWindowID());
+        mRequestingPrincipal, originalURI, flags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!mHasBeenCrossSite &&
-      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false)) &&
-      (originalURI == uri ||
-       NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(originalURI, false)))) {
+      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false, false)) &&
+      (originalURI == uri || NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(
+                                 originalURI, false, false)))) {
     return NS_OK;
   }
 
