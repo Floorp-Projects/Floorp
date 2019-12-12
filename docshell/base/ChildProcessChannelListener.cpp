@@ -14,7 +14,8 @@ static StaticRefPtr<ChildProcessChannelListener> sCPCLSingleton;
 void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
                                                    Callback&& aCallback) {
   if (auto args = mChannelArgs.GetAndRemove(aIdentifier)) {
-    aCallback(args->mChannel, std::move(args->mRedirects));
+    aCallback(args->mChannel, std::move(args->mRedirects),
+              args->mLoadStateLoadFlags);
   } else {
     mCallbacks.Put(aIdentifier, std::move(aCallback));
   }
@@ -22,11 +23,13 @@ void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
 
 void ChildProcessChannelListener::OnChannelReady(
     nsIChildChannel* aChannel, uint64_t aIdentifier,
-    nsTArray<net::DocumentChannelRedirect>&& aRedirects) {
+    nsTArray<net::DocumentChannelRedirect>&& aRedirects,
+    uint32_t aLoadStateLoadFlags) {
   if (auto callback = mCallbacks.GetAndRemove(aIdentifier)) {
-    (*callback)(aChannel, std::move(aRedirects));
+    (*callback)(aChannel, std::move(aRedirects), aLoadStateLoadFlags);
   } else {
-    mChannelArgs.Put(aIdentifier, {aChannel, std::move(aRedirects)});
+    mChannelArgs.Put(aIdentifier,
+                     {aChannel, std::move(aRedirects), aLoadStateLoadFlags});
   }
 }
 
