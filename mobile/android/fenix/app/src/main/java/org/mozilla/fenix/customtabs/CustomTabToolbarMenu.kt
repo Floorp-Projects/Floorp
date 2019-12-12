@@ -32,10 +32,7 @@ class CustomTabToolbarMenu(
         val back = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             primaryContentDescription = context.getString(R.string.browser_menu_back),
-            primaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.primaryText,
-                context
-            ),
+            primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
                 session?.canGoBack ?: true
             },
@@ -51,10 +48,7 @@ class CustomTabToolbarMenu(
         val forward = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             primaryContentDescription = context.getString(R.string.browser_menu_forward),
-            primaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.primaryText,
-                context
-            ),
+            primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
                 session?.canGoForward ?: true
             },
@@ -70,20 +64,13 @@ class CustomTabToolbarMenu(
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
-            primaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.primaryText,
-                context
-            ),
+            primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
-                val loading = session?.loading
-                loading == false
+                session?.loading == false
             },
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
-            secondaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.primaryText,
-                context
-            ),
+            secondaryImageTintResource = primaryTextColor(),
             disableInSecondaryState = false
         ) {
             if (session?.loading == true) {
@@ -120,9 +107,10 @@ class CustomTabToolbarMenu(
 
     private val desktopMode = BrowserMenuSwitch(
         label = context.getString(R.string.browser_menu_desktop_site),
-        initialState = { session?.desktopMode ?: false }, listener = { checked ->
-            onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
-        })
+        initialState = { session?.desktopMode ?: false }
+    ) { checked ->
+        onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+    }
 
     private val findInPage = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_find_in_page),
@@ -137,7 +125,6 @@ class CustomTabToolbarMenu(
             val appName = context.getString(R.string.app_name)
             context.getString(R.string.browser_menu_open_in_fenix, appName)
         }(),
-        textSize = ToolbarMenu.CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
