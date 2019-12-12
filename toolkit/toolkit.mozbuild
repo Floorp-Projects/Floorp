@@ -77,7 +77,6 @@ DIRS += [
     '/js/ipc',
     '/hal',
     '/js/xpconnect',
-    '/intl/chardet',
     '/modules/libjar',
     '/storage',
 ]

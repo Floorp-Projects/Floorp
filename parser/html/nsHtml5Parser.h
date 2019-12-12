@@ -17,7 +17,6 @@
 #include "nsCOMArray.h"
 #include "nsContentSink.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDetectionConfident.h"
 #include "nsHtml5OwningUTF16Buffer.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"

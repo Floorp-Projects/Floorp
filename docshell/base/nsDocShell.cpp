@@ -1290,7 +1290,8 @@ nsDocShell::GatherCharsetMenuTelemetry() {
             Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION::RemoteNonTld);
       }
       break;
-    case kCharsetFromAutoDetection:
+    case kCharsetFromInitialAutoDetection:
+    case kCharsetFromFinalAutoDetection:
       // Changing charset on unlabeled doc where chardet fired
       if (isFileURL) {
         Telemetry::AccumulateCategorical(
@@ -1921,7 +1922,8 @@ nsDocShell::GetCharsetAutodetected(bool* aCharsetAutodetected) {
   }
   int32_t source = doc->GetDocumentCharacterSetSource();
 
-  if (source == kCharsetFromAutoDetection ||
+  if (source == kCharsetFromInitialAutoDetection ||
+      source == kCharsetFromFinalAutoDetection ||
       source == kCharsetFromUserForcedAutoDetection) {
     *aCharsetAutodetected = true;
   }
