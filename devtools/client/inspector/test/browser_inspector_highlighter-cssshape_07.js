@@ -140,7 +140,9 @@ async function getBoundingBoxInPx(config) {
   const quads = await testActor.getAllAdjustedQuads(selector);
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
-  const computedStyle = await inspector.pageStyle.getComputed(highlightedNode);
+  const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
+    highlightedNode
+  );
   const paddingTop = parseFloat(computedStyle["padding-top"].value);
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers

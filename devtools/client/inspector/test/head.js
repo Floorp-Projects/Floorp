@@ -536,7 +536,8 @@ const getHighlighterHelperFor = type =>
 
         return {
           getComputedStyle: async function(options = {}) {
-            return inspector.pageStyle.getComputed(highlightedNode, options);
+            const pageStyle = highlightedNode.inspectorFront.pageStyle;
+            return pageStyle.getComputed(highlightedNode, options);
           },
         };
       },

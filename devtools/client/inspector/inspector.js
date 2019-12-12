@@ -261,7 +261,6 @@ Inspector.prototype = {
 
     await Promise.all([
       this._getCssProperties(),
-      this._getPageStyle(),
       this._getDefaultSelection(),
       this._getAccessibilityFront(),
     ]);
@@ -481,12 +480,6 @@ Inspector.prototype = {
     return this._getDefaultNodeForSelection().catch(
       this._handleRejectionIfNotDestroyed
     );
-  },
-
-  _getPageStyle: function() {
-    return this.inspectorFront.getPageStyle().then(pageStyle => {
-      this.pageStyle = pageStyle;
-    }, this._handleRejectionIfNotDestroyed);
   },
 
   /**
@@ -1681,7 +1674,6 @@ Inspector.prototype = {
 
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
-      this.pageStyle = null;
     }
 
     this.cancelUpdate();
