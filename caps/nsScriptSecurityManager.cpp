@@ -676,7 +676,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
     NS_ENSURE_SUCCESS(rv, rv);
     // Check the principal is allowed to load the target.
-    return aPrincipal->CheckMayLoad(targetBaseURI, true, false);
+    // Unfortunately we don't have a window id to work with here...
+    return aPrincipal->CheckMayLoadWithReporting(targetBaseURI, false, 0);
   }
 
   //-- get the source scheme
