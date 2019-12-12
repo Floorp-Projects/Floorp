@@ -30,7 +30,9 @@ add_task(async function() {
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
 
   await addTab(TEST_URI);
-  const ToolboxTask = await initBrowserToolboxTask();
+  const ToolboxTask = await initBrowserToolboxTask({
+    enableContentMessages: true,
+  });
   await ToolboxTask.importFunctions({ findMessages, findMessage, waitUntil });
 
   // Make sure the data: URL message appears in the OBT.
