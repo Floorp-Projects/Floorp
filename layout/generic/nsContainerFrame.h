@@ -307,6 +307,8 @@ class nsContainerFrame : public nsSplittableFrame {
    * The nsOverflowContinuationTracker helper class should be used for tracking
    * overflow containers and adding them to the appropriate list.
    * See nsBlockFrame::Reflow for a sample implementation.
+   *
+   * For more information, see https://wiki.mozilla.org/Gecko:Continuation_Model
    */
 
   friend class nsOverflowContinuationTracker;
