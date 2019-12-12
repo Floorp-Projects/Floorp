@@ -30,7 +30,7 @@ function windowObserver(win, topic) {
     function() {
       if (
         win.document.documentURI ===
-        "chrome://mozapps/content/downloads/unknownContentType.xul"
+        "chrome://mozapps/content/downloads/unknownContentType.xhtml"
       ) {
         executeSoon(function() {
           let dialog = win.document.getElementById("unknownContentType");

@@ -7,4 +7,4 @@ toolkit.jar:
   content/mozapps/update/history.xhtml                          (content/history.xhtml)
   content/mozapps/update/history.js                             (content/history.js)
   content/mozapps/update/updateElevation.js                     (content/updateElevation.js)
-* content/mozapps/update/updateElevation.xul                    (content/updateElevation.xul)
+* content/mozapps/update/updateElevation.xhtml                  (content/updateElevation.xhtml)

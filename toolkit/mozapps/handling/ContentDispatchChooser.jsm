@@ -6,7 +6,7 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xul";
+const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xhtml";
 const STRINGBUNDLE_URL = "chrome://mozapps/locale/handling/handling.properties";
 
 // nsContentDispatchChooser class

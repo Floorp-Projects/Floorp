@@ -27,7 +27,7 @@ add_task(async function() {
   let win = await waitForNewWindow();
   is(
     win.location,
-    "chrome://mozapps/content/downloads/unknownContentType.xul",
+    "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     "Should have seen the unknown content dialog."
   );
   is(gBrowser.contentTitle, "Test Page", "Should still have the right title.");

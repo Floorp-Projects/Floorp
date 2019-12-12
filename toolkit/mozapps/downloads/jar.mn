@@ -4,4 +4,4 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-* content/mozapps/downloads/unknownContentType.xul              (content/unknownContentType.xul)
+* content/mozapps/downloads/unknownContentType.xhtml              (content/unknownContentType.xhtml)

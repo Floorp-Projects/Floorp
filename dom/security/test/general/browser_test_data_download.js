@@ -37,7 +37,7 @@ function test() {
     );
   });
   addWindowListener(
-    "chrome://mozapps/content/downloads/unknownContentType.xul",
+    "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     function(win) {
       is(
         win.document.getElementById("location").value,

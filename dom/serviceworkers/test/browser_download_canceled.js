@@ -37,7 +37,7 @@ async function clearDownloads() {
  * we have clicked the given button.
  */
 function promiseClickDownloadDialogButton(buttonAction) {
-  const uri = "chrome://mozapps/content/downloads/unknownContentType.xul";
+  const uri = "chrome://mozapps/content/downloads/unknownContentType.xhtml";
   return BrowserTestUtils.promiseAlertDialogOpen(
     buttonAction,
     uri,
