@@ -1,0 +1,25 @@
+{
+    "stages": "3",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "{MOZ_FETCHES_DIR}/gcc",
+    "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
+    "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "patches": [
+        "mingwclang-llvm-objcopy-COFF-Remove-a-superfluous-namespace-qua.patch",
+        "mingwclang-llvm-objcopy-COFF-Add-support-for-removing-sections.patch",
+        "mingwclang-llvm-objcopy-COFF-Implement-strip-debug.patch",
+        "mingwclang-llvm-objcopy-COFF-Implement-only-keep-debug.patch",
+        "mingwclang-llvm-objcopy-COFF-Implement-only-section.patch",
+        "mingwclang-llvm-objcopy-Consistently-use-createStringError-inst.patch",
+        "mingwclang-llvm-objcopy-COFF-Update-symbol-indices-in-weak-exte.patch",
+        "mingwclang-llvm-objcopy-Return-Error-from-Buffer-allocate-ELF-W.patch",
+        "mingwclang-Reapply-llvm-objcopy-COFF-Implement-add-gnu-debuglin.patch",
+        "mingwclang-llvm-objcopy-COFF-Clear-the-unwritten-tail-of-coff_s.patch",
+        "mingwclang-llvm-objcopy-COFF-Fix-handling-of-aux-symbols-for-bi.patch",
+        "mingwclang-llvm-objcopy-COFF-Error-out-on-use-of-unhandled-opti.patch"
+    ]
+}
