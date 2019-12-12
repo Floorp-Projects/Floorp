@@ -10,15 +10,15 @@ function test() {
 
 function afterOpen() {
   is(
-    content.document.documentElement.textContent.indexOf("\u00A4"),
+    content.document.documentElement.textContent.indexOf("\u0434"),
     131,
-    "Parent doc should be windows-1252 initially"
+    "Parent doc should be IBM866 initially"
   );
 
   is(
-    content.frames[0].document.documentElement.textContent.indexOf("\u00A4"),
+    content.frames[0].document.documentElement.textContent.indexOf("\u0434"),
     87,
-    "Child doc should be windows-1252 initially"
+    "Child doc should be IBM866 initially"
   );
 }
 
