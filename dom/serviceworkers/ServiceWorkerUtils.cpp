@@ -86,14 +86,12 @@ nsresult ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
   Unused << aScriptURI->GetRef(ref);
   NS_ENSURE_TRUE(ref.IsEmpty(), NS_ERROR_DOM_SECURITY_ERR);
 
-  // Unfortunately we don't seem to have an obvious window id here; in
-  // particular ClientInfo does not have one.
-  rv = principal->CheckMayLoadWithReporting(
-      aScopeURI, false /* allowIfInheritsPrincipal */, 0 /* innerWindowID */);
+  rv = principal->CheckMayLoad(aScopeURI, true /* report */,
+                               false /* allowIfInheritsPrincipal */);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
 
-  rv = principal->CheckMayLoadWithReporting(
-      aScriptURI, false /* allowIfInheritsPrincipal */, 0 /* innerWindowID */);
+  rv = principal->CheckMayLoad(aScriptURI, true /* report */,
+                               false /* allowIfInheritsPrincipal */);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
 
   return NS_OK;

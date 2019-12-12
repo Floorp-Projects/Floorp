@@ -144,7 +144,7 @@ void PrincipalVerifier::VerifyOnMainThread() {
       DispatchToInitiatingThread(rv);
       return;
     }
-    rv = principal->CheckMayLoad(uri, false);
+    rv = principal->CheckMayLoad(uri, false, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       DispatchToInitiatingThread(rv);
       return;

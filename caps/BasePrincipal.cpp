@@ -349,26 +349,9 @@ BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther,
 }
 
 NS_IMETHODIMP
-BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aAllowIfInheritsPrincipal) {
-  return CheckMayLoadHelper(aURI, aAllowIfInheritsPrincipal, false, 0);
-}
-
-NS_IMETHODIMP
-BasePrincipal::CheckMayLoadWithReporting(nsIURI* aURI,
-                                         bool aAllowIfInheritsPrincipal,
-                                         uint64_t aInnerWindowID) {
-  return CheckMayLoadHelper(aURI, aAllowIfInheritsPrincipal, true,
-                            aInnerWindowID);
-}
-
-nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
-                                           bool aAllowIfInheritsPrincipal,
-                                           bool aReport,
-                                           uint64_t aInnerWindowID) {
+BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport,
+                            bool aAllowIfInheritsPrincipal) {
   NS_ENSURE_ARG_POINTER(aURI);
-  MOZ_ASSERT(
-      aReport || aInnerWindowID == 0,
-      "Why do we have an inner window id if we're not supposed to report?");
 
   // Check the internal method first, which allows us to quickly approve loads
   // for the System Principal.
@@ -402,7 +385,7 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
     if (NS_SUCCEEDED(rv) && prinURI) {
       nsScriptSecurityManager::ReportError(
           "CheckSameOriginError", prinURI, aURI,
-          mOriginAttributes.mPrivateBrowsingId > 0, aInnerWindowID);
+          mOriginAttributes.mPrivateBrowsingId > 0);
     }
   }
 

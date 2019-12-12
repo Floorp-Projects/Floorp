@@ -39,12 +39,9 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
     return nullptr;
   }
 
-  // Check to see if URI is allowed.  We're not going to worry about a
-  // window ID here because it's not 100% clear which window's id we
-  // would want, and we're throwing a content-visible exception
-  // anyway.
+  // Check to see if URI is allowed.
   nsresult rv = ssm->CheckLoadURIWithPrincipal(
-      &aSubjectPrincipal, aURI, nsIScriptSecurityManager::STANDARD, 0);
+      &aSubjectPrincipal, aURI, nsIScriptSecurityManager::STANDARD);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
