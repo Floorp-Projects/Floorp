@@ -18,6 +18,12 @@ const { LoginManagerStorage_json } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "GeckoViewLoginStorage",
+  "resource://gre/modules/GeckoViewLoginStorage.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -93,8 +99,6 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   async searchLoginsAsync(matchData) {
     this.log("searchLoginsAsync:", matchData);
 
-    await Promise.resolve();
-
     let realMatchData = {};
     let options = {};
     for (let [name, value] of Object.entries(matchData)) {
@@ -112,14 +116,58 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       }
     }
 
-    // TODO: get from GV
-    let candidateLogins = [];
+    if (!realMatchData.origin) {
+      throw new Error("searchLoginsAsync: An `origin` is required");
+    }
+
+    let baseHostname;
+    try {
+      baseHostname = Services.eTLD.getBaseDomain(
+        Services.io.newURI(realMatchData.origin)
+      );
+    } catch (ex) {
+      if (ex.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
+        // `getBaseDomain` cannot handle IP addresses and `nsIURI` cannot return
+        // IPv6 hostnames with the square brackets so use `URL.hostname`.
+        baseHostname = new URL(realMatchData.origin).hostname;
+      } else {
+        throw ex;
+      }
+    }
+
+    // Query all logins for the eTLD+1 and then filter the logins in _searchLogins
+    // so that we can handle the logic for scheme upgrades, subdomains, etc.
+    // Convert from the new shape to one which supports the legacy getters used
+    // by _searchLogins.
+    let candidateLogins = (await GeckoViewLoginStorage.fetchLogins(
+      baseHostname
+    )).map(this._vanillaLoginToStorageLogin);
     let [logins, ids] = this._searchLogins(
       realMatchData,
       options,
       candidateLogins
     );
     return logins;
+  }
+
+  /**
+   * Convert a modern decrypted vanilla login object to one expected from logins.json.
+   *
+   * The storage login is usually encrypted but not in this case, this aligns
+   * with the `_decryptLogins` method being a no-op.
+   *
+   * @param {object} vanillaLogin using `origin`/`formActionOrigin`/`username` properties.
+   * @returns {object} a vanilla login for logins.json using
+   *                   `hostname`/`formSubmitURL`/`encryptedUsername`.
+   */
+  _vanillaLoginToStorageLogin(vanillaLogin) {
+    return {
+      ...vanillaLogin,
+      hostname: vanillaLogin.origin,
+      formSubmitURL: vanillaLogin.formActionOrigin,
+      encryptedUsername: vanillaLogin.username,
+      encryptedPassword: vanillaLogin.password,
+    };
   }
 
   /**
@@ -154,6 +202,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   /**
    * GeckoView logins are already decrypted before this component receives them
    * so this method is a no-op for this backend.
+   * @see _vanillaLoginToStorageLogin
    */
   _decryptLogins(logins) {
     return logins;
