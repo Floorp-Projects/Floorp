@@ -1117,6 +1117,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                              MutableHandleValue vp);
   MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
                              MutableHandleDebuggerFrame result);
+  MOZ_MUST_USE bool getFrame(JSContext* cx,
+                             Handle<AbstractGeneratorObject*> genObj,
+                             MutableHandleDebuggerFrame result);
 
   /*
    * Return the Debugger.Script object for |script|, or create a new one if
