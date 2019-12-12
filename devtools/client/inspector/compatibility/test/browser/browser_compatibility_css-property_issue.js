@@ -13,6 +13,7 @@ const TEST_URI = `
     color: blue;
     border-block-color: lime;
     user-modify: read-only;
+    font-variant-alternates: historical-forms;
   }
   </style>
   <body></body>
@@ -24,6 +25,13 @@ const TEST_DATA = [
     property: "border-block-color",
     url: "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
     deprecated: false,
+    experimental: false,
+  },
+  {
+    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+    property: "font-variant-alternates",
+    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
+    deprecated: true,
     experimental: true,
   },
   {
