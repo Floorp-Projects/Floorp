@@ -8662,19 +8662,18 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
 
   if (status == NS_NET_STATUS_CONNECTED_TO ||
       status == NS_NET_STATUS_WAITING_FOR) {
+    bool isTrr = false;
     if (mTransaction) {
-      mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr);
-      mResolvedByTRR = mTransaction->ResolvedByTRR();
+      mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(trans);
       if (socketTransport) {
         socketTransport->GetSelfAddr(&mSelfAddr);
         socketTransport->GetPeerAddr(&mPeerAddr);
-        bool isTrr = false;
         socketTransport->ResolvedByTRR(&isTrr);
-        mResolvedByTRR = isTrr;
       }
     }
+    mResolvedByTRR = isTrr;
   }
 
   // block socket status event after Cancel or OnStopRequest has been called.

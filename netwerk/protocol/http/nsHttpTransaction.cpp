@@ -1026,8 +1026,6 @@ void nsHttpTransaction::SetPushedStream(Http2PushedStreamWrapper* push) {
   mPushedStream = push;
 }
 
-bool nsHttpTransaction::ResolvedByTRR() { return mResolvedByTRR; }
-
 nsHttpTransaction* nsHttpTransaction::AsHttpTransaction() { return this; }
 
 HttpTransactionParent* nsHttpTransaction::AsHttpTransactionParent() {
@@ -2342,10 +2340,12 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   return NS_OK;
 }
 
-void nsHttpTransaction::GetNetworkAddresses(NetAddr& self, NetAddr& peer) {
+void nsHttpTransaction::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
+                                            bool& aResolvedByTRR) {
   MutexAutoLock lock(mLock);
   self = mSelfAddr;
   peer = mPeerAddr;
+  aResolvedByTRR = mResolvedByTRR;
 }
 
 bool nsHttpTransaction::CanDo0RTT() {
