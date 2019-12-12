@@ -232,22 +232,34 @@ NativeObject* DebuggerFrame::initClass(JSContext* cx,
 }
 
 /* static */
-DebuggerFrame* DebuggerFrame::create(JSContext* cx, HandleObject proto,
-                                     const FrameIter& iter,
-                                     HandleNativeObject debugger) {
+DebuggerFrame* DebuggerFrame::create(
+    JSContext* cx, HandleObject proto, HandleNativeObject debugger,
+    const FrameIter* maybeIter,
+    Handle<AbstractGeneratorObject*> maybeGenerator) {
+  MOZ_ASSERT(maybeIter || maybeGenerator);
+
   DebuggerFrame* frame = NewObjectWithGivenProto<DebuggerFrame>(cx, proto);
   if (!frame) {
     return nullptr;
   }
 
-  FrameIter::Data* data = iter.copyData();
-  if (!data) {
-    return nullptr;
-  }
-  frame->setFrameIterData(data);
-
   frame->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
   frame->setReservedSlot(HAS_INCREMENTED_STEPPER_SLOT, BooleanValue(false));
+
+  if (maybeIter) {
+    FrameIter::Data* data = maybeIter->copyData();
+    if (!data) {
+      return nullptr;
+    }
+
+    frame->setFrameIterData(data);
+  }
+
+  if (maybeGenerator) {
+    if (!frame->setGenerator(cx, maybeGenerator)) {
+      return nullptr;
+    }
+  }
 
   return frame;
 }
