@@ -1449,6 +1449,8 @@ pub struct TileCacheInstance {
     /// List of spatial nodes, with some extra information
     /// about whether they changed since last frame.
     spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
+    /// Switch back and forth between old and new spatial nodes hashmaps to avoid re-allocating.
+    old_spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
     /// A set of spatial nodes that primitives / clips depend on found
     /// during dependency creation. This is used to avoid trying to
     /// calculate invalid relative transforms when building the spatial
@@ -1523,6 +1525,7 @@ impl TileCacheInstance {
             opacity_bindings: FastHashMap::default(),
             old_opacity_bindings: FastHashMap::default(),
             spatial_nodes: FastHashMap::default(),
+            old_spatial_nodes: FastHashMap::default(),
             used_spatial_nodes: FastHashSet::default(),
             dirty_region: DirtyRegion::new(),
             tile_size: PictureSize::zero(),
@@ -2241,10 +2244,11 @@ impl TileCacheInstance {
         }
 
         // Diff the state of the spatial nodes between last frame build and now.
-        let mut old_spatial_nodes = mem::replace(&mut self.spatial_nodes, FastHashMap::default());
+        mem::swap(&mut self.spatial_nodes, &mut self.old_spatial_nodes);
 
         // TODO(gw): Maybe remove the used_spatial_nodes set and just mutate / create these
         //           diffs inside add_prim_dependency?
+        self.spatial_nodes.clear();
         for spatial_node_index in self.used_spatial_nodes.drain() {
             // Get the current relative transform.
             let mut value = get_transform_key(
@@ -2255,7 +2259,7 @@ impl TileCacheInstance {
 
             // Check if the transform has changed from last frame
             let mut changed = true;
-            if let Some(old_info) = old_spatial_nodes.remove(&spatial_node_index) {
+            if let Some(old_info) = self.old_spatial_nodes.remove(&spatial_node_index) {
                 if old_info.value == value {
                     // Since the transform key equality check applies epsilon, if we
                     // consider the value to be the same, store that old value to avoid
