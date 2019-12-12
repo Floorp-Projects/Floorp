@@ -203,7 +203,8 @@ typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
-// for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.
+// for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.  The TypeCode
+// spans the full range of type codes including the specialized AnyRef, FuncRef.
 //
 // PackedTypeCode is an enum class, as opposed to the more natural
 // struct-with-bitfields, because bitfields would make it non-POD.
@@ -260,11 +261,99 @@ static inline uint32_t UnpackTypeCodeIndex(PackedTypeCode ptc) {
   return uint32_t(ptc) >> 8;
 }
 
-static inline bool IsReferenceType(PackedTypeCode ptc) {
-  TypeCode tc = UnpackTypeCodeType(ptc);
-  return tc == TypeCode::Ref || tc == TypeCode::AnyRef ||
-         tc == TypeCode::FuncRef || tc == TypeCode::NullRef;
+static inline uint32_t UnpackTypeCodeIndexUnchecked(PackedTypeCode ptc) {
+  return uint32_t(ptc) >> 8;
 }
+
+// Return the TypeCode, but return TypeCode::Ref for any reference type.
+//
+// This function is very, very hot, hence what would normally be a switch on the
+// value `c` to map the reference types to TypeCode::Ref has been distilled into
+// a simple comparison; this is fastest.  Should type codes become too
+// complicated for this to work then a lookup table also has better performance
+// than a switch.
+//
+// An alternative is for the PackedTypeCode to represent something closer to
+// what ValType needs, so that this decoding step is not necessary, but that
+// moves complexity elsewhere, and the perf gain here would be only about 1% for
+// baseline compilation throughput.
+
+static inline TypeCode UnpackTypeCodeTypeAbstracted(PackedTypeCode ptc) {
+  TypeCode c = UnpackTypeCodeType(ptc);
+  return c < LowestPrimitiveTypeCode ? TypeCode::Ref : c;
+}
+
+static inline bool IsReferenceType(PackedTypeCode ptc) {
+  return UnpackTypeCodeTypeAbstracted(ptc) == TypeCode::Ref;
+}
+
+// The RefType carries more information about types t for which t.isReference()
+// is true.
+
+class RefType {
+ public:
+  enum Kind {
+    Null = uint8_t(TypeCode::NullRef),
+    Any = uint8_t(TypeCode::AnyRef),
+    Func = uint8_t(TypeCode::FuncRef),
+    TypeIndex = uint8_t(TypeCode::Ref)
+  };
+
+ private:
+  PackedTypeCode ptc_;
+
+#ifdef DEBUG
+  bool isValid() const {
+    switch (UnpackTypeCodeType(ptc_)) {
+      case TypeCode::NullRef:
+      case TypeCode::FuncRef:
+      case TypeCode::AnyRef:
+        MOZ_ASSERT(UnpackTypeCodeIndexUnchecked(ptc_) == NoRefTypeIndex);
+        return true;
+      case TypeCode::Ref:
+        MOZ_ASSERT(UnpackTypeCodeIndexUnchecked(ptc_) != NoRefTypeIndex);
+        return true;
+      default:
+        return false;
+    }
+  }
+#endif
+
+  explicit RefType(Kind kind) : ptc_(PackTypeCode(TypeCode(kind))) {
+    MOZ_ASSERT(isValid());
+  }
+
+  // We keep this private since all sorts of values coerce to uint32_t.
+  explicit RefType(uint32_t refTypeIndex)
+      : ptc_(PackTypeCode(TypeCode::Ref, refTypeIndex)) {
+    MOZ_ASSERT(isValid());
+  }
+
+ public:
+  explicit RefType(PackedTypeCode ptc) : ptc_(ptc) { MOZ_ASSERT(isValid()); }
+
+  static RefType fromTypeCode(TypeCode tc) {
+    MOZ_ASSERT(tc != TypeCode::Ref);
+    return RefType(Kind(tc));
+  }
+
+  static RefType fromTypeIndex(uint32_t refTypeIndex) {
+    return RefType(refTypeIndex);
+  }
+
+  Kind kind() const { return Kind(UnpackTypeCodeType(ptc_)); }
+
+  uint32_t typeIndex() const { return UnpackTypeCodeIndex(ptc_); }
+
+  PackedTypeCode packed() const { return ptc_; }
+
+  static RefType any() { return RefType(Any); }
+  static RefType func() { return RefType(Func); }
+  static RefType null() { return RefType(Null); }
+
+  bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
+  bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
+};
 
 // The ValType represents the storage type of a WebAssembly location, whether
 // parameter, local, or global.
@@ -273,7 +362,8 @@ class ValType {
   PackedTypeCode tc_;
 
 #ifdef DEBUG
-  bool isValidCode() {
+  bool isValidTypeCode() {
+    MOZ_ASSERT(isValid());
     switch (UnpackTypeCodeType(tc_)) {
       case TypeCode::I32:
       case TypeCode::I64:
@@ -291,30 +381,40 @@ class ValType {
 #endif
 
  public:
-  enum Code {
+  enum Kind {
     I32 = uint8_t(TypeCode::I32),
     I64 = uint8_t(TypeCode::I64),
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
-
-    AnyRef = uint8_t(TypeCode::AnyRef),
-    FuncRef = uint8_t(TypeCode::FuncRef),
-    NullRef = uint8_t(TypeCode::NullRef),
     Ref = uint8_t(TypeCode::Ref),
   };
 
+ private:
+  explicit ValType(TypeCode c) : tc_(PackTypeCode(c)) {
+    MOZ_ASSERT(c != TypeCode::Ref);
+    MOZ_ASSERT(isValid());
+  }
+
+  TypeCode typeCode() const {
+    MOZ_ASSERT(isValid());
+    return UnpackTypeCodeType(tc_);
+  }
+
+ public:
   ValType() : tc_(InvalidPackedTypeCode()) {}
 
-  MOZ_IMPLICIT ValType(Code c) : tc_(PackTypeCode(TypeCode(c))) {
-    MOZ_ASSERT(isValidCode());
+  MOZ_IMPLICIT ValType(Kind c) : tc_(PackTypeCode(TypeCode(c))) {
+    MOZ_ASSERT(c != Ref);
+    MOZ_ASSERT(isValidTypeCode());
   }
 
-  ValType(Code c, uint32_t refTypeIndex)
-      : tc_(PackTypeCode(TypeCode(c), refTypeIndex)) {
-    MOZ_ASSERT(isValidCode());
+  MOZ_IMPLICIT ValType(RefType rt) : tc_(rt.packed()) {
+    MOZ_ASSERT(isValidTypeCode());
   }
 
-  explicit ValType(PackedTypeCode ptc) : tc_(ptc) { MOZ_ASSERT(isValidCode()); }
+  explicit ValType(PackedTypeCode ptc) : tc_(ptc) {
+    MOZ_ASSERT(isValidTypeCode());
+  }
 
   explicit ValType(jit::MIRType mty) {
     switch (mty) {
@@ -335,38 +435,87 @@ class ValType {
     }
   }
 
+  static ValType fromNonRefTypeCode(TypeCode tc) {
+#ifdef DEBUG
+    switch (tc) {
+      case TypeCode::I32:
+      case TypeCode::I64:
+      case TypeCode::F32:
+      case TypeCode::F64:
+        break;
+      default:
+        MOZ_CRASH("Bad type code");
+    }
+#endif
+    return ValType(tc);
+  }
+
   static ValType fromBitsUnsafe(uint32_t bits) {
     return ValType(PackedTypeCodeFromBits(bits));
   }
 
-  PackedTypeCode packed() const { return tc_; }
-
-  uint32_t bitsUnsafe() const { return PackedTypeCodeToBits(tc_); }
-
-  Code code() const { return Code(UnpackTypeCodeType(tc_)); }
-
   bool isValid() const { return IsValid(tc_); }
 
-  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
-  bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
+  PackedTypeCode packed() const {
+    MOZ_ASSERT(isValid());
+    return tc_;
+  }
 
-  bool isReference() const { return IsReferenceType(tc_); }
+  uint32_t bitsUnsafe() const {
+    MOZ_ASSERT(isValid());
+    return PackedTypeCodeToBits(tc_);
+  }
+
+  bool isRef() const {
+    MOZ_ASSERT(isValid());
+    return UnpackTypeCodeType(tc_) == TypeCode::Ref;
+  }
+
+  bool isReference() const {
+    MOZ_ASSERT(isValid());
+    return IsReferenceType(tc_);
+  }
+
+  Kind kind() const {
+    MOZ_ASSERT(isValid());
+    return Kind(UnpackTypeCodeTypeAbstracted(tc_));
+  }
+
+  RefType refType() const {
+    MOZ_ASSERT(isReference());
+    return RefType(tc_);
+  }
+
+  RefType::Kind refTypeKind() const {
+    MOZ_ASSERT(isReference());
+    return RefType(tc_).kind();
+  }
 
   // Some types are encoded as JS::Value when they escape from Wasm (when passed
   // as parameters to imports or returned from exports).  For AnyRef the Value
   // encoding is pretty much a requirement.  For other types it's a choice that
   // may (temporarily) simplify some code.
   bool isEncodedAsJSValueOnEscape() const {
-    return code() == Code::AnyRef || code() == Code::FuncRef;
+    return typeCode() == TypeCode::AnyRef || typeCode() == TypeCode::FuncRef;
   }
 
-  bool operator==(const ValType& that) const { return tc_ == that.tc_; }
-  bool operator!=(const ValType& that) const { return tc_ != that.tc_; }
-  bool operator==(Code that) const {
-    MOZ_ASSERT(that != Code::Ref);
-    return code() == that;
+  bool operator==(const ValType& that) const {
+    MOZ_ASSERT(isValid() && that.isValid());
+    return tc_ == that.tc_;
   }
-  bool operator!=(Code that) const { return !(*this == that); }
+
+  bool operator!=(const ValType& that) const {
+    MOZ_ASSERT(isValid() && that.isValid());
+    return tc_ != that.tc_;
+  }
+
+  bool operator==(Kind that) const {
+    MOZ_ASSERT(isValid());
+    MOZ_ASSERT(that != Kind::Ref);
+    return Kind(typeCode()) == that;
+  }
+
+  bool operator!=(Kind that) const { return !(*this == that); }
 };
 
 // The dominant use of this data type is for locals and args, and profiling
@@ -377,16 +526,13 @@ typedef Vector<ValType, 16, SystemAllocPolicy> ValTypeVector;
 // ValType utilities
 
 static inline unsigned SizeOf(ValType vt) {
-  switch (vt.code()) {
+  switch (vt.kind()) {
     case ValType::I32:
     case ValType::F32:
       return 4;
     case ValType::I64:
     case ValType::F64:
       return 8;
-    case ValType::AnyRef:
-    case ValType::FuncRef:
-    case ValType::NullRef:
     case ValType::Ref:
       return sizeof(intptr_t);
   }
@@ -399,7 +545,7 @@ static inline unsigned SizeOf(ValType vt) {
 // case-by-case basis.
 
 static inline jit::MIRType ToMIRType(ValType vt) {
-  switch (vt.code()) {
+  switch (vt.kind()) {
     case ValType::I32:
       return jit::MIRType::Int32;
     case ValType::I64:
@@ -409,9 +555,6 @@ static inline jit::MIRType ToMIRType(ValType vt) {
     case ValType::F64:
       return jit::MIRType::Double;
     case ValType::Ref:
-    case ValType::AnyRef:
-    case ValType::FuncRef:
-    case ValType::NullRef:
       return jit::MIRType::RefOrNull;
   }
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
@@ -424,7 +567,7 @@ static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
 }
 
 static inline const char* ToCString(ValType type) {
-  switch (type.code()) {
+  switch (type.kind()) {
     case ValType::I32:
       return "i32";
     case ValType::I64:
@@ -433,17 +576,24 @@ static inline const char* ToCString(ValType type) {
       return "f32";
     case ValType::F64:
       return "f64";
-    case ValType::AnyRef:
-      return "anyref";
-    case ValType::FuncRef:
-      return "funcref";
-    case ValType::NullRef:
-      return "nullref";
     case ValType::Ref:
-      return "ref";
+      switch (type.refTypeKind()) {
+        case RefType::Any:
+          return "anyref";
+        case RefType::Func:
+          return "funcref";
+        case RefType::Null:
+          return "nullref";
+        case RefType::TypeIndex:
+          return "ref";
+        default:
+          break;
+      }
+      break;
     default:
-      MOZ_CRASH("bad value type");
+      break;
   }
+  MOZ_CRASH("bad value type");
 }
 
 static inline const char* ToCString(const Maybe<ValType>& type) {
@@ -780,7 +930,7 @@ class MOZ_NON_PARAM Val : public LitVal {
     u.ref_ = val;
   }
   explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
-    MOZ_ASSERT(type == ValType::FuncRef);
+    MOZ_ASSERT(type == RefType::func());
     u.ref_ = val.asAnyRef();
   }
   void trace(JSTracer* trc);
@@ -837,10 +987,10 @@ class FuncType {
   HashNumber hash() const {
     HashNumber hn = 0;
     for (const ValType& vt : args_) {
-      hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
+      hn = mozilla::AddToHash(hn, HashNumber(vt.packed()));
     }
     for (const ValType& vt : results_) {
-      hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
+      hn = mozilla::AddToHash(hn, HashNumber(vt.packed()));
     }
     return hn;
   }
@@ -867,13 +1017,13 @@ class FuncType {
   // as are FuncRef returns.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+      if (arg.isReference() && arg != RefType::any()) {
         return true;
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef &&
-          result.code() != ValType::FuncRef) {
+      if (result.isReference() && result != RefType::any() &&
+          result != RefType::func()) {
         return true;
       }
     }
@@ -883,13 +1033,13 @@ class FuncType {
   // allowed, as are FuncRef returns.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+      if (arg.isReference() && arg != RefType::any()) {
         return true;
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef &&
-          result.code() != ValType::FuncRef) {
+      if (result.isReference() && result != RefType::any() &&
+          result != RefType::func()) {
         return true;
       }
     }
@@ -899,13 +1049,13 @@ class FuncType {
   // FuncRef parameters.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef &&
-          arg.code() != ValType::FuncRef) {
+      if (arg.isReference() && arg != RefType::any() &&
+          arg != RefType::func()) {
         return true;
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef) {
+      if (result.isReference() && result != RefType::any()) {
         return true;
       }
     }
@@ -1152,7 +1302,7 @@ class GlobalDesc {
                       ModuleKind kind = ModuleKind::Wasm)
       : kind_((isMutable || !initial.isVal()) ? GlobalKind::Variable
                                               : GlobalKind::Constant) {
-    MOZ_ASSERT(initial.type() != ValType::NullRef);
+    MOZ_ASSERT(initial.type() != RefType::null());
     if (isVariable()) {
       u.var.val.initial_ = initial;
       u.var.isMutable_ = isMutable;
@@ -1167,7 +1317,7 @@ class GlobalDesc {
   explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex,
                       ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import) {
-    MOZ_ASSERT(type != ValType::NullRef);
+    MOZ_ASSERT(type != RefType::null());
     u.var.val.import.type_ = type;
     u.var.val.import.index_ = importIndex;
     u.var.isMutable_ = isMutable;
@@ -2089,9 +2239,9 @@ enum class TableKind { AnyRef, FuncRef, AsmJS };
 static inline ValType ToElemValType(TableKind tk) {
   switch (tk) {
     case TableKind::AnyRef:
-      return ValType::AnyRef;
+      return RefType::any();
     case TableKind::FuncRef:
-      return ValType::FuncRef;
+      return RefType::func();
     case TableKind::AsmJS:
       break;
   }
