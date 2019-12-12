@@ -219,7 +219,7 @@ class LoaderListener final : public nsIStreamListener,
     MOZ_ASSERT(mStream);
 
     if (mTestStreamFailure) {
-      aRequest->Cancel(NS_ERROR_ABORT);
+      return NS_ERROR_UNEXPECTED;
     }
 
     // We only need this for the ReadSegments call, the value is unused.
