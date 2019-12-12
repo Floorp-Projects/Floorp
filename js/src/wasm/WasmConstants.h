@@ -49,10 +49,6 @@ static const uint8_t SLEB128SignBit = 0x40;
 
 enum class TypeCode {
 
-  // If more "simple primitive" (non-reference, non-constructor,
-  // non-special-purpose) types are added here then you MUST update
-  // LowestPrimitiveTypeCode, below.
-
   I32 = 0x7f,  // SLEB128(-0x01)
   I64 = 0x7e,  // SLEB128(-0x02)
   F32 = 0x7d,  // SLEB128(-0x03)
@@ -81,12 +77,6 @@ enum class TypeCode {
 
   Limit = 0x80
 };
-
-// This is the lowest-valued TypeCode that is a primitive type, used in
-// UnpackTypeCodeTypeAbstracted().  If primitive typecodes are added below any
-// reference typecode then the logic in that function MUST change.
-
-static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::F64;
 
 enum class FuncTypeIdDescKind { None, Immediate, Global };
 

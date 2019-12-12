@@ -125,11 +125,22 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 
   MOZ_ASSERT(fi.funcType().args().length() == argc);
   for (size_t i = 0; i < argc; i++) {
-    switch (fi.funcType().args()[i].kind()) {
-      case ValType::I32: {
+    switch (fi.funcType().args()[i].code()) {
+      case ValType::I32:
         args[i].set(Int32Value(*(int32_t*)&argv[i]));
         break;
-      }
+      case ValType::F32:
+        args[i].set(JS::CanonicalizedDoubleValue(*(float*)&argv[i]));
+        break;
+      case ValType::F64:
+        args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
+        break;
+      case ValType::FuncRef:
+        args[i].set(UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)&argv[i])));
+        break;
+      case ValType::AnyRef:
+        args[i].set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
+        break;
       case ValType::I64: {
 #ifdef ENABLE_WASM_BIGINT
         MOZ_ASSERT(HasI64BigIntSupport(cx));
@@ -145,30 +156,10 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         MOZ_CRASH("unhandled type in callImport");
 #endif
       }
-      case ValType::F32: {
-        args[i].set(JS::CanonicalizedDoubleValue(*(float*)&argv[i]));
-        break;
-      }
-      case ValType::F64: {
-        args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
-        break;
-      }
-      case ValType::Ref: {
-        switch (fi.funcType().args()[i].refTypeKind()) {
-          case RefType::Func:
-            args[i].set(
-                UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)&argv[i])));
-            break;
-          case RefType::Any:
-          case RefType::Null:
-            args[i].set(
-                UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
-            break;
-          case RefType::TypeIndex:
-            MOZ_CRASH("temporarily unsupported Ref type in callImport");
-        }
-        break;
-      }
+      case ValType::Ref:
+        MOZ_CRASH("temporarily unsupported Ref type in callImport");
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
     }
   }
 
@@ -229,9 +220,19 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   size_t numKnownArgs = std::min(importArgs.length(), importFun->nargs());
   for (uint32_t i = 0; i < numKnownArgs; i++) {
     StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
-    switch (importArgs[i].kind()) {
+    switch (importArgs[i].code()) {
       case ValType::I32:
         if (!argTypes->hasType(TypeSet::Int32Type())) {
+          return true;
+        }
+        break;
+      case ValType::F32:
+        if (!argTypes->hasType(TypeSet::DoubleType())) {
+          return true;
+        }
+        break;
+      case ValType::F64:
+        if (!argTypes->hasType(TypeSet::DoubleType())) {
           return true;
         }
         break;
@@ -244,40 +245,24 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 #else
         MOZ_CRASH("NYI");
 #endif
-      case ValType::F32:
-        if (!argTypes->hasType(TypeSet::DoubleType())) {
-          return true;
-        }
+      case ValType::AnyRef:
+        // We don't know what type the value will be, so we can't really check
+        // whether the callee will accept it.  It doesn't make much sense to see
+        // if the callee accepts all of the types an AnyRef might represent
+        // because most callees will not have been exposed to all those types
+        // and so we'll never pass the test.  Instead, we must use the callee's
+        // arg-type-checking entry point, and not check anything here.  See
+        // FuncType::jitExitRequiresArgCheck().
         break;
-      case ValType::F64:
-        if (!argTypes->hasType(TypeSet::DoubleType())) {
-          return true;
-        }
+      case ValType::FuncRef:
+        // We handle FuncRef as we do AnyRef: by checking the type dynamically
+        // in the callee.  Code in the stubs layer must box up the FuncRef as a
+        // Value.
         break;
       case ValType::Ref:
-        switch (importArgs[i].refTypeKind()) {
-          case RefType::Any:
-            // We don't know what type the value will be, so we can't really
-            // check whether the callee will accept it.  It doesn't make much
-            // sense to see if the callee accepts all of the types an AnyRef
-            // might represent because most callees will not have been exposed
-            // to all those types and so we'll never pass the test.  Instead, we
-            // must use the callee's arg-type-checking entry point, and not
-            // check anything here.  See FuncType::jitExitRequiresArgCheck().
-            break;
-          case RefType::Func:
-            // We handle FuncRef as we do AnyRef: by checking the type
-            // dynamically in the callee.  Code in the stubs layer must box up
-            // the FuncRef as a Value.
-            break;
-          case RefType::Null:
-            // Ditto NullRef.
-            break;
-          case RefType::TypeIndex:
-            // Guarded by temporarilyUnsupportedReftypeForExit()
-            MOZ_CRASH("case guarded above");
-        }
-        break;
+        MOZ_CRASH("case guarded above");
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
     }
   }
 
@@ -366,23 +351,6 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
   }
   static_assert(sizeof(argv[0]) >= sizeof(void*), "fits");
   *(void**)argv = result.get().forCompiledCode();
-  return true;
-}
-
-/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
-Instance::callImport_nullref(Instance* instance, int32_t funcImportIndex,
-                             int32_t argc, uint64_t* argv) {
-  JSContext* cx = TlsContext.get();
-  RootedValue rval(cx);
-  if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
-    return false;
-  }
-  if (!rval.isNull()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_NULL_REQUIRED);
-    return false;
-  }
-  *(void**)argv = nullptr;
   return true;
 }
 
@@ -875,14 +843,15 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  switch (table.repr()) {
-    case TableRepr::Ref:
+  switch (table.kind()) {
+    case TableKind::AnyRef:
       table.fillAnyRef(start, len, AnyRef::fromCompiledCode(value));
       break;
-    case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+    case TableKind::FuncRef:
       table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
       break;
+    case TableKind::AsmJS:
+      MOZ_CRASH("not asm.js");
   }
 
   return 0;
@@ -899,7 +868,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  if (table.repr() == TableRepr::Ref) {
+  if (table.kind() == TableKind::AnyRef) {
     return table.getAnyRef(index).forCompiledCode();
   }
 
@@ -924,15 +893,16 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    switch (table.repr()) {
-      case TableRepr::Ref:
+    switch (table.kind()) {
+      case TableKind::AnyRef:
         table.fillAnyRef(oldSize, delta, ref);
         break;
-      case TableRepr::Func:
-        MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+      case TableKind::FuncRef:
         table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
                           TlsContext.get());
         break;
+      case TableKind::AsmJS:
+        MOZ_CRASH("not asm.js");
     }
   }
 
@@ -950,15 +920,16 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  switch (table.repr()) {
-    case TableRepr::Ref:
+  switch (table.kind()) {
+    case TableKind::AnyRef:
       table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
       break;
-    case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+    case TableKind::FuncRef:
       table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
                         TlsContext.get());
       break;
+    case TableKind::AsmJS:
+      MOZ_CRASH("not asm.js");
   }
 
   return 0;
@@ -1125,14 +1096,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 //   post-barrier may be needed for the same reason as above.
 
 void CopyValPostBarriered(uint8_t* dst, const Val& src) {
-  switch (src.type().kind()) {
+  switch (src.type().code()) {
     case ValType::I32: {
       int32_t x = src.i32();
-      memcpy(dst, &x, sizeof(x));
-      break;
-    }
-    case ValType::I64: {
-      int64_t x = src.i64();
       memcpy(dst, &x, sizeof(x));
       break;
     }
@@ -1141,12 +1107,19 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
       memcpy(dst, &x, sizeof(x));
       break;
     }
+    case ValType::I64: {
+      int64_t x = src.i64();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
     case ValType::F64: {
       double x = src.f64();
       memcpy(dst, &x, sizeof(x));
       break;
     }
-    case ValType::Ref: {
+    case ValType::Ref:
+    case ValType::FuncRef:
+    case ValType::AnyRef: {
       // TODO/AnyRef-boxing: With boxed immediates and strings, the write
       // barrier is going to have to be more complicated.
       ASSERT_ANYREF_IS_JSOBJECT;
@@ -1158,6 +1131,9 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
         JSObject::writeBarrierPost((JSObject**)dst, nullptr, x.asJSObject());
       }
       break;
+    }
+    case ValType::NullRef: {
+      MOZ_CRASH("unexpected Val type");
     }
   }
 }
@@ -1708,7 +1684,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   RootedValue v(cx);
   for (size_t i = 0; i < funcType->args().length(); ++i) {
     v = i < args.length() ? args[i] : UndefinedValue();
-    switch (funcType->arg(i).kind()) {
+    switch (funcType->arg(i).code()) {
       case ValType::I32:
         if (!ToInt32(cx, v, (int32_t*)&exportArgs[i])) {
           return false;
@@ -1749,55 +1725,38 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
                      *(double*)&exportArgs[i]);
         break;
       case ValType::Ref:
-        switch (funcType->arg(i).refTypeKind()) {
-          case RefType::Func: {
-            RootedFunction fun(cx);
-            if (!CheckFuncRefValue(cx, v, &fun)) {
-              return false;
-            }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
-            if (!refs.emplaceBack(fun)) {
-              return false;
-            }
-            DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
-                         int(refs.length() - 1));
-            break;
-          }
-          case RefType::Null: {
-            if (!v.isNull()) {
-              JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                       JSMSG_WASM_NULL_REQUIRED);
-              return false;
-            }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
-            if (!refs.emplaceBack(AnyRef::null().asJSObject())) {
-              return false;
-            }
-            DebugCodegen(DebugChannel::Function, "nullptr(#%d) ",
-                         int(refs.length() - 1));
-            break;
-          }
-          case RefType::Any: {
-            RootedAnyRef ar(cx, AnyRef::null());
-            if (!BoxAnyRef(cx, v, &ar)) {
-              return false;
-            }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
-            if (!refs.emplaceBack(ar.get().asJSObject())) {
-              return false;
-            }
-            DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
-                         int(refs.length() - 1));
-            break;
-          }
-          case RefType::TypeIndex: {
-            MOZ_CRASH("temporarily unsupported Ref type in callExport");
-          }
+        MOZ_CRASH("temporarily unsupported Ref type in callExport");
+      case ValType::FuncRef: {
+        RootedFunction fun(cx);
+        if (!CheckFuncRefValue(cx, v, &fun)) {
+          return false;
         }
+        // Store in rooted array until no more GC is possible.
+        ASSERT_ANYREF_IS_JSOBJECT;
+        if (!refs.emplaceBack(fun)) {
+          return false;
+        }
+        DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
+                     int(refs.length() - 1));
         break;
+      }
+      case ValType::AnyRef: {
+        RootedAnyRef ar(cx, AnyRef::null());
+        if (!BoxAnyRef(cx, v, &ar)) {
+          return false;
+        }
+        // Store in rooted array until no more GC is possible.
+        ASSERT_ANYREF_IS_JSOBJECT;
+        if (!refs.emplaceBack(ar.get().asJSObject())) {
+          return false;
+        }
+        DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
+                     int(refs.length() - 1));
+        break;
+      }
+      case ValType::NullRef: {
+        MOZ_CRASH("NullRef not expressible");
+      }
     }
   }
 
@@ -1854,7 +1813,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   } else {
     MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
     DebugCodegen(DebugChannel::Function, ": ");
-    switch (results[0].kind()) {
+    switch (results[0].code()) {
       case ValType::I32:
         args.rval().set(Int32Value(*(int32_t*)retAddr));
         DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
@@ -1884,26 +1843,19 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         DebugCodegen(DebugChannel::Function, "f64(%lf)", *(double*)retAddr);
         break;
       case ValType::Ref:
-        switch (results[0].refTypeKind()) {
-          case RefType::Func:
-            args.rval().set(
-                UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)retAddr)));
-            DebugCodegen(DebugChannel::Function, "funcptr(%p)",
-                         *(void**)retAddr);
-            break;
-          case RefType::Null:
-            args.rval().setNull();
-            DebugCodegen(DebugChannel::Function, "null ");
-            break;
-          case RefType::Any:
-            args.rval().set(
-                UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
-            DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
-            break;
-          case RefType::TypeIndex:
-            MOZ_CRASH("temporarily unsupported Ref type in callExport");
-        }
+        MOZ_CRASH("temporarily unsupported Ref type in callExport");
+      case ValType::FuncRef:
+        args.rval().set(
+            UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)retAddr)));
+        DebugCodegen(DebugChannel::Function, "funcptr(%p)", *(void**)retAddr);
         break;
+      case ValType::AnyRef:
+        args.rval().set(
+            UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
+        DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
+        break;
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
     }
   }
   DebugCodegen(DebugChannel::Function, "\n");
