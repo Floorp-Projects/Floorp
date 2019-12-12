@@ -1409,10 +1409,9 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
             break;
           case RefType::Func:
           case RefType::Any:
+          case RefType::Null:
             offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
             break;
-          default:
-            MOZ_CRASH("Unknown type");
         }
         break;
     }
@@ -1667,15 +1666,17 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   if (elementType == uint8_t(TypeCode::FuncRef)) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (elementType == uint8_t(TypeCode::AnyRef)) {
+  } else if (elementType == uint8_t(TypeCode::AnyRef) ||
+             elementType == uint8_t(TypeCode::NullRef)) {
     if (!refTypesEnabled) {
       return d.fail("expected 'funcref' element type");
     }
-    tableKind = TableKind::AnyRef;
+    tableKind = elementType == uint8_t(TypeCode::AnyRef) ? TableKind::AnyRef
+                                                         : TableKind::NullRef;
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
-    return d.fail("expected 'funcref' or 'anyref' element type");
+    return d.fail("expected reference element type");
 #else
     return d.fail("expected 'funcref' element type");
 #endif
@@ -1712,6 +1713,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
       switch (type.refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
+        case RefType::Null:
           break;
         case RefType::TypeIndex:
 #ifdef WASM_PRIVATE_REFTYPES
@@ -2423,16 +2425,13 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         case ElemSegmentPayload::ElemExpression: {
           switch (form) {
             case uint8_t(TypeCode::FuncRef):
-              // Below we must in principle check every element expression to
-              // ensure that it is a subtype of FuncRef.  However, the only
-              // reference expressions allowed are ref.null and ref.func, and
-              // they both pass that test, and so no additional check is needed
-              // at this time.
               elemType = RefType::func();
               break;
             case uint8_t(TypeCode::AnyRef):
-              // Ditto, for AnyRef, just even more trivial.
               elemType = RefType::any();
+              break;
+            case uint8_t(TypeCode::NullRef):
+              elemType = RefType::null();
               break;
             default:
               return d.fail(
@@ -2516,18 +2515,25 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         if (!d.readOp(&op)) {
           return d.fail("failed to read initializer operation");
         }
+
+        RefType initType = RefType::any();
         switch (op.b0) {
           case uint16_t(Op::RefFunc):
+            initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
             if (kind == ElemSegmentKind::Declared) {
               return d.fail(
                   "declared element segments cannot contain ref.null");
             }
+            initType = RefType::null();
             needIndex = false;
             break;
           default:
             return d.fail("failed to read initializer operation");
+        }
+        if (!env->isRefSubtypeOf(ValType(initType), ValType(elemType))) {
+          return d.fail("initializer type must be subtype of element type");
         }
       }
 
