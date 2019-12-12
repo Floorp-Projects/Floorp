@@ -693,7 +693,8 @@ nsresult nsFrameLoader::CheckURILoad(nsIURI* aURI,
 
   // Check if we are allowed to load absURL
   nsresult rv = secMan->CheckLoadURIWithPrincipal(
-      principal, aURI, nsIScriptSecurityManager::STANDARD);
+      principal, aURI, nsIScriptSecurityManager::STANDARD,
+      mOwnerContent->OwnerDoc()->InnerWindowID());
   if (NS_FAILED(rv)) {
     return rv;  // We're not
   }
