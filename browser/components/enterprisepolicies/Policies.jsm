@@ -779,6 +779,11 @@ var Policies = {
           blockAllExtensions = true;
           // Turn off discovery pane in about:addons
           setAndLockPref("extensions.getAddons.showPane", false);
+          // Turn off recommendations
+          setAndLockPref(
+            "extensions.htmlaboutaddons.recommendations.enable",
+            false
+          );
           // Block about:debugging
           blockAboutPage(manager, "about:debugging");
         }
