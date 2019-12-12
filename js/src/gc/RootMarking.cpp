@@ -433,6 +433,8 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
       traceEmbeddingGrayRoots(trc);
     }
   }
+
+  traceKeptObjects(trc);
 }
 
 void GCRuntime::traceEmbeddingBlackRoots(JSTracer* trc) {

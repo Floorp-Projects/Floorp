@@ -42,6 +42,7 @@
 #include "builtin/Symbol.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
+#include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
@@ -126,6 +127,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_SharedArrayBuffer:
       return !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
 
+    case JSProto_WeakRef:
     case JSProto_FinalizationGroup:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
 

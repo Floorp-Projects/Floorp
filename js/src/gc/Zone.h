@@ -11,6 +11,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/SegmentedVector.h"
 
+#include "gc/Barrier.h"
 #include "gc/FindSCCs.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/ZoneAllocator.h"
@@ -23,6 +24,7 @@ namespace js {
 
 class Debugger;
 class RegExpZone;
+class WeakRefObject;
 
 namespace jit {
 class JitZone;
@@ -94,6 +96,28 @@ class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
 
   MOZ_ALWAYS_INLINE JSString* lookup(BaseScript* script) const;
   MOZ_ALWAYS_INLINE void put(BaseScript* script, JSString* string);
+};
+
+// WeakRefHeapPtrVector is a GCVector of WeakRefObjects.
+class WeakRefHeapPtrVector
+    : public GCVector<js::HeapPtrObject, 1, js::ZoneAllocPolicy> {
+ public:
+  using GCVector::GCVector;
+
+  // call in compacting, to update the target in each WeakRefObject.
+  void sweep(js::HeapPtrObject& target);
+};
+
+// WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
+// WeakRef to the list of JS WeakRefs.
+class WeakRefMap
+    : public GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
+                       MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy> {
+ public:
+  using GCHashMap::GCHashMap;
+  using Base = GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
+                         MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
+  void sweep();
 };
 
 }  // namespace js
@@ -677,6 +701,28 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkScriptMapsAfterMovingGC();
 #endif
+
+ private:
+  js::ZoneOrGCTaskData<js::WeakRefMap> weakRefMap_;
+
+  js::WeakRefMap& weakRefMap() { return weakRefMap_.ref(); }
+
+  using KeptAliveSet =
+      JS::GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
+                    js::ZoneAllocPolicy>;
+  friend class js::WeakRefObject;
+  js::ZoneOrGCTaskData<KeptAliveSet> keptObjects;
+
+ public:
+  // Add the target of JS WeakRef to a kept-alive set maintained by GC.
+  // see https://tc39.es/proposal-weakrefs/#sec-keepduringjob
+  bool keepDuringJob(HandleObject target);
+
+  void traceKeptObjects(JSTracer* trc);
+
+  // Clear the kept-alive set.
+  // see https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+  void clearKeptObjects();
 };
 
 }  // namespace JS
