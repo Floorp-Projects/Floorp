@@ -7,7 +7,6 @@
 
 #include <algorithm>
 
-#include "gc/Verifier.h"
 #include "gc/WeakMap.h"
 #include "gc/Zone.h"
 #include "js/Proxy.h"
@@ -15,6 +14,12 @@
 
 using namespace js;
 using namespace js::gc;
+
+static constexpr CellColor AllCellColors[] = {CellColor::White, CellColor::Gray,
+                                              CellColor::Black};
+
+static constexpr CellColor MarkedCellColors[] = {CellColor::Gray,
+                                                 CellColor::Black};
 
 namespace js {
 
