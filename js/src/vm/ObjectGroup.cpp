@@ -701,23 +701,6 @@ void ObjectGroup::setDefaultNewGroupUnknown(JSContext* cx,
   }
 }
 
-#ifdef DEBUG
-/* static */
-bool ObjectGroup::hasDefaultNewGroup(JSObject* proto, const JSClass* clasp,
-                                     ObjectGroup* group) {
-  ObjectGroupRealm::NewTable* table =
-      ObjectGroupRealm::get(group).defaultNewTable;
-
-  if (table) {
-    auto lookup =
-        ObjectGroupRealm::NewEntry::Lookup(clasp, TaggedProto(proto), nullptr);
-    auto p = table->lookup(lookup);
-    return p && p->group == group;
-  }
-  return false;
-}
-#endif /* DEBUG */
-
 inline const JSClass* GetClassForProtoKey(JSProtoKey key) {
   switch (key) {
     case JSProto_Null:
@@ -1494,26 +1477,6 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
   }
 
   return res;
-}
-
-void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
-                                                  jsbytecode* pc,
-                                                  JSProtoKey kind,
-                                                  ObjectGroup* group) {
-  MOZ_ASSERT(script->realm() == group->realm());
-
-  AllocationSiteKey key(script, script->pcToOffset(pc), kind,
-                        group->proto().toObjectOrNull());
-
-  AllocationSiteTable::Ptr p = allocationSiteTable->lookup(key);
-  MOZ_RELEASE_ASSERT(p);
-  allocationSiteTable->remove(p);
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!allocationSiteTable->putNew(key, group)) {
-      oomUnsafe.crash("Inconsistent object table");
-    }
-  }
 }
 
 /* static */
