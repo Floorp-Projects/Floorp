@@ -27,8 +27,6 @@ devtools.jar:
     content/performance-new/frame-script.js (performance-new/frame-script.js)
     content/performance-new/popup/initializer.js (performance-new/popup/initializer.js)
     content/performance-new/popup/popup.xhtml (performance-new/popup/popup.xhtml)
-    content/performance-new/aboutprofiling/initializer.js (performance-new/aboutprofiling/initializer.js)
-    content/performance-new/aboutprofiling/index.xhtml (performance-new/aboutprofiling/index.xhtml)
     content/memory/index.xhtml (memory/index.xhtml)
     content/framework/toolbox-window.xhtml (framework/toolbox-window.xhtml)
     content/framework/toolbox-options.xhtml (framework/toolbox-options.xhtml)
@@ -130,7 +128,6 @@ devtools.jar:
     skin/images/webconsole/run.svg (themes/images/webconsole/run.svg)
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
     skin/animation.css (themes/animation.css)
-    skin/aboutprofiling.css (themes/aboutprofiling.css)
     skin/perf.css (themes/perf.css)
     skin/performance.css (themes/performance.css)
     skin/memory.css (themes/memory.css)
@@ -255,3 +252,14 @@ devtools.jar:
 
     # WhatsNew panel
     content/whats-new/index.html (whats-new/index.html)
+
+#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
+    # about:profiling
+
+    # This page is still Nightly only while under active development.
+    # The about:profiling page is also has an ifdef in:
+    # browser/components/about/AboutRedirector.cpp
+    skin/aboutprofiling.css (themes/aboutprofiling.css)
+    content/performance-new/aboutprofiling/initializer.js (performance-new/aboutprofiling/initializer.js)
+    content/performance-new/aboutprofiling/index.xhtml (performance-new/aboutprofiling/index.xhtml)
+#endif
