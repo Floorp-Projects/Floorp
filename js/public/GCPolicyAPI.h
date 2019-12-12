@@ -54,26 +54,10 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
+#include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE
 #include "js/TraceKind.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
-
-// Expand the given macro D for each public GC pointer.
-#define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
-  D(JS::Symbol*)                           \
-  D(JS::BigInt*)                           \
-  D(JSAtom*)                               \
-  D(JSFunction*)                           \
-  D(JSObject*)                             \
-  D(JSScript*)                             \
-  D(JSString*)
-
-// Expand the given macro D for each public tagged GC pointer type.
-#define FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(D) \
-  D(JS::Value)                                    \
-  D(jsid)
-
-#define FOR_EACH_PUBLIC_AGGREGATE_GC_POINTER_TYPE(D) D(JSPropertyDescriptor)
 
 namespace JS {
 
@@ -145,7 +129,7 @@ struct GCPointerPolicy {
   struct GCPolicy<Type> : public GCPointerPolicy<Type> {}; \
   template <>                                              \
   struct GCPolicy<Type const> : public GCPointerPolicy<Type const> {};
-FOR_EACH_PUBLIC_GC_POINTER_TYPE(EXPAND_SPECIALIZE_GCPOLICY)
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(EXPAND_SPECIALIZE_GCPOLICY)
 #undef EXPAND_SPECIALIZE_GCPOLICY
 
 template <typename T>

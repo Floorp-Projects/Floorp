@@ -20,6 +20,7 @@
 
 #include "js/GCAnnotations.h"
 #include "js/GCPolicyAPI.h"
+#include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
 #include "js/HeapAPI.h"
 #include "js/ProfilingStack.h"
 #include "js/Realm.h"
@@ -145,8 +146,8 @@ struct IsHeapConstructibleType {
   struct IsHeapConstructibleType<T> {         \
     static constexpr bool value = true;       \
   };
-FOR_EACH_PUBLIC_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
-FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 #undef DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE
 
 template <typename T, typename Wrapper>
