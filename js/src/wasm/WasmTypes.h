@@ -496,7 +496,14 @@ class ValType {
   // encoding is pretty much a requirement.  For other types it's a choice that
   // may (temporarily) simplify some code.
   bool isEncodedAsJSValueOnEscape() const {
-    return typeCode() == TypeCode::AnyRef || typeCode() == TypeCode::FuncRef;
+    switch (typeCode()) {
+      case TypeCode::AnyRef:
+      case TypeCode::FuncRef:
+      case TypeCode::NullRef:
+        return true;
+      default:
+        return false;
+    }
   }
 
   bool operator==(const ValType& that) const {
@@ -586,12 +593,7 @@ static inline const char* ToCString(ValType type) {
           return "nullref";
         case RefType::TypeIndex:
           return "ref";
-        default:
-          break;
       }
-      break;
-    default:
-      break;
   }
   MOZ_CRASH("bad value type");
 }
@@ -1014,7 +1016,7 @@ class FuncType {
     return false;
   }
   // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
-  // as are FuncRef returns.
+  // as are FuncRef and nullref returns.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg != RefType::any()) {
@@ -1023,14 +1025,14 @@ class FuncType {
     }
     for (ValType result : results()) {
       if (result.isReference() && result != RefType::any() &&
-          result != RefType::func()) {
+          result != RefType::func() && result != RefType::null()) {
         return true;
       }
     }
     return false;
   }
   // For inlined JS->wasm jit entries, AnyRef parameters and returns are
-  // allowed, as are FuncRef returns.
+  // allowed, as are FuncRef and nullref returns.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg != RefType::any()) {
@@ -1039,18 +1041,18 @@ class FuncType {
     }
     for (ValType result : results()) {
       if (result.isReference() && result != RefType::any() &&
-          result != RefType::func()) {
+          result != RefType::func() && result != RefType::null()) {
         return true;
       }
     }
     return false;
   }
   // For wasm->JS jit exits, AnyRef parameters and returns are allowed, as are
-  // FuncRef parameters.
+  // FuncRef and nullref parameters.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg != RefType::any() &&
-          arg != RefType::func()) {
+          arg != RefType::func() && arg != RefType::null()) {
         return true;
       }
     }
@@ -1302,7 +1304,6 @@ class GlobalDesc {
                       ModuleKind kind = ModuleKind::Wasm)
       : kind_((isMutable || !initial.isVal()) ? GlobalKind::Variable
                                               : GlobalKind::Constant) {
-    MOZ_ASSERT(initial.type() != RefType::null());
     if (isVariable()) {
       u.var.val.initial_ = initial;
       u.var.isMutable_ = isMutable;
@@ -1317,7 +1318,6 @@ class GlobalDesc {
   explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex,
                       ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import) {
-    MOZ_ASSERT(type != RefType::null());
     u.var.val.import.type_ = type;
     u.var.val.import.index_ = importIndex;
     u.var.isMutable_ = isMutable;
@@ -2104,6 +2104,7 @@ enum class SymbolicAddress {
   CallImport_F64,
   CallImport_FuncRef,
   CallImport_AnyRef,
+  CallImport_NullRef,
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
   CoerceInPlace_JitEntry,
@@ -2234,18 +2235,20 @@ struct Limits {
 //  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
 // Eventually there should be a single unified AnyRef representation.
 
-enum class TableKind { AnyRef, FuncRef, AsmJS };
+enum class TableKind { AnyRef, FuncRef, NullRef, AsmJS };
 
 static inline ValType ToElemValType(TableKind tk) {
   switch (tk) {
     case TableKind::AnyRef:
       return RefType::any();
+    case TableKind::NullRef:
+      return RefType::null();
     case TableKind::FuncRef:
       return RefType::func();
     case TableKind::AsmJS:
       break;
   }
-  MOZ_CRASH("not used for asm.js");
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
 }
 
 struct TableDesc {
@@ -2264,6 +2267,11 @@ struct TableDesc {
 };
 
 typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
+
+// An enum that describes the representation classes for tables; TableKind is
+// mapped into this by Table::repr().
+
+enum class TableRepr { Ref, Func };
 
 // TLS data for a single module instance.
 //

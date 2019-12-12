@@ -9035,7 +9035,6 @@ void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
 
 void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
                                          ValType type) {
-  MOZ_ASSERT(type != RefType::null());
   pushReturnValueOfCall(call, ToMIRType(type));
 }
 

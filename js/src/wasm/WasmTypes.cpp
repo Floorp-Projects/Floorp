@@ -258,8 +258,9 @@ static bool IsImmediateType(ValType vt) {
       switch (vt.refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
+        case RefType::Null:
           return true;
-        default:
+        case RefType::TypeIndex:
           return false;
       }
       break;
@@ -284,7 +285,9 @@ static unsigned EncodeImmediateType(ValType vt) {
           return 4;
         case RefType::Any:
           return 5;
-        default:
+        case RefType::Null:
+          return 6;
+        case RefType::TypeIndex:
           break;
       }
       break;
@@ -732,10 +735,9 @@ bool DebugFrame::updateReturnJSValue() {
               UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
           break;
         case RefType::Any:
+        case RefType::Null:
           cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
           break;
-        default:
-          MOZ_CRASH("result type");
       }
       break;
     default:
