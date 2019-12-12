@@ -186,15 +186,12 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
    * Parses a style sheet and reserializes it with the 'binding' property
    * removed if it was present.
    *
-   * @param aOrigin the original style sheet source
-   * @param aSanitized the reserialization without 'binding'; only valid if
-   *                   this method return true
+   * @param aOriginal the original style sheet source
+   * @param aSanitized the reserialization without dangerous CSS.
    * @param aDocument the document the style sheet belongs to
    * @param aBaseURI the base URI to use
-   * @return true if the 'binding' property was encountered and false
-   *              otherwise
    */
-  bool SanitizeStyleSheet(const nsAString& aOriginal, nsAString& aSanitized,
+  void SanitizeStyleSheet(const nsAString& aOriginal, nsAString& aSanitized,
                           mozilla::dom::Document* aDocument, nsIURI* aBaseURI);
 
   /**

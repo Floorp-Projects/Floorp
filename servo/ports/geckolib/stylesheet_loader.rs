@@ -135,6 +135,7 @@ impl AsyncStylesheetParser {
             self.quirks_mode.into(),
             self.line_number_offset,
             use_counters.as_ref().map(|c| &**c),
+            /* sanitized_output = */ None,
         ));
 
         let use_counters = match use_counters {
