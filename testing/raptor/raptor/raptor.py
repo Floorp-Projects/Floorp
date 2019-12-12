@@ -709,8 +709,6 @@ class Browsertime(Perftest):
 
         # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
         browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
-        # Raptor's `foregroundDelay` delay (ms) for foregrounding app
-        browsertime_script.extend(["--browsertime.foreground_delay", "5000"])
 
         # Raptor's `post startup delay` is settle time after the browser has started
         browsertime_script.extend(["--browsertime.post_startup_delay",

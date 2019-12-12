@@ -5,14 +5,7 @@ module.exports = async function(context, commands) {
   let url = context.options.browsertime.url;
   let page_cycles = context.options.browsertime.page_cycles;
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;
-  let foreground_delay = context.options.browsertime.foreground_delay;
   let post_startup_delay = context.options.browsertime.post_startup_delay;
-
-  context.log.info("Waiting for %d ms (foreground_delay)", foreground_delay);
-  await commands.wait.byTime(foreground_delay);
-
-  context.log.info("Navigating to about:blank");
-  await commands.navigate("about:blank");
 
   context.log.info(
     "Waiting for %d ms (post_startup_delay)",
