@@ -6,9 +6,9 @@ from __future__ import absolute_import, print_function
 
 import unittest
 
-from StringIO import StringIO
 import os
 import shutil
+from six import StringIO
 
 from tempfile import mkdtemp
 
