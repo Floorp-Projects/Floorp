@@ -10,6 +10,8 @@ transforms:
 job-defaults:
     attributes:
         cron: true
+        # This enables uploading symbols.
+        enable-full-crashsymbols: true
     treeherder:
         platform: symbols/opt
         kind: build
