@@ -46,7 +46,9 @@ async function testPolygonIframeMovePoint(config) {
   await testActor.reflow();
   await onRuleViewChanged;
 
-  let computedStyle = await inspector.pageStyle.getComputed(highlightedNode);
+  let computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
+    highlightedNode
+  );
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes("10px 1.25%"), "Point moved to 10px 1.25%");
 
@@ -58,7 +60,9 @@ async function testPolygonIframeMovePoint(config) {
   await testActor.reflow();
   await onRuleViewChanged;
 
-  computedStyle = await inspector.pageStyle.getComputed(highlightedNode);
+  computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
+    highlightedNode
+  );
   definition = computedStyle["clip-path"].value;
   ok(definition.includes("110px 51.25%"), "Point moved to 110px 51.25%");
 

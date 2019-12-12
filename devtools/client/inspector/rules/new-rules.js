@@ -81,7 +81,6 @@ class RulesView {
     this.cssProperties = inspector.cssProperties;
     this.doc = window.document;
     this.inspector = inspector;
-    this.pageStyle = inspector.pageStyle;
     this.selection = inspector.selection;
     this.store = inspector.store;
     this.telemetry = inspector.telemetry;
@@ -757,6 +756,7 @@ class RulesView {
       return;
     }
 
+    this.pageStyle = element.inspectorFront.pageStyle;
     this.elementStyle = new ElementStyle(
       element,
       this,
