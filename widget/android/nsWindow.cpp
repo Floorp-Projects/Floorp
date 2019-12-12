@@ -1293,7 +1293,7 @@ void nsWindow::GeckoViewSupport::Open(
       java::EventDispatcher::Ref::From(aDispatcher), nullptr);
   androidView->mInitData = java::GeckoBundle::Ref::From(aInitData);
 
-  nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars,geckoview");
+  nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars");
   if (aPrivateMode) {
     chromeFlags += ",private";
   }
