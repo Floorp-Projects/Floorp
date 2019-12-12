@@ -4240,7 +4240,7 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
     MDefinition* arg = i >= callInfo.argc() ? *undefined : callInfo.getArg(i);
 
     MInstruction* conversion = nullptr;
-    switch (sig.args()[i].kind()) {
+    switch (sig.args()[i].code()) {
       case wasm::ValType::I32:
         conversion = MTruncateToInt32::New(alloc(), arg);
         break;
@@ -4250,31 +4250,29 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
       case wasm::ValType::F64:
         conversion = MToDouble::New(alloc(), arg);
         break;
-      case wasm::ValType::Ref:
-        switch (sig.args()[i].refTypeKind()) {
-          case wasm::RefType::Any:
-            // Transform the JS representation into an AnyRef representation.
-            // The resulting type is MIRType::RefOrNull.  These cases are all
-            // effect-free.
-            switch (arg->type()) {
-              case MIRType::Object:
-              case MIRType::ObjectOrNull:
-                conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
-                break;
-              case MIRType::Null:
-                conversion = MWasmNullConstant::New(alloc());
-                break;
-              default:
-                conversion = MWasmBoxValue::New(alloc(), arg);
-                break;
-            }
+      case wasm::ValType::AnyRef:
+        // Transform the JS representation into an AnyRef representation.  The
+        // resulting type is MIRType::RefOrNull.  These cases are all
+        // effect-free.
+        switch (arg->type()) {
+          case MIRType::Object:
+          case MIRType::ObjectOrNull:
+            conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
+            break;
+          case MIRType::Null:
+            conversion = MWasmNullConstant::New(alloc());
             break;
           default:
-            MOZ_CRASH("impossible per above check");
+            conversion = MWasmBoxValue::New(alloc(), arg);
+            break;
         }
         break;
       case wasm::ValType::I64:
+      case wasm::ValType::FuncRef:
+      case wasm::ValType::Ref:
         MOZ_CRASH("impossible per above check");
+      case wasm::ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
     }
 
     current->add(conversion);
