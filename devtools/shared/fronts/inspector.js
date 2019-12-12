@@ -46,6 +46,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       this._getWalker(),
       this._getHighlighter(),
       this._getPageStyle(),
+      this._startChangesFront(),
     ]);
   }
 
@@ -91,6 +92,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   async _getPageStyle() {
     this.pageStyle = await super.getPageStyle();
+  }
+
+  async _startChangesFront() {
+    await this.targetFront.getFront("changes");
   }
 
   destroy() {

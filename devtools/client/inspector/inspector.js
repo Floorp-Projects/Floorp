@@ -264,7 +264,6 @@ Inspector.prototype = {
       this._getPageStyle(),
       this._getDefaultSelection(),
       this._getAccessibilityFront(),
-      this._getChangesFront(),
     ]);
     this.reflowTracker = new ReflowTracker(this.currentTarget);
 
@@ -474,15 +473,6 @@ Inspector.prototype = {
       "accessibility"
     );
     return this.accessibilityFront;
-  },
-
-  _getChangesFront: async function() {
-    // Get the Changes front, then call a method on it, which will instantiate
-    // the ChangesActor. We want the ChangesActor to be guaranteed available before
-    // the user makes any changes.
-    this.changesFront = await this.currentTarget.getFront("changes");
-    await this.changesFront.start();
-    return this.changesFront;
   },
 
   _getDefaultSelection: function() {
