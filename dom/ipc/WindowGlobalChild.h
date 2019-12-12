@@ -116,14 +116,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
                                          const ClonedMessageData& aData,
                                          const ClonedMessageData& aStack);
 
-  mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState,
-                                             bool aSetNavigating);
-
-  mozilla::ipc::IPCResult RecvInternalLoadInChild(
-      nsDocShellLoadState* aLoadState, bool aTakeFocus);
-
-  mozilla::ipc::IPCResult RecvDisplayLoadError(const nsAString& aURI);
-
   mozilla::ipc::IPCResult RecvMakeFrameLocal(
       dom::BrowsingContext* aFrameContext, uint64_t aPendingSwitchId);
 

@@ -61,12 +61,6 @@ child:
    */
   async GetSecurityInfo() returns(nsCString? serializedSecInfo);
 
-  async LoadURIInChild(nsDocShellLoadState aLoadState, bool aSetNavigating);
-
-  async InternalLoadInChild(nsDocShellLoadState aLoadState, bool aTakeFocus);
-
-  async DisplayLoadError(nsString aURI);
-
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData, ClonedMessageData aStack);
 
