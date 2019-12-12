@@ -52,10 +52,6 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  // This method returns true if all members of the "group" are in a
-  // "background" state.
-  virtual bool IsBackground() const { return false; }
-
   class Runnable final : public mozilla::Runnable, public nsIRunnablePriority {
    public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,

@@ -27,10 +27,7 @@ LinkedList<TabGroup>* TabGroup::sTabGroups = nullptr;
 TabGroup::TabGroup(bool aIsChrome)
     : mLastWindowLeft(false),
       mThrottledQueuesInitialized(false),
-      mNumOfIndexedDBTransactions(0),
-      mNumOfIndexedDBDatabases(0),
-      mIsChrome(aIsChrome),
-      mForegroundCount(0) {
+      mIsChrome(aIsChrome) {
   if (!sTabGroups) {
     sTabGroups = new LinkedList<TabGroup>();
   }
@@ -174,10 +171,6 @@ already_AddRefed<TabGroup> TabGroup::Join(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(!tabGroup->mWindows.Contains(aWindow));
   tabGroup->mWindows.AppendElement(aWindow);
 
-  if (!aWindow->IsBackground()) {
-    tabGroup->mForegroundCount++;
-  }
-
   return tabGroup.forget();
 }
 
@@ -185,11 +178,6 @@ void TabGroup::Leave(nsPIDOMWindowOuter* aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWindows.Contains(aWindow));
   mWindows.RemoveElement(aWindow);
-
-  if (!aWindow->IsBackground()) {
-    MOZ_DIAGNOSTIC_ASSERT(mForegroundCount > 0);
-    mForegroundCount--;
-  }
 
   MaybeDestroy();
 }
@@ -224,33 +212,6 @@ AbstractThread* TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory) {
   }
 
   return SchedulerGroup::AbstractMainThreadForImpl(aCategory);
-}
-
-void TabGroup::WindowChangedBackgroundStatus(bool aIsNowBackground) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (aIsNowBackground) {
-    MOZ_DIAGNOSTIC_ASSERT(mForegroundCount > 0);
-    mForegroundCount -= 1;
-  } else {
-    mForegroundCount += 1;
-  }
-}
-
-bool TabGroup::IsBackground() const {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-#ifdef DEBUG
-  uint32_t foregrounded = 0;
-  for (auto& window : mWindows) {
-    if (!window->IsBackground()) {
-      foregrounded++;
-    }
-  }
-  MOZ_ASSERT(foregrounded == mForegroundCount);
-#endif
-
-  return mForegroundCount == 0;
 }
 
 }  // namespace dom
