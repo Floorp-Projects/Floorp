@@ -24,8 +24,6 @@ class TaggedProto {
   TaggedProto(const TaggedProto& other) : proto(other.proto) {}
   explicit TaggedProto(JSObject* proto) : proto(proto) {}
 
-  uintptr_t toWord() const { return uintptr_t(proto); }
-
   bool isDynamic() const { return proto == LazyProto; }
   bool isObject() const {
     /* Skip nullptr and LazyProto. */
