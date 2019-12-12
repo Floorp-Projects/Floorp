@@ -228,7 +228,7 @@ class TargetList {
   // Called whenever a new Target front is available.
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
-  async _onTargetAvailable(targetFront) {
+  async _onTargetAvailable(targetFront, isTargetSwitching = false) {
     if (this._targets.has(targetFront)) {
       // The top level target front can be reported via listRemoteFrames as well as listProcesses
       // in the case of the BrowserToolbox. For any other target, log an error if it is already
@@ -252,15 +252,17 @@ class TargetList {
       type: targetType,
       targetFront,
       isTopLevel: targetFront == this.targetFront,
+      isTargetSwitching,
     });
   }
 
-  _onTargetDestroyed(targetFront) {
+  _onTargetDestroyed(targetFront, isTargetSwitching = false) {
     const targetType = this._getTargetType(targetFront);
     this._destroyListeners.emit(targetType, {
       type: targetType,
       targetFront,
       isTopLevel: targetFront == this.targetFront,
+      isTargetSwitching,
     });
     this._targets.delete(targetFront);
   }
@@ -356,6 +358,8 @@ class TargetList {
    *        - {String} type: The target type
    *        - {TargetFront} targetFront: The target Front
    *        - {Boolean} isTopLevel: Is this target the top level one?
+   *        - {Boolean} isTargetSwitching: Is this target relates to a navigation and
+   *                    this replaced a previously available target, this flag will be true
    * @param {Function} onDestroy
    *        Callback fired in case of target front destruction.
    *        The function is called with the same arguments than onAvailable.
@@ -385,6 +389,7 @@ class TargetList {
               type,
               targetFront,
               isTopLevel: targetFront == this.targetFront,
+              isTargetSwitching: false,
             });
           } catch (e) {
             // Prevent throwing when onAvailable handler throws on one target
@@ -475,7 +480,9 @@ class TargetList {
   async switchToTarget(newTarget) {
     // First report that all existing targets are destroyed
     for (const target of this._targets) {
-      this._onTargetDestroyed(target);
+      // We only consider the top level target to be switched
+      const isTargetSwitching = target == this.targetFront;
+      this._onTargetDestroyed(target, isTargetSwitching);
     }
     const listenedTypes = TargetList.ALL_TYPES.filter(type =>
       this._isListening(type)
@@ -490,7 +497,7 @@ class TargetList {
     this.targetFront = newTarget;
 
     // Notify about this new target to creation listeners
-    this._onTargetAvailable(newTarget);
+    this._onTargetAvailable(newTarget, true);
 
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
