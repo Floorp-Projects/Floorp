@@ -83,6 +83,9 @@ add_gcc_warning('-Wno-invalid-offsetof', cxx_compiler)
 # catches objects passed by value to variadic functions.
 check_and_add_gcc_warning('-Wclass-varargs')
 
+# catches empty if/switch/for initialization statements that have no effect
+check_and_add_gcc_warning('-Wempty-init-stmt', cxx_compiler)
+
 # catches some implicit conversion of floats to ints
 check_and_add_gcc_warning('-Wfloat-overflow-conversion')
 check_and_add_gcc_warning('-Wfloat-zero-conversion')
