@@ -78,7 +78,7 @@ void MediaQueryList::AddListener(EventListener* aListener, ErrorResult& aRv) {
   AddEventListenerOptionsOrBoolean options;
   options.SetAsBoolean() = false;
 
-  AddEventListener(ONCHANGE_STRING, aListener, options, false, aRv);
+  AddEventListener(ONCHANGE_STRING, aListener, options, Nullable<bool>(), aRv);
 }
 
 void MediaQueryList::EventListenerAdded(nsAtom* aType) {
