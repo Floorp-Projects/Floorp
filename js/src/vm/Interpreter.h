@@ -482,9 +482,6 @@ JSObject* LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent,
 
 bool SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
                       HandleValue value, bool strict);
-bool SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
-                      HandleValue value, bool strict, HandleScript script,
-                      jsbytecode* pc);
 
 bool SetObjectElementWithReceiver(JSContext* cx, HandleObject obj,
                                   HandleValue index, HandleValue value,
