@@ -110,14 +110,5 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
 
 Services.obs.notifyObservers(this, "tab-content-frameloader-created");
 
-// Remove this once bug 1397365 is fixed.
-addEventListener("MozAfterPaint", function onFirstNonBlankPaint() {
-  if (content.document.documentURI == "about:blank" && !content.opener) {
-    return;
-  }
-  removeEventListener("MozAfterPaint", onFirstNonBlankPaint);
-  sendAsyncMessage("Browser:FirstNonBlankPaint");
-});
-
 // This is a temporary hack to prevent regressions (bug 1471327).
 void content;
