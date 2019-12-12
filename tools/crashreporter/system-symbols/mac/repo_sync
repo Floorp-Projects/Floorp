@@ -1,0 +1,864 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# Copyright 2011 Disney Enterprises, Inc. All rights reserved
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+
+# * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+
+# * Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in
+# the documentation and/or other materials provided with the
+# distribution.
+
+# * The names "Disney", "Walt Disney Pictures", "Walt Disney Animation
+# Studios" or the names of its contributors may NOT be used to
+# endorse or promote products derived from this software without
+# specific prior written permission from Walt Disney Pictures.
+
+# Disclaimer: THIS SOFTWARE IS PROVIDED BY WALT DISNEY PICTURES AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE, NONINFRINGEMENT AND TITLE ARE DISCLAIMED.
+# IN NO EVENT SHALL WALT DISNEY PICTURES, THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND BASED ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+"""
+repo_sync
+
+Created by Greg Neagle on 2011-03-03.
+"""
+
+import calendar
+import os
+import optparse
+import plistlib
+import re
+import shutil
+import subprocess
+#import sys
+import time
+import tempfile
+import urlparse
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+
+from reposadolib import reposadocommon
+
+def _win_os_rename(src, dst):
+    '''Non-atomic os.rename() that doesn't throw OSError under Windows
+
+	Windows doesn't allow renaming a file to a filename that already exists
+    Idea from: http://bugs.python.org/issue8828#msg106599
+    '''
+    try:
+        os.rename(src, dst)
+    except OSError:
+        os.unlink(dst)
+        os.rename(src, dst)
+
+if os.name in ('nt', 'ce'):
+    os_rename = _win_os_rename
+else:
+    os_rename = os.rename
+
+def parseServerMetadata(filename):
+    '''Parses a softwareupdate server metadata file, looking for information
+    of interest.
+    Returns a dictionary containing title, version, and description.'''
+    title = ''
+    vers = ''
+    description = ''
+    try:
+        md_plist = plistlib.readPlist(filename)
+    except (OSError, IOError, ExpatError), err:
+        reposadocommon.print_stderr(
+            'Error reading %s: %s', filename, err)
+        return {}
+    vers = md_plist.get('CFBundleShortVersionString', '')
+    localization = md_plist.get('localization', {})
+    languages = localization.keys()
+    preferred_lang = getPreferredLocalization(languages)
+    preferred_localization = localization.get(preferred_lang)
+    if preferred_localization:
+        title = preferred_localization.get('title', '')
+        encoded_description = preferred_localization.get('description', '')
+        if encoded_description:
+            description = str(encoded_description)
+
+    metadata = {}
+    metadata['title'] = title
+    metadata['version'] = vers
+    metadata['description'] = description
+    return metadata
+
+
+def parse_cdata(cdata_str):
+    '''Parses the CDATA string from an Apple Software Update distribution file
+    and returns a dictionary with key/value pairs.
+
+    The data in the CDATA string is in the format of an OS X .strings file,
+    which is generally:
+
+    "KEY1" = "VALUE1";
+    "KEY2"='VALUE2';
+    "KEY3" = 'A value
+    that spans
+    multiple lines.
+    ';
+
+    Values can span multiple lines; either single or double-quotes can be used
+    to quote the keys and values, and the alternative quote character is allowed
+    as a literal inside the other, otherwise the quote character is escaped.
+
+    //-style comments and blank lines are allowed in the string; these should
+    be skipped by the parser unless within a value.
+
+    '''
+    parsed_data = {}
+    REGEX = (r"""^\s*"""
+             r"""(?P<key_quote>['"]?)(?P<key>[^'"]+)(?P=key_quote)"""
+             r"""\s*=\s*"""
+             r"""(?P<value_quote>['"])(?P<value>.*?)(?P=value_quote);$""")
+    regex = re.compile(REGEX, re.MULTILINE | re.DOTALL)
+
+    # iterate through the string, finding all possible non-overlapping
+    # matches
+    for match_obj in re.finditer(regex, cdata_str):
+        match_dict = match_obj.groupdict()
+        if 'key' in match_dict.keys() and 'value' in match_dict.keys():
+            key = match_dict['key']
+            value = match_dict['value']
+            # now 'de-escape' escaped quotes
+            quote = match_dict.get('value_quote')
+            if quote:
+                escaped_quote = '\\' + quote
+                value = value.replace(escaped_quote, quote)
+            parsed_data[key] = value
+
+    return parsed_data
+
+
+def parseSUdist(filename, debug=False):
+    '''Parses a softwareupdate dist file, looking for information of interest.
+    Returns a dictionary containing su_name, title, version, and description.'''
+
+    try:
+        dom = minidom.parse(filename)
+    except ExpatError:
+        reposadocommon.print_stderr(
+            'Invalid XML in %s', filename)
+        return None
+    except IOError, err:
+        reposadocommon.print_stderr(
+            'Error reading %s: %s', filename, err)
+        return None
+
+    su_choice_id_key = 'su'
+    # look for <choices-outline ui='SoftwareUpdate'
+    choice_outlines = dom.getElementsByTagName('choices-outline') or []
+    for outline in choice_outlines:
+        if 'ui' in outline.attributes.keys():
+            if outline.attributes['ui'].value == 'SoftwareUpdate':
+                if debug:
+                    print outline.toxml()
+                lines = outline.getElementsByTagName('line')
+                if lines:
+                    if debug:
+                        print lines[0].toxml()
+                    if 'choice' in lines[0].attributes.keys():
+                        su_choice_id_key = lines[0].attributes['choice'].value
+
+    if debug:
+        print 'su_choice_id_key: %s' % su_choice_id_key
+
+    # get values from choice id=su_choice_id_key (there may be more than one!)
+    pkgs = {}
+    su_choice = {}
+    choice_elements = dom.getElementsByTagName('choice') or []
+    for choice in choice_elements:
+        keys = choice.attributes.keys()
+        if 'id' in keys:
+            choice_id = choice.attributes['id'].value
+            if choice_id == su_choice_id_key:
+                if debug:
+                    print choice.toxml()
+                # this is the one Software Update uses
+                for key in keys:
+                    su_choice[key] = choice.attributes[key].value
+                pkg_refs = choice.getElementsByTagName('pkg-ref') or []
+                for pkg in pkg_refs:
+                    if 'id' in pkg.attributes.keys():
+                        pkg_id = pkg.attributes['id'].value
+                        if not pkg_id in pkgs.keys():
+                            pkgs[pkg_id] = {}
+                        if pkg.firstChild:
+                            pkg_name = pkg.firstChild.wholeText
+                            if pkg_name:
+                                pkgs[pkg_id]['name'] = pkg_name
+                        if 'onConclusion' in pkg.attributes.keys():
+                            pkgs[pkg_id]['RestartAction'] = (
+                                pkg.attributes['onConclusion'].value)
+                        if 'version' in pkg.attributes.keys():
+                            pkgs[pkg_id]['version'] = (
+                                pkg.attributes['version'].value)
+
+    if debug:
+        print 'su_choice: %s' % su_choice
+
+    # look for localization and parse CDATA
+    cdata = {}
+    localizations = dom.getElementsByTagName('localization')
+    if localizations:
+        string_elements = localizations[0].getElementsByTagName('strings')
+        if string_elements:
+            strings = string_elements[0]
+            if strings.firstChild:
+                text = strings.firstChild.wholeText
+                if debug:
+                    print 'CDATA text: %s' % text
+                cdata = parse_cdata(text)
+                if debug:
+                    print 'CDATA dict: %s' % cdata
+
+    # assemble!
+    dist = {}
+    dist['su_name'] = su_choice.get('suDisabledGroupID', '')
+    dist['title'] = su_choice.get('title', '')
+    dist['version'] = su_choice.get('versStr', '')
+    dist['description'] = su_choice.get('description', '')
+    for key in dist.keys():
+        if dist[key].startswith('SU_'):
+            # get value from cdata dictionary
+            dist[key] = cdata.get(dist[key], dist[key])
+    dist['pkg_refs'] = pkgs
+
+    return dist
+
+
+class CurlError(Exception):
+    '''curl returned an error we can't handle'''
+    pass
+
+
+class HTTPError(Exception):
+    '''curl returned an HTTP error we can't handle'''
+    pass
+
+
+class CurlDownloadError(Exception):
+    """Curl failed to download the item"""
+    pass
+
+
+
+def curl(url, destinationpath, onlyifnewer=False, etag=None, resume=False):
+    """Gets an HTTP or HTTPS URL and stores it in
+    destination path. Returns a dictionary of headers, which includes
+    http_result_code and http_result_description.
+    Will raise CurlError if curl returns an error.
+    Will raise HTTPError if HTTP Result code is not 2xx or 304.
+    If destinationpath already exists, you can set 'onlyifnewer' to true to
+    indicate you only want to download the file only if it's newer on the
+    server.
+    If you have an ETag from the current destination path, you can pass that
+    to download the file only if it is different.
+    Finally, if you set resume to True, curl will attempt to resume an
+    interrupted download. You'll get an error if the existing file is
+    complete; if the file has changed since the first download attempt, you'll
+    get a mess."""
+
+    header = {}
+    header['http_result_code'] = '000'
+    header['http_result_description'] = ""
+
+    curldirectivepath = os.path.join(TMPDIR, 'curl_temp')
+    tempdownloadpath = os.path.normpath(destinationpath + '.download')
+
+    # we're writing all the curl options to a file and passing that to
+    # curl so we avoid the problem of URLs showing up in a process listing
+    try:
+        fileobj = open(curldirectivepath, mode='w')
+        print >> fileobj, 'silent'         # no progress meter
+        print >> fileobj, 'show-error'     # print error msg to stderr
+        print >> fileobj, 'no-buffer'      # don't buffer output
+        print >> fileobj, 'fail'           # throw error if download fails
+        print >> fileobj, 'dump-header -'  # dump headers to stdout
+        print >> fileobj, 'speed-time = 30' # give up if too slow d/l
+        print >> fileobj, 'tlsv1'          # use only TLS 1.x
+        print >> fileobj, 'http1.1'        # disable http2
+        print >> fileobj, 'url = "%s"' % url
+
+        # add additional options from our prefs
+        if reposadocommon.pref('AdditionalCurlOptions'):
+            for line in reposadocommon.pref('AdditionalCurlOptions'):
+                print >> fileobj, line
+
+        if os.path.exists(tempdownloadpath):
+            if resume:
+                # let's try to resume this download
+                print >> fileobj, 'continue-at -'
+            else:
+                os.remove(tempdownloadpath)
+
+        if os.path.exists(destinationpath):
+            if etag:
+                escaped_etag = etag.replace('"', '\\"')
+                print >> fileobj, ('header = "If-None-Match: %s"'
+                                   % escaped_etag)
+            elif onlyifnewer:
+                print >> fileobj, 'time-cond = "%s"' % destinationpath
+            else:
+                os.remove(destinationpath)
+
+        fileobj.close()
+    except Exception, err:
+        raise CurlError(-5, 'Error writing curl directive: %s' % str(err))
+
+    cmd = [reposadocommon.pref('CurlPath'),
+           '-q',                    # don't read .curlrc file
+           '--config',              # use config file
+           curldirectivepath,
+           '-o', tempdownloadpath]
+
+    proc = subprocess.Popen(cmd, shell=False, bufsize=1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    targetsize = 0
+    downloadedpercent = -1
+
+    while True:
+        line = proc.stdout.readline()
+        if line:
+            line_stripped = line.rstrip('\r\n')
+            if line_stripped:
+                line = line_stripped
+
+                if line.startswith('HTTP/'):
+                    header['http_result_code'] = ''
+                    header['http_result_description'] = ''
+                    try:
+                        part = line.split(None, 2)
+                        header['http_result_code'] = part[1]
+                        header['http_result_description'] = part[2]
+                    except IndexError:
+                        pass
+                elif ': ' in line:
+                    part = line.split(': ', 1)
+                    fieldname = part[0].lower()
+                    header[fieldname] = part[1]
+            else:
+                # "empty" line, but not end of output. likely end of headers
+                # for a given HTTP result section
+                try:
+                    targetsize = int(header.get('content-length'))
+                    if (targetsize and
+                            header.get('http_result_code').startswith('2')):
+                        if reposadocommon.pref('HumanReadableSizes'):
+                            printed_size = reposadocommon.humanReadable(targetsize)
+                        else:
+                            printed_size = str(targetsize) + ' bytes'
+                        reposadocommon.print_stdout(
+                            'Downloading %s from %s...', printed_size, url)
+                except (ValueError, TypeError):
+                    targetsize = 0
+                if header.get('http_result_code') == '206':
+                    # partial content because we're resuming
+                    reposadocommon.print_stderr(
+                        'Resuming partial download for %s',
+                        os.path.basename(destinationpath))
+                    contentrange = header.get('content-range')
+                    if contentrange.startswith('bytes'):
+                        try:
+                            targetsize = int(contentrange.split('/')[1])
+                        except (ValueError, TypeError):
+                            targetsize = 0
+
+        elif proc.poll() != None:
+            break
+
+    retcode = proc.poll()
+    if retcode:
+        curlerr = proc.stderr.read().rstrip('\n')
+        if curlerr:
+            curlerr = curlerr.split(None, 2)[2]
+        if os.path.exists(tempdownloadpath):
+            if (not resume) or (retcode == 33):
+                # 33 means server doesn't support range requests
+                # and so cannot resume downloads, so
+                os.remove(tempdownloadpath)
+        raise CurlError(retcode, curlerr)
+    else:
+        temp_download_exists = os.path.isfile(tempdownloadpath)
+        http_result = header.get('http_result_code')
+        if (downloadedpercent != 100 and
+                http_result.startswith('2') and
+                temp_download_exists):
+            downloadedsize = os.path.getsize(tempdownloadpath)
+            if downloadedsize >= targetsize:
+                os_rename(tempdownloadpath, destinationpath)
+                return header
+            else:
+                # not enough bytes retreived
+                if not resume and temp_download_exists:
+                    os.remove(tempdownloadpath)
+                raise CurlError(-5, 'Expected %s bytes, got: %s' %
+                                (targetsize, downloadedsize))
+        elif http_result.startswith('2') and temp_download_exists:
+            os_rename(tempdownloadpath, destinationpath)
+            return header
+        elif http_result == '304':
+            return header
+        elif (not temp_download_exists and
+              http_result == '200' and
+              os.path.isfile(destinationpath) and
+              (not (targetsize and
+                    (targetsize != os.path.getsize(destinationpath))))):
+            # The above comparison tries to check that a) no body content was
+            # delivered, b) the HTTP result was 200, c) there is an existing
+            # download already, and d) [if the there was a Content-Length
+            # returned by the server] that the file sizes match. The logic is
+            # reversed with a 'not' in step d) to return True if the sizes
+            # match or there is no Content-Length.
+
+            # This is a test for an edge case where curl does not download
+            # body content even if the server returned a 200 response. This
+            # happens when curl is given the 'time-cond' option (which sends
+            # the HTTP header If-Modified-Since to the server) and the server
+            # responds with a 200 response but curl terminates the connection
+            # before any body content is transferred. I.e. curl goes above
+            # and beyond sending an If-Modified-Since and actually compares
+            # the Last-Modified header returned to it itself to make a
+            # decision whether to download the document body.
+
+            # See curl issue report here:
+            # https://sourceforge.net/p/curl/bugs/806/
+            reposadocommon.print_stderr(
+                'WARNING: No body provided; assuming already downloaded for %s',
+                destinationpath)
+            return header
+        else:
+            # there was a download error of some sort; clean all relevant
+            # downloads that may be in a bad state.
+            for filename in [tempdownloadpath, destinationpath]:
+                try:
+                    os.unlink(filename)
+                except OSError:
+                    pass
+            raise HTTPError(http_result,
+                            header.get('http_result_description', ''))
+
+
+def getURL(url, destination_path):
+    '''Downloads a file from url to destination_path, checking existing
+    files by mode date or etag'''
+    if os.path.exists(destination_path):
+        saved_etag = get_saved_etag(url)
+    else:
+        saved_etag = None
+    try:
+        header = curl(url, destination_path,
+                      onlyifnewer=True, etag=saved_etag)
+    except CurlError, err:
+        err = 'Error %s: %s' % tuple(err)
+        raise CurlDownloadError(err)
+
+    except HTTPError, err:
+        err = 'HTTP result %s: %s' % tuple(err)
+        raise CurlDownloadError(err)
+
+    err = None
+    if header['http_result_code'] == '304':
+        # not modified; what we have is correct
+        #print >> sys.stderr, ('%s is already downloaded.' % url)
+        pass
+    else:
+        if header.get('last-modified'):
+            # set the modtime of the downloaded file to the modtime of the
+            # file on the server
+            modtimestr = header['last-modified']
+            modtimetuple = time.strptime(modtimestr,
+                                         '%a, %d %b %Y %H:%M:%S %Z')
+            modtimeint = calendar.timegm(modtimetuple)
+            os.utime(destination_path, (time.time(), modtimeint))
+        if header.get('etag'):
+            # store etag for future use
+            record_etag(url, header['etag'])
+
+
+_ETAG = {}
+def get_saved_etag(url):
+    '''Retrieves a saved etag'''
+    #global _ETAG
+    if _ETAG == {}:
+        reposadocommon.getDataFromPlist('ETags.plist')
+    if url in _ETAG:
+        return _ETAG[url]
+    else:
+        return None
+
+
+def record_etag(url, etag):
+    '''Saves an etag in our internal dict'''
+    #global _ETAG
+    _ETAG[url] = etag
+
+
+def writeEtagDict():
+    '''Writes our stored etags to disk'''
+    reposadocommon.writeDataToPlist(_ETAG, 'ETags.plist')
+
+
+class ReplicationError(Exception):
+    '''A custom error when replication fails'''
+    pass
+
+
+def replicateURLtoFilesystem(full_url, root_dir=None,
+                             base_url=None, copy_only_if_missing=False,
+                             appendToFilename=''):
+    '''Downloads a URL and stores it in the same relative path on our
+    filesystem. Returns a path to the replicated file.'''
+
+    if root_dir == None:
+        root_dir = reposadocommon.pref('UpdatesRootDir')
+
+    if base_url:
+        if not full_url.startswith(base_url):
+            raise ReplicationError('%s is not a resource in %s'
+                                   % (full_url, base_url))
+        relative_url = full_url[len(base_url):].lstrip('/')
+    else:
+        (unused_scheme, unused_netloc,
+         path, unused_query, unused_fragment) = urlparse.urlsplit(full_url)
+        relative_url = path.lstrip('/')
+    relative_url = os.path.normpath(relative_url)
+    local_file_path = os.path.join(root_dir, relative_url) + appendToFilename
+    local_dir_path = os.path.dirname(local_file_path)
+    if copy_only_if_missing and os.path.exists(local_file_path):
+        return local_file_path
+    if not os.path.exists(local_dir_path):
+        try:
+            os.makedirs(local_dir_path)
+        except OSError, oserr:
+            raise ReplicationError(oserr)
+    try:
+        getURL(full_url, local_file_path)
+    except CurlDownloadError, err:
+        raise ReplicationError(err)
+    return local_file_path
+
+
+class ArchiveError(Exception):
+    '''A custom error when archiving fails'''
+    pass
+
+
+def archiveCatalog(catalogpath):
+    '''Makes a copy of our catalog in our archive folder,
+    marking with a date'''
+    archivedir = os.path.join(os.path.dirname(catalogpath), 'archive')
+    if not os.path.exists(archivedir):
+        try:
+            os.makedirs(archivedir)
+        except OSError, oserr:
+            raise ArchiveError(oserr)
+    # get modtime of original file
+    modtime = int(os.stat(catalogpath).st_mtime)
+    # make a string from the mod time
+    modtimestring = time.strftime('.%Y-%m-%d-%H%M%S', time.localtime(modtime))
+    catalogname = os.path.basename(catalogpath)
+    # remove the '.apple' from the end of the catalogname
+    if catalogname.endswith('.apple'):
+        catalogname = catalogname[0:-6]
+    archivepath = os.path.join(archivedir, catalogname + modtimestring)
+    if not os.path.exists(archivepath):
+        try:
+            catalog = plistlib.readPlist(catalogpath)
+            plistlib.writePlist(catalog, archivepath)
+            # might as well set the mod time of the archive file to match
+            os.utime(archivepath, (time.time(), modtime))
+        except (OSError, IOError, ExpatError), err:
+            reposadocommon.print_stderr(
+                'Error archiving %s: %s', catalogpath, err)
+
+
+def getPreferredLocalization(list_of_localizations):
+    '''Picks the best localization from a list of available
+    localizations. If we're running on OS X, we use
+    NSBundle.preferredLocalizationsFromArray_forPreferences_,
+    else we look for PreferredLocalizations in our preferences'''
+    try:
+        from Foundation import NSBundle
+    except ImportError:
+        # Foundation NSBundle isn't available, use prefs instead
+        languages = (reposadocommon.pref('PreferredLocalizations')
+                     or ['English', 'en'])
+        for language in languages:
+            if language in list_of_localizations:
+                return language
+    else:
+        preferred_langs = (
+            NSBundle.preferredLocalizationsFromArray_forPreferences_(
+                list_of_localizations, None))
+        if preferred_langs:
+            return preferred_langs[0]
+
+    if 'English' in list_of_localizations:
+        return 'English'
+    elif 'en' in list_of_localizations:
+        return 'en'
+    return None
+
+
+def cleanUpTmpDir():
+    """Cleans up our temporary directory."""
+    global TMPDIR
+    if TMPDIR:
+        try:
+            shutil.rmtree(TMPDIR)
+        except (OSError, IOError):
+            pass
+        TMPDIR = None
+
+
+TMPDIR = None
+def sync(fast_scan=False, download_packages=True, product_ids=None):
+    '''Syncs Apple's Software Updates with our local store.
+    Returns a dictionary of products.'''
+    global TMPDIR
+    TMPDIR = tempfile.mkdtemp()
+    if reposadocommon.LOGFILE:
+        print 'Output logged to %s' % reposadocommon.LOGFILE
+    reposadocommon.print_stdout('repo_sync run started')
+    catalog_urls = reposadocommon.pref('AppleCatalogURLs')
+    products = reposadocommon.getProductInfo()
+
+    # clear cached AppleCatalog listings
+    for item in products.keys():
+        products[item]['AppleCatalogs'] = []
+    replicated_products = []
+
+    for catalog_url in catalog_urls:
+        localcatalogpath = (
+            reposadocommon.getLocalPathNameFromURL(catalog_url) + '.apple')
+        if os.path.exists(localcatalogpath):
+            archiveCatalog(localcatalogpath)
+        try:
+            localcatalogpath = replicateURLtoFilesystem(
+                catalog_url, appendToFilename='.apple')
+        except ReplicationError, err:
+            reposadocommon.print_stderr(
+                'Could not replicate %s: %s', catalog_url, err)
+            continue
+        try:
+            catalog = plistlib.readPlist(localcatalogpath)
+        except (OSError, IOError, ExpatError), err:
+            reposadocommon.print_stderr(
+                'Error reading %s: %s', localcatalogpath, err)
+            continue
+        if 'Products' in catalog:
+            product_keys = list(catalog['Products'].keys())
+            reposadocommon.print_stdout('%s products found in %s',
+                                        len(product_keys), catalog_url)
+            product_keys.sort()
+            for product_key in product_keys:
+                if product_ids and product_key not in product_ids:
+                    continue
+                if product_key in replicated_products:
+                    products[product_key]['AppleCatalogs'].append(
+                        catalog_url)
+                else:
+                    if not product_key in products:
+                        products[product_key] = {}
+                    products[product_key]['AppleCatalogs'] = [catalog_url]
+                    product = catalog['Products'][product_key]
+                    products[product_key]['CatalogEntry'] = product
+                    if download_packages and 'ServerMetadataURL' in product:
+                        try:
+                            unused_path = replicateURLtoFilesystem(
+                                product['ServerMetadataURL'],
+                                copy_only_if_missing=fast_scan)
+                        except ReplicationError, err:
+                            reposadocommon.print_stderr(
+                                'Could not replicate %s: %s',
+                                product['ServerMetadataURL'], err)
+                            continue
+
+                    if download_packages:
+                        for package in product.get('Packages', []):
+                            # TO-DO: Check 'Size' attribute and make sure
+                            # we have enough space on the target
+                            # filesystem before attempting to download
+                            if 'URL' in package:
+                                try:
+                                    unused_path = replicateURLtoFilesystem(
+                                        package['URL'],
+                                        copy_only_if_missing=fast_scan)
+                                except ReplicationError, err:
+                                    reposadocommon.print_stderr(
+                                        'Could not replicate %s: %s',
+                                        package['URL'], err)
+                                    continue
+                            if 'MetadataURL' in package:
+                                try:
+                                    unused_path = replicateURLtoFilesystem(
+                                        package['MetadataURL'],
+                                        copy_only_if_missing=fast_scan)
+                                except ReplicationError, err:
+                                    reposadocommon.print_stderr(
+                                        'Could not replicate %s: %s',
+                                        package['MetadataURL'], err)
+                                    continue
+                            if 'IntegrityDataURL' in package:
+                                try:
+                                    unused_path = replicateURLtoFilesystem(
+                                        package['IntegrityDataURL'],
+                                        copy_only_if_missing=fast_scan)
+                                except ReplicationError, err:
+                                    reposadocommon.print_stderr(
+                                        'Could not replicate %s: %s',
+                                        package['IntegrityDataURL'], err)
+                                    continue
+
+                    # calculate total size
+                    size = 0
+                    for package in product.get('Packages', []):
+                        size += package.get('Size', 0)
+
+                    distributions = product['Distributions']
+                    preferred_lang = getPreferredLocalization(
+                        distributions.keys())
+                    preferred_dist = None
+
+                    for dist_lang in distributions.keys():
+                        dist_url = distributions[dist_lang]
+                        if (download_packages or
+                                dist_lang == preferred_lang):
+                            try:
+                                dist_path = replicateURLtoFilesystem(
+                                    dist_url,
+                                    copy_only_if_missing=fast_scan)
+                                if dist_lang == preferred_lang:
+                                    preferred_dist = dist_path
+                            except ReplicationError, err:
+                                reposadocommon.print_stderr(
+                                    'Could not replicate %s: %s', dist_url, err)
+
+                    if not preferred_dist:
+                        # we didn't download the .dist for the preferred
+                        # language. Let's use English.
+                        if 'English' in distributions.keys():
+                            dist_lang = 'English'
+                        elif 'en' in distributions.keys():
+                            dist_lang = 'en'
+                        else:
+                            # no English or en.dist!
+                            reposadocommon.print_stderr(
+                                'No usable .dist file found!')
+                            continue
+                        dist_url = distributions[dist_lang]
+                        preferred_dist = reposadocommon.getLocalPathNameFromURL(
+                            dist_url)
+
+                    dist = parseSUdist(preferred_dist)
+                    if not dist:
+                        reposadocommon.print_stderr(
+                            'Could not get data from dist file: %s',
+                            preferred_dist)
+                        continue
+                    products[product_key]['title'] = dist['title']
+                    products[product_key]['version'] = dist['version']
+                    products[product_key]['size'] = str(size)
+                    products[product_key]['description'] = dist['description']
+                    products[product_key]['PostDate'] = product['PostDate']
+                    products[product_key]['pkg_refs'] = dist['pkg_refs']
+
+                    # if we got this far, we've replicated the product data
+                    replicated_products.append(product_key)
+
+                    # record original catalogs in case the product is
+                    # deprecated in the future
+                    #if not 'OriginalAppleCatalogs' in products[product_key]:
+                    #    products[product_key]['OriginalAppleCatalogs'] = \
+                    #        products[product_key]['AppleCatalogs']
+
+                    # If AppleCatalogs list is non-empty, record to
+                    # OriginalAppleCatalogs in case the product is deprecated
+                    # in the future
+                    #
+                    # (This is a change from the original implementation to
+                    # account for products being mistakenly released for the
+                    # wrong sucatalogs and later corrected. The assumption now
+                    # is that a change in available catalogs means Apple is
+                    # fixing a mistake; disappearing from all catalogs means
+                    # an item is deprecated.)
+                    if products[product_key]['AppleCatalogs']:
+                        products[product_key]['OriginalAppleCatalogs'] = (
+                            products[product_key]['AppleCatalogs'])
+
+        # record products we've successfully downloaded
+        reposadocommon.writeDownloadStatus(replicated_products)
+        # write our ETags to disk for future use
+        writeEtagDict()
+        # record our product cache
+        reposadocommon.writeProductInfo(products)
+        # write our local (filtered) catalogs
+        reposadocommon.writeLocalCatalogs(localcatalogpath)
+
+    # clean up tmpdir
+    cleanUpTmpDir()
+    reposadocommon.print_stdout('repo_sync run ended')
+
+
+def main():
+    '''Main command processing'''
+    parser = optparse.OptionParser()
+    parser.set_usage('''Usage: %prog [options]''')
+    parser.add_option('--log', dest='logfile', metavar='LOGFILE',
+                      help='Log all output to LOGFILE. No output to STDOUT.')
+    parser.add_option('--recheck', action='store_true',
+                      help='Recheck already downloaded packages for changes.')
+    parser.add_option('--no-download', dest='no_download', action='store_true',
+                      help="""Do not download update packages.""")
+    parser.add_option('--product-id', dest='product_ids', action='append',
+                      metavar='ID', help="""Only fetch packages with id ID.""")
+
+    options, unused_arguments = parser.parse_args()
+    if reposadocommon.validPreferences():
+        if not os.path.exists(reposadocommon.pref('CurlPath')):
+            reposadocommon.print_stderr('ERROR: curl tool not found at %s',
+                                        reposadocommon.pref('CurlPath'))
+            exit(-1)
+        if not reposadocommon.pref('LocalCatalogURLBase') or options.no_download:
+            download_packages = False
+        else:
+            download_packages = True
+        if options.logfile:
+            reposadocommon.LOGFILE = options.logfile
+        elif reposadocommon.pref('RepoSyncLogFile'):
+            reposadocommon.LOGFILE = reposadocommon.pref('RepoSyncLogFile')
+
+        if options.product_ids:
+            product_ids = set(options.product_ids)
+        else:
+            product_ids = None
+
+        sync(fast_scan=(not options.recheck),
+             download_packages=download_packages,
+             product_ids=product_ids)
+
+
+if __name__ == '__main__':
+    main()

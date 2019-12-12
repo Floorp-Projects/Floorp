@@ -248,3 +248,5 @@ jobs:
     visual-metrics:
         symbol: I(visual-metrics)
         parent: debian9-base
+    system-symbols-mac:
+        symbol: I(system-symbols-mac)
