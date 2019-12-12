@@ -8,9 +8,9 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsICharsetDetectionObserver.h"
 #include "nsHtml5MetaScanner.h"
 #include "mozilla/Encoding.h"
-#include "mozilla/EncodingDetector.h"
 #include "mozilla/JapaneseDetector.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5OwningUTF16Buffer.h"
@@ -21,6 +21,7 @@
 #include "nsHtml5Speculation.h"
 #include "nsISerialEventTarget.h"
 #include "nsITimer.h"
+#include "nsICharsetDetector.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/Buffer.h"
 
@@ -100,7 +101,7 @@ enum eHtml5StreamState {
   STREAM_ENDED = 2
 };
 
-class nsHtml5StreamParser final : public nsISupports {
+class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
   using Encoding = mozilla::Encoding;
@@ -117,7 +118,8 @@ class nsHtml5StreamParser final : public nsISupports {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsHtml5StreamParser)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser,
+                                           nsICharsetDetectionObserver)
 
   nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor, nsHtml5Parser* aOwner,
                       eParserMode aMode);
@@ -131,6 +133,12 @@ class nsHtml5StreamParser final : public nsISupports {
                            uint64_t aSourceOffset, uint32_t aLength);
 
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult status);
+
+  // nsICharsetDetectionObserver
+  /**
+   * Chardet calls this to report the detection result
+   */
+  NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) override;
 
   // EncodingDeclarationHandler
   // https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
@@ -327,26 +335,13 @@ class nsHtml5StreamParser final : public nsISupports {
    * to UTF-8 as the non-speculative encoding and start processing
    * the decoded data.
    */
-  void CommitLocalFileToEncoding();
+  void CommitLocalFileToUTF8();
 
   /**
    * When speculatively decoding from file: URL as UTF-8, redecode
    * using fallback and then continue normally with the fallback.
    */
   void ReDecodeLocalFile();
-
-  /**
-   * Potentially guess the encoding using mozilla::EncodingDetector.
-   */
-  void GuessEncoding(bool aEof, bool aInitial);
-
-  inline void DontGuessEncoding() {
-    mFeedChardet = false;
-    mGuessEncoding = false;
-    if (mDecodingLocalFileWithoutTokenizing) {
-      CommitLocalFileToEncoding();
-    }
-  }
 
   /**
    * Become confident or resolve and encoding name to its preferred form.
@@ -443,14 +438,9 @@ class nsHtml5StreamParser final : public nsISupports {
   NotNull<const Encoding*> mEncoding;
 
   /**
-   * Whether the generic or Japanese detector should still be fed.
+   * Whether the Cyrillic or Japanese detector should still be fed.
    */
   bool mFeedChardet;
-
-  /**
-   * Whether the generic detector should be still queried for its guess.
-   */
-  bool mGuessEncoding;
 
   /**
    * Whether reparse is forbidden
@@ -566,21 +556,14 @@ class nsHtml5StreamParser final : public nsISupports {
   nsCOMPtr<nsIRunnable> mLoadFlusher;
 
   /**
+   * The Cyrillic detector if enabled.
+   */
+  nsCOMPtr<nsICharsetDetector> mChardet;
+
+  /**
    * The Japanese detector.
    */
   mozilla::UniquePtr<mozilla::JapaneseDetector> mJapaneseDetector;
-
-  /**
-   * The generict detector.
-   */
-  mozilla::UniquePtr<mozilla::EncodingDetector> mDetector;
-
-  /**
-   * The TLD we're loading from or empty if unknown.
-   */
-  nsCString mTLD;
-
-  bool mUseJapaneseDetector;
 
   /**
    * Whether the initial charset source was kCharsetFromParentFrame
@@ -591,9 +574,9 @@ class nsHtml5StreamParser final : public nsISupports {
 
   /**
    * If true, we are decoding a local file that lacks an encoding
-   * declaration and we are not tokenizing yet.
+   * declaration as UTF-8 and we are not tokenizing yet.
    */
-  bool mDecodingLocalFileWithoutTokenizing;
+  bool mDecodingLocalFileAsUTF8;
 
   /**
    * Timer for flushing tree ops once in a while when not speculating.

@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "nsContentUtils.h"
+#include "nsCyrillicDetector.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsIHttpChannel.h"
 #include "nsHtml5Parser.h"
@@ -69,7 +70,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHtml5StreamParser)
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5StreamParser)
-  NS_INTERFACE_TABLE(nsHtml5StreamParser, nsISupports)
+  NS_INTERFACE_TABLE(nsHtml5StreamParser, nsICharsetDetectionObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5StreamParser)
 NS_INTERFACE_MAP_END
 
@@ -83,6 +84,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   tmp->mExecutorFlusher = nullptr;
   tmp->mLoadFlusher = nullptr;
   tmp->mExecutor = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChardet)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
@@ -98,6 +100,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   if (tmp->mLoadFlusher) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mLoadFlusher->mExecutor");
     cb.NoteXPCOMChild(static_cast<nsIContentSink*>(tmp->mExecutor));
+  }
+  // hack: count self if held by mChardet
+  if (tmp->mChardet) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChardet->mObserver");
+    cb.NoteXPCOMChild(static_cast<nsICharsetDetectionObserver*>(tmp));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -151,7 +158,6 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mCharsetSource(kCharsetUninitialized),
       mEncoding(WINDOWS_1252_ENCODING),
       mFeedChardet(true),
-      mGuessEncoding(true),
       mReparseForbidden(false),
       mLastBuffer(nullptr),  // Will be filled when starting
       mExecutor(aExecutor),
@@ -178,10 +184,9 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
       mJapaneseDetector(mozilla::JapaneseDetector::Create(
           StaticPrefs::intl_charset_detector_iso2022jp_allowed())),
-      mUseJapaneseDetector(false),
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
-      mDecodingLocalFileWithoutTokenizing(false),
+      mDecodingLocalFileAsUTF8(false),
       mFlushTimer(NS_NewTimer(mEventTarget)),
       mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex"),
       mFlushTimerArmed(false),
@@ -200,6 +205,24 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
         new nsHtml5Highlighter(mExecutor->GetStage());
     mTokenizer->EnableViewSource(highlighter);    // takes ownership
     mTreeBuilder->EnableViewSource(highlighter);  // doesn't own
+  }
+
+  // Chardet instantiation adapted from File.
+  // Chardet is initialized here even if it turns out to be useless
+  // to make the chardet refcount its observer (nsHtml5StreamParser)
+  // on the main thread.
+  nsAutoCString detectorName;
+  Preferences::GetLocalizedCString("intl.charset.detector", detectorName);
+  if (!detectorName.IsEmpty()) {
+    // We recognize one of the two magic strings for Russian and Ukranian.
+    if (detectorName.EqualsLiteral("ruprob")) {
+      mChardet = new nsRUProbDetector();
+    } else if (detectorName.EqualsLiteral("ukprob")) {
+      mChardet = new nsUKProbDetector();
+    }
+    if (mChardet) {
+      (void)mChardet->Init(this);
+    }
   }
 
   // There's a zeroing operator new for everything else
@@ -232,49 +255,52 @@ nsresult nsHtml5StreamParser::GetChannel(nsIChannel** aChannel) {
                   : NS_ERROR_NOT_AVAILABLE;
 }
 
-void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
-  if (mUseJapaneseDetector) {
-    return;
-  }
-  if (!aInitial) {
-    mGuessEncoding = false;
-  }
-  auto encoding = mDetector->Guess(mTLD, mDecodingLocalFileWithoutTokenizing);
-  if (HasDecoder() && !mDecodingLocalFileWithoutTokenizing) {
-    if (mEncoding == encoding) {
-      auto source = aInitial ? kCharsetFromInitialAutoDetection
-                             : kCharsetFromFinalAutoDetection;
-      MOZ_ASSERT(mCharsetSource < source, "Why are we running chardet at all?");
-      mCharsetSource = source;
-      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-    } else {
-      MOZ_ASSERT(mCharsetSource < kCharsetFromFinalAutoDetection);
-      // We've already committed to a decoder. Request a reload from the
-      // docshell.
-      mTreeBuilder->NeedsCharsetSwitchTo(encoding,
-                                         kCharsetFromFinalAutoDetection, 0);
-      FlushTreeOpsAndDisarmTimer();
-      Interrupt();
+NS_IMETHODIMP
+nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf) {
+  NS_ASSERTION(IsParserThread(), "Wrong thread!");
+  if (aConf == eBestAnswer || aConf == eSureAnswer) {
+    mFeedChardet = false;  // just in case
+    auto encoding =
+        Encoding::ForLabelNoReplacement(nsDependentCString(aCharset));
+    if (!encoding) {
+      return NS_OK;
     }
-  } else {
-    // Got a confident answer from the sniffing buffer. That code will
-    // take care of setting up the decoder.
-    mEncoding = encoding;
-    mCharsetSource = aInitial ? kCharsetFromInitialAutoDetection
-                              : kCharsetFromFinalAutoDetection;
-    mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
+    if (HasDecoder()) {
+      if (mEncoding == encoding) {
+        MOZ_ASSERT(mCharsetSource < kCharsetFromAutoDetection,
+                   "Why are we running chardet at all?");
+        mCharsetSource = kCharsetFromAutoDetection;
+        mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
+      } else {
+        // We've already committed to a decoder. Request a reload from the
+        // docshell.
+        mTreeBuilder->NeedsCharsetSwitchTo(WrapNotNull(encoding),
+                                           kCharsetFromAutoDetection, 0);
+        FlushTreeOpsAndDisarmTimer();
+        Interrupt();
+      }
+    } else {
+      // Got a confident answer from the sniffing buffer. That code will
+      // take care of setting up the decoder.
+      mEncoding = WrapNotNull(encoding);
+      mCharsetSource = kCharsetFromAutoDetection;
+      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
+    }
   }
+  return NS_OK;
 }
 
 void nsHtml5StreamParser::FeedJapaneseDetector(Span<const uint8_t> aBuffer,
                                                bool aLast) {
-  MOZ_ASSERT(!mDecodingLocalFileWithoutTokenizing);
   const Encoding* detected = mJapaneseDetector->Feed(aBuffer, aLast);
   if (!detected) {
     return;
   }
-  DontGuessEncoding();
-  int32_t source = kCharsetFromFinalAutoDetection;
+  mFeedChardet = false;
+  if (mDecodingLocalFileAsUTF8 && detected != ISO_2022_JP_ENCODING) {
+    return;
+  }
+  int32_t source = kCharsetFromAutoDetection;
   if (mCharsetSource == kCharsetFromParentForced ||
       mCharsetSource == kCharsetFromUserForced) {
     source = kCharsetFromUserForcedAutoDetection;
@@ -300,10 +326,23 @@ void nsHtml5StreamParser::FeedJapaneseDetector(Span<const uint8_t> aBuffer,
 
 void nsHtml5StreamParser::FeedDetector(Span<const uint8_t> aBuffer,
                                        bool aLast) {
-  if (mUseJapaneseDetector) {
+  if (mEncoding->IsJapaneseLegacy()) {
     FeedJapaneseDetector(aBuffer, aLast);
+  } else if (mEncoding == WINDOWS_1251_ENCODING && mChardet &&
+             !mDecodingLocalFileAsUTF8) {
+    if (!aBuffer.IsEmpty()) {
+      bool dontFeed = false;
+      mozilla::Unused << mChardet->DoIt((const char*)aBuffer.Elements(),
+                                        aBuffer.Length(), &dontFeed);
+      if (dontFeed) {
+        mFeedChardet = false;
+      }
+    }
+    if (aLast) {
+      mozilla::Unused << mChardet->Done();
+    }
   } else {
-    Unused << mDetector->Feed(aBuffer, aLast);
+    mFeedChardet = false;
   }
 }
 
@@ -349,18 +388,16 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
     Span<const uint8_t> aFromSegment) {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
-  if (mDecodingLocalFileWithoutTokenizing &&
-      mCharsetSource <= kCharsetFromFileURLGuess) {
+  if (mDecodingLocalFileAsUTF8 && mCharsetSource <= kCharsetFromFileURLGuess) {
     MOZ_ASSERT(mEncoding != UTF_8_ENCODING);
     mUnicodeDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
   } else {
-    if (mCharsetSource >= kCharsetFromFinalAutoDetection) {
-      if (!(mCharsetSource == kCharsetFromUserForced ||
-            mCharsetSource == kCharsetFromParentForced)) {
-        DontGuessEncoding();
-      }
-      mDecodingLocalFileWithoutTokenizing = false;
+    if (mCharsetSource >= kCharsetFromAutoDetection &&
+        !(mCharsetSource == kCharsetFromUserForced ||
+          mCharsetSource == kCharsetFromParentForced)) {
+      mFeedChardet = false;
     }
+    mDecodingLocalFileAsUTF8 = false;
     mUnicodeDecoder = mEncoding->NewDecoderWithBOMRemoval();
   }
   if (mSniffingBuffer) {
@@ -376,10 +413,10 @@ nsresult nsHtml5StreamParser::SetupDecodingFromBom(
     NotNull<const Encoding*> aEncoding) {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   mEncoding = aEncoding;
-  mDecodingLocalFileWithoutTokenizing = false;
+  mDecodingLocalFileAsUTF8 = false;
   mUnicodeDecoder = mEncoding->NewDecoderWithoutBOMHandling();
   mCharsetSource = kCharsetFromByteOrderMark;
-  DontGuessEncoding();
+  mFeedChardet = false;
   mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
   mSniffingBuffer = nullptr;
   mMetaScanner = nullptr;
@@ -437,7 +474,7 @@ void nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(
   }
   mCharsetSource = kCharsetFromIrreversibleAutoDetection;
   mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-  DontGuessEncoding();
+  mFeedChardet = false;
   mTreeBuilder->MaybeComplainAboutCharset("EncBomlessUtf16", true, 0);
 }
 
@@ -511,23 +548,22 @@ void nsHtml5StreamParser::FinalizeSniffingWithDetector(
     FeedDetector(MakeSpan(mSniffingBuffer.get(), mSniffingLength), false);
   }
   if (mFeedChardet && !aFromSegment.IsEmpty()) {
-    // Avoid buffer boundary-dependent behavior.
-    FeedDetector(aFromSegment.To(aCountToSniffingLimit), false);
+    // Avoid buffer boundary-dependent behavior when
+    // reparsing is forbidden. If reparse is forbidden,
+    // act as if we only saw the first 1024 bytes.
+    // When reparsing isn't forbidden, buffer boundaries
+    // can have an effect on whether the page is loaded
+    // once or twice. :-(
+    FeedDetector(mReparseForbidden ? aFromSegment.To(aCountToSniffingLimit)
+                                   : aFromSegment,
+                 false);
   }
-  bool guess = mFeedChardet;
-  if (mFeedChardet && aEof && aCountToSniffingLimit <= aFromSegment.Length()) {
-    FeedDetector(Span<const uint8_t>(), true);
+  if (mFeedChardet && aEof &&
+      (!mReparseForbidden || aCountToSniffingLimit == aFromSegment.Length())) {
+    // Don't signal EOF if reparse is forbidden and we didn't pass all input
+    // to the detector above.
     mFeedChardet = false;
-  }
-  if (guess) {
-    GuessEncoding(aEof, (guess == mFeedChardet));
-  }
-  if (mReparseForbidden) {
-    DontGuessEncoding();
-  }
-  if (mFeedChardet && !aEof && aCountToSniffingLimit < aFromSegment.Length()) {
-    // Avoid buffer boundary-dependent behavior.
-    FeedDetector(aFromSegment.From(aCountToSniffingLimit), false);
+    FeedDetector(Span<const uint8_t>(), true);
   }
 }
 
@@ -738,11 +774,8 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
           // Honor override
           if (mEncoding->IsJapaneseLegacy()) {
             mFeedChardet = true;
-            mUseJapaneseDetector = true;
             FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit,
                                          false);
-          } else {
-            DontGuessEncoding();
           }
           return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
               aFromSegment);
@@ -759,10 +792,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
       // meta not found, honor override
       if (mEncoding->IsJapaneseLegacy()) {
         mFeedChardet = true;
-        mUseJapaneseDetector = true;
         FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit, false);
-      } else {
-        DontGuessEncoding();
       }
       return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
     }
@@ -877,10 +907,14 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
         mUnicodeDecoder->DecodeToUTF16(src, dst, false);
-    if (!mDecodingLocalFileWithoutTokenizing) {
+    if (!mDecodingLocalFileAsUTF8) {
       OnNewContent(dst.To(written));
     }
     if (hadErrors && !mHasHadErrors) {
+      if (mDecodingLocalFileAsUTF8) {
+        ReDecodeLocalFile();
+        return NS_OK;
+      }
       mHasHadErrors = true;
       if (mEncoding == UTF_8_ENCODING) {
         mTreeBuilder->TryToEnableEncodingMenu();
@@ -900,15 +934,9 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
     } else {
       MOZ_ASSERT(totalRead == aFromSegment.Length(),
                  "The Unicode decoder consumed the wrong number of bytes.");
-      if (mDecodingLocalFileWithoutTokenizing &&
+      if (mDecodingLocalFileAsUTF8 &&
           mLocalFileBytesBuffered == LOCAL_FILE_UTF_8_BUFFER_SIZE) {
-        auto encoding = mEncoding;
-        GuessEncoding(false, false);
-        if (encoding == mEncoding) {
-          CommitLocalFileToEncoding();
-        } else {
-          ReDecodeLocalFile();
-        }
+        CommitLocalFileToUTF8();
       }
       return NS_OK;
     }
@@ -916,12 +944,16 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
 }
 
 void nsHtml5StreamParser::ReDecodeLocalFile() {
-  MOZ_ASSERT(mDecodingLocalFileWithoutTokenizing);
-  mDecodingLocalFileWithoutTokenizing = false;
+  MOZ_ASSERT(mDecodingLocalFileAsUTF8);
+  mDecodingLocalFileAsUTF8 = false;
   mUnicodeDecoder = mEncoding->NewDecoderWithBOMRemoval();
   mHasHadErrors = false;
 
-  DontGuessEncoding();
+  // We need the detector to start with fresh state.
+  // Turn off ISO-2022-JP detection, because if this doc was
+  // ISO-2022-JP, it would have already been detected.
+  mJapaneseDetector = mozilla::JapaneseDetector::Create(false);
+  mFeedChardet = true;
 
   // Throw away previous decoded data
   mLastBuffer = mFirstBuffer;
@@ -935,11 +967,13 @@ void nsHtml5StreamParser::ReDecodeLocalFile() {
   }
 }
 
-void nsHtml5StreamParser::CommitLocalFileToEncoding() {
-  MOZ_ASSERT(mDecodingLocalFileWithoutTokenizing);
-  mDecodingLocalFileWithoutTokenizing = false;
+void nsHtml5StreamParser::CommitLocalFileToUTF8() {
+  MOZ_ASSERT(mDecodingLocalFileAsUTF8);
+  mDecodingLocalFileAsUTF8 = false;
   mFeedChardet = false;
-  mGuessEncoding = false;
+  mEncoding = UTF_8_ENCODING;
+  mCharsetSource = kCharsetFromFileURLGuess;
+  mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
 
   nsHtml5OwningUTF16Buffer* buffer = mFirstBuffer;
   while (buffer) {
@@ -970,17 +1004,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(
       !mExecutor->HasStarted(),
       "Got OnStartRequest at the wrong stage in the executor life cycle.");
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  // To avoid the cost of instantiating the detector when it's not needed,
-  // let's instantiate only if we make it out of this method with the
-  // intent to use it.
-  auto detectorCreator = MakeScopeExit([&] {
-    if (mFeedChardet && !mUseJapaneseDetector) {
-      mDetector = mozilla::EncodingDetector::Create();
-    }
-  });
-
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
     mObserver->OnStartRequest(aRequest);
   }
@@ -990,7 +1014,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   mSkipContentSniffing = loadInfo->GetSkipContentSniffing();
 
   if (mSkipContentSniffing) {
-    DontGuessEncoding();
+    mFeedChardet = false;
   }
 
   mStreamState = STREAM_BEING_READ;
@@ -1005,7 +1029,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
       mMode == LOAD_AS_DATA ? false : mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
 
-  MOZ_ASSERT(!mDecodingLocalFileWithoutTokenizing);
+  MOZ_ASSERT(!mDecodingLocalFileAsUTF8);
   bool isSrcdoc = false;
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = GetChannel(getter_AddRefs(channel));
@@ -1023,27 +1047,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
           rv = channel->GetURI(getter_AddRefs(currentURI));
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIURI> innermost = NS_GetInnermostURI(currentURI);
-            if (innermost->SchemeIs("file")) {
-              mDecodingLocalFileWithoutTokenizing = true;
-            } else {
-              nsAutoCString host;
-              innermost->GetAsciiHost(host);
-              if (!host.IsEmpty()) {
-                // First let's see if the host is DNS-absolute and ends with a
-                // dot and get rid of that one.
-                if (host.Last() == '.') {
-                  host.SetLength(host.Length() - 1);
-                }
-                int32_t index = host.RFindChar('.');
-                if (index != kNotFound) {
-                  // We tolerate an IPv4 component as generic "TLD", so don't
-                  // bother checking.
-                  ToLowerCase(
-                      Substring(host, index + 1, host.Length() - (index + 1)),
-                      mTLD);
-                }
-              }
-            }
+            mDecodingLocalFileAsUTF8 = innermost->SchemeIs("file");
           }
         }
       }
@@ -1112,6 +1116,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
       // This is the old Gecko behavior but the HTML5 spec disagrees.
       // Don't reparse on POST.
       mReparseForbidden = true;
+      mFeedChardet = false;  // can't restart anyway
     }
   }
 
@@ -1138,58 +1143,14 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (mCharsetSource == kCharsetFromParentFrame) {
-    // Remember this for error reporting.
+    // Remember this in case chardet overwrites mCharsetSource
     mInitialEncodingWasFromParentFrame = true;
   }
 
-  if (mCharsetSource >= kCharsetFromFinalAutoDetection) {
-    if ((mCharsetSource == kCharsetFromParentForced ||
-         mCharsetSource == kCharsetFromUserForced) &&
-        mEncoding->IsJapaneseLegacy()) {
-      // Japanese detector only
-      mUseJapaneseDetector = true;
-      mGuessEncoding = false;
-    } else {
-      DontGuessEncoding();
-    }
-  }
-
-  // Compute various pref-based special cases
-  if (!mDecodingLocalFileWithoutTokenizing && mFeedChardet) {
-    if (StaticPrefs::intl_charset_detector_ng_enabled()) {
-      if (mTLD.EqualsLiteral("jp")) {
-        mUseJapaneseDetector =
-            !StaticPrefs::intl_charset_detector_ng_jp_enabled();
-      } else if (mTLD.EqualsLiteral("in") &&
-                 mEncoding == WINDOWS_1252_ENCODING &&
-                 !StaticPrefs::intl_charset_detector_ng_in_enabled()) {
-        // Avoid breaking font hacks that Chrome doesn't break.
-        DontGuessEncoding();
-      } else if (mTLD.EqualsLiteral("lk") &&
-                 mEncoding == WINDOWS_1252_ENCODING &&
-                 !StaticPrefs::intl_charset_detector_ng_lk_enabled()) {
-        // Avoid breaking font hacks that Chrome doesn't break.
-        DontGuessEncoding();
-      }
-    } else {
-      // If the new detector is turned off in general, we still use it to
-      // emulate the old Cyrillic detector in cases where the old Cyrillic
-      // detector would have been enabled.
-      nsAutoCString detectorName;
-      Preferences::GetLocalizedCString("intl.charset.detector", detectorName);
-      bool forceEncodingDetectorToCyrillicOnly =
-          detectorName.EqualsLiteral("ruprob") ||
-          detectorName.EqualsLiteral("ukprob");
-      if (mEncoding->IsJapaneseLegacy()) {
-        mUseJapaneseDetector = true;
-      } else if (mEncoding == WINDOWS_1251_ENCODING &&
-                 forceEncodingDetectorToCyrillicOnly) {
-        mTLD.AssignLiteral("ru");  // Force the detector into Cyrillic mode
-                                   // regardless of real TLD
-      } else {
-        DontGuessEncoding();
-      }
-    }
+  if (mCharsetSource >= kCharsetFromAutoDetection &&
+      !(mCharsetSource == kCharsetFromParentForced ||
+        mCharsetSource == kCharsetFromUserForced)) {
+    mFeedChardet = false;
   }
 
   if (mCharsetSource < kCharsetFromUtf8OnlyMime) {
@@ -1202,10 +1163,10 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   // There's no need to remove the BOM manually here, because
   // the UTF-8 decoder removes it.
   mReparseForbidden = true;
-  DontGuessEncoding();
+  mFeedChardet = false;
 
   // Instantiate the converter here to avoid BOM sniffing.
-  mDecodingLocalFileWithoutTokenizing = false;
+  mDecodingLocalFileAsUTF8 = false;
   mUnicodeDecoder = mEncoding->NewDecoderWithBOMRemoval();
   return NS_OK;
 }
@@ -1269,10 +1230,15 @@ void nsHtml5StreamParser::DoStopRequest() {
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
         mUnicodeDecoder->DecodeToUTF16(src, dst, true);
-    if (!mDecodingLocalFileWithoutTokenizing) {
+    if (!mDecodingLocalFileAsUTF8) {
       OnNewContent(dst.To(written));
     }
     if (hadErrors && !mHasHadErrors) {
+      if (mDecodingLocalFileAsUTF8) {
+        ReDecodeLocalFile();
+        DoStopRequest();
+        return;
+      }
       mHasHadErrors = true;
       if (mEncoding == UTF_8_ENCODING) {
         mTreeBuilder->TryToEnableEncodingMenu();
@@ -1289,20 +1255,9 @@ void nsHtml5StreamParser::DoStopRequest() {
       }
       mLastBuffer = (mLastBuffer->next = newBuf.forget());
     } else {
-      if (mDecodingLocalFileWithoutTokenizing) {
+      if (mDecodingLocalFileAsUTF8) {
         MOZ_ASSERT(mLocalFileBytesBuffered < LOCAL_FILE_UTF_8_BUFFER_SIZE);
-        MOZ_ASSERT(mGuessEncoding);
-        auto encoding = mEncoding;
-        GuessEncoding(true, false);
-        if (encoding == mEncoding) {
-          CommitLocalFileToEncoding();
-        } else {
-          ReDecodeLocalFile();
-          DoStopRequest();
-          return;
-        }
-      } else if (mGuessEncoding) {
-        GuessEncoding(true, false);
+        CommitLocalFileToUTF8();
       }
       break;
     }
@@ -1347,7 +1302,7 @@ nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
 
 void nsHtml5StreamParser::DoDataAvailableBuffer(
     mozilla::Buffer<uint8_t>&& aBuffer) {
-  if (MOZ_LIKELY(!mDecodingLocalFileWithoutTokenizing)) {
+  if (MOZ_LIKELY(!mDecodingLocalFileAsUTF8)) {
     DoDataAvailable(aBuffer);
     return;
   }
@@ -1395,7 +1350,7 @@ void nsHtml5StreamParser::DoDataAvailableBuffer(
   // Do this clean-up here to avoid use-after-free when
   // DoDataAvailable is passed a span pointing into an
   // element of mBufferedLocalFileData.
-  if (!mDecodingLocalFileWithoutTokenizing) {
+  if (!mDecodingLocalFileAsUTF8) {
     mBufferedLocalFileData.Clear();
   }
 }
@@ -1428,7 +1383,7 @@ void nsHtml5StreamParser::DoDataAvailable(Span<const uint8_t> aBuffer) {
     return;
   }
 
-  if (mDecodingLocalFileWithoutTokenizing) {
+  if (mDecodingLocalFileAsUTF8) {
     return;
   }
 
@@ -1501,7 +1456,7 @@ nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   MOZ_ASSERT(IsParserThread(), "Wrong thread!");
   mozilla::MutexAutoLock autoLock(mTokenizerMutex);
 
-  if (MOZ_UNLIKELY(mDecodingLocalFileWithoutTokenizing)) {
+  if (MOZ_UNLIKELY(mDecodingLocalFileAsUTF8)) {
     // It's a bit sad to potentially buffer the first 1024
     // bytes in two places, but it's a lot simpler than trying
     // to optitize out that copy. It only happens for local files
@@ -1572,7 +1527,7 @@ const Encoding* nsHtml5StreamParser::PreferredForInternalEncodingDecl(
       }
     }
     mCharsetSource = kCharsetFromMetaTag;  // become confident
-    DontGuessEncoding();                   // don't feed chardet when confident
+    mFeedChardet = false;                  // don't feed chardet when confident
     return nullptr;
   }
 
@@ -1611,7 +1566,7 @@ bool nsHtml5StreamParser::internalEncodingDeclaration(nsHtml5String aEncoding) {
 
   // Avoid having the chardet ask for another restart after this restart
   // request.
-  DontGuessEncoding();
+  mFeedChardet = false;
   mTreeBuilder->NeedsCharsetSwitchTo(WrapNotNull(encoding), kCharsetFromMetaTag,
                                      mTokenizer->getLineNumber());
   FlushTreeOpsAndDisarmTimer();
@@ -1648,7 +1603,7 @@ void nsHtml5StreamParser::FlushTreeOpsAndDisarmTimer() {
 void nsHtml5StreamParser::ParseAvailableData() {
   MOZ_ASSERT(IsParserThread(), "Wrong thread!");
   mTokenizerMutex.AssertCurrentThreadOwns();
-  MOZ_ASSERT(!mDecodingLocalFileWithoutTokenizing);
+  MOZ_ASSERT(!mDecodingLocalFileAsUTF8);
 
   if (IsTerminatedOrInterrupted()) {
     return;
