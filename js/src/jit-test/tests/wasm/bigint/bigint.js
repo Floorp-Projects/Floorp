@@ -195,9 +195,214 @@ function testMixedArgs() {
   });
 }
 
+function testGlobalImport() {
+  var exports = wasmEvalText(
+    `(module
+      (import "g" "a" (global $a i64))
+      (import "g" "b" (global $b i64))
+      (import "g" "c" (global $c i64))
+
+      (export "a" (global $a))
+      (export "b" (global $b))
+      (export "c" (global $c))
+    )`,
+    { g: { a: 1n, b: 2n ** 63n, c: "123" } }
+  ).exports;
+
+  testWithJit(() => {
+    assertEq(exports.a.value, 1n);
+    assertEq(exports.b.value, -(2n ** 63n));
+    assertEq(exports.c.value, 123n);
+  });
+}
+
+function testMutableGlobalImport() {
+  var exports = wasmEvalText(
+    `(module
+      (import "g" "a" (global $a (mut i64)))
+      (import "g" "b" (global $b (mut i64)))
+
+      (export "a" (global $a))
+      (export "b" (global $b))
+    )`,
+    {
+      g: {
+        a: new WebAssembly.Global({ value: "i64", mutable: true }, 1n),
+        b: new WebAssembly.Global({ value: "i64", mutable: true }, "2"),
+      },
+    }
+  ).exports;
+
+  testWithJit(() => {
+    assertEq(exports.a.value, 1n);
+    assertEq(exports.b.value, 2n);
+  });
+}
+
+function testMutableGlobalImportLiteral() {
+  assertErrorMessage(
+    () =>
+      wasmEvalText(
+        `(module
+          (import "g" "a" (global $a (mut i64)))
+        )`,
+        { g: { a: 1n } }
+      ),
+    WebAssembly.LinkError,
+    "imported global mutability mismatch"
+  );
+}
+
+function testGlobalBadImportLiteral() {
+  assertErrorMessage(
+    () =>
+      wasmEvalText(
+        `(module
+          (import "g" "a" (global $a i64))
+          (export "a" (global $a))
+        )`,
+        { g: { a: 1 } }
+      ),
+    WebAssembly.LinkError,
+    "import object field 'a' is not a BigInt"
+  );
+
+  assertErrorMessage(
+    () =>
+      wasmEvalText(
+        `(module
+          (import "g" "a" (global $a i64))
+          (export "a" (global $a))
+        )`,
+        { g: { a: "foo" } }
+      ),
+    SyntaxError,
+    "invalid BigInt syntax"
+  );
+}
+
+// This exercises error code paths that can be taken when
+// HasI64BigIntSupport() is true, though the test does not directly deal
+// with I64 types.
+function testGlobalBadImportNumber() {
+  assertErrorMessage(
+    () =>
+      wasmEvalText(
+        `(module
+          (import "g" "a" (global $a i32))
+          (export "a" (global $a))
+        )`,
+        { g: { a: 1n } }
+      ),
+    WebAssembly.LinkError,
+    "import object field 'a' is not a Number"
+  );
+
+  assertErrorMessage(
+    () =>
+      wasmEvalText(
+        `(module
+          (import "g" "a" (global $a i32))
+          (export "a" (global $a))
+        )`,
+        { g: { a: "foo" } }
+      ),
+    WebAssembly.LinkError,
+    "import object field 'a' is not a Number"
+  );
+}
+
+function testI64Global() {
+  var global = new WebAssembly.Global({ value: "i64", mutable: true });
+
+  assertEq(global.value, 0n); // initial value
+
+  global.value = 123n;
+  assertEq(global.value, 123n);
+
+  global.value = 2n ** 63n;
+  assertEq(global.value, -(2n ** 63n));
+
+  global.value = "123";
+  assertEq(global.value, 123n);
+}
+
+function testI64GlobalValueOf() {
+  var argument = { value: "i64" };
+
+  // as literal
+  var global = new WebAssembly.Global(argument, {
+    valueOf() {
+      return 123n;
+    },
+  });
+  assertEq(global.value, 123n);
+
+  // as string
+  var global2 = new WebAssembly.Global(argument, {
+    valueOf() {
+      return "123";
+    },
+  });
+  assertEq(global.value, 123n);
+}
+
+function testGlobalI64ValueWrongType() {
+  var argument = { value: "i64" };
+  assertErrorMessage(
+    () => new WebAssembly.Global(argument, 666),
+    TypeError,
+    "not a BigInt"
+  );
+  assertErrorMessage(
+    () => new WebAssembly.Global(argument, "foo"),
+    SyntaxError,
+    "invalid BigInt syntax"
+  );
+  assertErrorMessage(
+    () =>
+      new WebAssembly.Global(argument, {
+        valueOf() {
+          return 5;
+        },
+      }),
+    TypeError,
+    "not a BigInt"
+  );
+}
+
+function testGlobalI64SetWrongType() {
+  var global = new WebAssembly.Global({ value: "i64", mutable: true });
+  assertErrorMessage(() => (global.value = 1), TypeError, "not a BigInt");
+  assertErrorMessage(
+    () => (global.value = "foo"),
+    SyntaxError,
+    "invalid BigInt syntax"
+  );
+  assertErrorMessage(
+    () =>
+      (global.value = {
+        valueOf() {
+          return 5;
+        },
+      }),
+    TypeError,
+    "not a BigInt"
+  );
+}
+
 testRet();
 testId();
 testIdPlus();
 testManyArgs();
 testImportExport();
 testMixedArgs();
+testGlobalImport();
+testMutableGlobalImport();
+testMutableGlobalImportLiteral();
+testGlobalBadImportLiteral();
+testGlobalBadImportNumber();
+testI64Global();
+testI64GlobalValueOf();
+testGlobalI64ValueWrongType();
+testGlobalI64SetWrongType();
