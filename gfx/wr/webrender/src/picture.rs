@@ -4848,11 +4848,12 @@ impl TileNode {
     /// Calculate the four child rects for a given node
     fn get_child_rects(
         rect: &PictureRect,
-    ) -> Vec<PictureRect> {
+        result: &mut [PictureRect; 4],
+    ) {
         let p0 = rect.origin;
         let half_size = PictureSize::new(rect.size.width * 0.5, rect.size.height * 0.5);
 
-        [
+        *result = [
             PictureRect::new(
                 PicturePoint::new(p0.x, p0.y),
                 half_size,
@@ -4869,7 +4870,7 @@ impl TileNode {
                 PicturePoint::new(p0.x + half_size.width, p0.y + half_size.height),
                 half_size,
             ),
-        ].to_vec()
+        ];
     }
 
     /// Called during pre_update, to clear the current dependencies
@@ -4889,7 +4890,8 @@ impl TileNode {
                 *frames_since_modified += 1;
             }
             TileNodeKind::Node { ref mut children, .. } => {
-                let child_rects = TileNode::get_child_rects(&rect);
+                let mut child_rects = [PictureRect::zero(); 4];
+                TileNode::get_child_rects(&rect, &mut child_rects);
                 assert_eq!(child_rects.len(), children.len());
 
                 for (child, rect) in children.iter_mut().zip(child_rects.iter()) {
@@ -5001,25 +5003,33 @@ impl TileNode {
                     }
                 };
 
-                // TODO(gw): We know that these are fixed arrays, we could do better with
-                //           allocations here!
-                let child_rects = TileNode::get_child_rects(&self.rect);
-                let child_rects: Vec<RectangleKey> = child_rects.iter().map(|r| (*r).into()).collect();
-                let mut child_indices = vec![Vec::new(); child_rects.len()];
+                let mut child_rects = [PictureRect::zero(); 4];
+                TileNode::get_child_rects(&self.rect, &mut child_rects);
+
+                let mut child_indices = [
+                    Vec::new(),
+                    Vec::new(),
+                    Vec::new(),
+                    Vec::new(),
+                ];
 
                 // Step through the index buffer, and add primitives to each of the children
                 // that they intersect.
                 for index in curr_indices {
                     let prim = &curr_prims[index.0 as usize];
                     for (child_rect, indices) in child_rects.iter().zip(child_indices.iter_mut()) {
-                        if prim.prim_clip_rect.intersects(child_rect) {
+                        let child_rect_key: RectangleKey = (*child_rect).into();
+                        if prim.prim_clip_rect.intersects(&child_rect_key) {
                             indices.push(index);
                         }
                     }
                 }
 
                 // Create the child nodes and switch from leaf -> node.
-                let children = child_indices.into_iter().map(|i| TileNode::new_leaf(i)).collect();
+                let children = child_indices
+                    .iter_mut()
+                    .map(|i| TileNode::new_leaf(mem::replace(i, Vec::new())))
+                    .collect();
 
                 self.kind = TileNodeKind::Node {
                     children: children,
