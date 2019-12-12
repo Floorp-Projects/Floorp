@@ -102,7 +102,7 @@ export type SourceBase = {|
   +isOriginal: boolean,
 |};
 
-export type SourceResource = Resource<{
+type SourceResource = Resource<{
   ...SourceBase,
   content: AsyncValue<SourceContent> | null,
 }>;
