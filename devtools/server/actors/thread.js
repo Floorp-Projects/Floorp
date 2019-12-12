@@ -1331,15 +1331,59 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Find the starting frame...
     let frame = this.youngestFrame;
+
+    const walkToParentFrame = () => {
+      if (!frame) {
+        return;
+      }
+
+      const currentFrame = frame;
+      frame = null;
+
+      if (currentFrame.older) {
+        frame = currentFrame.older;
+      } else if (
+        this._options.shouldIncludeAsyncLiveFrames &&
+        currentFrame.asyncPromise
+      ) {
+        // We support returning Frame actors for frames that are suspended
+        // at an 'await', and here we want to walk upward to look for the first
+        // frame that will be resumed when the current frame's promise resolves.
+        let reactions = currentFrame.asyncPromise.getPromiseReactions();
+        while (true) {
+          // We loop here because we may have code like:
+          //
+          //   async function inner(){ debugger; }
+          //
+          //   async function outer() {
+          //     await Promise.resolve().then(() => inner());
+          //   }
+          //
+          // where we can see that when `inner` resolves, we will resume from
+          // `outer`, even though there is a layer of promises between, and
+          // that layer could be any number of promises deep.
+          if (!(reactions[0] instanceof Debugger.Object)) {
+            break;
+          }
+
+          reactions = reactions[0].getPromiseReactions();
+        }
+
+        if (reactions[0] instanceof Debugger.Frame) {
+          frame = reactions[0];
+        }
+      }
+    };
+
     let i = 0;
     while (frame && i < start) {
-      frame = frame.older;
+      walkToParentFrame();
       i++;
     }
 
     // Return count frames, or all remaining frames if count is not defined.
     const frames = [];
-    for (; frame && (!count || i < start + count); i++, frame = frame.older) {
+    for (; frame && (!count || i < start + count); i++, walkToParentFrame()) {
       const sourceActor = this.sources.createSourceActor(frame.script.source);
       if (!sourceActor) {
         continue;

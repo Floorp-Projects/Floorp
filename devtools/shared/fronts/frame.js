@@ -18,6 +18,8 @@ class FrameFront extends FrontClassWithSpec(frameSpec) {
     this.where = json.where;
     this.this = json.this;
     this.data = json;
+    this.asyncCause = json.asyncCause;
+    this.state = json.state;
   }
 }
 
