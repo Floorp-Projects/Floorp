@@ -8,6 +8,13 @@ function make_channel(url, callback, ctx) {
 }
 
 add_task(async function check_protocols() {
+  // Enable the collection (during test) for all products so even products
+  // that don't collect the data will be able to run the test without failure.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   let httpserv = new HttpServer();
   httpserv.registerPathHandler("/redirect", redirectHandler);
   httpserv.registerPathHandler("/content", contentHandler);
