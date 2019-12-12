@@ -5,7 +5,6 @@
 // @flow
 
 import { bindActionCreators } from "redux";
-import { isOriginalId } from "devtools-source-map";
 
 import { copyToTheClipboard } from "../../../utils/clipboard";
 import {
@@ -90,7 +89,7 @@ const jumpToMappedLocationItem = (
   id: "node-menu-jump",
   label: L10N.getFormatStr(
     "editor.jumpToMappedLocation1",
-    isOriginalId(selectedSource.id)
+    selectedSource.isOriginal
       ? L10N.getStr("generated")
       : L10N.getStr("original")
   ),

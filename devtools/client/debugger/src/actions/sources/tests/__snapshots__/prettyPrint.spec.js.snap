@@ -8,6 +8,7 @@ Object {
   "introductionUrl": null,
   "isBlackBoxed": false,
   "isExtension": false,
+  "isOriginal": true,
   "isPrettyPrinted": true,
   "isWasm": false,
   "relativeUrl": "/examples/base.js:formatted",

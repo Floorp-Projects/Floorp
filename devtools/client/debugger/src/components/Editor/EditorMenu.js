@@ -7,7 +7,6 @@
 import { Component } from "react";
 import { connect } from "../../utils/connect";
 import { showMenu } from "devtools-contextmenu";
-import { isOriginalId } from "devtools-source-map";
 
 import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import { isPretty } from "../../utils/source";
@@ -92,7 +91,7 @@ const mapStateToProps = (state, props) => ({
   cx: getThreadContext(state),
   isPaused: getIsPaused(state, getCurrentThread(state)),
   hasMappedLocation:
-    (isOriginalId(props.selectedSource.id) ||
+    (props.selectedSource.isOriginal ||
       isSourceWithMap(state, props.selectedSource.id) ||
       isPretty(props.selectedSource)) &&
     !getPrettySource(state, props.selectedSource.id),
