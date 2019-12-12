@@ -1163,38 +1163,6 @@ class HandleBase<JSObject*, Container>
   JS::Handle<U*> as() const;
 };
 
-/**
- * Types for a variable that either should or shouldn't be rooted, depending on
- * the template parameter allowGC. Used for implementing functions that can
- * operate on either rooted or unrooted data.
- *
- * The toHandle() and toMutableHandle() functions are for calling functions
- * which require handle types and are only called in the CanGC case. These
- * allow the calling code to type check.
- */
-enum AllowGC { NoGC = 0, CanGC = 1 };
-template <typename T, AllowGC allowGC>
-class MaybeRooted {};
-
-template <typename T>
-class MaybeRooted<T, CanGC> {
- public:
-  typedef JS::Handle<T> HandleType;
-  typedef JS::Rooted<T> RootType;
-  typedef JS::MutableHandle<T> MutableHandleType;
-
-  static inline JS::Handle<T> toHandle(HandleType v) { return v; }
-
-  static inline JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
-    return v;
-  }
-
-  template <typename T2>
-  static inline JS::Handle<T2*> downcastHandle(HandleType v) {
-    return v.template as<T2>();
-  }
-};
-
 } /* namespace js */
 
 namespace JS {
