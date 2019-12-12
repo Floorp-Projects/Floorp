@@ -559,14 +559,13 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     // was suspended, popping the stack frame, and later resumed (and we
     // were not stepping, so did not pass through slowPathOnResumeFrame).
     Rooted<AbstractGeneratorObject*> genObj(cx);
-    GeneratorWeakMap::AddPtr gp;
     if (referent.isGeneratorFrame()) {
       {
         AutoRealm ar(cx, referent.callee());
         genObj = GetGeneratorObjectForFrame(cx, referent);
       }
       if (genObj) {
-        gp = generatorFrames.lookupForAdd(genObj);
+        GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
         if (gp) {
           frame = &gp->value()->as<DebuggerFrame>();
           MOZ_ASSERT(&frame->unwrappedGenerator() == genObj);
