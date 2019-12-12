@@ -50,6 +50,9 @@ FEATURE_CHECK_NEEDED = {
 RELEASE_OR_BETA = set([
     "Intl.NumberFormat-unified",
     "Intl.DateTimeFormat-fractionalSecondDigits",
+    "Promise.any",
+    "AggregateError",
+    "String.prototype.replaceAll",
 ])
 
 
