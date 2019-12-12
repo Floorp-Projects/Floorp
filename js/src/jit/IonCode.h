@@ -12,7 +12,6 @@
 
 #include "jstypes.h"
 
-#include "gc/Heap.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonOptimizationLevels.h"

@@ -7,7 +7,6 @@
 
 #include <algorithm>
 
-#include "gc/Heap.h"
 #include "gc/Verifier.h"
 #include "gc/WeakMap.h"
 #include "gc/Zone.h"

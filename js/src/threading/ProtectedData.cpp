@@ -6,7 +6,6 @@
 
 #include "threading/ProtectedData.h"
 
-#include "gc/Heap.h"
 #include "gc/Zone.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"

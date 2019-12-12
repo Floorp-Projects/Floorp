@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 
 #include "builtin/TypedObjectConstants.h"
+#include "gc/Allocator.h"
 #include "gc/WeakMap.h"
 #include "js/Conversions.h"
 #include "vm/ArrayBufferObject.h"

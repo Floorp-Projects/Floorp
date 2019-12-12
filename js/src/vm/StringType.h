@@ -17,9 +17,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "gc/Allocator.h"
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
-#include "gc/Heap.h"
 #include "gc/Nursery.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
