@@ -37,7 +37,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       kind_(desc.kind),
       length_(desc.limits.initial),
       maximum_(desc.limits.maximum) {
-  MOZ_ASSERT(kind_ != TableKind::AnyRef);
+  MOZ_ASSERT(repr() == TableRepr::Func);
 }
 
 Table::Table(JSContext* cx, const TableDesc& desc,
@@ -48,7 +48,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       kind_(desc.kind),
       length_(desc.limits.initial),
       maximum_(desc.limits.maximum) {
-  MOZ_ASSERT(kind_ == TableKind::AnyRef);
+  MOZ_ASSERT(repr() == TableRepr::Ref);
 }
 
 /* static */
@@ -65,7 +65,8 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
       return SharedTable(
           cx->new_<Table>(cx, desc, maybeObject, std::move(functions)));
     }
-    case TableKind::AnyRef: {
+    case TableKind::AnyRef:
+    case TableKind::NullRef: {
       TableAnyRefVector objects;
       if (!objects.resize(desc.limits.initial)) {
         return nullptr;
@@ -73,9 +74,8 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
       return SharedTable(
           cx->new_<Table>(cx, desc, maybeObject, std::move(objects)));
     }
-    default:
-      MOZ_CRASH();
   }
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
 }
 
 void Table::tracePrivate(JSTracer* trc) {
@@ -103,6 +103,9 @@ void Table::tracePrivate(JSTracer* trc) {
       objects_.trace(trc);
       break;
     }
+    case TableKind::NullRef: {
+      break;
+    }
     case TableKind::AsmJS: {
 #ifdef DEBUG
       for (uint32_t i = 0; i < length_; i++) {
@@ -128,7 +131,7 @@ void Table::trace(JSTracer* trc) {
 }
 
 uint8_t* Table::functionBase() const {
-  if (kind() == TableKind::AnyRef) {
+  if (repr() == TableRepr::Ref) {
     return nullptr;
   }
   return (uint8_t*)functions_.get();
@@ -176,7 +179,7 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
       elem.code = code;
       elem.tls = nullptr;
       break;
-    case TableKind::AnyRef:
+    default:
       MOZ_CRASH("Bad table type");
   }
 }
@@ -235,8 +238,9 @@ void Table::fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref) {
 }
 
 void Table::setNull(uint32_t index) {
-  switch (kind_) {
-    case TableKind::FuncRef: {
+  switch (repr()) {
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(kind() == TableKind::FuncRef);
       FunctionTableElem& elem = functions_[index];
       if (elem.tls) {
         JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
@@ -246,20 +250,18 @@ void Table::setNull(uint32_t index) {
       elem.tls = nullptr;
       break;
     }
-    case TableKind::AnyRef: {
+    case TableRepr::Ref: {
       fillAnyRef(index, 1, AnyRef::null());
       break;
-    }
-    case TableKind::AsmJS: {
-      MOZ_CRASH("Should not happen");
     }
   }
 }
 
 bool Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
   MOZ_RELEASE_ASSERT(srcTable.kind() != TableKind::AsmJS);
-  switch (kind_) {
-    case TableKind::FuncRef: {
+  switch (repr()) {
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(kind() == TableKind::FuncRef);
       if (srcTable.kind() == TableKind::FuncRef) {
         FunctionTableElem& dst = functions_[dstIndex];
         if (dst.tls) {
@@ -283,24 +285,27 @@ bool Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       }
       break;
     }
-    case TableKind::AnyRef: {
-      if (srcTable.kind() == TableKind::AnyRef) {
-        fillAnyRef(dstIndex, 1, srcTable.getAnyRef(srcIndex));
-      } else {
-        // Upcast. Possibly suboptimal to grab the cx here for every iteration
-        // of the outer copy loop.
-        JSContext* cx = TlsContext.get();
-        RootedFunction fun(cx);
-        if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
-          // OOM, so just pass it on.
-          return false;
+    case TableRepr::Ref: {
+      switch (srcTable.repr()) {
+        case TableRepr::Ref: {
+          fillAnyRef(dstIndex, 1, srcTable.getAnyRef(srcIndex));
+          break;
         }
-        fillAnyRef(dstIndex, 1, AnyRef::fromJSObject(fun));
+        case TableRepr::Func: {
+          MOZ_RELEASE_ASSERT(srcTable.kind() == TableKind::FuncRef);
+          // Upcast. Possibly suboptimal to grab the cx here for every iteration
+          // of the outer copy loop.
+          JSContext* cx = TlsContext.get();
+          RootedFunction fun(cx);
+          if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
+            // OOM, so just pass it on.
+            return false;
+          }
+          fillAnyRef(dstIndex, 1, AnyRef::fromJSObject(fun));
+          break;
+        }
       }
       break;
-    }
-    case TableKind::AsmJS: {
-      MOZ_CRASH("Bad table type");
     }
   }
   return true;
@@ -327,8 +332,9 @@ uint32_t Table::grow(uint32_t delta) {
 
   MOZ_ASSERT(movingGrowable());
 
-  switch (kind_) {
-    case TableKind::FuncRef: {
+  switch (repr()) {
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(kind() == TableKind::FuncRef);
       // Note that realloc does not release functions_'s pointee on failure
       // which is exactly what we need here.
       FunctionTableElem* newFunctions = js_pod_realloc<FunctionTableElem>(
@@ -343,14 +349,11 @@ uint32_t Table::grow(uint32_t delta) {
       PodZero(newFunctions + length_, delta);
       break;
     }
-    case TableKind::AnyRef: {
+    case TableRepr::Ref: {
       if (!objects_.resize(newLength.value())) {
         return -1;
       }
       break;
-    }
-    case TableKind::AsmJS: {
-      MOZ_CRASH("Bad table type");
     }
   }
 

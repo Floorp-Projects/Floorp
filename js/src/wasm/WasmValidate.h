@@ -693,6 +693,7 @@ class Decoder {
 #ifdef ENABLE_WASM_REFTYPES
       case uint8_t(TypeCode::FuncRef):
       case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::NullRef):
         if (!refTypesEnabled) {
           return fail("reference types not enabled");
         }
