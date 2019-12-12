@@ -6,6 +6,7 @@
 
 JAR_MANIFESTS += ['content/jar.mn']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 XPCOM_MANIFESTS += [
     'components.conf',
