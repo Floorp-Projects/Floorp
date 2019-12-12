@@ -3,18 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TOOLKIT_COMPONENTS_REMOTE_REMOTEUTILS_H_
-#define TOOLKIT_COMPONENTS_REMOTE_REMOTEUTILS_H_
-
-#include "nsString.h"
-
-static void BuildClassName(const char* aProgram, const char* aProfile,
-                           nsString& aClassName) {
-  aClassName.AppendPrintf("Mozilla_%s_%s_RemoteWindow", aProgram, aProfile);
-}
+#ifndef RemoteUtils_h__
+#define RemoteUtils_h__
 
 char* ConstructCommandLine(int32_t argc, char** argv,
                            const char* aDesktopStartupID,
                            int* aCommandLineLength);
 
-#endif  // TOOLKIT_COMPONENTS_REMOTE_REMOTEUTILS_H_
+#endif  // RemoteUtils_h__

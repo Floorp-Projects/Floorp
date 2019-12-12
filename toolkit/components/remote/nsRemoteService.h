@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TOOLKIT_COMPONENTS_REMOTE_NSREMOTESERVER_H_
-#define TOOLKIT_COMPONENTS_REMOTE_NSREMOTESERVER_H_
+#ifndef __nsRemoteService_h__
+#define __nsRemoteService_h__
 
 #include "nsRemoteServer.h"
 #include "nsIObserver.h"
@@ -46,4 +46,4 @@ class nsRemoteService final : public nsIObserver {
   nsCString mProfile;
 };
 
-#endif  // TOOLKIT_COMPONENTS_REMOTE_NSREMOTESERVER_H_
+#endif  // __nsRemoteService_h__
