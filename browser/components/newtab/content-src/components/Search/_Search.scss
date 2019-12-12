@@ -66,24 +66,12 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     position: relative;
     width: $searchbar-width-small;
 
-    .ds-outer-wrapper-breakpoint-override & {
-      width: 216px;
-    }
-
     @media (min-width: $break-point-medium) {
       width: $searchbar-width-medium;
-
-      .ds-outer-wrapper-breakpoint-override & {
-        width: 460px;
-      }
     }
 
     @media (min-width: $break-point-large) {
       width: $searchbar-width-large;
-
-      .ds-outer-wrapper-breakpoint-override & {
-        width: 696px;
-      }
     }
   }
 
