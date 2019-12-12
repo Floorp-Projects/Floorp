@@ -420,7 +420,6 @@ void nsThread::ThreadFunc(void* aArg) {
   MOZ_ASSERT(self->mEvents);
 
   self->mThread = PR_GetCurrentThread();
-  self->mVirtualThread = GetCurrentVirtualThread();
   self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
@@ -508,7 +507,6 @@ void nsThread::ThreadFunc(void* aArg) {
 
   // The PRThread will be deleted in PR_JoinThread(), so clear references.
   self->mThread = nullptr;
-  self->mVirtualThread = nullptr;
   self->mEventTarget->ClearCurrentThread();
   NS_RELEASE(self);
 }
@@ -600,7 +598,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
           new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
-      mThread(nullptr),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -624,7 +621,6 @@ nsThread::nsThread()
       mEventTarget(nullptr),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
-      mThread(nullptr),
       mStackSize(0),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -699,7 +695,6 @@ nsresult nsThread::Init(const nsACString& aName) {
 
 nsresult nsThread::InitCurrentThread() {
   mThread = PR_GetCurrentThread();
-  mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
   InitCommon();
 
@@ -764,13 +759,13 @@ nsThread::IsOnCurrentThread(bool* aResult) {
   if (mEventTarget) {
     return mEventTarget->IsOnCurrentThread(aResult);
   }
-  *aResult = GetCurrentVirtualThread() == mVirtualThread;
+  *aResult = PR_GetCurrentThread() == mThread;
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
 nsThread::IsOnCurrentThreadInfallible() {
-  // This method is only going to be called if `mVirtualThread` is null, which
+  // This method is only going to be called if `mThread` is null, which
   // only happens when the thread has exited the event loop.  Therefore, when
   // we are called, we can never be on this thread.
   return false;

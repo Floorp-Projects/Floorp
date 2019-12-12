@@ -172,7 +172,7 @@ bool TaskQueue::IsEmpty() {
 }
 
 bool TaskQueue::IsCurrentThreadIn() const {
-  bool in = mRunningThread == GetCurrentPhysicalThread();
+  bool in = mRunningThread == PR_GetCurrentThread();
   return in;
 }
 
