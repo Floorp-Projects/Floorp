@@ -580,7 +580,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
 
   for (size_t i = 0; i < fe.funcType().args().length(); i++) {
     HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
-    switch (fe.funcType().args()[i].code()) {
+    switch (fe.funcType().args()[i].kind()) {
       case ValType::I32: {
         int32_t i32;
         if (!ToInt32(cx, arg, &i32)) {
@@ -600,15 +600,21 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
         argv[i] = DoubleValue(dbl);
         break;
       }
-      case ValType::AnyRef: {
-        // Leave Object and Null alone, we will unbox inline.  All we need to do
-        // is convert other values to an Object representation.
-        if (!arg.isObjectOrNull()) {
-          RootedAnyRef result(cx, AnyRef::null());
-          if (!BoxAnyRef(cx, arg, &result)) {
-            return false;
-          }
-          argv[i].setObject(*result.get().asJSObject());
+      case ValType::Ref: {
+        switch (fe.funcType().args()[i].refTypeKind()) {
+          case RefType::Any:
+            // Leave Object and Null alone, we will unbox inline.  All we need
+            // to do is convert other values to an Object representation.
+            if (!arg.isObjectOrNull()) {
+              RootedAnyRef result(cx, AnyRef::null());
+              if (!BoxAnyRef(cx, arg, &result)) {
+                return false;
+              }
+              argv[i].setObject(*result.get().asJSObject());
+            }
+            break;
+          default:
+            MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
         }
         break;
       }
@@ -1480,7 +1486,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   }
 
   uint32_t abiType;
-  switch (funcType.ret().ref().code()) {
+  switch (funcType.ret().ref().kind()) {
     case ValType::F32:
       abiType = ArgType_Float32 << RetType_Shift;
       break;
@@ -1496,7 +1502,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
   }
 
   for (size_t i = 0; i < args.length(); i++) {
-    switch (args[i].code()) {
+    switch (args[i].kind()) {
       case ValType::F32:
         abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1)));
         break;

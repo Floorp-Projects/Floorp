@@ -242,11 +242,11 @@ struct ModuleEnvironment {
     MOZ_ASSERT(two.isReference());
 #if defined(ENABLE_WASM_REFTYPES)
 #  if defined(ENABLE_WASM_GC)
-    return one == two || two == ValType::AnyRef || one == ValType::NullRef ||
+    return one == two || two == RefType::any() || one == RefType::null() ||
            (one.isRef() && two.isRef() && gcTypesEnabled() &&
             isStructPrefixOf(two, one));
 #  else
-    return one == two || two == ValType::AnyRef || one == ValType::NullRef;
+    return one == two || two == RefType::any() || one == RefType::null();
 #  endif
 #else
     return one == two;
@@ -255,8 +255,8 @@ struct ModuleEnvironment {
 
  private:
   bool isStructPrefixOf(ValType a, ValType b) const {
-    const StructType& other = types[a.refTypeIndex()].structType();
-    return types[b.refTypeIndex()].structType().hasPrefix(other);
+    const StructType& other = types[a.refType().typeIndex()].structType();
+    return types[b.refType().typeIndex()].structType().hasPrefix(other);
   }
 };
 
@@ -405,12 +405,13 @@ class Encoder {
   MOZ_MUST_USE bool writeVarS64(int64_t i) { return writeVarS<int64_t>(i); }
   MOZ_MUST_USE bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
     if (type.isRef()) {
       return writeFixedU8(uint8_t(TypeCode::Ref)) &&
-             writeVarU32(type.refTypeIndex());
+             writeVarU32(type.refType().typeIndex());
     }
-    return writeFixedU8(uint8_t(type.code()));
+    TypeCode tc = UnpackTypeCodeType(type.packed());
+    MOZ_ASSERT(size_t(tc) < size_t(TypeCode::Limit));
+    return writeFixedU8(uint8_t(tc));
   }
   MOZ_MUST_USE bool writeOp(Op op) {
     static_assert(size_t(Op::Limit) == 256, "fits");
@@ -665,10 +666,14 @@ class Decoder {
   MOZ_MUST_USE ValType uncheckedReadValType() {
     uint8_t code = uncheckedReadFixedU8();
     switch (code) {
-      case uint8_t(ValType::Ref):
-        return ValType(ValType::Code(code), uncheckedReadVarU32());
+      case uint8_t(TypeCode::Ref):
+        return RefType::fromTypeIndex(uncheckedReadVarU32());
+      case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::FuncRef):
+      case uint8_t(TypeCode::NullRef):
+        return RefType::fromTypeCode(TypeCode(uncheckedReadVarU32()));
       default:
-        return ValType::Code(code);
+        return ValType::fromNonRefTypeCode(TypeCode(code));
     }
   }
   MOZ_MUST_USE bool readValType(uint32_t numTypes, bool refTypesEnabled,
@@ -679,22 +684,22 @@ class Decoder {
       return false;
     }
     switch (code) {
-      case uint8_t(ValType::I32):
-      case uint8_t(ValType::F32):
-      case uint8_t(ValType::F64):
-      case uint8_t(ValType::I64):
-        *type = ValType::Code(code);
+      case uint8_t(TypeCode::I32):
+      case uint8_t(TypeCode::F32):
+      case uint8_t(TypeCode::F64):
+      case uint8_t(TypeCode::I64):
+        *type = ValType::fromNonRefTypeCode(TypeCode(code));
         return true;
 #ifdef ENABLE_WASM_REFTYPES
-      case uint8_t(ValType::FuncRef):
-      case uint8_t(ValType::AnyRef):
+      case uint8_t(TypeCode::FuncRef):
+      case uint8_t(TypeCode::AnyRef):
         if (!refTypesEnabled) {
           return fail("reference types not enabled");
         }
-        *type = ValType::Code(code);
+        *type = RefType::fromTypeCode(TypeCode(code));
         return true;
 #  ifdef ENABLE_WASM_GC
-      case uint8_t(ValType::Ref): {
+      case uint8_t(TypeCode::Ref): {
         if (!gcTypesEnabled) {
           return fail("(ref T) types not enabled");
         }
@@ -705,7 +710,7 @@ class Decoder {
         if (typeIndex >= numTypes) {
           return fail("ref index out of range");
         }
-        *type = ValType(ValType::Code(code), typeIndex);
+        *type = RefType::fromTypeIndex(typeIndex);
         return true;
       }
 #  endif
@@ -720,7 +725,7 @@ class Decoder {
     if (!readValType(types.length(), refTypesEnabled, gcTypesEnabled, type)) {
       return false;
     }
-    if (type->isRef() && !types[type->refTypeIndex()].isStructType()) {
+    if (type->isRef() && !types[type->refType().typeIndex()].isStructType()) {
       return fail("ref does not reference a struct type");
     }
     return true;

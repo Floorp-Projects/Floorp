@@ -64,7 +64,7 @@ static_assert(HugeMappedSize > ArrayBufferObject::MaxBufferByteLength,
 
 Val::Val(const LitVal& val) {
   type_ = val.type();
-  switch (type_.code()) {
+  switch (type_.kind()) {
     case ValType::I32:
       u.i32_ = val.i32();
       return;
@@ -78,12 +78,8 @@ Val::Val(const LitVal& val) {
       u.f64_ = val.f64();
       return;
     case ValType::Ref:
-    case ValType::FuncRef:
-    case ValType::AnyRef:
       u.ref_ = val.ref();
       return;
-    case ValType::NullRef:
-      break;
   }
   MOZ_CRASH();
 }
@@ -252,24 +248,28 @@ static const unsigned sMaxTypes =
     (sTotalBits - sTagBits - sReturnBit - sLengthBits) / sTypeBits;
 
 static bool IsImmediateType(ValType vt) {
-  switch (vt.code()) {
+  switch (vt.kind()) {
     case ValType::I32:
     case ValType::I64:
     case ValType::F32:
     case ValType::F64:
-    case ValType::FuncRef:
-    case ValType::AnyRef:
       return true;
-    case ValType::NullRef:
     case ValType::Ref:
-      return false;
+      switch (vt.refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          return true;
+        default:
+          return false;
+      }
+      break;
   }
   MOZ_CRASH("bad ValType");
 }
 
 static unsigned EncodeImmediateType(ValType vt) {
   static_assert(4 < (1 << sTypeBits), "fits");
-  switch (vt.code()) {
+  switch (vt.kind()) {
     case ValType::I32:
       return 0;
     case ValType::I64:
@@ -278,12 +278,15 @@ static unsigned EncodeImmediateType(ValType vt) {
       return 2;
     case ValType::F64:
       return 3;
-    case ValType::FuncRef:
-      return 4;
-    case ValType::AnyRef:
-      return 5;
-    case ValType::NullRef:
     case ValType::Ref:
+      switch (vt.refTypeKind()) {
+        case RefType::Func:
+          return 4;
+        case RefType::Any:
+          return 5;
+        default:
+          break;
+      }
       break;
   }
   MOZ_CRASH("bad ValType");
@@ -705,7 +708,7 @@ bool DebugFrame::updateReturnJSValue() {
     return true;
   }
   MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-  switch (results[0].code()) {
+  switch (results[0].kind()) {
     case ValType::I32:
       cachedReturnJSValue_.setInt32(resultI32_);
       break;
@@ -720,14 +723,20 @@ bool DebugFrame::updateReturnJSValue() {
       cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
       break;
     case ValType::Ref:
-      cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
-      break;
-    case ValType::FuncRef:
-      cachedReturnJSValue_ =
-          UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
-      break;
-    case ValType::AnyRef:
-      cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
+      switch (results[0].refTypeKind()) {
+        case RefType::TypeIndex:
+          cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
+          break;
+        case RefType::Func:
+          cachedReturnJSValue_ =
+              UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
+          break;
+        case RefType::Any:
+          cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
+          break;
+        default:
+          MOZ_CRASH("result type");
+      }
       break;
     default:
       MOZ_CRASH("result type");

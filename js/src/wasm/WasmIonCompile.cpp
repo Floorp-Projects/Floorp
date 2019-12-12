@@ -175,7 +175,7 @@ class FunctionCompiler {
 
     for (size_t i = args.length(); i < locals_.length(); i++) {
       MInstruction* ins = nullptr;
-      switch (locals_[i].code()) {
+      switch (locals_[i].kind()) {
         case ValType::I32:
           ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
           break;
@@ -189,12 +189,8 @@ class FunctionCompiler {
           ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
           break;
         case ValType::Ref:
-        case ValType::FuncRef:
-        case ValType::AnyRef:
           ins = MWasmNullConstant::New(alloc());
           break;
-        case ValType::NullRef:
-          MOZ_CRASH("NullRef not expressible");
       }
 
       curBlock_->add(ins);
@@ -2147,7 +2143,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
   MIRType mirType = ToMIRType(value.type());
 
   MDefinition* result;
-  switch (value.type().code()) {
+  switch (value.type().kind()) {
     case ValType::I32:
       result = f.constant(Int32Value(value.i32()), mirType);
       break;
@@ -2160,10 +2156,16 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
     case ValType::F64:
       result = f.constant(value.f64());
       break;
-    case ValType::FuncRef:
-    case ValType::AnyRef:
-      MOZ_ASSERT(value.ref().isNull());
-      result = f.nullRefConstant();
+    case ValType::Ref:
+      switch (value.type().refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          MOZ_ASSERT(value.ref().isNull());
+          result = f.nullRefConstant();
+          break;
+        default:
+          MOZ_CRASH("unexpected reference type in EmitGetGlobal");
+      }
       break;
     default:
       MOZ_CRASH("unexpected type in EmitGetGlobal");
@@ -3649,7 +3651,7 @@ static bool EmitRefNull(FunctionCompiler& f) {
 
 static bool EmitRefIsNull(FunctionCompiler& f) {
   MDefinition* input;
-  if (!f.iter().readConversion(ValType::AnyRef, ValType::I32, &input)) {
+  if (!f.iter().readConversion(RefType::any(), ValType::I32, &input)) {
     return false;
   }
 
@@ -4107,7 +4109,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         if (!f.env().gcTypesEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
-        CHECK(EmitComparison(f, ValType::AnyRef, JSOP_EQ,
+        CHECK(EmitComparison(f, RefType::any(), JSOP_EQ,
                              MCompare::Compare_RefOrNull));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
