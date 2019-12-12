@@ -834,7 +834,7 @@ bool MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop,
 
   mMonitor = new RefCountedMonitor();
   mWorkerLoop = MessageLoop::current();
-  mWorkerThread = GetCurrentVirtualThread();
+  mWorkerThread = PR_GetCurrentThread();
   mWorkerLoop->AddDestructionObserver(this);
   mListener->OnIPCChannelOpened();
 
@@ -915,7 +915,7 @@ void MessageChannel::OnOpenAsSlave(MessageChannel* aTargetChan, Side aSide) {
 void MessageChannel::CommonThreadOpenInit(MessageChannel* aTargetChan,
                                           Side aSide) {
   mWorkerLoop = MessageLoop::current();
-  mWorkerThread = GetCurrentVirtualThread();
+  mWorkerThread = PR_GetCurrentThread();
   mWorkerLoop->AddDestructionObserver(this);
   mListener->OnIPCChannelOpened();
 
