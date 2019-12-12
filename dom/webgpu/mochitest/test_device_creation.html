@@ -8,7 +8,7 @@
 <body>
 <script>
 
-ok(SpecialPowers.getBoolPref('dom.webgpu.enable'), 'Pref should be enabled.');
+ok(SpecialPowers.getBoolPref('dom.webgpu.enabled'), 'Pref should be enabled.');
 
 const func = async function() {
   const adapter = await navigator.gpu.requestAdapter();
