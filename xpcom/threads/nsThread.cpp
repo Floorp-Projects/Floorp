@@ -776,8 +776,9 @@ nsThread::IsOnCurrentThreadInfallible() {
 
 NS_IMETHODIMP
 nsThread::GetPRThread(PRThread** aResult) {
-  *aResult = mThread;
-  return NS_OK;
+  PRThread* thread = mThread;  // atomic load
+  *aResult = thread;
+  return thread ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
