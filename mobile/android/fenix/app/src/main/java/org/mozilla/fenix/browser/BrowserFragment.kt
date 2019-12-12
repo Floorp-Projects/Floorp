@@ -190,11 +190,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
     }
 
-    override fun getEngineMargins(): Pair<Int, Int> {
-        val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        return 0 to toolbarSize
-    }
-
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
         listOf(
             R.id.mozac_feature_readerview_font_size_decrease,

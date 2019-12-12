@@ -71,7 +71,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
                     ),
                     owner = this,
-                    view = view)
+                    view = view
+                )
 
                 windowFeature.set(
                     feature = CustomTabWindowFeature(
@@ -184,11 +185,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     )
             nav(R.id.externalAppBrowserFragment, directions)
         }
-    }
-
-    override fun getEngineMargins(): Pair<Int, Int> {
-        // Since the top toolbar is dynamic we don't want any margins
-        return 0 to 0
     }
 
     override fun getContextMenuCandidates(

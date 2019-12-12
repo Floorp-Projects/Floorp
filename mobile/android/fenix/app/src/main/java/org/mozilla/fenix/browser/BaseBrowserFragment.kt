@@ -593,7 +593,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     /**
      * Returns the top and bottom margins.
      */
-    protected abstract fun getEngineMargins(): Pair<Int, Int>
+    private fun getEngineMargins(): Pair<Int, Int> =
+        if (context?.settings()?.shouldUseBottomToolbar == true) {
+            val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            0 to toolbarSize
+        } else {
+            0 to 0
+        }
 
     /**
      * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
