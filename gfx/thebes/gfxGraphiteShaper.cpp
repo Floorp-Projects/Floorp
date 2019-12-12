@@ -15,6 +15,10 @@
 
 #include "harfbuzz/hb.h"
 
+#include "mozilla/ScopeExit.h"
+
+#include "ThebesRLBox.h"
+
 #define FloatToFixed(f) (65536 * (f))
 #define FixedToFloat(f) ((f) * (1.0 / 65536.0))
 // Right shifts of negative (signed) integers are undefined, as are overflows
@@ -32,23 +36,38 @@ using namespace mozilla;  // for AutoSwap_* types
 gfxGraphiteShaper::gfxGraphiteShaper(gfxFont* aFont)
     : gfxFontShaper(aFont),
       mGrFace(mFont->GetFontEntry()->GetGrFace()),
-      mGrFont(nullptr),
+      mSandbox(mFont->GetFontEntry()->GetGrSandbox()),
+      mCallback(mFont->GetFontEntry()->GetGrSandboxAdvanceCallbackHandle()),
       mFallbackToSmallCaps(false) {
   mCallbackData.mFont = aFont;
 }
 
 gfxGraphiteShaper::~gfxGraphiteShaper() {
-  if (mGrFont) {
-    gr_font_destroy(mGrFont);
+  auto t_mGrFont = rlbox::from_opaque(mGrFont);
+  if (t_mGrFont) {
+    sandbox_invoke(*mSandbox, gr_font_destroy, t_mGrFont);
   }
   mFont->GetFontEntry()->ReleaseGrFace(mGrFace);
 }
 
 /*static*/
-float gfxGraphiteShaper::GrGetAdvance(const void* appFontHandle,
-                                      uint16_t glyphid) {
-  const CallbackData* cb = static_cast<const CallbackData*>(appFontHandle);
-  return FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
+thread_local gfxGraphiteShaper::CallbackData*
+    gfxGraphiteShaper::tl_GrGetAdvanceData = nullptr;
+
+/*static*/
+tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
+    rlbox_sandbox_gr& sandbox,
+    tainted_opaque_gr<const void*> /* appFontHandle */,
+    tainted_opaque_gr<uint16_t> t_glyphid) {
+  CallbackData* cb = tl_GrGetAdvanceData;
+  if (!cb) {
+    // GrGetAdvance callback called unexpectedly. Just return safe value.
+    tainted_gr<float> ret = 0;
+    return ret.to_opaque();
+  }
+  auto glyphid = rlbox::from_opaque(t_glyphid).UNSAFE_unverified();
+  tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
+  return ret.to_opaque();
 }
 
 static inline uint32_t MakeGraphiteLangTag(uint32_t aTag) {
@@ -63,16 +82,19 @@ static inline uint32_t MakeGraphiteLangTag(uint32_t aTag) {
 }
 
 struct GrFontFeatures {
-  gr_face* mFace;
-  gr_feature_val* mFeatures;
+  tainted_gr<gr_face*> mFace;
+  tainted_gr<gr_feature_val*> mFeatures;
+  rlbox_sandbox_gr* mSandbox;
 };
 
 static void AddFeature(const uint32_t& aTag, uint32_t& aValue, void* aUserArg) {
   GrFontFeatures* f = static_cast<GrFontFeatures*>(aUserArg);
 
-  const gr_feature_ref* fref = gr_face_find_fref(f->mFace, aTag);
+  tainted_gr<const gr_feature_ref*> fref =
+      sandbox_invoke(*(f->mSandbox), gr_face_find_fref, f->mFace, aTag);
   if (fref) {
-    gr_fref_set_feature_value(fref, aValue, f->mFeatures);
+    sandbox_invoke(*(f->mSandbox), gr_fref_set_feature_value, fref, aValue,
+                   f->mFeatures);
   }
 }
 
@@ -101,24 +123,39 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
                                   bool aVertical, RoundingFlags aRounding,
                                   gfxShapedText* aShapedText) {
   const gfxFontStyle* style = mFont->GetStyle();
+  auto t_mGrFace = rlbox::from_opaque(mGrFace);
+  auto t_mGrFont = rlbox::from_opaque(mGrFont);
 
-  if (!mGrFont) {
-    if (!mGrFace) {
+  if (!t_mGrFont) {
+    if (!t_mGrFace) {
       return false;
     }
 
     if (mFont->ProvidesGlyphWidths()) {
-      gr_font_ops ops = {
-          sizeof(gr_font_ops), &GrGetAdvance,
-          nullptr  // vertical text not yet implemented
-      };
-      mGrFont = gr_make_font_with_ops(mFont->GetAdjustedSize(), &mCallbackData,
-                                      &ops, mGrFace);
+      auto p_ops = mSandbox->malloc_in_sandbox<gr_font_ops>();
+      if (!p_ops) {
+        return false;
+      }
+      auto clean_ops = MakeScopeExit([&] { mSandbox->free_in_sandbox(p_ops); });
+      p_ops->size = sizeof(*p_ops);
+      p_ops->glyph_advance_x = *mCallback;
+      p_ops->glyph_advance_y = nullptr;  // vertical text not yet implemented
+      t_mGrFont = sandbox_invoke(
+          *mSandbox, gr_make_font_with_ops, mFont->GetAdjustedSize(),
+          // For security, we do not pass the callback data to this arg, and use
+          // a TLS var instead. However, gr_make_font_with_ops expects this to
+          // be a non null ptr, and changes its behavior if it isn't. Therefore,
+          // we should pass some dummy non null pointer which will be passed to
+          // the GrGetAdvance callback, but never used. Let's just pass p_ops
+          // again, as this is a non-null tainted pointer.
+          p_ops /* mCallbackData */, p_ops, t_mGrFace);
     } else {
-      mGrFont = gr_make_font(mFont->GetAdjustedSize(), mGrFace);
+      t_mGrFont = sandbox_invoke(*mSandbox, gr_make_font,
+                                 mFont->GetAdjustedSize(), t_mGrFace);
     }
+    mGrFont = t_mGrFont.to_opaque();
 
-    if (!mGrFont) {
+    if (!t_mGrFont) {
       return false;
     }
 
@@ -148,10 +185,11 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
     style->language->ToUTF8String(langString);
     grLang = GetGraphiteTagForLang(langString);
   }
-  gr_feature_val* grFeatures = gr_face_featureval_for_lang(mGrFace, grLang);
+  tainted_gr<gr_feature_val*> grFeatures =
+      sandbox_invoke(*mSandbox, gr_face_featureval_for_lang, t_mGrFace, grLang);
 
   // insert any merged features into Graphite feature list
-  GrFontFeatures f = {mGrFace, grFeatures};
+  GrFontFeatures f = {t_mGrFace, grFeatures, mSandbox};
   MergeFontFeatures(style, mFont->GetFontEntry()->mFeatureSettings,
                     aShapedText->DisableLigatures(),
                     mFont->GetFontEntry()->FamilyName(), mFallbackToSmallCaps,
@@ -175,44 +213,61 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
   size_t numChars = CountUnicodes(aText, aLength);
   gr_bidirtl grBidi = gr_bidirtl(
       aShapedText->IsRightToLeft() ? (gr_rtl | gr_nobidi) : gr_nobidi);
-  gr_segment* seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures, gr_utf16,
-                                aText, numChars, grBidi);
 
-  gr_featureval_destroy(grFeatures);
+  tainted_gr<char16_t*> t_aText =
+      mSandbox->malloc_in_sandbox<char16_t>(aLength);
+  if (!t_aText) {
+    return false;
+  }
+  auto clean_txt = MakeScopeExit([&] { mSandbox->free_in_sandbox(t_aText); });
+
+  rlbox::memcpy(*mSandbox, t_aText, aText, aLength * sizeof(char16_t));
+
+  tl_GrGetAdvanceData = &mCallbackData;
+  auto clean_adv_data = MakeScopeExit([&] { tl_GrGetAdvanceData = nullptr; });
+
+  tainted_gr<gr_segment*> seg =
+      sandbox_invoke(*mSandbox, gr_make_seg, mGrFont, t_mGrFace, 0, grFeatures,
+                     gr_utf16, t_aText, numChars, grBidi);
+
+  sandbox_invoke(*mSandbox, gr_featureval_destroy, grFeatures);
 
   if (!seg) {
     return false;
   }
 
-  nsresult rv = SetGlyphsFromSegment(aShapedText, aOffset, aLength, aText, seg,
-                                     aRounding);
+  nsresult rv =
+      SetGlyphsFromSegment(aShapedText, aOffset, aLength, aText,
+                           t_aText.to_opaque(), seg.to_opaque(), aRounding);
 
-  gr_seg_destroy(seg);
+  sandbox_invoke(*mSandbox, gr_seg_destroy, seg);
 
   return NS_SUCCEEDED(rv);
 }
 
 nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     gfxShapedText* aShapedText, uint32_t aOffset, uint32_t aLength,
-    const char16_t* aText, gr_segment* aSegment, RoundingFlags aRounding) {
+    const char16_t* aText, tainted_opaque_gr<char16_t*> t_aText,
+    tainted_opaque_gr<gr_segment*> aSegment, RoundingFlags aRounding) {
   typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
   int32_t dev2appUnits = aShapedText->GetAppUnitsPerDevUnit();
   bool rtl = aShapedText->IsRightToLeft();
 
   // identify clusters; graphite may have reordered/expanded/ligated glyphs.
-  gr_glyph_to_char_association* data =
-      gr_get_glyph_to_char_association(aSegment, aLength, aText);
+  tainted_gr<gr_glyph_to_char_association*> data =
+      sandbox_invoke(*mSandbox, gr_get_glyph_to_char_association, aSegment,
+                     aLength, rlbox::from_opaque(t_aText));
 
   if (!data) {
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t cIndex = data->cIndex;
-  gr_glyph_to_char_cluster* clusters = data->clusters;
-  uint16_t* gids = data->gids;
-  float* xLocs = data->xLocs;
-  float* yLocs = data->yLocs;
+  uint32_t cIndex = data->cIndex.UNSAFE_unverified();
+  gr_glyph_to_char_cluster* clusters = data->clusters.UNSAFE_unverified();
+  uint16_t* gids = data->gids.UNSAFE_unverified();
+  float* xLocs = data->xLocs.UNSAFE_unverified();
+  float* yLocs = data->yLocs.UNSAFE_unverified();
 
   CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
@@ -226,13 +281,17 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     float adv;  // total advance of the cluster
     if (rtl) {
       if (i == 0) {
-        adv = gr_seg_advance_X(aSegment) - xLocs[c.baseGlyph];
+        adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment)
+                  .UNSAFE_unverified() -
+              xLocs[c.baseGlyph];
       } else {
         adv = xLocs[clusters[i - 1].baseGlyph] - xLocs[c.baseGlyph];
       }
     } else {
       if (i == cIndex) {
-        adv = gr_seg_advance_X(aSegment) - xLocs[c.baseGlyph];
+        adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment)
+                  .UNSAFE_unverified() -
+              xLocs[c.baseGlyph];
       } else {
         adv = xLocs[clusters[i + 1].baseGlyph] - xLocs[c.baseGlyph];
       }
@@ -288,7 +347,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     }
   }
 
-  gr_free_char_association(data);
+  sandbox_invoke(*mSandbox, gr_free_char_association, data);
   return NS_OK;
 }
 

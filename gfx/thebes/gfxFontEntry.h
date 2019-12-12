@@ -24,6 +24,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "ThebesRLBoxTypes.h"
 #include <math.h>
 
 typedef struct gr_face gr_face;
@@ -337,10 +338,21 @@ class gfxFontEntry {
   hb_face_t* GetHBFace();
   void ForgetHBFace();
 
+  // Get the sandbox instance that graphite is running in.
+  rlbox_sandbox_gr* GetGrSandbox();
+
+  // Register and get the callback handle for the glyph advance firefox callback
+  // Since the sandbox instance is shared with multiple test shapers, callback
+  // registration must be handled centrally to ensure multiple instances don't
+  // register the same callback.
+  sandbox_callback_gr<float (*)(const void*, uint16_t)>*
+  GetGrSandboxAdvanceCallbackHandle();
+
   // Get Graphite face corresponding to this font file.
   // Caller must call gfxFontEntry::ReleaseGrFace when finished with it.
-  gr_face* GetGrFace();
-  void ReleaseGrFace(gr_face* aFace);
+  // Graphite is run in a sandbox
+  tainted_opaque_gr<gr_face*> GetGrFace();
+  void ReleaseGrFace(tainted_opaque_gr<gr_face*> aFace);
 
   // Does the font have graphite contextuals that involve the space glyph
   // (and therefore we should bypass the word cache)?
@@ -570,15 +582,16 @@ class gfxFontEntry {
   // Callback that the hb_face will use to tell us when it is being deleted.
   static void HBFaceDeletedCallback(void* aUserData);
 
+  // All libGraphite functionality is sandboxed in an rlbox sandbox. This
+  // contains data for the sandbox instance.
+  struct GrSandboxData;
+  GrSandboxData* mSandboxData = nullptr;
+
   // gr_face is -not- refcounted, so it will be owned directly by the font
   // entry, and we'll keep a count of how many references we've handed out;
   // each shaper is responsible to call ReleaseGrFace on its entry when
   // finished with it, so that we know when it can be deleted.
-  gr_face* mGrFace = nullptr;
-
-  // hashtable to map raw table data ptr back to its owning blob, for use by
-  // graphite table-release callback
-  nsDataHashtable<nsPtrHashKey<const void>, void*>* mGrTableMap = nullptr;
+  tainted_opaque_gr<gr_face*> mGrFace;
 
   // For AAT font, a strong reference to the 'trak' table (if present).
   hb_blob_t* const kTrakTableUninitialized = (hb_blob_t*)(intptr_t(-1));
@@ -594,10 +607,12 @@ class gfxFontEntry {
   // number of current users of this entry's mGrFace
   nsrefcnt mGrFaceRefCnt = 0;
 
-  static const void* GrGetTable(const void* aAppFaceHandle, unsigned int aName,
-                                size_t* aLen);
-  static void GrReleaseTable(const void* aAppFaceHandle,
-                             const void* aTableBuffer);
+  static tainted_opaque_gr<const void*> GrGetTable(
+      rlbox_sandbox_gr& sandbox, tainted_opaque_gr<const void*> aAppFaceHandle,
+      tainted_opaque_gr<unsigned int> aName, tainted_opaque_gr<size_t*> aLen);
+  static void GrReleaseTable(rlbox_sandbox_gr& sandbox,
+                             tainted_opaque_gr<const void*> aAppFaceHandle,
+                             tainted_opaque_gr<const void*> aTableBuffer);
 
   // For memory reporting: size of user-font data belonging to this entry.
   // We record this in the font entry because the actual data block may be
