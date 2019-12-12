@@ -217,10 +217,6 @@ RenderedFrameId RendererOGL::GetLastCompletedFrameId() {
   return mCompositor->GetLastCompletedFrameId();
 }
 
-RenderedFrameId RendererOGL::UpdateFrameId() {
-  return mCompositor->UpdateFrameId();
-}
-
 void RendererOGL::Pause() { mCompositor->Pause(); }
 
 bool RendererOGL::Resume() { return mCompositor->Resume(); }
