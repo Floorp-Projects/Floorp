@@ -5896,6 +5896,7 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
       refresher->SetupRefreshURIFromHeader(mDocumentURI, NodePrincipal(),
+                                           InnerWindowID(),
                                            NS_ConvertUTF16toUTF8(aData));
     }
   }
