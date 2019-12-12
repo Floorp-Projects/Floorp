@@ -521,7 +521,7 @@ bool global_isIndirect(const GlobalDesc* global) {
 BD_ConstantValue global_constantValue(const GlobalDesc* global) {
   Val value(global->constantValue());
   BD_ConstantValue v;
-  v.t = TypeCode(value.type().code());
+  v.t = TypeCode(value.type().kind());
   switch (v.t) {
     case TypeCode::I32:
       v.u.i32 = value.i32();
@@ -542,7 +542,7 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
 }
 
 TypeCode global_type(const GlobalDesc* global) {
-  return TypeCode(global->type().code());
+  return UnpackTypeCodeType(global->type().packed());
 }
 
 size_t global_tlsOffset(const GlobalDesc* global) {
