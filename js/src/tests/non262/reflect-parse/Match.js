@@ -156,7 +156,7 @@ var Match =
                 if (!(inner instanceof MatchError)) {
                     throw inner;
                 }
-                inner.message = `matching property ${uneval(key)}:\n${inner.message}`;
+                inner.message = `matching property "${String(key)}":\n${inner.message}`;
                 throw inner;
             }
         }

@@ -15,6 +15,6 @@ printStatus (summary);
 eval("function f(x) { switch (x) { case Array: return 1; }}");
 var result = f(Array);
 if (result !== 1)
-  throw "Unexpected result: "+uneval(result);
+  throw "Unexpected result: "+String(result);
  
 reportCompare(expect, actual, summary);
