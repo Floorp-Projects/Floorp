@@ -358,11 +358,14 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
   }
 
   uint32_t numLocalEntries = 0;
-  ValType prev;
-  for (ValType t : locals) {
-    if (t != prev) {
-      numLocalEntries++;
-      prev = t;
+  if (locals.length()) {
+    ValType prev = locals[0];
+    numLocalEntries++;
+    for (ValType t : locals) {
+      if (t != prev) {
+        numLocalEntries++;
+        prev = t;
+      }
     }
   }
 
@@ -371,7 +374,7 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
   }
 
   if (numLocalEntries) {
-    prev = locals[0];
+    ValType prev = locals[0];
     uint32_t count = 1;
     for (uint32_t i = 1; i < locals.length(); i++, count++) {
       if (prev != locals[i]) {
@@ -999,7 +1002,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
-        CHECK(iter.readComparison(ValType::AnyRef, &nothing, &nothing));
+        CHECK(iter.readComparison(RefType::any(), &nothing, &nothing));
         break;
       }
 #endif
@@ -1020,7 +1023,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         if (!env.refTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
-        CHECK(iter.readConversion(ValType::AnyRef, ValType::I32, &nothing));
+        CHECK(iter.readConversion(RefType::any(), ValType::I32, &nothing));
         break;
       }
 #endif
@@ -1268,7 +1271,7 @@ static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState,
     return true;
   }
 
-  uint32_t refTypeIndex = type.refTypeIndex();
+  uint32_t refTypeIndex = type.refType().typeIndex();
   switch ((*typeState)[refTypeIndex]) {
     case TypeState::None:
       (*typeState)[refTypeIndex] = TypeState::ForwardStruct;
@@ -1386,7 +1389,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     }
 
     CheckedInt32 offset;
-    switch (fields[i].type.code()) {
+    switch (fields[i].type.kind()) {
       case ValType::I32:
         offset = layout.addScalar(Scalar::Int32);
         break;
@@ -1400,14 +1403,18 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addScalar(Scalar::Float64);
         break;
       case ValType::Ref:
-        offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+        switch (fields[i].type.refTypeKind()) {
+          case RefType::TypeIndex:
+            offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+            break;
+          case RefType::Func:
+          case RefType::Any:
+            offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
+            break;
+          default:
+            MOZ_CRASH("Unknown type");
+        }
         break;
-      case ValType::FuncRef:
-      case ValType::AnyRef:
-        offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
-        break;
-      default:
-        MOZ_CRASH("Unknown type");
     }
     if (!offset.isValid()) {
       return d.fail("Object too large");
@@ -1695,18 +1702,27 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
 }
 
 static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
-  switch (type.code()) {
+  switch (type.kind()) {
     case ValType::I32:
     case ValType::F32:
     case ValType::F64:
     case ValType::I64:
-    case ValType::FuncRef:
-    case ValType::AnyRef:
       break;
-#ifdef WASM_PRIVATE_REFTYPES
     case ValType::Ref:
-      return d.fail("cannot expose reference type");
+      switch (type.refTypeKind()) {
+        case RefType::Func:
+        case RefType::Any:
+          break;
+        case RefType::TypeIndex:
+#ifdef WASM_PRIVATE_REFTYPES
+          return d.fail("cannot expose reference type");
+#else
+          break;
 #endif
+        default:
+          return d.fail("unexpected variable type in global import/export");
+      }
+      break;
     default:
       return d.fail("unexpected variable type in global import/export");
   }
@@ -2396,7 +2412,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     // the type or definition kind of the payload. `Active` element segments are
     // restricted to MVP behavior, which assumes only function indices.
     if (kind == ElemSegmentKind::Active) {
-      elemType = ValType::FuncRef;
+      elemType = RefType::func();
     } else {
       uint8_t form;
       if (!d.readFixedU8(&form)) {
@@ -2412,11 +2428,11 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
               // reference expressions allowed are ref.null and ref.func, and
               // they both pass that test, and so no additional check is needed
               // at this time.
-              elemType = ValType::FuncRef;
+              elemType = RefType::func();
               break;
             case uint8_t(TypeCode::AnyRef):
               // Ditto, for AnyRef, just even more trivial.
-              elemType = ValType::AnyRef;
+              elemType = RefType::any();
               break;
             default:
               return d.fail(
@@ -2431,7 +2447,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
                 "segments with extern indices can only contain function "
                 "references");
           }
-          elemType = ValType::FuncRef;
+          elemType = RefType::func();
         }
       }
     }
@@ -2440,7 +2456,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     switch (kind) {
       case ElemSegmentKind::Declared: {
         if (!(elemType.isReference() &&
-              env->isRefSubtypeOf(elemType, ValType::FuncRef))) {
+              env->isRefSubtypeOf(elemType, RefType::func()))) {
           return d.fail(
               "declared segment's element type must be subtype of funcref");
         }
