@@ -54,7 +54,9 @@ export type PendingSelectedLocation = {
 export type {
   SourcesMap,
   SourcesMapByThread,
+  SourceBase,
   SourceResourceState,
+  SourceResource,
 } from "./sources";
 export type { ActiveSearchType, OrientationType } from "./ui";
 export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
