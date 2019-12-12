@@ -27,14 +27,14 @@ async function testSwitchToTarget(client) {
   info("Test TargetList.switchToTarget method");
 
   const { mainRoot } = client;
-  let target = await mainRoot.getMainProcess();
-  const targetList = new TargetList(mainRoot, target);
+  const firstTarget = await mainRoot.getMainProcess();
+  const targetList = new TargetList(mainRoot, firstTarget);
 
   await targetList.startListening([TargetList.TYPES.FRAME]);
 
   is(
     targetList.targetFront,
-    target,
+    firstTarget,
     "The target list top level target is the main process one"
   );
 
@@ -46,29 +46,81 @@ async function testSwitchToTarget(client) {
   const secondTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
 
   const frameTargets = [];
-  const onFrameAvailable = ({ type, targetFront, isTopLevel }) => {
+  let currentTarget = firstTarget;
+  const onFrameAvailable = ({
+    type,
+    targetFront,
+    isTopLevel,
+    isTargetSwitching,
+  }) => {
     is(
       type,
       TargetList.TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
-      targetFront == target ? isTopLevel : !isTopLevel,
+      targetFront == currentTarget ? isTopLevel : !isTopLevel,
       "isTopLevel argument is correct"
     );
+    if (isTopLevel) {
+      // When calling watchTargets, this will be false, but it will be true when calling switchToTarget
+      is(
+        isTargetSwitching,
+        currentTarget == secondTarget,
+        "target switching boolean is correct"
+      );
+    } else {
+      ok(!isTargetSwitching, "for now, only top level target can be switched");
+    }
     frameTargets.push(targetFront);
   };
-  await targetList.watchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
+  const destroyedTargets = [];
+  const onFrameDestroyed = ({
+    type,
+    targetFront,
+    isTopLevel,
+    isTargetSwitching,
+  }) => {
+    is(
+      type,
+      TargetList.TYPES.FRAME,
+      "target-destroyed: We are only notified about frame targets"
+    );
+    ok(
+      targetFront == firstTarget ? isTopLevel : !isTopLevel,
+      "target-destroyed: isTopLevel argument is correct"
+    );
+    if (isTopLevel) {
+      is(
+        isTargetSwitching,
+        true,
+        "target-destroyed: target switching boolean is correct"
+      );
+    } else {
+      ok(
+        !isTargetSwitching,
+        "target-destroyed: for now, only top level target can be switched"
+      );
+    }
+    destroyedTargets.push(targetFront);
+  };
+  await targetList.watchTargets(
+    [TargetList.TYPES.FRAME],
+    onFrameAvailable,
+    onFrameDestroyed
+  );
 
+  // Save the original list of targets
+  const createdTargets = [...frameTargets];
   // Clear the recorded target list of all existing targets
   frameTargets.length = 0;
 
-  target = secondTarget;
+  currentTarget = secondTarget;
   await targetList.switchToTarget(secondTarget);
 
   is(
     targetList.targetFront,
-    target,
+    currentTarget,
     "After the switch, the top level target has been updated"
   );
   // Because JS Window Actor API isn't used yet, FrameDescriptor.getTarget returns null
@@ -77,10 +129,24 @@ async function testSwitchToTarget(client) {
   is(
     frameTargets.length,
     1,
-    "We get the report of two iframe when switching to the new target"
+    "We get the report of the top level iframe when switching to the new target"
   );
-  is(frameTargets[0], target);
+  is(frameTargets[0], currentTarget);
   //is(frameTargets[1].url, "data:text/html,foo");
+
+  // Ensure that all the targets reported before the call to switchToTarget
+  // are reported as destroyed while calling switchToTarget.
+  is(
+    destroyedTargets.length,
+    createdTargets.length,
+    "All targets original reported are destroyed"
+  );
+  for (const newTarget of createdTargets) {
+    ok(
+      destroyedTargets.includes(newTarget),
+      "Each originally target is reported as destroyed"
+    );
+  }
 
   targetList.stopListening([TargetList.TYPES.FRAME]);
 
