@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        cron: true
+    treeherder:
+        platform: symbols/opt
+        kind: build
+        tier: 2
+    worker-type: b-linux
+
+jobs:
+    mac:
+        description: Extract macOS system symbols found in crashreports
+        worker:
+            artifacts:
+                - name: public/build
+                  type: directory
+                  path: /home/worker/artifacts/
+            docker-image: {in-tree: system-symbols-mac}
+            max-run-time: 28800
+        treeherder:
+            symbol: system-symbols-mac
+    win:
+        description: Extract windows system symbols found in crashreports
+        worker:
+            artifacts:
+                - name: public/build
+                  type: directory
+                  path: /home/worker/artifacts/
+            docker-image: {in-tree: system-symbols-win}
+            max-run-time: 3600
+        treeherder:
+            symbol: system-symbols-win

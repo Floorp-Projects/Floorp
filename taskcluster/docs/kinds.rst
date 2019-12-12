@@ -629,3 +629,7 @@ A shipitscript task that does the following:
 l10n-bump
 ---------
 Cron-driven tasks that bump l10n-changesets files in-tree, using data from the l10n dashboard.
+
+system-symbols
+--------------
+Generate missing macOS and windows system symbols from crash reports.
