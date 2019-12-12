@@ -202,12 +202,13 @@ bool nsStyleDisplay::IsAbsolutelyPositioned(
          !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
-uint8_t nsStyleUI::GetEffectivePointerEvents(nsIFrame* aFrame) const {
+mozilla::StylePointerEvents nsStyleUI::GetEffectivePointerEvents(
+    nsIFrame* aFrame) const {
   if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
     // The root frame is not allowed to have pointer-events: none, or else
     // no frames could be hit test against and scrolling the viewport would
     // not work.
-    return NS_STYLE_POINTER_EVENTS_AUTO;
+    return mozilla::StylePointerEvents::Auto;
   }
   return mPointerEvents;
 }
