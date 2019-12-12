@@ -45,29 +45,6 @@
 == css-conditional/at-supports-037.html css-conditional/at-supports-001-ref.html
 == css-conditional/at-supports-038.html css-conditional/at-supports-001-ref.html
 == css-conditional/at-supports-039.html css-conditional/at-supports-001-ref.html
-== css-namespaces/prefix-001.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/prefix-002.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/prefix-003.xml css-namespaces/reftest/ref-lime-1-generic.xml
-== css-namespaces/prefix-004.xml css-namespaces/reftest/ref-lime-2-generic.xml
-== css-namespaces/prefix-005.xml css-namespaces/reftest/ref-lime-2-generic.xml
-== css-namespaces/prefix-006.xml css-namespaces/reftest/ref-lime-2.xml
-== css-namespaces/scope-001.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/scope-002.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/syntax-001.xml css-namespaces/reftest/ref-lime-1-block.xml
-== css-namespaces/syntax-002.xml css-namespaces/reftest/ref-lime-1-block.xml
-== css-namespaces/syntax-003.xml css-namespaces/reftest/ref-lime-5.xml
-== css-namespaces/syntax-004.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/syntax-005.xml css-namespaces/reftest/ref-lime-5.xml
-== css-namespaces/syntax-006.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/syntax-007.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/syntax-008.xml css-namespaces/reftest/ref-lime-2.xml
-== css-namespaces/syntax-009.xml css-namespaces/reftest/ref-lime-1.xml
-== css-namespaces/syntax-010.xml css-namespaces/reftest/ref-lime-3.xml
-== css-namespaces/syntax-011.xml css-namespaces/reftest/ref-lime-6.xml
-== css-namespaces/syntax-012.xml css-namespaces/reftest/ref-lime-3.xml
-== css-namespaces/syntax-013.xml css-namespaces/reftest/ref-lime-5.xml
-== css-namespaces/syntax-014.xml css-namespaces/reftest/ref-lime-3.xml
-== css-namespaces/syntax-015.xml css-namespaces/reftest/ref-lime-1.xml
 fails == css-values/attr-color-invalid-cast.html css-values/reference/200-200-green.html
 == css-values/attr-color-invalid-fallback.html css-values/reference/200-200-green.html
 fails == css-values/attr-color-valid.html css-values/reference/200-200-green.html
