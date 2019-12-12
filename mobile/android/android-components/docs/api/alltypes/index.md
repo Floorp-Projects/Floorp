@@ -385,6 +385,7 @@
 | [mozilla.components.service.glean.private.MemoryUnit](../mozilla.components.service.glean.private/-memory-unit.md) |  |
 | [mozilla.components.feature.push.MessageBus](../mozilla.components.feature.push/-message-bus/index.md) | An implementation of [Bus](../mozilla.components.concept.push/-bus/index.md) where the event type is restricted to an enum. |
 | [mozilla.components.concept.engine.webextension.MessageHandler](../mozilla.components.concept.engine.webextension/-message-handler/index.md) | A handler for all messaging related events, usable for both content and background scripts. |
+| [mozilla.components.concept.engine.webextension.Metadata](../mozilla.components.concept.engine.webextension/-metadata/index.md) | Provides information about a [WebExtension](../mozilla.components.concept.engine.webextension/-web-extension/index.md). |
 | [org.mozilla.telemetry.measurement.MetricsMeasurement](../org.mozilla.telemetry.measurement/-metrics-measurement/index.md) |  |
 | [mozilla.components.support.migration.Migration](../mozilla.components.support.migration/-migration/index.md) | Supported Fennec migrations and their current versions. |
 | [mozilla.components.support.migration.MigrationResults](../mozilla.components.support.migration/-migration-results.md) | Results of running a set of migrations. |
