@@ -61,6 +61,8 @@ class FakeEngineView(context: Context) : TextView(context), EngineView {
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {}
 
+    override fun clearSelection() {}
+
     override fun setVerticalClipping(clippingHeight: Int) {}
 
     override fun setDynamicToolbarMaxHeight(height: Int) {}

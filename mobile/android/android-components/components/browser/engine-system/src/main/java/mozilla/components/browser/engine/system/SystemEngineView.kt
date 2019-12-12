@@ -677,6 +677,10 @@ class SystemEngineView @JvmOverloads constructor(
         }
     }
 
+    override fun clearSelection() {
+        // no-op
+    }
+
     private fun createThumbnailUsingDrawingView(view: View, onFinish: (Bitmap?) -> Unit) {
         val outBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(outBitmap)

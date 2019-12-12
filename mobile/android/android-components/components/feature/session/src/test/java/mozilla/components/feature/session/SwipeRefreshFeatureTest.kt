@@ -96,6 +96,7 @@ class SwipeRefreshFeatureTest {
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
+        override fun clearSelection() {}
         override fun render(session: EngineSession) {}
         override fun release() {}
     }

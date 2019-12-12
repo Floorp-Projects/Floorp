@@ -18,6 +18,9 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 72.0
     * `browser-engine-gecko-nightly`: GeckoView 73.0
 
+* **browser-engine-system** and **browser-engine-gecko-nightly**
+  * Added `EngineView.canClearSelection()` and `EngineView.clearSelection()` for clearing the selection.
+
 * **feature-accounts**
   * ⚠️ **This is a breaking change**: Migrated `FxaPushSupportFeature` to the `feature-accounts-push` component.
 
