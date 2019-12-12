@@ -33,6 +33,11 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
+  ManifestProcessor: "resource://gre/modules/ManifestProcessor.jsm",
+});
+
 function uuid() {
   return Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator)
@@ -44,6 +49,48 @@ const sharedDataKey = id => `SiteSpecificBrowserBase:${id}`;
 
 const IS_MAIN_PROCESS =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
+
+/**
+ * Generates a basic app manifest for a URI.
+ *
+ * @param {nsIURI} uri the start URI for the site.
+ * @return {Manifest} an app manifest.
+ */
+function manifestForURI(uri) {
+  try {
+    let manifestURI = Services.io.newURI("/manifest.json", null, uri);
+    return ManifestProcessor.process({
+      jsonText: "{}",
+      manifestURL: manifestURI.spec,
+      docURL: uri.spec,
+    });
+  } catch (e) {
+    console.error(`Failed to generate a SSB manifest for ${uri.spec}.`, e);
+    throw e;
+  }
+}
+
+/**
+ * Generates an app manifest for a site loaded in a browser element.
+ *
+ * @param {Element} browser the browser element the site is loaded in.
+ * @return {Promise<Manifest>} an app manifest.
+ */
+async function buildManifestForBrowser(browser) {
+  let manifest = null;
+  try {
+    manifest = await ManifestObtainer.browserObtainManifest(browser);
+  } catch (e) {
+    // We can function without a valid manifest.
+    console.error(e);
+  }
+
+  if (!manifest) {
+    manifest = manifestForURI(browser.currentURI);
+  }
+
+  return manifest;
+}
 
 /**
  * Maintains an ID -> SSB mapping in the main process. Content processes should
@@ -59,17 +106,17 @@ const SSBMap = new Map();
 /**
  * The base contains the data about an SSB instance needed in content processes.
  *
- * The only data needed currently is the URI used to launch the SSB.
+ * The only data needed currently is site's `scope` which is just a URI.
  */
 class SiteSpecificBrowserBase {
   /**
    * Creates a new SiteSpecificBrowserBase. Generally should only be called by
    * code within this module.
    *
-   * @param {nsIURI} uri the base URI for the SSB.
+   * @param {nsIURI} scope the scope for the SSB.
    */
-  constructor(uri) {
-    this._uri = uri;
+  constructor(scope) {
+    this._scope = scope;
   }
 
   /**
@@ -94,8 +141,8 @@ class SiteSpecificBrowserBase {
       return null;
     }
 
-    let uri = Services.io.newURI(Services.cpmm.sharedData.get(key));
-    return new SiteSpecificBrowserBase(uri);
+    let scope = Services.io.newURI(Services.cpmm.sharedData.get(key));
+    return new SiteSpecificBrowserBase(scope);
   }
 
   /**
@@ -111,38 +158,51 @@ class SiteSpecificBrowserBase {
       return true;
     }
 
-    // A simplistic check. Is this a uri from the same origin.
-    return uri.prePath == this._uri.prePath;
+    // https://w3c.github.io/manifest/#dfn-within-scope
+    if (this._scope.prePath != uri.prePath) {
+      return false;
+    }
+
+    return uri.filePath.startsWith(this._scope.filePath);
   }
 }
 
 /**
  * The SSB instance used in the main process.
+ *
+ * We maintain two pieces of data for an SSB:
+ *
+ * First is the string UUID for identification purposes.
+ *
+ * Second is an app manifest (https://w3c.github.io/manifest/). If the site does
+ * not provide one a basic one will be automatically generated.
+ *
+ * We pass data based on these down to the SiteSpecificBrowserBase in this and
+ * other processes (via `_updateSharedData`).
  */
 class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   /**
    * Creates a new SiteSpecificBrowser. Generally should only be called by
    * code within this module.
    *
-   * @param {string} id  the SSB's unique ID.
-   * @param {nsIURI} uri the base URI for the SSB.
+   * @param {string} id the SSB's unique ID.
+   * @param {Manifest} manifest the app manifest for the SSB.
    */
-  constructor(id, uri) {
+  constructor(id, manifest) {
     if (!IS_MAIN_PROCESS) {
       throw new Error(
         "SiteSpecificBrowser instances are only available in the main process."
       );
     }
 
-    super(uri);
+    super(Services.io.newURI(manifest.scope));
     this._id = id;
+    this._manifest = manifest;
 
     // Cache the SSB for retrieval.
     SSBMap.set(id, this);
 
-    // Cache the data that the content processes need.
-    Services.ppmm.sharedData.set(sharedDataKey(id), this._uri.spec);
-    Services.ppmm.sharedData.flush();
+    this._updateSharedData();
   }
 
   /**
@@ -163,6 +223,76 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   }
 
   /**
+   * Creates an SSB from a parsed app manifest.
+   *
+   * @param {Manifest} manifest the app manifest for the site.
+   * @return {Promise<SiteSpecificBrowser>} the generated SSB.
+   */
+  static async createFromManifest(manifest) {
+    if (!SiteSpecificBrowserService.isEnabled) {
+      throw new Error("Site specific browsing is disabled.");
+    }
+
+    if (!manifest.scope.startsWith("https:")) {
+      throw new Error(
+        "Site specific browsers can only be opened for secure sites."
+      );
+    }
+
+    return new SiteSpecificBrowser(uuid(), manifest);
+  }
+
+  /**
+   * Creates an SSB from a site loaded in a browser element.
+   *
+   * @param {Element} browser the browser element the site is loaded in.
+   * @return {Promise<SiteSpecificBrowser>} the generated SSB.
+   */
+  static async createFromBrowser(browser) {
+    if (!SiteSpecificBrowserService.isEnabled) {
+      throw new Error("Site specific browsing is disabled.");
+    }
+
+    if (!browser.currentURI.schemeIs("https")) {
+      throw new Error(
+        "Site specific browsers can only be opened for secure sites."
+      );
+    }
+
+    return SiteSpecificBrowser.createFromManifest(
+      await buildManifestForBrowser(browser)
+    );
+  }
+
+  /**
+   * Creates an SSB from a sURI.
+   *
+   * @param {nsIURI} uri the uri to generate from.
+   * @return {SiteSpecificBrowser} the generated SSB.
+   */
+  static createFromURI(uri) {
+    if (!SiteSpecificBrowserService.isEnabled) {
+      throw new Error("Site specific browsing is disabled.");
+    }
+
+    if (!uri.schemeIs("https")) {
+      throw new Error(
+        "Site specific browsers can only be opened for secure sites."
+      );
+    }
+
+    return new SiteSpecificBrowser(uuid(), manifestForURI(uri));
+  }
+
+  /**
+   * Caches the data needed by content processes.
+   */
+  _updateSharedData() {
+    Services.ppmm.sharedData.set(sharedDataKey(this.id), this._scope.spec);
+    Services.ppmm.sharedData.flush();
+  }
+
+  /**
    * The SSB's ID.
    */
   get id() {
@@ -173,19 +303,31 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    * The default URI to load.
    */
   get startURI() {
-    return this._uri;
+    return Services.io.newURI(this._manifest.start_url);
   }
 
   /**
    * Launches a SSB by opening the necessary UI.
+   *
+   * @param {nsIURI?} the initial URI to load. If not provided uses the default.
    */
-  launch() {
+  launch(uri = null) {
     let sa = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+
     let idstr = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
     );
     idstr.data = this.id;
     sa.appendElement(idstr);
+
+    if (uri) {
+      let uristr = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      uristr.data = uri.spec;
+      sa.appendElement(uristr);
+    }
+
     Services.ww.openWindow(
       null,
       "chrome://browser/content/ssb/ssb.html",
@@ -196,27 +338,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   }
 }
 
-const SiteSpecificBrowserService = {
-  /**
-   * Given a URI launches the SSB UI to display it.
-   *
-   * @param {nsIURI} uri the URI to display.
-   */
-  launchFromURI(uri) {
-    if (!this.isEnabled) {
-      throw new Error("Site specific browsing is disabled.");
-    }
-
-    if (!uri.schemeIs("https")) {
-      throw new Error(
-        "Site specific browsers can only be opened for secure sites."
-      );
-    }
-
-    let ssb = new SiteSpecificBrowser(uuid(), uri);
-    ssb.launch();
-  },
-};
+const SiteSpecificBrowserService = {};
 
 XPCOMUtils.defineLazyPreferenceGetter(
   SiteSpecificBrowserService,
@@ -254,7 +376,8 @@ class SSBCommandLineHandler {
             .setScheme("https")
             .finalize();
         }
-        SiteSpecificBrowserService.launchFromURI(uri);
+        let ssb = SiteSpecificBrowser.createFromURI(uri);
+        ssb.launch();
       } catch (e) {
         dump(`Unable to parse '${site}' as a URI: ${e}\n`);
       }
