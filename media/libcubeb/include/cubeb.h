@@ -31,19 +31,13 @@ extern "C" {
 
     @code
     cubeb * app_ctx;
-    cubeb_init(&app_ctx, "Example Application");
+    cubeb_init(&app_ctx, "Example Application", NULL);
     int rv;
     uint32_t rate;
     uint32_t latency_frames;
     uint64_t ts;
 
-    rv = cubeb_get_min_latency(app_ctx, &output_params, &latency_frames);
-    if (rv != CUBEB_OK) {
-      fprintf(stderr, "Could not get minimum latency");
-      return rv;
-    }
-
-    rv = cubeb_get_preferred_sample_rate(app_ctx, output_params, &rate);
+    rv = cubeb_get_preferred_sample_rate(app_ctx, &rate);
     if (rv != CUBEB_OK) {
       fprintf(stderr, "Could not get preferred sample-rate");
       return rv;
@@ -55,6 +49,12 @@ extern "C" {
     output_params.channels = 2;
     output_params.layout = CUBEB_LAYOUT_UNDEFINED;
     output_params.prefs = CUBEB_STREAM_PREF_NONE;
+
+    rv = cubeb_get_min_latency(app_ctx, &output_params, &latency_frames);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not get minimum latency");
+      return rv;
+    }
 
     cubeb_stream_params input_params;
     input_params.format = CUBEB_SAMPLE_FLOAT32NE;
@@ -97,14 +97,14 @@ extern "C" {
 
     @code
     long data_cb(cubeb_stream * stm, void * user,
-                 void * input_buffer, void * output_buffer, long nframes)
+                 const void * input_buffer, void * output_buffer, long nframes)
     {
-      float * in  = input_buffer;
+      const float * in  = input_buffer;
       float * out = output_buffer;
 
-      for (i = 0; i < nframes; ++i) {
-        for (c = 0; c < 2; ++c) {
-          out[i][c] = in[i];
+      for (int i = 0; i < nframes; ++i) {
+        for (int c = 0; c < 2; ++c) {
+          out[2 * i + c] = in[i];
         }
       }
       return nframes;
