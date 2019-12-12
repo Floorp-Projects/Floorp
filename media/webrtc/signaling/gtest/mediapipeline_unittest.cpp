@@ -244,20 +244,22 @@ class TestAgent {
 
   void SetState(const std::string& aTransportId, TransportLayer::State aState,
                 bool aRtcp) {
-    mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
+    test_utils->sts_target()->Dispatch(
         WrapRunnable(transport_, &LoopbackTransport::SetState, aTransportId,
-                     aState, aRtcp));
+                     aState, aRtcp),
+        nsISerialEventTarget::DISPATCH_SYNC);
   }
 
   void UpdateTransport(const std::string& aTransportId,
                        UniquePtr<MediaPipelineFilter>&& aFilter) {
-    auto sync = MakeRefPtr<mozilla::SyncRunnable>(NS_NewRunnableFunction(
-        __func__, [pipeline = audio_pipeline_, aTransportId,
-                   filter = std::move(aFilter)]() mutable {
-          pipeline->UpdateTransport_s(aTransportId, std::move(filter));
-        }));
-    sync->DispatchToThread(test_utils->sts_target());
+    test_utils->sts_target()->Dispatch(
+        NS_NewRunnableFunction(__func__,
+                               [pipeline = audio_pipeline_, aTransportId,
+                                filter = std::move(aFilter)]() mutable {
+                                 pipeline->UpdateTransport_s(aTransportId,
+                                                             std::move(filter));
+                               }),
+        nsISerialEventTarget::DISPATCH_SYNC);
   }
 
   void Stop() {
@@ -271,8 +273,9 @@ class TestAgent {
   void Shutdown() {
     if (audio_pipeline_) audio_pipeline_->Shutdown_m();
 
-    mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(), WrapRunnable(this, &TestAgent::Shutdown_s));
+    test_utils->sts_target()->Dispatch(
+        WrapRunnable(this, &TestAgent::Shutdown_s),
+        nsISerialEventTarget::DISPATCH_SYNC);
   }
 
   uint32_t GetRemoteSSRC() {
@@ -376,6 +379,15 @@ class TestAgentReceive : public TestAgent {
   UniquePtr<MediaPipelineFilter> bundle_filter_;
 };
 
+void WaitFor(TimeDuration aDuration) {
+  bool done = false;
+  NS_DelayedDispatchToCurrentThread(
+      NS_NewRunnableFunction(__func__, [&] { done = true; }),
+      aDuration.ToMilliseconds());
+  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      [&] { return done; });
+}
+
 class MediaPipelineTest : public ::testing::Test {
  public:
   ~MediaPipelineTest() {
@@ -391,9 +403,9 @@ class MediaPipelineTest : public ::testing::Test {
 
   // Setup transport.
   void InitTransports() {
-    mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnableNM(&TestAgent::Connect, &p2_, &p1_));
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableNM(&TestAgent::Connect, &p2_, &p1_),
+        nsISerialEventTarget::DISPATCH_SYNC);
   }
 
   // Verify RTP and RTCP
@@ -424,7 +436,7 @@ class MediaPipelineTest : public ::testing::Test {
     p2_.SetState(transportId, TransportLayer::TS_CONNECTING, false);
     p2_.SetState(transportId, TransportLayer::TS_CONNECTING, true);
 
-    PR_Sleep(10);
+    WaitFor(TimeDuration::FromMilliseconds(10));
 
     // Set state of transports to OPEN (ie; connected). This should result in
     // media flowing.
@@ -434,7 +446,7 @@ class MediaPipelineTest : public ::testing::Test {
     p2_.SetState(transportId, TransportLayer::TS_OPEN, true);
 
     if (bundle) {
-      PR_Sleep(ms_until_filter_update);
+      WaitFor(TimeDuration::FromMilliseconds(ms_until_filter_update));
 
       // Leaving refinedFilter not set implies we want to just update with
       // the other side's SSRC
@@ -448,13 +460,13 @@ class MediaPipelineTest : public ::testing::Test {
     }
 
     // wait for some RTP/RTCP tx and rx to happen
-    PR_Sleep(ms_of_traffic_after_answer);
+    WaitFor(TimeDuration::FromMilliseconds(ms_of_traffic_after_answer));
 
     p1_.Stop();
     p2_.Stop();
 
     // wait for any packets in flight to arrive
-    PR_Sleep(200);
+    WaitFor(TimeDuration::FromMilliseconds(200));
 
     p1_.Shutdown();
     p2_.Shutdown();
