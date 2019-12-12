@@ -61,6 +61,11 @@ XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
 });
+XPCOMUtils.defineLazyGetter(this, "dateAndTimeFormatter", () => {
+  return new Services.intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+  });
+});
 
 function loginSort(formHostPort, a, b) {
   let maybeHostPortA = LoginHelper.maybeGetHostPortForURL(a.origin);
@@ -144,7 +149,6 @@ class LoginAutocompleteItem extends AutocompleteItem {
   constructor(
     login,
     isPasswordField,
-    dateAndTimeFormatter,
     duplicateUsernames,
     actor,
     isOriginMatched
@@ -281,16 +285,12 @@ function LoginAutoCompleteResult(
   // Saved login items
   let formHostPort = LoginHelper.maybeGetHostPortForURL(formOrigin);
   let logins = matchingLogins.sort(loginSort.bind(null, formHostPort));
-  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-  });
   let duplicateUsernames = findDuplicates(matchingLogins);
 
   for (let login of logins) {
     let item = new LoginAutocompleteItem(
       login,
       isPasswordField,
-      dateAndTimeFormatter,
       duplicateUsernames,
       actor,
       LoginHelper.isOriginMatching(login.origin, formOrigin, {
