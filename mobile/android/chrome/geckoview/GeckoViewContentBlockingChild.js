@@ -11,16 +11,6 @@ class GeckoViewContentBlockingChild extends GeckoViewChildModule {
   onEnable() {
     debug`onEnable`;
 
-    const flags = Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
-    this.progressFilter = Cc[
-      "@mozilla.org/appshell/component/browser-status-filter;1"
-    ].createInstance(Ci.nsIWebProgress);
-    this.progressFilter.addProgressListener(this, flags);
-    const webProgress = docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this.progressFilter, flags);
-
     this.messageManager.addMessageListener("ContentBlocking:RequestLog", this);
   }
 
@@ -45,37 +35,6 @@ class GeckoViewContentBlockingChild extends GeckoViewChildModule {
         break;
       }
     }
-  }
-
-  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
-    debug`onContentBlockingEvent ${aEvent.toString(16)}`;
-
-    if (!aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
-      return;
-    }
-
-    const channel = aRequest.QueryInterface(Ci.nsIChannel);
-    const uri = channel.URI && channel.URI.spec;
-    const classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
-
-    if (!uri) {
-      return;
-    }
-
-    debug`onContentBlockingEvent matchedList: ${classChannel.matchedList}`;
-    debug`onContentBlockingEvent matchedTrackingLists: ${
-      classChannel.matchedTrackingLists
-    }`;
-
-    const message = {
-      type: "GeckoView:ContentBlockingEvent",
-      uri: uri,
-      category: aEvent,
-      blockedList: classChannel.matchedList || null,
-      loadedLists: classChannel.matchedTrackingLists,
-    };
-
-    this.eventDispatcher.sendRequest(message);
   }
 }
 
