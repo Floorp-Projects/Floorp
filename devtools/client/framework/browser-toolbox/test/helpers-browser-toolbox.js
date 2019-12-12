@@ -31,8 +31,13 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
  *
  * @param {Object}:
  *        - {Boolean} enableBrowserToolboxFission: pass true to enable the OBT.
+ *        - {Boolean} enableContentMessages: pass true to log content messages
+ *          in the Console.
  */
-async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
+async function initBrowserToolboxTask({
+  enableBrowserToolboxFission,
+  enableContentMessages,
+} = {}) {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
   await pushPref("devtools.browsertoolbox.enable-test-server", true);
@@ -81,6 +86,13 @@ async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
 
   if (enableBrowserToolboxFission) {
     await preferenceFront.setBoolPref("devtools.browsertoolbox.fission", true);
+  }
+
+  if (enableContentMessages) {
+    await preferenceFront.setBoolPref(
+      "devtools.browserconsole.contentMessages",
+      true
+    );
   }
 
   async function spawn(arg, fn) {
