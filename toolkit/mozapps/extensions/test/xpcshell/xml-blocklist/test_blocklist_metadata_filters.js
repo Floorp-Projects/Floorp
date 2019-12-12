@@ -6,7 +6,7 @@
 // and RegExps for each. See bug 897735.
 
 const URI_EXTENSION_BLOCKLIST_DIALOG =
-  "chrome://mozapps/content/extensions/blocklist.xul";
+  "chrome://mozapps/content/extensions/blocklist.xhtml";
 
 var testserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 gPort = testserver.identity.primaryPort;

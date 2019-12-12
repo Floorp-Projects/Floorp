@@ -6,7 +6,7 @@ MockFilePicker.init(window);
 
 const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 const ALWAYS_DOWNLOAD_DIR_PREF = "browser.download.useDownloadDir";
-const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
+const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xhtml";
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
 Services.scriptloader.loadSubScript(

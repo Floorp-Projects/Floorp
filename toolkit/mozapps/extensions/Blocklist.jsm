@@ -141,7 +141,7 @@ const XMLURI_BLOCKLIST = "http://www.mozilla.org/2006/addons-blocklist";
 const XMLURI_PARSE_ERROR =
   "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 const URI_BLOCKLIST_DIALOG =
-  "chrome://mozapps/content/extensions/blocklist.xul";
+  "chrome://mozapps/content/extensions/blocklist.xhtml";
 const DEFAULT_SEVERITY = 3;
 const DEFAULT_LEVEL = 2;
 const MAX_BLOCK_LEVEL = 3;

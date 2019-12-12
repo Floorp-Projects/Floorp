@@ -10,7 +10,7 @@ function test() {
   // Test: "Open with" dialog comes up when pdf.js is not selected as the default
   // handler.
   addWindowListener(
-    "chrome://mozapps/content/downloads/unknownContentType.xul",
+    "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     finish
   );
 
