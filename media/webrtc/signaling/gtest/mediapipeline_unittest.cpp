@@ -37,61 +37,72 @@ static MtransportTestUtils* test_utils;
 
 namespace {
 
-class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
+class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
  public:
-  FakeMediaStreamTrackSource() : MediaStreamTrackSource(nullptr, nsString()) {}
-
-  virtual mozilla::dom::MediaSourceEnum GetMediaSource() const override {
-    return mozilla::dom::MediaSourceEnum::Microphone;
+  FakeAudioTrack()
+      : ProcessedMediaTrack(44100, MediaSegment::AUDIO, nullptr),
+        mMutex("Fake AudioTrack") {
+    Resume();
   }
 
-  virtual void Disable() override {}
-
-  virtual void Enable() override {}
-
-  virtual void Stop() override {}
-};
-
-class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
- public:
-  FakeAudioStreamTrack()
-      : AudioStreamTrack(nullptr, nullptr, new FakeMediaStreamTrackSource(),
-                         mozilla::dom::MediaStreamTrackState::Ended),
-        mMutex("Fake AudioStreamTrack"),
-        mStop(false),
-        mCount(0) {
-    NS_NewTimerWithFuncCallback(
-        getter_AddRefs(mTimer), FakeAudioStreamTrackGenerateData, this, 20,
-        nsITimer::TYPE_REPEATING_SLACK,
-        "FakeAudioStreamTrack::FakeAudioStreamTrackGenerateData",
-        test_utils->sts_target());
+  void Destroy() override {
+    MOZ_ASSERT(!mMainThreadDestroyed);
+    mMainThreadDestroyed = true;
+    Suspend();
   }
 
-  void Stop() {
+  void QueueSetAutoend(bool) override {}
+
+  void Suspend() override {
     mozilla::MutexAutoLock lock(mMutex);
-    mStop = true;
+    if (mSuspended) {
+      return;
+    }
+    mSuspended = true;
     mTimer->Cancel();
+    mTimer = nullptr;
   }
 
-  virtual void AddListener(MediaTrackListener* aListener) override {
+  void Resume() override {
     mozilla::MutexAutoLock lock(mMutex);
-    mListeners.push_back(aListener);
+    if (!mSuspended) {
+      return;
+    }
+    mSuspended = false;
+    NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mTimer), FakeAudioTrackGenerateData, this, 20,
+        nsITimer::TYPE_REPEATING_SLACK,
+        "FakeAudioTrack::FakeAudioTrackGenerateData", test_utils->sts_target());
   }
+
+  void AddListener(MediaTrackListener* aListener) override {
+    mozilla::MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mListener);
+    mListener = aListener;
+  }
+
+  void RemoveListener(MediaTrackListener* aListener) override {
+    mozilla::MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mListener == aListener);
+    mListener = nullptr;
+  }
+
+  void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override {}
 
  private:
-  std::vector<MediaTrackListener*> mListeners;
   mozilla::Mutex mMutex;
-  bool mStop;
+  MediaTrackListener* mListener = nullptr;
+  bool mSuspended = true;
   nsCOMPtr<nsITimer> mTimer;
-  int mCount;
+  int mCount = 0;
 
-  static void FakeAudioStreamTrackGenerateData(nsITimer* timer, void* closure) {
-    auto mst = static_cast<FakeAudioStreamTrack*>(closure);
+  static void FakeAudioTrackGenerateData(nsITimer* timer, void* closure) {
+    auto t = static_cast<FakeAudioTrack*>(closure);
     const int AUDIO_BUFFER_SIZE = 1600;
     const int NUM_CHANNELS = 2;
 
-    mozilla::MutexAutoLock lock(mst->mMutex);
-    if (mst->mStop) {
+    mozilla::MutexAutoLock lock(t->mMutex);
+    if (t->mSuspended) {
       return;
     }
 
@@ -100,8 +111,8 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
     int16_t* data = reinterpret_cast<int16_t*>(samples->Data());
     for (int i = 0; i < (AUDIO_BUFFER_SIZE * NUM_CHANNELS); i++) {
       // saw tooth audio sample
-      data[i] = ((mst->mCount % 8) * 4000) - (7 * 4000) / 2;
-      mst->mCount++;
+      data[i] = ((t->mCount % 8) * 4000) - (7 * 4000) / 2;
+      t->mCount++;
     }
 
     mozilla::AudioSegment segment;
@@ -110,8 +121,8 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
     segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE,
                          PRINCIPAL_HANDLE_NONE);
 
-    for (auto& listener : mst->mListeners) {
-      listener->NotifyQueuedChanges(nullptr, 0, segment);
+    if (t->mListener) {
+      t->mListener->NotifyQueuedChanges(nullptr, 0, segment);
     }
   }
 };
@@ -259,7 +270,6 @@ class TestAgent {
 
   void Shutdown() {
     if (audio_pipeline_) audio_pipeline_->Shutdown_m();
-    if (audio_stream_track_) audio_stream_track_->Stop();
 
     mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(), WrapRunnable(this, &TestAgent::Shutdown_s));
@@ -292,7 +302,7 @@ class TestAgent {
  protected:
   mozilla::AudioCodecConfig audio_config_;
   RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
-  RefPtr<FakeAudioStreamTrack> audio_stream_track_;
+  RefPtr<FakeAudioTrack> audio_track_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
@@ -308,7 +318,7 @@ class TestAgentSend : public TestAgent {
             ->ConfigureSendMediaCodec(&audio_config_);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
-    audio_stream_track_ = new FakeAudioStreamTrack();
+    audio_track_ = new FakeAudioTrack();
   }
 
   virtual void CreatePipeline(const std::string& aTransportId) {
@@ -319,7 +329,7 @@ class TestAgentSend : public TestAgent {
                                            test_utils->sts_target(), false,
                                            audio_conduit_);
 
-    audio_pipeline->SetTrack(audio_stream_track_.get());
+    audio_pipeline->SetSendTrack(audio_track_);
     audio_pipeline->Start();
 
     audio_pipeline_ = audio_pipeline;

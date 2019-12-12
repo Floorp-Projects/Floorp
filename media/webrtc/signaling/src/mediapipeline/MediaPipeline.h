@@ -300,11 +300,11 @@ class MediaPipelineTransmit : public MediaPipeline {
   // Override MediaPipeline::TransportReady_s.
   void TransportReady_s() override;
 
-  // Replace a track with a different one
-  // In non-compliance with the likely final spec, allow the new
-  // track to be part of a different stream (since we don't support
-  // multiple tracks of a type in a stream yet).  bug 1056650
-  virtual nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
+  // Replace a track with a different one.
+  nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
+
+  // Set the track whose data we will transmit. For internal and test use. */
+  void SetSendTrack(RefPtr<ProcessedMediaTrack> aSendTrack);
 
   // Separate classes to allow ref counting
   class PipelineListener;

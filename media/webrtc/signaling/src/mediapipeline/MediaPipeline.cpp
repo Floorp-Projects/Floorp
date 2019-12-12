@@ -1010,11 +1010,8 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
     if (!mDomTrack->Ended()) {
       if (!mSendTrack) {
         // Create the send track only once; when the first live track is set.
-        MOZ_ASSERT(!mTransmitting);
-        mSendTrack = mDomTrack->Graph()->CreateForwardedInputTrack(
-            mDomTrack->GetTrack()->mType);
-        mSendTrack->QueueSetAutoend(false);
-        mSendTrack->Suspend();  // Suspended while not transmitting.
+        SetSendTrack(mDomTrack->Graph()->CreateForwardedInputTrack(
+            mDomTrack->GetTrack()->mType));
       }
       mSendPort = mSendTrack->AllocateInputPort(mDomTrack->GetTrack());
     }
@@ -1025,6 +1022,16 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   }
 
   return NS_OK;
+}
+
+void MediaPipelineTransmit::SetSendTrack(
+    RefPtr<ProcessedMediaTrack> aSendTrack) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mTransmitting);
+  MOZ_ASSERT(!mSendTrack);
+  mSendTrack = std::move(aSendTrack);
+  mSendTrack->QueueSetAutoend(false);
+  mSendTrack->Suspend();  // Suspended while not transmitting.
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData,
