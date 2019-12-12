@@ -53,6 +53,10 @@ const {
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
+const { getDefaultRecordingPreferencesForOlderFirefox } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/popup/background.jsm.js"
+);
+
 /**
  * This file initializes the DevTools Panel UI. It is in charge of initializing
  * the DevTools specific environment, and then passing those requirements into
@@ -74,7 +78,10 @@ async function gInit(perfFront, preferenceFront) {
     // according to what's in the target's preferences. This way the preferences are
     // stored on the target. This could be useful for something like Android where you
     // might want to tweak the settings.
-    getRecordingPreferencesFromDebuggee(preferenceFront),
+    getRecordingPreferencesFromDebuggee(
+      preferenceFront,
+      getDefaultRecordingPreferencesForOlderFirefox()
+    ),
     // Get the supported features from the debuggee. If the debuggee is before
     // Firefox 72, then return null, as the actor does not support that feature.
     // We can't use `target.actorHasMethod`, because the target is not provided
