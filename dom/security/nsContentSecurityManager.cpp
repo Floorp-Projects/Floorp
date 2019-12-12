@@ -987,9 +987,9 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
                nsIContentPolicy::TYPE_DOCUMENT);
     nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
 
-    // It doesn't matter what we pass for the third, data-inherits, argument.
+    // It doesn't matter what we pass for the second, data-inherits, argument.
     // Any protocol which inherits won't pay attention to cookies anyway.
-    rv = loadingPrincipal->CheckMayLoad(uri, false, false);
+    rv = loadingPrincipal->CheckMayLoad(uri, false);
     if (NS_FAILED(rv)) {
       AddLoadFlags(aChannel, nsIRequest::LOAD_ANONYMOUS);
     }

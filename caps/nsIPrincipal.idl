@@ -140,15 +140,22 @@ interface nsIPrincipal : nsISerializable
      *
      *
      * @param uri    The URI about to be loaded.
-     * @param report If true, will report a warning to the console service
-     *               if the load is not allowed.
      * @param allowIfInheritsPrincipal   If true, the load is allowed if the
      *                                   loadee inherits the principal of the
      *                                   loader.
      * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
      */
-    void checkMayLoad(in nsIURI uri, in boolean report,
+    void checkMayLoad(in nsIURI uri,
                       in boolean allowIfInheritsPrincipal);
+
+    /**
+     * Like checkMayLoad, but if returning an error will also report that error
+     * to the console, using the provided window id.  The window id may be 0 to
+     * report to just the browser console, not web consoles.
+     */
+    void checkMayLoadWithReporting(in nsIURI uri,
+                                   in boolean allowIfInheritsPrincipal,
+                                   in unsigned long long innerWindowID);
 
     /**
     * Checks if the provided URI is concidered third-party to the
