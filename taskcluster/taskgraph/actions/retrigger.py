@@ -27,6 +27,22 @@ logger = logging.getLogger(__name__)
 RERUN_STATES = ('exception', 'failed')
 
 
+def _should_retrigger(task_graph, label):
+    """
+    Return whether a given task in the taskgraph should be retriggered.
+
+    This handles the case where the task isn't there by assuming it should not be.
+    """
+    if label not in task_graph:
+        logger.info(
+            "Task {} not in full taskgraph, assuming task should not be retriggered.".format(
+                label
+            )
+        )
+        return False
+    return task_graph[label].attributes.get("retrigger", False)
+
+
 @register_callback_action(
     title='Retrigger',
     name='retrigger',
@@ -138,7 +154,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
     with_downstream = ' '
     to_run = [label]
 
-    if not input.get('force', None) and not full_task_graph[label].attributes.get('retrigger'):
+    if not input.get('force', None) and not _should_retrigger(full_task_graph, label):
         logger.info(
             "Not retriggering task {}, task should not be retrigged "
             "and force not specified.".format(
@@ -257,10 +273,11 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
         times = request.get('times', 1)
         rerun_tasks = [
             label for label in request.get('tasks')
-            if not full_task_graph[label].attributes.get('retrigger')]
+            if not _should_retrigger(full_task_graph, label)
+        ]
         retrigger_tasks = [
             label for label in request.get('tasks')
-            if full_task_graph[label].attributes.get('retrigger')
+            if _should_retrigger(full_task_graph, label)
         ]
 
         for label in rerun_tasks:
