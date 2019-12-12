@@ -10645,23 +10645,6 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
       inFrameLoaderSwap ==
       (mDocumentContainer && mDocumentContainer->InFrameSwap()));
 
-  if (IsTopLevelContentDocument() && GetDocGroup() &&
-      Telemetry::CanRecordExtended()) {
-    TabGroup* tabGroup = mDocGroup->GetTabGroup();
-
-    if (tabGroup) {
-      uint32_t active = tabGroup->Count(true /* aActiveOnly */);
-      uint32_t total = tabGroup->Count();
-
-      if (HasHttpScheme(GetDocumentURI())) {
-        Telemetry::Accumulate(Telemetry::ACTIVE_HTTP_DOCGROUPS_PER_TABGROUP,
-                              active);
-        Telemetry::Accumulate(Telemetry::TOTAL_HTTP_DOCGROUPS_PER_TABGROUP,
-                              total);
-      }
-    }
-  }
-
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();
