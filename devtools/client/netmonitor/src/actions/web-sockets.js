@@ -13,6 +13,7 @@ const {
   WS_SET_REQUEST_FILTER_TEXT,
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
+  WS_CLOSE_CONNECTION,
 } = require("../constants");
 
 const { getDisplayedFrames } = require("../selectors/index");
@@ -108,6 +109,24 @@ function toggleWebSocketsColumn(column) {
 }
 
 /**
+ * Sets current connection status to closed
+ *
+ * @param {number} httpChannelId - Unique id identifying the ws channel
+ * @param {boolean} wasClean - False if ws terminated due to error
+ * @param {number} code - Error code
+ * @param {string} reason
+ */
+function closeConnection(httpChannelId, wasClean, code, reason) {
+  return {
+    type: WS_CLOSE_CONNECTION,
+    httpChannelId,
+    wasClean,
+    code,
+    reason,
+  };
+}
+
+/**
  * Move the selection up to down according to the "delta" parameter. Possible values:
  * - Number: positive or negative, move up or down by specified distance
  * - "PAGE_UP" | "PAGE_DOWN" (String): page up or page down
@@ -146,6 +165,7 @@ module.exports = {
   toggleFrameFilterType,
   setFrameFilterText,
   resetWebSocketsColumns,
+  closeConnection,
   toggleWebSocketsColumn,
   selectFrameDelta,
 };

@@ -14,15 +14,20 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const { PluralForm } = require("devtools/shared/plural-form");
-const { getDisplayedFrames } = require("../../selectors/index");
+const {
+  getDisplayedFrames,
+  isCurrentChannelClosed,
+  getClosedConnectionDetails,
+} = require("../../selectors/index");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { table, tbody, tr, td, div, input, label, hr } = dom;
+const { table, tbody, tr, td, div, input, label, hr, p } = dom;
 const { L10N } = require("../../utils/l10n");
 const FRAMES_EMPTY_TEXT = L10N.getStr("messagesEmptyText");
 const TOGGLE_MESSAGES_TRUNCATION = L10N.getStr("toggleMessagesTruncation");
 const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
   "toggleMessagesTruncation.title"
 );
+const CONNECTION_CLOSED_TEXT = L10N.getStr("netmonitor.ws.connection.closed");
 const Actions = require("../../actions/index");
 
 const { getSelectedFrame } = require("../../selectors/index");
@@ -50,6 +55,8 @@ class FrameListContent extends Component {
       selectedFrame: PropTypes.object,
       selectFrame: PropTypes.func.isRequired,
       columns: PropTypes.object.isRequired,
+      isClosed: PropTypes.func.isRequired,
+      closedConnectionDetails: PropTypes.object,
       channelId: PropTypes.number,
       onSelectFrameDelta: PropTypes.func.isRequired,
     };
@@ -229,7 +236,14 @@ class FrameListContent extends Component {
   }
 
   render() {
-    const { frames, selectedFrame, connector, columns } = this.props;
+    const {
+      frames,
+      selectedFrame,
+      connector,
+      columns,
+      isClosed,
+      closedConnectionDetails,
+    } = this.props;
 
     if (frames.length === 0) {
       return div(
@@ -331,6 +345,15 @@ class FrameListContent extends Component {
           )
         )
       ),
+      isClosed &&
+        p(
+          {
+            className: "ws-connection-closed-message",
+          },
+          `${CONNECTION_CLOSED_TEXT}: ${closedConnectionDetails.code} ${
+            closedConnectionDetails.reason
+          }`
+        ),
       hr({
         ref: "scrollAnchor",
         className: "ws-frames-list-scroll-anchor",
@@ -344,6 +367,8 @@ module.exports = connect(
     selectedFrame: getSelectedFrame(state),
     frames: getDisplayedFrames(state),
     columns: state.webSockets.columns,
+    isClosed: isCurrentChannelClosed(state),
+    closedConnectionDetails: getClosedConnectionDetails(state),
   }),
   dispatch => ({
     selectFrame: item => dispatch(Actions.selectFrame(item)),

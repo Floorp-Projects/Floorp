@@ -54,6 +54,10 @@
   color: inherit;
 }
 
+#messages-panel .ws-connection-closed-message {
+  text-align: center;
+}
+
 /* Use lining numbers so that seconds and milliseconds align */
 
 #messages-panel .ws-frames-list-time {
