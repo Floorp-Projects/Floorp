@@ -1986,8 +1986,6 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport) {
 
   bool aboutBlankInherits = dataInherits && loadInfo->GetAboutBlankInherits();
 
-  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
-
   for (nsIRedirectHistoryEntry* redirectHistoryEntry :
        loadInfo->RedirectChain()) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -2006,14 +2004,7 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport) {
       continue;
     }
 
-    nsresult res;
-    if (aReport) {
-      res = loadingPrincipal->CheckMayLoadWithReporting(uri, dataInherits,
-                                                        innerWindowID);
-    } else {
-      res = loadingPrincipal->CheckMayLoad(uri, dataInherits);
-    }
-    if (NS_FAILED(res)) {
+    if (NS_FAILED(loadingPrincipal->CheckMayLoad(uri, aReport, dataInherits))) {
       return true;
     }
   }
@@ -2028,15 +2019,7 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport) {
     return false;
   }
 
-  nsresult res;
-  if (aReport) {
-    res = loadingPrincipal->CheckMayLoadWithReporting(uri, dataInherits,
-                                                      innerWindowID);
-  } else {
-    res = loadingPrincipal->CheckMayLoad(uri, dataInherits);
-  }
-
-  return NS_FAILED(res);
+  return NS_FAILED(loadingPrincipal->CheckMayLoad(uri, aReport, dataInherits));
 }
 
 bool NS_IsSafeTopLevelNav(nsIChannel* aChannel) {

@@ -1301,11 +1301,10 @@ bool nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
         // in case someone goofs with these in the future, let's drop them.
         rv = NS_ERROR_FAILURE;
       } else {
-        rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags,
-                                               0);
+        rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags);
       }
     } else {
-      rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags, 0);
+      rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags);
     }
   }
   if (NS_FAILED(rv)) {
