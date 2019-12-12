@@ -105,10 +105,15 @@ function isObject(value) {
 exports.evalWithDebugger = function(string, options = {}, webConsole) {
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
+
   // early return for replay
   if (dbg.replaying) {
+    if (options.eager) {
+      throw new Error("Eager evaluations are not supported while replaying");
+    }
     return evalReplay(frame, dbg, evalString);
   }
+
   const { dbgWindow, bindSelf } = getDbgWindow(options, dbg, webConsole);
   const helpers = getHelpers(dbgWindow, options, webConsole);
   const { bindings, helperCache } = bindCommands(
@@ -126,6 +131,11 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
 
   updateConsoleInputEvaluation(dbg, dbgWindow, webConsole);
 
+  let sideEffectData = null;
+  if (options.eager) {
+    sideEffectData = preventSideEffects(dbg);
+  }
+
   const result = getEvalResult(
     evalString,
     evalOptions,
@@ -133,6 +143,10 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     frame,
     dbgWindow
   );
+
+  if (options.eager) {
+    allowSideEffects(dbg, sideEffectData);
+  }
 
   const { helperResult } = helpers;
 
@@ -163,7 +177,7 @@ function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
   // Attempt to initialize any declarations found in the evaluated string
   // since they may now be stuck in an "initializing" state due to the
   // error. Already-initialized bindings will be ignored.
-  if ("throw" in result) {
+  if (result && "throw" in result) {
     parseErrorOutput(dbgWindow, string);
   }
   return result;
@@ -234,6 +248,62 @@ function parseErrorOutput(dbgWindow, string) {
       dbgWindow.forceLexicalInitializationByName(name);
     }
   }
+}
+
+function preventSideEffects(dbg) {
+  if (dbg.onEnterFrame || dbg.onNativeCall) {
+    throw new Error("Debugger has hook installed");
+  }
+
+  const data = {
+    executedScripts: new Set(),
+    debuggees: dbg.getDebuggees(),
+
+    handler: {
+      hit: () => null,
+    },
+  };
+
+  dbg.addAllGlobalsAsDebuggees();
+
+  dbg.onEnterFrame = frame => {
+    const script = frame.script;
+
+    if (data.executedScripts.has(script)) {
+      return;
+    }
+    data.executedScripts.add(script);
+
+    const offsets = script.getEffectfulOffsets();
+    for (const offset of offsets) {
+      script.setBreakpoint(offset, data.handler);
+    }
+  };
+
+  dbg.onNativeCall = (callee, reason) => {
+    if (reason == "get") {
+      // Native getters are never considered effectful.
+      return undefined;
+    }
+    return null;
+  };
+
+  return data;
+}
+
+function allowSideEffects(dbg, data) {
+  for (const script of data.executedScripts) {
+    script.clearBreakpoint(data.handler);
+  }
+
+  for (const global of dbg.getDebuggees()) {
+    if (!data.debuggees.includes(global)) {
+      dbg.removeDebuggee(global);
+    }
+  }
+
+  dbg.onEnterFrame = undefined;
+  dbg.onNativeCall = undefined;
 }
 
 function updateConsoleInputEvaluation(dbg, dbgWindow, webConsole) {

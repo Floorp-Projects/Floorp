@@ -499,6 +499,10 @@ html #webconsole-notificationbox {
   fill: var(--theme-icon-checked-color);
 }
 
+.eager-evaluation-result * {
+  color: var(--theme-comment) !important;
+}
+
 .webconsole-app .cm-auto-complete-shadow-text::after {
   content: attr(title);
   color: var(--theme-comment);

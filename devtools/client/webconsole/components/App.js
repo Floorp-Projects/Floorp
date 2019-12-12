@@ -39,6 +39,9 @@ const JSTerm = createFactory(
 const ConfirmDialog = createFactory(
   require("devtools/client/webconsole/components/Input/ConfirmDialog")
 );
+const EagerEvaluation = createFactory(
+  require("devtools/client/webconsole/components/Input/EagerEvaluation")
+);
 
 // And lazy load the ones that may not be used.
 loader.lazyGetter(this, "SideBar", () =>
@@ -332,6 +335,10 @@ class App extends Component {
     });
   }
 
+  renderEagerEvaluation() {
+    return EagerEvaluation();
+  }
+
   renderReverseSearch() {
     const { serviceContainer, reverseSearchInitialValue } = this.props;
 
@@ -411,6 +418,7 @@ class App extends Component {
     const consoleOutput = this.renderConsoleOutput();
     const notificationBox = this.renderNotificationBox();
     const jsterm = this.renderJsTerm();
+    const eager = this.renderEagerEvaluation();
     const reverseSearch = this.renderReverseSearch();
     const sidebar = this.renderSideBar();
     const confirmDialog = this.renderConfirmDialog();
@@ -422,7 +430,8 @@ class App extends Component {
         { className: "flexible-output-input", key: "in-out-container" },
         consoleOutput,
         notificationBox,
-        jsterm
+        jsterm,
+        eager
       ),
       editorMode
         ? GridElementWidthResizer({

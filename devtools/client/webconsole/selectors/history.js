@@ -81,6 +81,11 @@ function getReverseSearchTotalResults(state) {
   return currentReverseSearchResults.length;
 }
 
+function getTerminalEagerResult(state) {
+  const { history } = state;
+  return history.terminalEagerResult;
+}
+
 module.exports = {
   getHistory,
   getHistoryEntries,
@@ -88,4 +93,5 @@ module.exports = {
   getReverseSearchResult,
   getReverseSearchResultPosition,
   getReverseSearchTotalResults,
+  getTerminalEagerResult,
 };

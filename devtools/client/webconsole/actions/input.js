@@ -5,7 +5,12 @@
 "use strict";
 
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
-const { EVALUATE_EXPRESSION } = require("devtools/client/webconsole/constants");
+const {
+  EVALUATE_EXPRESSION,
+  SET_TERMINAL_INPUT,
+  SET_TERMINAL_EAGER_RESULT,
+} = require("devtools/client/webconsole/constants");
+const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
 
 loader.lazyServiceGetter(
   this,
@@ -36,6 +41,21 @@ loader.lazyRequireGetter(
 );
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
+async function getMappedExpression(hud, expression) {
+  let mapResult;
+  try {
+    mapResult = await hud.getMappedExpression(expression);
+  } catch (e) {
+    console.warn("Error when calling getMappedExpression", e);
+  }
+
+  let mapped = null;
+  if (mapResult) {
+    ({ expression, mapped } = mapResult);
+  }
+  return { expression, mapped };
+}
+
 function evaluateExpression(expression) {
   return async ({ dispatch, webConsoleUI, hud, client }) => {
     if (!expression) {
@@ -61,16 +81,8 @@ function evaluateExpression(expression) {
 
     WebConsoleUtils.usageCount++;
 
-    let mappedExpressionRes;
-    try {
-      mappedExpressionRes = await hud.getMappedExpression(expression);
-    } catch (e) {
-      console.warn("Error when calling getMappedExpression", e);
-    }
-
-    expression = mappedExpressionRes
-      ? mappedExpressionRes.expression
-      : expression;
+    let mapped;
+    ({ expression, mapped } = await getMappedExpression(hud, expression));
 
     const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
 
@@ -83,7 +95,7 @@ function evaluateExpression(expression) {
         frameActor,
         selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
         webConsoleFront,
-        mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null,
+        mapped,
       })
       .then(onSettled, onSettled);
 
@@ -195,8 +207,56 @@ function setInputValue(value) {
   };
 }
 
+function terminalInputChanged(expression) {
+  return async ({ dispatch, webConsoleUI, hud, client, getState }) => {
+    const prefs = getAllPrefs(getState());
+    if (!prefs.eagerEvaluation) {
+      return;
+    }
+
+    // The server does not support eager evaluation when replaying.
+    if (hud.currentTarget.isReplayEnabled()) {
+      return;
+    }
+
+    const originalExpression = expression;
+    dispatch({
+      type: SET_TERMINAL_INPUT,
+      expression,
+    });
+
+    let mapped;
+    ({ expression, mapped } = await getMappedExpression(hud, expression));
+
+    const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
+
+    const response = await client.evaluateJSAsync(expression, {
+      frameActor,
+      selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
+      webConsoleFront,
+      mapped,
+      eager: true,
+    });
+
+    const result = response.exception || response.result;
+
+    // Don't show syntax errors or undefined results to the user.
+    if (result.isSyntaxError || result.type == "undefined") {
+      return;
+    }
+
+    // eslint-disable-next-line consistent-return
+    return dispatch({
+      type: SET_TERMINAL_EAGER_RESULT,
+      expression: originalExpression,
+      result,
+    });
+  };
+}
+
 module.exports = {
   evaluateExpression,
   focusInput,
   setInputValue,
+  terminalInputChanged,
 };
