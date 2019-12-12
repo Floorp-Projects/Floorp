@@ -107,7 +107,7 @@ async function openHelperAppDialog(launcher) {
   } catch (ex) {
     ok(
       false,
-      "Trying to show unknownContentType.xul failed with exception: " + ex
+      "Trying to show unknownContentType.xhtml failed with exception: " + ex
     );
     Cu.reportError(ex);
   }
@@ -117,7 +117,7 @@ async function openHelperAppDialog(launcher) {
 
   is(
     dlg.location.href,
-    "chrome://mozapps/content/downloads/unknownContentType.xul",
+    "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     "Got correct dialog"
   );
 

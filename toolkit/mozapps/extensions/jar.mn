@@ -5,10 +5,10 @@
 toolkit.jar:
 % content mozapps %content/mozapps/
 #ifndef MOZ_FENNEC
-  content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
+  content/mozapps/extensions/extensions.xhtml                   (content/extensions.xhtml)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
   content/mozapps/extensions/extensions.js                      (content/extensions.js)
-  content/mozapps/extensions/blocklist.xul                      (content/blocklist.xul)
+  content/mozapps/extensions/blocklist.xhtml                    (content/blocklist.xhtml)
   content/mozapps/extensions/blocklist.js                       (content/blocklist.js)
   content/mozapps/extensions/pluginPrefs.xhtml                  (content/pluginPrefs.xhtml)
   content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)

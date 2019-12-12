@@ -10,7 +10,7 @@ function waitForNewWindow() {
 
           is(
             domwindow.document.location.href,
-            "chrome://mozapps/content/downloads/unknownContentType.xul",
+            "chrome://mozapps/content/downloads/unknownContentType.xhtml",
             "Download page appeared"
           );
           resolve(domwindow);

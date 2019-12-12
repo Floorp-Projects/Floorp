@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const URI_BLOCKLIST_DIALOG =
-  "chrome://mozapps/content/extensions/blocklist.xul";
+  "chrome://mozapps/content/extensions/blocklist.xhtml";
 
 // This tests that the blocklist dialog still affects soft-blocked add-ons
 // if the user clicks the "Restart Later" button. It also ensures that the

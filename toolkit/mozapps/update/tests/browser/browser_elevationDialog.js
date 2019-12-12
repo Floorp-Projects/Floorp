@@ -107,7 +107,8 @@ function waitForElevationDialog() {
 
         async function elevationDialogOnLoad() {
           domwindow.removeEventListener("load", elevationDialogOnLoad, true);
-          let chromeURI = "chrome://mozapps/content/update/updateElevation.xul";
+          let chromeURI =
+            "chrome://mozapps/content/update/updateElevation.xhtml";
           is(
             domwindow.document.location.href,
             chromeURI,

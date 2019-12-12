@@ -174,7 +174,7 @@ nsUnknownContentTypeDialog.prototype = {
       let rootWin = docShell.rootTreeItem.domWindow;
       this.mDialog = Services.ww.openWindow(
         rootWin,
-        "chrome://mozapps/content/downloads/unknownContentType.xul",
+        "chrome://mozapps/content/downloads/unknownContentType.xhtml",
         null,
         "chrome,centerscreen,titlebar,dialog=yes,dependent",
         null
