@@ -16,9 +16,11 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventQueue.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadLocal.h"
 #include "PrioritizedEventQueue.h"
@@ -41,20 +43,31 @@ class BackgroundEventTarget final : public nsIEventTarget {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
-  BackgroundEventTarget() = default;
+  BackgroundEventTarget();
 
   nsresult Init();
 
-  nsresult Shutdown();
+  already_AddRefed<nsISerialEventTarget>
+    CreateBackgroundTaskQueue(const char* aName);
+
+  void BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>&);
+  void FinishShutdown();
 
  private:
   ~BackgroundEventTarget() = default;
 
   nsCOMPtr<nsIThreadPool> mPool;
   nsCOMPtr<nsIThreadPool> mIOPool;
+
+  Mutex mMutex;
+  nsTArray<RefPtr<TaskQueue>> mTaskQueues;
 };
 
 NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
+
+BackgroundEventTarget::BackgroundEventTarget()
+    : mMutex("BackgroundEventTarget::mMutex")
+{}
 
 nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
@@ -118,11 +131,29 @@ BackgroundEventTarget::IsOnCurrentThread(bool* aValue) {
 NS_IMETHODIMP
 BackgroundEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                 uint32_t aFlags) {
+  // We need to be careful here, because if an event is getting dispatched here
+  // from within TaskQueue::Runner::Run, it will be dispatched with
+  // NS_DISPATCH_AT_END, but we might not be running the event on the same
+  // pool, depending on which pool we were on and the dispatch flags.  If we
+  // dispatch an event with NS_DISPATCH_AT_END to the wrong pool, the pool
+  // may not process the event in a timely fashion, which can lead to deadlock.
   uint32_t flags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
-  if (aFlags & NS_DISPATCH_EVENT_MAY_BLOCK) {
-    return mIOPool->Dispatch(std::move(aRunnable), flags);
+  bool mayBlock = bool(aFlags & NS_DISPATCH_EVENT_MAY_BLOCK);
+  nsCOMPtr<nsIThreadPool>& pool = mayBlock ? mIOPool : mPool;
+
+  // If we're already running on the pool we want to dispatch to, we can
+  // unconditionally add NS_DISPATCH_AT_END to indicate that we shouldn't spin
+  // up a new thread.
+  //
+  // Otherwise, we should remove NS_DISPATCH_AT_END so we don't run into issues
+  // like those in the above comment.
+  if (pool->IsOnCurrentThread()) {
+    flags |= NS_DISPATCH_AT_END;
+  } else {
+    flags &= ~NS_DISPATCH_AT_END;
   }
-  return mPool->Dispatch(std::move(aRunnable), flags);
+
+  return pool->Dispatch(std::move(aRunnable), flags);
 }
 
 NS_IMETHODIMP
@@ -139,10 +170,28 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult BackgroundEventTarget::Shutdown() {
+void BackgroundEventTarget::BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>& promises) {
+  for (auto& queue : mTaskQueues) {
+    promises.AppendElement(queue->BeginShutdown());
+  }
+}
+
+void BackgroundEventTarget::FinishShutdown() {
   mPool->Shutdown();
   mIOPool->Shutdown();
-  return NS_OK;
+}
+
+already_AddRefed<nsISerialEventTarget> BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
+  MutexAutoLock lock(mMutex);
+
+  RefPtr<TaskQueue> queue = new TaskQueue(do_AddRef(this), aName,
+                                          /*aSupportsTailDispatch=*/ false,
+                                          /*aRetainFlags=*/ true);
+  nsCOMPtr<nsISerialEventTarget> target(queue->WrapAsEventTarget());
+
+  mTaskQueues.AppendElement(queue.forget());
+
+  return target.forget();
 }
 
 extern "C" {
@@ -294,6 +343,8 @@ void nsThreadManager::InitializeShutdownObserver() {
 nsThreadManager::nsThreadManager()
     : mCurThreadIndex(0), mMainPRThread(nullptr), mInitialized(false) {}
 
+nsThreadManager::~nsThreadManager() = default;
+
 nsresult nsThreadManager::Init() {
   // Child processes need to initialize the thread manager before they
   // initialize XPCOM in order to set up the crash reporter. This leads to
@@ -363,7 +414,33 @@ void nsThreadManager::Shutdown() {
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
 
-  static_cast<BackgroundEventTarget*>(mBackgroundEventTarget.get())->Shutdown();
+  typedef typename ShutdownPromise::AllPromiseType AllPromise;
+  typename AllPromise::ResolveOrRejectValue val;
+  using ResolveValueT = typename AllPromise::ResolveValueType;
+  using RejectValueT = typename AllPromise::RejectValueType;
+
+  nsTArray<RefPtr<ShutdownPromise>> promises;
+  mBackgroundEventTarget->BeginShutdown(promises);
+
+  RefPtr<AllPromise> complete = ShutdownPromise::All(mMainThread, promises);
+
+  bool taskQueuesShutdown = false;
+
+  complete->Then(mMainThread, __func__,
+                 [&](const ResolveValueT& aResolveValue) {
+                   mBackgroundEventTarget->FinishShutdown();
+                   taskQueuesShutdown = true;
+                 },
+                 [&](RejectValueT aRejectValue) {
+                   mBackgroundEventTarget->FinishShutdown();
+                   taskQueuesShutdown = true;
+                 });
+
+  // Wait for task queues to shutdown, so we don't shut down the underlying threads
+  // of the background event target in the block below, thereby preventing the task
+  // queues from emptying, preventing the shutdown promises from resolving, and
+  // prevent anything checking `taskQueuesShutdown` from working.
+  ::SpinEventLoopUntil([&]() { return taskQueuesShutdown; }, mMainThread);
 
   {
     // We gather the threads from the hashtable into a list, so that we avoid
@@ -473,6 +550,14 @@ nsresult nsThreadManager::DispatchToBackgroundThread(nsIRunnable* aEvent,
 
   nsCOMPtr<nsIEventTarget> backgroundTarget(mBackgroundEventTarget);
   return backgroundTarget->Dispatch(aEvent, aDispatchFlags);
+}
+
+already_AddRefed<nsISerialEventTarget> nsThreadManager::CreateBackgroundTaskQueue(const char* aName) {
+  if (!mInitialized) {
+    return nullptr;
+  }
+
+  return mBackgroundEventTarget->CreateBackgroundTaskQueue(aName);
 }
 
 nsThread* nsThreadManager::GetCurrentThread() {
