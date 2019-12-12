@@ -128,3 +128,27 @@ To send special keys, one must send the respective key's codepoint. Since this u
 For example, to send the tab key you would send "\uE004".
 
 [activation]: https://html.spec.whatwg.org/multipage/interaction.html#activation
+
+### set_permission
+
+Usage: `test-driver.set_permission(descriptor, state, one_realm)`
+ * _descriptor_: a
+   [PermissionDescriptor](https://w3c.github.io/permissions/#dictdef-permissiondescriptor)
+   or derived object
+ * _state_: a
+   [PermissionState](https://w3c.github.io/permissions/#enumdef-permissionstate)
+   value
+ * _one_realm_: a boolean that indicates whether the permission settings
+   apply to only one realm
+
+This function causes permission requests and queries for the status of a
+certain permission type (e.g. "push", or "background-fetch") to always
+return _state_. It returns a Promise that resolves after the permission has
+been set to be overridden with _state_.
+
+Example:
+
+``` js
+await test_driver.set_permission({ name: "background-fetch" }, "denied");
+await test_driver.set_permission({ name: "push", userVisibleOnly: true }, "granted", true);
+```
