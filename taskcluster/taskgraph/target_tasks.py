@@ -853,3 +853,13 @@ def target_tasks_condprof(full_task_graph, parameters, graph_config):
     for name, task in full_task_graph.tasks.iteritems():
         if task.kind == "condprof":
             yield name
+
+
+@_target_task('system-symbols')
+def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
+    """
+    Select tasks for uploading system-symbols.
+    """
+    for name, task in full_task_graph.tasks.iteritems():
+        if task.kind == "system-symbols-upload":
+            yield name
