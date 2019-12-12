@@ -47,7 +47,6 @@ function test()
       if (testval != expect) {
         break;
       }
-      print('uneval: ' + uneval(fun));
       var declsrc = '(' +
         src.slice(1, -1).replace('function f', 'function f' + i) + ')';
       print('declsrc: ' + declsrc);
