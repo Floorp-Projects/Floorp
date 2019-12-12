@@ -20,8 +20,8 @@ loader.lazyImporter(
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
-  "BrowserModule",
-  "devtools/client/performance-new/browser"
+  "RecordingUtils",
+  "devtools/shared/performance-new/recording-utils"
 );
 
 // Some platforms are built without the Gecko Profiler.
@@ -101,7 +101,7 @@ class ActorReadyGeckoProfilerInterface {
         "leaf",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
-      activeBrowsingContextID: BrowserModule.getActiveBrowsingContextID(),
+      activeBrowsingContextID: RecordingUtils.getActiveBrowsingContextID(),
     };
 
     try {
