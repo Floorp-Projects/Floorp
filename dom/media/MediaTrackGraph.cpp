@@ -2417,11 +2417,14 @@ static void MoveToSegment(SourceMediaTrack* aTrack, MediaSegment* aIn,
   MOZ_ASSERT(aDesiredUpToTime >= aCurrentTime);
   if (aIn->GetType() == MediaSegment::AUDIO) {
     AudioSegment* in = static_cast<AudioSegment*>(aIn);
+    AudioSegment* out = static_cast<AudioSegment*>(aOut);
     TrackTime desiredDurationToMove = aDesiredUpToTime - aCurrentTime;
     TrackTime end = std::min(in->GetDuration(), desiredDurationToMove);
 
-    aOut->AppendSlice(*in, 0, end);
+    out->AppendSlice(*in, 0, end);
     in->RemoveLeading(end);
+
+    out->ApplyVolume(aTrack->GetVolumeLocked());
   } else {
     VideoSegment* in = static_cast<VideoSegment*>(aIn);
     VideoSegment* out = static_cast<VideoSegment*>(aOut);
@@ -2707,6 +2710,16 @@ void SourceMediaTrack::RemoveAllDirectListenersImpl() {
     l->NotifyDirectListenerUninstalled();
   }
   mDirectTrackListeners.Clear();
+}
+
+void SourceMediaTrack::SetVolume(float aVolume) {
+  MutexAutoLock lock(mMutex);
+  mVolume = aVolume;
+}
+
+float SourceMediaTrack::GetVolumeLocked() {
+  mMutex.AssertCurrentThreadOwns();
+  return mVolume;
 }
 
 SourceMediaTrack::~SourceMediaTrack() {}

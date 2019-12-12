@@ -492,6 +492,9 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
     mVideoEndedPromise = mData->mVideoEndedPromise;
     mOutputListener = mData->OnOutput().Connect(mOwnerThread, this,
                                                 &DecodedStream::NotifyOutput);
+    if (mData->mAudioTrack) {
+      mData->mAudioTrack->SetVolume(static_cast<float>(mVolume));
+    }
     SendData();
   }
   return NS_OK;
@@ -560,6 +563,9 @@ void DecodedStream::SetPlaying(bool aPlaying) {
 void DecodedStream::SetVolume(double aVolume) {
   AssertOwnerThread();
   mVolume = aVolume;
+  if (mData && mData->mAudioTrack) {
+    mData->mAudioTrack->SetVolume(static_cast<float>(aVolume));
+  }
 }
 
 void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
@@ -650,8 +656,6 @@ void DecodedStream::SendAudio(double aVolume,
     SendStreamAudio(mData.get(), mStartTime.ref(), audio[i], &output, rate,
                     aPrincipalHandle);
   }
-
-  output.ApplyVolume(aVolume);
 
   // |mNextAudioTime| is updated as we process each audio sample in
   // SendStreamAudio().
