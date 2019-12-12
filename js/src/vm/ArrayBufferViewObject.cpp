@@ -62,16 +62,6 @@ void ArrayBufferViewObject::notifyBufferDetached() {
   setPrivate(nullptr);
 }
 
-uint8_t* ArrayBufferViewObject::dataPointerUnshared(
-    const JS::AutoRequireNoGC& nogc) {
-  return static_cast<uint8_t*>(dataPointerUnshared());
-}
-
-void ArrayBufferViewObject::setDataPointerUnshared(uint8_t* data) {
-  MOZ_ASSERT(!isSharedMemory());
-  setPrivate(data);
-}
-
 /* static */
 ArrayBufferObjectMaybeShared* ArrayBufferViewObject::bufferObject(
     JSContext* cx, Handle<ArrayBufferViewObject*> thisObject) {
