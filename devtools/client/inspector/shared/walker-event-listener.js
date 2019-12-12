@@ -41,11 +41,10 @@ class WalkerEventListener {
     const targets = this._inspector.toolbox.targetList.getAllTargets(
       this._inspector.toolbox.targetList.TYPES.FRAME
     );
-    for (const target of targets) {
-      this._onTargetDestroyed(
-        this._inspector.toolbox.targetList.TYPES.FRAME,
-        target
-      );
+    for (const targetFront of targets) {
+      this._onTargetDestroyed({
+        targetFront,
+      });
     }
 
     this._inspector = null;
@@ -60,7 +59,7 @@ class WalkerEventListener {
     );
   }
 
-  async _onTargetAvailable(type, targetFront, isTopLevel) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     const inspectorFront = await targetFront.getFront("inspector");
     const { walker } = inspectorFront;
     for (const [name, listener] of Object.entries(this._listenerMap)) {
@@ -68,7 +67,7 @@ class WalkerEventListener {
     }
   }
 
-  _onTargetDestroyed(type, targetFront, isTopLevel) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     const inspectorFront = targetFront.getCachedFront("inspector");
     if (inspectorFront) {
       const { walker } = inspectorFront;

@@ -249,7 +249,7 @@ Inspector.prototype = {
     return this._deferredOpen();
   },
 
-  async _onTargetAvailable(type, targetFront, isTopLevel) {
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
     // Ignore all targets but the top level one
     if (!isTopLevel) {
       return;
@@ -283,7 +283,7 @@ Inspector.prototype = {
     }
   },
 
-  _onTargetDestroyed(type, targetFront, isTopLevel) {
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     // Ignore all targets but the top level one
     if (!isTopLevel) {
       return;
