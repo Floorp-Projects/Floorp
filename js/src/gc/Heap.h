@@ -33,13 +33,6 @@ class StoreBuffer;
 class TenuredCell;
 struct Chunk;
 
-/*
- * This flag allows an allocation site to request a specific heap based upon the
- * estimated lifetime or lifetime requirements of objects allocated from that
- * site.
- */
-enum InitialHeap : uint8_t { DefaultHeap, TenuredHeap };
-
 // Cells are aligned to CellAlignShift, so the largest tagged null pointer is:
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;
 

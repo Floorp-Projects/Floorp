@@ -14,7 +14,6 @@
 #include <stddef.h>
 
 #include "gc/DeletePolicy.h"
-#include "gc/Heap.h"
 #include "gc/Policy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"

@@ -15,7 +15,6 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
-#include "gc/Heap.h"
 #include "js/Debug.h"
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
 #include "js/PropertySpec.h"

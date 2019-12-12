@@ -17,7 +17,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
-#include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
 #include "js/AllocPolicy.h"

@@ -9,7 +9,6 @@
 
 #include "gc/GCLock.h"
 #include "gc/GCRuntime.h"
-#include "gc/Heap.h"
 
 #include "jsapi-tests/tests.h"
 

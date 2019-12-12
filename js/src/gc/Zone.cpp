@@ -7,6 +7,7 @@
 #include "gc/Zone-inl.h"
 
 #include "gc/FreeOp.h"
+#include "gc/GCLock.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineIC.h"

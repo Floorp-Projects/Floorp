@@ -7,13 +7,27 @@
 #ifndef gc_Allocator_h
 #define gc_Allocator_h
 
-#include "gc/GCLock.h"
-#include "gc/Heap.h"
+#include <stdint.h>
+
+#include "gc/AllocKind.h"
 #include "js/RootingAPI.h"
 
 class JSFatInlineString;
 
 namespace js {
+
+enum AllowGC { NoGC = 0, CanGC = 1 };
+
+namespace gc {
+
+/*
+ * This flag allows an allocation site to request a specific heap based upon the
+ * estimated lifetime or lifetime requirements of objects allocated from that
+ * site.
+ */
+enum InitialHeap : uint8_t { DefaultHeap, TenuredHeap };
+
+}  // namespace gc
 
 // Allocate a new GC thing that's not a JSObject or a string.
 //

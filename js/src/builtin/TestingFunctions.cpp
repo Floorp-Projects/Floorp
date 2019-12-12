@@ -40,7 +40,7 @@
 #  include "irregexp/RegExpEngine.h"
 #  include "irregexp/RegExpParser.h"
 #endif
-#include "gc/Heap.h"
+#include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
