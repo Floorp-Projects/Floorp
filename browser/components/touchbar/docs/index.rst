@@ -101,12 +101,6 @@ Clarification on some of these properties is warranted.
   ``kInputTypes.POPOVER``, any input type except another ``kInputTypes.POPOVER``
   can be used.
 
-A final property, ``context``, is also accepted. ``context`` is a function that
-returns a string. The returned string should be the name of a key in
-``kBuiltInInputs``. ``context`` is a useful property if you want to show one
-input in the Touch Bar in one context, and another input in a different context.
-An example of its use follows below.
-
 .. _in that file: https://searchfox.org/mozilla-central/rev/ebe492edacc75bb122a2b380e4cafcca3470864c/browser/components/touchbar/MacTouchBar.js#82
 
 Input types
@@ -180,43 +174,6 @@ A simple button
 
   A button is defined with a title, icon, type, and a callback. The callback
   simply calls the XUL command to go back.
-
-Using ``context``
-  In this example, two main buttons are defined. One focuses the address bar
-  and the other closes the current window. The OpenLocationOrClosePrivateWindow
-  object uses the ``context`` property to display the former in Normal
-  Browsing Mode and the latter in Private Browsing Mode. Note also that
-  ClosePrivateWindow uses ``image`` and ``color`` to be consistent with
-  PBM styling. By including OpenLocationOrClosePrivateWindow as a default input
-  in ``nsTouchBar.mm``, the user can be shown a different Touch Bar depending on
-  whether they are in Normal or Private Browsing Mode.
-
-  .. highlight:: JavaScript
-  .. code::
-
-    OpenLocation: {
-      title: "open-location",
-      image: "chrome://browser/skin/search-glass.svg",
-      type: kInputTypes.MAIN_BUTTON,
-      callback: () => execCommand("Browser:OpenLocation", "OpenLocation"),
-    },
-    ClosePrivateWindow: {
-      title: "close-private-window",
-      image: "hrome://browser/skin/privateBrowsing.svg",
-      type: kInputTypes.MAIN_BUTTON,
-      callback: () => execCommand("cmd_closeWindow", "ClosePrivateWindow"),
-      color: "#8000D7",
-    },
-    OpenLocationOrClosePrivateWindow: {
-      // This is just a forwarder to other inputs.
-      context: () => {
-        if (PrivateBrowsingUtils.isWindowPrivate(BrowserWindowTracker.getTopWindow())) {
-          return "ClosePrivateWindow";
-        } else {
-          return "OpenLocation";
-        }
-      },
-    },
 
 The search popover
   This is the input that occupies the Touch Bar when the address bar is focused.
