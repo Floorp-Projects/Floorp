@@ -463,24 +463,6 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "chardetng"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
- "memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "chardetng_c"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "chardetng 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "encoding_rs 0.8.20 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1475,7 +1457,6 @@ dependencies = [
  "bitsdownload 0.1.0",
  "bookmark_sync 0.1.0",
  "cert_storage 0.0.1",
- "chardetng_c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-coreaudio 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=5fcbd99e1b7356be1efcdc41654d495bd4c71c8c)",
  "cubeb-pulse 0.3.0 (git+https://github.com/djg/cubeb-pulse-rs?rev=8069f8f4189982e0b38fa6dc8993dd4fab41f728)",
@@ -4757,8 +4738,6 @@ dependencies = [
 "checksum cc 1.0.47 (registry+https://github.com/rust-lang/crates.io-index)" = "aa87058dce70a3ff5621797f1506cb837edd02ac4c0ae642b4542dce802908b8"
 "checksum cexpr 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8fc0086be9ca82f7fc89fc873435531cb898b86e850005850de1f820e2db6e9b"
 "checksum cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "082bb9b28e00d3c9d39cc03e64ce4cea0f1bb9b3fde493f0cbc008472d22bdf4"
-"checksum chardetng 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "19200261d1f12430abce7cafdafbf53ac92c502fbad8d015174883905d87a3bc"
-"checksum chardetng_c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0458f9fd705d9040356a137c5872a0f9ce1d27222d69de6aeeecf00e5e520076"
 "checksum chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "45912881121cb26fad7c38c17ba7daa18764771836b34fab7d3fbd93ed633878"
 "checksum clang-sys 0.28.1 (registry+https://github.com/rust-lang/crates.io-index)" = "81de550971c976f176130da4b2978d3b524eaa0fd9ac31f3ceb5ae1231fb4853"
 "checksum clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f0f16b89cbb9ee36d87483dc939fe9f1e13c05898d56d7b230a0d4dff033a536"
