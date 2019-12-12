@@ -173,16 +173,15 @@ class SweepMarkTask : public GCParallelTaskHelper<SweepMarkTask> {
 
 template <typename F>
 struct Callback {
-  MainThreadOrGCTaskData<F> op;
-  MainThreadOrGCTaskData<void*> data;
+  F op;
+  void* data;
 
   Callback() : op(nullptr), data(nullptr) {}
   Callback(F op, void* data) : op(op), data(data) {}
 };
 
 template <typename F>
-using CallbackVector =
-    MainThreadData<Vector<Callback<F>, 4, SystemAllocPolicy>>;
+using CallbackVector = Vector<Callback<F>, 4, SystemAllocPolicy>;
 
 template <typename T, typename Iter0, typename Iter1>
 class ChainedIter {
@@ -1059,14 +1058,16 @@ class GCRuntime {
 
   MainThreadData<uint32_t> gcCallbackDepth;
 
-  Callback<JSGCCallback> gcCallback;
-  Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;
-  Callback<JSObjectsTenuredCallback> tenuredCallback;
-  CallbackVector<JSFinalizeCallback> finalizeCallbacks;
-  Callback<JSHostCleanupFinalizationGroupCallback>
+  MainThreadData<Callback<JSGCCallback>> gcCallback;
+  MainThreadData<Callback<JS::DoCycleCollectionCallback>>
+      gcDoCycleCollectionCallback;
+  MainThreadData<Callback<JSObjectsTenuredCallback>> tenuredCallback;
+  MainThreadData<CallbackVector<JSFinalizeCallback>> finalizeCallbacks;
+  MainThreadOrGCTaskData<Callback<JSHostCleanupFinalizationGroupCallback>>
       hostCleanupFinalizationGroupCallback;
-  CallbackVector<JSWeakPointerZonesCallback> updateWeakPointerZonesCallbacks;
-  CallbackVector<JSWeakPointerCompartmentCallback>
+  MainThreadData<CallbackVector<JSWeakPointerZonesCallback>>
+      updateWeakPointerZonesCallbacks;
+  MainThreadData<CallbackVector<JSWeakPointerCompartmentCallback>>
       updateWeakPointerCompartmentCallbacks;
 
   /*
@@ -1075,8 +1076,8 @@ class GCRuntime {
    * roots. The black/gray distinction is only relevant to the cycle
    * collector.
    */
-  CallbackVector<JSTraceDataOp> blackRootTracers;
-  Callback<JSTraceDataOp> grayRootTracer;
+  MainThreadData<CallbackVector<JSTraceDataOp>> blackRootTracers;
+  MainThreadOrGCTaskData<Callback<JSTraceDataOp>> grayRootTracer;
 
   /* Always preserve JIT code during GCs, for testing. */
   MainThreadData<bool> alwaysPreserveCode;
