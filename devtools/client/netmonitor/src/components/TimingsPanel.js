@@ -106,9 +106,14 @@ class TimingsPanel extends Component {
     }
 
     const { timings, offsets } = eventTimings;
-    const queuedAt = startedMs - firstRequestStartedMs;
-    const startedAt = queuedAt + timings.blocked;
-    const downloadedAt = queuedAt + totalTime;
+    let queuedAt, startedAt, downloadedAt;
+    const isFirstRequestStartedAvailable = firstRequestStartedMs !== null;
+
+    if (isFirstRequestStartedAvailable) {
+      queuedAt = startedMs - firstRequestStartedMs;
+      startedAt = queuedAt + timings.blocked;
+      downloadedAt = queuedAt + totalTime;
+    }
 
     const timelines = TIMING_KEYS.map((type, idx) => {
       // Determine the relative offset for each timings box. For example, the
@@ -159,30 +164,31 @@ class TimingsPanel extends Component {
 
     return div(
       { className: "panel-container" },
-      div(
-        { className: "timings-overview" },
-        span(
-          { className: "timings-overview-item" },
-          L10N.getFormatStr(
-            "netmonitor.timings.queuedAt",
-            getFormattedTime(queuedAt)
+      isFirstRequestStartedAvailable &&
+        div(
+          { className: "timings-overview" },
+          span(
+            { className: "timings-overview-item" },
+            L10N.getFormatStr(
+              "netmonitor.timings.queuedAt",
+              getFormattedTime(queuedAt)
+            )
+          ),
+          span(
+            { className: "timings-overview-item" },
+            L10N.getFormatStr(
+              "netmonitor.timings.startedAt",
+              getFormattedTime(startedAt)
+            )
+          ),
+          span(
+            { className: "timings-overview-item" },
+            L10N.getFormatStr(
+              "netmonitor.timings.downloadedAt",
+              getFormattedTime(downloadedAt)
+            )
           )
         ),
-        span(
-          { className: "timings-overview-item" },
-          L10N.getFormatStr(
-            "netmonitor.timings.startedAt",
-            getFormattedTime(startedAt)
-          )
-        ),
-        span(
-          { className: "timings-overview-item" },
-          L10N.getFormatStr(
-            "netmonitor.timings.downloadedAt",
-            getFormattedTime(downloadedAt)
-          )
-        )
-      ),
       div(
         { className: "label-separator" },
         L10N.getStr("netmonitor.timings.requestTiming")
@@ -198,5 +204,5 @@ class TimingsPanel extends Component {
 }
 
 module.exports = connect(state => ({
-  firstRequestStartedMs: state.requests.firstStartedMs,
+  firstRequestStartedMs: state.requests ? state.requests.firstStartedMs : null,
 }))(TimingsPanel);
