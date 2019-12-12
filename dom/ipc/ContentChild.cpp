@@ -104,6 +104,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/UnderrunHandler.h"
 #include "mozilla/net/HttpChannelChild.h"
+#include "nsFocusManager.h"
 #include "nsQueryObject.h"
 #include "imgLoader.h"
 #include "GMPServiceChild.h"
@@ -112,6 +113,7 @@
 #include "audio_thread_priority.h"
 #include "nsIConsoleService.h"
 #include "audio_thread_priority.h"
+#include "nsIURIMutator.h"
 
 #if !defined(XP_WIN)
 #  include "mozilla/Omnijar.h"
@@ -4148,6 +4150,82 @@ mozilla::ipc::IPCResult ContentChild::RecvScriptError(
   rv = consoleService->LogMessage(scriptError);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to log script error"));
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
+    BrowsingContext* aContext, nsDocShellLoadState* aLoadState,
+    bool aSetNavigating) {
+  aContext->LoadURI(nullptr, aLoadState, aSetNavigating);
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
+  BrowserChild* bc = BrowserChild::GetFrom(window);
+  if (bc) {
+    bc->NotifyNavigationFinished();
+  }
+
+#ifdef MOZ_CRASHREPORTER
+  if (CrashReporter::GetEnabled()) {
+    nsCOMPtr<nsIURI> annotationURI;
+
+    nsresult rv = NS_MutateURI(aLoadState->URI())
+                      .SetUserPass(EmptyCString())
+                      .Finalize(annotationURI);
+
+    if (NS_FAILED(rv)) {
+      // Ignore failures on about: URIs.
+      annotationURI = aLoadState->URI();
+    }
+
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL,
+                                       annotationURI->GetSpecOrDefault());
+  }
+#endif
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
+    BrowsingContext* aContext, nsDocShellLoadState* aLoadState,
+    bool aTakeFocus) {
+  aContext->InternalLoad(nullptr, aLoadState, nullptr, nullptr);
+
+  if (aTakeFocus) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> domWin = aContext->GetDOMWindow()) {
+      nsFocusManager::FocusWindow(domWin);
+    }
+  }
+
+#ifdef MOZ_CRASHREPORTER
+  if (CrashReporter::GetEnabled()) {
+    nsCOMPtr<nsIURI> annotationURI;
+
+    nsresult rv = NS_MutateURI(aLoadState->URI())
+                      .SetUserPass(EmptyCString())
+                      .Finalize(annotationURI);
+
+    if (NS_FAILED(rv)) {
+      // Ignore failures on about: URIs.
+      annotationURI = aLoadState->URI();
+    }
+
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL,
+                                       annotationURI->GetSpecOrDefault());
+  }
+#endif
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDisplayLoadError(
+    BrowsingContext* aContext, const nsAString& aURI) {
+  aContext->DisplayLoadError(aURI);
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
+  BrowserChild* bc = BrowserChild::GetFrom(window);
+  if (bc) {
+    bc->NotifyNavigationFinished();
+  }
   return IPC_OK();
 }
 
