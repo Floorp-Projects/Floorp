@@ -69,7 +69,8 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
   static uint32_t SecurityHashURI(nsIURI* aURI);
 
   static nsresult ReportError(const char* aMessageTag, nsIURI* aSource,
-                              nsIURI* aTarget, bool aFromPrivateWindow);
+                              nsIURI* aTarget, bool aFromPrivateWindow,
+                              uint64_t aInnerWindowID = 0);
 
   static bool GetStrictFileOriginPolicy() { return sStrictFileOriginPolicy; }
 
