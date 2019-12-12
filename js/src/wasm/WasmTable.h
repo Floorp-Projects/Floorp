@@ -71,6 +71,17 @@ class Table : public ShareableBase<Table> {
   void trace(JSTracer* trc);
 
   TableKind kind() const { return kind_; }
+  TableRepr repr() const {
+    switch (kind()) {
+      case TableKind::AnyRef:
+      case TableKind::NullRef:
+        return TableRepr::Ref;
+      case TableKind::FuncRef:
+      case TableKind::AsmJS:
+        return TableRepr::Func;
+    }
+  }
+
   bool isFunction() const {
     return kind_ == TableKind::FuncRef || kind_ == TableKind::AsmJS;
   }
