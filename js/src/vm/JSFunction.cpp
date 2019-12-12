@@ -770,11 +770,17 @@ inline void JSFunction::trace(JSTracer* trc) {
     } else if (hasScript()) {
       JSScript* script = static_cast<JSScript*>(u.scripted.s.script_);
       TraceManuallyBarrieredEdge(trc, &script, "script");
-      u.scripted.s.script_ = script;
+      // Self-hosted scripts are shared with workers but are never
+      // relocated. Skip unnecessary writes to prevent the possible data race.
+      if (u.scripted.s.script_ != script) {
+        u.scripted.s.script_ = script;
+      }
     } else if (hasLazyScript()) {
       LazyScript* lazy = static_cast<LazyScript*>(u.scripted.s.script_);
       TraceManuallyBarrieredEdge(trc, &lazy, "lazy");
-      u.scripted.s.script_ = lazy;
+      if (u.scripted.s.script_ != lazy) {
+        u.scripted.s.script_ = lazy;
+      }
     }
     // NOTE: The u.scripted.s.selfHostedLazy_ does not point to GC things.
 
