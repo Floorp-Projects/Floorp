@@ -70,6 +70,9 @@ interface nsIWebBrowserChrome : nsISupports
     // Whether this window should use out-of-process cross-origin subframes.
     const unsigned long CHROME_FISSION_WINDOW         = 0x00200000;
 
+    // This is a GeckoView window
+    const unsigned long CHROME_GECKOVIEW              = 0x00400000;
+
     // Prevents new window animations on MacOS and Windows. Currently
     // ignored for Linux.
     const unsigned long CHROME_SUPPRESS_ANIMATION     = 0x01000000;
