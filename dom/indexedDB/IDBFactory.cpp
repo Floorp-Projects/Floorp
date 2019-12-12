@@ -395,10 +395,6 @@ void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || (mActiveTransactionCount + aDelta) <
                                           mActiveTransactionCount);
   mActiveTransactionCount += aDelta;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (window) {
-    window->UpdateActiveIndexedDBTransactionCount(aDelta);
-  }
 }
 
 void IDBFactory::UpdateActiveDatabaseCount(int32_t aDelta) {

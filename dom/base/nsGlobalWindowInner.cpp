@@ -2465,15 +2465,6 @@ void nsPIDOMWindowInner::TryToCacheTopInnerWindow() {
   }
 }
 
-void nsPIDOMWindowInner::UpdateActiveIndexedDBTransactionCount(int32_t aDelta) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (aDelta == 0) {
-    return;
-  }
-
-  TabGroup()->IndexedDBTransactionCounter() += aDelta;
-}
 
 void nsPIDOMWindowInner::UpdateActiveIndexedDBDatabaseCount(int32_t aDelta) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2489,8 +2480,6 @@ void nsPIDOMWindowInner::UpdateActiveIndexedDBDatabaseCount(int32_t aDelta) {
                           : mNumOfIndexedDBDatabases;
 
   counter += aDelta;
-
-  TabGroup()->IndexedDBDatabaseCounter() += aDelta;
 }
 
 bool nsPIDOMWindowInner::HasActiveIndexedDBDatabases() {
