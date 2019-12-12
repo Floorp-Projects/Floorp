@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1575663903042">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1576068160484">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3209,6 +3209,38 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="235d9439-305c-48db-a6da-5a8639ab9c80" id="/^((xh5yh45p59fdrtimlot6@xh5yh45p59fdrtimlot6\.com)|(758ct3wkmbrvd8equs21@758ct3wkmbrvd8equs21\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1af528d2-d0e1-4981-acfa-3b10501aed34" id="/^((\{87dd9a06-b692-4fa0-91c4-0aead43c25cc\})|(\{9082269e-1de7-4d34-9736-1174917f9459\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="eac7bf16-aae5-4958-8b85-5dcc9a3a1ce8" id="/^((\{e1d407bc-1986-4577-bc31-a63d07cbae10\})|(\{3a2831f6-37df-4a42-baf6-0b81d5b6a68f\})|(s3google@translator))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="aa154bb5-7fc9-4226-928e-199aa7eded69" id="/^((photoplus@4329fgjfdgkf343\.com)|(\{1b1c9b32-9dd3-461c-85c6-bbac4ef2af10\})|(\{7DC6D86C-EA66-48C3-9BA7-AE26A8ECB175\})|(david\.janitzek@gmail\.com)|(\{ac393d9e-1610-4eaa-8951-77655f98b4f7\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="4438f49a-2f78-48d9-bc7e-a897f3f62945" id="@cloaking-skull">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="810f4d41-368a-4cfc-8513-81063587b97c" id="{7bb202fa-9247-49c6-898c-ce0d36bc44e3}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="fd42cd0b-a72a-4a0f-9a6a-965ee2f29cb6" id="/^((\{108dfe62-0473-47cd-b33e-8270d062db77\})|(\{e4a4e54a-5d49-4ac3-93d7-ec0d30ad06ef\})|(\{ccad95df-add6-4d8a-aa5c-cdc484075bad\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="8c92ab3a-9c31-4f75-b980-19e39b702fd8" id="{d69204d4-610c-4144-9d26-8cf8b2ad6e14}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="c3774104-d770-48a5-acd7-c7136d62bb40" id="{d69204d4-610c-4144-9d26-8cf8b2ad6e15}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
