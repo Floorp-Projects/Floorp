@@ -1891,6 +1891,9 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
   chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nullptr)
                      ? nsIWebBrowserChrome::CHROME_DEPENDENT
                      : 0;
+  chromeFlags |= WinHasOption(aFeatures, "geckoview", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_GECKOVIEW
+                     : 0;
   chromeFlags |= WinHasOption(aFeatures, "modal", 0, nullptr)
                      ? (nsIWebBrowserChrome::CHROME_MODAL |
                         nsIWebBrowserChrome::CHROME_DEPENDENT)
