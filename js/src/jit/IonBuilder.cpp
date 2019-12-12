@@ -1717,7 +1717,9 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
     }
   }
 
-  return Ok();
+  // The iloop above never breaks, so this point is unreachable.  Don't add code
+  // here, or you'll trigger compile errors about unreachable code with some
+  // compilers!
 }
 
 AbortReasonOr<Ok> IonBuilder::startTraversingBlock(MBasicBlock* block) {
