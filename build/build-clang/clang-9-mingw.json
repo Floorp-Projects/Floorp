@@ -1,0 +1,13 @@
+{
+    "stages": "3",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "{MOZ_FETCHES_DIR}/gcc",
+    "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
+    "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "patches": [
+    ]
+}
