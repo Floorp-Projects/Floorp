@@ -122,9 +122,9 @@ $wrapper-max-width-widest: $grid-unit * 8 + $base-gutter * 7 + $section-horizont
 $scrollbar-width: 16px;
 
 // Breakpoints
-$break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width;
-$break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width;
-$break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width;
+$break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width; // 610px
+$break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width; // 866px
+$break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width; // 1122px
 
 $section-title-font-size: 13px;
 

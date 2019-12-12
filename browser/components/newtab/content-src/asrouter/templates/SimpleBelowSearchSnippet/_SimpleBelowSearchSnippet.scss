@@ -8,18 +8,6 @@
     min-height: 60px;
     background-color: transparent;
 
-    // Add more padding if discovery stream is enabled.
-    .ds-outer-wrapper-breakpoint-override & {
-      padding: 0 50px;
-
-      @media (max-width: 865px) {
-
-        .buttonContainer {
-          margin: auto;
-        }
-      }
-    }
-
     .snippet-hover-wrapper {
       min-height: 60px;
       border-radius: 4px;
@@ -30,15 +18,6 @@
         .blockButton {
           display: block;
           opacity: 1;
-
-          // larger inset if discovery stream is enabled.
-          .ds-outer-wrapper-breakpoint-override & {
-            inset-inline-end: -8%;
-
-            @media (max-width: 865px) {
-              inset-inline-end: 2%;
-            }
-          }
         }
       }
     }
@@ -99,12 +78,6 @@
     @media (max-width: $break-point-medium - 1px) {
       margin: auto;
     }
-
-    // Disable breakpoints for now if discovery stream is enabled.
-    .ds-outer-wrapper-breakpoint-override & {
-      @include full-width-styles;
-      margin: auto;
-    }
   }
 
   .blockButton {
@@ -152,11 +125,6 @@
     @media (max-width: $break-point-medium) {
       margin: auto;
     }
-
-    // Disable breakpoints for now if discovery stream is enabled.
-    .ds-outer-wrapper-breakpoint-override & {
-      @include full-width-styles;
-    }
   }
 
   &.withButton {
@@ -180,15 +148,6 @@
       // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
       @media (max-width: $break-point-widest + 1px) {
         inset-inline-end: 2%;
-      }
-
-      .ds-outer-wrapper-breakpoint-override & {
-        inset-inline-end: -10%;
-        margin: auto;
-
-        @media (max-width: 865px) {
-          inset-inline-end: 2%;
-        }
       }
     }
 
@@ -227,11 +186,6 @@
     margin: 8px 0 0;
 
     @media (min-width: $break-point-medium) {
-      margin: 12px 0;
-    }
-
-    // Disable breakpoints for now if discovery stream is enabled.
-    .ds-outer-wrapper-breakpoint-override & {
       margin: 12px 0;
     }
 
