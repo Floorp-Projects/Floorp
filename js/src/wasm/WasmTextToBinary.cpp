@@ -2160,6 +2160,9 @@ WasmToken WasmTokenStream::next() {
       if (consume(u"nop")) {
         return WasmToken(WasmToken::Nop, begin, cur_);
       }
+      if (consume(u"nullref")) {
+        return WasmToken(WasmToken::ValueType, RefType::null(), begin, cur_);
+      }
       break;
 
     case 'o':
@@ -4721,9 +4724,13 @@ static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
       *tableKind = TableKind::AnyRef;
       return true;
     }
+    if (token.valueType() == RefType::null()) {
+      *tableKind = TableKind::NullRef;
+      return true;
+    }
 #endif
   }
-  c.ts.generateError(token, "'funcref' or 'anyref' required", c.error);
+  c.ts.generateError(token, "generic reference type required", c.error);
   return false;
 }
 
@@ -5038,13 +5045,18 @@ static bool TryParseElemType(WasmParseContext& c, bool* isFunc, ValType* ty) {
   }
 
   WasmToken token = c.ts.peek();
-  if (token.kind() == WasmToken::ValueType &&
-      (token.valueType() == RefType::func() ||
-       token.valueType() == RefType::any())) {
-    c.ts.get();
-    *isFunc = false;
-    *ty = token.valueType();
-    return true;
+  if (token.kind() == WasmToken::ValueType) {
+    switch (token.valueType().refTypeKind()) {
+      case RefType::Func:
+      case RefType::Any:
+      case RefType::Null:
+        c.ts.get();
+        *isFunc = false;
+        *ty = token.valueType();
+        return true;
+      case RefType::TypeIndex:
+        break;
+    }
   }
 
   return false;
@@ -5055,7 +5067,7 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
   // <init-expr> is any <expr> or (offset <const>).
   // <table-use> is (table <n>) or just <n> (an extension).
   // <fnref> is a naked function reference (index or name)
-  // <elem-type> is funcref or anyref
+  // <elem-type> is funcref or anyref or nullref
   //
   // Active initializer for table 0 which must be table-of-functions, this is
   // sugar:
@@ -6960,6 +6972,11 @@ static bool EncodeTableLimits(Encoder& e, const Limits& limits,
       break;
     case TableKind::AnyRef:
       if (!e.writeVarU32(uint32_t(TypeCode::AnyRef))) {
+        return false;
+      }
+      break;
+    case TableKind::NullRef:
+      if (!e.writeVarU32(uint32_t(TypeCode::NullRef))) {
         return false;
       }
       break;

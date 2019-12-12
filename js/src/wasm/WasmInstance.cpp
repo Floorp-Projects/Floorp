@@ -160,10 +160,11 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
                 UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)&argv[i])));
             break;
           case RefType::Any:
+          case RefType::Null:
             args[i].set(
                 UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
             break;
-          default:
+          case RefType::TypeIndex:
             MOZ_CRASH("temporarily unsupported Ref type in callImport");
         }
         break;
@@ -269,7 +270,11 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
             // dynamically in the callee.  Code in the stubs layer must box up
             // the FuncRef as a Value.
             break;
-          default:
+          case RefType::Null:
+            // Ditto NullRef.
+            break;
+          case RefType::TypeIndex:
+            // Guarded by temporarilyUnsupportedReftypeForExit()
             MOZ_CRASH("case guarded above");
         }
         break;
@@ -361,6 +366,23 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
   }
   static_assert(sizeof(argv[0]) >= sizeof(void*), "fits");
   *(void**)argv = result.get().forCompiledCode();
+  return true;
+}
+
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
+Instance::callImport_nullref(Instance* instance, int32_t funcImportIndex,
+                             int32_t argc, uint64_t* argv) {
+  JSContext* cx = TlsContext.get();
+  RootedValue rval(cx);
+  if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
+    return false;
+  }
+  if (!rval.isNull()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_NULL_REQUIRED);
+    return false;
+  }
+  *(void**)argv = nullptr;
   return true;
 }
 
@@ -853,15 +875,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  switch (table.kind()) {
-    case TableKind::AnyRef:
+  switch (table.repr()) {
+    case TableRepr::Ref:
       table.fillAnyRef(start, len, AnyRef::fromCompiledCode(value));
       break;
-    case TableKind::FuncRef:
+    case TableRepr::Func:
+      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
       table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
       break;
-    case TableKind::AsmJS:
-      MOZ_CRASH("not asm.js");
   }
 
   return 0;
@@ -878,7 +899,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  if (table.kind() == TableKind::AnyRef) {
+  if (table.repr() == TableRepr::Ref) {
     return table.getAnyRef(index).forCompiledCode();
   }
 
@@ -903,16 +924,15 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    switch (table.kind()) {
-      case TableKind::AnyRef:
+    switch (table.repr()) {
+      case TableRepr::Ref:
         table.fillAnyRef(oldSize, delta, ref);
         break;
-      case TableKind::FuncRef:
+      case TableRepr::Func:
+        MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
         table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
                           TlsContext.get());
         break;
-      case TableKind::AsmJS:
-        MOZ_CRASH("not asm.js");
     }
   }
 
@@ -930,16 +950,15 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  switch (table.kind()) {
-    case TableKind::AnyRef:
+  switch (table.repr()) {
+    case TableRepr::Ref:
       table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
       break;
-    case TableKind::FuncRef:
+    case TableRepr::Func:
+      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
       table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
                         TlsContext.get());
       break;
-    case TableKind::AsmJS:
-      MOZ_CRASH("not asm.js");
   }
 
   return 0;
@@ -1745,6 +1764,21 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
                          int(refs.length() - 1));
             break;
           }
+          case RefType::Null: {
+            if (!v.isNull()) {
+              JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                       JSMSG_WASM_NULL_REQUIRED);
+              return false;
+            }
+            // Store in rooted array until no more GC is possible.
+            ASSERT_ANYREF_IS_JSOBJECT;
+            if (!refs.emplaceBack(AnyRef::null().asJSObject())) {
+              return false;
+            }
+            DebugCodegen(DebugChannel::Function, "nullptr(#%d) ",
+                         int(refs.length() - 1));
+            break;
+          }
           case RefType::Any: {
             RootedAnyRef ar(cx, AnyRef::null());
             if (!BoxAnyRef(cx, v, &ar)) {
@@ -1759,7 +1793,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
                          int(refs.length() - 1));
             break;
           }
-          default: {
+          case RefType::TypeIndex: {
             MOZ_CRASH("temporarily unsupported Ref type in callExport");
           }
         }
@@ -1857,12 +1891,16 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
             DebugCodegen(DebugChannel::Function, "funcptr(%p)",
                          *(void**)retAddr);
             break;
+          case RefType::Null:
+            args.rval().setNull();
+            DebugCodegen(DebugChannel::Function, "null ");
+            break;
           case RefType::Any:
             args.rval().set(
                 UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
             DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
             break;
-          default:
+          case RefType::TypeIndex:
             MOZ_CRASH("temporarily unsupported Ref type in callExport");
         }
         break;

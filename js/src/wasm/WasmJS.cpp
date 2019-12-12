@@ -240,6 +240,15 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
           val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
           return true;
         }
+        case RefType::Null: {
+          if (!v.isNull()) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                     JSMSG_WASM_NULL_REQUIRED);
+            return false;
+          }
+          val.set(Val(RefType::null(), AnyRef::null()));
+          return true;
+        }
         case RefType::Any: {
           RootedAnyRef tmp(cx, AnyRef::null());
           if (!BoxAnyRef(cx, v, &tmp)) {
@@ -248,7 +257,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
           val.set(Val(RefType::any(), tmp));
           return true;
         }
-        default: {
+        case RefType::TypeIndex: {
           break;
         }
       }
@@ -288,9 +297,10 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
           out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
           return true;
         case RefType::Any:
+        case RefType::Null:
           out.set(UnboxAnyRef(val.ref()));
           return true;
-        default:
+        case RefType::TypeIndex:
           break;
       }
       break;
@@ -2239,13 +2249,16 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       StringEqualsLiteral(elementLinearStr, "funcref")) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (StringEqualsLiteral(elementLinearStr, "anyref")) {
+  } else if (StringEqualsLiteral(elementLinearStr, "anyref") ||
+             StringEqualsLiteral(elementLinearStr, "nullref")) {
     if (!HasReftypesSupport(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
     }
-    tableKind = TableKind::AnyRef;
+    tableKind = StringEqualsLiteral(elementLinearStr, "anyref")
+                    ? TableKind::AnyRef
+                    : TableKind::NullRef;
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
@@ -2326,8 +2339,9 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  switch (table.kind()) {
-    case TableKind::FuncRef: {
+  switch (table.repr()) {
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
       RootedFunction fun(cx);
       if (!table.getFuncRef(cx, index, &fun)) {
         return false;
@@ -2335,12 +2349,9 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
       args.rval().setObjectOrNull(fun);
       break;
     }
-    case TableKind::AnyRef: {
+    case TableRepr::Ref: {
       args.rval().set(UnboxAnyRef(table.getAnyRef(index)));
       break;
-    }
-    default: {
-      MOZ_CRASH("Unexpected table kind");
     }
   }
   return true;
@@ -2369,6 +2380,9 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
 
   RootedValue fillValue(cx, args[1]);
   switch (table.kind()) {
+    case TableKind::AsmJS: {
+      MOZ_CRASH("Should not happen");
+    }
     case TableKind::FuncRef: {
       RootedFunction fun(cx);
       if (!CheckFuncRefValue(cx, fillValue, &fun)) {
@@ -2379,6 +2393,16 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
       break;
     }
+    case TableKind::NullRef: {
+      if (!fillValue.isNull()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_NULL_REQUIRED);
+        return false;
+      }
+      RootedAnyRef tmp(cx, AnyRef::null());
+      table.fillAnyRef(index, 1, tmp);
+      break;
+    }
     case TableKind::AnyRef: {
       RootedAnyRef tmp(cx, AnyRef::null());
       if (!BoxAnyRef(cx, fillValue, &tmp)) {
@@ -2386,9 +2410,6 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       }
       table.fillAnyRef(index, 1, tmp);
       break;
-    }
-    default: {
-      MOZ_CRASH("Unexpected table kind");
     }
   }
 
@@ -2437,6 +2458,9 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   static_assert(MaxTableLength < UINT32_MAX, "Invariant");
 
   switch (table.kind()) {
+    case TableKind::AsmJS: {
+      MOZ_CRASH("asm.js not supported");
+    }
     case TableKind::FuncRef: {
       if (fillValue.isNull()) {
 #ifdef DEBUG
@@ -2469,8 +2493,19 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
       }
       break;
     }
-    default: {
-      MOZ_CRASH("Unexpected table kind");
+    case TableKind::NullRef: {
+      if (fillValue.isNull()) {
+#ifdef DEBUG
+        for (uint32_t index = oldLength; index < oldLength + delta; index++) {
+          MOZ_ASSERT(table.getAnyRef(index).isNull());
+        }
+#endif
+      } else {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_NULL_REQUIRED);
+        return false;
+      }
+      break;
     }
   }
 
@@ -2558,7 +2593,9 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
                                        "wasm reference-typed global");
           }
           break;
-        default:
+        case RefType::Null:
+          break;
+        case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
       break;
@@ -2626,7 +2663,9 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
                                        cell->ref.asJSObject());
           }
           break;
-        default:
+        case RefType::Null:
+          break;
+        case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
       break;
@@ -2707,6 +2746,9 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   } else if (HasReftypesSupport(cx) &&
              StringEqualsLiteral(typeLinearStr, "anyref")) {
     globalType = RefType::any();
+  } else if (HasReftypesSupport(cx) &&
+             StringEqualsLiteral(typeLinearStr, "nullref")) {
+    globalType = RefType::null();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2739,9 +2781,10 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
           globalVal = Val(RefType::func(), AnyRef::null());
           break;
         case RefType::Any:
+        case RefType::Null:
           globalVal = Val(RefType::any(), AnyRef::null());
           break;
-        default:
+        case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
       break;
@@ -2792,9 +2835,10 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
           args.thisv().toObject().as<WasmGlobalObject>().type().refTypeKind()) {
         case RefType::Func:
         case RefType::Any:
+        case RefType::Null:
           args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
           return true;
-        default:
+        case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
       break;
@@ -2868,8 +2912,12 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
           }
           break;
         }
-        default:
+        case RefType::Null: {
+          break;
+        }
+        case RefType::TypeIndex: {
           MOZ_CRASH("Ref NYI");
+        }
       }
       break;
   }
@@ -2925,9 +2973,10 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
           outval.set(Val(RefType::func(), cell->ref));
           return;
         case RefType::Any:
+        case RefType::Null:
           outval.set(Val(RefType::any(), cell->ref));
           return;
-        default:
+        case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
       }
       break;
