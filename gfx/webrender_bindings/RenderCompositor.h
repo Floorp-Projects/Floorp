@@ -53,9 +53,6 @@ class RenderCompositor {
     return mLatestRenderFrameId.Prev();
   }
 
-  // Update FrameId when WR rendering does not happen.
-  virtual RenderedFrameId UpdateFrameId() { return GetNextRenderFrameId(); }
-
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
   // Called when WR rendering is skipped
