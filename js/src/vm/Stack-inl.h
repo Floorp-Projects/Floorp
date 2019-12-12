@@ -36,10 +36,6 @@ inline GlobalObject& InterpreterFrame::global() const {
   return script()->global();
 }
 
-inline JSObject& InterpreterFrame::varObj() const {
-  return GetVariablesObject(environmentChain());
-}
-
 inline LexicalEnvironmentObject&
 InterpreterFrame::extensibleLexicalEnvironment() const {
   return NearestEnclosingExtensibleLexicalEnvironment(environmentChain());
@@ -662,28 +658,6 @@ inline bool AbstractFramePtr::isGeneratorFrame() const {
   }
   JSScript* s = script();
   return s->isGenerator() || s->isAsync();
-}
-
-inline bool AbstractFramePtr::isNonStrictDirectEvalFrame() const {
-  if (isInterpreterFrame()) {
-    return asInterpreterFrame()->isNonStrictDirectEvalFrame();
-  }
-  if (isBaselineFrame()) {
-    return asBaselineFrame()->isNonStrictDirectEvalFrame();
-  }
-  MOZ_ASSERT(isRematerializedFrame());
-  return false;
-}
-
-inline bool AbstractFramePtr::isStrictEvalFrame() const {
-  if (isInterpreterFrame()) {
-    return asInterpreterFrame()->isStrictEvalFrame();
-  }
-  if (isBaselineFrame()) {
-    return asBaselineFrame()->isStrictEvalFrame();
-  }
-  MOZ_ASSERT(isRematerializedFrame());
-  return false;
 }
 
 inline Value* AbstractFramePtr::argv() const {

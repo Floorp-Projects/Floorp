@@ -137,12 +137,6 @@ class AbstractFramePtr {
     MOZ_ASSERT_IF(fp, asWasmDebugFrame() == fp);
   }
 
-  static AbstractFramePtr FromRaw(void* raw) {
-    AbstractFramePtr frame;
-    frame.ptr_ = uintptr_t(raw);
-    return frame;
-  }
-
   bool isInterpreterFrame() const {
     return (ptr_ & TagMask) == Tag_InterpreterFrame;
   }
@@ -223,8 +217,6 @@ class AbstractFramePtr {
 
   inline bool isFunctionFrame() const;
   inline bool isGeneratorFrame() const;
-  inline bool isNonStrictDirectEvalFrame() const;
-  inline bool isStrictEvalFrame() const;
 
   inline unsigned numActualArgs() const;
   inline unsigned numFormalArgs() const;
@@ -426,20 +418,6 @@ class InterpreterFrame {
 
   bool isFunctionFrame() const { return script_->isFunction(); }
 
-  inline bool isStrictEvalFrame() const {
-    return isEvalFrame() && script()->strict();
-  }
-
-  bool isNonStrictEvalFrame() const {
-    return isEvalFrame() && !script()->strict();
-  }
-
-  bool isNonGlobalEvalFrame() const;
-
-  bool isNonStrictDirectEvalFrame() const {
-    return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
-  }
-
   /*
    * Previous frame
    *
@@ -524,7 +502,7 @@ class InterpreterFrame {
    * lookup are actually created.
    *
    * Given that an InterpreterFrame corresponds roughly to a ES Execution
-   * Context (ES 10.3), InterpreterFrame::varObj corresponds to the
+   * Context (ES 10.3), GetVariablesObject corresponds to the
    * VariableEnvironment component of a Exection Context. Intuitively, the
    * variables object is where new bindings (variables and functions) are
    * stored. One might expect that this is either the Call object or
@@ -541,7 +519,6 @@ class InterpreterFrame {
   inline EnvironmentObject& aliasedEnvironment(EnvironmentCoordinate ec) const;
   inline GlobalObject& global() const;
   inline CallObject& callObj() const;
-  inline JSObject& varObj() const;
   inline LexicalEnvironmentObject& extensibleLexicalEnvironment() const;
 
   template <typename SpecificEnvironment>
@@ -671,11 +648,6 @@ class InterpreterFrame {
     markReturnValue();
   }
 
-  void clearReturnValue() {
-    rval_.setUndefined();
-    markReturnValue();
-  }
-
   void resumeGeneratorFrame(JSObject* envChain) {
     MOZ_ASSERT(script()->isGenerator() || script()->isAsync());
     MOZ_ASSERT(isFunctionFrame());
@@ -776,14 +748,6 @@ class InterpreterRegs {
   Value* spForStackDepth(unsigned depth) const {
     MOZ_ASSERT(fp_->script()->nfixed() + depth <= fp_->script()->nslots());
     return fp_->base() + depth;
-  }
-
-  /* For generators. */
-  void rebaseFromTo(const InterpreterRegs& from, InterpreterFrame& to) {
-    fp_ = &to;
-    sp = to.slots() + (from.sp - from.fp_->slots());
-    pc = from.pc;
-    MOZ_ASSERT(fp_);
   }
 
   void popInlineFrame() {
