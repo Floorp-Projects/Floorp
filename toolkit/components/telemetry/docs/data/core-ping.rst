@@ -51,7 +51,7 @@ Structure:
                        // device when the ping was created
       "sessions": <integer>, // number of sessions since last upload
       "durations": <integer>, // combined duration, in seconds, of all
-                                    // sessions since last upload
+                              // sessions since last upload
       "searches": <object>, // Optional, object of search use counts in the
                             // format: { "engine.source": <pos integer> }
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
@@ -64,7 +64,86 @@ Structure:
       "defaultBrowser": <boolean> // true if the user has set Firefox as default browser
       "bug_1501329_affected": <boolean>  // true if Firefox previously used canary clientId
                                          // when submitting telemetry
-
+      "fennec": <object> // Fennec only.
+                         // Block of a variety of fields of different types.
+                         // Used to understand the usage of Fennec features in the release population
+                         // to understand when Fenix is ready to support Fennec users.
+      {
+        "new_tab": {
+          "top_sites_clicked": <int>, // Number of times a Top Site was opened from the Awesome Screen.
+                                      // Resets after each sent core ping.
+          "pocket_stories_clicked": <int>, // Number of time a Pocket Recommended website was opened
+                                           // from the Awesome Screen.
+                                           // Resets after each sent core ping.
+        }
+        "settings_advanced": {
+          "restore_tabs": <boolean>, // State of the "Settings/Advanced/Restore Tabs" setting
+          "show_images": <string>, // State of the "Settings/Advanced/Show images" setting
+                                   // Value will be be "user-specified" for any non-default values
+          "show_web_fonts": <boolean>,  // State of the "Settings/Advanced/Show web fonts" setting
+        },
+        "settings_general": {
+          "full_screen_browsing": <boolean>, // Current state of the
+                                             // "Settings/General/Full-screen browsing" setting.
+          "tab_queue": <boolean>, // State of the "Settings/General/Tab queue" setting.
+          "tab_queue_usage_count": <int>, // Number of tabs opened through Tab Queue.
+                                          // Resets after each sent core ping.
+          "compact_tabs": <boolean>, // State of the "Settings/General/Compact tabs" setting.
+          "homepage": {
+            "custom_homepage": <boolean>, // "true" if not "about:home".
+            "custom_homepage_use_for_newtab": <boolean>, // If the "Settings/General/Home/Also use for new tabs"
+                                                         // setting is enabled.
+            "topsites_enabled": <boolean>, // If the "Settings/General/Home/Top Sites"
+                                           // setting is set to "Show".
+            "pocket_enabled": <boolean>, // If the "Settings/General/Home/Top Sites/Recommended by Pocket"
+                                         // setting is enabled.
+            "recent_bookmarks_enabled": <boolean>, // If the "Settings/General/Home/Top Sites/
+                                                   //          Additional Content/Recent Bookmarks"
+                                                   // setting is enabled.
+            "visited_enabled": <boolean>, // If the "Settings/General/Home/Top Sites/Additional Content/Visited"
+                                          // setting is enabled.
+            bookmarks_enabled": <boolean>, // If the "Settings/General/Home/Bookmarks" setting is set to "Show".
+            "history_enabled": <boolean>, // If the "Settings/General/Home/History" setting is set to "Show".
+          }
+        },
+        "settings_privacy": {
+          "do_not_track": <boolean>, // If the "Settings/Privacy/Do not track" is enabled.
+          "master_password": <boolean>, // If the "Settings/Privacy/Use master password" is enabled.
+          "master_password_usage_count": <int>, // Number of times the user has entered their master password.
+                                                // Resets after each sent core ping.
+        },
+        "settings_notifications": {
+          "product_feature_tips": <boolean>, // If the "Settings/Notifications/Product and feature tips"
+                                             // setting is enabled.
+        },
+        "addons": {
+          "active": [addon_id_1, addon_id_2, …, ], // From all installed addons, which ones are active.
+          "disabled": [addon_id_1, addon_id_2, …], // From all installed addons, which ones are disabled.
+        },
+        "page_options": {
+          "save_as_pdf": <int>, // Number of times the user has used "Page/Save to PDF".
+                                // Resets after each sent core ping.
+          "print": <int>, // Number of times the user has used the "Page/Print".
+                          // Resets after each sent core ping.
+          "total_added_search_engines": <int>, // The absolute number of user added search engines,
+                                               // not just those added during this session.
+          "total_sites_pinned_to_topsites": <int>, // The absolute number of times the user has used
+                                                   // the "Pin Site" functionality.
+                                                   // Not just those added during this session.
+          "view_source": <int>, // Number of times the user has used the "Page/View Page Source".
+                                // Resets after each sent core ping.
+          "bookmark_with_star": <int>, // The number of times the user has used the "Menu / <Star>".
+                                       // Resets after each sent core ping.
+          "current_pwas_count": <int>, // On Android >=25 - a positive number of PWAs currently on
+                                       // homescreen, installed from this app.
+                                       // On Android <25 - a default of "-1".
+        },
+        "sync": {
+          "only_over_wifi": <boolean>, // "true" if the "Settings/Sync/Sync only over Wi-Fi"
+                                       // setting is enabled.
+                                       // null if the user is not signed into Sync.
+        }
+      }
     }
 
 Field details
@@ -186,6 +265,194 @@ This describes which accessibility services are currently enabled on user's devi
 products. This is optional because users often do not have any accessibility services enabled. If present, the value is
 a list of accessibility service ids.
 
+fennec.new_tab.top_sites_clicked
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `top_sites_clicked` field contains the number of times a top site was
+opened from the new tab page since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+
+Fennec.new_tab.pocket_stories_clicked
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `pocket_stories_clicked` contains the number of times a pocket story was
+opened from the new tab page since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+Fennec.settings_advanced.restore_tabs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `restore_tabs` field contains state of the "Settings/Advanced/Restore Tabs"
+setting. It is true for "Always Restore" and false for "Don’t restore after
+quitting Firefox".
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_advanced.show_images
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `show_images` field contains the state of the
+"Settings/Advanced/Show images" settings.
+It is a string value set to "default" if the setting is "Always", or
+"user~specified" for any of the other options.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_advanced.show_web_fonts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `show_web_fonts` field is a boolean that contains the current state of the
+"Settings/Advanced/Show web fonts" setting.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.full_screen_browsing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `full_screen_browsing` field is a boolean that contains the current state
+of the "Settings/General/Full~screen browsing" setting.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.tab_queue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `tab_queue` field is a boolean that contains the current state of the
+"Settings/General/Tab queue" setting.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.tab_queue_usage_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `tab_queue_usage_count` is a counter that increments with the number of
+tabs opened through the tab queue.
+It contains the total number of queued tabs opened since the last time the
+Core Ping was sent.
+This counter is reset when the core ping has been sent.
+
+Fennec.settings_general.compact_tabs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `compact_tabs` field is a boolean that contains the current state of the
+"Settings/General/Compact tabs" setting.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.custom_homepage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `custom_homepage` field is set to true if the homepage is not set to the
+the default `about:home`.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.custom_homepage_use_for_newtab
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `custom_homepage_use_for_newtab` field is set to true if the
+"Settings/General/Home/Also use for new tabs" setting is enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.topsites_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `topsites_enabled` setting is true if the "Settings/General/Home/Top Sites"
+setting is set to "Show".
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.pocket_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `pocket_enabled` setting is true if the
+"Settings/General/Home/Top Sites/Recommended by Pocket" setting is enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.recent_bookmarks_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `recent_bookmarks_enabled` setting is true if the
+"Settings/General/Home/Top Sites/Additional Content/Recent Bookmarks" setting
+is enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.visited_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `visited_enabled` setting is true if the
+"Settings/General/Home/Top Sites/Additional Content/Visited" setting is
+enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.bookmarks_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `bookmarks_enabled` setting is true if the
+"Settings/General/Home/Bookmarks" setting is set to "Show".
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_general.homepage.history_enabled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `history_enabled` setting is true if the "Settings/General/Home/History"
+setting is set to "Show".
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_privacy.do_not_track
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `do_not_track` setting is true if the "Settings/Privacy/Do not track" is
+enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_privacy.master_password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `master_password` setting is true if the
+"Settings/Privacy/Use master password" is enabled.
+The value is determined at the time of sending the core ping.
+
+Fennec.settings_privacy.master_password_usage_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `master_password_usage_count` field contains the number of times the user
+has entered their master password since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+Fennec.settings_notifications.product_feature_tips
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `product_feature_tips` setting is true if the
+"Settings/Notifications/Product and feature tips" setting is enabled.
+The value is determined at the time of sending the core ping.
+
+fennec.page_options.save_as_pdf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `save_as_pdf` field contains the number of times the user has used the
+"Page/Save to PDF" feature since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+fennec.page_options.print
+~~~~~~~~~~~~~~~~~~~~~~~~~
+The `print` field contains the number of times the user has used the
+"Page/Print" feature since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+fennec.page_options.total_added_search_engines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `total_added_search_engines` is an absolute value that contains the number
+of search engines the user has added manually.
+The value is determined at the time of sending the core ping and never reset
+to zero.
+
+fennec.page_options.total_sites_pinned_to_topsites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `total_sites_pinned_to_topsites` is an absolute value that contains the
+number of sites the user has pinned to top sites.
+The value is determined at the time of sending the core ping and never reset
+to zero.
+
+fennec.page_options.view_source
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `view_source` field contains the number of times the user has used the
+"Page/View Page Source" feature since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+Fennec.page_options.bookmark_with_star
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `bookmark_with_star` field contains the number of times the user has used
+the "Menu / <Star>"" feature since the last time the core ping was sent.
+This counter is reset when the core ping has been sent.
+
+Fennec.page_options.current_pwas_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `current_pwas_count` field contains the number of currently installed PWAs
+from this application.
+As Android APIs for querying this are only available on Android >=25 for lower
+versions of Android the value of this key will be "-1".
+The value is determined at the time of sending the core ping.
+
+Fennec.sync.only_over_wifi
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `only_over_wifi` setting is true if the
+"Settings/Sync/Sync only over Wi~Fi" setting is enabled.
+The value is determined at the time of sending the core ping.
+If the user is not signed into sync, then this value is set to `null`.
+The value is determined at the time of sending the core ping.
+
 Other parameters
 ----------------
 
@@ -199,6 +466,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
+* v10: added ``bug_1501329_affected``
 * v9:
 
   - Apr 2017: changed ``arch`` to contain device arch rather than the one we
