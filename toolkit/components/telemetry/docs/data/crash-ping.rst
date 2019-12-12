@@ -37,9 +37,7 @@ Structure:
         crashDate: "YYYY-MM-DD",
         crashTime: <ISO Date>, // per-hour resolution
         version: 1,
-        sessionId: <UUID>, // may be missing for crashes that happen early
-                           // in startup. Added in Firefox 48 with the
-                           // intention of uplifting to Firefox 46
+        sessionId: <UUID>, // Telemetry ID of crashing session. May be missing for crashes that happen early in startup
         crashId: <UUID>, // Optional, ID of the associated crash
         minidumpSha256Hash: <hash>, // SHA256 hash of the minidump file
         processType: <type>, // Type of process that crashed, see below for a list of types
@@ -70,7 +68,6 @@ Structure:
           ShutdownProgress: <phase>, // Optional, contains a string describing the shutdown phase in which the crash occurred
           SystemMemoryUsePercentage: <percentage>, // Windows-only, percent of memory in use
           StartupCrash: "1", // Optional, if set indicates that Firefox crashed during startup
-          TelemetrySessionId: <id>, // Active telemetry session ID when the crash was recorded
           TextureUsage: <usage>, // Optional, usage of texture memory in bytes
           TotalPageFile: <size>, // Windows-only, paging file in use expressed in bytes
           TotalPhysicalMemory: <size>, // Windows-only, physical memory in use expressed in bytes
