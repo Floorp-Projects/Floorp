@@ -1083,7 +1083,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   data.subjectPrincipal() = &aSubjectPrincipal;
   RefPtr<nsGlobalWindowInner> callerInnerWindow;
   // We don't need to get the caller's agentClusterId since that is used for
-  // checking whehter it's okay to sharing memory (and it's not allowed to share
+  // checking whether it's okay to sharing memory (and it's not allowed to share
   // memory cross processes)
   if (!nsGlobalWindowOuter::GatherPostMessageData(
           aCx, aTargetOrigin, getter_AddRefs(sourceBc), data.origin(),
@@ -1092,6 +1092,9 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
           getter_AddRefs(callerInnerWindow),
           getter_AddRefs(data.callerDocumentURI()),
           /* aCallerAgentClusterId */ nullptr, aError)) {
+    return;
+  }
+  if (sourceBc && sourceBc->IsDiscarded()) {
     return;
   }
   data.source() = sourceBc;
