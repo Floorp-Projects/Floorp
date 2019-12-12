@@ -435,9 +435,8 @@ JS_PUBLIC_API void js::gc::TraceExternalEdge(JSTracer* trc, T* thingp,
   TraceEdgeInternal(trc, ConvertToBase(thingp), name);
 }
 
-template <typename T>
 JS_PUBLIC_API void js::UnsafeTraceManuallyBarrieredEdge(JSTracer* trc,
-                                                        T* thingp,
+                                                        JSObject** thingp,
                                                         const char* name) {
   TraceEdgeInternal(trc, ConvertToBase(thingp), name);
 }
@@ -458,8 +457,6 @@ class AbstractGeneratorObject;
 #define INSTANTIATE_PUBLIC_TRACE_FUNCTIONS(type)                          \
   template JS_PUBLIC_API void JS::UnsafeTraceRoot<type>(JSTracer*, type*, \
                                                         const char*);     \
-  template JS_PUBLIC_API void js::UnsafeTraceManuallyBarrieredEdge<type>( \
-      JSTracer*, type*, const char*);                                     \
   template JS_PUBLIC_API void js::gc::TraceExternalEdge<type>(            \
       JSTracer*, type*, const char*);
 JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
