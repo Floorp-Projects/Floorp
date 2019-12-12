@@ -1156,6 +1156,23 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "-moz-stack-sizing": {
+    "isInherited": false,
+    "subproperties": [
+      "-moz-stack-sizing"
+    ],
+    "supports": [],
+    "values": [
+      "ignore",
+      "ignore-horizontal",
+      "ignore-vertical",
+      "inherit",
+      "initial",
+      "revert",
+      "stretch-to-fit",
+      "unset"
+    ]
+  },
   "-moz-tab-size": {
     "isInherited": true,
     "subproperties": [
@@ -3322,6 +3339,7 @@ exports.CSS_PROPERTIES = {
       "-moz-box-flex",
       "-moz-box-orient",
       "-moz-box-pack",
+      "-moz-stack-sizing",
       "-moz-box-ordinal-group"
     ],
     "supports": [],
