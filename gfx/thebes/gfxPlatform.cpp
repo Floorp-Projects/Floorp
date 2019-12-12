@@ -3326,6 +3326,9 @@ void gfxPlatform::InitWebRenderConfig() {
 
   if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBRENDER_COMPOSITOR)) {
     gfxVars::SetUseWebRenderCompositor(true);
+    // Call UserEnable() only for reporting to Decision Log.
+    // If feature is enabled by default. It is not reported to Decision Log.
+    featureComp.UserEnable("Enabled");
   }
 
   // Set features that affect WR's RendererOptions
