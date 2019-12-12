@@ -224,7 +224,6 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         '--browsertime.page_cycles', '1',
         '--browsertime.url', mock_test['test_url'],
         '--browsertime.page_cycle_delay', '1000',
-        '--browsertime.foreground_delay', '5000',
         '--browsertime.post_startup_delay', str(DEFAULT_TIMEOUT),
         '--firefox.profileTemplate',
         '--skipHar',
