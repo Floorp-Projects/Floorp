@@ -41,10 +41,10 @@ HOST_DEFINES = {
 include('stl-headers.mozbuild')
 if CONFIG['WRAP_STL_INCLUDES']:
     stl_compiler = None
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        stl_compiler = 'gcc'
-    elif CONFIG['CC_TYPE'] == 'clang-cl':
+    if CONFIG['OS_TARGET'] == 'WINNT':
         stl_compiler = 'msvc'
+    else:
+        stl_compiler = 'gcc'
 
     if stl_compiler:
         # Note that the 'stl_wrappers' folder is known to the build system as
@@ -67,7 +67,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
     # NOTE: If we aren't wrapping STL includes, we're building part of the browser
     # which won't need this wrapper, such as L10N. Just don't try to generate the
     # wrapper in that case.
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['OS_TARGET'] == 'WINNT':
         GeneratedFile('../dist/stl_wrappers/windows.h',
                       script='make-windows-h-wrapper.py',
                       entry_point='generate',
