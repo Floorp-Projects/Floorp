@@ -1296,43 +1296,37 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VisualViewport", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "VRDisplay", insecureContext: true, releaseNonWindowsAndMac: false },
+  { name: "VRDisplay", releaseNonWindowsAndMac: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VRDisplayCapabilities",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VRDisplayEvent",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VREyeParameters",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VRFieldOfView",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VRFrameData",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "VRPose", insecureContext: true, releaseNonWindowsAndMac: false },
+  { name: "VRPose", releaseNonWindowsAndMac: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "VRStageParameters",
-    insecureContext: true,
     releaseNonWindowsAndMac: false,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!

@@ -4001,6 +4001,9 @@ const ContentPermissionIntegration = {
       case "geolocation": {
         return new PermissionUI.GeolocationPermissionPrompt(request);
       }
+      case "xr": {
+        return new PermissionUI.XRPermissionPrompt(request);
+      }
       case "desktop-notification": {
         return new PermissionUI.DesktopNotificationPermissionPrompt(request);
       }

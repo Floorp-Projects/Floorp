@@ -181,6 +181,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void FinishGetVRDisplays(bool isWebVRSupportedInwindow, Promise* p);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
+  void OnXRPermissionRequestAllow();
+  void OnXRPermissionRequestCancel();
   VRServiceTest* RequestVRServiceTest();
   bool IsWebVRContentDetected() const;
   bool IsWebVRContentPresenting() const;

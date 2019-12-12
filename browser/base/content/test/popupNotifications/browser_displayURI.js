@@ -30,7 +30,10 @@ async function check(contentTask, options = {}) {
     let panel = await popupShownPromise;
     let notification = panel.children[0];
     let body = notification.querySelector(".popup-notification-body");
-    if (notification.id == "geolocation-notification") {
+    if (
+      notification.id == "geolocation-notification" ||
+      notification.id == "xr-notification"
+    ) {
       ok(
         body.innerHTML.includes("local file"),
         `file:// URIs should be displayed as local file.`
@@ -96,6 +99,12 @@ add_task(async function test_displayURI_geo() {
   });
 });
 
+add_task(async function test_displayURI_xr() {
+  await check(async function() {
+    content.navigator.getVRDisplays();
+  });
+});
+
 add_task(async function test_displayURI_camera() {
   await check(async function() {
     content.navigator.mediaDevices.getUserMedia({ video: true, fake: true });
@@ -107,6 +116,18 @@ add_task(async function test_displayURI_geo_blob() {
     async function() {
       let text =
         "<script>navigator.geolocation.getCurrentPosition(() => {})</script>";
+      let blob = new Blob([text], { type: "text/html" });
+      let url = content.URL.createObjectURL(blob);
+      content.location.href = url;
+    },
+    { skipOnExtension: true }
+  );
+});
+
+add_task(async function test_displayURI_xr_blob() {
+  await check(
+    async function() {
+      let text = "<script>navigator.getVRDisplays()</script>";
       let blob = new Blob([text], { type: "text/html" });
       let url = content.URL.createObjectURL(blob);
       content.location.href = url;
