@@ -94,7 +94,8 @@ class HttpTransactionShell : public nsISupports {
   virtual nsISupports* SecurityInfo() = 0;
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
 
-  virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer) = 0;
+  virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,
+                                   bool& aResolvedByTRR) = 0;
 
   // Functions for Timing interface
   virtual mozilla::TimeStamp GetDomainLookupStart() = 0;
@@ -133,7 +134,6 @@ class HttpTransactionShell : public nsISupports {
 
   virtual bool ProxyConnectFailed() = 0;
   virtual int32_t GetProxyConnectResponseCode() = 0;
-  virtual bool ResolvedByTRR() = 0;
 
   virtual nsresult SetSniffedTypeToChannel(
       nsIRequest* aPump, nsIChannel* aChannel,
@@ -161,7 +161,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual nsISupports* SecurityInfo() override;                                \
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)         \
       override;                                                                \
-  virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer) override;     \
+  virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,               \
+                                   bool& aResolvedByTRR) override;             \
   virtual mozilla::TimeStamp GetDomainLookupStart() override;                  \
   virtual mozilla::TimeStamp GetDomainLookupEnd() override;                    \
   virtual mozilla::TimeStamp GetConnectStart() override;                       \
@@ -188,7 +189,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) override;       \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
-  virtual bool ResolvedByTRR() override;                                       \
   virtual nsresult SetSniffedTypeToChannel(                                    \
       nsIRequest* aPump, nsIChannel* aChannel,                                 \
       nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) override;           \
