@@ -473,25 +473,18 @@ typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
 bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                       MutableHandleArrayBufferObjectMaybeShared buffer);
 
-bool ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length,
-                    uint32_t* out);
-
 /*
  * Tests for ArrayBufferObject, like obj->is<ArrayBufferObject>().
  */
 bool IsArrayBuffer(HandleValue v);
-bool IsArrayBuffer(HandleObject obj);
 bool IsArrayBuffer(JSObject* obj);
-ArrayBufferObject& AsArrayBuffer(HandleObject obj);
 ArrayBufferObject& AsArrayBuffer(JSObject* obj);
 
 /*
  * Ditto for ArrayBufferObjectMaybeShared.
  */
 bool IsArrayBufferMaybeShared(HandleValue v);
-bool IsArrayBufferMaybeShared(HandleObject obj);
 bool IsArrayBufferMaybeShared(JSObject* obj);
-ArrayBufferObjectMaybeShared& AsArrayBufferMaybeShared(HandleObject obj);
 ArrayBufferObjectMaybeShared& AsArrayBufferMaybeShared(JSObject* obj);
 
 extern uint32_t JS_FASTCALL ClampDoubleToUint8(const double x);
