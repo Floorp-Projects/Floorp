@@ -6,9 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWinRemoteClient.h"
-#include "nsWinRemoteUtils.h"
-
 #include <windows.h>
+#include "RemoteUtils.h"
 
 using namespace mozilla;
 
