@@ -8,8 +8,10 @@ const nativeErrors = [
     URIError
 ];
 
-
-assertEq(Reflect.ownKeys(Error.prototype).toString(), "toSource,toString,message,name,stack,constructor");
+const expectedOwnKeys = "toSource" in Object.prototype
+                        ? "toSource,toString,message,name,stack,constructor"
+                        : "toString,message,name,stack,constructor";
+assertEq(Reflect.ownKeys(Error.prototype).toString(), expectedOwnKeys);
 assertEq(Error.prototype.name, "Error");
 assertEq(Error.prototype.message, "");
 

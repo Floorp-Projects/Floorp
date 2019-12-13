@@ -21,7 +21,9 @@ function runTests() {
     var T = new StructType({x: int32, y: uint8, z: float64});
     assertEq(S.__proto__, StructType.prototype);
     assertEq(S.prototype.__proto__, StructType.prototype.prototype);
-    assertEq(S.toSource(), "new StructType({x: int32, y: uint8, z: float64})");
+    if (Object.prototype.toSource) {
+        assertEq(S.toSource(), "new StructType({x: int32, y: uint8, z: float64})");
+    }
     assertEq(S.byteLength, 16);
     assertEq(S.byteAlignment, 8);
     var fieldNames = Object.getOwnPropertyNames(S.fieldTypes);
