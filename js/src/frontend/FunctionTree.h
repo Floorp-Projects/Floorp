@@ -74,7 +74,7 @@ class FunctionTree {
 //
 // - In Eager mode, deferred items happens right away and the tree is not
 //   constructed.
-// - In Deferred mode, deferred items happens only when publishDeferredItems
+// - In Deferred mode, deferred items happens only when publishDeferredFunctions
 //   is called.
 //
 // Note: Function trees point to function boxes, which only have the lifetime of
