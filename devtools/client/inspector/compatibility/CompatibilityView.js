@@ -124,7 +124,6 @@ function _getDefaultTargetBrowsers() {
     "safari",
     "safari_ios",
     "edge",
-    "edge_mobile",
   ];
   const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
 
