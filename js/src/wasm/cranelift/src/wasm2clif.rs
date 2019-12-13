@@ -115,7 +115,11 @@ pub fn init_sig(
 /// if any.
 enum FailureMode {
     Infallible,
-    NotZero,
+    /// The value returned by the function must be checked. internal_ret set to true indicates that
+    /// the returned value is only used internally, and should not be passed back to wasm.
+    NotZero {
+        internal_ret: bool,
+    },
 }
 
 /// A description of builtin call to the `wasm::Instance`.
@@ -144,25 +148,25 @@ const FN_MEMORY_COPY: InstanceCall = InstanceCall {
     address: SymbolicAddress::MemoryCopy,
     arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_MEMORY_COPY_SHARED: InstanceCall = InstanceCall {
     address: SymbolicAddress::MemoryCopyShared,
     arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_MEMORY_FILL: InstanceCall = InstanceCall {
     address: SymbolicAddress::MemoryFill,
     arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_MEMORY_FILL_SHARED: InstanceCall = InstanceCall {
     address: SymbolicAddress::MemoryFillShared,
     arguments: &[ir::types::I32, ir::types::I32, ir::types::I32, POINTER_TYPE],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_MEMORY_INIT: InstanceCall = InstanceCall {
     address: SymbolicAddress::MemoryInit,
@@ -173,13 +177,13 @@ const FN_MEMORY_INIT: InstanceCall = InstanceCall {
         ir::types::I32,
     ],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_DATA_DROP: InstanceCall = InstanceCall {
     address: SymbolicAddress::DataDrop,
     arguments: &[ir::types::I32],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_TABLE_SIZE: InstanceCall = InstanceCall {
     address: SymbolicAddress::TableSize,
@@ -197,7 +201,7 @@ const FN_TABLE_COPY: InstanceCall = InstanceCall {
         ir::types::I32,
     ],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_TABLE_INIT: InstanceCall = InstanceCall {
     address: SymbolicAddress::TableInit,
@@ -209,13 +213,13 @@ const FN_TABLE_INIT: InstanceCall = InstanceCall {
         ir::types::I32,
     ],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 const FN_ELEM_DROP: InstanceCall = InstanceCall {
     address: SymbolicAddress::ElemDrop,
     arguments: &[ir::types::I32],
     ret: Some(ir::types::I32),
-    failure_mode: FailureMode::NotZero,
+    failure_mode: FailureMode::NotZero { internal_ret: true },
 };
 
 // Custom trap codes specific to this embedding
@@ -558,13 +562,17 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
 
         let ret = pos.func.dfg.first_result(call_ins);
         match call.failure_mode {
-            FailureMode::Infallible => {}
-            FailureMode::NotZero => {
+            FailureMode::Infallible => Some(ret),
+            FailureMode::NotZero { internal_ret } => {
                 pos.ins()
                     .trapnz(ret, ir::TrapCode::User(TRAP_THROW_REPORTED));
+                if internal_ret {
+                    None
+                } else {
+                    Some(ret)
+                }
             }
         }
-        Some(ret)
     }
 }
 
@@ -1033,11 +1041,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         let index = pos
             .ins()
             .iconst(ir::types::I32, dst_table_index.index() as i64);
-        let ret = self.instance_call(
-            &mut pos,
-            &FN_TABLE_COPY,
-            &[dst, src, len, index, index],
-        );
+        let ret = self.instance_call(&mut pos, &FN_TABLE_COPY, &[dst, src, len, index, index]);
         debug_assert!(ret.is_none());
         Ok(())
     }
