@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset=utf-8>
+<title></title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+
+function parseBlob(blob) {
+  return new Promise(resolve => {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", URL.createObjectURL(blob));
+    xhr.onload = () => {
+      resolve(xhr.responseXML);
+    }
+    xhr.send();
+  });
+}
+
+promise_test(async (t) => {
+  // Most browser engines, including Gecko, use 5000 as the limit, so test a
+  // range around that.
+  const cutoff = 5000;
+
+  let minDepth = cutoff - 100;
+  let maxDepth = cutoff + 100;
+
+  // Generate a string with elements nested maxDepth deep.
+  const openTag = "<x>";
+  const closeTag = "</x>";
+  let xml = openTag.repeat(maxDepth) + closeTag.repeat(maxDepth);
+
+  // Compute where we change from opening to closing tags.
+  const middle = maxDepth * openTag.length;
+
+  // Create a blob around the string.
+  let blob = new Blob([xml], { type: "application/xml" });
+
+  while (minDepth < maxDepth) {
+    // Try to parse a number of nested tags between minDepth and maxDepth.
+    let test = Math.ceil((minDepth + maxDepth) / 2);
+
+    // We need the number of opening and closing tags to be equal to the number
+    // that we calculated above.
+    let slice = blob.slice(middle - (test * openTag.length),
+                           middle + (test * closeTag.length));
+
+    let responseXML = await parseBlob(slice);
+
+    // Move either minDepth or maxDepth so that the actual limit is still in the
+    // range of [minDepth-maxDepth].
+    if (responseXML) {
+      // Depth is ok.
+      minDepth = test;
+    } else {
+      maxDepth = test - 1;
+    }
+  }
+  assert_equals(minDepth, maxDepth);
+  assert_equals(minDepth, cutoff);
+},"Parsing XML fails when the nesting depth is 5000");
+
+</script>
