@@ -17,6 +17,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.migration.state.MigrationAction
+import mozilla.components.support.migration.state.MigrationStore
 
 private const val NOTIFICATION_TAG = "mozac.support.migration.notification"
 private const val NOTIFICATION_CHANNEL_ID = "mozac.support.migration.generic"
@@ -36,6 +38,7 @@ private val temporaryNotificationIcon = R.drawable.mozac_lib_crash_notification
  */
 abstract class AbstractMigrationService : Service() {
     protected abstract val migrator: FennecMigrator
+    protected abstract val store: MigrationStore
 
     private val logger = Logger("MigrationService")
     private val scope = MainScope()
@@ -49,7 +52,8 @@ abstract class AbstractMigrationService : Service() {
 
         scope.launch {
             try {
-                migrate()
+                val results = migrate()
+                store.dispatch(MigrationAction.Result(results))
             } finally {
                 logger.debug("Stopping migration service")
                 shutdown()
@@ -59,7 +63,7 @@ abstract class AbstractMigrationService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private suspend fun migrate() {
+    private suspend fun migrate(): MigrationResults {
         val results = migrator.migrateAsync().await()
 
         logger.debug("Migration completed:")
@@ -67,6 +71,8 @@ abstract class AbstractMigrationService : Service() {
         results.forEach { (migration, run) ->
             logger.debug("$migration, version=${run.version} success=${run.success}")
         }
+
+        return results
     }
 
     override fun onDestroy() {
@@ -90,6 +96,8 @@ abstract class AbstractMigrationService : Service() {
     }
 
     private fun shutdown() {
+        store.dispatch(MigrationAction.Completed)
+
         stopForeground(true)
 
         // Now after the migration this notification channel is no longer needed and we can just
