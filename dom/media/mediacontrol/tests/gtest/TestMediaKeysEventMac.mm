@@ -63,9 +63,9 @@ static void NotifyFakeMediaKeysEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aS
   int keyData = 0;
   if (aEvent == MediaControlKeysEvent::ePlayPause) {
     keyData = NX_KEYTYPE_PLAY << 16;
-  } else if (aEvent == MediaControlKeysEvent::eNext) {
+  } else if (aEvent == MediaControlKeysEvent::eNextTrack) {
     keyData = NX_KEYTYPE_NEXT << 16;
-  } else if (aEvent == MediaControlKeysEvent::ePrev) {
+  } else if (aEvent == MediaControlKeysEvent::ePrevTrack) {
     keyData = NX_KEYTYPE_PREVIOUS << 16;
   }
   keyData |= ((aIsKeyPressed ? 0xA : 0xB) << 8);
@@ -103,11 +103,11 @@ TEST(MediaHardwareKeysEventSourceMac, TestKeyPressedMediaKeysEvent)
   NotifyKeyPressedMediaKeysEvent(source, MediaControlKeysEvent::ePlayPause);
   ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKeysEvent::ePlayPause));
 
-  NotifyKeyPressedMediaKeysEvent(source, MediaControlKeysEvent::eNext);
-  ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKeysEvent::eNext));
+  NotifyKeyPressedMediaKeysEvent(source, MediaControlKeysEvent::eNextTrack);
+  ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKeysEvent::eNextTrack));
 
-  NotifyKeyPressedMediaKeysEvent(source, MediaControlKeysEvent::ePrev);
-  ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKeysEvent::ePrev));
+  NotifyKeyPressedMediaKeysEvent(source, MediaControlKeysEvent::ePrevTrack);
+  ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKeysEvent::ePrevTrack));
 
   source->RemoveListener(listener);
   ASSERT_TRUE(source->GetListenersNum() == 0);
@@ -126,10 +126,10 @@ TEST(MediaHardwareKeysEventSourceMac, TestKeyReleasedMediaKeysEvent)
   NotifyKeyReleasedMediaKeysEvent(source, MediaControlKeysEvent::ePlayPause);
   ASSERT_TRUE(!listener->IsReceivedResult());
 
-  NotifyKeyReleasedMediaKeysEvent(source, MediaControlKeysEvent::eNext);
+  NotifyKeyReleasedMediaKeysEvent(source, MediaControlKeysEvent::eNextTrack);
   ASSERT_TRUE(!listener->IsReceivedResult());
 
-  NotifyKeyReleasedMediaKeysEvent(source, MediaControlKeysEvent::ePrev);
+  NotifyKeyReleasedMediaKeysEvent(source, MediaControlKeysEvent::ePrevTrack);
   ASSERT_TRUE(!listener->IsReceivedResult());
 
   source->RemoveListener(listener);
