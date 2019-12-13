@@ -1763,7 +1763,7 @@ with only_when(compile_environment & target_is_windows):
 
 @depends(toolkit)
 def has_remote(toolkit):
-    if toolkit in ('gtk', 'windows'):
+    if toolkit in ('gtk', 'windows', 'cocoa'):
         return True
 
 set_config('MOZ_HAS_REMOTE', has_remote)
