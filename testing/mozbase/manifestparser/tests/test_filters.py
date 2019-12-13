@@ -234,6 +234,8 @@ def test_pathprefix(create_tests):
         'subdir/test1',
         'subdir/test2',
         ('subdir/test3', {'manifest': 'manifest.ini'}),
+        ('other/test4', {'manifest': 'manifest-common.ini',
+                         'ancestor_manifest': 'other/manifest.ini'}),
     )
 
     def names(items):
@@ -263,6 +265,16 @@ def test_pathprefix(create_tests):
     prefix = pathprefix(['subdir/test2', 'manifest.ini'])
     filtered = prefix(tests, {})
     assert names(filtered) == ['test0', 'test2', 'test3']
+
+    # relative ancestor manifest
+    prefix = pathprefix(['other/manifest.ini'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test4']
+
+    # absolute ancestor manifest
+    prefix = pathprefix(['/root/other/manifest.ini'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test4']
 
 
 if __name__ == '__main__':
