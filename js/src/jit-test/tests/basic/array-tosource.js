@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !Array.prototype.toSource
+
 load(libdir + 'asserts.js');
 
 assertEq(Array.prototype.toSource.call([1, 'hi']), '[1, "hi"]');

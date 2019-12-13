@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !Function.prototype.toSource
+
 // Source string has balanced parentheses even when the source code was discarded.
 
 setDiscardSource(true);

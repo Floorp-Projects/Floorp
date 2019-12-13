@@ -3,8 +3,10 @@ load(libdir + 'asserts.js');
 function test() {
   assertTypeErrorMessage(() => { ctypes.Int64(1).toString(1, 2); },
                          "Int64.prototype.toString takes at most one argument");
-  assertTypeErrorMessage(() => { ctypes.Int64(1).toSource(1); },
-                         "Int64.prototype.toSource takes no arguments");
+  if (ctypes.Int64.prototype.toSource) {
+    assertTypeErrorMessage(() => { ctypes.Int64(1).toSource(1); },
+                           "Int64.prototype.toSource takes no arguments");
+  }
   assertTypeErrorMessage(() => { ctypes.Int64(); },
                          "Int64 constructor takes one argument");
   assertTypeErrorMessage(() => { ctypes.Int64.compare(); },
@@ -18,8 +20,10 @@ function test() {
 
   assertTypeErrorMessage(() => { ctypes.UInt64(1).toString(1, 2); },
                          "UInt64.prototype.toString takes at most one argument");
-  assertTypeErrorMessage(() => { ctypes.UInt64(1).toSource(1); },
-                         "UInt64.prototype.toSource takes no arguments");
+  if (ctypes.UInt64.prototype.toSource) {
+    assertTypeErrorMessage(() => { ctypes.UInt64(1).toSource(1); },
+                           "UInt64.prototype.toSource takes no arguments");
+  }
   assertTypeErrorMessage(() => { ctypes.UInt64(); },
                          "UInt64 constructor takes one argument");
   assertTypeErrorMessage(() => { ctypes.UInt64.compare(); },

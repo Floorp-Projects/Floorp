@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !Object.prototype.toSource
+
 function f() {
     var x = arguments;
     arguments.length = {};

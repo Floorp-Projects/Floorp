@@ -56,17 +56,23 @@ return function test(str, f, isGeneric = false) {
 }
 })();
 
-test("new Boolean(true)", b => Boolean.prototype.toSource.call(b));
+if (Boolean.prototype.toSource) {
+    test("new Boolean(true)", b => Boolean.prototype.toSource.call(b));
+}
 test("new Boolean(true)", b => Boolean.prototype.toString.call(b));
 test("new Boolean(true)", b => Boolean.prototype.valueOf.call(b));
-test("new Number(1)", n => Number.prototype.toSource.call(n));
+if (Number.prototype.toSource) {
+    test("new Number(1)", n => Number.prototype.toSource.call(n));
+}
 test("new Number(1)", n => Number.prototype.toString.call(n));
 test("new Number(1)", n => Number.prototype.valueOf.call(n));
 test("new Number(1)", n => Number.prototype.toFixed.call(n));
 test("new Number(1)", n => Number.prototype.toExponential.call(n));
 test("new Number(1)", n => Number.prototype.toPrecision.call(n));
 test("(function*(){yield 1})()", i => (function*(){yield})().next.call(i).toString());
-test("new String('one')", s => String.prototype.toSource.call(s));
+if (String.prototype.toSource) {
+    test("new String('one')", s => String.prototype.toSource.call(s));
+}
 test("new String('one')", s => String.prototype.toString.call(s));
 test("new RegExp('1')", r => RegExp.prototype.exec.call(r, '1').toString());
 test("new RegExp('1')", r => RegExp.prototype.test.call(r, '1'));
@@ -150,7 +156,9 @@ test("new Date()", d => justDontThrow(Date.prototype.toLocaleDateString.call(d))
 test("new Date()", d => justDontThrow(Date.prototype.toLocaleTimeString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toTimeString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toDateString.call(d)));
-test("new Date()", d => justDontThrow(Date.prototype.toSource.call(d)));
+if (Date.prototype.toSource) {
+    test("new Date()", d => justDontThrow(Date.prototype.toSource.call(d)));
+}
 test("new Date()", d => justDontThrow(Date.prototype.toString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.valueOf.call(d)));
 
