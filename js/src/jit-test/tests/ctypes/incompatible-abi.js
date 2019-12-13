@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.ctypes || !ctypes.default_abi.toSource
+
 load(libdir + 'asserts.js');
 
 function test() {

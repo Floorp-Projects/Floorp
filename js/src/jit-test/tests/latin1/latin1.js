@@ -42,7 +42,9 @@ assertLatin1(String(undefined));
 // objects
 assertLatin1(Math.toString());
 assertLatin1(({x:1}).toString());
-assertLatin1(({x:"foo"}).toSource());
+if (Object.prototype.toSource) {
+    assertLatin1(({x:"foo"}).toSource());
+}
 assertLatin1([1, "bar"].toString());
 
 // typeof
