@@ -28,8 +28,6 @@ class EventEmitter {
    *    The type of event.
    * @param {Function|Object} listener
    *    The listener that processes the event.
-   * @returns {Function}
-   *    A function that removes the listener when called.
    */
   static on(target, type, listener) {
     if (typeof listener !== "function" && !isEventHandler(listener)) {
@@ -47,8 +45,6 @@ class EventEmitter {
     } else {
       events.set(type, new Set([listener]));
     }
-
-    return () => EventEmitter.off(target, type, listener);
   }
 
   /**
@@ -257,7 +253,7 @@ class EventEmitter {
   }
 
   on(...args) {
-    return EventEmitter.on(this, ...args);
+    EventEmitter.on(this, ...args);
   }
 
   off(...args) {

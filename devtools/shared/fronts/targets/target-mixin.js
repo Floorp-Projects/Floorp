@@ -38,6 +38,7 @@ function TargetMixin(parentClass) {
       this.destroy = this.destroy.bind(this);
       this._onNewSource = this._onNewSource.bind(this);
 
+      this.activeConsole = null;
       this.threadFront = null;
 
       // By default, we close the DebuggerClient of local tabs which
@@ -337,14 +338,11 @@ function TargetMixin(parentClass) {
 
     // Attach the console actor
     async attachConsole() {
-      const consoleFront = await this.getFront("console");
-      await consoleFront.startListeners([]);
+      this.activeConsole = await this.getFront("console");
+      await this.activeConsole.startListeners([]);
 
       this._onInspectObject = packet => this.emit("inspect-object", packet);
-      this.removeOnInspectObjectListener = consoleFront.on(
-        "inspectObject",
-        this._onInspectObject
-      );
+      this.activeConsole.on("inspectObject", this._onInspectObject);
     }
 
     /**
@@ -400,9 +398,8 @@ function TargetMixin(parentClass) {
       }
 
       // Remove listeners set in attachConsole
-      if (this.removeOnInspectObjectListener) {
-        this.removeOnInspectObjectListener();
-        this.removeOnInspectObjectListener = null;
+      if (this.activeConsole && this._onInspectObject) {
+        this.activeConsole.off("inspectObject", this._onInspectObject);
       }
     }
 
@@ -469,6 +466,7 @@ function TargetMixin(parentClass) {
      * Clean up references to what this target points to.
      */
     _cleanup() {
+      this.activeConsole = null;
       this.threadFront = null;
       this._client = null;
 

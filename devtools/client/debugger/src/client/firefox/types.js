@@ -178,37 +178,7 @@ export type TabPayload = {
   webExtensionInspectedWindowActor: ActorId,
 };
 
-/**
- * Tab Target gives access to the browser tabs
- * @memberof firefox
- * @static
- */
-export type Target = {
-  on: (string, Function) => void,
-  emit: (string, any) => void,
-  getFront: string => Promise<ConsoleFront>,
-  form: { consoleActor: any },
-  root: any,
-  navigateTo: ({ url: string }) => Promise<*>,
-  listWorkers: () => Promise<*>,
-  reload: () => Promise<*>,
-  destroy: () => void,
-  threadFront: ThreadFront,
-  name: string,
-  isBrowsingContext: boolean,
-  isContentProcess: boolean,
-  isWorkerTarget: boolean,
-  traits: Object,
-  chrome: Boolean,
-  url: string,
-  isAddon: Boolean,
-  isServiceWorker: boolean,
-
-  // Property installed by the debugger itself.
-  debuggerServiceWorkerStatus: string,
-};
-
-type ConsoleFront = {
+type ConsoleClient = {
   evaluateJSAsync: (
     script: Script,
     func: Function,
@@ -221,6 +191,37 @@ type ConsoleFront = {
     frameId: ?string
   ) => void,
   emit: (string, any) => void,
+};
+
+/**
+ * Tab Target gives access to the browser tabs
+ * @memberof firefox
+ * @static
+ */
+export type Target = {
+  on: (string, Function) => void,
+  emit: (string, any) => void,
+  form: { consoleActor: any },
+  root: any,
+  navigateTo: ({ url: string }) => Promise<*>,
+  listWorkers: () => Promise<*>,
+  reload: () => Promise<*>,
+  destroy: () => void,
+  threadFront: ThreadFront,
+  activeConsole: ConsoleClient,
+
+  name: string,
+  isBrowsingContext: boolean,
+  isContentProcess: boolean,
+  isWorkerTarget: boolean,
+  traits: Object,
+  chrome: Boolean,
+  url: string,
+  isAddon: Boolean,
+  isServiceWorker: boolean,
+
+  // Property installed by the debugger itself.
+  debuggerServiceWorkerStatus: string,
 };
 
 /**

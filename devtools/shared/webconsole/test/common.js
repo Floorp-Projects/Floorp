@@ -97,7 +97,7 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
     const [, threadFront] = await target.attachThread();
     await threadFront.resume();
 
-    const webConsoleFront = await target.getFront("console");
+    const webConsoleFront = target.activeConsole;
 
     // By default the console isn't listening for anything,
     // request listeners from here
