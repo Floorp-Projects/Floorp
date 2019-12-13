@@ -8,6 +8,7 @@ license:
         - build/pgo/js-input
         - build/workspace-hack/src/lib.rs
         - browser/app/blocklist.xml
+        - tools/crashreporter/system-symbols/mac/parse_pbzx.py
         # License not super clear
         - browser/branding/
         # Trademark
