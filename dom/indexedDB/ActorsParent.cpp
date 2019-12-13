@@ -5385,14 +5385,14 @@ class DatabaseOperationBase : public Runnable,
 
   typedef nsDataHashtable<nsUint64HashKey, bool> UniqueIndexTable;
 
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  const nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   const nsID mBackgroundChildLoggingId;
   const uint64_t mLoggingSerialNumber;
-  nsresult mResultCode;
 
  private:
+  nsresult mResultCode = NS_OK;
   Atomic<bool> mOperationMayProceed;
-  bool mActorDestroyed;
+  FlippedOnce<false> mActorDestroyed;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -5413,7 +5413,7 @@ class DatabaseOperationBase : public Runnable,
   void NoteActorDestroyed() {
     AssertIsOnOwningThread();
 
-    mActorDestroyed = true;
+    mActorDestroyed.Flip();
     mOperationMayProceed = false;
   }
 
@@ -5435,12 +5435,18 @@ class DatabaseOperationBase : public Runnable,
 
   nsresult ResultCode() const { return mResultCode; }
 
-  void SetFailureCode(nsresult aErrorCode) {
+  void SetFailureCode(nsresult aFailureCode) {
     MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
-    MOZ_ASSERT(NS_FAILED(aErrorCode));
-
-    mResultCode = aErrorCode;
+    OverrideFailureCode(aFailureCode);
   }
+
+  void SetFailureCodeIfUnset(nsresult aFailureCode) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      OverrideFailureCode(aFailureCode);
+    }
+  }
+
+  bool HasFailed() const { return NS_FAILED(mResultCode); }
 
   static nsresult GetStructuredCloneReadInfoFromStatement(
       mozIStorageStatement* aStatement, uint32_t aDataIndex,
@@ -5457,13 +5463,17 @@ class DatabaseOperationBase : public Runnable,
         mOwningEventTarget(GetCurrentThreadEventTarget()),
         mBackgroundChildLoggingId(aBackgroundChildLoggingId),
         mLoggingSerialNumber(aLoggingSerialNumber),
-        mResultCode(NS_OK),
-        mOperationMayProceed(true),
-        mActorDestroyed(false) {
+        mOperationMayProceed(true) {
     AssertIsOnOwningThread();
   }
 
   ~DatabaseOperationBase() override { MOZ_ASSERT(mActorDestroyed); }
+
+  void OverrideFailureCode(nsresult aFailureCode) {
+    MOZ_ASSERT(NS_FAILED(aFailureCode));
+
+    mResultCode = aFailureCode;
+  }
 
   static nsAutoCString MaybeGetBindingClauseForKeyRange(
       const Maybe<SerializedKeyRange>& aOptionalKeyRange,
@@ -13627,7 +13637,7 @@ mozilla::ipc::IPCResult Database::RecvClose() {
 void Database::StartTransactionOp::RunOnConnectionThread() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(Transaction());
-  MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+  MOZ_ASSERT(!HasFailed());
 
   IDB_LOG_MARK_PARENT_TRANSACTION("Beginning database work", "DB Start",
                                   IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
@@ -14759,7 +14769,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
 void VersionChangeTransaction::SendCompleteNotification(nsresult aResult) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mOpenDatabaseOp);
-  MOZ_ASSERT_IF(!mActorWasAlive, NS_FAILED(mOpenDatabaseOp->mResultCode));
+  MOZ_ASSERT_IF(!mActorWasAlive, mOpenDatabaseOp->HasFailed());
   MOZ_ASSERT_IF(!mActorWasAlive, mOpenDatabaseOp->mState >
                                      OpenDatabaseOp::State::SendingResults);
 
@@ -14770,12 +14780,12 @@ void VersionChangeTransaction::SendCompleteNotification(nsresult aResult) {
     return;
   }
 
-  if (NS_FAILED(aResult) && NS_SUCCEEDED(openDatabaseOp->mResultCode)) {
+  if (NS_FAILED(aResult)) {
     // 3.3.1 Opening a database:
     // "If the upgrade transaction was aborted, run the steps for closing a
     //  database connection with connection, create and return a new AbortError
     //  exception and abort these steps."
-    openDatabaseOp->mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+    openDatabaseOp->SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
 
   openDatabaseOp->mState = OpenDatabaseOp::State::SendingResults;
@@ -20303,9 +20313,7 @@ FactoryOp::Run() {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingResults) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     // Must set mState before dispatching otherwise we will race with the owning
     // thread.
@@ -20335,9 +20343,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   nsresult rv = DirectoryOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     // The caller holds a strong reference to us, no need for a self reference
     // before calling Run().
@@ -20354,9 +20360,9 @@ void FactoryOp::DirectoryLockFailed() {
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
-  if (NS_SUCCEEDED(mResultCode)) {
+  if (!HasFailed()) {
     IDB_REPORT_INTERNAL_ERR();
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    SetFailureCode(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   // The caller holds a strong reference to us, no need for a self reference
@@ -21188,9 +21194,7 @@ void OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
     // directly.
@@ -21261,7 +21265,7 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
   MOZ_ASSERT(mState == State::DatabaseWorkVersionChange);
   MOZ_ASSERT(mVersionChangeTransaction);
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
-  MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+  MOZ_ASSERT(!HasFailed());
   MOZ_ASSERT_IF(!IsActorDestroyed(), mDatabase);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
@@ -21294,8 +21298,8 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
 void OpenDatabaseOp::SendResults() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::SendingResults);
-  MOZ_ASSERT_IF(NS_SUCCEEDED(mResultCode), mMaybeBlockedDatabases.IsEmpty());
-  MOZ_ASSERT_IF(NS_SUCCEEDED(mResultCode), !mVersionChangeTransaction);
+  MOZ_ASSERT_IF(!HasFailed(), mMaybeBlockedDatabases.IsEmpty());
+  MOZ_ASSERT_IF(!HasFailed(), !mVersionChangeTransaction);
 
   mMaybeBlockedDatabases.Clear();
 
@@ -21312,20 +21316,18 @@ void OpenDatabaseOp::SendResults() {
   }
 
   if (mVersionChangeTransaction) {
-    MOZ_ASSERT(NS_FAILED(mResultCode));
+    MOZ_ASSERT(HasFailed());
 
-    mVersionChangeTransaction->Abort(mResultCode, /* aForce */ true);
+    mVersionChangeTransaction->Abort(ResultCode(), /* aForce */ true);
     mVersionChangeTransaction = nullptr;
   }
 
   if (IsActorDestroyed()) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
+    SetFailureCodeIfUnset(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   } else {
     FactoryRequestResponse response;
 
-    if (NS_SUCCEEDED(mResultCode)) {
+    if (!HasFailed()) {
       // If we just successfully completed a versionchange operation then we
       // need to update the version in our metadata.
       mMetadata->mCommonMetadata.version() = mRequestedVersion;
@@ -21340,7 +21342,7 @@ void OpenDatabaseOp::SendResults() {
       } else {
         response = ClampResultCode(rv);
 #ifdef DEBUG
-        mResultCode = response.get_nsresult();
+        SetFailureCode(response.get_nsresult());
 #endif
       }
     } else {
@@ -21350,7 +21352,7 @@ void OpenDatabaseOp::SendResults() {
       // sure we find such cases.
       mMetadata = nullptr;
 #endif
-      response = ClampResultCode(mResultCode);
+      response = ClampResultCode(ResultCode());
     }
 
     Unused << PBackgroundIDBFactoryRequestParent::Send__delete__(this,
@@ -21360,7 +21362,7 @@ void OpenDatabaseOp::SendResults() {
   if (mDatabase) {
     MOZ_ASSERT(!mDirectoryLock);
 
-    if (NS_FAILED(mResultCode)) {
+    if (HasFailed()) {
       mDatabase->Invalidate();
     }
 
@@ -21386,7 +21388,7 @@ void OpenDatabaseOp::SendResults() {
 
 void OpenDatabaseOp::ConnectionClosedCallback() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_FAILED(mResultCode));
+  MOZ_ASSERT(HasFailed());
   MOZ_ASSERT(mDirectoryLock);
 
   mDirectoryLock = nullptr;
@@ -21399,7 +21401,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   MOZ_ASSERT(mState == State::BeginVersionChange ||
              mState == State::DatabaseWorkVersionChange ||
              mState == State::SendingResults);
-  MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+  MOZ_ASSERT(!HasFailed());
   MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
   MOZ_ASSERT(!IsActorDestroyed());
 
@@ -21441,7 +21443,7 @@ nsresult OpenDatabaseOp::EnsureDatabaseActorIsAlive() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DatabaseWorkVersionChange ||
              mState == State::SendingResults);
-  MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+  MOZ_ASSERT(!HasFailed());
   MOZ_ASSERT(!IsActorDestroyed());
 
   EnsureDatabaseActor();
@@ -21952,9 +21954,7 @@ void DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
     // directly.
@@ -21980,10 +21980,10 @@ void DeleteDatabaseOp::SendResults() {
   if (!IsActorDestroyed()) {
     FactoryRequestResponse response;
 
-    if (NS_SUCCEEDED(mResultCode)) {
+    if (!HasFailed()) {
       response = DeleteDatabaseRequestResponse(mPreviousVersion);
     } else {
-      response = ClampResultCode(mResultCode);
+      response = ClampResultCode(ResultCode());
     }
 
     Unused << PBackgroundIDBFactoryRequestParent::Send__delete__(this,
@@ -22058,10 +22058,8 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
       info->mWaitingFactoryOp = nullptr;
     }
 
-    if (NS_FAILED(mResultCode)) {
-      if (NS_SUCCEEDED(deleteOp->ResultCode())) {
-        deleteOp->SetFailureCode(mResultCode);
-      }
+    if (HasFailed()) {
+      deleteOp->SetFailureCodeIfUnset(ResultCode());
     } else {
       // Inform all the other databases that they are now invalidated. That
       // should remove the previous metadata from our table.
@@ -22115,9 +22113,7 @@ nsresult DeleteDatabaseOp::VersionChangeOp::Run() {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
   }
@@ -22189,7 +22185,7 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mInternalState == InternalState::DatabaseWork);
   MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
+  MOZ_ASSERT(!HasFailed());
 
   AUTO_PROFILER_LABEL("TransactionDatabaseOperationBase::RunOnConnectionThread",
                       DOM);
@@ -22198,12 +22194,12 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
 
   if (mTransactionIsAborted || mTransaction->IsInvalidatedOnAnyThread()) {
     // This transaction is already set to be aborted or invalidated.
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+    SetFailureCode(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   } else if (!OperationMayProceed()) {
     // The operation was canceled in some way, likely because the child process
     // has crashed.
     IDB_REPORT_INTERNAL_ERR();
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    OverrideFailureCode(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   } else {
     Database* database = mTransaction->GetDatabase();
     MOZ_ASSERT(database);
@@ -22211,7 +22207,7 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
     // Here we're actually going to perform the database operation.
     nsresult rv = database->EnsureConnection();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mResultCode = rv;
+      SetFailureCode(rv);
     } else {
       DatabaseConnection* connection = database->GetConnection();
       MOZ_ASSERT(connection);
@@ -22221,7 +22217,7 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
       if (mLoggingSerialNumber) {
         rv = autoProgress.Register(connection->GetStorageConnection(), this);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          mResultCode = rv;
+          SetFailureCode(rv);
         }
       }
 
@@ -22243,7 +22239,7 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
         }
 
         if (NS_FAILED(rv)) {
-          mResultCode = rv;
+          SetFailureCode(rv);
         }
       }
     }
@@ -22331,35 +22327,39 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
     // destroyed.  Normal operations redundantly check if the actor was
     // destroyed in SendSuccessResult and SendFailureResult, therefore it's
     // ok to call it in all cases here.
-    if (NS_SUCCEEDED(mResultCode)) {
+    if (!HasFailed()) {
       IDB_REPORT_INTERNAL_ERR();
-      mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      SetFailureCode(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
   } else if (mTransaction->IsInvalidated() || mTransaction->IsAborted()) {
     // Aborted transactions always see their requests fail with ABORT_ERR,
     // even if the request succeeded or failed with another error.
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+    OverrideFailureCode(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
 
-  if (NS_SUCCEEDED(mResultCode)) {
+  const nsresult rv = [aSendPreprocessInfo, this] {
+    if (HasFailed()) {
+      return ResultCode();
+    }
     if (aSendPreprocessInfo) {
       // This should not release the IPDL reference.
-      mResultCode = SendPreprocessInfo();
-    } else {
-      // This may release the IPDL reference.
-      mResultCode = SendSuccessResult();
+      return SendPreprocessInfo();
     }
-  }
+    // This may release the IPDL reference.
+    return SendSuccessResult();
+  }();
 
-  if (NS_FAILED(mResultCode)) {
+  if (NS_FAILED(rv)) {
+    SetFailureCodeIfUnset(rv);
+
     // This should definitely release the IPDL reference.
-    if (!SendFailureResult(mResultCode)) {
+    if (!SendFailureResult(rv)) {
       // Abort the transaction.
-      mTransaction->Abort(mResultCode, /* aForce */ false);
+      mTransaction->Abort(rv, /* aForce */ false);
     }
   }
 
-  if (aSendPreprocessInfo && NS_SUCCEEDED(mResultCode)) {
+  if (aSendPreprocessInfo && !HasFailed()) {
     mInternalState = InternalState::WaitingForContinue;
 
     mWaitingForContinue = true;
@@ -22723,9 +22723,7 @@ DatabaseOp::Run() {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::SendingResults) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
+    SetFailureCodeIfUnset(rv);
 
     // Must set mState before dispatching otherwise we will race with the owning
     // thread.
@@ -22851,7 +22849,7 @@ void CreateFileOp::SendResults() {
   if (!IsActorDestroyed() && !mDatabase->IsInvalidated()) {
     DatabaseRequestResponse response;
 
-    if (NS_SUCCEEDED(mResultCode)) {
+    if (!HasFailed()) {
       RefPtr<MutableFile> mutableFile;
       nsresult rv = CreateMutableFile(getter_AddRefs(mutableFile));
       if (NS_SUCCEEDED(rv)) {
@@ -22863,11 +22861,11 @@ void CreateFileOp::SendResults() {
       } else {
         response = ClampResultCode(rv);
 #ifdef DEBUG
-        mResultCode = response.get_nsresult();
+        SetFailureCode(response.get_nsresult());
 #endif
       }
     } else {
-      response = ClampResultCode(mResultCode);
+      response = ClampResultCode(ResultCode());
     }
 
     Unused << PBackgroundIDBDatabaseRequestParent::Send__delete__(this,
@@ -24314,7 +24312,7 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
 
   switch (aResponse.type()) {
     case PreprocessResponse::Tnsresult:
-      mResultCode = aResponse.get_nsresult();
+      SetFailureCode(aResponse.get_nsresult());
       break;
 
     case PreprocessResponse::TObjectStoreGetPreprocessResponse:
