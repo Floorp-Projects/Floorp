@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.uneval
+
 // uneval works on objects with no callable .toSource method.
 
 var obj = Object.create(null);

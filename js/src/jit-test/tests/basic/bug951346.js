@@ -1,3 +1,3 @@
 
 enableShellAllocationMetadataBuilder();
-eval(uneval({'-1':true}));
+eval(`(${JSON.stringify({'-1':true})})`);

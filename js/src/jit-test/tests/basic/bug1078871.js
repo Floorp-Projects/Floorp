@@ -35,7 +35,7 @@ function tangle(n, m) {
         arr[j] = arr[rand(n)] + arr[rand(n)];
       }
     }
-    uneval(arr[j]);
+    JSON.stringify(arr[j]);
   }
 
   return arr;
