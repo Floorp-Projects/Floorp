@@ -1,3 +1,5 @@
+// |reftest| skip-if(!Array.prototype.toSource)
+
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +14,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (typeof Array.prototype.toSource != 'undefined')
-{
-  expect = '[null]';
-  actual = [null].toSource();
+expect = '[null]';
+actual = [null].toSource();
 
-  reportCompare(expect, actual, summary);
-}
+reportCompare(expect, actual, summary);
