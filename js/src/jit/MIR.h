@@ -1998,9 +1998,6 @@ bool TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes);
 bool EqualTypes(MIRType type1, TemporaryTypeSet* typeset1, MIRType type2,
                 TemporaryTypeSet* typeset2);
 
-bool CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType,
-                         MIRType input, TypeSet* inputTypes);
-
 class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
   // Number of elements to allocate for the array.
