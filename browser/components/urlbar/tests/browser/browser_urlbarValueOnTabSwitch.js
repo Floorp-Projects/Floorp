@@ -45,7 +45,7 @@ add_task(async function() {
   BrowserTestUtils.loadURI(partialURLTab.linkedBrowser, testURL);
   await Promise.all([loaded1, loaded2, loaded3]);
 
-  testURL = gURLBar.trimValue(testURL);
+  testURL = BrowserUtils.trimURL(testURL);
   testPartialURL = testURL.substr(0, testURL.length - charsToDelete);
 
   function cleanUp() {

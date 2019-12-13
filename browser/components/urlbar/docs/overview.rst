@@ -269,8 +269,6 @@ Implements an input box *View*, owns an *UrlbarView*.
 
   UrlbarInput {
     constructor(options = { textbox, panel });
-    // Used to trim urls when necessary (e.g. removing "http://")
-    trimValue();
     // Uses UrlbarValueFormatter to highlight the base host, search aliases
     // and to keep the host visible on overflow.
     formatValue(val);
