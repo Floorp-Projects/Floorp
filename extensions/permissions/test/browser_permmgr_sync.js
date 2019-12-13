@@ -25,7 +25,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
     async function(aBrowser) {
-      await ContentTask.spawn(aBrowser, null, async function() {
+      await SpecialPowers.spawn(aBrowser, [], async function() {
         // Before the load http URIs shouldn't have been sent down yet
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -145,7 +145,7 @@ add_task(async function() {
       addPerm("https://example.com", "newperm4");
       addPerm("https://someotherrandomwebsite.com", "document");
 
-      await ContentTask.spawn(aBrowser, null, async function() {
+      await SpecialPowers.spawn(aBrowser, [], async function() {
         // The new permissions should be available, but only for
         // http://example.com, and about:home
         is(

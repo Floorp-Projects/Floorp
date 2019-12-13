@@ -25,7 +25,7 @@ add_task(async function() {
   // Open new http window from JavaScript in file:// page and check that we get
   // a new window with the correct page and features.
   let promiseNewWindow = BrowserTestUtils.waitForNewWindow({ url: TEST_HTTP });
-  await ContentTask.spawn(browser, TEST_HTTP, uri => {
+  await SpecialPowers.spawn(browser, [TEST_HTTP], uri => {
     content.open(uri, "_blank");
   });
   let win = await promiseNewWindow;

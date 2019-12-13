@@ -11,7 +11,7 @@ add_task(async function() {
 
   const label = "oi-test";
   const onLoggedMessage = waitForMessage(hud, label);
-  await ContentTask.spawn(gBrowser.selectedBrowser, label, function(str) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [label], function(str) {
     content.wrappedJSObject.console.log(str, [1, 2, 3]);
   });
   const { node } = await onLoggedMessage;

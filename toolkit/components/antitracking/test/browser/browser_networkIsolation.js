@@ -112,7 +112,7 @@ add_task(async function() {
   checkAltSvcCache(0, []);
 
   info("Loading tracking scripts and tracking images");
-  await ContentTask.spawn(browser, { trackingURL }, async function(obj) {
+  await SpecialPowers.spawn(browser, [{ trackingURL }], async function(obj) {
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => {

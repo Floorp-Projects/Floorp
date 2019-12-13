@@ -51,7 +51,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:test-linkable-page" },
     async browser => {
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         isnot(
           content.document.body.textContent,
           "scriptLoaded",
@@ -70,7 +70,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:test-unlinkable-page" },
     async browser => {
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         is(
           content.document.body.textContent,
           "scriptLoaded",

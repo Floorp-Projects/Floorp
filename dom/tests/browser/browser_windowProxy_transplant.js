@@ -36,10 +36,8 @@ add_task(async function() {
     await BrowserTestUtils.browserLoaded(browser, false, URL1);
 
     info("Chrome script has loaded initial URI.");
-    await ContentTask.spawn(
-      browser,
-      { URL1, URL2, URL3 },
-      async ({ URL1, URL2, URL3 }) => {
+    await SpecialPowers.spawn(
+      browser, [{ URL1, URL2, URL3 }], async ({ URL1, URL2, URL3 }) => {
         let iframe = content.document.createElement("iframe");
         content.document.body.appendChild(iframe);
 

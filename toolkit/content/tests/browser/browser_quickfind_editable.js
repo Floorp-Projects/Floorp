@@ -21,7 +21,7 @@ async function test_hotkeys(browser, expected) {
 }
 
 async function focus_element(browser, query) {
-  await ContentTask.spawn(browser, query, async function focus(query) {
+  await SpecialPowers.spawn(browser, [query], async function focus(query) {
     let element = content.document.querySelector(query);
     element.focus();
   });

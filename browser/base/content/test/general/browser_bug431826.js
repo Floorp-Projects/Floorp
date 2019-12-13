@@ -1,5 +1,5 @@
 function remote(task) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, task);
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], task);
 }
 
 add_task(async function() {

@@ -3,17 +3,17 @@ add_task(async function() {
   let tab = BrowserTestUtils.addTab(gBrowser);
   let uri = "data:text/html;charset=utf-8,<html/>";
 
-  let eventPromise = ContentTask.spawn(tab.linkedBrowser, null, function() {
+  let eventPromise = SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     const { PromiseUtils } = ChromeUtils.import(
       "resource://gre/modules/PromiseUtils.jsm"
     );
     let deferred = PromiseUtils.defer();
 
     let listener = event => {
-      removeEventListener("DOMDocElementInserted", listener, true);
+      docShell.chromeEventHandler.removeEventListener("DOMDocElementInserted", listener, true);
       deferred.resolve(event.target.documentURIObject.spec);
     };
-    addEventListener("DOMDocElementInserted", listener, true);
+    docShell.chromeEventHandler.addEventListener("DOMDocElementInserted", listener, true);
 
     return deferred.promise;
   });

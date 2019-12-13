@@ -31,7 +31,7 @@ function test_openUILink_checkPrincipal() {
       "example.com loaded"
     );
 
-    await ContentTask.spawn(tab.linkedBrowser, null, function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
       let channel = content.docShell.currentDocumentChannel;
 
       const loadingPrincipal = channel.loadInfo.loadingPrincipal;

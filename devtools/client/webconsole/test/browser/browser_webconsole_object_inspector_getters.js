@@ -13,7 +13,7 @@ add_task(async function() {
 
   const LONGSTRING = "ab ".repeat(1e5);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, LONGSTRING, function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function(
     longString
   ) {
     content.wrappedJSObject.console.log(

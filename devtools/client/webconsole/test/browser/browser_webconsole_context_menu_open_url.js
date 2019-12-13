@@ -21,7 +21,7 @@ add_task(async function() {
   info("Test Open URL menu item for text log");
 
   info("Logging a text message in the content window");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log("simple text message");
   });
   let message = await waitFor(() => findMessage(hud, "simple text message"));
@@ -64,7 +64,7 @@ add_task(async function() {
   info("Test Open URL menu item for network log");
 
   info("Reload the content window to produce a network log");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });
   message = await waitFor(() => findMessage(hud, "test-console.html"));

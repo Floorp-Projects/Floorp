@@ -37,7 +37,7 @@ add_task(async function test_principal_click() {
       myLink.click();
       await loadPromise;
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         let channel = content.docShell.currentDocumentChannel;
         is(
           channel.originalURI.asciiSpec,
@@ -94,7 +94,7 @@ add_task(async function test_principal_ctrl_click() {
       let tab = await loadPromise;
       gBrowser.selectTabAtIndex(2);
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         let channel = content.docShell.currentDocumentChannel;
         is(
           channel.originalURI.asciiSpec,
@@ -160,7 +160,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
       let tab = await loadPromise;
       gBrowser.selectTabAtIndex(2);
 
-      await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         let channel = content.docShell.currentDocumentChannel;
         is(
           channel.originalURI.asciiSpec,

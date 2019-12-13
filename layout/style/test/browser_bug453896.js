@@ -7,7 +7,7 @@ add_task(async function() {
       url: uri,
     },
     function(browser) {
-      return ContentTask.spawn(browser, null, async function() {
+      return SpecialPowers.spawn(browser, [], async function() {
         var fake_window = { ok: ok };
         content.wrappedJSObject.run(fake_window);
       });

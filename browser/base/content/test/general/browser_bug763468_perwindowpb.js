@@ -52,7 +52,7 @@ async function openNewTab(aWindow, aExpectedURL) {
     false,
     aExpectedURL
   );
-  let alreadyLoaded = await ContentTask.spawn(browser, aExpectedURL, url => {
+  let alreadyLoaded = await SpecialPowers.spawn(browser, [aExpectedURL], url => {
     let doc = content.document;
     return doc && doc.readyState === "complete" && doc.location.href == url;
   });

@@ -51,7 +51,7 @@ async function openPage(shouldClick) {
       if (shouldClick) {
         await BrowserTestUtils.synthesizeMouse("body", 2, 2, {}, browser);
       }
-      let hasInteractedWith = await ContentTask.spawn(browser, "", function() {
+      let hasInteractedWith = await SpecialPowers.spawn(browser, [""], function() {
         return content.document.userHasInteracted;
       });
       is(

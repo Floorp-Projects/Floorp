@@ -82,11 +82,11 @@ function runCharsetTest(url, check1, charset, check2) {
         afterChangeCharset
       );
 
-      ContentTask.spawn(gBrowser.selectedBrowser, null, check1).then(() => {
+      SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
         BrowserSetForcedCharacterSet(charset);
       });
     } else {
-      ContentTask.spawn(gBrowser.selectedBrowser, null, check1).then(() => {
+      SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
         gBrowser.removeCurrentTab();
         finish();
       });
@@ -94,7 +94,7 @@ function runCharsetTest(url, check1, charset, check2) {
   }
 
   function afterChangeCharset() {
-    ContentTask.spawn(gBrowser.selectedBrowser, null, check2).then(() => {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], check2).then(() => {
       gBrowser.removeCurrentTab();
       finish();
     });

@@ -47,7 +47,7 @@ add_task(async function test_yandex_translation() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     const { TranslationDocument } = ChromeUtils.import(
       "resource:///modules/translation/TranslationDocument.jsm"
     );

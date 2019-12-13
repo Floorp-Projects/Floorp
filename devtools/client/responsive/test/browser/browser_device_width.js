@@ -142,7 +142,7 @@ async function checkSubframeProps(ui) {
 }
 
 function grabContentInfo(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     return {
       screen: {
         width: content.screen.width,
@@ -157,7 +157,7 @@ function grabContentInfo(ui) {
 }
 
 function grabContentSubframeInfo(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     const subframe = content.document.getElementById("subframe");
     const win = subframe.contentWindow;
     return {

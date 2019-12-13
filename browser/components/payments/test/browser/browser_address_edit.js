@@ -77,12 +77,10 @@ add_task(async function test_add_link() {
       delete newAddress.email;
 
       for (let options of testOptions) {
-        let shippingAddressChangePromise = ContentTask.spawn(
-          browser,
-          {
+        let shippingAddressChangePromise = SpecialPowers.spawn(
+          browser, [{
             eventName: "shippingaddresschange",
-          },
-          PTU.ContentTasks.awaitPaymentEventPromise
+          }], PTU.ContentTasks.awaitPaymentEventPromise
         );
 
         await manuallyAddShippingAddress(frame, newAddress, options);
@@ -148,12 +146,10 @@ add_task(async function test_edit_link() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       });
 
-      let shippingAddressChangePromise = ContentTask.spawn(
-        browser,
-        {
+      let shippingAddressChangePromise = SpecialPowers.spawn(
+        browser, [{
           eventName: "shippingaddresschange",
-        },
-        PTU.ContentTasks.awaitPaymentEventPromise
+        }], PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       const EXPECTED_ADDRESS = {
@@ -791,12 +787,10 @@ add_task(async function test_private_persist_addresses() {
       );
 
       info("awaiting the shippingaddresschange event");
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           eventName: "shippingaddresschange",
-        },
-        PTU.ContentTasks.awaitPaymentEventPromise
+        }], PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       await spawnPaymentDialogTask(
@@ -859,10 +853,8 @@ add_task(async function test_private_persist_addresses() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await ContentTask.spawn(
-        browser,
-        {},
-        PTU.ContentTasks.addCompletionHandler
+      let result = await SpecialPowers.spawn(
+        browser, [], PTU.ContentTasks.addCompletionHandler
       );
 
       // Verify response has the expected properties

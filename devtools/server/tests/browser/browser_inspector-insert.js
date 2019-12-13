@@ -21,7 +21,7 @@ async function testRearrange(walker) {
   // Move nodeA to the end of the list.
   await walker.insertBefore(nodeA, longlist, null);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     ok(
       !content.document.querySelector("#a").nextSibling,
       "a should now be at the end of the list."
@@ -39,10 +39,8 @@ async function testRearrange(walker) {
   const nextNode = children.nodes[13];
   await walker.insertBefore(nodeA, longlist, nextNode);
 
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [nextNode.actorID],
-    async function(actorID) {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[nextNode.actorID]], async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
@@ -78,10 +76,8 @@ async function testInsertInvalidInput(walker) {
   const nextSibling = children.nodes[1];
 
   // Now move it to the original location and make sure no mutation happens.
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [longlist.actorID],
-    async function(actorID) {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[longlist.actorID]], async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
@@ -101,10 +97,8 @@ async function testInsertInvalidInput(walker) {
   );
 
   await walker.insertBefore(nodeA, longlist, nodeA);
-  let hasMutated = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    async function() {
+  let hasMutated = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -113,10 +107,8 @@ async function testInsertInvalidInput(walker) {
   ok(!hasMutated, "hasn't mutated");
 
   await walker.insertBefore(nodeA, longlist, nextSibling);
-  hasMutated = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    async function() {
+  hasMutated = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -125,10 +117,8 @@ async function testInsertInvalidInput(walker) {
   ok(!hasMutated, "still hasn't mutated after inserting before nextSibling");
 
   await walker.insertBefore(nodeA, longlist);
-  hasMutated = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    async function() {
+  hasMutated = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -137,10 +127,8 @@ async function testInsertInvalidInput(walker) {
   ok(hasMutated, "has mutated after inserting with null sibling");
 
   await walker.insertBefore(nodeA, longlist);
-  hasMutated = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    async function() {
+  hasMutated = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -148,7 +136,7 @@ async function testInsertInvalidInput(walker) {
   );
   ok(!hasMutated, "hasn't mutated after inserting with null sibling again");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.observer.disconnect();
   });
 }

@@ -16,7 +16,7 @@ add_task(async function() {
     messages: [{ text: "abba" }, { text: "abba" }, { text: "abba" }],
   });
 
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     for (let i = 0; i < 3; i++) {
       const o = { id: "abba" };
       content.console.log("abba", o);

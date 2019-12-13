@@ -34,10 +34,8 @@ add_task(async function test_new_window() {
     TEST_PATH + "file_dummy.html"
   );
 
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { gMaxAvailWidth, gMaxAvailHeight },
-    async function(input) {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ gMaxAvailWidth, gMaxAvailHeight }], async function(input) {
       is(
         content.screen.width,
         input.gMaxAvailWidth,

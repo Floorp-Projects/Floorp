@@ -55,11 +55,11 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
     const manifest = await ManifestObtainer.browserObtainManifest(browser);
     let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);
-    let color = await ContentTask.spawn(browser, icon, getIconColor);
+    let color = await SpecialPowers.spawn(browser, [icon], getIconColor);
     is(color[0], 255, "Fetched red icon");
 
     icon = await ManifestIcons.browserFetchIcon(browser, manifest, 500);
-    color = await ContentTask.spawn(browser, icon, getIconColor);
+    color = await SpecialPowers.spawn(browser, [icon], getIconColor);
     is(color[2], 255, "Fetched blue icon");
   });
 });

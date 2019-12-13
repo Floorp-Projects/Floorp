@@ -74,7 +74,7 @@ add_task(async function() {
   );
   const mutated = waitForNMutations(inspector, "childList", 2);
   const pseudoMutated = waitForMutation(inspector, "nativeAnonymousChildList");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const root = content.document.querySelector(".root");
     const hasBeforeEl = content.document.querySelector(
       "no-slot-component .has-before"

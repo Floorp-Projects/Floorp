@@ -64,7 +64,7 @@ add_task(async function() {
       checkA11yFront(parent, {}, a11yDoc);
     },
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document
           .getElementById("button")
           .setAttribute("aria-label", "Renamed")
@@ -77,7 +77,7 @@ add_task(async function() {
     "description-change",
     () => checkA11yFront(accessibleFront, { description: "" }),
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document
           .getElementById("button")
           .removeAttribute("aria-describedby")
@@ -94,7 +94,7 @@ add_task(async function() {
       SimpleTest.isDeeply(newStates, expectedStates, "States are updated");
     },
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document.getElementById("button").setAttribute("disabled", true)
       )
   );
@@ -124,7 +124,7 @@ add_task(async function() {
       is(newAttrs.live, "polite", "Attributes are updated");
     },
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document
           .getElementById("button")
           .setAttribute("aria-live", "polite")
@@ -139,7 +139,7 @@ add_task(async function() {
     "value-change",
     () => checkA11yFront(accessibleSliderFront, { value: "6" }),
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document
           .getElementById("slider")
           .setAttribute("aria-valuenow", "6")
@@ -168,7 +168,7 @@ add_task(async function() {
       );
     },
     () =>
-      ContentTask.spawn(browser, null, () => {
+      SpecialPowers.spawn(browser, [], () => {
         const doc = content.document;
         const slider = doc.getElementById("slider");
         const button = doc.createElement("button");
@@ -189,7 +189,7 @@ add_task(async function() {
         "Slider's first child has an updated index in parent"
       ),
     () =>
-      ContentTask.spawn(browser, null, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document.getElementById("slider").firstChild.remove()
       )
   );

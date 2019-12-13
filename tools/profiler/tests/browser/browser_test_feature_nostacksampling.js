@@ -18,10 +18,8 @@ add_task(async function test_profile_feature_nostacksampling() {
 
   const url = BASE_URL + "do_work_500ms.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
-      contentBrowser,
-      null,
-      () => Services.appinfo.processID
+    const contentPid = await SpecialPowers.spawn(
+      contentBrowser, [], () => Services.appinfo.processID
     );
 
     // Wait 500ms so that the tab finishes executing.

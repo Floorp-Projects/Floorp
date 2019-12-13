@@ -166,7 +166,7 @@ async function assertNavigationEvents({ url, frameId }) {
 }
 
 async function getTestTabRandomId() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.randomId;
   });
 }

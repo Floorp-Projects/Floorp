@@ -24,15 +24,13 @@ function runTest(obj) {
     await BrowserTestUtils.browserLoaded(browser);
 
     info("The non-tracker page opens a tracker iframe");
-    await ContentTask.spawn(
-      browser,
-      {
+    await SpecialPowers.spawn(
+      browser, [{
         page: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "localStorage.html",
         image: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "raptor.jpg",
         loading: obj.loading,
         result: obj.result,
-      },
-      async obj => {
+      }], async obj => {
         let loading = await new content.Promise(resolve => {
           let image = new content.Image();
           image.src = obj.image + "?" + Math.random();

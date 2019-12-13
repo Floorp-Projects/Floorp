@@ -29,7 +29,7 @@ add_task(async function setup() {
 });
 
 async function testInstall(browser, args) {
-  let success = await ContentTask.spawn(browser, { args }, async function(
+  let success = await SpecialPowers.spawn(browser, [{ args }], async function(
     opts
   ) {
     let { args } = opts;

@@ -67,7 +67,7 @@ const tests = [
     desc: "Remove a child from a document.",
     setup: async ({ doc, browser }) => {
       is(doc.querySelectorAll(".treeRow").length, 4, "Tree size is correct.");
-      await ContentTask.spawn(browser, {}, () =>
+      await SpecialPowers.spawn(browser, [], () =>
         content.document.getElementById("p").remove()
       );
       await BrowserTestUtils.waitForCondition(
@@ -99,7 +99,7 @@ const tests = [
   {
     desc: "Update child's text content.",
     setup: async ({ browser }) => {
-      await ContentTask.spawn(browser, {}, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         content.document.getElementById("h1").textContent = "New Header";
       });
     },

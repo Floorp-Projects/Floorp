@@ -23,7 +23,7 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
   await promiseTabLoadEvent(tab, TEST_TOP_PAGE);
 
   info("Loading tracking scripts and tracking images");
-  let referrer = await ContentTask.spawn(b, { rp }, async function({ rp }) {
+  let referrer = await SpecialPowers.spawn(b, [{ rp }], async function({ rp }) {
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => {

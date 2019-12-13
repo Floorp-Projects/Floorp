@@ -43,7 +43,7 @@ add_task(async function() {
     );
   });
   info("Opening second tab using a click");
-  await ContentTask.spawn(firstTab.linkedBrowser, "", async function() {
+  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
     content.document.getElementsByTagName("a")[0].click();
   });
   info("Waiting for the second tab to be opened");

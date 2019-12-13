@@ -256,7 +256,7 @@ let cpt = 0;
  */
 function emitContentBlockedMessage() {
   const url = `${BLOCKED_URL}?${++cpt}`;
-  ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -269,7 +269,7 @@ function emitContentBlockedMessage() {
  */
 function logString(hud, str) {
   const onMessage = waitForMessage(hud, str);
-  ContentTask.spawn(gBrowser.selectedBrowser, str, function(arg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
     content.console.log(arg);
   });
   return onMessage;
