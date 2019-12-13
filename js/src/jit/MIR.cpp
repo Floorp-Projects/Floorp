@@ -2388,6 +2388,22 @@ bool MPhi::checkForTypeChange(TempAllocator& alloc, MDefinition* ins,
   return true;
 }
 
+MBox::MBox(TempAllocator& alloc, MDefinition* ins)
+    : MUnaryInstruction(classOpcode, ins) {
+  setResultType(MIRType::Value);
+  if (ins->resultTypeSet()) {
+    setResultTypeSet(ins->resultTypeSet());
+  } else if (ins->type() != MIRType::Value) {
+    TypeSet::Type ntype =
+        ins->type() == MIRType::Object
+            ? TypeSet::AnyObjectType()
+            : TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type()));
+    setResultTypeSet(
+        alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype));
+  }
+  setMovable();
+}
+
 void MCall::addArg(size_t argnum, MDefinition* arg) {
   // The operand vector is initialized in reverse order by the IonBuilder.
   // It cannot be checked for consistency until all arguments are added.

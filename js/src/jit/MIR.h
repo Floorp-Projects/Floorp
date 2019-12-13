@@ -3296,21 +3296,7 @@ class MSameValue : public MBinaryInstruction, public SameValuePolicy::Data {
 
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
-  MBox(TempAllocator& alloc, MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setResultType(MIRType::Value);
-    if (ins->resultTypeSet()) {
-      setResultTypeSet(ins->resultTypeSet());
-    } else if (ins->type() != MIRType::Value) {
-      TypeSet::Type ntype =
-          ins->type() == MIRType::Object
-              ? TypeSet::AnyObjectType()
-              : TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type()));
-      setResultTypeSet(
-          alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype));
-    }
-    setMovable();
-  }
+  MBox(TempAllocator& alloc, MDefinition* ins);
 
  public:
   INSTRUCTION_HEADER(Box)
