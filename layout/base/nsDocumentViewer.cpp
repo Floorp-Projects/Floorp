@@ -160,32 +160,41 @@ class nsDocViewerSelectionListener final : public nsISelectionListener {
   // nsISelectionListerner interface
   NS_DECL_NSISELECTIONLISTENER
 
-  nsDocViewerSelectionListener(nsDocumentViewer* aDocViewer)
-      : mDocViewer(aDocViewer), mSelectionWasCollapsed(true) {}
+  nsDocViewerSelectionListener()
+      : mDocViewer(nullptr), mSelectionWasCollapsed(true) {}
+
+  nsresult Init(nsDocumentViewer* aDocViewer);
 
   void Disconnect() { mDocViewer = nullptr; }
 
  protected:
-  virtual ~nsDocViewerSelectionListener() = default;
+  virtual ~nsDocViewerSelectionListener() {}
 
   nsDocumentViewer* mDocViewer;
   bool mSelectionWasCollapsed;
 };
 
-/** editor Implementation of the FocusListener interface */
+/** editor Implementation of the FocusListener interface
+ */
 class nsDocViewerFocusListener final : public nsIDOMEventListener {
  public:
-  nsDocViewerFocusListener(nsDocumentViewer* aDocViewer)
-      : mDocViewer(aDocViewer) {}
+  /** default constructor
+   */
+  nsDocViewerFocusListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
+  nsresult Init(nsDocumentViewer* aDocViewer);
+
   void Disconnect() { mDocViewer = nullptr; }
 
  protected:
-  virtual ~nsDocViewerFocusListener() = default;
+  /** default destructor
+   */
+  virtual ~nsDocViewerFocusListener();
 
+ private:
   nsDocumentViewer* mDocViewer;
 };
 
@@ -378,9 +387,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   void PrepareToStartLoad(void);
 
   nsresult SyncParentSubDocMap();
-
-  void RemoveFocusListener();
-  void ReinitializeFocusListener();
 
   mozilla::dom::Selection* GetDocumentSelection();
 
@@ -649,7 +655,9 @@ nsDocumentViewer::~nsDocumentViewer() {
     mSelectionListener->Disconnect();
   }
 
-  RemoveFocusListener();
+  if (mFocusListener) {
+    mFocusListener->Disconnect();
+  }
 
   // XXX(?) Revoke pending invalidate events
 }
@@ -668,29 +676,6 @@ void nsDocumentViewer::LoadStart(Document* aDocument) {
 
   if (!mDocument) {
     mDocument = aDocument;
-  }
-}
-
-void nsDocumentViewer::RemoveFocusListener() {
-  if (RefPtr<nsDocViewerFocusListener> oldListener = mFocusListener.forget()) {
-    oldListener->Disconnect();
-    if (mDocument) {
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), oldListener,
-                                     false);
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), oldListener,
-                                     false);
-    }
-  }
-}
-
-void nsDocumentViewer::ReinitializeFocusListener() {
-  RemoveFocusListener();
-  mFocusListener = new nsDocViewerFocusListener(this);
-  if (mDocument) {
-    mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
-                                false, false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
-                                false, false);
   }
 }
 
@@ -786,19 +771,19 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
     //
     // Note that we are flushing before we add mPresShell as an observer
     // to avoid bogus notifications.
+
     mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
   }
 
   mPresShell->BeginObservingDocument();
 
   // Initialize our view manager
+  int32_t p2a = mPresContext->AppUnitsPerDevPixel();
+  MOZ_ASSERT(
+      p2a ==
+      mPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   {
-    int32_t p2a = mPresContext->AppUnitsPerDevPixel();
-    MOZ_ASSERT(
-        p2a ==
-        mPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
-
     nscoord width = p2a * mBounds.width;
     nscoord height = p2a * mBounds.height;
 
@@ -809,6 +794,7 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
     mPresContext->SetOverrideDPPX(mOverrideDPPX);
   }
 
+  p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
   if (aDoInitialReflow) {
     RefPtr<PresShell> presShell = mPresShell;
     // Initial reflow
@@ -818,7 +804,13 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   // now register ourselves as a selection listener, so that we get
   // called when the selection changes in the window
   if (!mSelectionListener) {
-    mSelectionListener = new nsDocViewerSelectionListener(this);
+    nsDocViewerSelectionListener* selectionListener =
+        new nsDocViewerSelectionListener();
+
+    selectionListener->Init(this);
+
+    // mSelectionListener is a owning reference
+    mSelectionListener = selectionListener;
   }
 
   RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
@@ -828,7 +820,36 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
 
   selection->AddSelectionListener(mSelectionListener);
 
-  ReinitializeFocusListener();
+  // Save old listener so we can unregister it
+  RefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
+  if (oldFocusListener) {
+    oldFocusListener->Disconnect();
+  }
+
+  // focus listener
+  //
+  // now register ourselves as a focus listener, so that we get called
+  // when the focus changes in the window
+  nsDocViewerFocusListener* focusListener = new nsDocViewerFocusListener();
+
+  focusListener->Init(this);
+
+  // mFocusListener is a strong reference
+  mFocusListener = focusListener;
+
+  if (mDocument) {
+    mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                false, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                false, false);
+
+    if (oldFocusListener) {
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"),
+                                     oldFocusListener, false);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"),
+                                     oldFocusListener, false);
+    }
+  }
 
   if (aDoInitialReflow && mDocument) {
     nsCOMPtr<Document> document = mDocument;
@@ -1574,7 +1595,14 @@ nsDocumentViewer::Open(nsISupports* aState, nsISHEntry* aSHEntry) {
 
   SyncParentSubDocMap();
 
-  ReinitializeFocusListener();
+  if (mFocusListener && mDocument) {
+    // The focus listener may have been disconnected.
+    mFocusListener->Init(this);
+    mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                false, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                false, false);
+  }
 
   // XXX re-enable image animations once that works correctly
 
@@ -1654,7 +1682,16 @@ nsDocumentViewer::Close(nsISHEntry* aSHEntry) {
     if (!mSHEntry && mDocument) mDocument->RemovedFromDocShell();
   }
 
-  RemoveFocusListener();
+  if (mFocusListener) {
+    mFocusListener->Disconnect();
+    if (mDocument) {
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                     false);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                     false);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -3205,6 +3242,11 @@ nsDocumentViewer::GetContentSizeConstrained(int32_t aMaxWidth,
 
 NS_IMPL_ISUPPORTS(nsDocViewerSelectionListener, nsISelectionListener)
 
+nsresult nsDocViewerSelectionListener::Init(nsDocumentViewer* aDocViewer) {
+  mDocViewer = aDocViewer;
+  return NS_OK;
+}
+
 /*
  * GetPopupNode, GetPopupLinkNode and GetPopupImageNode are helpers
  * for the cmd_copyLink / cmd_copyImageLocation / cmd_copyImageContents family
@@ -3375,6 +3417,10 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(
 // nsDocViewerFocusListener
 NS_IMPL_ISUPPORTS(nsDocViewerFocusListener, nsIDOMEventListener)
 
+nsDocViewerFocusListener::nsDocViewerFocusListener() : mDocViewer(nullptr) {}
+
+nsDocViewerFocusListener::~nsDocViewerFocusListener() {}
+
 nsresult nsDocViewerFocusListener::HandleEvent(Event* aEvent) {
   NS_ENSURE_STATE(mDocViewer);
 
@@ -3404,6 +3450,11 @@ nsresult nsDocViewerFocusListener::HandleEvent(Event* aEvent) {
     }
   }
 
+  return NS_OK;
+}
+
+nsresult nsDocViewerFocusListener::Init(nsDocumentViewer* aDocViewer) {
+  mDocViewer = aDocViewer;
   return NS_OK;
 }
 
