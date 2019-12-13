@@ -27,6 +27,7 @@ namespace gfx {
   _(WEBRENDER, Feature, "WebRender")                              \
   _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")          \
   _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor") \
+  _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")      \
   _(OMTP, Feature, "Off Main Thread Painting")                    \
   _(ADVANCED_LAYERS, Feature, "Advanced Layers")                  \
   _(WEBGPU, Feature, "WebGPU")                                    \
