@@ -28,16 +28,18 @@ catch(ex)
   reportCompare(expect, actual, summary + ': 1');
 }
 
-try
-{
-  expect = 'function a(){\n  return 1..toSource();\n}';
-  actual = a.toSource();
-  compareSource(expect, actual, summary + ': 2');
-}
-catch(ex)
-{
-  actual = ex + '';
-  reportCompare(expect, actual, summary + ': 2');
+if (Function.prototype.toSource) {
+  try
+  {
+    expect = 'function a(){\n  return 1..toSource();\n}';
+    actual = a.toSource();
+    compareSource(expect, actual, summary + ': 2');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+    reportCompare(expect, actual, summary + ': 2');
+  }
 }
 
 expect = a;

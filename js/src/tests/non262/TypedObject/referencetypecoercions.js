@@ -4,6 +4,8 @@ var summary = 'TypedObjects reference type coercions';
 var actual = '';
 var expect = '';
 
+var hasObjectPrototypeToSource = !!Object.prototype.toSource;
+
 var ArrayType = TypedObject.ArrayType;
 var StructType = TypedObject.StructType;
 var Any = TypedObject.Any;
@@ -60,9 +62,12 @@ function runTests()
 
   assertThrows(() => Object(undefined));
 
-  TestValues(Object, [{input: x, output: x},
-                      {input: 22.22, source: true, output: "(new Number(22.22))"},
-                      {input: true, source: true, output: "(new Boolean(true))"}]);
+  TestValues(Object, [{input: x, output: x}]);
+
+  if (hasObjectPrototypeToSource) {
+    TestValues(Object, [{input: 22.22, source: true, output: "(new Number(22.22))"},
+                        {input: true, source: true, output: "(new Boolean(true))"}]);
+  }
 
   reportCompare(true, true, "TypedObjects reference type tests");
 }

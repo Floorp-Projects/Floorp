@@ -89,7 +89,9 @@ function runTests()
         check(() => type(+Infinity) === 0);
         check(() => type(-Infinity) === 0);
         check(() => type(NaN) === 0);
-        check(() => type.toSource() === strings[i]);
+        if (Object.prototype.toSource) {
+            check(() => type.toSource() === strings[i]);
+        }
         check(() => type(null) == 0);
         check(() => type(undefined) == 0);
         check(() => type([]) == 0);
@@ -110,7 +112,9 @@ function runTests()
         check(() => type(+Infinity) === Infinity);
         check(() => type(-Infinity) === -Infinity);
         check(() => Number.isNaN(type(NaN)));
-        check(() => type.toSource() === floatStrings[i]);
+        if (Object.prototype.toSource) {
+            check(() => type.toSource() === floatStrings[i]);
+        }
         check(() => type(null) == 0);
         check(() => Number.isNaN(type(undefined)));
         check(() => type([]) == 0);

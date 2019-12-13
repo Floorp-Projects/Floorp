@@ -1,9 +1,12 @@
 const t = RegExp.prototype;
 
-let properties = "toSource,toString,compile,exec,test," +
+let properties = "toString,compile,exec,test," +
                  "flags,global,ignoreCase,multiline,source,sticky,unicode," +
                  "constructor," +
                  "Symbol(Symbol.match),Symbol(Symbol.replace),Symbol(Symbol.search),Symbol(Symbol.split)";
+if (Object.prototype.toSource) {
+    properties = "toSource," + properties;
+}
 if (Symbol.matchAll) {
     properties += ",Symbol(Symbol.matchAll)";
 }
