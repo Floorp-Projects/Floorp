@@ -16,6 +16,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsIBrowserChild.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -86,7 +87,6 @@ static const char kPrintingPromptService[] =
 #include "nsPageSequenceFrame.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsFrameManager.h"
 #include "mozilla/ReflowInput.h"
@@ -609,9 +609,8 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
       root &&
       root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint);
 
-  nsCOMPtr<nsIDocShellTreeOwner> owner;
-  aDocShell->GetTreeOwner(getter_AddRefs(owner));
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
+  nsCOMPtr<nsIBrowserChild> browserChild = aDocShell->GetBrowserChild();
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(browserChild);
   if (browserChrome) {
     browserChrome->IsWindowModal(&mIsForModalWindow);
   }
@@ -3227,12 +3226,9 @@ static void DumpViews(nsIDocShell* aDocShell, FILE* out) {
 
     // dump the views of the sub documents
     int32_t i, n;
-    aDocShell->GetChildCount(&n);
-    for (i = 0; i < n; i++) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      aDocShell->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      if (childAsShell) {
+    BrowsingContext* bc = nsDocShell::Cast(aDocShell)->GetBrowsingContext();
+    for (auto& child : bc->GetChildren()) {
+      if (auto childDS = child->GetDocShell()) {
         DumpViews(childAsShell, out);
       }
     }
