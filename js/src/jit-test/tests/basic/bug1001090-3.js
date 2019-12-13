@@ -14,7 +14,7 @@ function h(f, inputs) {
             } catch (e) {}
         }
     }
-    output.push(g(uneval(results)))
+    output.push(g(JSON.stringify(results)))
 }
 m = (function(x, y) {});
 h(m, [])

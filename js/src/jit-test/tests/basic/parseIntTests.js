@@ -13,7 +13,8 @@ function doParseIntTests() {
     outputs[6] = 1;
     outputs[7] = -1;
     for (var i = 0; i < 8; i++) {
-        var testfn = new Function('return parseIntHelper(' + uneval(inputs[i]) + ');');
+        var n = Object.is(inputs[i], -0) ? "-0" : String(inputs[i]);
+        var testfn = new Function('return parseIntHelper(' + n + ');');
         assertEq(testfn(), outputs[i]);
     }
 }
