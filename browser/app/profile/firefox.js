@@ -412,14 +412,11 @@ pref("permissions.fullscreen.allowed", false);
 
 pref("permissions.postPrompt.animate", true);
 
-// This is primarily meant to be enabled for studies.
 #ifdef NIGHTLY_BUILD
-  pref("permissions.eventTelemetry.enabled", true);
+  pref("permissions.delegation.enabled", true);
 #else
-  pref("permissions.eventTelemetry.enabled", false);
+  pref("permissions.delegation.enabled", false);
 #endif
-
-pref("permissions.delegation.enabled", true);
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -1711,7 +1708,11 @@ pref("view_source.tab", true);
 
 pref("dom.serviceWorkers.enabled", true);
 
-pref("dom.security.featurePolicy.enabled", true);
+#ifdef NIGHTLY_BUILD
+  pref("dom.security.featurePolicy.enabled", true);
+#else
+  pref("dom.security.featurePolicy.enabled", false);
+#endif
 
 // Enable Push API.
 pref("dom.push.enabled", true);
