@@ -12,9 +12,9 @@ add_task(async function test() {
   let browser = gBrowser.selectedBrowser;
   let innerWindowId = browser.innerWindowID;
 
-  let stackTraceEmpty = await SpecialPowers.spawn(
+  let stackTraceEmpty = await ContentTask.spawn(
     browser,
-    [{ innerWindowId }],
+    { innerWindowId },
     async function(args) {
       let { TestUtils } = ChromeUtils.import(
         "resource://testing-common/TestUtils.jsm"

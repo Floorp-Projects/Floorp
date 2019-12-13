@@ -278,7 +278,7 @@ function promiseCheckChildNoFocusedElement(browser) {
     return null;
   }
 
-  return SpecialPowers.spawn(browser, [], async function() {
+  return ContentTask.spawn(browser, null, async function() {
     Assert.equal(
       Services.focus.focusedElement,
       null,
