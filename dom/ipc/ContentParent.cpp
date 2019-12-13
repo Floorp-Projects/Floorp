@@ -5398,6 +5398,19 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
     UpdateCookieStatus(aChannel);
   }
 
+  RefPtr<nsILoadInfo> loadInfo;
+  rv = aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<BrowsingContext> browsingContext;
+  rv = loadInfo->GetBrowsingContext(getter_AddRefs(browsingContext));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (browsingContext && !browsingContext->IsDiscarded()) {
+    browsingContext->GetSessionStorageManager()
+        ->SendSessionStorageDataToContentProcess(this, principal);
+  }
+
   if (!NextGenLocalStorageEnabled()) {
     return NS_OK;
   }
@@ -5808,6 +5821,15 @@ mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
 #else
   return IPC_FAIL(this, "Unsupported on this platform");
 #endif  // defined(XP_WIN)
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSessionStorageData(
+    BrowsingContext* const aTop, const nsACString& aOriginAttrs,
+    const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
+    const nsTArray<KeyValuePair>& aSessionData) {
+  aTop->GetSessionStorageManager()->LoadSessionStorageData(
+      this, aOriginAttrs, aOriginKey, aDefaultData, aSessionData);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(

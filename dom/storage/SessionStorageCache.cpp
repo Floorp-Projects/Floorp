@@ -6,6 +6,8 @@
 
 #include "SessionStorageCache.h"
 
+#include "mozilla/dom/PContent.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -127,6 +129,27 @@ already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
   }
 
   return cache.forget();
+}
+
+nsTArray<KeyValuePair> SessionStorageCache::SerializeData(
+    DataSetType aDataSetType) {
+  nsTArray<KeyValuePair> data;
+  for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
+    KeyValuePair keyValuePair;
+    keyValuePair.key() = iter.Key();
+    keyValuePair.value() = iter.Data();
+    data.EmplaceBack(std::move(keyValuePair));
+  }
+  return data;
+}
+
+void SessionStorageCache::DeserializeData(DataSetType aDataSetType,
+                                          const nsTArray<KeyValuePair>& aData) {
+  Clear(aDataSetType, false);
+  for (const auto& keyValuePair : aData) {
+    nsString oldValue;
+    SetItem(aDataSetType, keyValuePair.key(), keyValuePair.value(), oldValue);
+  }
 }
 
 bool SessionStorageCache::DataSet::ProcessUsageDelta(int64_t aDelta) {
