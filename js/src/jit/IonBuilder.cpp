@@ -1420,6 +1420,13 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
       break;
   }
 
+  // Unbox the OSR value to the type expected by the loop header.
+  //
+  // The only specialized types that can show up here are MIRTypes with a
+  // corresponding TypeSet::Type because NewBaselineFrameInspector and
+  // newPendingLoopHeader use TypeSet::Type for Values from the BaselineFrame.
+  // This means magic values other than MagicOptimizedArguments are represented
+  // as UnknownType() and MIRType::Value. See also TypeSet::IsUntrackedValue.
   switch (type) {
     case MIRType::Boolean:
     case MIRType::Int32:
@@ -1434,6 +1441,10 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
         osrBlock->rewriteSlot(slot, unbox);
         def = unbox;
       }
+      break;
+
+    case MIRType::Value:
+      // Nothing to do.
       break;
 
     case MIRType::Null: {
@@ -1463,7 +1474,7 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
     }
 
     default:
-      break;
+      MOZ_CRASH("Unexpected type");
   }
 
   MOZ_ASSERT(def == osrBlock->getSlot(slot));
