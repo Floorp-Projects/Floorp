@@ -333,14 +333,9 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
     if (!publishDeferredFunctions(root)) {
       return false;
     }
-    if (!publishLazyScripts(root)) {
-      return false;
-    }
-
     return true;
   }
 
-  bool publishLazyScripts(FunctionTree* root);
   bool publishDeferredFunctions(FunctionTree* root);
 
  public:

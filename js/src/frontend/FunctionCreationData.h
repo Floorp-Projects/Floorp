@@ -57,6 +57,31 @@ struct FunctionCreationData {
                        GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                        bool isSelfHosting = false, bool inFunctionBox = false);
 
+  // Custom Copy constructor to ensure we never copy a FunctionCreationData
+  // that has a LazyScriptData.
+  //
+  // We want to be able to copy FunctionCreationData into a Functionbox as part
+  // of our attempts to syntax parse an inner function, however, because
+  // trySyntaxParseInnerFunction is fallible, for example, if a new directive
+  // like "use asmjs" is encountered, we don't want to -move- it into the
+  // FunctionBox, because we may need it again if the syntax parse fails.
+  //
+  // To ensure that we never lose a lazyScriptData however, we guarantee that
+  // when this copy constructor is run, it doesn't have any lazyScriptData.
+  FunctionCreationData(const FunctionCreationData& data)
+      : atom(data.atom),
+        kind(data.kind),
+        generatorKind(data.generatorKind),
+        asyncKind(data.asyncKind),
+        allocKind(data.allocKind),
+        flags(data.flags),
+        isSelfHosting(data.isSelfHosting),
+        lazyScriptData(mozilla::Nothing()) {
+    MOZ_RELEASE_ASSERT(!data.lazyScriptData);
+  }
+
+  FunctionCreationData(FunctionCreationData&& data) = default;
+
   // The Parser uses KeepAtoms to prevent GC from collecting atoms
   JSAtom* atom = nullptr;
   FunctionSyntaxKind kind = FunctionSyntaxKind::Expression;
@@ -67,6 +92,8 @@ struct FunctionCreationData {
   FunctionFlags flags = {};
 
   bool isSelfHosting = false;
+
+  mozilla::Maybe<LazyScriptCreationData> lazyScriptData;
 
   HandleAtom getAtom(JSContext* cx) const;
 
