@@ -46,7 +46,7 @@ class BigIntLiteral;
 class ObjectBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  using ListType = mozilla::Variant<StackGCCellPtr, BigIntCreationData,
+  using ListType = mozilla::Variant<JS::GCCellPtr, BigIntCreationData,
                                     ObjLiteralCreationData, RegExpCreationData>;
   JS::RootedVector<ListType> vector;
 
@@ -60,8 +60,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
   MOZ_MUST_USE bool append(Scope* scope, uint32_t* index) {
     *index = vector.length();
-    if (!vector.append(
-            mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(scope))))) {
+    if (!vector.append(mozilla::AsVariant(JS::GCCellPtr(scope)))) {
       return false;
     }
     if (!firstScopeIndex) {
@@ -74,8 +73,7 @@ struct MOZ_STACK_CLASS GCThingList {
     if (literal->isDeferred()) {
       return vector.append(mozilla::AsVariant(literal->creationData()));
     }
-    return vector.append(
-        mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(literal->value()))));
+    return vector.append(mozilla::AsVariant(JS::GCCellPtr(literal->value())));
   }
   MOZ_MUST_USE bool append(RegExpLiteral* literal, uint32_t* index) {
     *index = vector.length();
@@ -83,8 +81,8 @@ struct MOZ_STACK_CLASS GCThingList {
       return vector.append(
           mozilla::AsVariant(std::move(literal->creationData())));
     }
-    return vector.append(mozilla::AsVariant(
-        StackGCCellPtr(JS::GCCellPtr(literal->objbox()->object()))));
+    return vector.append(
+        mozilla::AsVariant(JS::GCCellPtr(literal->objbox()->object())));
   }
   MOZ_MUST_USE bool append(ObjLiteralCreationData&& objlit, uint32_t* index) {
     *index = vector.length();
@@ -98,7 +96,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
   AbstractScope getScope(size_t index) const {
     auto& elem = vector[index].get();
-    return AbstractScope(&elem.as<StackGCCellPtr>().get().as<Scope>());
+    return AbstractScope(&elem.as<JS::GCCellPtr>().as<Scope>());
   }
 
   AbstractScope firstScope() const {
