@@ -39,10 +39,6 @@ const ICONS = {
     src: "chrome://devtools/skin/images/browsers/edge.svg",
     isMobileIconNeeded: false,
   },
-  edge_mobile: {
-    src: "chrome://devtools/skin/images/browsers/edge.svg",
-    isMobileIconNeeded: true,
-  },
 };
 
 class UnsupportedBrowserItem extends PureComponent {
