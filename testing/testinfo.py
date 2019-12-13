@@ -12,6 +12,7 @@ import posixpath
 import re
 import requests
 import subprocess
+import threading
 import traceback
 import mozpack.path as mozpath
 from moztest.resolve import TestResolver, TestManifestLoader
@@ -20,6 +21,8 @@ from mozfile import which
 from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
 
 ACTIVEDATA_RECORD_LIMIT = 10000
+MAX_ACTIVEDATA_CONCURRENCY = 5
+MAX_ACTIVEDATA_RETRIES = 5
 
 
 class TestInfo(object):
@@ -51,6 +54,28 @@ class TestInfo(object):
         data = response.json()["data"]
         self.log_verbose("response length: %d" % len(data))
         return data
+
+
+class ActiveDataThread(threading.Thread):
+    """
+    A thread to query ActiveData and wait for its response.
+    """
+    def __init__(self, name, ti, query, context):
+        threading.Thread.__init__(self, name=name)
+        self.ti = ti
+        self.query = query
+        self.context = context
+        self.response = None
+
+    def run(self):
+        attempt = 1
+        while attempt < MAX_ACTIVEDATA_RETRIES and not self.response:
+            try:
+                self.response = self.ti.activedata_query(self.query)
+            except Exception:
+                self.ti.log_verbose("%s: Exception on attempt #%d:" % (self.name, attempt))
+                traceback.print_exc()
+                attempt += 1
 
 
 class TestInfoTests(TestInfo):
@@ -512,8 +537,9 @@ class TestInfoReport(TestInfo):
     def __init__(self, verbose):
         TestInfo.__init__(self, verbose)
         self.total_activedata_matches = 0
+        self.threads = []
 
-    def add_activedata_for_suite(self, branches, days, by_component,
+    def add_activedata_for_suite(self, label, branches, days,
                                  suite_clause, tests_clause, path_mod):
         dates_clause = {"date": "today-%dday" % days}
         where_conditions = [
@@ -557,17 +583,8 @@ class TestInfoReport(TestInfo):
             ],
             "where": {"and": where_conditions}
         }
-        ad_response = self.activedata_query(ad_query)
-        if len(ad_response) >= ACTIVEDATA_RECORD_LIMIT:
-            print("warning: limit reached; some data may be missing")
-        matches = 0
-        for record in ad_response:
-            if 'result' in record:
-                result = record['result']
-                if self.update_report(by_component, result, path_mod):
-                    matches += 1
-        self.log_verbose("  %d results; %d matches" % (len(ad_response), matches))
-        self.total_activedata_matches += matches
+        t = ActiveDataThread(label, self, ad_query, path_mod)
+        self.threads.append(t)
 
     def update_report(self, by_component, result, path_mod):
         def update_item(item, label, value):
@@ -594,6 +611,44 @@ class TestInfoReport(TestInfo):
                         update_item(item, 'failed runs', result.get('failures', 0))
                         return True
         return False
+
+    def collect_activedata_results(self, by_component):
+        # Start the first MAX_ACTIVEDATA_CONCURRENCY threads. If too many
+        # concurrent requests are made to ActiveData, the requests frequently
+        # fail (504 is the typical response).
+        for i in range(min(MAX_ACTIVEDATA_CONCURRENCY, len(self.threads))):
+            t = self.threads[i]
+            t.start()
+        # Wait for running threads (first N threads in self.threads) to complete.
+        # When a thread completes, start the next thread, process the results
+        # from the completed thread, and remove the completed thread from
+        # the thread list.
+        while len(self.threads):
+            running_threads = min(MAX_ACTIVEDATA_CONCURRENCY, len(self.threads))
+            for i in range(running_threads):
+                t = self.threads[i]
+                t.join(1)
+                if not t.isAlive():
+                    ad_response = t.response
+                    path_mod = t.context
+                    name = t.name
+                    del self.threads[i]
+                    if len(self.threads) >= MAX_ACTIVEDATA_CONCURRENCY:
+                        running_threads = min(MAX_ACTIVEDATA_CONCURRENCY, len(self.threads))
+                        self.threads[running_threads - 1].start()
+                    if ad_response:
+                        if len(ad_response) >= ACTIVEDATA_RECORD_LIMIT:
+                            print("%s: ActiveData query limit reached; data may be missing" % name)
+                        matches = 0
+                        for record in ad_response:
+                            if 'result' in record:
+                                result = record['result']
+                                if self.update_report(by_component, result, path_mod):
+                                    matches += 1
+                        self.log_verbose("%s: %d results; %d matches" %
+                                         (name, len(ad_response), matches))
+                        self.total_activedata_matches += matches
+                    break
 
     def path_mod_reftest(self, path):
         # "<path1> == <path2>" -> "<path1>"
@@ -689,15 +744,17 @@ class TestInfoReport(TestInfo):
             suite_clause = {"eq": {"run.suite.name": suite}}
             path_mod = suites[suite][0]
             test_clauses = suites[suite][1]
+            suite_count = 1
             for test_clause in test_clauses:
-                self.log_verbose("Adding ActiveData data for %s / %s..." %
-                                 (suite, str(test_clause)))
-                self.add_activedata_for_suite(branches, days, by_component,
+                label = "%s-%d" % (suite, suite_count)
+                suite_count += 1
+                self.add_activedata_for_suite(label, branches, days,
                                               suite_clause, test_clause, path_mod)
         # Remainder: All supported suites not handled above.
         suite_clause = {"not": {"in": {"run.suite.name": unsupported_suites + list(suites)}}}
-        self.add_activedata_for_suite(branches, days, by_component,
+        self.add_activedata_for_suite("remainder", branches, days,
                                       suite_clause, None, None)
+        self.collect_activedata_results(by_component)
 
     def description(self, components, flavor, subsuite, paths,
                     show_manifests, show_tests, show_summary, show_annotations,
