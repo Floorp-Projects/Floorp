@@ -18,7 +18,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    ;
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
@@ -45,12 +45,9 @@ find-menu appears in editor element which has had makeEditable() called but desi
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = SpecialPowers.spawn(gBrowser, [], async function() {
+      let promise = ContentTask.spawn(gBrowser, [], async function() {
         return new Promise(resolve => {
-          docShell.chromeEventHandler.addEventListener("DOMContentLoaded", function listener() {
-            docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
+          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
         });
       });
       BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf-8,some%20random%20text");
@@ -59,7 +56,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
     }
 
     async function onDocumentLoaded() {
-      await SpecialPowers.spawn(gBrowser, [], async function() {
+      await ContentTask.spawn(gBrowser, [], async function() {
         var edsession = content.docShell.editingSession;
         edsession.makeWindowEditable(content, "html", false, true, false);
         content.focus();
@@ -74,7 +71,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
 
     async function enterStringIntoEditor(aString) {
       for (let i = 0; i < aString.length; i++) {
-        await SpecialPowers.spawn(gBrowser, [{ charCode: aString.charCodeAt(i) }], async function(args) {
+        await ContentTask.spawn(gBrowser, [{ charCode: aString.charCodeAt(i) }], async function(args) {
           let event = content.document.createEvent("KeyboardEvent");
           event.initKeyEvent("keypress", true, true, null, false, false,
                              false, false, 0, args.charCode);

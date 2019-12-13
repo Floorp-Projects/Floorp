@@ -13,9 +13,9 @@ function test() {
   );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener(
+      addEventListener(
         "load",
         () => {
           content.addEventListener("InstallTriggered", () => {
