@@ -288,24 +288,22 @@ partial interface Document {
 partial interface Document {
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions have it uppercase.
-  [LenientSetter, Unscopable, Func="Document::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter, Unscopable]
   readonly attribute boolean fullscreen;
   [BinaryName="fullscreen"]
   readonly attribute boolean mozFullScreen;
-  [LenientSetter, Func="Document::IsUnprefixedFullscreenEnabled", NeedsCallerType]
+  [LenientSetter, NeedsCallerType]
   readonly attribute boolean fullscreenEnabled;
   [BinaryName="fullscreenEnabled", NeedsCallerType]
   readonly attribute boolean mozFullScreenEnabled;
 
-  [Throws, Func="Document::IsUnprefixedFullscreenEnabled"]
+  [Throws]
   Promise<void> exitFullscreen();
   [Throws, BinaryName="exitFullscreen"]
   Promise<void> mozCancelFullScreen();
 
   // Events handlers
-  [Func="Document::IsUnprefixedFullscreenEnabled"]
   attribute EventHandler onfullscreenchange;
-  [Func="Document::IsUnprefixedFullscreenEnabled"]
   attribute EventHandler onfullscreenerror;
 };
 

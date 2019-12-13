@@ -20,13 +20,9 @@
        self[msg.fn].apply(null, msg.args);
      }
      function onLoad() {
-       SpecialPowers.pushPrefEnv({
-         "set": [["full-screen-api.unprefix.enabled", true]]
-       }, function() {
-         // The test file must be loaded into youtube.com domain
-         // because it needs unprivileged access to fullscreenEnabled.
-         ifr.src = "https://mochitest.youtube.com" + path;
-       });
+       // The test file must be loaded into youtube.com domain
+       // because it needs unprivileged access to fullscreenEnabled.
+       ifr.src = "https://mochitest.youtube.com" + path;
      }
     </script>
   </head>

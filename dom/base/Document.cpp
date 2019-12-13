@@ -13241,14 +13241,6 @@ void Document::RemoteFrameFullscreenReverted() {
   RestorePreviousFullscreenState(std::move(exit));
 }
 
-/* static */
-bool Document::IsUnprefixedFullscreenEnabled(JSContext* aCx,
-                                             JSObject* aObject) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return nsContentUtils::IsSystemCaller(aCx) ||
-         StaticPrefs::full_screen_api_unprefix_enabled();
-}
-
 static bool HasFullscreenSubDocument(Document* aDoc) {
   uint32_t count = CountFullscreenSubDocuments(aDoc);
   NS_ASSERTION(count <= 1,
@@ -13260,15 +13252,14 @@ static bool HasFullscreenSubDocument(Document* aDoc) {
 // in the given document. Returns a static string indicates the reason
 // why it is not enabled otherwise.
 static const char* GetFullscreenError(Document* aDoc, CallerType aCallerType) {
-  bool apiEnabled = StaticPrefs::full_screen_api_enabled();
-  if (apiEnabled && aCallerType == CallerType::System) {
+  if (!StaticPrefs::full_screen_api_enabled()) {
+    return "FullscreenDeniedDisabled";
+  }
+
+  if (aCallerType == CallerType::System) {
     // Chrome code can always use the fullscreen API, provided it's not
     // explicitly disabled.
     return nullptr;
-  }
-
-  if (!apiEnabled) {
-    return "FullscreenDeniedDisabled";
   }
 
   if (!aDoc->IsVisible()) {
