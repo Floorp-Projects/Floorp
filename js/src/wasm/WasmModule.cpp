@@ -522,7 +522,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
   // in-order and terminate if one has an out-of-bounds range.
   // We enable bulk memory semantics if shared memory is enabled.
 #ifdef ENABLE_WASM_BULKMEM_OPS
-  const bool eagerBoundsCheck = cx->options().wasmCranelift();
+  const bool eagerBoundsCheck = false;
 #else
   // Bulk memory must be available if shared memory is enabled.
   const bool eagerBoundsCheck =
