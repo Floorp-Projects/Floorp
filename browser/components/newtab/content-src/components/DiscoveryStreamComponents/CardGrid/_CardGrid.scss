@@ -59,7 +59,15 @@ $col4-header-font-size: 14;
     grid-template-columns: repeat(4, 1fr);
 
     &.ds-card-grid-divisible-by-3 {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(1, 1fr);
+
+      @media (min-width: $break-point-medium) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: $break-point-large) {
+        grid-template-columns: repeat(3, 1fr);
+      }
 
       .title {
         font-size: 17px;
