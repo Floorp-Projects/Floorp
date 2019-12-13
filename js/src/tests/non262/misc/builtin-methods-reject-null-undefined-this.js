@@ -32,7 +32,10 @@ var ClassToMethodMap =
               /*
                * "isPrototypeOf" has special |this| handling already tested in
                * non262/Object/propertyIsEnumerable.js.
-               */],
+               */
+              "__defineGetter__", "__defineSetter__",
+              "__lookupGetter__", "__lookupSetter__",
+              ],
     // Function methods often don't ToObject(this) as their very first step,
     // and they're already stepwise well-tested such that manual tests here
     // would be redundant.
@@ -44,10 +47,9 @@ var ClassToMethodMap =
               "indexOf", "lastIndexOf", "localeCompare", "match", "replace",
               "search", "slice", "split", "substring", "toLowerCase",
               "toLocaleLowerCase", "toUpperCase", "toLocaleUpperCase", "trim",
-              /*
-               * "trimLeft" and "trimRight" are non-standard and thus are tested
-               * in non262/extensions/trim-extensions.js.
-               */
+              "bold", "italics", "fixed", "fontsize",
+              "fontcolor", "link", "anchor", "strike", "small", "big", "blink",
+              "sup", "sub", "substr", "trimLeft", "trimRight",
               ],
     Boolean: ["toString", "valueOf"],
     Number:  ["toString", "toLocaleString", "valueOf",
@@ -76,7 +78,8 @@ var ClassToMethodMap =
               "setSeconds", "setUTCSeconds", "setMinutes", "setUTCMinutes",
               "setHours", "setUTCHours", "setDate", "setUTCDate",  "setMonth",
               "setUTCMonth", "setFullYear", "setUTCFullYear", "toUTCString",
-              "toISOString", "toJSON"],
+              "toISOString", "toJSON",
+              "getYear", "setYear",  "toGMTString"],
     RegExp:  ["exec", "test", "toString"],
     Error:   ["toString"],
   };
