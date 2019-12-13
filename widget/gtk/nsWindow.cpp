@@ -4829,7 +4829,8 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
     GtkBorder decorationSize = {0, 0, 0, 0};
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT &&
         mSizeState == nsSizeMode_Normal) {
-      GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
+      decorationSize = GetCSDDecorationSize(
+          gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
     }
 
     int scale = GdkScaleFactor();
@@ -6834,8 +6835,8 @@ void nsWindow::UpdateClientOffsetForCSDWindow() {
   // so we need to read offset between mContainer and toplevel mShell
   // window.
   if (mSizeState == nsSizeMode_Normal) {
-    GtkBorder decorationSize;
-    GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
+    GtkBorder decorationSize = GetCSDDecorationSize(
+        gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
     mClientOffset = nsIntPoint(decorationSize.left, decorationSize.top);
   } else {
     mClientOffset = nsIntPoint(0, 0);
@@ -7662,8 +7663,8 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
     float height = (float)mBounds.Height() / scale;
 
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
-      GtkBorder decorationSize;
-      GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
+      GtkBorder decorationSize = GetCSDDecorationSize(
+          gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
       width += decorationSize.left + decorationSize.right;
       height += decorationSize.top + decorationSize.bottom;
     }

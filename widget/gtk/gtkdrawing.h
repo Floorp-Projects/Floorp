@@ -106,6 +106,11 @@ typedef struct {
   ToolbarButtonGTKMetrics button[TOOLBAR_BUTTONS];
 } ToolbarGTKMetrics;
 
+typedef struct {
+  bool initialized;
+  GtkBorder decorationSize;
+} CSDWindowDecorationSize;
+
 typedef enum {
   MOZ_GTK_STEPPER_DOWN = 1 << 0,
   MOZ_GTK_STEPPER_BOTTOM = 1 << 1,
@@ -611,15 +616,12 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
                                 bool* aReversedButtonsPlacement);
 
 /**
- * Get size of CSD window extents of given GtkWindow.
+ * Get size of CSD window extents.
  *
- * aGtkWindow      [IN]  Decorated window.
- * aDecorationSize [OUT] Returns calculated (or estimated) decoration
- *                       size of given aGtkWindow.
+ * aIsPopup: [IN] Get decoration size for popup or toplevel window.
  *
- * returns:    True if we have extract decoration size (for GTK 3.20+)
- *             False if we have only an estimation (for GTK+ before  3.20+)
+ * returns: Calculated (or estimated) decoration size of given aGtkWindow.
  */
-bool GetCSDDecorationSize(GtkWindow* aGtkWindow, GtkBorder* aDecorationSize);
+GtkBorder GetCSDDecorationSize(bool aIsPopup);
 
 #endif
