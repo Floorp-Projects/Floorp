@@ -276,9 +276,9 @@ function expectObserverCalledOnClose(
 }
 
 function promiseMessage(aMessage, aAction, aCount = 1) {
-  let promise = SpecialPowers.spawn(
+  let promise = ContentTask.spawn(
     gBrowser.selectedBrowser,
-    [[aMessage, aCount]],
+    [aMessage, aCount],
     async function([expectedMessage, expectedCount]) {
       return new Promise(resolve => {
         function listenForMessage({ data }) {
@@ -509,10 +509,8 @@ async function reloadAndAssertClosedStreams() {
   await disableObserverVerification();
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [],
-    "() => content.location.reload()"
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () =>
+    content.location.reload()
   );
 
   await loadedPromise;

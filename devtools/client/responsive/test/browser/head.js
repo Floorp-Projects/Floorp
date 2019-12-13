@@ -194,7 +194,7 @@ function addRDMTask(rdmUrl, rdmTask, includeBrowserEmbeddedUI) {
 }
 
 function spawnViewportTask(ui, args, task) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [args], task);
+  return ContentTask.spawn(ui.getViewportBrowser(), args, task);
 }
 
 function waitForFrameLoad(ui, targetURL) {
@@ -442,7 +442,7 @@ const selectNetworkThrottling = (ui, value) =>
   ]);
 
 function getSessionHistory(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return ContentTask.spawn(browser, null, function() {
     /* eslint-disable no-undef */
     const { SessionHistory } = ChromeUtils.import(
       "resource://gre/modules/sessionstore/SessionHistory.jsm"

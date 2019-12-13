@@ -18,14 +18,11 @@ async function requestNotificationPermission(browser) {
 }
 
 async function requestCameraPermission(browser) {
-  return SpecialPowers.spawn(browser, [], () => {
-    return new Promise(resolve => {
-      content.navigator.mediaDevices
-        .getUserMedia({ video: true, fake: true })
-        .catch(resolve(false))
-        .then(resolve(true));
-    });
-  });
+  return SpecialPowers.spawn(browser, [], () =>
+    content.navigator.mediaDevices
+      .getUserMedia({ video: true, fake: true })
+      .then(() => true, () => false)
+  );
 }
 
 add_task(async function test_fullscreen_closes_permissionui_prompt() {
@@ -145,7 +142,7 @@ add_task(async function test_permission_prompt_closes_fullscreen() {
   let fullScreenExit = waitForFullScreenState(browser, false);
 
   info("Requesting notification permission");
-  requestNotificationPermission(browser);
+  requestNotificationPermission(browser).catch(() => {});
   await popupShown;
 
   info("Waiting for full-screen exit");

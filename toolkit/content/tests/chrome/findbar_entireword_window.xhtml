@@ -19,8 +19,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    ;
-    ContentTask.setTestScope(window.arguments[0]);
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 
     var gFindBar = null;
     var gBrowser;
@@ -123,14 +122,11 @@
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
 
-      let promise = SpecialPowers.spawn(gBrowser, [], async function() {
-        return new Promise(resolve => {
-          docShell.chromeEventHandler.addEventListener("DOMContentLoaded", function listener() {
-            docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
-        });
-      });
+      let promise = ContentTask.spawn(gBrowser, null, () =>
+        new Promise(resolve => {
+          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
+        })
+      );
       BrowserTestUtils.loadURI(gBrowser, kBaseURL + "/sample_entireword_" + testName + ".html");
       await promise;
       await onDocumentLoaded(testName);
