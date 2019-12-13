@@ -120,14 +120,10 @@ DebuggerClient.prototype = {
   /**
    * Shut down communication with the debugging server.
    *
-   * @param onClosed function
-   *        If specified, will be called when the debugging connection
-   *        has been closed. This parameter is deprecated - please use
-   *        the returned Promise.
    * @return Promise
    *         Resolves after the underlying transport is closed.
    */
-  close(onClosed) {
+  close() {
     const promise = new Promise(resolve => {
       // Disable detach event notifications, because event handlers will be in a
       // cleared scope by the time they run.
@@ -153,10 +149,6 @@ DebuggerClient.prototype = {
 
       cleanup();
     });
-
-    if (onClosed) {
-      promise.then(onClosed);
-    }
 
     return promise;
   },
