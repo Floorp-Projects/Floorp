@@ -2,14 +2,10 @@
 
 buildscript {
     repositories {
-        // remove next line after Android Gradle Plugin 3.6.0+ is stable
-        maven { url "http://storage.googleapis.com/r8-releases/raw/master"}
         google()
         jcenter()
     }
     dependencies {
-        // remove next line after Android Gradle Plugin 3.6.0+ is stable
-        classpath Deps.tools_newestR8
         classpath Deps.tools_androidgradle
         classpath Deps.tools_kotlingradle
         classpath Deps.androidx_safeargs

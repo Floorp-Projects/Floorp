@@ -4,9 +4,8 @@
 
 object Versions {
     const val kotlin = "1.3.30"
-    const val coroutines = "1.3.1"
+    const val coroutines = "1.3.3"
     const val android_gradle_plugin = "3.5.0"
-    const val newest_r8 = "ceaee94e172c6c057cc05e646f5324853fc5d4c5"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
     const val rxBindings = "3.0.0-alpha2"
@@ -72,7 +71,6 @@ object Versions {
 @Suppress("unused")
 object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
-    const val tools_newestR8 = "com.android.tools:r8:${Versions.newest_r8}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
