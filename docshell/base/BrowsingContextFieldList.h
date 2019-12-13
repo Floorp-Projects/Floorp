@@ -59,4 +59,6 @@ MOZ_BC_FIELD(Loading, bool)
 MOZ_BC_FIELD(GVAudibleAutoplayRequestStatus, GVAutoplayRequestStatus)
 MOZ_BC_FIELD(GVInaudibleAutoplayRequestStatus, GVAutoplayRequestStatus)
 
+MOZ_BC_FIELD(AncestorLoading, bool)
+
 #undef MOZ_BC_FIELD
