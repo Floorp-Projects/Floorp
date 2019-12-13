@@ -559,7 +559,7 @@ class WebConsoleUI {
    *         (or the selected frame if it exists), null if no frame was found.
    *         webConsoleFront is the front for the thread the frame is associated with.
    */
-  getFrameActor() {
+  async getFrameActor() {
     const state = this.hud.getDebuggerFrames();
     if (!state) {
       return { frameActor: null, webConsoleFront: this.webConsoleFront };
@@ -571,9 +571,11 @@ class WebConsoleUI {
       return { frameActor: null, webConsoleFront: this.webConsoleFront };
     }
 
+    const webConsoleFront = await state.target.getFront("console");
+
     return {
       frameActor: grip.actor,
-      webConsoleFront: state.target.activeConsole,
+      webConsoleFront,
     };
   }
 
