@@ -49,6 +49,7 @@
 #include "GVAutoplayRequestStatusIPC.h"
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
+extern mozilla::LazyLogModule gTimeoutDeferralLog;
 
 #define AUTOPLAY_LOG(msg, ...) \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
@@ -162,6 +163,20 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
     context->mOpenerPolicy = inherit->Top()->mOpenerPolicy;
     // CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
     context->mEmbedderPolicy = inherit->mEmbedderPolicy;
+    // if our parent has a parent that's loading, we need it too
+    context->mAncestorLoading = aParent ? aParent->mAncestorLoading : false;
+    if (!context->mAncestorLoading && aParent) {
+      // Check if the parent was itself loading already
+      nsPIDOMWindowOuter* outer = aParent->GetDOMWindow();
+      if (outer) {
+        Document* document = nsGlobalWindowOuter::Cast(outer)->GetDocument();
+        auto readystate = document->GetReadyStateEnum();
+        if (readystate == Document::ReadyState::READYSTATE_LOADING ||
+            readystate == Document::ReadyState::READYSTATE_INTERACTIVE) {
+          context->mAncestorLoading = true;
+        }
+      }
+    }
   }
 
   nsContentUtils::GenerateUUIDInPlace(context->mHistoryID);
@@ -1310,6 +1325,26 @@ void BrowsingContext::DidSetMuted() {
       win->RefreshMediaElementsVolume();
     }
   });
+}
+
+// Inform the Document for this context of the (potential) change in
+// loading state
+void BrowsingContext::DidSetAncestorLoading() {
+  nsPIDOMWindowOuter* outer = GetDOMWindow();
+  if (!outer) {
+    MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
+            ("DidSetAncestorLoading BC: %p -- No outer window", (void*)this));
+    return;
+  }
+  Document* document = nsGlobalWindowOuter::Cast(outer)->GetExtantDoc();
+  if (document) {
+    MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
+            ("DidSetAncestorLoading BC: %p -- NotifyLoading(%d, %d, %d)",
+             (void*)this, mAncestorLoading, document->GetReadyStateEnum(),
+             document->GetReadyStateEnum()));
+    document->NotifyLoading(mAncestorLoading, document->GetReadyStateEnum(),
+                            document->GetReadyStateEnum());
+  }
 }
 
 bool BrowsingContext::MaySetEmbedderInnerWindowId(const uint64_t& aValue,

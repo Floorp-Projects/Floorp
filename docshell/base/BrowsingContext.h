@@ -73,6 +73,10 @@ class BrowsingContextBase {
   }
   ~BrowsingContextBase() = default;
 
+  // This defines the default do-nothing implementations for DidSetXxxx()
+  // and MaySetXxxxx() for all the fields in
+  // mozilla/dom/BrowsingContextFieldList.h.  See below for descriptions
+  // of what these do if overridden.
 #define MOZ_BC_FIELD(name, type)                                    \
   type m##name;                                                     \
                                                                     \
@@ -456,6 +460,14 @@ class BrowsingContext : public nsISupports,
     bool mValidated = false;
   };
 
+  // Every BrowsingContext has a set of GetXxxx() and SetXxxxx() methods for
+  // all the fields defined in mozilla/dom/BrowsingContextFieldList.h.
+  // They all have optional DidSetXxxx() and MaySetXxxx() methods, which
+  // have default inherited do-nothing implementations, but we can override
+  // here.  DidSetXxxx() is used to run code in any process that sees the
+  // the value updated (note: even if the value itself didn't change).
+  // MaySetXxxx() is used to verify that the setting is allowed, and will
+  // assert if it fails in Debug builds.
 #define MOZ_BC_FIELD(name, type)                        \
   template <typename... Args>                           \
   void Set##name(Args&&... aValue) {                    \
@@ -573,6 +585,8 @@ class BrowsingContext : public nsISupports,
   // And then, we do a pre-order walk in the tree to refresh the
   // volume of all media elements.
   void DidSetMuted();
+
+  void DidSetAncestorLoading();
 
   bool MaySetEmbedderInnerWindowId(const uint64_t& aValue,
                                    ContentParent* aSource);
