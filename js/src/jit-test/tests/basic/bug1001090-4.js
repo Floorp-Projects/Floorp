@@ -13,7 +13,7 @@ function h(f, inputs) {
             } catch (e) {}
         }
     }
-    g(uneval(results))
+    g(JSON.stringify(results))
 }
 try {
     x()

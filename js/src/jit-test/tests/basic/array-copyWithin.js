@@ -118,7 +118,7 @@ var proxyObj = {
 var p = new Proxy([1, 2, 3, 4, 5], proxyObj);
 Array.prototype.copyWithin.call(p, 0, 3);
 for (name of Object.getOwnPropertyNames(p)) {
-    print(name + ": " + uneval(Object.getOwnPropertyDescriptor(p, name)));
+    print(name + ": " + JSON.stringify(Object.getOwnPropertyDescriptor(p, name)));
 }
 
 assertDeepEq(p, [6, 7, , , 5]);

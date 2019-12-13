@@ -54,7 +54,7 @@ function check(b, desc) {
                 gczeal(4)
         }
     }
-    banner = desc || uneval()
+    banner = desc || String()
     a = deserialize(serialize(b))
     var queue = [[a, b, banner]];
     while (queue.length) {
