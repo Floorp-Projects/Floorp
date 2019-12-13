@@ -51,8 +51,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollByVertical(mode: Int) {
         setup()
-        val vh = mainSession.evaluateJS("window.innerHeight") as Double
-        assertThat("Viewport height is not zero", vh, greaterThan(0.0))
+        val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
+        assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
         waitForVerticalScroll(vh, scrollWaitTimeout)
         val scrollY = mainSession.evaluateJS("window.visualViewport.pageTop") as Double
@@ -62,8 +62,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollByHorizontal(mode: Int) {
         setup()
-        val vw = mainSession.evaluateJS("window.innerWidth") as Double
-        assertThat("Viewport width is not zero", vw, greaterThan(0.0))
+        val vw = mainSession.evaluateJS("window.visualViewport.width") as Double
+        assertThat("Visual viewport width is not zero", vw, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.fromViewportWidth(1.0), ScreenLength.zero(), mode)
         waitForHorizontalScroll(vw, scrollWaitTimeout)
         val scrollX = mainSession.evaluateJS("window.visualViewport.pageLeft") as Double
@@ -96,8 +96,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollByVerticalTwice(mode: Int) {
         setup()
-        val vh = mainSession.evaluateJS("window.innerHeight") as Double
-        assertThat("Viewport height is not zero", vh, greaterThan(0.0))
+        val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
+        assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
         waitForVerticalScroll(vh, scrollWaitTimeout)
         sessionRule.session.panZoomController.scrollBy(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
@@ -120,8 +120,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollToVertical(mode: Int) {
         setup()
-        val vh = mainSession.evaluateJS("window.innerHeight") as Double
-        assertThat("Viewport height is not zero", vh, greaterThan(0.0))
+        val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
+        assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
         waitForVerticalScroll(vh, scrollWaitTimeout)
         val scrollY = mainSession.evaluateJS("window.visualViewport.pageTop") as Double
@@ -131,8 +131,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollToHorizontal(mode: Int) {
         setup()
-        val vw = mainSession.evaluateJS("window.innerWidth") as Double
-        assertThat("Viewport width is not zero", vw, greaterThan(0.0))
+        val vw = mainSession.evaluateJS("window.visualViewport.width") as Double
+        assertThat("Visual viewport width is not zero", vw, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.fromViewportWidth(1.0), ScreenLength.zero(), mode)
         waitForHorizontalScroll(vw, scrollWaitTimeout)
         val scrollX = mainSession.evaluateJS("window.visualViewport.pageLeft") as Double
@@ -205,8 +205,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun scrollToVerticalTwice(mode: Int) {
         setup()
-        val vh = mainSession.evaluateJS("window.innerHeight") as Double
-        assertThat("Viewport height is not zero", vh, greaterThan(0.0))
+        val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
+        assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
         waitForVerticalScroll(vh, scrollWaitTimeout)
         sessionRule.session.panZoomController.scrollTo(ScreenLength.zero(), ScreenLength.fromViewportHeight(1.0), mode)
