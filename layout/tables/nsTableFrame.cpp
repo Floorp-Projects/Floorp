@@ -2157,7 +2157,7 @@ nscoord nsTableFrame::GetCollapsedISize(const WritingMode aWM,
   nsTableFrame* fif = static_cast<nsTableFrame*>(FirstInFlow());
   for (nsIFrame* groupFrame : mColGroups) {
     const nsStyleVisibility* groupVis = groupFrame->StyleVisibility();
-    bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+    bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
     nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)groupFrame;
     for (nsTableColFrame* colFrame = cgFrame->GetFirstColumn(); colFrame;
          colFrame = colFrame->GetNextCol()) {
@@ -2165,7 +2165,7 @@ nscoord nsTableFrame::GetCollapsedISize(const WritingMode aWM,
       nscoord colIdx = colFrame->GetColIndex();
       if (mozilla::StyleDisplay::TableColumn == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->StyleVisibility();
-        bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+        bool collapseCol = StyleVisibility::Collapse == colVis->mVisible;
         nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
         if (!collapseGroup && !collapseCol) {
           iSize += colISize;

@@ -284,7 +284,7 @@ nscoord nsBox::GetXULBoxAscent(nsBoxLayoutState& aState) {
 }
 
 bool nsBox::IsXULCollapsed() {
-  return StyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
+  return StyleVisibility()->mVisible == StyleVisibility::Collapse;
 }
 
 nsresult nsIFrame::XULLayout(nsBoxLayoutState& aState) {

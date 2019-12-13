@@ -870,7 +870,7 @@ nscoord nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
   nsTableFrame* tableFrame = GetTableFrame();
   nsSize containerSize = tableFrame->GetSize();
   const nsStyleVisibility* groupVis = StyleVisibility();
-  bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
   if (collapseGroup) {
     tableFrame->SetNeedToCollapse(true);
   }
@@ -1379,7 +1379,7 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
   nsTableFrame* tableFrame = GetTableFrame();
   TableRowGroupReflowInput state(aReflowInput, tableFrame);
   const nsStyleVisibility* groupVis = StyleVisibility();
-  bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
   if (collapseGroup) {
     tableFrame->SetNeedToCollapse(true);
   }
