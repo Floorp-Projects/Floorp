@@ -2878,6 +2878,22 @@ gfx.adapter:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  device_id_last_seen:
+    bug_numbers:
+      - 1601091
+    description: >
+      Graphics adapter device identification
+      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+    expires: "74"
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    products:
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
   subsystem_id:
     bug_numbers:
       - 1594145
@@ -2975,6 +2991,22 @@ gfx:
     description: >
       Name of the graphics compositor in use. possible values are "opengl, d3d11, client, webrender or basic"
     expires: never
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    products:
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+  compositor_last_seen:
+    bug_numbers:
+      - 1601091
+    description: >
+      Name of the graphics compositor in use. possible values are "opengl, d3d11, client, webrender or basic".
+      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+    expires: "74"
     kind: string
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com

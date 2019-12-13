@@ -505,6 +505,21 @@ gfx.adapter.primary:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
     expires: never
+  device_id_last_seen:
+    description: >
+      Graphics adapter device identification last seen
+      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+    type: string
+    lifetime: user
+    gecko_datapoint: gfx.adapter.device_id_last_seen
+    bugs:
+      - 1601091
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    expires: "2020-02-01"
   subsystem_id:
     description: >
       Graphics adapter subsystem identification
@@ -606,6 +621,21 @@ gfx.status:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
     expires: never
+  compositor_last_seen:
+    description: >
+      Name of the graphics compositor last seen in use. possible values are "opengl, d3d11, client, webrender or basic"
+      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+    type: string
+    lifetime: user
+    gecko_datapoint: gfx.compositor_last_seen
+    bugs:
+      - 1601091
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    expires: "2020-02-01"
   headless:
     description: >
       Boolean indicated whether graphics is running in headless (no display) mode
