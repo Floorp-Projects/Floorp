@@ -17,7 +17,7 @@ body {
 .navbar_container {
   width: 100%;
 
-  margin-top: 20px;
+  margin-block: 15px;
   
   display: flex;
   flex-direction: row;
@@ -29,7 +29,7 @@ body {
 .icon_container {
   width: 44px;
   height: 44px;
-  margin-inline-end: 10px;
+  margin: 5px;
 
   border-radius: 22px;
   border-width: 2px;
@@ -41,6 +41,17 @@ body {
   background-color: inherit;
 
   -moz-context-properties: fill;
+
+  transition-property: transform;
+  transition-duration: 200ms;
+}
+
+.icon_container:hover {
+  transform: scale(1.25);
+}
+
+.icon_container:disabled {
+  transform: unset;
 }
 
 .icon_disabled_hide:disabled {
@@ -48,6 +59,7 @@ body {
 }
 .icon_backward {
   background-image: url("assets/icon-backward.svg");
+  margin-inline-start: 10px;
 }
 .icon_forward {
   background-image: url("assets/icon-forward.svg");
@@ -63,8 +75,7 @@ body {
 }
 .icon_prefs {
   background-image: url("assets/icon-settings.svg");
-  margin-inline-end: 0px;
-  margin-inline-start: 10px;
+  margin-inline-end: 10px;
 }
 
 .urlbar_container {
@@ -72,6 +83,7 @@ body {
   flex-grow: 1;
 
   padding: 0;
+  margin: 5px;
 
   border-radius: 22px;
   border: 2px solid transparent;

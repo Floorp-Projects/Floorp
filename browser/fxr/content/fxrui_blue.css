@@ -7,6 +7,8 @@
   * easier to map between the stylesheet and the design doc.
   */
 :root {
+  --num01: #1D2E3B;
+  --num02: #4C495C;
   --num03: #7D8896;
   --num04: #B3BECC;
   --num06: #FFFFFF;
@@ -24,39 +26,38 @@
 }
 
 body {
-  background-color: var(--num06);
+  background-color: var(--num01);
+  color: var(--num06);
 }
 
 .icon_container {
-  border-color: var(--num08);
-  background-color: var(--num06);
-  fill: var(--num08);
+  background-color: var(--num02);
+  border-color: transparent;
+  fill: var(--num06);
 }
 .icon_container:hover {
-  background-color: var(--num07);  
-  border-color: var(--num07);
+  background-color: var(--num01);  
   fill: var(--num06);
 }
 .icon_container:active {
-  background-color: var(--num09);  
-  border-color: var(--num09);
+  background-color: var(--num04);  
   fill: var(--num06);
 }
 .icon_container:disabled {
   background-color: var(--num16);  
-  border-color: var(--num16);
   fill: var(--num14);
 }
 
 .urlbar_container {  
-  border-color:var(--num08);
-  background-color: var(--num06);
+  border-color: transparent;
+  background-color: var(--num02);
 }
 .urlbar_container:hover {
-  border-color:var(--num07);
+  border-color:var(--num04);
 }
 .urlbar_container:focus-within {
   border-color:var(--num08);
+  background-color: var(--num01);
 }
 
 .urlbar_secure_icon {
@@ -64,7 +65,7 @@ body {
 }
 
 .urlbar_input {  
-  color: var(--num13);
+  color: var(--num06);
 }
 .urlbar_input::selection {
   background-color: var(--num08);

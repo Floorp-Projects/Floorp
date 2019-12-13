@@ -4,6 +4,8 @@
 
 body {
   margin: 10px 50px;
+  background-color: var(--num06);
+  color: var(--num13);
 }
 
 .plain_button {
