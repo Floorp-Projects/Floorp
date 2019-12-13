@@ -202,7 +202,6 @@ class DebuggerObject : public NativeObject {
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   struct CallData;
-  struct PromiseReactionRecordBuilder;
 
   static MOZ_MUST_USE bool getErrorReport(JSContext* cx,
                                           HandleObject maybeError,

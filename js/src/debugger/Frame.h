@@ -149,9 +149,8 @@ class DebuggerFrame : public NativeObject {
   static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
                                  HandleObject dbgCtor);
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
-                               HandleNativeObject debugger,
-                               const FrameIter* maybeIter,
-                               Handle<AbstractGeneratorObject*> maybeGenerator);
+                               const FrameIter& iter,
+                               HandleNativeObject debugger);
 
   static MOZ_MUST_USE bool getArguments(JSContext* cx,
                                         HandleDebuggerFrame frame,
