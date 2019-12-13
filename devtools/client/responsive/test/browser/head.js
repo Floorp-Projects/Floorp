@@ -154,9 +154,7 @@ function addRDMTask(rdmUrl, rdmTask, includeBrowserEmbeddedUI) {
       const usingBrowserUI = Services.prefs.getBoolPref(
         "devtools.responsive.browserUI.enabled"
       );
-      const browser = usingBrowserUI
-        ? tab.linkedBrowser
-        : ui.getViewportBrowser();
+      const browser = tab.linkedBrowser;
       try {
         await task({ ui, manager, browser, usingBrowserUI });
       } catch (err) {
@@ -832,14 +830,13 @@ function promiseRDMZoom(ui, browser, zoom) {
       return;
     }
 
+    const zoomComplete = BrowserTestUtils.waitForEvent(
+      browser,
+      "PostFullZoomChange"
+    );
     ZoomManager.setZoomForBrowser(browser, zoom);
 
     // Await the zoom complete event, then reflow.
-    BrowserTestUtils.waitForContentEvent(
-      ui.getViewportBrowser(),
-      "ZoomComplete"
-    )
-      .then(promiseContentReflow(ui))
-      .then(resolve);
+    zoomComplete.then(promiseContentReflow(ui)).then(resolve);
   });
 }
