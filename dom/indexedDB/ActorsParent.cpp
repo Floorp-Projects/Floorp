@@ -5054,7 +5054,7 @@ class ConnectionPool final {
 
   void NoteFinishedTransaction(uint64_t aTransactionId);
 
-  void ScheduleQueuedTransactions(ThreadInfo& aThreadInfo);
+  void ScheduleQueuedTransactions(ThreadInfo aThreadInfo);
 
   void NoteIdleDatabase(DatabaseInfo* aDatabaseInfo);
 
@@ -5116,7 +5116,11 @@ struct ConnectionPool::ThreadInfo {
 
   ThreadInfo();
 
-  explicit ThreadInfo(const ThreadInfo& aOther);
+  ThreadInfo(const ThreadInfo& aOther) = delete;
+  ThreadInfo& operator=(const ThreadInfo& aOther) = delete;
+
+  ThreadInfo(ThreadInfo&& aOther) noexcept;
+  ThreadInfo& operator=(ThreadInfo&& aOther) = default;
 
   ~ThreadInfo();
 };
@@ -5212,10 +5216,14 @@ class ConnectionPool::FinishCallbackWrapper final : public Runnable {
 struct ConnectionPool::IdleResource {
   TimeStamp mIdleTime;
 
+  IdleResource(const IdleResource& aOther) = delete;
+  IdleResource(IdleResource&& aOther) noexcept
+      : IdleResource(aOther.mIdleTime) {}
+  IdleResource& operator=(const IdleResource& aOther) = delete;
+  IdleResource& operator=(IdleResource&& aOther) = delete;
+
  protected:
   explicit IdleResource(const TimeStamp& aIdleTime);
-
-  explicit IdleResource(const IdleResource& aOther) = delete;
 
   ~IdleResource();
 };
@@ -5243,13 +5251,20 @@ struct ConnectionPool::IdleDatabaseInfo final : public IdleResource {
 struct ConnectionPool::IdleThreadInfo final : public IdleResource {
   ThreadInfo mThreadInfo;
 
- public:
-  // Boo, this is needed because nsTArray::InsertElementSorted() doesn't yet
-  // work with rvalue references.
-  MOZ_IMPLICIT
-  IdleThreadInfo(const ThreadInfo& aThreadInfo);
+  explicit IdleThreadInfo(ThreadInfo aThreadInfo);
 
-  explicit IdleThreadInfo(const IdleThreadInfo& aOther) = delete;
+  IdleThreadInfo(const IdleThreadInfo& aOther) = delete;
+  IdleThreadInfo(IdleThreadInfo&& aOther) noexcept
+      : IdleResource(std::move(aOther)),
+        mThreadInfo(std::move(aOther.mThreadInfo)) {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mThreadInfo.mRunnable);
+    MOZ_ASSERT(mThreadInfo.mThread);
+
+    MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
+  }
+  IdleThreadInfo& operator=(const IdleThreadInfo& aOther) = delete;
+  IdleThreadInfo& operator=(IdleThreadInfo&& aOther) = delete;
 
   ~IdleThreadInfo();
 
@@ -11778,19 +11793,17 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
   }
 }
 
-void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo& aThreadInfo) {
+void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aThreadInfo.mThread);
   MOZ_ASSERT(aThreadInfo.mRunnable);
   MOZ_ASSERT(!mQueuedTransactions.IsEmpty());
-  MOZ_ASSERT(!mIdleThreads.Contains(aThreadInfo));
 
   AUTO_PROFILER_LABEL("ConnectionPool::ScheduleQueuedTransactions", DOM);
 
-  mIdleThreads.InsertElementSorted(aThreadInfo);
-
-  aThreadInfo.mRunnable = nullptr;
-  aThreadInfo.mThread = nullptr;
+  auto idleThreadInfo = IdleThreadInfo{std::move(aThreadInfo)};
+  MOZ_ASSERT(!mIdleThreads.Contains(idleThreadInfo));
+  mIdleThreads.InsertElementSorted(std::move(idleThreadInfo));
 
   const auto foundIt = std::find_if(
       mQueuedTransactions.begin(), mQueuedTransactions.end(),
@@ -11824,7 +11837,7 @@ void ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo) {
 
     if (otherDatabasesWaiting) {
       // Let another database use this thread.
-      ScheduleQueuedTransactions(aDatabaseInfo->mThreadInfo);
+      ScheduleQueuedTransactions(std::move(aDatabaseInfo->mThreadInfo));
     } else if (mShutdownRequested) {
       // If there are no other databases that need to run then we can shut this
       // thread down immediately instead of going through the idle thread
@@ -11867,17 +11880,16 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
 
     if (!mQueuedTransactions.IsEmpty()) {
       // Give the thread to another database.
-      ScheduleQueuedTransactions(aDatabaseInfo->mThreadInfo);
+      ScheduleQueuedTransactions(std::move(aDatabaseInfo->mThreadInfo));
     } else if (!aDatabaseInfo->TotalTransactionCount()) {
       if (mShutdownRequested) {
         ShutdownThread(aDatabaseInfo->mThreadInfo);
       } else {
-        MOZ_ASSERT(!mIdleThreads.Contains(aDatabaseInfo->mThreadInfo));
+        auto idleThreadInfo =
+            IdleThreadInfo{std::move(aDatabaseInfo->mThreadInfo)};
+        MOZ_ASSERT(!mIdleThreads.Contains(idleThreadInfo));
 
-        mIdleThreads.InsertElementSorted(aDatabaseInfo->mThreadInfo);
-
-        aDatabaseInfo->mThreadInfo.mRunnable = nullptr;
-        aDatabaseInfo->mThreadInfo.mThread = nullptr;
+        mIdleThreads.InsertElementSorted(std::move(idleThreadInfo));
 
         if (mIdleThreads.Length() > kMaxIdleConnectionThreadCount) {
           ShutdownThread(mIdleThreads[0].mThreadInfo);
@@ -12302,11 +12314,12 @@ ConnectionPool::ThreadInfo::ThreadInfo() {
   MOZ_COUNT_CTOR(ConnectionPool::ThreadInfo);
 }
 
-ConnectionPool::ThreadInfo::ThreadInfo(const ThreadInfo& aOther)
-    : mThread(aOther.mThread), mRunnable(aOther.mRunnable) {
+ConnectionPool::ThreadInfo::ThreadInfo(ThreadInfo&& aOther) noexcept
+    : mThread(std::move(aOther.mThread)),
+      mRunnable(std::move(aOther.mRunnable)) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aOther.mThread);
-  MOZ_ASSERT(aOther.mRunnable);
+  MOZ_ASSERT(mThread);
+  MOZ_ASSERT(mRunnable);
 
   MOZ_COUNT_CTOR(ConnectionPool::ThreadInfo);
 }
@@ -12351,13 +12364,13 @@ ConnectionPool::IdleDatabaseInfo::~IdleDatabaseInfo() {
   MOZ_COUNT_DTOR(ConnectionPool::IdleDatabaseInfo);
 }
 
-ConnectionPool::IdleThreadInfo::IdleThreadInfo(const ThreadInfo& aThreadInfo)
+ConnectionPool::IdleThreadInfo::IdleThreadInfo(ThreadInfo aThreadInfo)
     : IdleResource(TimeStamp::NowLoRes() +
                    TimeDuration::FromMilliseconds(kConnectionThreadIdleMS)),
-      mThreadInfo(aThreadInfo) {
+      mThreadInfo(std::move(aThreadInfo)) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aThreadInfo.mRunnable);
-  MOZ_ASSERT(aThreadInfo.mThread);
+  MOZ_ASSERT(mThreadInfo.mRunnable);
+  MOZ_ASSERT(mThreadInfo.mThread);
 
   MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
 }
