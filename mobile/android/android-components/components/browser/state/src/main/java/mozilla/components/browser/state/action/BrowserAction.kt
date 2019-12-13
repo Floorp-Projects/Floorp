@@ -283,6 +283,11 @@ sealed class WebExtensionAction : BrowserAction() {
         WebExtensionAction()
 
     /**
+     * Update the given [updatedExtension] in the [BrowserState.extensions].
+     */
+    data class UpdateWebExtension(val updatedExtension: WebExtensionState) : WebExtensionAction()
+
+    /**
      * Updates a browser action of a given [extensionId].
      */
     data class UpdateBrowserAction(

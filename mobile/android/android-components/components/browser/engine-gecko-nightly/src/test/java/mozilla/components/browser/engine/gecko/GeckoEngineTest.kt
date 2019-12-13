@@ -789,6 +789,19 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `updating a web extension successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+
+        engine.updateWebExtension(
+            mock(),
+            onSuccess = { onSuccessCalled = true }
+        )
+        assertTrue(onSuccessCalled)
+    }
+
+    @Test
     fun `list web extensions successfully`() {
         val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)

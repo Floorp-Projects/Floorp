@@ -82,4 +82,20 @@ interface WebExtensionDelegate {
      * granted.
      */
     fun onInstallPermissionRequest(webExtension: WebExtension): Boolean = false
+
+    /**
+     * Invoked when a web extension has changed its permissions while trying to update to a
+     * new version. This requires user interaction as the updated extension will not be installed,
+     * until the user grants the new permissions.
+     *
+     * @param current The current [WebExtension].
+     * @param updated The update [WebExtension] that requires extra permissions.
+     * @param onPermissionsGranted A callback to indicate if the new permissions from the [updated] extension
+     * are granted or not.
+     */
+    fun onUpdatePermissionRequest(
+        current: WebExtension,
+        updated: WebExtension,
+        onPermissionsGranted: ((Boolean) -> Unit)
+    ) = Unit
 }
