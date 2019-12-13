@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script src="imgutils.js"></script>
+<img id="img" src="animated1.gif">
+<script>
+  let observer = new ImageDecoderObserverStub();
+  observer.decodeComplete = () => {
+    parent.postMessage("decodeComplete", "*");
+  };
+  observer.loadComplete = () => {
+    parent.postMessage("loadComplete", "*");
+  };
+  observer = SpecialPowers.wrapCallbackObject(observer);
+  const gObserver = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                                 .getService(SpecialPowers.Ci.imgITools)
+                                 .createScriptedObserver(observer);
+  const img = document.getElementById("img");
+  SpecialPowers.wrap(img).addObserver(gObserver);
+  window.addEventListener("unload", () => {
+    SpecialPowers.wrap(img).removeObserver(gObserver);
+  });
+</script>
