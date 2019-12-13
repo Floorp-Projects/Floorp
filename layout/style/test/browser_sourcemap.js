@@ -8,7 +8,7 @@ add_task(async function() {
       url: uri,
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [], function*() {
+      await SpecialPowers.spawn(browser, [], function() {
         let seenSheets = 0;
 
         for (let i = 0; i < content.document.styleSheets.length; ++i) {

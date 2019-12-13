@@ -65,8 +65,9 @@ async function runTest() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ scriptURL: SW_SCRIPT_URL }],
-    async ({ scriptURL }) =>
-      await content.wrappedJSObject.registerAndWaitForActive(scriptURL)
+    async ({ scriptURL }) => {
+      await content.wrappedJSObject.registerAndWaitForActive(scriptURL);
+    }
   );
   info(`Registered and activated Service Worker ${SW_SCRIPT_URL}`);
 
