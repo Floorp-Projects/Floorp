@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 459606;
-var summary = '((0.1).toFixed()).toSource()';
+var summary = '(0.1).toFixed()';
 var actual = '';
 var expect = '';
 
@@ -19,8 +19,8 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = '(new String("0"))';
-  actual = ((0.1).toFixed()).toSource();
+  expect = "0";
+  actual = (0.1).toFixed();
 
   reportCompare(expect, actual, summary);
 }

@@ -5,8 +5,8 @@ function assertTypedEqual(type, a_orig, b_orig) {
   try {
     recur(type, a_orig, b_orig);
   } catch (e) {
-    print("failure during "+
-          "assertTypedEqual("+type.toSource()+", "+a_orig.toSource()+", "+b_orig.toSource()+")");
+    var msg = `failure during assertTypedEqual(${describeType(type)}, ${JSON.stringify(a_orig)}, ${JSON.stringify(b_orig)})`;
+    print(msg);
     throw e;
   }
 
@@ -25,5 +25,24 @@ function assertTypedEqual(type, a_orig, b_orig) {
       } else {
         assertEq(a, b);
       }
+  }
+}
+
+function describeType(type) {
+  if (type instanceof TypedObject.ArrayType) {
+    return `new ArrayType(${describeType(type.elementType)}, ${type.length})`;
+  } else if (type instanceof TypedObject.StructType) {
+    var fields = [];
+    for (var key of Object.getOwnPropertyNames(type.fieldTypes)) {
+      fields.push(`${key}: ${describeType(type.fieldTypes[key])}`);
+    }
+    return `new StructType({${fields.join(", ")}})`;
+  } else {
+    for (var key of Object.getOwnPropertyNames(TypedObject)) {
+      if (TypedObject[key] === type) {
+        return key;
+      }
+    }
+    return JSON.stringify(type);
   }
 }

@@ -36,14 +36,11 @@ function tryRunning(f, code)
 }
 var realFunction = Function;
 var realToString = toString;
-var realToSource = toSource;
 function tryEnsureSanity()
 {
   delete Function;
-  delete toSource;
   delete toString;
   Function = realFunction;
-  toSource = realToSource;
   toString = realToString;
 }
 for (let iters = 0; iters < 2000; ++iters) { 

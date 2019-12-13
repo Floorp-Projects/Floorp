@@ -46,7 +46,7 @@ function runTests() {
 
   for (var i = 0; i < typesAndAlignments.length; i++) {
     var test = typesAndAlignments[i];
-    print("Type:", test.type.toSource(),
+    print("Type:", describeType(test.type),
           "Size:", test.type.byteLength,
           "Alignment:", test.type.byteAlignment);
     assertEq(test.type.byteLength, test.size);
