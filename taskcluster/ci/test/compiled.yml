@@ -38,6 +38,10 @@ cppunit:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try']
+            default: built-projects
 
 gtest:
     description: "GTests run"
