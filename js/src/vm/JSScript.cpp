@@ -4967,7 +4967,7 @@ static JSObject* CloneInnerInterpretedFunction(
 static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
                                    HandleObject obj,
                                    Handle<ScriptSourceObject*> sourceObject,
-                                   JS::HandleVector<StackGCCellPtr> gcThings) {
+                                   JS::HandleVector<JS::GCCellPtr> gcThings) {
   if (obj->is<RegExpObject>()) {
     return CloneScriptRegExpObject(cx, obj->as<RegExpObject>());
   }
@@ -4992,8 +4992,7 @@ static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
 
     Scope* enclosing = innerFun->nonLazyScript()->enclosingScope();
     uint32_t scopeIndex = FindScopeIndex(srcData->gcthings(), *enclosing);
-    RootedScope enclosingClone(cx,
-                               &gcThings[scopeIndex].get().get().as<Scope>());
+    RootedScope enclosingClone(cx, &gcThings[scopeIndex].get().as<Scope>());
     return CloneInnerInterpretedFunction(cx, enclosingClone, innerFun,
                                          sourceObject);
   }
@@ -5008,7 +5007,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   uint32_t ngcthings = srcData->gcthings().size();
 
   // Clone GC things.
-  JS::RootedVector<StackGCCellPtr> gcThings(cx);
+  JS::RootedVector<JS::GCCellPtr> gcThings(cx);
   size_t scopeIndex = 0;
   Rooted<ScriptSourceObject*> sourceObject(cx, dst->sourceObject());
   RootedObject obj(cx);
@@ -5035,7 +5034,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
         scope = &gcThing.as<Scope>();
         uint32_t enclosingScopeIndex =
             FindScopeIndex(srcData->gcthings(), *scope->enclosing());
-        enclosingScope = &gcThings[enclosingScopeIndex].get().get().as<Scope>();
+        enclosingScope = &gcThings[enclosingScopeIndex].get().as<Scope>();
         Scope* clone = Scope::clone(cx, scope, enclosingScope);
         if (!clone || !gcThings.append(JS::GCCellPtr(clone))) {
           return false;
@@ -5066,7 +5065,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   {
     auto array = dstData->gcthings();
     for (uint32_t i = 0; i < ngcthings; ++i) {
-      array[i] = gcThings[i].get().get();
+      array[i] = gcThings[i].get();
     }
   }
 

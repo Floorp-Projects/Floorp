@@ -591,10 +591,9 @@ add_task(async function ensure_search_engine() {
   // keyword.enabled is necessary for the tests to see keyword searches.
   Services.prefs.setBoolPref("keyword.enabled", true);
 
-  // Initialize the search service, but first set this geo IP pref to a dummy
+  // Before initializing the search service, set the geo IP url pref to a dummy
   // string.  When the search service is initialized, it contacts the URI named
-  // in this pref, which breaks the test since outside connections aren't
-  // allowed.
+  // in this pref, causing unnecessary error logs.
   let geoPref = "browser.search.geoip.url";
   Services.prefs.setCharPref(geoPref, "");
   registerCleanupFunction(() => Services.prefs.clearUserPref(geoPref));

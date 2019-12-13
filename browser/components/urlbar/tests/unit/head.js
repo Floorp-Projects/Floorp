@@ -180,6 +180,13 @@ async function addTestEngine(basename, httpServer = undefined) {
   let dataUrl =
     "http://localhost:" + httpServer.identity.primaryPort + "/data/";
 
+  // Before initializing the search service, set the geo IP url pref to a dummy
+  // string.  When the search service is initialized, it contacts the URI named
+  // in this pref, causing unnecessary error logs.
+  let geoPref = "browser.search.geoip.url";
+  Services.prefs.setCharPref(geoPref, "");
+  registerCleanupFunction(() => Services.prefs.clearUserPref(geoPref));
+
   info("Adding engine: " + basename);
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {

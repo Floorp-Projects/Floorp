@@ -1010,21 +1010,6 @@ struct WeakHeapPtrHasher {
   }
 };
 
-// Wrapper around GCCellPtr for use with RootedVector<StackGCCellPtr>.
-class MOZ_STACK_CLASS StackGCCellPtr {
-  JS::GCCellPtr ptr_;
-
- public:
-  MOZ_IMPLICIT StackGCCellPtr(JS::GCCellPtr ptr) : ptr_(ptr) {}
-  StackGCCellPtr() = default;
-
-  void operator=(const StackGCCellPtr& other) { ptr_ = other.ptr_; }
-
-  void trace(JSTracer* trc);
-
-  JS::GCCellPtr get() const { return ptr_; }
-};
-
 }  // namespace js
 
 namespace mozilla {

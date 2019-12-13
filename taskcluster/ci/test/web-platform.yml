@@ -65,7 +65,7 @@ web-platform-tests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
@@ -102,7 +102,7 @@ web-platform-tests-reftests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     tier:
         by-test-platform:
@@ -128,7 +128,7 @@ web-platform-tests-wdspec:
             - --test-type=wdspec
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']
             default: built-projects
     tier:

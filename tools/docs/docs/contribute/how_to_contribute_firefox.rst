@@ -170,6 +170,8 @@ Run:
 
     $ hg commit --amend <the modified file>
 
+After amending the patch, you will need to submit it using moz-phab again.
+
 If you wrote many changes, you can squash or edit commits with the
 command:
 
