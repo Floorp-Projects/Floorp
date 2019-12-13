@@ -2,12 +2,30 @@ $top-sites-vertical-space-with-spoc: 20px;
 
 // ds topsites wraps the original topsites, with a few css changes.
 .ds-top-sites {
+  .top-sites-list {
+    .top-site-outer:nth-child(n+5) {
+      display: none;
+    }
+
+    @media (min-width: $break-point-large) {
+      .top-site-outer:nth-child(n+7) {
+        display: none;
+      }
+
+      .top-site-outer:nth-child(-n+6) {
+        display: inline-block;
+      }
+    }
+
+    @media (min-width: $break-point-widest) {
+      .top-site-outer:nth-child(n) {
+        display: inline-block;
+      }
+    }
+  }
 
   // This is the override layer.
   .top-sites {
-    // Slightly different alignment with the other DS components than AS has.
-    margin: 0 (-$section-horizontal-padding);
-
     .top-site-outer {
       padding: 0 12px;
 
