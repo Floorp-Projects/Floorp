@@ -43,7 +43,9 @@ add_task(async function addScriptAfterNavigation({ Page }) {
 });
 
 add_task(async function addWithIsolatedWorldAndNavigate({ Page, Runtime }) {
+  const contextsCreated = recordContextCreated(Runtime, 3);
   await Runtime.enable();
+  info(`Navigating to ${DOC}`);
   const { frameId } = await Page.navigate({ url: DOC });
   await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -54,6 +56,8 @@ add_task(async function addWithIsolatedWorldAndNavigate({ Page, Runtime }) {
     worldName: WORLD,
     grantUniversalAccess: true,
   });
+  // flush context-created events for the steps above
+  await contextsCreated;
   const contexts = await checkIsolatedContextAfterLoad(
     Runtime,
     toDataURL("<p>Next")
@@ -85,10 +89,8 @@ add_task(async function addTwoScriptsWithIsolatedWorld({ Page, Runtime }) {
   await checkIsolatedContextAfterLoad(Runtime, DOC, names);
 });
 
-async function checkIsolatedContextAfterLoad(Runtime, url, names = [WORLD]) {
-  // At least the default context will get created
-  const expected = names.length + 1;
-  const contextsCreated = new Promise(resolve => {
+function recordContextCreated(Runtime, expectedCount) {
+  return new Promise(resolve => {
     const ctx = [];
     const unsubscribe = Runtime.executionContextCreated(payload => {
       ctx.push(payload.context);
@@ -96,7 +98,7 @@ async function checkIsolatedContextAfterLoad(Runtime, url, names = [WORLD]) {
         `Runtime.executionContextCreated: ${payload.context.auxData.type}` +
           `\n\turl ${payload.context.origin}`
       );
-      if (ctx.length > expected) {
+      if (ctx.length > expectedCount) {
         unsubscribe();
         resolve(ctx);
       }
@@ -106,6 +108,13 @@ async function checkIsolatedContextAfterLoad(Runtime, url, names = [WORLD]) {
       resolve(ctx);
     });
   });
+}
+
+async function checkIsolatedContextAfterLoad(Runtime, url, names = [WORLD]) {
+  // At least the default context will get created
+  const expected = names.length + 1;
+  const contextsCreated = recordContextCreated(Runtime, expected);
+  info(`Navigating to ${url}`);
   await loadURL(url);
   const contexts = await contextsCreated;
   is(contexts.length, expected, "Expected number of contexts got created");
