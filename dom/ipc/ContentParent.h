@@ -1210,6 +1210,11 @@ class ContentParent final
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvSessionStorageData(
+      BrowsingContext* aTop, const nsACString& aOriginAttrs,
+      const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
+      const nsTArray<KeyValuePair>& aSessionData);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
