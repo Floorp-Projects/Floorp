@@ -2178,10 +2178,9 @@ bool MPhi::updateForReplacement(MDefinition* def) {
 static inline TemporaryTypeSet* MakeMIRTypeSet(TempAllocator& alloc,
                                                MIRType type) {
   MOZ_ASSERT(type != MIRType::Value);
-  TypeSet::Type ntype =
-      type == MIRType::Object
-          ? TypeSet::AnyObjectType()
-          : TypeSet::PrimitiveType(ValueTypeFromMIRType(type));
+
+  TypeSet::Type ntype = TypeSet::GetMaybeUntrackedType(type);
+
   return alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype);
 }
 
@@ -2248,8 +2247,7 @@ bool jit::TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes) {
     case MIRType::Symbol:
     case MIRType::BigInt:
     case MIRType::MagicOptimizedArguments:
-      return types->hasType(
-          TypeSet::PrimitiveType(ValueTypeFromMIRType(input)));
+      return types->hasType(TypeSet::PrimitiveType(input));
 
     case MIRType::Object:
       return types->unknownObject() ||
@@ -2394,12 +2392,7 @@ MBox::MBox(TempAllocator& alloc, MDefinition* ins)
   if (ins->resultTypeSet()) {
     setResultTypeSet(ins->resultTypeSet());
   } else if (ins->type() != MIRType::Value) {
-    TypeSet::Type ntype =
-        ins->type() == MIRType::Object
-            ? TypeSet::AnyObjectType()
-            : TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type()));
-    setResultTypeSet(
-        alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype));
+    setResultTypeSet(MakeMIRTypeSet(alloc, ins->type()));
   }
   setMovable();
 }
@@ -6086,8 +6079,7 @@ static bool PropertyTypeIncludes(TempAllocator& alloc, HeapTypeSetKey property,
   // explicitly contains the type.
   TypeSet* types = property.maybeTypes();
   if (implicitType != MIRType::None) {
-    TypeSet::Type newType =
-        TypeSet::PrimitiveType(ValueTypeFromMIRType(implicitType));
+    TypeSet::Type newType = TypeSet::PrimitiveType(implicitType);
     if (types) {
       types = types->clone(alloc.lifoAlloc());
     } else {
