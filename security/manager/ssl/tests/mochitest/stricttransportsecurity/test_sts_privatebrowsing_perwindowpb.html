@@ -22,7 +22,6 @@
     "http://mochi.test:8888/chrome/security/manager/ssl/tests/mochitest/stricttransportsecurity/page_blank.html";
 
   const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-  ;
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   // This is how many sub-tests (testframes) in each round.
@@ -89,7 +88,7 @@
       frame.setAttribute("src", contentSrc);
 
       return new Promise(resolve => {
-        frame.addEventListener("load", resolve);
+        frame.addEventListener("load", () => resolve(), { once: true });
         content.document.body.appendChild(frame);
       });
     }).then(() => {

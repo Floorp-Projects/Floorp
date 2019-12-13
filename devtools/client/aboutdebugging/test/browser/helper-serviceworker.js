@@ -70,8 +70,8 @@ async function waitForRegistration(tab) {
   info("Wait until the registration appears on the window");
   const swBrowser = tab.linkedBrowser;
   await asyncWaitUntil(async () =>
-    SpecialPowers.spawn(swBrowser, [], function() {
-      return content.wrappedJSObject.getRegistration();
+    SpecialPowers.spawn(swBrowser, [], async function() {
+      return !!(await content.wrappedJSObject.getRegistration());
     })
   );
 }
