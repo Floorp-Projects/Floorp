@@ -155,13 +155,12 @@ add_task(async function testSidebarSetObjectValueGrip() {
     obj;
   `;
 
-  const consoleFront = await toolbox.target.getFront("console");
   const evalResult = await inspectedWindowFront.eval(
     fakeExtCallerInfo,
     expression,
     {
       evalResultAsGrip: true,
-      toolboxConsoleActorID: consoleFront.actor,
+      toolboxConsoleActorID: toolbox.target.activeConsole.actor,
     }
   );
 
@@ -238,13 +237,12 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   const expression = "({ body: document.body })";
 
-  const consoleFront = await toolbox.target.getFront("console");
   const evalResult = await inspectedWindowFront.eval(
     fakeExtCallerInfo,
     expression,
     {
       evalResultAsGrip: true,
-      toolboxConsoleActorID: consoleFront.actor,
+      toolboxConsoleActorID: toolbox.target.activeConsole.actor,
     }
   );
 
