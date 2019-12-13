@@ -4706,8 +4706,9 @@ class DatabaseConnection final {
   class UpdateRefcountFunction;
 
  private:
-  nsCOMPtr<mozIStorageConnection> mStorageConnection;
-  RefPtr<FileManager> mFileManager;
+  InitializedOnceMustBeTrue<const nsCOMPtr<mozIStorageConnection>>
+      mStorageConnection;
+  InitializedOnceMustBeTrue<const RefPtr<FileManager>> mFileManager;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
@@ -4732,7 +4733,7 @@ class DatabaseConnection final {
   mozIStorageConnection* GetStorageConnection() const {
     if (mStorageConnection) {
       AssertIsOnConnectionThread();
-      return mStorageConnection;
+      return mStorageConnection->get();
     }
 
     return nullptr;
@@ -9794,11 +9795,11 @@ nsresult DatabaseConnection::GetCachedStatement(
 
   if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
     nsresult rv =
-        mStorageConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
+        (*mStorageConnection)->CreateStatement(aQuery, getter_AddRefs(stmt));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       nsCString msg;
-      MOZ_ALWAYS_SUCCEEDS(mStorageConnection->GetLastErrorString(msg));
+      MOZ_ALWAYS_SUCCEEDS((*mStorageConnection)->GetLastErrorString(msg));
 
       nsAutoCString error =
           NS_LITERAL_CSTRING("The statement '") + aQuery +
@@ -9863,11 +9864,11 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     MOZ_ASSERT(mFileManager);
 
     RefPtr<UpdateRefcountFunction> function =
-        new UpdateRefcountFunction(this, mFileManager);
+        new UpdateRefcountFunction(this, mFileManager->get());
 
-    rv = mStorageConnection->CreateFunction(
-        NS_LITERAL_CSTRING("update_refcount"),
-        /* aNumArguments */ 2, function);
+    rv = (*mStorageConnection)
+             ->CreateFunction(NS_LITERAL_CSTRING("update_refcount"),
+                              /* aNumArguments */ 2, function);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -10326,17 +10327,18 @@ void DatabaseConnection::Close() {
   AUTO_PROFILER_LABEL("DatabaseConnection::Close", DOM);
 
   if (mUpdateRefcountFunction) {
-    MOZ_ALWAYS_SUCCEEDS(mStorageConnection->RemoveFunction(
-        NS_LITERAL_CSTRING("update_refcount")));
+    MOZ_ALWAYS_SUCCEEDS(
+        (*mStorageConnection)
+            ->RemoveFunction(NS_LITERAL_CSTRING("update_refcount")));
     mUpdateRefcountFunction = nullptr;
   }
 
   mCachedStatements.Clear();
 
-  MOZ_ALWAYS_SUCCEEDS(mStorageConnection->Close());
-  mStorageConnection = nullptr;
+  MOZ_ALWAYS_SUCCEEDS((*mStorageConnection)->Close());
+  mStorageConnection.reset();
 
-  mFileManager = nullptr;
+  mFileManager.reset();
 }
 
 nsresult DatabaseConnection::DisableQuotaChecks() {
@@ -10346,8 +10348,9 @@ nsresult DatabaseConnection::DisableQuotaChecks() {
   if (!mQuotaObject) {
     MOZ_ASSERT(!mJournalQuotaObject);
 
-    nsresult rv = mStorageConnection->GetQuotaObjects(
-        getter_AddRefs(mQuotaObject), getter_AddRefs(mJournalQuotaObject));
+    nsresult rv = (*mStorageConnection)
+                      ->GetQuotaObjects(getter_AddRefs(mQuotaObject),
+                                        getter_AddRefs(mJournalQuotaObject));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -10367,11 +10370,8 @@ void DatabaseConnection::EnableQuotaChecks() {
   MOZ_ASSERT(mQuotaObject);
   MOZ_ASSERT(mJournalQuotaObject);
 
-  RefPtr<QuotaObject> quotaObject;
-  RefPtr<QuotaObject> journalQuotaObject;
-
-  mQuotaObject.swap(quotaObject);
-  mJournalQuotaObject.swap(journalQuotaObject);
+  const RefPtr<QuotaObject> quotaObject = std::move(mQuotaObject);
+  const RefPtr<QuotaObject> journalQuotaObject = std::move(mJournalQuotaObject);
 
   quotaObject->EnableQuotaCheck();
   journalQuotaObject->EnableQuotaCheck();
