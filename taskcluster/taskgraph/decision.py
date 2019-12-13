@@ -140,10 +140,6 @@ try_task_config_schema = Schema({
     # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
     Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
     Optional(
-        "debian-tests",
-        description="Run linux desktop tests on debian 10 (buster)."
-        ): bool,
-    Optional(
         "ubuntu-bionic",
         description="Run linux desktop tests on Ubuntu 18.04 (bionic)."
         ): bool,
