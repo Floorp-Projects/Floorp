@@ -2598,6 +2598,9 @@
         (relatedToCurrent && this.selectedTab);
 
       var t = document.createXULElement("tab", { is: "tabbrowser-tab" });
+      // Tag the tab as being created so extension code can ignore events
+      // prior to TabOpen.
+      t.initializingTab = true;
       t.openerTab = openerTab;
 
       aURI = aURI || "about:blank";
@@ -2861,6 +2864,7 @@
       // Dispatch a new tab notification.  We do this once we're
       // entirely done, so that things are in a consistent state
       // even if the event listener opens or closes tabs.
+      delete t.initializingTab;
       let evt = new CustomEvent("TabOpen", {
         bubbles: true,
         detail: eventDetail || {},
