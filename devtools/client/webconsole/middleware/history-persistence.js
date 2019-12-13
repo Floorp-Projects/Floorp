@@ -46,7 +46,11 @@ function historyPersistenceMiddleware(store) {
     // entries from the previous session are loaded.
     if (historyLoaded && triggerStoreActions.includes(action.type)) {
       const state = store.getState();
-      asyncStorage.setItem("webConsoleHistory", state.history.entries);
+      asyncStorage
+        .setItem("webConsoleHistory", state.history.entries)
+        .catch(e => {
+          console.error("Error when saving WebConsole input history", e);
+        });
     }
 
     return res;
