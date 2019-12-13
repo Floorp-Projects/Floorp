@@ -35,28 +35,15 @@ use cranelift_wasm::{
 use crate::bindings::{self, SymbolicAddress};
 use crate::compile::{symbolic_function_name, wasm_function_name};
 
-/// Get the integer type used for representing pointers on this platform.
-fn native_pointer_type() -> ir::Type {
-    if cfg!(target_pointer_width = "64") {
-        ir::types::I64
-    } else {
-        ir::types::I32
-    }
-}
-
-/// Number of bytes in a native pointer.
-pub fn native_pointer_size() -> i32 {
-    if cfg!(target_pointer_width = "64") {
-        8
-    } else {
-        4
-    }
-}
-
 #[cfg(target_pointer_width = "64")]
 const POINTER_TYPE: ir::Type = ir::types::I64;
 #[cfg(target_pointer_width = "32")]
 const POINTER_TYPE: ir::Type = ir::types::I32;
+
+#[cfg(target_pointer_width = "64")]
+pub const POINTER_SIZE: i32 = 8;
+#[cfg(target_pointer_width = "32")]
+pub const POINTER_SIZE: i32 = 4;
 
 /// Convert a TlsData offset into a `Offset32` for a global decl.
 fn offset32(offset: usize) -> ir::immediates::Offset32 {
@@ -93,7 +80,7 @@ fn init_sig_from_wsig(
     // Add a VM context pointer argument.
     // This corresponds to SpiderMonkey's `WasmTlsReg` hidden argument.
     sig.params.push(ir::AbiParam::special(
-        native_pointer_type(),
+        POINTER_TYPE,
         ir::ArgumentPurpose::VMContext,
     ));
 
@@ -328,7 +315,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             func.create_global_value(ir::GlobalValueData::IAddImm {
                 base: vmctx,
                 offset: imm64(offset),
-                global_type: native_pointer_type(),
+                global_type: POINTER_TYPE,
             })
         })
     }
@@ -344,7 +331,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let gv = func.create_global_value(ir::GlobalValueData::IAddImm {
             base: vmctx,
             offset: imm64(self.env.func_import_tls_offset(index)),
-            global_type: native_pointer_type(),
+            global_type: POINTER_TYPE,
         });
         // Save it for next time.
         self.func_gvs[index] = gv.into();
@@ -361,15 +348,14 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 let gv = pos.func.create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
                     offset: imm64(self.static_env.instanceTlsOffset),
-                    global_type: native_pointer_type(),
+                    global_type: POINTER_TYPE,
                 });
                 self.instance_gv = gv.into();
                 gv
             }
         };
-        let ga = pos.ins().global_value(native_pointer_type(), gv);
-        pos.ins()
-            .load(native_pointer_type(), ir::MemFlags::trusted(), ga, 0)
+        let ga = pos.ins().global_value(POINTER_TYPE, gv);
+        pos.ins().load(POINTER_TYPE, ir::MemFlags::trusted(), ga, 0)
     }
 
     /// Generate code that loads the current instance pointer.
@@ -382,13 +368,13 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 let gv = pos.func.create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
                     offset: imm64(self.static_env.interruptTlsOffset),
-                    global_type: native_pointer_type(),
+                    global_type: POINTER_TYPE,
                 });
                 self.interrupt_gv = gv.into();
                 gv
             }
         };
-        let ga = pos.ins().global_value(native_pointer_type(), gv);
+        let ga = pos.ins().global_value(POINTER_TYPE, gv);
         pos.ins()
             .load(ir::types::I32, ir::MemFlags::trusted(), ga, 0)
     }
@@ -428,7 +414,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 .create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
                     offset: imm64(self.static_env.cxTlsOffset),
-                    global_type: native_pointer_type(),
+                    global_type: POINTER_TYPE,
                 })
                 .into();
         }
@@ -440,12 +426,12 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 .create_global_value(ir::GlobalValueData::IAddImm {
                     base: vmctx,
                     offset: imm64(self.static_env.realmTlsOffset),
-                    global_type: native_pointer_type(),
+                    global_type: POINTER_TYPE,
                 })
                 .into();
         }
 
-        let ptr = native_pointer_type();
+        let ptr = POINTER_TYPE;
         let flags = ir::MemFlags::trusted();
         let cx_addr_val = pos.ins().global_value(ptr, self.cx_addr.unwrap());
         let cx = pos.ins().load(ptr, flags, cx_addr_val, 0);
@@ -458,7 +444,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
     /// Update the JSContext's realm value in preparation for making an indirect call through
     /// an external table.
     fn switch_to_indirect_callee_realm(&mut self, pos: &mut FuncCursor, vmctx: ir::Value) {
-        let ptr = native_pointer_type();
+        let ptr = POINTER_TYPE;
         let flags = ir::MemFlags::trusted();
         let cx = pos
             .ins()
@@ -478,7 +464,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         vmctx: ir::Value,
         gv_addr: ir::Value,
     ) {
-        let ptr = native_pointer_type();
+        let ptr = POINTER_TYPE;
         let flags = ir::MemFlags::trusted();
         let cx = pos
             .ins()
@@ -496,7 +482,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
     fn load_pinned_reg(&self, pos: &mut FuncCursor, vmctx: ir::Value) {
         if cfg!(feature = "cranelift_x86") && cfg!(target_pointer_width = "64") {
             let heap_base = pos.ins().load(
-                native_pointer_type(),
+                POINTER_TYPE,
                 ir::MemFlags::trusted(),
                 vmctx,
                 self.static_env.memoryBaseTlsOffset as i32,
@@ -507,7 +493,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
 
     fn reload_tls_and_pinned_regs(&mut self, pos: &mut FuncCursor) {
         let vmctx_gv = self.get_vmctx_gv(&mut pos.func);
-        let vmctx = pos.ins().global_value(native_pointer_type(), vmctx_gv);
+        let vmctx = pos.ins().global_value(POINTER_TYPE, vmctx_gv);
         self.load_pinned_reg(pos, vmctx);
     }
 
@@ -522,12 +508,12 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         let call_conv = self.static_env.call_conv();
         let (fnref, sigref) = self.symbolic_funcref(pos.func, call.address, || {
             let mut sig = ir::Signature::new(call_conv);
-            sig.params.push(ir::AbiParam::new(native_pointer_type()));
+            sig.params.push(ir::AbiParam::new(POINTER_TYPE));
             for argument in call.arguments {
                 sig.params.push(ir::AbiParam::new(*argument).uext());
             }
             sig.params.push(ir::AbiParam::special(
-                native_pointer_type(),
+                POINTER_TYPE,
                 ir::ArgumentPurpose::VMContext,
             ));
             if let Some(ret) = &call.ret {
@@ -545,7 +531,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         // We must use `func_addr` for symbolic references since the stubs can be far away, and the
         // C++ `SymbolicAccess` linker expects it.
 
-        let func_addr = pos.ins().func_addr(native_pointer_type(), fnref);
+        let func_addr = pos.ins().func_addr(POINTER_TYPE, fnref);
         let call_ins = pos.ins().call_indirect(sigref, func_addr, &[]);
         let mut built_arguments = pos.func.dfg[call_ins].take_value_list().unwrap();
         built_arguments.push(instance, &mut pos.func.dfg.value_lists);
@@ -582,7 +568,7 @@ impl<'a, 'b, 'c> TargetEnvironment for TransEnv<'a, 'b, 'c> {
     }
 
     fn pointer_type(&self) -> ir::Type {
-        native_pointer_type()
+        POINTER_TYPE
     }
 }
 
@@ -614,7 +600,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             let gv = func.create_global_value(ir::GlobalValueData::Load {
                 base: vmctx_gv,
                 offset: offset32(offset),
-                global_type: native_pointer_type(),
+                global_type: POINTER_TYPE,
                 readonly: true,
             });
             (gv, 0.into())
@@ -648,7 +634,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         let base = func.create_global_value(ir::GlobalValueData::Load {
             base: vcmtx,
             offset: offset32(0),
-            global_type: native_pointer_type(),
+            global_type: POINTER_TYPE,
             readonly: is_static,
         });
 
@@ -660,7 +646,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             // Get the `TlsData::boundsCheckLimit` field.
             let bound_gv = func.create_global_value(ir::GlobalValueData::Load {
                 base: vcmtx,
-                offset: native_pointer_size().into(),
+                offset: POINTER_SIZE.into(),
                 global_type: ir::types::I32,
                 readonly: false,
             });
@@ -690,7 +676,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         if wsig.id_kind() != bindings::FuncTypeIdDescKind::None {
             // A signature to be used for an indirect call also takes a signature id.
             sigdata.params.push(ir::AbiParam::special(
-                native_pointer_type(),
+                POINTER_TYPE,
                 ir::ArgumentPurpose::SignatureId,
             ));
         }
@@ -719,8 +705,8 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
 
         let base_gv = func.create_global_value(ir::GlobalValueData::Load {
             base: table_desc.global,
-            offset: offset32(native_pointer_size() as usize),
-            global_type: native_pointer_type(),
+            offset: offset32(POINTER_SIZE as usize),
+            global_type: POINTER_TYPE,
             readonly: false,
         });
 
@@ -777,14 +763,14 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             bindings::FuncTypeIdDescKind::Immediate => {
                 // The signature is represented as an immediate pointer-sized value.
                 let imm = wsig.id_immediate() as i64;
-                Some(pos.ins().iconst(native_pointer_type(), imm))
+                Some(pos.ins().iconst(POINTER_TYPE, imm))
             }
             bindings::FuncTypeIdDescKind::Global => {
                 let gv = self.sig_global(pos.func, wsig.id_tls_offset());
-                let addr = pos.ins().global_value(native_pointer_type(), gv);
+                let addr = pos.ins().global_value(POINTER_TYPE, gv);
                 Some(
                     pos.ins()
-                        .load(native_pointer_type(), ir::MemFlags::trusted(), addr, 0),
+                        .load(POINTER_TYPE, ir::MemFlags::trusted(), addr, 0),
                 )
             }
         };
@@ -803,11 +789,11 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         pos.ins().trapnz(oob, ir::TrapCode::OutOfBounds);
 
         // 3. Load the wtable base pointer from a global.
-        let tbase = pos.ins().global_value(native_pointer_type(), base_gv);
+        let tbase = pos.ins().global_value(POINTER_TYPE, base_gv);
 
         // 4. Load callee pointer from wtable.
-        let callee_x = if native_pointer_type() != ir::types::I32 {
-            pos.ins().uextend(native_pointer_type(), callee)
+        let callee_x = if POINTER_TYPE != ir::types::I32 {
+            pos.ins().uextend(POINTER_TYPE, callee)
         } else {
             callee
         };
@@ -816,7 +802,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         let entry = pos.ins().iadd(tbase, callee_scaled);
         let callee_func = pos
             .ins()
-            .load(native_pointer_type(), ir::MemFlags::trusted(), entry, 0);
+            .load(POINTER_TYPE, ir::MemFlags::trusted(), entry, 0);
 
         // Check for a null callee.
         pos.ins()
@@ -825,12 +811,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         // Handle external tables, set up environment.
         // A function table call could redirect execution to another module with a different realm,
         // so switch to this realm just in case.
-        let callee_vmctx = pos.ins().load(
-            native_pointer_type(),
-            ir::MemFlags::trusted(),
-            entry,
-            native_pointer_size(),
-        );
+        let callee_vmctx =
+            pos.ins()
+                .load(POINTER_TYPE, ir::MemFlags::trusted(), entry, POINTER_SIZE);
         self.switch_to_indirect_callee_realm(&mut pos, callee_vmctx);
         self.load_pinned_reg(&mut pos, callee_vmctx);
 
@@ -870,19 +853,16 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             // This is a call to an imported function. We need to load the callee address and vmctx
             // from the associated `FuncImportTls` struct in a global.
             let gv = self.func_import_global(pos.func, callee_index);
-            let gv_addr = pos.ins().global_value(native_pointer_type(), gv);
+            let gv_addr = pos.ins().global_value(POINTER_TYPE, gv);
 
             // We need the first two pointer-sized fields from the `FuncImportTls` struct: `code`
             // and `tls`.
-            let fit_code =
+            let fit_code = pos
+                .ins()
+                .load(POINTER_TYPE, ir::MemFlags::trusted(), gv_addr, 0);
+            let fit_tls =
                 pos.ins()
-                    .load(native_pointer_type(), ir::MemFlags::trusted(), gv_addr, 0);
-            let fit_tls = pos.ins().load(
-                native_pointer_type(),
-                ir::MemFlags::trusted(),
-                gv_addr,
-                native_pointer_size(),
-            );
+                    .load(POINTER_TYPE, ir::MemFlags::trusted(), gv_addr, POINTER_SIZE);
 
             // Switch to the callee's realm.
             self.switch_to_import_realm(&mut pos, fit_tls, gv_addr);
@@ -952,7 +932,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         len: ir::Value,
     ) -> WasmResult<()> {
         let heap_gv = pos.func.heaps[heap].base;
-        let mem_base = pos.ins().global_value(native_pointer_type(), heap_gv);
+        let mem_base = pos.ins().global_value(POINTER_TYPE, heap_gv);
 
         // We have a specialized version of `memory.copy` when we are using
         // shared memory or not.
@@ -975,7 +955,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         len: ir::Value,
     ) -> WasmResult<()> {
         let mem_base_gv = pos.func.heaps[heap].base;
-        let mem_base = pos.ins().global_value(native_pointer_type(), mem_base_gv);
+        let mem_base = pos.ins().global_value(POINTER_TYPE, mem_base_gv);
 
         // We have a specialized version of `memory.fill` when we are using
         // shared memory or not.
@@ -1112,7 +1092,7 @@ impl TableInfo {
         let global = func.create_global_value(ir::GlobalValueData::IAddImm {
             base: vmctx,
             offset,
-            global_type: native_pointer_type(),
+            global_type: POINTER_TYPE,
         });
 
         TableInfo { global }
@@ -1122,6 +1102,6 @@ impl TableInfo {
     pub fn entry_size(&self) -> i64 {
         // Each entry is an `wasm::FunctionTableElem` which consists of the code pointer and a new
         // VM context pointer.
-        i64::from(native_pointer_size()) * 2
+        i64::from(POINTER_SIZE) * 2
     }
 }
