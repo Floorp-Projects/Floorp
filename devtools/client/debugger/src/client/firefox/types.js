@@ -178,21 +178,6 @@ export type TabPayload = {
   webExtensionInspectedWindowActor: ActorId,
 };
 
-type ConsoleClient = {
-  evaluateJSAsync: (
-    script: Script,
-    func: Function,
-    params?: { frameActor: ?FrameId }
-  ) => Promise<{ result: ExpressionResult }>,
-  autocomplete: (
-    input: string,
-    cursor: number,
-    func: Function,
-    frameId: ?string
-  ) => void,
-  emit: (string, any) => void,
-};
-
 /**
  * Tab Target gives access to the browser tabs
  * @memberof firefox
@@ -201,6 +186,7 @@ type ConsoleClient = {
 export type Target = {
   on: (string, Function) => void,
   emit: (string, any) => void,
+  getFront: string => Promise<ConsoleFront>,
   form: { consoleActor: any },
   root: any,
   navigateTo: ({ url: string }) => Promise<*>,
@@ -208,8 +194,6 @@ export type Target = {
   reload: () => Promise<*>,
   destroy: () => void,
   threadFront: ThreadFront,
-  activeConsole: ConsoleClient,
-
   name: string,
   isBrowsingContext: boolean,
   isContentProcess: boolean,
@@ -222,6 +206,21 @@ export type Target = {
 
   // Property installed by the debugger itself.
   debuggerServiceWorkerStatus: string,
+};
+
+type ConsoleFront = {
+  evaluateJSAsync: (
+    script: Script,
+    func: Function,
+    params?: { frameActor: ?FrameId }
+  ) => Promise<{ result: ExpressionResult }>,
+  autocomplete: (
+    input: string,
+    cursor: number,
+    func: Function,
+    frameId: ?string
+  ) => void,
+  emit: (string, any) => void,
 };
 
 /**
