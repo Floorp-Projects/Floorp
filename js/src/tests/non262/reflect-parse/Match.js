@@ -82,8 +82,6 @@ var Match =
         }
     };
 
-    Pattern.MatchError = MatchError;
-
     function isAtom(x) {
         return (typeof x === "number") ||
             (typeof x === "string") ||
