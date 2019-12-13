@@ -250,4 +250,44 @@ add_task(async function test_without_tabs_permission() {
   }, false /* withPermissions */);
 });
 
+add_task(async function test_onUpdated_after_onRemoved() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+    async background() {
+      const url =
+        "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+      let removed = false;
+      let tab;
+
+      // If remove happens fast and we never receive onUpdated, that is ok, but
+      // we never want to receive onUpdated after onRemoved.
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+        if (!tab || tab.id !== tabId) {
+          return;
+        }
+        browser.test.assertFalse(
+          removed,
+          "tab has not been removed before onUpdated"
+        );
+      });
+
+      browser.tabs.onRemoved.addListener((tabId, removedInfo) => {
+        if (!tab || tab.id !== tabId) {
+          return;
+        }
+        removed = true;
+        browser.test.notifyPass("onRemoved");
+      });
+
+      tab = await browser.tabs.create({ url });
+      browser.tabs.remove(tab.id);
+    },
+  });
+  await extension.startup();
+  await extension.awaitFinish("onRemoved");
+  await extension.unload();
+});
+
 add_task(forceGC);
