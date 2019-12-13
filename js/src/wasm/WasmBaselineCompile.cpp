@@ -4929,7 +4929,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 #  elif defined(JS_CODEGEN_MIPS32)
             ScratchF64 scratch(*this);
             loadF64(arg, scratch);
-            MOZ_ASSERT(MOZ_LITTLE_ENDIAN);
+            MOZ_ASSERT(MOZ_LITTLE_ENDIAN());
             masm.moveFromDoubleLo(scratch, argLoc.evenGpr());
             masm.moveFromDoubleHi(scratch, argLoc.oddGpr());
             break;

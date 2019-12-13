@@ -48,7 +48,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
     four 32 bit ints.  */
  
 -#if IEEE_WORD_ORDER == BIG_ENDIAN
-+#if MOZ_BIG_ENDIAN
++#if MOZ_BIG_ENDIAN()
  
  typedef union
  {
@@ -67,7 +67,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  #endif
  
 -#if IEEE_WORD_ORDER == LITTLE_ENDIAN
-+#if MOZ_LITTLE_ENDIAN
++#if MOZ_LITTLE_ENDIAN()
  
  typedef union
  {
@@ -91,7 +91,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 + * ints.
 + */
 +
-+#if MOZ_BIG_ENDIAN
++#if MOZ_BIG_ENDIAN()
  
  typedef union
  {
@@ -110,7 +110,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  #endif
  
 -#if IEEE_WORD_ORDER == LITTLE_ENDIAN
-+#if MOZ_LITTLE_ENDIAN
++#if MOZ_LITTLE_ENDIAN()
  
  typedef union
  {

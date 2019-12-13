@@ -34,7 +34,7 @@ static_assert(1 << defaultShift == sizeof(JS::Value),
               "The defaultShift is wrong");
 
 static const uint32_t LOW_32_MASK = (1LL << 32) - 1;
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
 static const int32_t LOW_32_OFFSET = 0;
 static const int32_t HIGH_32_OFFSET = 4;
 #else
@@ -525,7 +525,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
 
   void pushValue(ValueOperand val);
   void popValue(ValueOperand val);
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   void pushValue(const Value& val) {
     push(Imm32(val.toNunboxTag()));
     if (val.isGCThing()) {
