@@ -22,7 +22,7 @@ function dprint(...xs) {
 // For eg testMethod and testFunction that are polymorphic in the array a,
 // the inliner gets confused and stops inlining after Int8 -- not what we want.
 function CLONE(f) {
-    return this.eval("(" + f.toSource() + ")");
+    return this.eval("(" + f.toString() + ")");
 }
 
 function testMethod(a, ...indices) {

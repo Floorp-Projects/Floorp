@@ -6,7 +6,7 @@ function f(x) {
     x -= 1;
   }
 }
-g.eval(f.toSource());
+g.eval(f.toString());
 
 // Toogle the debugger while the function f is running.
 setInterruptCallback(toogleDebugger);

@@ -12,7 +12,7 @@ function loop(i) {
   for (n = 0; n < i; n++)
     debugger;
 }
-g.eval(loop.toSource());
+g.eval(loop.toString());
 
 dbg.onDebuggerStatement = function (f) {
   // Collect coverage info each time we hit a debugger statement.

@@ -8,7 +8,7 @@ function loop(i) {
   for (n = 0; n < i; n++)
     debugger;
 }
-g.eval(loop.toSource());
+g.eval(loop.toString());
 
 var countDown = 20;
 dbg.onDebuggerStatement = function (f) {
