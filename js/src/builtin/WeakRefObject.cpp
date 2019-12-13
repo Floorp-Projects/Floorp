@@ -114,17 +114,19 @@ void WeakRefObject::finalize(JSFreeOp* fop, JSObject* obj) {
   gc->unregisterWeakRef(cx, target, weakRef);
 }
 
-const JSClassOps WeakRefObject::classOps_ = {nullptr, /* addProperty */
-                                             nullptr, /* delProperty */
-                                             nullptr, /* enumerate */
-                                             nullptr, /* newEnumerate */
-                                             nullptr, /* resolve */
-                                             nullptr, /* mayResolve */
-                                             finalize,
-                                             nullptr, /* call */
-                                             nullptr, /* hasInstance */
-                                             nullptr, /* construct */
-                                             trace};
+const JSClassOps WeakRefObject::classOps_ = {
+    nullptr,  /* addProperty */
+    nullptr,  /* delProperty */
+    nullptr,  /* enumerate */
+    nullptr,  /* newEnumerate */
+    nullptr,  /* resolve */
+    nullptr,  /* mayResolve */
+    finalize, /* finalize */
+    nullptr,  /* call */
+    nullptr,  /* hasInstance */
+    nullptr,  /* construct */
+    trace     /* trace */
+};
 
 const ClassSpec WeakRefObject::classSpec_ = {
     GenericCreateConstructor<WeakRefObject::construct, 0,

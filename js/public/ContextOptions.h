@@ -37,7 +37,8 @@ class JS_PUBLIC_API ContextOptions {
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
-        fuzzing_(false) {}
+        fuzzing_(false) {
+  }
 
   bool asmJS() const { return asmJS_; }
   ContextOptions& setAsmJS(bool flag) {
