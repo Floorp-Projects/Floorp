@@ -65,6 +65,7 @@ class Message : public Pickle {
     NORMAL_PRIORITY = 0,
     INPUT_PRIORITY = 1,
     HIGH_PRIORITY = 2,
+    MEDIUMHIGH_PRIORITY = 3,
   };
 
   enum MessageCompression {
