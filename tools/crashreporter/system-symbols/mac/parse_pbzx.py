@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# This code is from https://gist.github.com/pudquick/ff412bcb29c9c1fa4b8d
+#
 # v2 pbzx stream handler
 # My personal writeup on the differences here:
 # https://gist.github.com/pudquick/29fcfe09c326a9b96cf5
@@ -9,6 +11,22 @@
 #
 # Cleaned up C version (as the basis for my code) here, thanks to Pepijn Bruienne / @bruienne
 # https://gist.github.com/bruienne/029494bbcfb358098b41
+#
+# The python version of this code does not have an explicit license, but
+# is based on GPLv3 C code linked above.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import struct
 import sys
