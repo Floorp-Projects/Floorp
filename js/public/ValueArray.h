@@ -15,10 +15,10 @@
 
 #include <stdint.h>  // size_t
 
-#include "js/CallArgs.h"  // JS::CallArgs
-#include "js/GCVector.h"  // JS::RootedVector
+#include "js/CallArgs.h"    // JS::CallArgs
+#include "js/GCVector.h"    // JS::RootedVector
 #include "js/RootingAPI.h"  // JS::AutoGCRooter, JS::{,Mutable}Handle
-#include "js/Value.h"  // JS::Value
+#include "js/Value.h"       // JS::Value
 
 namespace JS {
 
