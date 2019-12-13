@@ -87,21 +87,21 @@ class TestLocalesMixin(unittest.TestCase):
 
     def test_query_abs_dirs_base(self):
         l = self._get_query_abs_dirs_obj()
-        dirs = l.query_abs_dirs().keys()
+        dirs = list(l.query_abs_dirs().keys())
         dirs.sort()
         self.assertEqual(dirs, self.BASE_ABS_DIRS)
 
     def test_query_abs_dirs_base2(self):
         l = self._get_query_abs_dirs_obj()
         l.query_abs_dirs().keys()
-        dirs = l.query_abs_dirs().keys()
+        dirs = list(l.query_abs_dirs().keys())
         dirs.sort()
         self.assertEqual(dirs, self.BASE_ABS_DIRS)
 
     def test_query_abs_dirs_l10n(self):
         l = self._get_query_abs_dirs_obj()
         l.config['l10n_dir'] = "l10n_dir"
-        dirs = l.query_abs_dirs().keys()
+        dirs = list(l.query_abs_dirs().keys())
         dirs.sort()
         expected_dirs = self.BASE_ABS_DIRS + ['abs_l10n_dir']
         expected_dirs.sort()
@@ -112,7 +112,7 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['l10n_dir'] = "l10n_dir"
         l.config['mozilla_dir'] = "mozilla_dir"
         l.config['locales_dir'] = "locales_dir"
-        dirs = l.query_abs_dirs().keys()
+        dirs = list(l.query_abs_dirs().keys())
         dirs.sort()
         expected_dirs = self.BASE_ABS_DIRS + [
             'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir']
@@ -125,7 +125,7 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['mozilla_dir'] = "mozilla_dir"
         l.config['locales_dir'] = "locales_dir"
         l.config['objdir'] = "objdir"
-        dirs = l.query_abs_dirs().keys()
+        dirs = list(l.query_abs_dirs().keys())
         dirs.sort()
         expected_dirs = self.BASE_ABS_DIRS + [
             'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir',
