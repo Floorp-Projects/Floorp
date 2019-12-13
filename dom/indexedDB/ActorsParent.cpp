@@ -20626,7 +20626,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     mgr->AddFileManager(fileManager);
   }
 
-  mFileManager = fileManager.forget();
+  mFileManager = std::move(fileManager);
 
   // Must close connection before dispatching otherwise we might race with the
   // connection thread which needs to open the same database.
@@ -21433,7 +21433,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
 
   auto factory = static_cast<Factory*>(Manager());
 
-  mDatabase = new Database(
+  mDatabase = MakeRefPtr<Database>(
       factory, mCommonParams.principalInfo(), mOptionalContentParentId, mGroup,
       mOrigin, mTelemetryId, mMetadata, mFileManager, mDirectoryLock.forget(),
       mFileHandleDisabled, mChromeWriteAccessAllowed);
@@ -27065,8 +27065,7 @@ already_AddRefed<nsIFile> FileHelper::GetFile(FileInfo* aFileInfo) {
   const int64_t fileId = aFileInfo->Id();
   MOZ_ASSERT(fileId > 0);
 
-  nsCOMPtr<nsIFile> file = mFileManager->GetFileForId(mFileDirectory, fileId);
-  return file.forget();
+  return mFileManager->GetFileForId(mFileDirectory, fileId);
 }
 
 already_AddRefed<nsIFile> FileHelper::GetJournalFile(FileInfo* aFileInfo) {
@@ -27078,9 +27077,7 @@ already_AddRefed<nsIFile> FileHelper::GetJournalFile(FileInfo* aFileInfo) {
   const int64_t fileId = aFileInfo->Id();
   MOZ_ASSERT(fileId > 0);
 
-  nsCOMPtr<nsIFile> file =
-      mFileManager->GetFileForId(mJournalDirectory, fileId);
-  return file.forget();
+  return mFileManager->GetFileForId(mJournalDirectory, fileId);
 }
 
 nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
