@@ -617,9 +617,9 @@ async function testFileAccess() {
       ok(test.file.exists(), `${test.file.path} exists`);
     }
 
-    let result = await SpecialPowers.spawn(
+    let result = await ContentTask.spawn(
       test.browser,
-      [test.file.path],
+      test.file.path,
       test.func
     );
 

@@ -450,5 +450,5 @@ async function testToggleHelper(browser, videoID, canToggle) {
   // Click on the very top-left pixel of the document and ensure that we
   // see all of the mouse events for it.
   await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
-  assertSawMouseEvents(browser, true);
+  await assertSawMouseEvents(browser, true);
 }

@@ -7,9 +7,6 @@
 var EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { E10SUtils } = ChromeUtils.import(
-  "resource://gre/modules/E10SUtils.jsm"
-);
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
@@ -80,6 +77,9 @@ var PermissionPrompts = {
         await closeLastTab();
         // we need to emulate user input in the form for the save-password prompt to be shown
         await clickOn("#login-capture", function beforeContentFn() {
+          const { E10SUtils } = ChromeUtils.import(
+            "resource://gre/modules/E10SUtils.jsm"
+          );
           E10SUtils.wrapHandlingUserInput(content, true, function() {
             let element = content.document.querySelector(
               "input[type=password]"
@@ -154,24 +154,20 @@ async function clickOn(selector, beforeContentFn) {
     URL
   );
 
+  let { SpecialPowers } = lastTab.ownerGlobal;
   if (beforeContentFn) {
-    await lastTab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
-      lastTab.linkedBrowser,
-      [],
-      beforeContentFn
-    );
+    await SpecialPowers.spawn(lastTab.linkedBrowser, [], beforeContentFn);
   }
 
-  await lastTab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
-    lastTab.linkedBrowser,
-    [selector],
-    async function(arg) {
-      E10SUtils.wrapHandlingUserInput(content, true, function() {
-        let element = content.document.querySelector(arg);
-        element.click();
-      });
-    }
-  );
+  await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
+    const { E10SUtils } = ChromeUtils.import(
+      "resource://gre/modules/E10SUtils.jsm"
+    );
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      let element = content.document.querySelector(arg);
+      element.click();
+    });
+  });
 
   // Wait for the popup to actually be shown before making the screenshot
   await BrowserTestUtils.waitForEvent(
