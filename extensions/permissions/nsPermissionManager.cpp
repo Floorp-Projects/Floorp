@@ -1699,6 +1699,18 @@ nsresult nsPermissionManager::AddInternal(
   nsresult rv = GetOriginFromPrincipal(aPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // For private browsing only store permissions for the session
+  if (aExpireType != EXPIRE_SESSION) {
+    uint32_t privateBrowsingId =
+        nsScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
+    nsresult rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    if (NS_SUCCEEDED(rv) &&
+        privateBrowsingId !=
+            nsScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+      aExpireType = EXPIRE_SESSION;
+    }
+  }
+
   if (!IsChildProcess()) {
     IPC::Permission permission(origin, aType, aPermission, aExpireType,
                                aExpireTime);
