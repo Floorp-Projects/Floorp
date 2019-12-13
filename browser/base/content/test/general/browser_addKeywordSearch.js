@@ -30,7 +30,9 @@ add_task(async function() {
       );
 
       await SpecialPowers.spawn(
-        tab.linkedBrowser, [{ action, param, method, id }], async function(args) {
+        tab.linkedBrowser,
+        [{ action, param, method, id }],
+        async function(args) {
           let doc = content.document;
           let form = doc.createElement("form");
           form.id = args.id;

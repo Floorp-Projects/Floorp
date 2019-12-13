@@ -40,16 +40,18 @@ add_task(async function test() {
 
   // Let's try to open a window from tab1 with a name 'tab-2'.
   info("Opening a window from the first tab...");
-  await SpecialPowers.spawn(browser1, [{ url: BASE_URI + "?new" }], async function(
-    opts
-  ) {
-    await new content.window.wrappedJSObject.Promise(resolve => {
-      let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
-      w.onload = function() {
-        resolve();
-      };
-    });
-  });
+  await SpecialPowers.spawn(
+    browser1,
+    [{ url: BASE_URI + "?new" }],
+    async function(opts) {
+      await new content.window.wrappedJSObject.Promise(resolve => {
+        let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
+        w.onload = function() {
+          resolve();
+        };
+      });
+    }
+  );
 
   is(browser1.contentTitle, "?old", "Tab1 title must be 'old'");
   is(browser1.contentPrincipal.userContextId, 1, "Tab1 UCI must be 1");

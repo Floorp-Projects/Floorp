@@ -77,7 +77,9 @@ async function verifyGeneratedPasswordWasFilled(
   passwordInputSelector
 ) {
   await SpecialPowers.spawn(
-    browser, [[passwordInputSelector]], function checkFinalFieldValue(inputSelector) {
+    browser,
+    [[passwordInputSelector]],
+    function checkFinalFieldValue(inputSelector) {
       let { LoginTestUtils: LTU } = ChromeUtils.import(
         "resource://testing-common/LoginTestUtils.jsm"
       );
@@ -117,7 +119,9 @@ async function openFormInNewTab(url, formValues, taskFn) {
       await formFilled;
 
       await SpecialPowers.spawn(
-        browser, [formValues], async function prepareAndCheckForm({
+        browser,
+        [formValues],
+        async function prepareAndCheckForm({
           password: passwordProps,
           username: usernameProps,
         }) {
@@ -744,7 +748,9 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         "popupshown"
       );
       await SpecialPowers.spawn(
-        browser, [[passwordInputSelector, usernameInputSelector]], function checkEmptyPasswordField([passwordSelector, usernameSelector]) {
+        browser,
+        [[passwordInputSelector, usernameInputSelector]],
+        function checkEmptyPasswordField([passwordSelector, usernameSelector]) {
           is(
             content.document.querySelector(passwordSelector).value,
             "",

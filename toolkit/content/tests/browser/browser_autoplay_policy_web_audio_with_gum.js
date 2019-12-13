@@ -148,7 +148,9 @@ async function testWebAudioWithGUM(testParameters) {
   info("- check whether audio context starts running -");
   try {
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [], checkingAudioContextRunningState
+      tab.linkedBrowser,
+      [],
+      checkingAudioContextRunningState
     );
   } catch (error) {
     ok(false, error.toString());

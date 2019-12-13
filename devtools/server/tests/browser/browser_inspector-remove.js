@@ -55,7 +55,9 @@ add_task(async function testRemoveSubtree() {
   const siblings = await walker.removeNode(longlist);
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[siblings.previousSibling.actorID, siblings.nextSibling.actorID]], function([previousActorID, nextActorID]) {
+    gBrowser.selectedBrowser,
+    [[siblings.previousSibling.actorID, siblings.nextSibling.actorID]],
+    function([previousActorID, nextActorID]) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );

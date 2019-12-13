@@ -171,7 +171,9 @@ async function loadURL(url) {
 function getContentProperty(prop) {
   info(`Retrieve ${prop} on the content window`);
   return SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [prop], _prop => content[_prop]
+    gBrowser.selectedBrowser,
+    [prop],
+    _prop => content[_prop]
   );
 }
 

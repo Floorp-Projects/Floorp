@@ -58,9 +58,13 @@ function tabWithRequest(task, permission) {
     },
     async function(browser) {
       let requestPromise = SpecialPowers.spawn(
-        browser, [{
-          permission,
-        }], async function({ permission }) {
+        browser,
+        [
+          {
+            permission,
+          },
+        ],
+        async function({ permission }) {
           function requestCallback(perm) {
             is(
               perm,

@@ -48,7 +48,9 @@ add_task(async function test_profile_feature_preferencereads() {
   const url = BASE_URL + "fixed_height.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
-      contentBrowser, [], () => Services.appinfo.processID
+      contentBrowser,
+      [],
+      () => Services.appinfo.processID
     );
 
     await waitForPaintAfterLoad();
@@ -72,10 +74,14 @@ add_task(async function test_profile_feature_preferencereads() {
     // Now reload the tab with a clean run.
     await SpecialPowers.spawn(contentBrowser, [], () => {
       return new Promise(resolve => {
-        docShell.chromeEventHandler.addEventListener("pageshow", () => resolve(), {
-          capturing: true,
-          once: true,
-        });
+        docShell.chromeEventHandler.addEventListener(
+          "pageshow",
+          () => resolve(),
+          {
+            capturing: true,
+            once: true,
+          }
+        );
         content.location.reload();
       });
     });

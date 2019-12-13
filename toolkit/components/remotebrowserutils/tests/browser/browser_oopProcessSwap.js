@@ -17,7 +17,9 @@ add_task(async function oopProcessSwap() {
 
       info("creating an in-process frame");
       let frameId = await SpecialPowers.spawn(
-        browser, [{ FILE }], async ({ FILE }) => {
+        browser,
+        [{ FILE }],
+        async ({ FILE }) => {
           let iframe = content.document.createElement("iframe");
           iframe.setAttribute("src", FILE);
           content.document.body.appendChild(iframe);
@@ -33,7 +35,9 @@ add_task(async function oopProcessSwap() {
 
       info("navigating to x-process frame");
       let oopinfo = await SpecialPowers.spawn(
-        browser, [{ WEB }], async ({ WEB }) => {
+        browser,
+        [{ WEB }],
+        async ({ WEB }) => {
           let iframe = content.document.querySelector("iframe");
 
           iframe.contentWindow.location = WEB;
@@ -98,7 +102,9 @@ add_task(async function oopOriginProcessSwap() {
 
       info("creating an in-process frame");
       let frameId = await SpecialPowers.spawn(
-        browser, [{ COM_DUMMY }], async ({ COM_DUMMY }) => {
+        browser,
+        [{ COM_DUMMY }],
+        async ({ COM_DUMMY }) => {
           let iframe = content.document.createElement("iframe");
           iframe.setAttribute("src", COM_DUMMY);
           content.document.body.appendChild(iframe);
@@ -114,7 +120,9 @@ add_task(async function oopOriginProcessSwap() {
 
       info("navigating to x-process frame");
       let oopinfo = await SpecialPowers.spawn(
-        browser, [{ ORG_POSTMSG }], async ({ ORG_POSTMSG }) => {
+        browser,
+        [{ ORG_POSTMSG }],
+        async ({ ORG_POSTMSG }) => {
           let iframe = content.document.querySelector("iframe");
 
           iframe.contentWindow.location = ORG_POSTMSG;

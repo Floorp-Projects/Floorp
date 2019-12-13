@@ -31,10 +31,16 @@ add_task(async function() {
   // Set a new title.
   await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      docShell.chromeEventHandler.addEventListener("DOMTitleChanged", function onTitleChanged() {
-        docShell.chromeEventHandler.removeEventListener("DOMTitleChanged", onTitleChanged);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "DOMTitleChanged",
+        function onTitleChanged() {
+          docShell.chromeEventHandler.removeEventListener(
+            "DOMTitleChanged",
+            onTitleChanged
+          );
+          resolve();
+        }
+      );
 
       content.document.title = "new title";
     });

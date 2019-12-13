@@ -75,7 +75,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -84,7 +86,9 @@ add_task(async function() {
   is(result, true, "plugin is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -114,7 +118,9 @@ add_task(async function() {
   await waitScrollStart(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -125,7 +131,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -161,7 +169,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -170,7 +180,9 @@ add_task(async function() {
   is(result, true, "plugin is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -200,7 +212,9 @@ add_task(async function() {
   await waitScrollStart(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -211,7 +225,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -244,7 +260,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -253,7 +271,9 @@ add_task(async function() {
   is(result, true, "plugin is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -266,7 +286,9 @@ add_task(async function() {
   await waitScrollStart(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -277,7 +299,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -290,7 +314,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -321,7 +347,9 @@ add_task(async function() {
   );
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return !!plugin;
@@ -330,7 +358,9 @@ add_task(async function() {
   is(result, true, "plugin is loaded");
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -343,7 +373,9 @@ add_task(async function() {
   await waitScrollStart(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -354,7 +386,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -367,7 +401,9 @@ add_task(async function() {
   await waitScrollFinish(gBrowser.selectedBrowser);
 
   result = await SpecialPowers.spawn(
-    pluginTab.linkedBrowser, [], async function() {
+    pluginTab.linkedBrowser,
+    [],
+    async function() {
       let doc = content.document.getElementById("subframe").contentDocument;
       let plugin = doc.getElementById("testplugin");
       return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();

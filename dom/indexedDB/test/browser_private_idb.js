@@ -112,19 +112,27 @@ function checkTabWindowIDB(tab) {
 
 async function checkTabDedicatedWorkerIDB(tab) {
   return SpecialPowers.spawn(
-    tab.linkedBrowser, [{
-      srcBlob: workerScriptBlob,
-      workerType: "dedicated",
-    }], workerCheckDeployer
+    tab.linkedBrowser,
+    [
+      {
+        srcBlob: workerScriptBlob,
+        workerType: "dedicated",
+      },
+    ],
+    workerCheckDeployer
   );
 }
 
 async function checkTabSharedWorkerIDB(tab) {
   return SpecialPowers.spawn(
-    tab.linkedBrowser, [{
-      srcBlob: workerScriptBlob,
-      workerType: "shared",
-    }], workerCheckDeployer
+    tab.linkedBrowser,
+    [
+      {
+        srcBlob: workerScriptBlob,
+        workerType: "shared",
+      },
+    ],
+    workerCheckDeployer
   );
 }
 

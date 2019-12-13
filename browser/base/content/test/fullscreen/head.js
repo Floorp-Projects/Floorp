@@ -1,8 +1,6 @@
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
-;
-
 function waitForFullScreenState(browser, state) {
   info("inside waitforfullscreenstate");
   return new Promise(resolve => {

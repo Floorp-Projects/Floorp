@@ -71,7 +71,9 @@ add_task(async function() {
 
 async function setSessionStorageItem(key, value) {
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[key, value]], ([innerKey, innerValue]) => {
+    gBrowser.selectedBrowser,
+    [[key, value]],
+    ([innerKey, innerValue]) => {
       content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
     }
   );

@@ -19,7 +19,9 @@ function open_subdialog_and_test_generic_start_state(
     ? "(" + domcontentloadedFn.toString() + ")()"
     : "";
   return SpecialPowers.spawn(
-    browser, [{ url, domcontentloadedFnStr }], async function(args) {
+    browser,
+    [{ url, domcontentloadedFnStr }],
+    async function(args) {
       let rv = { acceptCount: 0 };
       let win = content.window;
       content.gSubDialog.open(args.url, null, rv);
@@ -100,16 +102,22 @@ async function close_subdialog_and_test_generic_end_state(
 ) {
   let getDialogsCount = () => {
     return SpecialPowers.spawn(
-      browser, [], () => content.window.gSubDialog._dialogs.length
+      browser,
+      [],
+      () => content.window.gSubDialog._dialogs.length
     );
   };
   let getStackChildrenCount = () => {
     return SpecialPowers.spawn(
-      browser, [], () => content.window.gSubDialog._dialogStack.children.length
+      browser,
+      [],
+      () => content.window.gSubDialog._dialogStack.children.length
     );
   };
   let dialogclosingPromise = SpecialPowers.spawn(
-    browser, [{ closingButton, acceptCount }], async function(expectations) {
+    browser,
+    [{ closingButton, acceptCount }],
+    async function(expectations) {
       let win = content.window;
       let subdialog = win.gSubDialog._topDialog;
       let frame = subdialog._frame;

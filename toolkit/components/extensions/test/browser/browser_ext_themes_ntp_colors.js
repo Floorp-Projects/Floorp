@@ -17,7 +17,9 @@ async function test_ntp_theme(theme, isBrightText) {
   let browser = gBrowser.selectedBrowser;
 
   let { originalBackground, originalColor } = await SpecialPowers.spawn(
-    browser, [], function() {
+    browser,
+    [],
+    function() {
       let doc = content.document;
       ok(
         !doc.body.hasAttribute("lwt-newtab"),
@@ -42,11 +44,15 @@ async function test_ntp_theme(theme, isBrightText) {
   Services.ppmm.sharedData.flush();
 
   await SpecialPowers.spawn(
-    browser, [{
-      isBrightText,
-      background: hexToCSS(theme.colors.ntp_background),
-      color: hexToCSS(theme.colors.ntp_text),
-    }], function({ isBrightText, background, color }) {
+    browser,
+    [
+      {
+        isBrightText,
+        background: hexToCSS(theme.colors.ntp_background),
+        color: hexToCSS(theme.colors.ntp_text),
+      },
+    ],
+    function({ isBrightText, background, color }) {
       let doc = content.document;
       ok(
         doc.body.hasAttribute("lwt-newtab"),
@@ -78,10 +84,14 @@ async function test_ntp_theme(theme, isBrightText) {
   Services.ppmm.sharedData.flush();
 
   await SpecialPowers.spawn(
-    browser, [{
-      originalBackground,
-      originalColor,
-    }], function({ originalBackground, originalColor }) {
+    browser,
+    [
+      {
+        originalBackground,
+        originalColor,
+      },
+    ],
+    function({ originalBackground, originalColor }) {
       let doc = content.document;
       ok(
         !doc.body.hasAttribute("lwt-newtab"),

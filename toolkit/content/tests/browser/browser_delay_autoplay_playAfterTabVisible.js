@@ -57,7 +57,11 @@ add_task(async function media_should_be_able_to_play_in_visible_tab() {
 
   info("- audio should be playing -");
   await waitForTabBlockEvent(tab, false);
-  await SpecialPowers.spawn(tab.linkedBrowser, [false], check_audio_pause_state);
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [false],
+    check_audio_pause_state
+  );
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);

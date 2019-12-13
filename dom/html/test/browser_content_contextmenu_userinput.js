@@ -46,7 +46,9 @@ add_task(async function() {
       );
 
       let promiseCtxMenuClick = SpecialPowers.spawn(
-        aBrowser, [], async function() {
+        aBrowser,
+        [],
+        async function() {
           await new Promise(resolve => {
             let windowUtils = content.windowUtils;
             let menuitem = content.document.getElementById("menuitem");

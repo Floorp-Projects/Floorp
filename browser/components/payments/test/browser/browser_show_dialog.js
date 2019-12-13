@@ -117,7 +117,9 @@ add_task(async function test_show_completePayment() {
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
       let result = await SpecialPowers.spawn(
-        browser, [], PTU.ContentTasks.addCompletionHandler
+        browser,
+        [],
+        PTU.ContentTasks.addCompletionHandler
       );
 
       let { shippingAddress } = result.response;
@@ -177,9 +179,13 @@ add_task(async function test_show_completePayment2() {
       });
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingoptionchange",
-        }], PTU.ContentTasks.promisePaymentRequestEvent
+        browser,
+        [
+          {
+            eventName: "shippingoptionchange",
+          },
+        ],
+        PTU.ContentTasks.promisePaymentRequestEvent
       );
 
       info(
@@ -192,9 +198,13 @@ add_task(async function test_show_completePayment2() {
       );
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingoptionchange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingoptionchange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
       info("got shippingoptionchange event");
 
@@ -226,7 +236,9 @@ add_task(async function test_show_completePayment2() {
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
       let result = await SpecialPowers.spawn(
-        browser, [], PTU.ContentTasks.addCompletionHandler
+        browser,
+        [],
+        PTU.ContentTasks.addCompletionHandler
       );
 
       is(result.response.shippingOption, "1", "Check shipping option");

@@ -32,7 +32,11 @@ add_task(async function test() {
                 docShell.chromeEventHandler.addEventListener(
                   "load",
                   function onLoad() {
-                    docShell.chromeEventHandler.removeEventListener("load", onLoad, true);
+                    docShell.chromeEventHandler.removeEventListener(
+                      "load",
+                      onLoad,
+                      true
+                    );
 
                     Assert.ok(
                       history.index < history.count,
