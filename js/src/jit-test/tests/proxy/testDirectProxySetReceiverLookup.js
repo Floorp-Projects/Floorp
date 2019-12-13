@@ -15,7 +15,7 @@ function test(target, id, existingDesc, expectedDesc) {
         defineProperty(t, idarg, desc) {
             assertEq(idarg, id);
             for (var attr of attrs) {
-                var args = uneval([target, id, existingDesc]).slice(1, -1);
+                var args = JSON.stringify([target, id, existingDesc]).slice(1, -1);
                 assertEq(attr in desc, attr in expectedDesc,
                          `test(${args}), checking existence of desc.${attr}`);
                 assertEq(desc[attr], expectedDesc[attr],

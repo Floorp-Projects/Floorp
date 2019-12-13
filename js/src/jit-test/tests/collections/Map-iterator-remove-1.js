@@ -1,7 +1,7 @@
 // A map iterator can cope with removing the current entry.
 
 function test(pairs) {
-    print(uneval(pairs));
+    print(JSON.stringify(pairs));
     var map = new Map(pairs);
     
     var all_keys = '';

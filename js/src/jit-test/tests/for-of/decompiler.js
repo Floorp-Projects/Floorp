@@ -3,7 +3,7 @@
 function tokens(code) {
     var arr = [];
     var s = code.replace(/\w+|[^\s]/g, function (tok) { arr.push(tok); return ""; });
-    assertEq(s.trim(), "", "tokens() should find all tokens in code: " + uneval(code));
+    assertEq(s.trim(), "", "tokens() should find all tokens in code: " + JSON.stringify(code));
     return arr;
 }
 

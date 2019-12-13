@@ -11,4 +11,4 @@ function test() {
 }
 test();
 `); } catch(exc) {}
-uneval(this);
+constructor.toString();

@@ -20,7 +20,7 @@ function f2(n) {
     for (var i = 0; i < n; i++) {
       (function() {
         this.x += i;
-        print(uneval(i));
+        print(String(i));
         obj[i] = i * i;
         if (i > 10) {
           f2(i / f1());
@@ -33,7 +33,7 @@ function f2(n) {
     for (var i = 0; i < n; i++) {
       (function() {
         this.x *= i;
-        print(uneval(i));
+        print(String(i));
         obj[i] = i * i;
         if (i > 10) {
           f2(i / f1());

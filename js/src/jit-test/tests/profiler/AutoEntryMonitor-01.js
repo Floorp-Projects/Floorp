@@ -3,8 +3,8 @@
 load(libdir + 'array-compare.js');
 
 function cold_and_warm(f, params, expected) {
-  print(uneval(params));
-  print(uneval(entryPoints(params)));
+  print(JSON.stringify(params));
+  print(JSON.stringify(entryPoints(params)));
   assertEq(arraysEqual(entryPoints(params), expected), true);
 
   // Warm up the function a bit, so the JITs will compile it, and try again.

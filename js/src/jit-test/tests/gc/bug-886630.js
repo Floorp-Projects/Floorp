@@ -47,18 +47,15 @@ var realEval = eval;
 var realMath = Math;
 var realFunction = Function;
 var realGC = gc;
-var realUneval = uneval;
 function tryEnsureSanity() {
     try {
         delete this.Math;
         delete this.Function;
         delete this.gc;
-        delete this.uneval;
         this.Math = realMath;
         this.eval = realEval;
         this.Function = realFunction;
         this.gc = realGC;
-        this.uneval = realUneval;
     } catch (e) {}
 }
 function tryIteration(rv) {
