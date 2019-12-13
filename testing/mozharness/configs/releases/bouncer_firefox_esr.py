@@ -49,7 +49,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
-               "win64-aarch64",
+                "win64-aarch64",
             ],
         },
         "installer-latest-ssl": {
@@ -109,7 +109,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
-                # add "win64-aarch64" when ESR60 dropped
+                "win64-aarch64",
             ],
         },
     },
@@ -123,7 +123,7 @@ config = {
                 "osx",
                 "win",
                 "win64",
-                # add "win64-aarch64" when ESR60 dropped
+                "win64-aarch64",
             ],
         },
     },
