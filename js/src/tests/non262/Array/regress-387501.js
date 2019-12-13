@@ -28,10 +28,10 @@ function test()
   actual = Array.prototype.toLocaleString.call((new String('foo')));
   assertEq(actual, expect, summary);
 
-  assertEq('["f", "o", "o"]', Array.prototype.toSource.call(new String('foo')));
-
   if (typeof Array.prototype.toSource != 'undefined')
   {
+    assertEq('["f", "o", "o"]', Array.prototype.toSource.call(new String('foo')));
+
     try
     {
       Array.prototype.toSource.call('foo');

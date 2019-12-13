@@ -46,7 +46,9 @@ function primitive(a) {
 
 for (var i = 0; i < a.length; i++) {
     var x = a[i];
-    var expectedSource = x.toSource();
+    if (x.toSource) {
+        var expectedSource = x.toSource();
+    }
     var expectedPrimitive = primitive(x);
     var expectedProto = x.__proto__;
     var expectedString = Object.prototype.toString.call(x);
@@ -54,7 +56,9 @@ for (var i = 0; i < a.length; i++) {
     x.__proto__ = {};
 
     var y = deserialize(serialize(x));
-    assertEq(y.toSource(), expectedSource);
+    if (x.toSource) {
+        assertEq(y.toSource(), expectedSource);
+    }
     assertEq(primitive(y), expectedPrimitive);
     assertEq(y.__proto__, expectedProto);
     assertEq(Object.prototype.toString.call(y), expectedString);
