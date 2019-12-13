@@ -305,8 +305,34 @@ class GeckoEngine(
      * See [Engine.listInstalledWebExtensions].
      */
     override fun listInstalledWebExtensions(onSuccess: (List<WebExtension>) -> Unit, onError: (Throwable) -> Unit) {
-        // TODO https://github.com/mozilla-mobile/android-components/issues/4500
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1600742
         onSuccess(emptyList())
+    }
+
+    /**
+     * See [Engine.enableWebExtension].
+     */
+    override fun enableWebExtension(
+        extension: WebExtension,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
+        webExtensionDelegate?.onEnabled(extension)
+        onSuccess(extension)
+    }
+
+    /**
+     * See [Engine.disableWebExtension].
+     */
+    override fun disableWebExtension(
+        extension: WebExtension,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
+        webExtensionDelegate?.onDisabled(extension)
+        onSuccess(extension)
     }
 
     /**

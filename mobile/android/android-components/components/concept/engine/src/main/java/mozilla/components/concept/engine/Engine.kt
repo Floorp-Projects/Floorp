@@ -189,6 +189,36 @@ interface Engine {
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
+     * Enables the provided [WebExtension]. If the extension is already enabled the [onSuccess]
+     * callback will be invoked, but this method has no effect on the extension.
+     *
+     * @param onSuccess (optional) callback invoked with the enabled [WebExtension]
+     * @param onError (optional) callback invoked if there was an error enabling
+     * the extensions. This callback is invoked with an [UnsupportedOperationException]
+     * in case the engine doesn't have web extension support.
+     */
+    fun enableWebExtension(
+        extension: WebExtension,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { }
+    ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
+
+    /**
+     * Disables the provided [WebExtension]. If the extension is already disabled the [onSuccess]
+     * callback will be invoked, but this method has no effect on the extension.
+     *
+     * @param onSuccess (optional) callback invoked with the enabled [WebExtension]
+     * @param onError (optional) callback invoked if there was an error disabling
+     * the installed extensions. This callback is invoked with an [UnsupportedOperationException]
+     * in case the engine doesn't have web extension support.
+     */
+    fun disableWebExtension(
+        extension: WebExtension,
+        onSuccess: ((WebExtension) -> Unit),
+        onError: ((Throwable) -> Unit) = { }
+    ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
+
+    /**
      * Registers a [WebExtensionDelegate] to be notified of engine events
      * related to web extensions
      *

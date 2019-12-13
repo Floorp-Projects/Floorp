@@ -28,6 +28,20 @@ interface WebExtensionDelegate {
     fun onUninstalled(webExtension: WebExtension) = Unit
 
     /**
+     * Invoked when a web extension was enabled successfully.
+     *
+     * @param webExtension The enabled extension.
+     */
+    fun onEnabled(webExtension: WebExtension) = Unit
+
+    /**
+     * Invoked when a web extension was disabled successfully.
+     *
+     * @param webExtension The disabled extension.
+     */
+    fun onDisabled(webExtension: WebExtension) = Unit
+
+    /**
      * Invoked when a web extension attempts to open a new tab via
      * browser.tabs.create.
      *
