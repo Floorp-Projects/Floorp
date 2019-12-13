@@ -1281,11 +1281,8 @@ CHUNK_SUITES_BLACKLIST = (
     'mochitest-browser-chrome',
     'mochitest-browser-chrome-screenshots',
     'mochitest-browser-chrome-thunderbird',
-    'mochitest-chrome',
     'mochitest-devtools-webreplay',
     'mochitest-plain',
-    'mochitest-plain-gpu',
-    'mochitest-remote',
     'mochitest-valgrind-plain',
     'mochitest-webgl1-core',
     'mochitest-webgl1-ext',
@@ -1367,7 +1364,7 @@ def split_chunks(config, tests):
 
         chunked_manifests = None
         if test['suite'] not in CHUNK_SUITES_BLACKLIST:
-            suite_definition = TEST_SUITES.get(test['suite'], {})
+            suite_definition = TEST_SUITES[test['suite']]
             chunked_manifests = get_chunked_manifests(
                 suite_definition['build_flavor'],
                 suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
