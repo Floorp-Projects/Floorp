@@ -9,6 +9,7 @@
 
 #include "ImageTracker.h"
 
+#include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/Preferences.h"
 #include "nsXULAppAPI.h"
