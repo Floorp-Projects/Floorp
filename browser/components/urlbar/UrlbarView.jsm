@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarContextualTip: "resource:///modules/UrlbarContextualTip.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -57,71 +56,6 @@ class UrlbarView {
 
     this.controller.setView(this);
     this.controller.addQueryListener(this);
-  }
-
-  /**
-   * Sets the icon, title, button's title, and link's title
-   * for the contextual tip. If a contextual tip has not
-   * been created, then it will be created.
-   *
-   * @param {object} details
-   * @param {string} details.title
-   *   Main title displayed by the contextual tip.
-   * @param {string} [details.buttonTitle]
-   *   Title of the button on the contextual tip.
-   *   If omitted then the button will be hidden.
-   * @param {string} [details.linkTitle]
-   *   Title of the link on the contextual tip.
-   *   If omitted then the link will be hidden.
-   * @param {string} [details.iconStyle]
-   *   A non-empty string of styles to add to the icon's style attribute.
-   *   These styles set CSS variables to URLs of images;
-   *   the CSS variables responsible for the icon's background image are
-   *   the variable names containing `--webextension-contextual-tip-icon`
-   *   in `browser/base/content/browser.css`.
-   *   If ommited, no changes are made to the icon.
-   */
-  setContextualTip(details) {
-    if (!this.contextualTip) {
-      this.contextualTip = new UrlbarContextualTip(this);
-    }
-    this.contextualTip.set(details);
-
-    // Disable one off search buttons from appearing if
-    // the contextual tip is the only item in the urlbar view.
-    if (this.visibleRowCount == 0) {
-      this._enableOrDisableOneOffSearches(false);
-    }
-
-    this._openPanel();
-  }
-
-  /**
-   * Hides the contextual tip.
-   */
-  hideContextualTip() {
-    if (this.contextualTip) {
-      this.contextualTip.hide();
-
-      // When the pending query has finished and there's 0 results then
-      // close the urlbar view.
-      this.input.lastQueryContextPromise.then(() => {
-        if (this.visibleRowCount == 0) {
-          this.close();
-        }
-      });
-    }
-  }
-
-  /**
-   * Removes the contextual tip from the DOM.
-   */
-  removeContextualTip() {
-    if (!this.contextualTip) {
-      return;
-    }
-    this.contextualTip.remove();
-    this.contextualTip = null;
   }
 
   get oneOffSearchButtons() {
@@ -426,9 +360,6 @@ class UrlbarView {
     this.window.removeEventListener("resize", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
-    if (this.contextualTip) {
-      this.contextualTip.hide();
-    }
   }
 
   maybeReopen() {

@@ -213,8 +213,7 @@
     "scopes": ["addon_parent"],
     "settings": true,
     "paths": [
-      ["urlbar"],
-      ["urlbar", "contextualTip"]
+      ["urlbar"]
     ]
   },
   "urlOverrides": {
