@@ -53,6 +53,10 @@ struct LazyScriptCreationData {
 // metadata without requiring immediate access to the garbage
 // collector.
 struct FunctionCreationData {
+  FunctionCreationData(HandleAtom atom, FunctionSyntaxKind kind,
+                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                       bool isSelfHosting = false, bool inFunctionBox = false);
+
   // The Parser uses KeepAtoms to prevent GC from collecting atoms
   JSAtom* atom = nullptr;
   FunctionSyntaxKind kind = FunctionSyntaxKind::Expression;

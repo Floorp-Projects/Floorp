@@ -2096,12 +2096,17 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
-FunctionCreationData GenerateFunctionCreationData(
-    HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, bool isSelfHosting /* = false */,
-    bool inFunctionBox /* = false */) {
-  gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-  FunctionFlags flags;
+FunctionCreationData::FunctionCreationData(HandleAtom atom,
+                                           FunctionSyntaxKind kind,
+                                           GeneratorKind generatorKind,
+                                           FunctionAsyncKind asyncKind,
+                                           bool isSelfHosting /* = false */,
+                                           bool inFunctionBox /* = false */)
+    : atom(atom),
+      kind(kind),
+      generatorKind(generatorKind),
+      asyncKind(asyncKind),
+      isSelfHosting(isSelfHosting) {
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
@@ -2144,9 +2149,6 @@ FunctionCreationData GenerateFunctionCreationData(
                    ? FunctionFlags::INTERPRETED_NORMAL
                    : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
-
-  return FunctionCreationData{atom,      kind,  generatorKind, asyncKind,
-                              allocKind, flags, isSelfHosting};
 }
 
 HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
@@ -2780,9 +2782,9 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   Rooted<FunctionCreationData> fcd(
-      cx_, GenerateFunctionCreationData(funName, kind, generatorKind, asyncKind,
-                                        options().selfHostingMode,
-                                        pc_->isFunctionBox()));
+      cx_,
+      FunctionCreationData(funName, kind, generatorKind, asyncKind,
+                           options().selfHostingMode, pc_->isFunctionBox()));
 
   // Speculatively parse using the directives of the parent parsing context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -7380,7 +7382,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
           : FunctionSyntaxKind::ClassConstructor;
 
   Rooted<FunctionCreationData> data(
-      cx_, GenerateFunctionCreationData(
+      cx_, FunctionCreationData(
                className, functionSyntaxKind, GeneratorKind::NotGenerator,
                FunctionAsyncKind::SyncFunction, options().selfHostingMode,
                pc_->isFunctionBox()));
@@ -7550,7 +7552,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   Rooted<FunctionCreationData> data(
-      cx_, GenerateFunctionCreationData(
+      cx_, FunctionCreationData(
                nullptr, FunctionSyntaxKind::Method, GeneratorKind::NotGenerator,
                FunctionAsyncKind::SyncFunction, options().selfHostingMode,
                pc_->isFunctionBox()));
