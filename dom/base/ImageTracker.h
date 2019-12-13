@@ -54,6 +54,8 @@ class ImageTracker {
 
   void RequestDiscardAll();
 
+  void MediaFeatureValuesChangedAllDocuments(const MediaFeatureChange&);
+
  private:
   ~ImageTracker();
 

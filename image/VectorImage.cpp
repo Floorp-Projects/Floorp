@@ -39,6 +39,7 @@
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 
 namespace mozilla {
 
@@ -564,7 +565,6 @@ void VectorImage::SendInvalidationNotifications() {
   // we would miss the subsequent invalidations if we didn't send out the
   // notifications indirectly in |InvalidateObservers...|.
 
-  MOZ_ASSERT(mHasPendingInvalidation);
   mHasPendingInvalidation = false;
   SurfaceCache::RemoveImage(ImageKey(this));
 
@@ -1525,6 +1525,36 @@ nsIntSize VectorImage::OptimalImageSizeForDest(const gfxSize& aDest,
 already_AddRefed<imgIContainer> VectorImage::Unwrap() {
   nsCOMPtr<imgIContainer> self(this);
   return self.forget();
+}
+
+void VectorImage::MediaFeatureValuesChangedAllDocuments(
+    const MediaFeatureChange& aChange) {
+  if (!mSVGDocumentWrapper) {
+    return;
+  }
+
+  // Don't bother if the document hasn't loaded yet.
+  if (!mIsFullyLoaded) {
+    return;
+  }
+
+  if (Document* doc = mSVGDocumentWrapper->GetDocument()) {
+    if (nsPresContext* presContext = doc->GetPresContext()) {
+      presContext->MediaFeatureValuesChangedAllDocuments(aChange);
+      // Media feature value changes don't happen in the middle of layout,
+      // so we don't need to call InvalidateObserversOnNextRefreshDriverTick
+      // to invalidate asynchronously.
+      //
+      // Ideally we would not invalidate images if the media feature value
+      // change did not cause any updates to the document, but since non-
+      // animated SVG images do not have their refresh driver ticked, it
+      // is the invalidation (and then the painting) which is what causes
+      // the document to be flushed. Theme and system metrics changes are
+      // rare, though, so it's not a big deal to invalidate even if it
+      // doesn't cause any change.
+      SendInvalidationNotifications();
+    }
+  }
 }
 
 }  // namespace image

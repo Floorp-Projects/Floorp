@@ -793,6 +793,30 @@ nsresult ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
   return NS_OK;
 }
 
+void ImageLoader::MediaFeatureValuesChangedAllDocuments(
+    const MediaFeatureChange& aChange) {
+  // Inform every CSS image used in the document that media feature values have
+  // changed.  If the same image is used in multiple places, then we can end up
+  // informing them multiple times.  Theme changes are rare though and we don't
+  // bother trying to ensure we only do this once per image.
+  //
+  // Pull the images out into an array and iterate over them, in case the
+  // image notifications do something that ends up modifying the table.
+  nsTArray<nsCOMPtr<imgIContainer>> images;
+  for (auto iter = mRegisteredImages.Iter(); !iter.Done(); iter.Next()) {
+    imgRequestProxy* req = iter.Data();
+    nsCOMPtr<imgIContainer> image;
+    req->GetImage(getter_AddRefs(image));
+    if (!image) {
+      continue;
+    }
+    images.AppendElement(image->Unwrap());
+  }
+  for (imgIContainer* image : images) {
+    image->MediaFeatureValuesChangedAllDocuments(aChange);
+  }
+}
+
 bool ImageLoader::ImageReflowCallback::ReflowFinished() {
   // Check that the frame is still valid. If it isn't, then onload was
   // unblocked when the frame was removed from the FrameSet in

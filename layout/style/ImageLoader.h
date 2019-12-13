@@ -19,6 +19,7 @@
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MediaFeatureChange.h"
 
 class imgIContainer;
 class nsIFrame;
@@ -70,6 +71,12 @@ class ImageLoader final : public imgINotificationObserver {
   void DropRequestsForFrame(nsIFrame* aFrame);
 
   void SetAnimationMode(uint16_t aMode);
+
+  /**
+   * Called by the document's pres context when media features in all
+   * SVG images must be re-evaluated.
+   */
+  void MediaFeatureValuesChangedAllDocuments(const MediaFeatureChange& aChange);
 
   // The prescontext for this ImageLoader's document. We need it to be passed
   // in because this can be called during presentation destruction after the
