@@ -308,7 +308,11 @@ var gSitePermissionsManager = {
     // Ignore unrelated permission types and permissions with unknown states.
     if (
       perm.type !== this._type ||
-      !PERMISSION_STATES.includes(perm.capability)
+      !PERMISSION_STATES.includes(perm.capability) ||
+      // Skip private browsing session permissions
+      (perm.principal.privateBrowsingId !==
+        Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID &&
+        perm.expireType === Services.perms.EXPIRE_SESSION)
     ) {
       return;
     }
