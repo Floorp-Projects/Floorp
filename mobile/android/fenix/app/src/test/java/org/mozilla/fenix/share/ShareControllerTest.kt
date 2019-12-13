@@ -28,7 +28,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
-import mozilla.components.feature.sendtab.SendTabUseCases
+import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test

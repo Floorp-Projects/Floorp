@@ -426,7 +426,7 @@ dependencies {
     implementation Deps.mozilla_feature_site_permissions
     implementation Deps.mozilla_feature_readerview
     implementation Deps.mozilla_feature_tab_collections
-    implementation Deps.mozilla_feature_sendtab
+    implementation Deps.mozilla_feature_accounts_push
     implementation Deps.mozilla_feature_webcompat
     implementation Deps.mozilla_feature_webnotifications
 

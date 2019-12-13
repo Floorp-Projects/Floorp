@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.fragment_share.view.*
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.feature.sendtab.SendTabUseCases
+import mozilla.components.feature.accounts.push.SendTabUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.ext.getRootView
