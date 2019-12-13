@@ -113,6 +113,8 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
   // The length of the data in Expat's buffer (in number of PRUnichars).
   uint32_t mExpatBuffered;
 
+  uint16_t mTagDepth;
+
   // These sinks all refer the same conceptual object. mOriginalSink is
   // identical with the nsIContentSink* passed to WillBuildModel, and exists
   // only to avoid QI-ing back to nsIContentSink*.
