@@ -28,8 +28,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.io.File
-import kotlin.reflect.full.functions
-import kotlin.reflect.jvm.isAccessible
 
 @RunWith(AndroidJUnit4::class)
 class FretboardTest {
@@ -525,45 +523,6 @@ class FretboardTest {
         })
 
         assertEquals(55, fretboard2.getUserBucket(testContext))
-    }
-
-    @Test
-    fun evenDistribution() {
-        val context = mock<Context>()
-        val sharedPrefs = mock<SharedPreferences>()
-        val prefsEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
-        `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
-        `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
-
-        val distribution = (1..1000).map {
-            val experimentEvaluator = ExperimentEvaluator()
-            val f = experimentEvaluator::class.functions.find { it.name == "getUserBucket" }
-            f!!.isAccessible = true
-            f.call(experimentEvaluator, context) as Int
-        }
-
-        distribution
-                .groupingBy { it }
-                .eachCount()
-                .forEach {
-                    assertTrue(it.value in 0..25)
-                }
-
-        distribution
-                .groupingBy { it / 10 }
-                .eachCount()
-                .forEach {
-                    assertTrue(it.value in 50..150)
-                }
-
-        distribution
-                .groupingBy { it / 50 }
-                .eachCount()
-                .forEach {
-                    assertTrue(it.value in 350..650)
-                }
     }
 
     @Test
