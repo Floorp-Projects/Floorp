@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from copy import deepcopy
+
 JSON_TYPE = None
 try:
     import simplejson as json
@@ -12,7 +14,6 @@ else:
     JSON_TYPE = 'simplejson'
 
 import mozharness.base.config as config
-from copy import deepcopy
 
 MH_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -32,7 +33,9 @@ class TestParseConfigFile(unittest.TestCase):
                            output='dict'):
         global_dict = {}
         local_dict = {}
-        execfile(filename, global_dict, local_dict)
+        # exec(open(filename).read(), global_dict, local_dict)
+        exec(compile(open(filename, "rb").read(),
+                     filename, 'exec'), global_dict, local_dict)
         return local_dict['config']
 
     def test_json_config(self):
