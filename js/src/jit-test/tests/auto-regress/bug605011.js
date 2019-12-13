@@ -14,6 +14,6 @@ try {
 } catch(exc1) {}
 (function() {
   try {
-    gczeal(2)(uneval(this))
+    gczeal(2)(JSON.stringify(this))
   } catch(exc2) {}
 })()
