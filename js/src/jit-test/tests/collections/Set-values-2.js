@@ -13,6 +13,6 @@ assertIteratorNext(ki, 3);
 assertIteratorNext(ki, 4);
 assertIteratorDone(ki, undefined);
 
-assertEq([...s.keys()].toSource(), data.toSource());
-assertEq([...s.values()].toSource(), data.toSource());
-assertEq([...s.entries()].toSource(), [[1, 1], [2, 2], [3, 3], [4, 4]].toSource());
+assertDeepEq([...s.keys()], data);
+assertDeepEq([...s.values()], data);
+assertDeepEq([...s.entries()], [[1, 1], [2, 2], [3, 3], [4, 4]]);

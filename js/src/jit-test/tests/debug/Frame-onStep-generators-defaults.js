@@ -3,6 +3,8 @@
 // (They're evaluated at a weird time in the generator life cycle, before the
 // generator object is created.)
 
+load(libdir + "asserts.js");
+
 let g = newGlobal({newCompartment: true});
 g.eval(`\
     function f1() {}        // line 1
@@ -30,4 +32,4 @@ dbg.onEnterFrame = frame => {
 };
 
 g.gen(0);
-assertEq(log.toSource(), [5, 7, 1, 8, 2, 9, 3, 10].toSource());
+assertDeepEq(log, [5, 7, 1, 8, 2, 9, 3, 10]);

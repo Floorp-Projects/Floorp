@@ -3,6 +3,8 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
+load(libdir + "asserts.js");
+
 var set = new Set();
 set.add(set);
 
@@ -25,8 +27,8 @@ for (value of magic) {
     assertEq(value, values[i++]);
 }
 
-assertEq([...set.keys()].toSource(), [...magic.keys()].toSource());
-assertEq([...set.values()].toSource(), [...magic.values()].toSource());
+assertDeepEq([...set.keys()], [...magic.keys()]);
+assertDeepEq([...set.values()], [...magic.values()]);
 
 var obj = {a: 1};
 obj.set = new Set();
