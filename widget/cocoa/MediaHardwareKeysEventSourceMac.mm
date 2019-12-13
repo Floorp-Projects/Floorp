@@ -38,18 +38,23 @@ static const char* ToMediaControlKeyStr(int aKeyCode) {
       return "Rewind";
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid action.");
+      return "UNKNOWN";
   }
-  return "UNKNOWN";
 }
 
 // The media keys subtype. No official docs found, but widely known.
 // http://lists.apple.com/archives/cocoa-dev/2007/Aug/msg00499.html
 const int kSystemDefinedEventMediaKeysSubtype = 8;
 
+static bool IsSupportedKeyCode(int aKeyCode) {
+  return aKeyCode == NX_KEYTYPE_PLAY || aKeyCode == NX_KEYTYPE_NEXT ||
+         aKeyCode == NX_KEYTYPE_FAST || aKeyCode == NX_KEYTYPE_PREVIOUS ||
+         aKeyCode == NX_KEYTYPE_REWIND;
+}
+
 static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
+  MOZ_ASSERT(IsSupportedKeyCode(aKeyCode));
   switch (aKeyCode) {
-    case NX_KEYTYPE_PLAY:
-      return MediaControlKeysEvent::ePlayPause;
     case NX_KEYTYPE_NEXT:
     case NX_KEYTYPE_FAST:
       return MediaControlKeysEvent::eNext;
@@ -57,9 +62,9 @@ static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
     case NX_KEYTYPE_REWIND:
       return MediaControlKeysEvent::ePrev;
     default:
-      MOZ_ASSERT_UNREACHABLE("Invalid action.");
+      MOZ_ASSERT(aKeyCode == NX_KEYTYPE_PLAY);
+      return MediaControlKeysEvent::ePlayPause;
   }
-  return MediaControlKeysEvent::eNone;
 }
 
 namespace mozilla {
@@ -160,6 +165,10 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(CGEventTapProxy pro
 
   // There is no listener waiting to process event.
   if (source->mListeners.IsEmpty()) {
+    return event;
+  }
+
+  if (!IsSupportedKeyCode(keyCode)) {
     return event;
   }
 
