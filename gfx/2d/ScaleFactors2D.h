@@ -53,6 +53,8 @@ struct ScaleFactors2D {
     return ScaleFactor<src, dst>(xScale);
   }
 
+  ScaleFactors2D<src, dst>& operator=(const ScaleFactors2D<src, dst>&) = default;
+
   bool operator==(const ScaleFactors2D<src, dst>& aOther) const {
     return xScale == aOther.xScale && yScale == aOther.yScale;
   }
