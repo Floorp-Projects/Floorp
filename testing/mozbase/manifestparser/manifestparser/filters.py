@@ -426,10 +426,16 @@ class pathprefix(InstanceFilter):
                 tp = os.path.normpath(tp)
 
                 if tp.endswith('.ini'):
-                    mpath = test['manifest'] if os.path.isabs(tp) else test['manifest_relpath']
+                    mpaths = [test['manifest_relpath']]
+                    if 'ancestor_manifest' in test:
+                        mpaths.append(test['ancestor_manifest'])
+
+                    if os.path.isabs(tp):
+                        root = test['manifest'][:-len(test['manifest_relpath'])-1]
+                        mpaths = [os.path.join(root, m) for m in mpaths]
 
                     # only return tests that are in this manifest
-                    if os.path.normpath(mpath) != tp:
+                    if not any(os.path.normpath(m) == tp for m in mpaths):
                         continue
                 else:
                     # only return tests that start with this path
