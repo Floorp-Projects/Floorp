@@ -5229,18 +5229,30 @@ struct ConnectionPool::IdleResource {
 };
 
 struct ConnectionPool::IdleDatabaseInfo final : public IdleResource {
-  DatabaseInfo* mDatabaseInfo;
+  InitializedOnceMustBeTrue<DatabaseInfo* const> mDatabaseInfo;
 
  public:
-  MOZ_IMPLICIT
-  IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
+  explicit IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
 
-  explicit IdleDatabaseInfo(const IdleDatabaseInfo& aOther) = delete;
+  IdleDatabaseInfo(const IdleDatabaseInfo& aOther) = delete;
+  IdleDatabaseInfo(IdleDatabaseInfo&& aOther) noexcept
+      : IdleResource(std::move(aOther)),
+        mDatabaseInfo{std::move(aOther.mDatabaseInfo)} {
+    MOZ_ASSERT(mDatabaseInfo);
+
+    MOZ_COUNT_CTOR(ConnectionPool::IdleDatabaseInfo);
+  }
+  IdleDatabaseInfo& operator=(const IdleDatabaseInfo& aOther) = delete;
+  IdleDatabaseInfo& operator=(IdleDatabaseInfo&& aOther) = delete;
 
   ~IdleDatabaseInfo();
 
   bool operator==(const IdleDatabaseInfo& aOther) const {
-    return mDatabaseInfo == aOther.mDatabaseInfo;
+    return *mDatabaseInfo == *aOther.mDatabaseInfo;
+  }
+
+  bool operator==(DatabaseInfo* const aDatabaseInfo) const {
+    return *mDatabaseInfo == aDatabaseInfo;
   }
 
   bool operator<(const IdleDatabaseInfo& aOther) const {
@@ -11144,10 +11156,10 @@ void ConnectionPool::IdleTimerCallback(nsITimer* aTimer, void* aClosure) {
     IdleDatabaseInfo& info = self->mIdleDatabases[index];
 
     if (now >= info.mIdleTime) {
-      if (info.mDatabaseInfo->mIdle) {
-        self->PerformIdleDatabaseMaintenance(info.mDatabaseInfo);
+      if ((*info.mDatabaseInfo)->mIdle) {
+        self->PerformIdleDatabaseMaintenance(*info.mDatabaseInfo);
       } else {
-        self->CloseDatabase(info.mDatabaseInfo);
+        self->CloseDatabase(*info.mDatabaseInfo);
       }
     } else {
       break;
@@ -11557,7 +11569,7 @@ void ConnectionPool::CloseIdleDatabases() {
 
   if (!mIdleDatabases.IsEmpty()) {
     for (IdleDatabaseInfo& idleInfo : mIdleDatabases) {
-      CloseDatabase(idleInfo.mDatabaseInfo);
+      CloseDatabase(*idleInfo.mDatabaseInfo);
     }
     mIdleDatabases.Clear();
   }
@@ -11848,7 +11860,7 @@ void ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo) {
     return;
   }
 
-  mIdleDatabases.InsertElementSorted(aDatabaseInfo);
+  mIdleDatabases.InsertElementSorted(IdleDatabaseInfo{aDatabaseInfo});
 
   AdjustIdleTimer();
 }
@@ -12359,7 +12371,6 @@ ConnectionPool::IdleDatabaseInfo::IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo)
 
 ConnectionPool::IdleDatabaseInfo::~IdleDatabaseInfo() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDatabaseInfo);
 
   MOZ_COUNT_DTOR(ConnectionPool::IdleDatabaseInfo);
 }
