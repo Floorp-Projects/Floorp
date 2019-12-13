@@ -651,8 +651,6 @@ Toolbox.prototype = {
   _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     if (isTopLevel) {
       this.detachTarget();
-    } else {
-      this._stopThreadFrontListeners(targetFront.threadFront);
     }
   },
 
