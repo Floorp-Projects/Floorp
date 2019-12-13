@@ -4,9 +4,14 @@
 
 "use strict";
 
+const Services = require("Services");
 const { l10n } = require("../modules/l10n");
 
-const { DEBUG_TARGETS, REQUEST_PROCESSES_SUCCESS } = require("../constants");
+const {
+  DEBUG_TARGETS,
+  PREFERENCES,
+  REQUEST_PROCESSES_SUCCESS,
+} = require("../constants");
 
 /**
  * This middleware converts tabs object that get from DebuggerClient.listProcesses() to
@@ -30,10 +35,19 @@ function toMainProcessComponentData(process) {
   const type = DEBUG_TARGETS.PROCESS;
   const id = process.processFront.actorID;
   const icon = "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
-  const name = l10n.getString("about-debugging-main-process-name");
-  const description = l10n.getString(
-    "about-debugging-main-process-description2"
+
+  const isMultiProcessToolboxEnabled = Services.prefs.getBoolPref(
+    PREFERENCES.FISSION_BROWSER_TOOLBOX,
+    false
   );
+
+  const name = isMultiProcessToolboxEnabled
+    ? l10n.getString("about-debugging-multiprocess-toolbox-name")
+    : l10n.getString("about-debugging-main-process-name");
+
+  const description = isMultiProcessToolboxEnabled
+    ? l10n.getString("about-debugging-multiprocess-toolbox-description")
+    : l10n.getString("about-debugging-main-process-description2");
 
   return {
     name,
