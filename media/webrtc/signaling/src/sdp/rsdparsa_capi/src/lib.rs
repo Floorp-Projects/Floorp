@@ -4,12 +4,11 @@
 
 extern crate rsdparsa;
 extern crate libc;
-#[macro_use] extern crate log;
 extern crate nserror;
 
+use std::ffi::CString;
 use std::ptr;
 use std::os::raw::c_char;
-use std::error::Error;
 
 use libc::size_t;
 
@@ -44,7 +43,7 @@ pub unsafe extern "C" fn parse_sdp(sdp: StringView,
         Err(boxed_error) => {
             *session = ptr::null();
             *error = Box::into_raw(Box::new(SdpParserError::Sequence {
-                message: (*boxed_error).description().to_string(),
+                message: format!("{}", boxed_error),
                 line_number: 0,
             }));
             return NS_ERROR_INVALID_ARG;
@@ -63,8 +62,7 @@ pub unsafe extern "C" fn parse_sdp(sdp: StringView,
         },
         Err(e) => {
             *session = ptr::null();
-            debug!("{:?}", e);
-            debug!("Error parsing SDP in rust: {}", e.description());
+            println!("Error parsing SDP in rust: {}", e);
             *error = Box::into_raw(Box::new(e));
             NS_ERROR_INVALID_ARG
         }
@@ -100,8 +98,20 @@ pub unsafe extern "C" fn sdp_get_error_line_num(error: *mut SdpParserError) -> s
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_error_message(error: *mut SdpParserError) -> StringView {
-    StringView::from((*error).description())
+// Callee must check that a nullptr is not returned
+pub unsafe extern "C" fn sdp_get_error_message(error: *mut SdpParserError) -> *mut c_char {
+   let message = format!("{}", *error);
+   return match CString::new(message.as_str()) {
+        Ok(c_char_ptr) => c_char_ptr.into_raw(),
+        Err(_) => 0 as *mut c_char,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_free_error_message(message: *mut c_char) {
+    if message != 0 as *mut c_char {
+        let _tmp = CString::from_raw(message);
+    }
 }
 
 #[no_mangle]
@@ -154,7 +164,7 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
     let address_string:String = match address.try_into(){
        Ok(x) => x,
        Err(boxed_error) => {
-           println!("Error while pasing string, description: {:?}", (*boxed_error).description());
+           println!("Error while parsing string, description: {}", boxed_error);
            return NS_ERROR_INVALID_ARG;
        }
     };

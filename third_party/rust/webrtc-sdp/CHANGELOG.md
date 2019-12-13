@@ -1,6 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.3] - 2019-12-10
+### Changed
+- Changed handling of default channel counts
+
+## [0.3.2] - 2019-12-02
+### Changed
+- Fixed handling of spaces in fmtp attributes
+- Minimum Rust version >= 1.36
+
 ## [0.3.1] - 2019-09-12
 ### Changed
 - Updated `urls` dependency to `0.2.1`

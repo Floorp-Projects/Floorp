@@ -22,6 +22,7 @@ class SdpPref {
  private:
   static const std::string PRIMARY_PREF;
   static const std::string ALTERNATE_PREF;
+  static const std::string STRICT_SUCCESS_PREF;
   static const std::string DEFAULT;
 
  public:
@@ -66,6 +67,8 @@ class SdpPref {
   static auto AlternateParseMode() -> AlternateParseModes;
 
  public:
+  // Do non-fatal parsing errors count as failure
+  static auto StrictSuccess() -> bool;
   // Functions to create the primary, secondary and failover parsers.
 
   // Reads about:config to choose the primary Parser

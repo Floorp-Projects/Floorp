@@ -11,6 +11,8 @@ namespace mozilla {
 const std::string SdpPref::PRIMARY_PREF = "media.peerconnection.sdp.parser";
 const std::string SdpPref::ALTERNATE_PREF =
     "media.peerconnection.sdp.alternate_parse_mode";
+const std::string SdpPref::STRICT_SUCCESS_PREF =
+    "media.peerconnection.sdp.strict_success";
 const std::string SdpPref::DEFAULT = "default";
 
 auto SdpPref::ToString(const Parsers& aParser) -> std::string {
@@ -94,6 +96,10 @@ auto SdpPref::Failover() -> Maybe<UniquePtr<SdpParser>> {
   }
   MOZ_CRASH("ALL Parsers CASES ARE NOT COVERED");
   return Nothing();
+}
+
+auto SdpPref::StrictSuccess() -> bool {
+  return Preferences::GetBool(STRICT_SUCCESS_PREF.c_str(), false);
 }
 
 }  // namespace mozilla
