@@ -4821,9 +4821,8 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
           gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
     }
 
-    int scale = GdkScaleFactor();
-    int width = mBounds.width / scale;
-    int height = mBounds.height / scale;
+    int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
+    int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
 
     cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
                                   width, height};
@@ -7642,9 +7641,8 @@ GtkTextDirection nsWindow::GetTextDirection() {
 
 void nsWindow::LockAspectRatio(bool aShouldLock) {
   if (aShouldLock) {
-    gint scale = GdkScaleFactor();
-    float width = (float)mBounds.Width() / scale;
-    float height = (float)mBounds.Height() / scale;
+    float width = (float)DevicePixelsToGdkCoordRoundDown(mBounds.width);
+    float height = (float)DevicePixelsToGdkCoordRoundDown(mBounds.height);
 
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
       GtkBorder decorationSize = GetCSDDecorationSize(
