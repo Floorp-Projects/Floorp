@@ -161,9 +161,10 @@ function promiseTabLoadEvent(tab, url) {
  * Wait for the search engine to change.
  */
 function promiseContentSearchChange(browser, newEngineName) {
-  return SpecialPowers.spawn(browser, [{ newEngineName }], async function(
-    args
-  ) {
+  // Callers of this depend on very specific, very racy timing, and fail
+  // if we introduce the trip through SpecialPowersParent that
+  // SpecialPowers.spawn requires.
+  return ContentTask.spawn(browser, { newEngineName }, async function(args) {
     return new Promise(resolve => {
       content.addEventListener("ContentSearchService", function listener(
         aEvent
