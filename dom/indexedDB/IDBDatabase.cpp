@@ -299,9 +299,9 @@ void IDBDatabase::RevertToPreviousState() {
 
   // Hold the current spec alive until RefreshTransactionsSpecEnumerator has
   // finished!
-  nsAutoPtr<DatabaseSpec> currentSpec(mSpec.forget());
+  auto currentSpec = std::move(mSpec);
 
-  mSpec = mPreviousSpec.forget();
+  mSpec = std::move(mPreviousSpec);
 
   RefreshSpec(/* aMayDelete */ true);
 }

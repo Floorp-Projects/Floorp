@@ -3438,10 +3438,9 @@ void BackgroundCursorChild::SendContinueInternal(
     // This is accompanied by invalidating cached entries at proper locations to
     // make it correct. To avoid this, further changes are necessary, see Bug
     // 1580499.
-    nsCOMPtr<nsIRunnable> continueRunnable = new DelayedActionRunnable(
-        this, &BackgroundCursorChild::CompleteContinueRequestFromCache);
-    MOZ_ALWAYS_TRUE(
-        NS_SUCCEEDED(NS_DispatchToCurrentThread(continueRunnable.forget())));
+    MOZ_ALWAYS_SUCCEEDS(
+        NS_DispatchToCurrentThread(MakeAndAddRef<DelayedActionRunnable>(
+            this, &BackgroundCursorChild::CompleteContinueRequestFromCache)));
 
     // TODO: Could we preload further entries in the background when the size of
     // mCachedResponses falls under some threshold? Or does the response
@@ -3588,10 +3587,10 @@ void BackgroundCursorChild::HandleResponse(const void_t& aResponse) {
   DispatchSuccessEvent(&helper);
 
   if (!mCursor) {
-    nsCOMPtr<nsIRunnable> deleteRunnable = new DelayedActionRunnable(
-        this, &BackgroundCursorChild::SendDeleteMeInternal);
     MOZ_ALWAYS_SUCCEEDS(this->GetActorEventTarget()->Dispatch(
-        deleteRunnable.forget(), NS_DISPATCH_NORMAL));
+        MakeAndAddRef<DelayedActionRunnable>(
+            this, &BackgroundCursorChild::SendDeleteMeInternal),
+        NS_DISPATCH_NORMAL));
   }
 }
 
