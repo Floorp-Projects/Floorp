@@ -14,17 +14,28 @@ add_task(async function() {
   await pushPref("devtools.webconsole.persistlog", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(() => findMessage(hud, "hello world"));
+  await waitFor(
+    () => findMessage(hud, "hello world"),
+    "Wait for log message to be rendered"
+  );
+  ok(true, "Log message rendered");
 
   info("Reload the page");
-  const onInitMessage = waitForMessage(hud, "hello world");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.location.reload();
   });
-  await onInitMessage;
 
   // Wait for the navigation message to be displayed.
-  await waitFor(() => findMessage(hud, "Navigated to"));
+  await waitFor(
+    () => findMessage(hud, "Navigated to"),
+    "Wait for navigation message to be rendered"
+  );
+
+  // Wait for 2 hellow world messages to be displayed.
+  await waitFor(
+    () => findMessages(hud, "hello world").length == 2,
+    "Wait for log message to be rendered after navigation"
+  );
 
   info("disable all filters and set a text filter that doesn't match anything");
   await setFilterState(hud, {
@@ -35,7 +46,10 @@ add_task(async function() {
     text: "qwqwqwqwqwqw",
   });
 
-  await waitFor(() => !findMessage(hud, "hello world"));
+  await waitFor(
+    () => !findMessage(hud, "hello world"),
+    "Wait for the log messages to be hidden"
+  );
   ok(
     findMessage(hud, "Navigated to"),
     "The navigation marker is still visible"
