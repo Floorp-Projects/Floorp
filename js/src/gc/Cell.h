@@ -606,7 +606,7 @@ class CellWithLengthAndFlags : public BaseCell {
   static constexpr size_t offsetOfLength() {
     return offsetof(CellWithLengthAndFlags, length_);
   }
-#elif MOZ_LITTLE_ENDIAN
+#elif MOZ_LITTLE_ENDIAN()
   static constexpr size_t offsetOfFlags() {
     return offsetof(CellWithLengthAndFlags, flags_);
   }

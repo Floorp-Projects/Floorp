@@ -941,7 +941,7 @@ static inline void FillChars(unsigned char* dest, const unsigned char* src,
 
 static inline void FillChars(char16_t* dest, LittleEndianChars src,
                              size_t length) {
-#ifdef MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   memcpy(dest, src.get(), length * sizeof(char16_t));
 #else
   for (size_t i = 0; i < length; ++i) {
