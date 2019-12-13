@@ -93,23 +93,16 @@ DebuggerClient.prototype = {
   /**
    * Connect to the server and start exchanging protocol messages.
    *
-   * @param onConnected function
-   *        If specified, will be called when the greeting packet is
-   *        received from the debugging server.
-   *
    * @return Promise
    *         Resolves once connected with an array whose first element
    *         is the application type, by default "browser", and the second
    *         element is the traits object (help figure out the features
    *         and behaviors of the server we connect to. See RootActor).
    */
-  connect(onConnected) {
+  connect() {
     return new Promise(resolve => {
       this.once("connected", (applicationType, traits) => {
         this.traits = traits;
-        if (onConnected) {
-          onConnected(applicationType, traits);
-        }
         resolve([applicationType, traits]);
       });
 
@@ -120,14 +113,10 @@ DebuggerClient.prototype = {
   /**
    * Shut down communication with the debugging server.
    *
-   * @param onClosed function
-   *        If specified, will be called when the debugging connection
-   *        has been closed. This parameter is deprecated - please use
-   *        the returned Promise.
    * @return Promise
    *         Resolves after the underlying transport is closed.
    */
-  close(onClosed) {
+  close() {
     const promise = new Promise(resolve => {
       // Disable detach event notifications, because event handlers will be in a
       // cleared scope by the time they run.
@@ -153,10 +142,6 @@ DebuggerClient.prototype = {
 
       cleanup();
     });
-
-    if (onClosed) {
-      promise.then(onClosed);
-    }
 
     return promise;
   },

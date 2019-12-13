@@ -854,7 +854,10 @@ PlacesTreeView.prototype = {
     let count = this._countVisibleRowsForNodeAtRow(oldRow);
 
     // Persist selection state.
-    let nodesToReselect = this._getSelectedNodesInRange(oldRow, oldRow + count);
+    let nodesToReselect = this._getSelectedNodesInRange(
+      oldRow,
+      oldRow + count - 1
+    );
     if (nodesToReselect.length) {
       this.selection.selectEventsSuppressed = true;
     }

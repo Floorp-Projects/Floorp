@@ -11,10 +11,6 @@
 #include "nscore.h"
 #include "nsRemoteClient.h"
 
-/**
- * Pure-virtual common base class for remoting implementations.
- */
-
 class nsWinRemoteClient : public nsRemoteClient {
  public:
   virtual ~nsWinRemoteClient() = default;

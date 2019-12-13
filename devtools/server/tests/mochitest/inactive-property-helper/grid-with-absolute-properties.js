@@ -41,7 +41,7 @@ function createTestsForProp(propertyName, propertyValue) {
       property: `${propertyName}`,
       createTestElement,
       rules: [
-        `#grid-container { display:grid; grid:auto/100px 100px; }`,
+        `#grid-container { display:grid; grid:auto/100px 100px; position: relative }`,
         `#grid-item { ${propertyName}: ${propertyValue}; position: absolute; }`,
       ],
       ruleIndex: 1,

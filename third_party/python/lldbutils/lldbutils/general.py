@@ -1,5 +1,6 @@
 import lldb
 from lldbutils import utils
+from __future__ import print_function
 
 def summarize_string(valobj, internal_dict):
     data = valobj.GetChildMemberWithName("mData")
@@ -49,28 +50,28 @@ def prefcnt(debugger, command, result, dict):
     frame = thread.GetSelectedFrame()
     obj = frame.EvaluateExpression(command)
     if obj.GetError().Fail():
-        print "could not evaluate expression"
+        print("could not evaluate expression")
         return
     obj = utils.dereference(obj)
     field = obj.GetChildMemberWithName("mRefCnt")
     if field.GetError().Fail():
         field = obj.GetChildMemberWithName("refCnt")
     if field.GetError().Fail():
-        print "not a refcounted object"
+        print("not a refcounted object")
         return
     refcnt_type = field.GetType().GetCanonicalType().GetName()
     if refcnt_type == "nsAutoRefCnt":
-        print field.GetChildMemberWithName("mValue").GetValueAsUnsigned(0)
+        print(field.GetChildMemberWithName("mValue").GetValueAsUnsigned(0))
     elif refcnt_type == "nsCycleCollectingAutoRefCnt":
-        print field.GetChildMemberWithName("mRefCntAndFlags").GetValueAsUnsigned(0) >> 2
+        print(field.GetChildMemberWithName("mRefCntAndFlags").GetValueAsUnsigned(0) >> 2)
     elif refcnt_type == "mozilla::ThreadSafeAutoRefCnt":
-        print field.GetChildMemberWithName("mValue").GetChildMemberWithName("mValue").GetValueAsUnsigned(0)
+        print(field.GetChildMemberWithName("mValue").GetChildMemberWithName("mValue").GetValueAsUnsigned(0))
     elif refcnt_type == "int":  # non-atomic mozilla::RefCounted object
-        print field.GetValueAsUnsigned(0)
+        print(field.GetValueAsUnsigned(0))
     elif refcnt_type == "mozilla::Atomic<int>":  # atomic mozilla::RefCounted object
-        print field.GetChildMemberWithName("mValue").GetValueAsUnsigned(0)
+        print(field.GetChildMemberWithName("mValue").GetValueAsUnsigned(0))
     else:
-        print "unknown mRefCnt type " + refcnt_type
+        print("unknown mRefCnt type " + refcnt_type)
 
 # Used to work around http://llvm.org/bugs/show_bug.cgi?id=22211
 def callfunc(debugger, command, result, dict):
@@ -78,7 +79,7 @@ def callfunc(debugger, command, result, dict):
        The function is assumed to return void."""
 
     if '(' not in command:
-        print 'Usage: callfunc your_function(args)'
+        print('Usage: callfunc your_function(args)')
         return
 
     command_parts = command.split('(')
@@ -88,7 +89,7 @@ def callfunc(debugger, command, result, dict):
     target = debugger.GetSelectedTarget()
     symbols = target.FindFunctions(funcname).symbols
     if not symbols:
-        print 'Could not find a function symbol for a function called "%s"' % funcname
+        print('Could not find a function symbol for a function called "%s"' % funcname)
         return
 
     sym = symbols[0]
