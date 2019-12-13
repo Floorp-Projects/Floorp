@@ -1833,6 +1833,7 @@ pref("app.normandy.logging.level", 50); // Warn
 pref("app.normandy.run_interval_seconds", 21600); // 6 hours
 pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/shield");
 pref("app.normandy.last_seen_buildid", "");
+pref("app.normandy.onsync_skew_sec", 600);
 #ifdef MOZ_DATA_REPORTING
   pref("app.shield.optoutstudies.enabled", true);
 #else
