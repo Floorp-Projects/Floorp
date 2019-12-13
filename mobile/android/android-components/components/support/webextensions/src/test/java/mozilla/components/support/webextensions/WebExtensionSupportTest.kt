@@ -249,6 +249,44 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to extension being enabled`() {
+        val store = spy(BrowserStore())
+
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+        whenever(ext.supportActions).thenReturn(true)
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onEnabled(ext)
+        verify(store).dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(ext.id, true))
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+    }
+
+    @Test
+    fun `reacts to extension being disabled`() {
+        val store = spy(BrowserStore())
+
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+        whenever(ext.supportActions).thenReturn(true)
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onDisabled(ext)
+        verify(store).dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(ext.id, false))
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+    }
+
+    @Test
     fun `observes store and registers action handlers on new engine sessions`() {
         val store = spy(BrowserStore(BrowserState(
             tabs = listOf(

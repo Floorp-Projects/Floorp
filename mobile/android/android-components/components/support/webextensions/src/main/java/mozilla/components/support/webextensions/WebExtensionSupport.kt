@@ -140,6 +140,16 @@ object WebExtensionSupport {
                 store.dispatch(WebExtensionAction.UninstallWebExtensionAction(webExtension.id))
             }
 
+            override fun onEnabled(webExtension: WebExtension) {
+                installedExtensions[webExtension.id] = webExtension
+                store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(webExtension.id, true))
+            }
+
+            override fun onDisabled(webExtension: WebExtension) {
+                installedExtensions[webExtension.id] = webExtension
+                store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(webExtension.id, false))
+            }
+
             override fun onInstallPermissionRequest(webExtension: WebExtension): Boolean {
                 // Our current installation flow has us approve permissions before we call
                 // install on the engine. Therefore we can just approve the permission request
