@@ -833,6 +833,18 @@ already_AddRefed<nsIEventTarget> IToplevelProtocol::GetMessageEventTarget(
       target = GetConstructedEventTarget(aMsg);
     }
 
+#ifdef DEBUG
+    // If this function is called more than once for the same message,
+    // the actor handle ID will already be in the map and the AddWithID
+    // call below will trigger a crash in DEBUG builds. Avoid this by
+    // removing the entry first and ASSERTing that if the ID has already
+    // been inserted, it matches the provided |aMsg| ID. If the ASSERT fails,
+    // the map contains a different event target which is unexpected.
+    nsCOMPtr<nsIEventTarget> existingTgt = mEventTargetMap.Lookup(handle.mId);
+    MOZ_ASSERT(existingTgt == target || existingTgt == nullptr);
+    mEventTargetMap.RemoveIfPresent(handle.mId);
+#endif /* DEBUG */
+
     mEventTargetMap.AddWithID(target, handle.mId);
   } else if (!target) {
     // We don't need the lock after this point.
