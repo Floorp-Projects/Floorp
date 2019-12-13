@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-enum class MediaControlKeysEvent { ePlayPause, ePrev, eNext, eNone };
+enum class MediaControlKeysEvent { ePlayPause, ePrev, eNext };
 
 /**
  * MediaControlKeysEventListener is a pure interface, which is used to monitor
