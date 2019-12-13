@@ -180,13 +180,13 @@ WebGLContext::WebGLContext()
 }
 
 WebGLContext::~WebGLContext() {
-  RemovePostRefreshObserver();
-
-  DestroyResourcesAndContext();
   if (NS_IsMainThread()) {
     // XXX mtseng: bug 709490, not thread safe
     WebGLMemoryTracker::RemoveWebGLContext(this);
   }
+
+  RemovePostRefreshObserver();
+  DestroyResourcesAndContext();
 }
 
 template <typename T>
