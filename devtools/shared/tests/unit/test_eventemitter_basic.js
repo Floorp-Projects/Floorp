@@ -255,6 +255,21 @@ const TESTS = {
     emitter.emit("c", 1);
     equal(received.length, 3, "the listener was not called after clearEvents");
   },
+
+  testOnReturn() {
+    const emitter = getEventEmitter();
+
+    let called = false;
+    const removeOnTest = emitter.on("test", () => {
+      called = true;
+    });
+
+    equal(typeof removeOnTest, "function", "`on` returns a function");
+    removeOnTest();
+
+    emitter.emit("test");
+    equal(called, false, "event listener wasn't called");
+  },
 };
 
 /**
