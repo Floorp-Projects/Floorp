@@ -19,6 +19,7 @@ namespace js {
 class ReadableStream;
 class ReadableStreamDefaultController;
 class TeeState;
+class WritableStream;
 
 extern MOZ_MUST_USE JSObject* ReadableStreamTee_Pull(
     JSContext* cx, JS::Handle<TeeState*> unwrappedTeeState);
@@ -32,6 +33,11 @@ extern MOZ_MUST_USE bool ReadableStreamTee(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
     bool cloneForBranch2, JS::MutableHandle<ReadableStream*> branch1Stream,
     JS::MutableHandle<ReadableStream*> branch2Stream);
+
+extern MOZ_MUST_USE JSObject* ReadableStreamPipeTo(
+    JSContext* cx, JS::Handle<ReadableStream*> unwrappedSource,
+    JS::Handle<WritableStream*> unwrappedDest, bool preventClose,
+    bool preventAbort, bool preventCancel, JS::Handle<JS::Value> signal);
 
 }  // namespace js
 

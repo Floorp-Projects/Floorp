@@ -495,6 +495,7 @@ bool shell::enableStreams = false;
 bool shell::enableReadableByteStreams = false;
 bool shell::enableBYOBStreamReaders = false;
 bool shell::enableWritableStreams = false;
+bool shell::enableReadableStreamPipeTo = false;
 bool shell::enableFields = false;
 bool shell::enableAwaitFix = false;
 bool shell::enableWeakRefs = false;
@@ -3730,6 +3731,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setReadableByteStreamsEnabled(enableReadableByteStreams)
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setWritableStreamsEnabled(enableWritableStreams)
+      .setReadableStreamPipeToEnabled(enableReadableStreamPipeTo)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix)
       .setWeakRefsEnabled(enableWeakRefs);
@@ -6295,6 +6297,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (v.isBoolean()) {
       creationOptions.setWritableStreamsEnabled(v.toBoolean());
+    }
+
+    if (!JS_GetProperty(cx, opts, "enableReadableStreamPipeTo", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setReadableStreamPipeToEnabled(v.toBoolean());
     }
 
     if (!JS_GetProperty(cx, opts, "systemPrincipal", &v)) {
@@ -10364,6 +10373,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
   enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableWritableStreams = op.getBoolOption("enable-writable-streams");
+  enableReadableStreamPipeTo = op.getBoolOption("enable-readablestream-pipeto");
 #ifdef ENABLE_WASM_BIGINT
   enableWasmBigInt = op.getBoolOption("wasm-bigint");
 #endif
@@ -11153,6 +11163,9 @@ int main(int argc, char** argv, char** envp) {
                         "ReadableStreams of type \"bytes\"") ||
       !op.addBoolOption('\0', "enable-writable-streams",
                         "Enable support for WHATWG WritableStreams") ||
+      !op.addBoolOption('\0', "enable-readablestream-pipeto",
+                        "Enable support for "
+                        "WHATWG ReadableStream.prototype.pipeTo") ||
       !op.addBoolOption('\0', "disable-experimental-fields",
                         "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-experimental-await-fix",

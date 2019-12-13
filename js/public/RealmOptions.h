@@ -161,6 +161,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getReadableStreamPipeToEnabled() const { return readableStreamPipeTo_; }
+  RealmCreationOptions& setReadableStreamPipeToEnabled(bool enabled) {
+    readableStreamPipeTo_ = enabled;
+    return *this;
+  }
+
   bool getFieldsEnabled() const { return fields_; }
   RealmCreationOptions& setFieldsEnabled(bool flag) {
     fields_ = flag;
@@ -213,6 +219,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool readableByteStreams_ = false;
   bool byobStreamReaders_ = false;
   bool writableStreams_ = false;
+  bool readableStreamPipeTo_ = false;
   bool fields_ = false;
   bool awaitFix_ = false;
   bool weakRefs_ = false;
