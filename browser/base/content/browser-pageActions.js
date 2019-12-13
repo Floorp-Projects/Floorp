@@ -4,7 +4,7 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "SiteSpecificBrowserService",
+  "SiteSpecificBrowser",
   "resource:///modules/SiteSpecificBrowserService.jsm"
 );
 
@@ -1099,12 +1099,18 @@ BrowserPageActions.launchSSB = {
     action.setDisabled(!browser.currentURI.schemeIs("https"), window);
   },
 
-  onCommand(event, buttonNode) {
+  async onCommand(event, buttonNode) {
     if (!gBrowser.currentURI.schemeIs("https")) {
       return;
     }
 
-    SiteSpecificBrowserService.launchFromURI(gBrowser.currentURI);
+    let ssb = await SiteSpecificBrowser.createFromBrowser(
+      gBrowser.selectedBrowser
+    );
+
+    // The site's manifest may point to a different start page so explicitly
+    // open the SSB to the current page.
+    ssb.launch(gBrowser.selectedBrowser.currentURI);
     gBrowser.removeTab(gBrowser.selectedTab, { closeWindowWithLastTab: false });
   },
 };
