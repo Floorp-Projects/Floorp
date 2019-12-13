@@ -69,6 +69,47 @@ add_task(async function addPermission() {
   PermissionTestUtils.remove(URI, "desktop-notification");
 });
 
+add_task(async function addPermissionPrivateBrowsing() {
+  let privateBrowsingPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+    URI,
+    { privateBrowsingId: 1 }
+  );
+  let doc = sitePermissionsDialog.document;
+  let richlistbox = doc.getElementById("permissionsBox");
+
+  Assert.equal(
+    richlistbox.itemCount,
+    0,
+    "Number of permission items is 0 initially"
+  );
+
+  // Add a session permission for private browsing.
+  PermissionTestUtils.add(
+    privateBrowsingPrincipal,
+    "desktop-notification",
+    Services.perms.ALLOW_ACTION,
+    Services.perms.EXPIRE_SESSION
+  );
+
+  // The permission should not show in the dialog UI.
+  Assert.equal(richlistbox.itemCount, 0);
+
+  PermissionTestUtils.remove(privateBrowsingPrincipal, "desktop-notification");
+
+  // Add a permanent permission for private browsing
+  // The permission manager will store it as EXPIRE_SESSION
+  PermissionTestUtils.add(
+    privateBrowsingPrincipal,
+    "desktop-notification",
+    Services.perms.ALLOW_ACTION
+  );
+
+  // The permission should not show in the dialog UI.
+  Assert.equal(richlistbox.itemCount, 0);
+
+  PermissionTestUtils.remove(privateBrowsingPrincipal, "desktop-notification");
+});
+
 add_task(async function observePermissionChange() {
   PermissionTestUtils.add(
     URI,
