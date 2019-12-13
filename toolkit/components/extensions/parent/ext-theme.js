@@ -473,11 +473,11 @@ this.theme = class extends ExtensionAPI {
             if (!browserWindow) {
               return Promise.reject(`Invalid window ID: ${windowId}`);
             }
-          }
 
-          if (!defaultTheme && !windowOverrides.has(windowId)) {
-            // If no theme has been initialized, nothing to do.
-            return;
+            let theme = windowOverrides.get(windowId);
+            if (!theme || theme.extension !== extension) {
+              return;
+            }
           }
 
           Theme.unload(windowId);
