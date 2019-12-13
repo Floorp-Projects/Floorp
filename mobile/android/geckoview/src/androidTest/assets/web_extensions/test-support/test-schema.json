@@ -104,6 +104,18 @@
             "name": "value"
           }
         ]
+      },
+      {
+        "name": "setResolutionAndScaleTo",
+        "type": "function",
+        "async": true,
+        "description": "Invokes nsIDOMWindowUtils.setResolutionAndScaleTo.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "resolution"
+          }
+        ]
       }
     ]
   }
