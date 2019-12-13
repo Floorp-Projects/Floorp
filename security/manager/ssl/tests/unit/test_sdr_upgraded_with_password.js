@@ -6,11 +6,11 @@
 "use strict";
 
 // Tests that the SDR implementation is able to decrypt strings encrypted using
-// a preexisting NSS key database that a) has a password and b) is in the old
-// dbm format.
-// To create such a database, run a version Firefox (or xpcshell) where the
-// default database format is the old dbm format (i.e. pre-bug 783994), set a
-// master password, and then encrypt something using nsISecretDecoderRing.
+// a preexisting NSS key database that a) has a password and b) has already been
+// upgraded from the old dbm format in a previous run of Firefox.
+// To create such a database, run the xpcshell test
+// `test_sdr_preexisting_with_password.js` and locate the file `key4.db` created
+// in the xpcshell test profile directory.
 // This does not apply to Android as the dbm implementation was never enabled on
 // that platform.
 
@@ -58,8 +58,20 @@ function run_test() {
   });
 
   let profile = do_get_profile();
-  let keyDBFile = do_get_file("test_sdr_preexisting_with_password/key3.db");
-  keyDBFile.copyTo(profile, "key3.db");
+  let key3DBFile = do_get_file("test_sdr_upgraded_with_password/key3.db");
+  key3DBFile.copyTo(profile, "key3.db");
+  let key4DBFile = do_get_file("test_sdr_upgraded_with_password/key4.db");
+  key4DBFile.copyTo(profile, "key4.db");
+  // Unfortunately we have to also copy the certificate databases as well.
+  // Otherwise, NSS will think it has to create them, which will cause NSS to
+  // think it has to also do a migration, which will open key3.db and not close
+  // it until shutdown, which means that on Windows removing the file just after
+  // startup fails. Luckily users profiles will have both key and certificate
+  // databases anyway, so this is an accurate reflection of normal use.
+  let cert8DBFile = do_get_file("test_sdr_upgraded_with_password/cert8.db");
+  cert8DBFile.copyTo(profile, "cert8.db");
+  let cert9DBFile = do_get_file("test_sdr_upgraded_with_password/cert9.db");
+  cert9DBFile.copyTo(profile, "cert9.db");
 
   let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
     Ci.nsISecretDecoderRing
@@ -123,5 +135,15 @@ function run_test() {
     gMockPrompter.numPrompts,
     1,
     "Should have been prompted for a password once"
+  );
+
+  // NSS does not close the old database when performing an upgrade. Thus, on
+  // Windows, we can't delete the old database file on the run that we perform
+  // an upgrade. However, we can delete it on subsequent runs.
+  let key3DBInProfile = do_get_profile();
+  key3DBInProfile.append("key3.db");
+  ok(
+    !key3DBInProfile.exists(),
+    "key3.db should not exist after running with key4.db with a password"
   );
 }

@@ -228,6 +228,9 @@ GeneratedFile('nsSTSPreloadList.h',
               script='../../../xpcom/ds/tools/make_dafsa.py',
               inputs=['nsSTSPreloadList.inc'])
 
+if CONFIG['NSS_DISABLE_DBM']:
+    DEFINES['NSS_DISABLE_DBM'] = '1'
+
 DEFINES['SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES'] = 'True'
 DEFINES['NSS_ENABLE_ECC'] = 'True'
 
