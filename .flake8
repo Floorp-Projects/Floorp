@@ -87,6 +87,9 @@ exclude =
     tools/crashreporter/*.configure,
     .ycm_extra_conf.py,
 
+    # This file uses py3.7 only syntax, so can't currently be checked by flake8 in-tree
+    tools/crashreporter/system-symbols/win/symsrv-fetch.py
+
 # See:
 #   - http://flake8.pycqa.org/en/latest/user/error-codes.html
 #   - http://pep8.readthedocs.io/en/latest/intro.html#configuration
