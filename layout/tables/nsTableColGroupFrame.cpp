@@ -325,7 +325,7 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
   NS_ASSERTION(nullptr != mContent, "bad state -- null content for frame");
 
   const nsStyleVisibility* groupVis = StyleVisibility();
-  bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
   if (collapseGroup) {
     GetTableFrame()->SetNeedToCollapse(true);
   }
