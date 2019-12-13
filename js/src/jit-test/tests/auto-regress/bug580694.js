@@ -10,7 +10,7 @@ function f1(a, t) {
     f2(f, a)
 }
 function f2() {
-    u = uneval()
+    u = String()
 }
 f = (function () {
     Proxy((function () {})(gc()), [])

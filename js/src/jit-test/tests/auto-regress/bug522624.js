@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.uneval
+
 // Binary: cache/js-dbg-32-a847cf5b4669-linux
 // Flags: -j
 //
