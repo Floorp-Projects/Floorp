@@ -42,7 +42,7 @@ async function testToolboxInitialization(testActor, tab) {
   ok(true, "Inspector started, and notification received.");
   ok(inspector, "Inspector instance is accessible.");
   ok(inspector.isReady, "Inspector instance is ready.");
-  is(inspector.currentTarget.tab, tab, "Valid target.");
+  is(inspector.currentTarget.localTab, tab, "Valid target.");
 
   await selectNode("p", inspector);
   await testMarkupView("p", inspector);

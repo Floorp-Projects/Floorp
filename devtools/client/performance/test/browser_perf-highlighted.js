@@ -46,7 +46,7 @@ add_task(async function() {
     "Performance tab is no longer highlighted when console.profile recording finishes."
   );
 
-  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.localTab });
 
   await startRecording(panel);
 

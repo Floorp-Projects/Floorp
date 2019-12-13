@@ -44,27 +44,30 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
   get isLocalTab() {
     return true;
   }
-  get tab() {
+  get localTab() {
     return this._tab;
   }
   toString() {
-    return `Target:${this.tab}`;
+    return `Target:${this.localTab}`;
   }
 
   /**
    * Listen to the different events.
    */
   _setupTabListeners() {
-    this.tab.addEventListener("TabClose", this._handleTabEvent);
-    this.tab.addEventListener("TabRemotenessChange", this._handleTabEvent);
+    this.localTab.addEventListener("TabClose", this._handleTabEvent);
+    this.localTab.addEventListener("TabRemotenessChange", this._handleTabEvent);
   }
 
   /**
    * Teardown event listeners.
    */
   _teardownTabListeners() {
-    this.tab.removeEventListener("TabClose", this._handleTabEvent);
-    this.tab.removeEventListener("TabRemotenessChange", this._handleTabEvent);
+    this.localTab.removeEventListener("TabClose", this._handleTabEvent);
+    this.localTab.removeEventListener(
+      "TabRemotenessChange",
+      this._handleTabEvent
+    );
   }
 
   /**
@@ -102,7 +105,7 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
     // Responsive design does a crazy dance around tabs and triggers
     // remotenesschange events. But we should ignore them as at the end
     // the content doesn't change its remoteness.
-    if (this.tab.isResponsiveDesignMode) {
+    if (this.localTab.isResponsiveDesignMode) {
       return;
     }
 
@@ -140,7 +143,7 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
     // Only try to fetch the the target from the existing client when target switching
     // is enabled. We keep the toolbox open with the original client we created it from.
     const newTarget = await TargetFactory.forTab(
-      this.tab,
+      this.localTab,
       targetSwitchingEnabled ? client : null
     );
 

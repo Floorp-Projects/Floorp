@@ -63,7 +63,7 @@ add_task(async function() {
     win: window,
   });
 
-  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.localTab });
   const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   info("Recording 1 - Starting console.profile()...");

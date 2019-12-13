@@ -53,7 +53,7 @@
   // Spawn an instance of the test actor for the given toolbox
   exports.getTestActor = async function(toolbox) {
     const client = toolbox.target.client;
-    return getTestActor(client, toolbox.target.tab, toolbox);
+    return getTestActor(client, toolbox.target.localTab, toolbox);
   };
 
   // Sometimes, we need the test actor before opening or without a toolbox then just
