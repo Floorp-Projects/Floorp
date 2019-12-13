@@ -337,7 +337,7 @@ TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, Type type) {
     return;
   }
   if (type.isPrimitive()) {
-    flags = PrimitiveTypeFlag(type.primitive());
+    flags = PrimitiveTypeFlag(type);
     if (flags == TYPE_FLAG_DOUBLE) {
       flags |= TYPE_FLAG_INT32;
     }
@@ -485,7 +485,7 @@ bool TypeSet::enumerateTypes(TypeListT* list) const {
   /* Enqueue type set members stored as bits. */
   for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
     if (flags & flag) {
-      Type type = PrimitiveType(TypeFlagPrimitive(flag));
+      Type type = PrimitiveTypeFromTypeFlag(flag);
       if (!list->append(type)) {
         return false;
       }
@@ -607,7 +607,7 @@ void TypeSet::addType(Type type, LifoAlloc* alloc) {
   }
 
   if (type.isPrimitive()) {
-    TypeFlags flag = PrimitiveTypeFlag(type.primitive());
+    TypeFlags flag = PrimitiveTypeFlag(type);
     if (flags & flag) {
       return;
     }
@@ -2230,7 +2230,7 @@ bool TemporaryTypeSet::filtersType(const TemporaryTypeSet* other,
   }
 
   for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-    Type type = PrimitiveType(TypeFlagPrimitive(flag));
+    Type type = PrimitiveTypeFromTypeFlag(flag);
     if (type != filteredType && other->hasType(type) && !hasType(type)) {
       return false;
     }
