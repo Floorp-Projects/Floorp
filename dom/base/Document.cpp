@@ -350,6 +350,7 @@
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
 mozilla::LazyLogModule gPageCacheLog("PageCache");
+mozilla::LazyLogModule gTimeoutDeferralLog("TimeoutDefer");
 
 namespace mozilla {
 namespace dom {
@@ -10932,35 +10933,45 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   return NS_OK;
 }
 
-static bool SetLoadingInSubDocument(Document* aDocument, void* aData) {
-  aDocument->SetAncestorLoading(*(static_cast<bool*>(aData)));
-  return true;
-}
-
-void Document::SetAncestorLoading(bool aAncestorIsLoading) {
-  NotifyLoading(mAncestorIsLoading, aAncestorIsLoading, mReadyState,
-                mReadyState);
-  mAncestorIsLoading = aAncestorIsLoading;
-}
-
-void Document::NotifyLoading(const bool& aCurrentParentIsLoading,
-                             bool aNewParentIsLoading,
+void Document::NotifyLoading(bool aNewParentIsLoading,
                              const ReadyState& aCurrentState,
                              ReadyState aNewState) {
   // Mirror the top-level loading state down to all subdocuments
-  bool was_loading = aCurrentParentIsLoading ||
+  bool was_loading = mAncestorIsLoading ||
                      aCurrentState == READYSTATE_LOADING ||
                      aCurrentState == READYSTATE_INTERACTIVE;
   bool is_loading = aNewParentIsLoading || aNewState == READYSTATE_LOADING ||
                     aNewState == READYSTATE_INTERACTIVE;  // new value for state
   bool set_load_state = was_loading != is_loading;
 
+  MOZ_LOG(
+      gTimeoutDeferralLog, mozilla::LogLevel::Debug,
+      ("NotifyLoading for doc %p: currentAncestor: %d, newParent: %d, "
+       "currentState %d newState: %d, was_loading: %d, is_loading: %d, "
+       "set_load_state: %d",
+       (void*)this, mAncestorIsLoading, aNewParentIsLoading, (int)aCurrentState,
+       (int)aNewState, was_loading, is_loading, set_load_state));
+
+  mAncestorIsLoading = aNewParentIsLoading;
   if (set_load_state && StaticPrefs::dom_timeout_defer_during_load()) {
+    // Tell our innerwindow (and thus TimeoutManager)
     nsPIDOMWindowInner* inner = GetInnerWindow();
     if (inner) {
       inner->SetActiveLoadingState(is_loading);
     }
-    EnumerateSubDocuments(SetLoadingInSubDocument, &is_loading);
+    BrowsingContext* context = GetBrowsingContext();
+    if (context) {
+      // Don't use PreOrderWalk to mirror this down; go down one level as a
+      // time so we can set mAncestorIsLoading and take into account the
+      // readystates of the subdocument.  In the child process it will call
+      // NotifyLoading() to notify the innerwindow/TimeoutManager, and then
+      // iterate it's children
+      for (auto& child : context->GetChildren()) {
+        MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
+                ("bc: %p SetAncestorLoading(%d)", (void*)child, is_loading));
+        child->SetAncestorLoading(is_loading);
+      }
+    }
   }
 }
 
@@ -10985,8 +10996,7 @@ void Document::SetReadyStateInternal(ReadyState aReadyState,
   if (aUpdateTimingInformation && READYSTATE_LOADING == aReadyState) {
     mLoadingTimeStamp = TimeStamp::Now();
   }
-  NotifyLoading(mAncestorIsLoading, mAncestorIsLoading, mReadyState,
-                aReadyState);
+  NotifyLoading(mAncestorIsLoading, mReadyState, aReadyState);
   mReadyState = aReadyState;
   if (aUpdateTimingInformation && mTiming) {
     switch (aReadyState) {
