@@ -32,8 +32,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'nsWinRemoteClient.cpp',
         'nsWinRemoteServer.cpp',
     ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    SOURCES += [
+        'nsMacRemoteClient.mm',
+        'nsMacRemoteServer.mm',
+    ]
 
 LOCAL_INCLUDES += [
     '../../profile',
+    '../../xre',
 ]
 FINAL_LIBRARY = 'xul'
