@@ -141,7 +141,7 @@ add_task(async function asJPEGFormatAndQuality({ Page }) {
 });
 
 async function getDevicePixelRatio() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.devicePixelRatio;
   });
 }
@@ -149,10 +149,8 @@ async function getDevicePixelRatio() {
 async function getImageDetails(image) {
   const mimeType = getMimeType(image);
 
-  return ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { mimeType, image },
-    async function({ mimeType, image }) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [{ mimeType, image }], async function({ mimeType, image }) {
       return new Promise(resolve => {
         const img = new content.Image();
         img.addEventListener(

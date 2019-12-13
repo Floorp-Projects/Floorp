@@ -37,7 +37,7 @@ add_task(async function() {
     await BrowserTestUtils.browserLoaded(browser, false, uri);
     is(onLocationChangeCount, 1, "should have 1 onLocationChange event");
     is(onSecurityChangeCount, 1, "should have 1 onSecurityChange event");
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       content.history.pushState({}, "", "https://example.com");
     });
     is(onLocationChangeCount, 2, "should have 2 onLocationChange events");

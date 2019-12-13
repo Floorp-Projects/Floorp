@@ -14,7 +14,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let cw = content;
         let oldTitle = cw.document.title;
         ok(oldTitle, "Content window should initially have a title.");

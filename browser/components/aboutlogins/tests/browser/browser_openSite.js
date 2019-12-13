@@ -20,7 +20,7 @@ add_task(async function test_launch_login_item() {
   );
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     loginItem._editButton.click();
     loginItem._usernameInput.value += "-changed";
@@ -53,7 +53,7 @@ add_task(async function test_launch_login_item() {
 
   BrowserTestUtils.removeTab(newTab);
 
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     ok(
       !content.document.querySelector("confirmation-dialog").hidden,
       "discard-changes confirmation-dialog should be visible after logging in to a site with a modified login present in the form"

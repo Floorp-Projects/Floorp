@@ -50,7 +50,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   ];
 
   for (const e of expected) {
-    await ContentTask.spawn(browser, { e }, async function(args) {
+    await SpecialPowers.spawn(browser, [{ e }], async function(args) {
       const { e: values } = args;
       const element = content.document.getElementById(values.id);
 
@@ -75,7 +75,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     );
     findBar._findField.value = "";
 
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       // Clear focus.
       content.document.activeElement.blur();
     });

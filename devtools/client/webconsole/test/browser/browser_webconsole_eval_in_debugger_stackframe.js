@@ -89,7 +89,7 @@ add_task(async function() {
   );
   ok(true, "`foo + foo3` updated in `firstCall()`");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     is(
       content.wrappedJSObject.foo,
       "globalFooBug783499",

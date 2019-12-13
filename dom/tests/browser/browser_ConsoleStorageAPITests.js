@@ -24,7 +24,7 @@ add_task(async function() {
   gBrowser.selectedTab = tab;
   var browser = gBrowser.selectedBrowser;
 
-  let observerPromise = ContentTask.spawn(browser, null, async function(opt) {
+  let observerPromise = SpecialPowers.spawn(browser, [], async function(opt) {
     const TEST_URI =
       "http://example.com/browser/dom/tests/browser/test-console-api.html";
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
@@ -77,7 +77,7 @@ add_task(async function() {
 
   let windowId = await observerPromise;
 
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     // make sure a closed window's events are in fact removed from
     // the storage cache
     content.console.log("adding a new event");
@@ -93,11 +93,11 @@ add_task(async function() {
   browser = gBrowser.selectedBrowser;
 
   // Spin the event loop to make sure everything is cleared.
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     return Promise.resolve();
   });
 
-  await ContentTask.spawn(browser, windowId, function(windowId) {
+  await SpecialPowers.spawn(browser, [windowId], function(windowId) {
     var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
       Ci.nsIConsoleAPIStorage
     );

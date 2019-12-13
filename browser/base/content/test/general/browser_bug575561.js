@@ -94,10 +94,8 @@ async function testLink(
     link.click();
     href = link.href;
   } else {
-    href = await ContentTask.spawn(
-      browser,
-      [testSubFrame, aLinkIndexOrFunction],
-      function([subFrame, index]) {
+    href = await SpecialPowers.spawn(
+      browser, [[testSubFrame, aLinkIndexOrFunction]], function([subFrame, index]) {
         let doc = subFrame
           ? content.document.querySelector("iframe").contentDocument
           : content.document;

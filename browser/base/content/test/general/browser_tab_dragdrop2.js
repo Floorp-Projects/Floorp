@@ -45,7 +45,7 @@ add_task(async function() {
   // Run tests once again.
   let promise = promiseTestsDone(win2);
   let browser2 = win2.gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser2, null, async () => {
+  await SpecialPowers.spawn(browser2, [], async () => {
     content.test_panels();
   });
   await promise;

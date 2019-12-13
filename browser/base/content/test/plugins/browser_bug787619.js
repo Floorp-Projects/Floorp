@@ -45,7 +45,7 @@ add_task(async function() {
 
   // click the overlay to prompt
   let promise = promisePopupNotification("click-to-play-plugins");
-  await ContentTask.spawn(gTestBrowser, {}, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("plugin");
     let bounds = plugin.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;

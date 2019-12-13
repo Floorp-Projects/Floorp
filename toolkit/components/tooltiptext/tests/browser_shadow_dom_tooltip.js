@@ -15,7 +15,7 @@ add_task(async function test_title_in_shadow_dom() {
   );
 
   info("creating host");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let doc = content.document;
     let host = doc.createElement("div");
     doc.body.appendChild(host);
@@ -68,7 +68,7 @@ add_task(async function test_title_in_light_dom() {
   );
 
   info("creating host");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let doc = content.document;
     let host = doc.createElement("div");
     host.title = "light";
@@ -121,7 +121,7 @@ add_task(async function test_title_through_slot() {
   );
 
   info("creating host");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let doc = content.document;
     let host = doc.createElement("div");
     host.title = "light";

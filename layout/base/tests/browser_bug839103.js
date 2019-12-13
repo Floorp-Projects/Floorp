@@ -7,7 +7,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: gTestRoot + "file_bug839103.html" },
     async function(browser) {
-      await ContentTask.spawn(browser, gTestRoot, testBody);
+      await SpecialPowers.spawn(browser, [gTestRoot], testBody);
     }
   );
 });

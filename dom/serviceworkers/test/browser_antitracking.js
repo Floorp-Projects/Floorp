@@ -47,10 +47,8 @@ add_task(async function() {
 
   // ## Install SW
   info("Installing SW");
-  await ContentTask.spawn(
-    topTab.linkedBrowser,
-    { sw: SW_REL_SW_SCRIPT },
-    async function({ sw }) {
+  await SpecialPowers.spawn(
+    topTab.linkedBrowser, [{ sw: SW_REL_SW_SCRIPT }], async function({ sw }) {
       // Waive the xray to use the content utils.js script functions.
       await content.wrappedJSObject.registerAndWaitForActive(sw);
     }
@@ -76,10 +74,8 @@ add_task(async function() {
   await browserLoadedPromise;
 
   // Create Iframe in the top-level page and verify its state.
-  let { controlled } = await ContentTask.spawn(
-    topTab.linkedBrowser,
-    { url: SW_IFRAME_PAGE },
-    async function({ url }) {
+  let { controlled } = await SpecialPowers.spawn(
+    topTab.linkedBrowser, [{ url: SW_IFRAME_PAGE }], async function({ url }) {
       const payload = await content.wrappedJSObject.createIframeAndWaitForMessage(
         url
       );
@@ -95,7 +91,7 @@ add_task(async function() {
   await BrowserTestUtils.loadURI(topTab.linkedBrowser, SW_REGISTER_PAGE);
   await browserLoadedPromise;
 
-  await ContentTask.spawn(topTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(topTab.linkedBrowser, [], async function() {
     await content.wrappedJSObject.unregisterAll();
   });
 

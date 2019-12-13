@@ -79,7 +79,7 @@ add_task(async function() {
   await promise;
 
   info("Verify the number of tracking nodes found");
-  await ContentTask.spawn(browser, { expected: 3 }, async function(obj) {
+  await SpecialPowers.spawn(browser, [{ expected: 3 }], async function(obj) {
     is(
       content.document.blockedNodeByClassifierCount,
       obj.expected,

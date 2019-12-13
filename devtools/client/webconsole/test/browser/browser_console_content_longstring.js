@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("Log a longString");
   const onMessage = waitForMessage(hud, LONGSTRING.slice(0, 50));
-  ContentTask.spawn(gBrowser.selectedBrowser, LONGSTRING, str => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], str => {
     content.console.log(str);
   });
 

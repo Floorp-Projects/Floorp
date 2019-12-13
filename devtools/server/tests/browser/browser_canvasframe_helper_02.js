@@ -11,7 +11,7 @@ add_task(async function() {
     "chrome://mochitests/content/browser/devtools/server/tests/browser/test-window.xhtml"
   );
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );

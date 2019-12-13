@@ -170,10 +170,8 @@ async function loadURL(url) {
  */
 function getContentProperty(prop) {
   info(`Retrieve ${prop} on the content window`);
-  return ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    prop,
-    _prop => content[_prop]
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [prop], _prop => content[_prop]
   );
 }
 

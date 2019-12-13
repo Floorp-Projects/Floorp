@@ -55,10 +55,8 @@ async function checkCacheEnabled(tabX, expected) {
 
   await reloadTab(tabX);
 
-  const oldGuid = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    {},
-    function() {
+  const oldGuid = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], function() {
       const doc = content.document;
       const h1 = doc.querySelector("h1");
       return h1.textContent;
@@ -67,10 +65,8 @@ async function checkCacheEnabled(tabX, expected) {
 
   await reloadTab(tabX);
 
-  const guid = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    {},
-    function() {
+  const guid = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [], function() {
       const doc = content.document;
       const h1 = doc.querySelector("h1");
       return h1.textContent;

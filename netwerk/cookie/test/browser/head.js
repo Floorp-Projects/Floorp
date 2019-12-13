@@ -104,7 +104,7 @@ this.CookiePolicyHelper = {
       await BrowserTestUtils.browserLoaded(browser);
 
       // Let's create an iframe.
-      await ContentTask.spawn(browser, { url: TEST_TOP_PAGE }, async obj => {
+      await SpecialPowers.spawn(browser, [{ url: TEST_TOP_PAGE }], async obj => {
         return new content.Promise(resolve => {
           let ifr = content.document.createElement("iframe");
           ifr.setAttribute("id", "iframe");
@@ -121,10 +121,8 @@ this.CookiePolicyHelper = {
           " and permission to " +
           config.fromPermission
       );
-      await ContentTask.spawn(
-        browser,
-        { callback: goodCb.toString() },
-        async obj => {
+      await SpecialPowers.spawn(
+        browser, [{ callback: goodCb.toString() }], async obj => {
           let runnableStr = `(() => {return (${obj.callback});})();`;
           let runnable = eval(runnableStr); // eslint-disable-line no-eval
           await runnable(content);
@@ -147,10 +145,8 @@ this.CookiePolicyHelper = {
           " and permission to " +
           config.toPermission
       );
-      await ContentTask.spawn(
-        browser,
-        { callback: goodCb.toString() },
-        async obj => {
+      await SpecialPowers.spawn(
+        browser, [{ callback: goodCb.toString() }], async obj => {
           let runnableStr = `(() => {return (${obj.callback});})();`;
           let runnable = eval(runnableStr); // eslint-disable-line no-eval
           await runnable(content);
@@ -172,10 +168,8 @@ this.CookiePolicyHelper = {
 
       // Let's exec the "bad" callback.
       info("Executing the test in a new tab");
-      await ContentTask.spawn(
-        browser,
-        { callback: badCb.toString() },
-        async obj => {
+      await SpecialPowers.spawn(
+        browser, [{ callback: badCb.toString() }], async obj => {
           let runnableStr = `(() => {return (${obj.callback});})();`;
           let runnable = eval(runnableStr); // eslint-disable-line no-eval
           await runnable(content);

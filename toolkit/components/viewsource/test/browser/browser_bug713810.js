@@ -7,7 +7,7 @@ const source =
 
 add_task(async function() {
   let viewSourceTab = await openDocumentSelect("data:text/html," + source, "p");
-  await ContentTask.spawn(viewSourceTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(viewSourceTab.linkedBrowser, [], async function() {
     Assert.equal(
       content.document.body.textContent,
       "<p>This is a paragraph.</p>",
@@ -20,7 +20,7 @@ add_task(async function() {
     "data:application/xhtml+xml," + source,
     "p"
   );
-  await ContentTask.spawn(viewSourceTab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(viewSourceTab.linkedBrowser, [], async function() {
     Assert.equal(
       content.document.body.textContent,
       '<p xmlns="http://www.w3.org/1999/xhtml">This is a paragraph.</p>',

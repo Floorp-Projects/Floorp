@@ -17,7 +17,7 @@ const TARGET_PAGE = ROOT + "dummy.html";
  *        the visibility state of the toolbars
  */
 function getToolbarsFromBrowserContent(aBrowser) {
-  return ContentTask.spawn(aBrowser, {}, async function() {
+  return SpecialPowers.spawn(aBrowser, [], async function() {
     return {
       toolbar: content.toolbar.visible,
       menubar: content.menubar.visible,

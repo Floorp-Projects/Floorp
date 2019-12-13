@@ -40,7 +40,7 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
       url: "http://example.com",
     },
     async function(browser) {
-      await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(
+      await SpecialPowers.spawn(browser, [TEST_PLUGIN_NAME], async function(
         pluginName
       ) {
         let plugins = Array.from(content.navigator.plugins);
@@ -66,7 +66,7 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
       url: "http://example.com",
     },
     async function(browser) {
-      await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(
+      await SpecialPowers.spawn(browser, [TEST_PLUGIN_NAME], async function(
         pluginName
       ) {
         let plugins = Array.from(content.navigator.plugins);

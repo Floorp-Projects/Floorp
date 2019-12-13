@@ -38,7 +38,7 @@ add_task(async function() {
 
   // Let's create an iframe and run the test there.
   let page = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "workerIframe.html";
-  await ContentTask.spawn(browser, page, async function(page) {
+  await SpecialPowers.spawn(browser, [page], async function(page) {
     await new content.Promise(resolve => {
       let ifr = content.document.createElement("iframe");
       ifr.id = "test";

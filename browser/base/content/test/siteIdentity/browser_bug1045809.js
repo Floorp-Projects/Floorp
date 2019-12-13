@@ -54,7 +54,7 @@ async function test1(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await ContentTask.spawn(gTestBrowser, null, function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function() {
     var x = content.document
       .getElementsByTagName("iframe")[0]
       .contentDocument.getElementById("mixedContentContainer");
@@ -72,7 +72,7 @@ async function test2(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await ContentTask.spawn(gTestBrowser, null, function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function() {
     var x = content.document
       .getElementsByTagName("iframe")[0]
       .contentDocument.getElementById("mixedContentContainer");
@@ -90,7 +90,7 @@ async function test3(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await ContentTask.spawn(gTestBrowser, null, function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function() {
     var x = content.document
       .getElementsByTagName("iframe")[0]
       .contentDocument.getElementById("mixedContentContainer");

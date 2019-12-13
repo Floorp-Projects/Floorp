@@ -33,7 +33,7 @@ add_task(async function test_theme_install() {
       "theme@tests.mozilla.org",
       false
     );
-    let installPromise = ContentTask.spawn(browser, URL, async url => {
+    let installPromise = SpecialPowers.spawn(browser, [URL], async url => {
       let install = await content.navigator.mozAddonManager.createInstall({
         url,
       });

@@ -6,10 +6,8 @@ const SCOPE = PAGE_URI + "?unregister_with_containers";
 const SW_SCRIPT = BASE_URI + "empty.js";
 
 function doRegister(browser) {
-  return ContentTask.spawn(
-    browser,
-    { script: SW_SCRIPT, scope: SCOPE },
-    async function(opts) {
+  return SpecialPowers.spawn(
+    browser, [{ script: SW_SCRIPT, scope: SCOPE }], async function(opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
       });
@@ -31,7 +29,7 @@ function doRegister(browser) {
 }
 
 function doUnregister(browser) {
-  return ContentTask.spawn(browser, SCOPE, async function(uri) {
+  return SpecialPowers.spawn(browser, [SCOPE], async function(uri) {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     let worker = reg.active;
     await reg.unregister();
@@ -51,7 +49,7 @@ function doUnregister(browser) {
 }
 
 function isControlled(browser) {
-  return ContentTask.spawn(browser, null, function() {
+  return SpecialPowers.spawn(browser, [], function() {
     return !!content.navigator.serviceWorker.controller;
   });
 }

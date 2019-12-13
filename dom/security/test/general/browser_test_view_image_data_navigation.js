@@ -28,7 +28,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
     );
     await loadPromise;
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
       ok(
         content.document.location.toString().startsWith("data:image/svg+xml;"),
         "data:image/svg navigation allowed through right-click view-image"

@@ -18,7 +18,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    ;
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
@@ -67,13 +67,13 @@
     function checkSelection() {
       return new Promise(resolve => {
         SimpleTest.executeSoon(() => {
-          ContentTask.spawn(gBrowser, null, async function() {
+          SpecialPowers.spawn(gBrowser, [], async function() {
             let selected = content.getSelection();
             Assert.equal(String(selected), "", "No text is selected");
 
             let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsISelectionDisplay)
-                                     .QueryInterface(Ci.nsISelectionController);
+                                       .getInterface(Ci.nsISelectionDisplay)
+                                       .QueryInterface(Ci.nsISelectionController);
             let selection = controller.getSelection(controller.SELECTION_FIND);
             Assert.equal(selection.rangeCount, 0, "No text is highlighted");
           }).then(resolve);
@@ -141,7 +141,7 @@
 
       // Changing case sensitivity does the search so clear the selected text
       // before the next test.
-      await ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
+      await SpecialPowers.spawn(gBrowser, [], () => content.getSelection().removeAllRanges());
     }
 
     async function testDiacriticMatching() {
@@ -159,7 +159,7 @@
 
       // Changing diacritic matching does the search so clear the selected text
       // before the next test.
-      await ContentTask.spawn(gBrowser, null, () => content.getSelection().removeAllRanges());
+      await SpecialPowers.spawn(gBrowser, [], () => content.getSelection().removeAllRanges());
     }
 
     async function testHighlight() {

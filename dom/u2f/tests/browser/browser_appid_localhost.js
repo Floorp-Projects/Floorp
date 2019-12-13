@@ -11,10 +11,8 @@ function promiseU2FRegister(tab, app_id) {
   challenge = bytesToBase64UrlSafe(challenge);
 
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    [app_id, challenge],
-    async function([app_id, challenge]) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser, [[app_id, challenge]], async function([app_id, challenge]) {
       return new Promise(resolve => {
         let version = "U2F_V2";
         content.u2f.register(app_id, [{ version, challenge }], [], resolve);
@@ -48,7 +46,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Check that we have the right origin, and U2F is available.
-  let ready = await ContentTask.spawn(tab.linkedBrowser, null, async () => {
+  let ready = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     return content.location.origin == "https://localhost" && content.u2f;
   });
   ok(ready, "Origin is https://localhost. U2F is available.");

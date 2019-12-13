@@ -25,7 +25,7 @@ add_task(async function test() {
         handleCompletion: resolve,
       })
     );
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       const input = content.document.querySelector("input");
 
       input.focus();
@@ -59,7 +59,7 @@ add_task(async function test() {
     );
 
     // close popup
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       const input = content.document.querySelector("input");
 
       input.blur();

@@ -11,7 +11,7 @@ add_task(async function test() {
   let browser = gBrowser.selectedBrowser;
   let innerWindowId = browser.innerWindowID;
 
-  let stackTraceEmpty = await ContentTask.spawn(browser, {innerWindowId}, async function(args) {
+  let stackTraceEmpty = await SpecialPowers.spawn(browser, [{innerWindowId}], async function(args) {
     let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
     let {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
 

@@ -25,7 +25,7 @@ add_task(async function() {
   await testRemoveAndChange("non-json-parsable", expectedKeys, TEST_HOST);
 
   // Clearing items.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.wrappedJSObject.clear();
   });
 
@@ -56,17 +56,15 @@ async function testRemoveAndChange(targetKey, expectedKeys, host) {
 }
 
 async function setLocalStorageItem(key, value) {
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    [key, value],
-    ([innerKey, innerValue]) => {
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser, [[key, value]], ([innerKey, innerValue]) => {
       content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
     }
   );
 }
 
 async function removeLocalStorageItem(key) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, key, innerKey => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [key], innerKey => {
     content.wrappedJSObject.localStorage.removeItem(innerKey);
   });
 }

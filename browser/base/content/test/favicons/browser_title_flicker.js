@@ -83,7 +83,7 @@ add_task(async () => {
       let label = tab.textLabel;
       let bounds = label.getBoundingClientRect();
 
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         let link = content.document.createElement("link");
         link.setAttribute("href", "file_favicon.png");
         link.setAttribute("rel", "icon");

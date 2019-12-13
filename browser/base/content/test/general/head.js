@@ -263,7 +263,7 @@ async function whenNewTabLoaded(aWindow, aCallback) {
   let expectedURL = aboutNewTabService.newTabURL;
   let browser = aWindow.gBrowser.selectedBrowser;
   let loadPromise = BrowserTestUtils.browserLoaded(browser, false, expectedURL);
-  let alreadyLoaded = await ContentTask.spawn(browser, expectedURL, url => {
+  let alreadyLoaded = await SpecialPowers.spawn(browser, [expectedURL], url => {
     let doc = content.document;
     return doc && doc.readyState === "complete" && doc.location.href == url;
   });
@@ -523,7 +523,7 @@ async function loadBadCertPage(url) {
   await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
   await loaded;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.document.getElementById("exceptionDialogButton").click();
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

@@ -30,7 +30,7 @@ add_task(async () => {
   await BrowserTestUtils.withNewTab(
     "resource://l10n-test/test.html",
     async browser => {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let document = content.document;
         let window = document.defaultView;
 

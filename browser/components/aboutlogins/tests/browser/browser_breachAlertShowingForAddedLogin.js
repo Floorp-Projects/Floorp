@@ -27,7 +27,7 @@ add_task(async function setup() {
 
 add_task(async function test_added_login_shows_breach_warning() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     is(
       loginList._loginGuidsSortedOrder.length,
@@ -37,7 +37,7 @@ add_task(async function test_added_login_shows_breach_warning() {
   });
 
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
-  await ContentTask.spawn(browser, TEST_LOGIN3.guid, async aTestLogin3Guid => {
+  await SpecialPowers.spawn(browser, [TEST_LOGIN3.guid], async aTestLogin3Guid => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     is(
       loginList._loginGuidsSortedOrder.length,

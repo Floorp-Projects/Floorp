@@ -344,12 +344,10 @@ async function add_link(aOptions = {}) {
         }
       );
 
-      ContentTask.spawn(
-        browser,
-        {
+      SpecialPowers.spawn(
+        browser, [{
           eventName: "paymentmethodchange",
-        },
-        PTU.ContentTasks.promisePaymentRequestEvent
+        }], PTU.ContentTasks.promisePaymentRequestEvent
       );
       info("added paymentmethodchange handler");
 
@@ -359,12 +357,10 @@ async function add_link(aOptions = {}) {
       );
 
       info("waiting for paymentmethodchange event");
-      await ContentTask.spawn(
-        browser,
-        {
+      await SpecialPowers.spawn(
+        browser, [{
           eventName: "paymentmethodchange",
-        },
-        PTU.ContentTasks.awaitPaymentEventPromise
+        }], PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       await spawnPaymentDialogTask(frame, async function waitForSummaryPage(
@@ -470,10 +466,8 @@ async function add_link(aOptions = {}) {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let result = await ContentTask.spawn(
-        browser,
-        {},
-        PTU.ContentTasks.addCompletionHandler
+      let result = await SpecialPowers.spawn(
+        browser, [], PTU.ContentTasks.addCompletionHandler
       );
 
       // Verify response has the expected properties

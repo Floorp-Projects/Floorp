@@ -124,7 +124,7 @@ add_task(async function process_switching_through_navigation_features() {
       TEST_HIGH1,
       true
     );
-    await ContentTask.spawn(browser, TEST_HIGH1, uri => {
+    await SpecialPowers.spawn(browser, [TEST_HIGH1], uri => {
       content.open(uri, "_blank");
     });
     let newTab = await promiseTabOpened;
@@ -202,7 +202,7 @@ add_task(async function process_switching_through_navigation_features() {
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     // Check that location change causes a change in process type as well.
-    await ContentTask.spawn(browser, TEST_HIGH1, uri => {
+    await SpecialPowers.spawn(browser, [TEST_HIGH1], uri => {
       content.location = uri;
     });
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HIGH1);
