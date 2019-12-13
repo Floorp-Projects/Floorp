@@ -2,8 +2,6 @@
 
 #include "qcmsint.h"
 
-#define FLOATSCALE  (float)(PRECACHE_OUTPUT_SIZE)
-#define CLAMPMAXVAL ( ((float) (PRECACHE_OUTPUT_SIZE - 1)) / PRECACHE_OUTPUT_SIZE )
 static const ALIGN float floatScale = FLOATSCALE;
 static const ALIGN float clampMaxValue = CLAMPMAXVAL;
 

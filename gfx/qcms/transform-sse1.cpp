@@ -3,8 +3,6 @@
 #include "qcmsint.h"
 
 /* pre-shuffled: just load these into XMM reg instead of load-scalar/shufps sequence */
-#define FLOATSCALE  (float)(PRECACHE_OUTPUT_SIZE)
-#define CLAMPMAXVAL ( ((float) (PRECACHE_OUTPUT_SIZE - 1)) / PRECACHE_OUTPUT_SIZE )
 static const ALIGN float floatScaleX4[4] =
     { FLOATSCALE, FLOATSCALE, FLOATSCALE, FLOATSCALE};
 static const ALIGN float clampMaxValueX4[4] =

@@ -1208,7 +1208,15 @@ qcms_transform* qcms_transform_create(
 		struct matrix in_matrix, out_matrix, result;
 		if (precache) {
 #ifdef X86
-		    if (sse_version_available() >= 2) {
+                    if (qcms_supports_avx) {
+			    if (in_type == QCMS_DATA_RGB_8) {
+				    transform->transform_fn = qcms_transform_data_rgb_out_lut_avx;
+			    } else if (in_type == QCMS_DATA_RGBA_8) {
+				    transform->transform_fn = qcms_transform_data_rgba_out_lut_avx;
+			    } else if (in_type == QCMS_DATA_BGRA_8) {
+				    transform->transform_fn = qcms_transform_data_bgra_out_lut_avx;
+			    }
+		    } else if (sse_version_available() >= 2) {
 			    if (in_type == QCMS_DATA_RGB_8) {
 				    transform->transform_fn = qcms_transform_data_rgb_out_lut_sse2;
 			    } else if (in_type == QCMS_DATA_RGBA_8) {
@@ -1386,5 +1394,15 @@ void qcms_enable_neon()
 {
 #if defined(__arm__) || defined(__aarch64__)
 	qcms_supports_neon = true;
+#endif
+}
+
+#if defined(X86)
+bool qcms_supports_avx;
+#endif
+void qcms_enable_avx()
+{
+#if defined(X86)
+	qcms_supports_avx = true;
 #endif
 }
