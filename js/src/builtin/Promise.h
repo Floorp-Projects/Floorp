@@ -17,6 +17,9 @@
 
 namespace js {
 
+class AsyncFunctionGeneratorObject;
+class AsyncGeneratorObject;
+
 enum PromiseSlots {
   // Int32 value with PROMISE_FLAG_* flags below.
   PromiseSlot_Flags = 0,
@@ -83,6 +86,7 @@ enum PromiseSlots {
 #define PROMISE_FLAG_HAD_USER_INTERACTION_UPON_CREATION 0x40
 
 class AutoSetNewObjectMetadata;
+struct PromiseReactionRecordBuilder;
 
 class PromiseObject : public NativeObject {
  public:
@@ -152,6 +156,22 @@ class PromiseObject : public NativeObject {
 
   // Return the process-unique ID of this promise. Only used by the debugger.
   uint64_t getID();
+
+  // Apply 'builder' to each reaction record in this promise's list. Used only
+  // by the Debugger API.
+  //
+  // The context cx need not be same-compartment with this promise. (In typical
+  // use, cx is in a debugger compartment, and this promise is in a debuggee
+  // compartment.) This function presents data to builder exactly as it appears
+  // in the reaction records, so the values passed to builder methods could
+  // potentially be cross-compartment with both cx and this promise.
+  //
+  // If this function encounters an error, it will report it to 'cx' and return
+  // false. If a builder call returns false, iteration stops, and this function
+  // returns false; the build should set an error on 'cx' as appropriate.
+  // Otherwise, this function returns true.
+  MOZ_MUST_USE bool forEachReactionRecord(
+      JSContext* cx, PromiseReactionRecordBuilder& builder);
 
   bool isUnhandled() {
     MOZ_ASSERT(state() == JS::PromiseState::Rejected);
@@ -593,6 +613,53 @@ class OffThreadPromiseRuntimeState {
 
   // shutdown() must be called by the JSRuntime while the JSRuntime is valid.
   void shutdown(JSContext* cx);
+};
+
+// Callback for describing promise reaction records, for use with
+// PromiseObject::getReactionRecords.
+struct PromiseReactionRecordBuilder {
+  // A reaction record created by a call to 'then' or 'catch', with functions to
+  // call on resolution or rejection, and the promise that will be settled
+  // according to the result of calling them.
+  //
+  // Note that resolve, reject, and result may not be same-compartment with cx,
+  // or with the promise we're inspecting. This function presents the values
+  // exactly as they appear in the reaction record. They may also be wrapped or
+  // unwrapped.
+  //
+  // Some reaction records refer to internal resolution or rejection functions
+  // that are not naturally represented as debuggee JavaScript functions. In
+  // this case, resolve and reject may be nullptr.
+  virtual MOZ_MUST_USE bool then(JSContext* cx, HandleObject resolve,
+                                 HandleObject reject, HandleObject result) = 0;
+
+  // A reaction record created when one native promise is resolved to another.
+  // The 'promise' argument is the promise that will be settled in the same way
+  // the promise this reaction record is attached to is settled.
+  //
+  // Note that promise may not be same-compartment with cx. This function
+  // presents the promise exactly as it appears in the reaction record.
+  virtual MOZ_MUST_USE bool direct(JSContext* cx,
+                                   Handle<PromiseObject*> unwrappedPromise) = 0;
+
+  // A reaction record that resumes an asynchronous function suspended at an
+  // await expression. The 'generator' argument is the generator object
+  // representing the call.
+  //
+  // Note that generator may not be same-compartment with cx. This function
+  // presents the generator exactly as it appears in the reaction record.
+  virtual MOZ_MUST_USE bool asyncFunction(
+      JSContext* cx,
+      Handle<AsyncFunctionGeneratorObject*> unwrappedGenerator) = 0;
+
+  // A reaction record that resumes an asynchronous generator suspended at an
+  // await expression. The 'generator' argument is the generator object
+  // representing the call.
+  //
+  // Note that generator may not be same-compartment with cx. This function
+  // presents the generator exactly as it appears in the reaction record.
+  virtual MOZ_MUST_USE bool asyncGenerator(
+      JSContext* cx, Handle<AsyncGeneratorObject*> unwrappedGenerator) = 0;
 };
 
 }  // namespace js

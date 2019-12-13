@@ -5319,6 +5319,74 @@ bool PromiseObject::dependentPromises(JSContext* cx,
   });
 }
 
+bool PromiseObject::forEachReactionRecord(
+    JSContext* cx, PromiseReactionRecordBuilder& builder) {
+  if (state() != JS::PromiseState::Pending) {
+    // Promise was resolved, so no reaction records are present.
+    return true;
+  }
+
+  RootedValue reactionsVal(cx, reactions());
+  if (reactionsVal.isNullOrUndefined()) {
+    // No reaction records are attached to this promise.
+    return true;
+  }
+
+  return ForEachReaction(cx, reactionsVal, [&](MutableHandleObject obj) {
+    if (IsProxy(obj)) {
+      obj.set(UncheckedUnwrap(obj));
+    }
+
+    if (JS_IsDeadWrapper(obj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
+      return false;
+    }
+
+    Rooted<PromiseReactionRecord*> reaction(cx,
+                                            &obj->as<PromiseReactionRecord>());
+    MOZ_ASSERT(reaction->targetState() == JS::PromiseState::Pending);
+
+    if (reaction->isAsyncFunction()) {
+      Rooted<AsyncFunctionGeneratorObject*> generator(
+          cx, reaction->asyncFunctionGenerator());
+      if (!builder.asyncFunction(cx, generator)) {
+        return false;
+      }
+    } else if (reaction->isAsyncGenerator()) {
+      Rooted<AsyncGeneratorObject*> generator(cx, reaction->asyncGenerator());
+      if (!builder.asyncGenerator(cx, generator)) {
+        return false;
+      }
+    } else if (reaction->isDefaultResolvingHandler()) {
+      Rooted<PromiseObject*> promise(cx, reaction->defaultResolvingPromise());
+      if (!builder.direct(cx, promise)) {
+        return false;
+      }
+    } else {
+      RootedObject resolve(cx);
+      RootedObject reject(cx);
+      RootedObject result(cx, reaction->promise());
+
+      Value v = reaction->getFixedSlot(ReactionRecordSlot_OnFulfilled);
+      if (v.isObject()) {
+        resolve = &v.toObject();
+      }
+
+      v = reaction->getFixedSlot(ReactionRecordSlot_OnRejected);
+      if (v.isObject()) {
+        reject = &v.toObject();
+      }
+
+      if (!builder.then(cx, resolve, reject, result)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
 /* static */
 bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
                             HandleValue resolutionValue) {

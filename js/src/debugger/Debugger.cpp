@@ -615,6 +615,36 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
   return true;
 }
 
+bool Debugger::getFrame(JSContext* cx, Handle<AbstractGeneratorObject*> genObj,
+                        MutableHandleDebuggerFrame result) {
+  // To create a Debugger.Frame for a running generator, we'd also need a
+  // FrameIter for its stack frame. We could make this work by searching the
+  // stack for the generator's frame, but for the moment, we only need this
+  // function to handle generators we've found on promises' reaction records,
+  // which should always be suspended.
+  MOZ_ASSERT(!genObj->isRunning());
+
+  // Do we have an existing Debugger.Frame for this generator?
+  GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
+  if (gp) {
+    MOZ_ASSERT(&gp->value()->unwrappedGenerator() == genObj);
+    result.set(gp->value());
+    return true;
+  }
+
+  // Create a new Debugger.Frame.
+  RootedObject proto(
+      cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
+  RootedNativeObject debugger(cx, object);
+
+  result.set(DebuggerFrame::create(cx, proto, debugger, nullptr, genObj));
+  if (!result) {
+    return false;
+  }
+
+  return true;
+}
+
 static bool DebuggerExists(
     GlobalObject* global, const std::function<bool(Debugger* dbg)>& predicate) {
   // The GC analysis can't determine that the predicate can't GC, so let it know
