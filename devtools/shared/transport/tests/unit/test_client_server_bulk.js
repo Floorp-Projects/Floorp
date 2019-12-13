@@ -241,10 +241,9 @@ var test_json_request_cs = async function(
   const transport = await transportFactory();
 
   const client = new DebuggerClient(transport);
-  client.connect((app, traits) => {
-    Assert.equal(traits.bulk, true);
-    client.mainRoot.rootForm.then(clientResolve);
-  });
+  const [, traits] = await client.connect();
+  Assert.equal(traits.bulk, true);
+  client.mainRoot.rootForm.then(clientResolve);
 
   clientDeferred
     .then(response => {
