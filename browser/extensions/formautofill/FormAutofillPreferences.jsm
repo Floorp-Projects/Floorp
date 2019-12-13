@@ -142,7 +142,7 @@ FormAutofillPreferences.prototype = {
       addressAutofillCheckbox.setAttribute("checked", true);
     }
 
-    addressAutofillCheckboxGroup.align = "center";
+    addressAutofillCheckboxGroup.setAttribute("align", "center");
     addressAutofillCheckboxGroup.flex = 1;
 
     formAutofillGroupBoxLabel.appendChild(formAutofillGroupBoxLabelHeading);
@@ -213,7 +213,7 @@ FormAutofillPreferences.prototype = {
         creditCardAutofillCheckbox.setAttribute("checked", true);
       }
 
-      creditCardAutofillCheckboxGroup.align = "center";
+      creditCardAutofillCheckboxGroup.setAttribute("align", "center");
       creditCardAutofillCheckboxGroup.flex = 1;
 
       formAutofillGroup.appendChild(creditCardAutofill);
