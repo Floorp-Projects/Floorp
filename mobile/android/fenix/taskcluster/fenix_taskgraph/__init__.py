@@ -60,7 +60,7 @@ def get_decision_parameters(graph_config, parameters):
 
 def read_version_file():
     with open(os.path.join(os.path.dirname(__file__), '..', '..', 'version.txt')) as f:
-        return f.read().strip()
+        return f.read().strip().decode('utf-8')
 
 
 def _resolve_release_type(head_tag):
