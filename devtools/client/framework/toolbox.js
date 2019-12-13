@@ -665,10 +665,8 @@ Toolbox.prototype = {
     await target.attach();
 
     // Start tracking network activity on toolbox open for targets such as tabs.
-    // (Workers and potentially others don't manage the console client in the target.)
-    if (target.activeConsole) {
-      await target.activeConsole.startListeners(["NetworkActivity"]);
-    }
+    const webConsoleFront = await target.getFront("console");
+    await webConsoleFront.startListeners(["NetworkActivity"]);
 
     const threadFront = await this._attachAndResumeThread(target);
     this._startThreadFrontListeners(threadFront);
