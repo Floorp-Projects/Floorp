@@ -58,7 +58,7 @@ class FirefoxConnector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.webConsoleFront = this.tabTarget.activeConsole;
+    this.webConsoleFront = await this.tabTarget.getFront("console");
 
     this.dataProvider = new FirefoxDataProvider({
       webConsoleFront: this.webConsoleFront,

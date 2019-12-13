@@ -59,13 +59,13 @@ HarAutomation.prototype = {
 
   // Automation
 
-  startMonitoring: function(client, callback) {
+  startMonitoring: async function(client, callback) {
     if (!client) {
       return;
     }
 
     this.debuggerClient = client;
-    this.webConsoleFront = this.toolbox.target.activeConsole;
+    this.webConsoleFront = await this.toolbox.target.getFront("console");
 
     this.tabWatcher = new TabWatcher(this.toolbox, this);
     this.tabWatcher.connect();
