@@ -34,7 +34,7 @@ use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResu
 use crate::bindings;
 use crate::isa::make_isa;
 use crate::utils::DashResult;
-use crate::wasm2clif::{init_sig, native_pointer_size, TransEnv, TRAP_THROW_REPORTED};
+use crate::wasm2clif::{init_sig, TransEnv, POINTER_SIZE, TRAP_THROW_REPORTED};
 
 // Namespace for user-defined functions.
 const USER_FUNCTION_NAMESPACE: u32 = 0;
@@ -522,7 +522,7 @@ impl<'a> RelocSink for EmitEnv<'a> {
                 let sym = index.into();
 
                 // The symbolic access patch address points *after* the stored pointer.
-                let offset = offset + native_pointer_size() as u32;
+                let offset = offset + POINTER_SIZE as u32;
                 self.metadata
                     .push(bindings::MetadataEntry::symbolic_access(offset, sym));
             }
@@ -543,7 +543,7 @@ impl<'a> RelocSink for EmitEnv<'a> {
                 };
 
                 // The symbolic access patch address points *after* the stored pointer.
-                let offset = offset + native_pointer_size() as u32;
+                let offset = offset + POINTER_SIZE as u32;
                 self.metadata
                     .push(bindings::MetadataEntry::symbolic_access(offset, sym));
             }
