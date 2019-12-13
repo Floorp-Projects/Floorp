@@ -4,4 +4,5 @@ child:
   prio(normal) async NormalPrio();
   prio(high) async HighPrio();
   prio(input) async InputPrio();
+  prio(mediumhigh) async MediumHighPrio();
 };
