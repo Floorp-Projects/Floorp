@@ -7,7 +7,6 @@
  */
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("browser.urlbar.geoSpecificDefaults", false);
   let engine = await addTestSuggestionsEngine();
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(engine);
@@ -69,10 +68,9 @@ add_task(async function test_restrictions() {
     sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
     searchString: "match",
   });
-  // Heuristic, private window, 2 suggestions.
-  Assert.deepEqual(
-    results.map(r => r.payload.engine),
-    new Array(4).fill("engine-suggestions.xml")
+  Assert.ok(
+    !results.some(r => r.payload.engine != "engine-suggestions.xml"),
+    "All the results should be search results"
   );
 });
 
