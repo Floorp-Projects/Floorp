@@ -62,10 +62,6 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
    */
   _setupTabListeners() {
     this.tab.addEventListener("TabClose", this._handleTabEvent);
-    this.tab.ownerDocument.defaultView.addEventListener(
-      "unload",
-      this._handleTabEvent
-    );
     this.tab.addEventListener("TabRemotenessChange", this._handleTabEvent);
   }
 
@@ -73,12 +69,6 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
    * Teardown event listeners.
    */
   _teardownTabListeners() {
-    if (this.tab.ownerDocument.defaultView) {
-      this.tab.ownerDocument.defaultView.removeEventListener(
-        "unload",
-        this._handleTabEvent
-      );
-    }
     this.tab.removeEventListener("TabClose", this._handleTabEvent);
     this.tab.removeEventListener("TabRemotenessChange", this._handleTabEvent);
   }
@@ -102,9 +92,6 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
           // Toolbox.destroy will call target.destroy eventually.
           await toolbox.destroy();
         }
-        break;
-      case "unload":
-        this.destroy();
         break;
       case "TabRemotenessChange":
         this._onRemotenessChange();
