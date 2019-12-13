@@ -114,7 +114,7 @@ function testMathyFunction(f, inputs) {
             } catch (e) {}
         }
     }
-    uneval([])
+    JSON.stringify([])
 }
 mathy2 = (function(stdlib, foreign, heap) {
     "use asm";

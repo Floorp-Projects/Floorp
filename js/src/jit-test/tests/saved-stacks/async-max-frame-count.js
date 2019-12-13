@@ -11,7 +11,7 @@ function recur(n, limit) {
 }
 
 function checkRecursion(n, limit) {
-  print("checkRecursion(" + uneval(n) + ", " + uneval(limit) + ")");
+  print("checkRecursion(" + String(n) + ", " + String(limit) + ")");
 
   try {
     var stack = recur(n, limit);
