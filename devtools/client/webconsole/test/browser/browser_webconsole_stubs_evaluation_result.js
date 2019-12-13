@@ -63,9 +63,9 @@ add_task(async function() {
 async function generateEvaluationResultStubs() {
   const stubs = new Map();
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-
+  const webConsoleFront = await toolbox.target.getFront("console");
   for (const [key, code] of getCommands()) {
-    const packet = await toolbox.target.activeConsole.evaluateJSAsync(code);
+    const packet = await webConsoleFront.evaluateJSAsync(code);
     stubs.set(key, getCleanedPacket(key, packet));
   }
 

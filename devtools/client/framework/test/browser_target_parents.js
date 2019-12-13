@@ -63,8 +63,8 @@ add_task(async function() {
               processDescriptor,
               "Got the correct descriptorFront from the process target."
             );
-            // activeConsole is one of the only attribute to assess that a Content Process Target is attached
-            ok(target.activeConsole, "The target is attached");
+            // Content Process Target is attached when it has a console front.
+            ok(target.getCachedFront("console"), "The target is attached");
             return target;
           })
         );

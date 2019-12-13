@@ -84,7 +84,8 @@ async function checkGetTabFailures(client) {
 async function checkSelectedTargetActor(targetFront2) {
   // Send a naive request to the second target actor to check if it works
   await targetFront2.attach();
-  const response = await targetFront2.activeConsole.startListeners([]);
+  const consoleFront = await targetFront2.getFront("console");
+  const response = await consoleFront.startListeners([]);
   ok(
     "startedListeners" in response,
     "Actor from the selected tab should respond to the request."
@@ -94,7 +95,8 @@ async function checkSelectedTargetActor(targetFront2) {
 async function checkFirstTargetActor(targetFront1) {
   // then send a request to the first target actor to check if it still works
   await targetFront1.attach();
-  const response = await targetFront1.activeConsole.startListeners([]);
+  const consoleFront = await targetFront1.getFront("console");
+  const response = await consoleFront.startListeners([]);
   ok(
     "startedListeners" in response,
     "Actor from the first tab should still respond."
