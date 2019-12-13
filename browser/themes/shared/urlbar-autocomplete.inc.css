@@ -74,49 +74,6 @@
   box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
 }
 
-#urlbar-contextual-tip {
-  align-items: center;
-  display: flex;
-  padding-top: 24px;
-  padding-bottom: 24px;
-  padding-inline: @urlbarViewItemInlinePadding@;
-}
-
-.urlbarView:not(.megabar) #urlbar-contextual-tip {
-  padding-inline-start: var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@));
-  padding-inline-end: var(--item-padding-end, 5px);
-}
-
-#urlbar-contextual-tip-title {
-  flex-grow: 1;
-  padding-inline-end: 75px;
-}
-
-#urlbar-contextual-tip-button {
-  height: 2.3em;
-  width: 9.15em;
-  border: none;
-  border-radius: 2px;
-  color: white;
-  background-color: var(--in-content-primary-button-background);
-}
-
-#urlbar-contextual-tip-button:hover {
-  background-color: var(--in-content-primary-button-background-hover);
-}
-
-#urlbar-contextual-tip-button:active {
-  background-color: var(--in-content-primary-button-background-active);
-}
-
-#urlbar-contextual-tip-button:-moz-focusring {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
-}
-
-#urlbar-contextual-tip-link {
-  text-align: end;
-}
-
 .urlbarView-results {
   padding-block: @urlbarViewPadding@;
   white-space: nowrap;
@@ -286,19 +243,9 @@
   background-color: var(--in-content-button-background-active);
 }
 
-#urlbar-contextual-tip-icon {
-  min-width: 24px;
-  height: 24px;
-  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
-  background-repeat: no-repeat;
-  background-size: contain;
-  -moz-context-properties: fill, fill-opacity;
-}
-
 @media (min-resolution: 2dppx) {
   .urlbarView-type-icon,
-  .urlbarView-favicon,
-  #urlbar-contextual-tip-icon {
+  .urlbarView-favicon {
       transform: translateY(-1.5px);
   }
 }
