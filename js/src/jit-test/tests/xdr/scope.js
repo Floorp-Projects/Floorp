@@ -14,6 +14,6 @@ test  = (function () {
     })();
   };
 
-  return "var obj = { x : 2 };" + f.toSource() + "; f()";
+  return "var obj = { x : 2 };" + f.toString() + "; f()";
 })();
 evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });

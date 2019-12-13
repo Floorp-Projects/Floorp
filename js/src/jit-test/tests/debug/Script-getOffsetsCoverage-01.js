@@ -29,7 +29,7 @@ function checkGetOffsetsCoverage(fun) {
   };
 
   // Extract the body of the function, as the code to be executed.
-  var source = fun.toSource();
+  var source = fun.toString();
   source = source.slice(source.indexOf('{') + 1, source.lastIndexOf('}'));
 
   // Extract comment starting with the previous keys, as a reference.

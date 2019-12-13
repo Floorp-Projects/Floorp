@@ -3,7 +3,7 @@ test = (function () {
   function f() {
     [1,2,3,4,5];
   };
-  return "var obj = { x : 2 };" + f.toSource() + "; f()";
+  return "var obj = { x : 2 };" + f.toString() + "; f()";
 })();
 evalWithCache(test, {});
 function evalWithCache(code, ctx) {

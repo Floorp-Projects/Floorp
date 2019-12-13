@@ -10,6 +10,6 @@ var test = (function () {
       return ifTrue();
     return ifFalse();
   }
-  return f.toSource() + "; f()";
+  return f.toString() + "; f()";
 })();
 evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });

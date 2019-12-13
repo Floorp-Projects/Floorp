@@ -18,7 +18,7 @@ function test(len) {
         randomS += chars.charAt((rand() * chars.length)|0);
     }
     s += randomS;
-    s += "'; function f() {}; assertEq(f.toSource(), 'function f() {}');";
+    s += "'; function f() {}; assertEq(f.toString(), 'function f() {}');";
     eval(s);
 }
 for (var i=32740; i<32780; i += 5) {
