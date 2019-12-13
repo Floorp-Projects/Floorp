@@ -21,7 +21,7 @@ add_task(async function test() {
       );
     }
 
-    await ContentTask.spawn(browser, null, startTests);
+    await SpecialPowers.spawn(browser, [], startTests);
     await mozBrowserTests(browser);
   });
 });
@@ -85,7 +85,7 @@ async function mozBrowserTests(browser) {
   Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
   Services.prefs.setBoolPref("network.disable.ipc.security", true);
 
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     info("Checking mozbrowser iframe");
     let mozBrowserFrame = content.document.createElement("iframe");
     mozBrowserFrame.setAttribute("mozbrowser", "");

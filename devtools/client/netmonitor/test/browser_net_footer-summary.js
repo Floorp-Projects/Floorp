@@ -32,7 +32,7 @@ add_task(async function() {
   for (let i = 0; i < 2; i++) {
     info(`Performing requests in batch #${i}`);
     const wait = waitForNetworkEvents(monitor, 8);
-    await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
       content.wrappedJSObject.performRequests(
         '{ "getMedia": true, "getFlash": true }'
       );

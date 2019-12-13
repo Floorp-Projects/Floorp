@@ -93,7 +93,7 @@ add_task(async function test_save_change() {
       async function(browser) {
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
-        await ContentTask.spawn(browser, [username, password], async function([
+        await SpecialPowers.spawn(browser, [[username, password]], async function([
           contentUsername,
           contentPassword,
         ]) {

@@ -62,10 +62,8 @@ async function runTest() {
   info(`Loaded page ${SW_REGISTER_PAGE_URL}`);
 
   info(`Registering Service Worker ${SW_SCRIPT_URL}`);
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { scriptURL: SW_SCRIPT_URL },
-    async ({ scriptURL }) =>
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ scriptURL: SW_SCRIPT_URL }], async ({ scriptURL }) =>
       await content.wrappedJSObject.registerAndWaitForActive(scriptURL)
   );
   info(`Registered and activated Service Worker ${SW_SCRIPT_URL}`);
@@ -82,10 +80,8 @@ async function runTest() {
   );
 
   info(`Dynamically creating ${FILE_URL}'s link`);
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { href: CROSS_ORIGIN_REDIRECT_URL },
-    ({ href }) => {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [{ href: CROSS_ORIGIN_REDIRECT_URL }], ({ href }) => {
       const { document } = content;
       const link = document.createElement("a");
       link.href = href;
@@ -125,10 +121,8 @@ async function runTest() {
   await loadURI(tab.linkedBrowser, SW_REGISTER_PAGE_URL);
 
   info("Unregistering all Service Workers");
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    async () => await content.wrappedJSObject.unregisterAll()
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [], async () => await content.wrappedJSObject.unregisterAll()
   );
 
   info("Closing tab");

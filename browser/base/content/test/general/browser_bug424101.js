@@ -25,10 +25,8 @@ add_task(async function() {
   for (let index = 0; index < tests.length; index++) {
     let test = tests[index];
 
-    await ContentTask.spawn(
-      gBrowser.selectedBrowser,
-      { element: test.element, type: test.type, index },
-      async function(arg) {
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser, [{ element: test.element, type: test.type, index }], async function(arg) {
         let element = content.document.createElement(arg.element);
         element.id = "element" + arg.index;
         if (arg.type) {

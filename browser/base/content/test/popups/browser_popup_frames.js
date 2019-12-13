@@ -19,10 +19,8 @@ add_task(async function test_opening_blocked_popups() {
     "data:text/html,Hello"
   );
 
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    baseURL + "popup_blocker.html",
-    uri => {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [baseURL + "popup_blocker.html"], uri => {
       let iframe = content.document.createElement("iframe");
       iframe.id = "popupframe";
       iframe.src = uri;
@@ -41,7 +39,7 @@ add_task(async function test_opening_blocked_popups() {
 
   ok(notification, "Should have notification.");
 
-  await ContentTask.spawn(tab.linkedBrowser, baseURL, async function(uri) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [baseURL], async function(uri) {
     let iframe = content.document.createElement("iframe");
     let pageHideHappened = ContentTaskUtils.waitForEvent(
       this,
@@ -59,7 +57,7 @@ add_task(async function test_opening_blocked_popups() {
   ok(notification, "Should still have notification");
 
   // Now navigate the subframe.
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let pageHideHappened = ContentTaskUtils.waitForEvent(
       this,
       "pagehide",
@@ -81,10 +79,8 @@ add_task(async function test_opening_blocked_popups() {
   );
 
   // Remove the frame and add another one:
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    baseURL + "popup_blocker.html",
-    uri => {
+  await SpecialPowers.spawn(
+    tab.linkedBrowser, [baseURL + "popup_blocker.html"], uri => {
       content.document.getElementById("popupframe").remove();
       let iframe = content.document.createElement("iframe");
       iframe.id = "popupframe";
@@ -103,7 +99,7 @@ add_task(async function test_opening_blocked_popups() {
 
   ok(notification, "Should have notification.");
 
-  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("popupframe").remove();
   });
 

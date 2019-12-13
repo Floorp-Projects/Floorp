@@ -85,7 +85,7 @@ add_task(async function() {
         ok(true, "Test1: Both of the tabs are loaded");
 
         // Confirm that the contents should be able to steal focus from content.
-        await ContentTask.spawn(fg, test, test => {
+        await SpecialPowers.spawn(fg, [test], test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
@@ -109,7 +109,7 @@ add_task(async function() {
           });
         });
 
-        await ContentTask.spawn(bg, test, test => {
+        await SpecialPowers.spawn(bg, [test], test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
@@ -160,7 +160,7 @@ add_task(async function() {
         ok(true, "Test2: Both of the tabs are loaded");
 
         // Confirm that the contents should be able to steal focus from content.
-        await ContentTask.spawn(fg, test, test => {
+        await SpecialPowers.spawn(fg, [test], test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;
@@ -184,7 +184,7 @@ add_task(async function() {
           });
         });
 
-        await ContentTask.spawn(bg, test, test => {
+        await SpecialPowers.spawn(bg, [test], test => {
           return new Promise(res => {
             function f() {
               let e = content.document.activeElement;

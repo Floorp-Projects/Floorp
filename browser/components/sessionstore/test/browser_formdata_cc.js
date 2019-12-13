@@ -101,7 +101,7 @@ add_task(async function() {
 });
 
 function setInputValue(browser, formValue) {
-  return ContentTask.spawn(browser, formValue, async function(newValue) {
+  return SpecialPowers.spawn(browser, [formValue], async function(newValue) {
     content.document.getElementById("txt").setUserInput(newValue);
   });
 }

@@ -28,10 +28,8 @@ add_task(async function() {
         true,
         true
       );
-      await ContentTask.spawn(
-        browser,
-        { base1: BASE1, base2: BASE2 },
-        async function({ base1, base2 }) {
+      await SpecialPowers.spawn(
+        browser, [{ base1: BASE1, base2: BASE2 }], async function({ base1, base2 }) {
           let top = content;
           top.name = "top";
           top.location.href += "#top";

@@ -102,7 +102,7 @@ add_task(async function test_simple_policies() {
   ok(policy2Ran, "Policy 2 ran correctly through onBeforeUIStartup");
   ok(policy3Ran, "Policy 3 ran correctly through onAllWindowsRestored");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       is(
         Services.policies.isAllowed("feature1"),

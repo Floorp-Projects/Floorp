@@ -126,7 +126,7 @@ async function testPlayWithoutUserGesture() {
     await canplayPromise;
     ok(video.paused, "video can't start without user input.");
   }
-  await ContentTask.spawn(tab.linkedBrowser, null, checkAutoplayKeyword);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], checkAutoplayKeyword);
 
   async function playVideo() {
     let video = content.document.getElementById("v");
@@ -135,7 +135,7 @@ async function testPlayWithoutUserGesture() {
       ok(video.paused, "video can't start play without user input.");
     });
   }
-  await ContentTask.spawn(tab.linkedBrowser, null, playVideo);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], playVideo);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
@@ -169,7 +169,7 @@ async function testPlayWithUserGesture(gesture) {
     }
   }
 
-  await ContentTask.spawn(tab.linkedBrowser, gesture, playVideo);
+  await SpecialPowers.spawn(tab.linkedBrowser, [gesture], playVideo);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);
@@ -243,10 +243,8 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- check whether audio context starts running -");
   try {
-    await ContentTask.spawn(
-      tab.linkedBrowser,
-      null,
-      checkingAudioContextRunningState
+    await SpecialPowers.spawn(
+      tab.linkedBrowser, [], checkingAudioContextRunningState
     );
   } catch (error) {
     ok(false, error.toString());
@@ -254,10 +252,8 @@ async function testWebAudioWithUserGesture(gesture) {
 
   info("- calling resume() -");
   try {
-    await ContentTask.spawn(
-      tab.linkedBrowser,
-      null,
-      resumeWithoutExpectedSuccess
+    await SpecialPowers.spawn(
+      tab.linkedBrowser, [], resumeWithoutExpectedSuccess
     );
   } catch (error) {
     ok(false, error.toString());
@@ -271,7 +267,7 @@ async function testWebAudioWithUserGesture(gesture) {
     let resumeFunc = gesture.isActivationGesture
       ? resumeWithExpectedSuccess
       : resumeWithoutExpectedSuccess;
-    await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
+    await SpecialPowers.spawn(tab.linkedBrowser, [], resumeFunc);
   } catch (error) {
     ok(false, error.toString());
   }

@@ -8,7 +8,7 @@ add_task(async function() {
     "http://example.com/browser/dom/tests/browser/test_bug1004814.html";
 
   await BrowserTestUtils.withNewTab(TEST_URI, async aBrowser => {
-    let duration = await ContentTask.spawn(aBrowser, null, function(opts) {
+    let duration = await SpecialPowers.spawn(aBrowser, [], function(opts) {
       return new Promise(resolve => {
         let ConsoleObserver = {
           QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),

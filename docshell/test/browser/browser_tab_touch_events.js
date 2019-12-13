@@ -9,7 +9,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function(
     browser
   ) {
-    await ContentTask.spawn(browser, null, test_body);
+    await SpecialPowers.spawn(browser, [], test_body);
   });
 });
 

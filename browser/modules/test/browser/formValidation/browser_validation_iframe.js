@@ -20,7 +20,7 @@ add_task(async function test_iframe() {
       "popupshown"
     );
 
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       content.document
         .getElementsByTagName("iframe")[0]
         .contentDocument.getElementById("s")
@@ -28,7 +28,7 @@ add_task(async function test_iframe() {
     });
     await popupShownPromise;
 
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let childdoc = content.document.getElementsByTagName("iframe")[0]
         .contentDocument;
       Assert.equal(

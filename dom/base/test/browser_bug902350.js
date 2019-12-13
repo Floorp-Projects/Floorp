@@ -36,7 +36,7 @@ add_task(async function mixed_content_block_for_target_top_test() {
     false,
     insecureUrl
   );
-  ContentTask.spawn(testBrowser, null, function() {
+  SpecialPowers.spawn(testBrowser, [], function() {
     var frame = content.document.getElementById("testing_frame");
     var topTarget = frame.contentWindow.document.getElementById("topTarget");
     topTarget.click();

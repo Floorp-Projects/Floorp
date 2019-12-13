@@ -13,17 +13,17 @@ addRDMTask(
   async function({ ui }) {
     const viewportBrowser = ui.getViewportBrowser();
 
-    const contentURL = await ContentTask.spawn(viewportBrowser, {}, function() {
-      return content.document.URL;
-    });
+    const contentURL = await SpecialPowers.spawn(
+      viewportBrowser,
+      [],
+      () => content.document.URL
+    );
     info("content URL is " + contentURL);
 
-    const contentInRDMPane = await ContentTask.spawn(
+    const contentInRDMPane = await SpecialPowers.spawn(
       viewportBrowser,
-      {},
-      function() {
-        return content.docShell.browsingContext.inRDMPane;
-      }
+      [],
+      () => docShell.browsingContext.inRDMPane
     );
 
     ok(

@@ -1,5 +1,5 @@
 function check_clear_visible(browser, aVisible) {
-  return ContentTask.spawn(browser, aVisible, function(aVisible) {
+  return SpecialPowers.spawn(browser, [aVisible], function(aVisible) {
     const doc = content.document;
     let visible = false;
     const reportListSubmitted = doc.getElementById("reportListSubmitted");

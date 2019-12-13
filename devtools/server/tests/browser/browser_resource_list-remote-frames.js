@@ -32,7 +32,7 @@ async function testLocalListFrames(tabTarget) {
 
   // However we can confirm that the newly created iframe is there.
   const browser = gBrowser.selectedBrowser;
-  const oopID = await ContentTask.spawn(browser, {}, async () => {
+  const oopID = await SpecialPowers.spawn(browser, [], async () => {
     const oop = content.document.querySelector("iframe");
     return oop.frameLoader.browsingContext.id;
   });

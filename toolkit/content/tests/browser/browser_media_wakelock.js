@@ -86,7 +86,7 @@ async function test_media_wakelock({
   let videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
 
   info(`- wait for media starting playing -`);
-  await ContentTask.spawn(browser, videoAttsParams, waitUntilVideoStarted);
+  await SpecialPowers.spawn(browser, [videoAttsParams], waitUntilVideoStarted);
   await audioWakeLock.check();
   await videoWakeLock.check();
 

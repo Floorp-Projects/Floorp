@@ -19,7 +19,7 @@ add_task(async function test_first_time_save() {
       gBrowser,
       "about:preferences#privacy"
     );
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       form.querySelector("#organization").focus();
       form.querySelector("#organization").value = "Sesame Street";
@@ -56,7 +56,7 @@ add_task(async function test_non_first_time_save() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       form.querySelector("#organization").focus();
       form.querySelector("#organization").value = "Mozilla";
@@ -96,7 +96,7 @@ add_task(async function test_first_time_save_with_sync_account() {
       gBrowser,
       "about:preferences#privacy-address-autofill"
     );
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       form.querySelector("#organization").focus();
       form.querySelector("#organization").value = "Foobar";

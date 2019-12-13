@@ -27,7 +27,7 @@ add_task(async function() {
   );
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(beaconTab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(beaconTab.linkedBrowser, [], async function() {
     content.wrappedJSObject.performRequests();
   });
   tab.linkedBrowser.reload();

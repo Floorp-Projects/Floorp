@@ -17,7 +17,7 @@ function testPostPrompt(task) {
       "notifications icon is not visible at first"
     );
 
-    await ContentTask.spawn(browser, null, task);
+    await SpecialPowers.spawn(browser, [], task);
 
     await TestUtils.waitForCondition(
       () => BrowserTestUtils.is_visible(icon),

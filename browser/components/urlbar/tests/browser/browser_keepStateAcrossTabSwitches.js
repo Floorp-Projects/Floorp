@@ -16,7 +16,7 @@ add_task(async function validURL() {
   let browser = tab.linkedBrowser;
   // Note: Waiting on content document not being hidden because new tab pages can be preloaded,
   // in which case no load events fire.
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     await ContentTaskUtils.waitForCondition(() => {
       return content.document && !content.document.hidden;
     });
@@ -48,7 +48,7 @@ add_task(async function invalidURL() {
   let browser = tab.linkedBrowser;
   // Note: Waiting on content document not being hidden because new tab pages can be preloaded,
   // in which case no load events fire.
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     await ContentTaskUtils.waitForCondition(() => {
       return content.document && !content.document.hidden;
     });

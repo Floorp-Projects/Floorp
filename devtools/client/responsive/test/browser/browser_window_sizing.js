@@ -30,10 +30,8 @@ add_task(async function() {
 });
 
 async function checkWindowOuterSize(ui, zoom_level) {
-  return ContentTask.spawn(
-    ui.getViewportBrowser(),
-    { width: WIDTH, height: HEIGHT, zoom: zoom_level },
-    async function({ width, height, zoom }) {
+  return SpecialPowers.spawn(
+    ui.getViewportBrowser(), [{ width: WIDTH, height: HEIGHT, zoom: zoom_level }], async function({ width, height, zoom }) {
       // Approximate the outer size value returned on the window content with the expected
       // value. We should expect, at the very most, a 2px difference between the two due
       // to floating point rounding errors that occur when scaling from inner size CSS
@@ -56,10 +54,8 @@ async function checkWindowOuterSize(ui, zoom_level) {
 }
 
 async function checkWindowScreenSize(ui, zoom_level) {
-  return ContentTask.spawn(
-    ui.getViewportBrowser(),
-    { width: WIDTH, height: HEIGHT, zoom: zoom_level },
-    async function({ width, height, zoom }) {
+  return SpecialPowers.spawn(
+    ui.getViewportBrowser(), [{ width: WIDTH, height: HEIGHT, zoom: zoom_level }], async function({ width, height, zoom }) {
       const { screen } = content;
 
       ok(
