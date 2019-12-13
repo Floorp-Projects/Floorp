@@ -117,6 +117,7 @@
 .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
   background: linear-gradient(to right, transparent 10%, var(--identity-tab-color) 10%, var(--identity-tab-color) 90%, transparent 90%);
   height: 2px;
+  margin-bottom: 2px;
 }
 
 .tabbrowser-tab[pinned][usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
