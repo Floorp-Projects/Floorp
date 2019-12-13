@@ -3417,11 +3417,40 @@ void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
 }
 
 /* static */
+void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
+                                              jsbytecode* pc,
+                                              const js::Value& rval) {
+  MOZ_ASSERT(rval.isMagic());
+
+  // It's possible that we arrived here from bailing out of Ion, and that
+  // Ion proved that the value is dead and optimized out. In such cases,
+  // do nothing.
+  if (rval.whyMagic() == JS_OPTIMIZED_OUT) {
+    return;
+  }
+
+  // In derived class constructors (including nested arrows/eval)
+  // GETALIASEDVAR can return the magic TDZ value.
+  MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+  MOZ_ASSERT(script->function() || script->isForEval());
+  MOZ_ASSERT(*GetNextPc(pc) == JSOP_CHECKTHIS ||
+             *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
+             *GetNextPc(pc) == JSOP_CHECKRETURN);
+
+  MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
+}
+
+/* static */
 void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, const js::Value& rval) {
   MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
 
   if (!script->hasJitScript()) {
+    return;
+  }
+
+  if (MOZ_UNLIKELY(rval.isMagic())) {
+    MonitorMagicValueBytecodeType(cx, script, pc, rval);
     return;
   }
 
