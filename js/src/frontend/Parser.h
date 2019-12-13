@@ -327,22 +327,13 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   FunctionTreeHolder& treeHolder_;
 
-  MOZ_MUST_USE bool publishDeferredItems(FunctionTree* root) {
-    // Publish deferred functions before LazyScripts, as the
-    // LazyScripts need the functions.
-    if (!publishDeferredFunctions(root)) {
-      return false;
-    }
-    return true;
-  }
-
-  bool publishDeferredFunctions(FunctionTree* root);
+  MOZ_MUST_USE bool publishDeferredFunctions(FunctionTree* root);
 
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
 
-  MOZ_MUST_USE bool publishDeferredItems() {
-    return publishDeferredItems(getTreeHolder().getFunctionTree());
+  MOZ_MUST_USE bool publishDeferredFunctions() {
+    return publishDeferredFunctions(getTreeHolder().getFunctionTree());
   }
 
   bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
