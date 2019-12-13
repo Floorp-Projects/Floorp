@@ -594,19 +594,13 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
           cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
       RootedNativeObject debugger(cx, object);
 
-      frame = DebuggerFrame::create(cx, proto, iter, debugger);
+      frame = DebuggerFrame::create(cx, proto, debugger, &iter, genObj);
       if (!frame) {
         return false;
       }
 
       if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
         return false;
-      }
-
-      if (genObj) {
-        if (!frame->setGenerator(cx, genObj)) {
-          return false;
-        }
       }
     }
 
