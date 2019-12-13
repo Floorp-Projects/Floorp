@@ -230,13 +230,11 @@ function maybeGenerateLogGroupId(options) {
   return options;
 }
 
-function maybeClearLogpoint(location: BreakpointLocation) {
+async function maybeClearLogpoint(location: BreakpointLocation) {
   const bp = breakpoints[locationKey(location)];
-  if (bp && bp.options.logGroupId && currentTarget.activeConsole) {
-    currentTarget.activeConsole.emit(
-      "clearLogpointMessages",
-      bp.options.logGroupId
-    );
+  if (bp && bp.options.logGroupId && currentTarget) {
+    const consoleFront = await currentTarget.getFront("console");
+    consoleFront.emit("clearLogpointMessages", bp.options.logGroupId);
   }
 }
 
@@ -275,34 +273,39 @@ async function evaluateExpressions(scripts: Script[], options: EvaluateParam) {
 
 type EvaluateParam = { thread: string, frameId: ?FrameId };
 
-function evaluate(
+async function evaluate(
   script: ?Script,
   { thread, frameId }: EvaluateParam = {}
 ): Promise<{ result: ExpressionResult }> {
   const params = { thread, frameActor: frameId };
   if (!currentTarget || !script) {
-    return Promise.resolve({ result: null });
+    return { result: null };
   }
 
   const target = thread ? lookupTarget(thread) : currentTarget;
-  const consoleFront = target.activeConsole;
+  const consoleFront = await target.getFront("console");
   if (!consoleFront) {
-    return Promise.resolve({ result: null });
+    return { result: null };
   }
 
   return consoleFront.evaluateJSAsync(script, params);
 }
 
-function autocomplete(
+async function autocomplete(
   input: string,
   cursor: number,
   frameId: ?string
 ): Promise<mixed> {
-  if (!currentTarget || !currentTarget.activeConsole || !input) {
-    return Promise.resolve({});
+  if (!currentTarget || !input) {
+    return {};
   }
+  const consoleFront = await currentTarget.getFront("console");
+  if (!consoleFront) {
+    return {};
+  }
+
   return new Promise(resolve => {
-    currentTarget.activeConsole.autocomplete(
+    consoleFront.autocomplete(
       input,
       cursor,
       result => resolve(result),
