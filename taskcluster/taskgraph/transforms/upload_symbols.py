@@ -10,7 +10,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import RELEASE_PROJECTS
-from taskgraph.util.treeherder import join_symbol
+from taskgraph.util.treeherder import join_symbol, inherit_treeherder_from_dep
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 
 import logging
 logger = logging.getLogger(__name__)
@@ -54,25 +55,14 @@ def fill_template(config, tasks):
         task['worker']['env']['SYMBOL_SECRET'] = task['worker']['env']['SYMBOL_SECRET'].format(
             level=config.params['level'])
 
-        build_platform = dep.attributes.get('build_platform')
-        build_type = dep.attributes.get('build_type')
-        attributes = task.setdefault('attributes', {})
-        attributes['build_platform'] = build_platform
-        attributes['build_type'] = build_type
-        if dep.attributes.get('nightly'):
-            attributes['nightly'] = True
-        if dep.attributes.get('shippable'):
-            attributes['shippable'] = True
+        attributes = copy_attributes_from_dependent_job(dep)
+        attributes.update(task.get('attributes', {}))
+        task['attributes'] = attributes
 
-        treeherder = task.get('treeherder', {})
+        treeherder = inherit_treeherder_from_dep(task, dep)
         th = dep.task.get('extra')['treeherder']
-        th_platform = dep.task['extra'].get('treeherder-platform',
-                                            "{}/{}".format(th['machine']['platform'], build_type))
         th_symbol = th.get('symbol')
         th_groupsymbol = th.get('groupSymbol', '?')
-        treeherder.setdefault('platform', th_platform)
-        treeherder.setdefault('tier', th['tier'])
-        treeherder.setdefault('kind', th['jobKind'])
 
         # Disambiguate the treeherder symbol.
         sym = 'Sym' + (th_symbol[1:] if th_symbol.startswith('B') else th_symbol)
@@ -81,10 +71,10 @@ def fill_template(config, tasks):
         )
         task['treeherder'] = treeherder
 
-        if dep.attributes.get('nightly'):
+        if attributes.get('nightly'):
             # For nightly builds, we want to run these tasks if the build is run.
             task['run-on-projects'] = dep.attributes.get('run_on_projects')
-        elif dep.attributes.get('shippable'):
+        elif attributes.get('shippable'):
             # For shippable builds, we want to run these tasks if the build is run.
             # XXX Better to run this on promote phase instead?
             task['run-on-projects'] = dep.attributes.get('run_on_projects')
