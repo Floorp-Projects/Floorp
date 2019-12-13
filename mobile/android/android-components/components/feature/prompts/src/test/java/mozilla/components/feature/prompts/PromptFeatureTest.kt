@@ -21,7 +21,6 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
@@ -46,6 +45,7 @@ import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.After
@@ -210,7 +210,7 @@ class PromptFeatureTest {
         assertEquals(singleChoiceRequest, tab()?.content?.promptRequest)
         feature.onCancel(tabId)
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
     }
 
@@ -225,7 +225,7 @@ class PromptFeatureTest {
         assertEquals(singleChoiceRequest, tab()?.content?.promptRequest)
         feature.onConfirm(tabId, mock<Choice>())
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
     }
 
@@ -240,7 +240,7 @@ class PromptFeatureTest {
         assertEquals(menuChoiceRequest, tab()?.content?.promptRequest)
         feature.onConfirm(tabId, mock<Choice>())
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
     }
 
@@ -255,7 +255,7 @@ class PromptFeatureTest {
         assertEquals(multipleChoiceRequest, tab()?.content?.promptRequest)
         feature.onConfirm(tabId, arrayOf<Choice>())
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
     }
 
@@ -274,13 +274,13 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onConfirm(tabId, false)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onShowNoMoreAlertsWasCalled)
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
     }
 
@@ -294,7 +294,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)
     }
@@ -318,13 +318,13 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onConfirm(tabId, false to "")
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissWasCalled)
     }
@@ -346,7 +346,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissWasCalled)
     }
@@ -378,7 +378,7 @@ class PromptFeatureTest {
 
             val now = Date()
             feature.onConfirm(tabId, now)
-            processActions()
+            store.waitUntilIdle()
 
             assertNull(tab()?.content?.promptRequest)
             assertEquals(now, selectedDate)
@@ -418,7 +418,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
         feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onSingleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
     }
@@ -450,7 +450,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
         feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onMultipleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
     }
@@ -470,7 +470,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
         feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)
     }
@@ -501,14 +501,14 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onConfirm(tabId, "" to "")
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertTrue(onDismissWasCalled)
     }
 
@@ -536,7 +536,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissWasCalled)
     }
@@ -561,14 +561,14 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onConfirm(tabId, "#f6b73c")
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissWasCalled)
     }
@@ -595,7 +595,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onConfirm(tabId, null)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)
     }
@@ -621,7 +621,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onCancelWasCalled)
     }
@@ -661,21 +661,21 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onConfirm(tabId, true to MultiButtonDialogFragment.ButtonType.POSITIVE)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onPositiveButtonWasCalled)
 
         feature.promptAbuserDetector.resetJSAlertAbuseState()
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onConfirm(tabId, true to MultiButtonDialogFragment.ButtonType.NEGATIVE)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onNegativeButtonWasCalled)
 
         feature.promptAbuserDetector.resetJSAlertAbuseState()
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.onConfirm(tabId, true to MultiButtonDialogFragment.ButtonType.NEUTRAL)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onNeutralButtonWasCalled)
     }
@@ -709,7 +709,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
         feature.onCancel(tabId)
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onCancelWasCalled)
     }
@@ -807,7 +807,7 @@ class PromptFeatureTest {
         assertEquals(shareRequest, tab()?.content?.promptRequest)
         feature.onConfirm(tabId, null)
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onSuccessCalled)
     }
@@ -831,7 +831,7 @@ class PromptFeatureTest {
         assertEquals(shareRequest, tab()?.content?.promptRequest)
         feature.onCancel(tabId)
 
-        processActions()
+        store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissCalled)
     }
@@ -842,11 +842,5 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(any())
         return fragmentManager
-    }
-
-    private fun processActions() {
-        // Dispatching a random unrelated action to block on it in order to wait for all other
-        // dispatched actions to have completed: https://github.com/mozilla-mobile/android-components/issues/4529
-        store.dispatch(SystemAction.LowMemoryAction).joinBlocking()
     }
 }

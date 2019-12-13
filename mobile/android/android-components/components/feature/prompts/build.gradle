@@ -44,6 +44,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
 }
 
 apply from: '../../../publish.gradle'

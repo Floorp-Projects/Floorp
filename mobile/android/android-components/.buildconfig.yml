@@ -268,6 +268,10 @@ projects:
     path: components/support/test
     description: 'A collection of helpers for testing components (local unit tests).'
     publish: true
+  support-test-libstate:
+    path: components/support/test-libstate
+    description: 'A collection of helpers for testing functionality that relies on the lib-state component (local unit tests).'
+    publish: true
   support-android-test:
     path: components/support/android-test
     description: 'A collection of helpers for testing components from instrumented (on device) tests.'
