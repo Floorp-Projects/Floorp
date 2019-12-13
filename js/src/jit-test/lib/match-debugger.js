@@ -27,7 +27,7 @@ class DebuggerObjectPattern extends Match.Pattern {
       for (const name of actual.getOwnPropertyNames()) {
         const desc = actual.getOwnPropertyDescriptor(name);
         if (!('value' in desc)) {
-          throw new Match.MatchError(`Debugger.Object referent has non-value property ${uneval(name)}`);
+          throw new Match.MatchError(`Debugger.Object referent has non-value property ${JSON.stringify(name)}`);
         }
         lifted[name] = desc.value;
       }

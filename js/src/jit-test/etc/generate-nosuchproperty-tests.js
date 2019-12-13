@@ -23,8 +23,8 @@ function generateTestCase(n, d) {
     TEST_CASE_FUNCS.push(testFuncName);
 
     print("//// Test chain of length " + n + " with late-property-addition at depth " + d);
-    print(uneval(runChain_NNNN_DDDD).replace(/NNNN/g, ''+n).replace(/DDDD/g, ''+d));
-    print(uneval(testChain_NNNN_DDDD).replace(/NNNN/g, ''+n).replace(/DDDD/g, ''+d));
+    print(String(runChain_NNNN_DDDD).replace(/NNNN/g, ''+n).replace(/DDDD/g, ''+d));
+    print(String(testChain_NNNN_DDDD).replace(/NNNN/g, ''+n).replace(/DDDD/g, ''+d));
     print("");
 }
 

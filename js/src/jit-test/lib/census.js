@@ -39,14 +39,14 @@ const Census = {};
           continue;
         }
         count = walk(subject[prop],
-                     name + "[" + uneval(prop) + "]",
+                     name + "[" + JSON.stringify(prop) + "]",
                      walker.enter(prop),
                      ignore,
                      count);
       }
       walker.done(ignore);
     } else {
-      print(name + " = " + uneval(subject));
+      print(name + " = " + JSON.stringify(subject));
       walker.check(subject);
       count++;
     }
@@ -117,11 +117,11 @@ const Census = {};
   }
 
   function missingProp(prop) {
-    throw "Census mismatch: subject lacks property present in basis: " + uneval(prop);
+    throw "Census mismatch: subject lacks property present in basis: " + JSON.stringify(prop);
   }
 
   function extraProp(prop) {
-    throw "Census mismatch: subject has property not present in basis: " + uneval(prop);
+    throw "Census mismatch: subject has property not present in basis: " + JSON.stringify(prop);
   }
 
   // Return a walker that checks that the subject census has counts all equal to
