@@ -8,6 +8,7 @@ cd "$SRCDIR/js/rust"
 
 cp $SRCDIR/.cargo/config.in $SRCDIR/.cargo/config
 
+export RUSTFMT="$MOZ_FETCHES_DIR/rustc/bin/rustfmt"
 export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/gcc/lib64"
 # Enable backtraces if we panic.
 export RUST_BACKTRACE=1
