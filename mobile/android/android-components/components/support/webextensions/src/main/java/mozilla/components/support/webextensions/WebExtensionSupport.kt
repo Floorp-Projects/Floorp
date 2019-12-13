@@ -29,6 +29,10 @@ import java.util.concurrent.ConcurrentHashMap
  * Provides functionality to make sure web extension related events in the
  * [Engine] are reflected in the browser state by dispatching the
  * corresponding actions to the [BrowserStore].
+ *
+ * Note that this class can be removed once the browser-state migration
+ * is completed and the [Engine] has direct access to the [BrowserStore]:
+ * https://github.com/orgs/mozilla-mobile/projects/31
  */
 object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")

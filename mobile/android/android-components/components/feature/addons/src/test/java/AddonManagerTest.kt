@@ -41,6 +41,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -97,7 +98,11 @@ class AddonManagerTest {
                 extensions = mapOf("ext1" to WebExtensionState("ext1", "url"))
             )
         )
+
         WebExtensionSupport.initialize(engine, store)
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions["ext1"] = extension
 
         // Verify add-ons were updated with state provided by the engine/store
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -231,5 +236,290 @@ class AddonManagerTest {
         verify(engine).updateWebExtension(any(), onSuccessCaptor.capture(), any())
         onSuccessCaptor.value.invoke(null)
         assertEquals(Status.NoUpdateAvailable, updateStatus)
+    }
+
+    @Test
+    fun `installAddon successfully`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = ""
+        )
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
+
+        var installedAddon: Addon? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.installAddon(addon, onSuccess = {
+            installedAddon = it
+        })
+
+        verify(engine).installWebExtension(
+            eq("ext1"), any(), anyBoolean(), anyBoolean(), onSuccessCaptor.capture(), any()
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        onSuccessCaptor.value.invoke(extension)
+        assertNotNull(installedAddon)
+        assertEquals(addon.id, installedAddon!!.id)
+    }
+
+    @Test
+    fun `installAddon failure`() {
+        val addon = Addon(id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = ""
+        )
+
+        val engine: Engine = mock()
+        val onErrorCaptor = argumentCaptor<((String, Throwable) -> Unit)>()
+
+        var throwable: Throwable? = null
+        var msg: String? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.installAddon(addon, onError = { errorMsg, caught ->
+            throwable = caught
+            msg = errorMsg
+        })
+
+        verify(engine).installWebExtension(
+            eq("ext1"), any(), anyBoolean(), anyBoolean(), any(), onErrorCaptor.capture()
+        )
+
+        onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
+        assertNotNull(throwable!!)
+        assertEquals(msg, addon.id)
+    }
+
+    @Test
+    fun `uninstallAddon successfully`() {
+        val installedAddon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = "",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[installedAddon.id] = extension
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<(() -> Unit)>()
+
+        var successCallbackInvoked = false
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.uninstallAddon(installedAddon, onSuccess = {
+            successCallbackInvoked = true
+        })
+        verify(engine).uninstallWebExtension(eq(extension), onSuccessCaptor.capture(), any())
+
+        onSuccessCaptor.value.invoke()
+        assertTrue(successCallbackInvoked)
+    }
+
+    @Test
+    fun `uninstallAddon failure cases`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = ""
+        )
+
+        val engine: Engine = mock()
+        val onErrorCaptor = argumentCaptor<((String, Throwable) -> Unit)>()
+        var throwable: Throwable? = null
+        var msg: String? = null
+        val errorCallback = { errorMsg: String, caught: Throwable ->
+            throwable = caught
+            msg = errorMsg
+        }
+        val manager = AddonManager(mock(), engine, mock(), mock())
+
+        // Extension is not installed so we're invoking the error callback and never the engine
+        manager.uninstallAddon(addon, onError = errorCallback)
+        verify(engine, never()).uninstallWebExtension(any(), any(), onErrorCaptor.capture())
+        assertNotNull(throwable!!)
+        assertEquals("Addon is not installed", throwable!!.localizedMessage)
+
+        // Install extension and try again
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+        manager.uninstallAddon(addon, onError = errorCallback)
+        verify(engine, never()).uninstallWebExtension(any(), any(), onErrorCaptor.capture())
+
+        // Make sure engine error is forwarded to caller
+        val installedAddon = addon.copy(installedState = Addon.InstalledState(addon.id, "1.0", "", true))
+        manager.uninstallAddon(installedAddon, onError = errorCallback)
+        verify(engine).uninstallWebExtension(eq(extension), any(), onErrorCaptor.capture())
+        onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
+        assertNotNull(throwable!!)
+        assertEquals("test", throwable!!.localizedMessage)
+        assertEquals(msg, addon.id)
+    }
+
+    @Test
+    fun `enableAddon successfully`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = "",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
+
+        var enabledAddon: Addon? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.enableAddon(addon, onSuccess = {
+            enabledAddon = it
+        })
+
+        verify(engine).enableWebExtension(eq(extension), onSuccessCaptor.capture(), any())
+        onSuccessCaptor.value.invoke(extension)
+        assertNotNull(enabledAddon)
+        assertEquals(addon.id, enabledAddon!!.id)
+    }
+
+    @Test
+    fun `enableAddon failure cases`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = ""
+        )
+        val engine: Engine = mock()
+        val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
+        var throwable: Throwable? = null
+        val errorCallback = { caught: Throwable ->
+            throwable = caught
+        }
+        val manager = AddonManager(mock(), engine, mock(), mock())
+
+        // Extension is not installed so we're invoking the error callback and never the engine
+        manager.enableAddon(addon, onError = errorCallback)
+        verify(engine, never()).enableWebExtension(any(), any(), onErrorCaptor.capture())
+        assertNotNull(throwable!!)
+        assertEquals("Addon is not installed", throwable!!.localizedMessage)
+
+        // Install extension and try again
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+        manager.enableAddon(addon, onError = errorCallback)
+        verify(engine, never()).enableWebExtension(any(), any(), onErrorCaptor.capture())
+
+        // Make sure engine error is forwarded to caller
+        val installedAddon = addon.copy(installedState = Addon.InstalledState(addon.id, "1.0", "", true))
+        manager.enableAddon(installedAddon, onError = errorCallback)
+        verify(engine).enableWebExtension(eq(extension), any(), onErrorCaptor.capture())
+        onErrorCaptor.value.invoke(IllegalStateException("test"))
+        assertNotNull(throwable!!)
+        assertEquals("test", throwable!!.localizedMessage)
+    }
+
+    @Test
+    fun `disableAddon successfully`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = "",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
+
+        var disabledAddon: Addon? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.disableAddon(addon, onSuccess = {
+            disabledAddon = it
+        })
+
+        verify(engine).disableWebExtension(eq(extension), onSuccessCaptor.capture(), any())
+        onSuccessCaptor.value.invoke(extension)
+        assertNotNull(disabledAddon)
+        assertEquals(addon.id, disabledAddon!!.id)
+    }
+
+    @Test
+    fun `disableAddon failure cases`() {
+        val addon = Addon(
+            id = "ext1",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "",
+            version = "",
+            createdAt = "",
+            updatedAt = ""
+        )
+        val engine: Engine = mock()
+        val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
+        var throwable: Throwable? = null
+        val errorCallback = { caught: Throwable ->
+            throwable = caught
+        }
+        val manager = AddonManager(mock(), engine, mock(), mock())
+
+        // Extension is not installed so we're invoking the error callback and never the engine
+        manager.disableAddon(addon, onError = errorCallback)
+        verify(engine, never()).disableWebExtension(any(), any(), onErrorCaptor.capture())
+        assertNotNull(throwable!!)
+        assertEquals("Addon is not installed", throwable!!.localizedMessage)
+
+        // Install extension and try again
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+        manager.disableAddon(addon, onError = errorCallback)
+        verify(engine, never()).disableWebExtension(any(), any(), onErrorCaptor.capture())
+
+        // Make sure engine error is forwarded to caller
+        val installedAddon = addon.copy(installedState = Addon.InstalledState(addon.id, "1.0", "", true))
+        manager.disableAddon(installedAddon, onError = errorCallback)
+        verify(engine).disableWebExtension(eq(extension), any(), onErrorCaptor.capture())
+        onErrorCaptor.value.invoke(IllegalStateException("test"))
+        assertNotNull(throwable!!)
+        assertEquals("test", throwable!!.localizedMessage)
     }
 }

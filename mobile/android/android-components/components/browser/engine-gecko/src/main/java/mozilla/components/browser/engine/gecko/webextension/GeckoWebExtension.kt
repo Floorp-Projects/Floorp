@@ -151,6 +151,7 @@ class GeckoWebExtension(
     override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) = Unit
     override fun hasActionHandler(session: EngineSession) = false
     override fun getMetadata(): Metadata? = null
+    override fun isEnabled(): Boolean = true
 }
 
 /**

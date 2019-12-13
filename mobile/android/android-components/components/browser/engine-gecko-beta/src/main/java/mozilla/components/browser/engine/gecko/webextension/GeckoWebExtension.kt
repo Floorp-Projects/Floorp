@@ -222,6 +222,7 @@ class GeckoWebExtension(
 
     // Not yet supported
     override fun getMetadata(): Metadata? = null
+    override fun isEnabled(): Boolean = true
 }
 
 /**

@@ -18,6 +18,7 @@ import org.json.JSONObject
  * @property supportActions whether or not browser and page actions are handled when
  * received from the web extension
  */
+@Suppress("TooManyFunctions")
 abstract class WebExtension(
     val id: String,
     val url: String,
@@ -127,6 +128,11 @@ abstract class WebExtension(
      * APK file) or coming from an external source.
      */
     fun isBuiltIn(): Boolean = Uri.parse(url).scheme == "resource"
+
+    /**
+     * Checks whether or not this extension is enabled.
+     */
+    abstract fun isEnabled(): Boolean
 }
 
 /**

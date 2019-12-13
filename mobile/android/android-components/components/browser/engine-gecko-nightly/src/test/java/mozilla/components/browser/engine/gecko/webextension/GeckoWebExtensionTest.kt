@@ -362,4 +362,10 @@ class GeckoWebExtensionTest {
         val externalExtension = GeckoWebExtension(WebExtension("https://url", "id", WebExtension.Flags.NONE))
         assertFalse(externalExtension.isBuiltIn())
     }
+
+    @Test
+    fun `isEnabled depends on native state`() {
+        val extension = GeckoWebExtension(WebExtension("resource://url", "id", WebExtension.Flags.NONE))
+        assertTrue(extension.isEnabled())
+    }
 }
