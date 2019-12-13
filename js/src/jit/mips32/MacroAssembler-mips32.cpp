@@ -823,7 +823,7 @@ void MacroAssemblerMIPS::ma_lid(FloatRegister dest, double value) {
     uint32_t hi;
   };
   DoubleStruct intStruct = mozilla::BitwiseCast<DoubleStruct>(value);
-#if MOZ_BIG_ENDIAN
+#if MOZ_BIG_ENDIAN()
   mozilla::Swap(intStruct.hi, intStruct.lo);
 #endif
 
@@ -1076,7 +1076,7 @@ void MacroAssemblerMIPSCompat::loadPrivate(const Address& address,
 void MacroAssemblerMIPSCompat::loadUnalignedDouble(
     const wasm::MemoryAccessDesc& access, const BaseIndex& src, Register temp,
     FloatRegister dest) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   computeScaledAddress(src, SecondScratchReg);
 
   BufferOffset load;
@@ -1107,7 +1107,7 @@ void MacroAssemblerMIPSCompat::loadUnalignedDouble(
 void MacroAssemblerMIPSCompat::loadUnalignedFloat32(
     const wasm::MemoryAccessDesc& access, const BaseIndex& src, Register temp,
     FloatRegister dest) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   computeScaledAddress(src, SecondScratchReg);
   BufferOffset load;
   if (Imm16::IsInSignedRange(src.offset) &&
@@ -1229,7 +1229,7 @@ void MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest) {
 void MacroAssemblerMIPSCompat::storeUnalignedFloat32(
     const wasm::MemoryAccessDesc& access, FloatRegister src, Register temp,
     const BaseIndex& dest) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   computeScaledAddress(dest, SecondScratchReg);
   moveFromFloat32(src, temp);
 
@@ -1250,7 +1250,7 @@ void MacroAssemblerMIPSCompat::storeUnalignedFloat32(
 void MacroAssemblerMIPSCompat::storeUnalignedDouble(
     const wasm::MemoryAccessDesc& access, FloatRegister src, Register temp,
     const BaseIndex& dest) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   computeScaledAddress(dest, SecondScratchReg);
 
   BufferOffset store;

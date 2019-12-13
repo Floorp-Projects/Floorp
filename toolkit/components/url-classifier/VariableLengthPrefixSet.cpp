@@ -161,7 +161,7 @@ nsresult VariableLengthPrefixSet::SetPrefixes(PrefixStringMap& aPrefixMap) {
     // Prefixes are lexicographically-sorted, so the interger array
     // passed to nsUrlClassifierPrefixSet should also follow the same order.
     // Reverse byte order in-place in Little-Endian platform.
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
     char* begin = prefixes->BeginWriting();
     char* end = prefixes->EndWriting();
 

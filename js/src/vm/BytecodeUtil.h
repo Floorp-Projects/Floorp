@@ -125,7 +125,7 @@ static const int32_t JUMP_OFFSET_MIN = INT32_MIN;
 static const int32_t JUMP_OFFSET_MAX = INT32_MAX;
 
 static MOZ_ALWAYS_INLINE uint32_t GET_UINT24(const jsbytecode* pc) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   // Do a single 32-bit load (for opcode and operand), then shift off the
   // opcode.
   uint32_t result;
@@ -139,7 +139,7 @@ static MOZ_ALWAYS_INLINE uint32_t GET_UINT24(const jsbytecode* pc) {
 static MOZ_ALWAYS_INLINE void SET_UINT24(jsbytecode* pc, uint32_t i) {
   MOZ_ASSERT(i < (1 << 24));
 
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   memcpy(pc + 1, &i, 3);
 #else
   pc[1] = jsbytecode(i);

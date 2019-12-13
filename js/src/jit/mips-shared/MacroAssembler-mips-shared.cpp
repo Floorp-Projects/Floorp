@@ -495,7 +495,7 @@ void MacroAssemblerMIPSShared::ma_load(Register dest, const BaseIndex& src,
 void MacroAssemblerMIPSShared::ma_load_unaligned(
     const wasm::MemoryAccessDesc& access, Register dest, const BaseIndex& src,
     Register temp, LoadStoreSize size, LoadStoreExtension extension) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   int16_t lowOffset, hiOffset;
   Register base;
 
@@ -650,7 +650,7 @@ void MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
 void MacroAssemblerMIPSShared::ma_store_unaligned(
     const wasm::MemoryAccessDesc& access, Register data, const BaseIndex& dest,
     Register temp, LoadStoreSize size, LoadStoreExtension extension) {
-  MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Wasm-only; wasm is disabled on big-endian.");
   int16_t lowOffset, hiOffset;
   Register base;
 
@@ -2108,7 +2108,7 @@ static void CompareExchange(MacroAssembler& masm,
 
   masm.as_andi(offsetTemp, SecondScratchReg, 3);
   masm.subPtr(offsetTemp, SecondScratchReg);
-#if !MOZ_LITTLE_ENDIAN
+#if !MOZ_LITTLE_ENDIAN()
   masm.as_xori(offsetTemp, offsetTemp, 3);
 #endif
   masm.as_sll(offsetTemp, offsetTemp, 3);
@@ -2251,7 +2251,7 @@ static void AtomicExchange(MacroAssembler& masm,
 
   masm.as_andi(offsetTemp, SecondScratchReg, 3);
   masm.subPtr(offsetTemp, SecondScratchReg);
-#if !MOZ_LITTLE_ENDIAN
+#if !MOZ_LITTLE_ENDIAN()
   masm.as_xori(offsetTemp, offsetTemp, 3);
 #endif
   masm.as_sll(offsetTemp, offsetTemp, 3);
@@ -2409,7 +2409,7 @@ static void AtomicFetchOp(MacroAssembler& masm,
 
   masm.as_andi(offsetTemp, SecondScratchReg, 3);
   masm.subPtr(offsetTemp, SecondScratchReg);
-#if !MOZ_LITTLE_ENDIAN
+#if !MOZ_LITTLE_ENDIAN()
   masm.as_xori(offsetTemp, offsetTemp, 3);
 #endif
   masm.as_sll(offsetTemp, offsetTemp, 3);
@@ -2590,7 +2590,7 @@ static void AtomicEffectOp(MacroAssembler& masm,
 
   masm.as_andi(offsetTemp, SecondScratchReg, 3);
   masm.subPtr(offsetTemp, SecondScratchReg);
-#if !MOZ_LITTLE_ENDIAN
+#if !MOZ_LITTLE_ENDIAN()
   masm.as_xori(offsetTemp, offsetTemp, 3);
 #endif
   masm.as_sll(offsetTemp, offsetTemp, 3);

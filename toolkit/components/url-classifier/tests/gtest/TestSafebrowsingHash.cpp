@@ -34,7 +34,7 @@ TEST(UrlClassifierHash, Compare)
   Prefix p1, p2, p3;
 
   // The order of p1,p2,p3 is "p1 == p3 < p2"
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   p1.Assign(nsCString("\x01\x00\x00\x00", 4));
   p2.Assign(nsCString("\x00\x00\x00\x01", 4));
   p3.Assign(nsCString("\x01\x00\x00\x00", 4));
