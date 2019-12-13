@@ -6,7 +6,6 @@
 
 JAR_MANIFESTS += ['content/jar.mn']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 XPCOM_MANIFESTS += [
     'components.conf',
@@ -14,9 +13,4 @@ XPCOM_MANIFESTS += [
 
 EXTRA_JS_MODULES += [
     'SiteSpecificBrowserService.jsm',
-]
-
-FINAL_TARGET_FILES.actors += [
-    'SiteSpecificBrowserChild.jsm',
-    'SiteSpecificBrowserParent.jsm',
 ]
