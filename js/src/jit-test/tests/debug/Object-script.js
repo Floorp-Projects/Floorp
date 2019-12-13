@@ -3,7 +3,7 @@ var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 
 function check(expr, expected) {
-  print("checking " + uneval(expr) + ", expecting " +
+  print("checking " + JSON.stringify(expr) + ", expecting " +
         (expected ? "script" : "no script"));
 
   let completion = gDO.executeInGlobal(expr);

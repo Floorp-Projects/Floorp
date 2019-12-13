@@ -6,7 +6,7 @@ var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 
 function check(code, expectedType, expectedCallee) {
-  print("check(" + uneval(code) + ")");
+  print("check(" + JSON.stringify(code) + ")");
   var hits;
   dbg.onDebuggerStatement = function (frame) {
     hits++;

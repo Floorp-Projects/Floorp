@@ -21,7 +21,7 @@ function script(func) {
     var gw = dbg.addDebuggee(func.global);
     var script = gw.makeDebuggeeValue(func).script;
     script.toString = function () {
-        return "[Debugger.Script for " + func.name + " in " + uneval(func.global) + "]";
+        return "[Debugger.Script for " + func.name + " in " + JSON.stringify(func.global) + "]";
     };
     return script;
 }
@@ -36,7 +36,7 @@ var allScripts = ([g1.f, g1.f(), g1.g, g1.h, g1.h(), g1.i,
 // omitted, expect no members of allScripts at all.
 function queryExpectOnly(query, expected) {
     print();
-    print("queryExpectOnly(" + uneval(query) + ")");
+    print("queryExpectOnly(" + JSON.stringify(query) + ")");
     var scripts = dbg.findScripts(query);
     var present = allScripts.filter(function (s) { return scripts.indexOf(s) != -1; });
     if (expected) {

@@ -9,8 +9,8 @@ var dbg = new Debugger(g);
 
 function test(type, provocation) {
     // Help people figure out which 'test' call failed.
-    print("type:        " + uneval(type));
-    print("provocation: " + uneval(provocation));
+    print("type:        " + JSON.stringify(type));
+    print("provocation: " + JSON.stringify(provocation));
 
     var log;
     dbg.onEnterFrame = function handleFirstFrame(f) {
