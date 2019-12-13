@@ -914,9 +914,9 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   }
 
   if (!mHasBeenCrossSite &&
-      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false, false)) &&
-      (originalURI == uri || NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(
-                                 originalURI, false, false)))) {
+      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false)) &&
+      (originalURI == uri ||
+       NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(originalURI, false)))) {
     return NS_OK;
   }
 
