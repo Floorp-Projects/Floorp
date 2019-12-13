@@ -849,7 +849,11 @@ class ResponsiveUI {
    * Helper for tests. Assumes a single viewport for now.
    */
   getViewportSize() {
-    return this.toolWindow.getViewportSize();
+    if (!this.isBrowserUIEnabled) {
+      return this.toolWindow.getViewportSize();
+    }
+
+    return this.rdmFrame.contentWindow.getViewportSize();
   }
 
   /**
@@ -857,7 +861,13 @@ class ResponsiveUI {
    */
   async setViewportSize(size) {
     await this.inited;
-    this.toolWindow.setViewportSize(size);
+    if (!this.isBrowserUIEnabled) {
+      this.toolWindow.setViewportSize(size);
+      return;
+    }
+
+    const { width, height } = size;
+    this.updateViewportSize(width, height);
   }
 
   /**
@@ -867,6 +877,7 @@ class ResponsiveUI {
     if (!this.isBrowserUIEnabled) {
       return this.toolWindow.getViewportBrowser();
     }
+
     return this.tab.linkedBrowser;
   }
 

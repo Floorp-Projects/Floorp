@@ -10,15 +10,21 @@ const TEST_URL = "http://example.com/";
 
 addRDMTask(
   TEST_URL,
-  async function({ browser }) {
-    const contentURL = await ContentTask.spawn(browser, {}, function() {
+  async function({ ui }) {
+    const viewportBrowser = ui.getViewportBrowser();
+
+    const contentURL = await ContentTask.spawn(viewportBrowser, {}, function() {
       return content.document.URL;
     });
     info("content URL is " + contentURL);
 
-    const contentInRDMPane = await ContentTask.spawn(browser, {}, function() {
-      return content.docShell.browsingContext.inRDMPane;
-    });
+    const contentInRDMPane = await ContentTask.spawn(
+      viewportBrowser,
+      {},
+      function() {
+        return content.docShell.browsingContext.inRDMPane;
+      }
+    );
 
     ok(
       contentInRDMPane,
