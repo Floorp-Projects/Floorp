@@ -563,9 +563,10 @@ def p_Priority(p):
     """Priority : ID"""
     kinds = {'normal': 1,
              'input': 2,
-             'high': 3}
+             'high': 3,
+             'mediumhigh': 4}
     if p[1] not in kinds:
-        _error(locFromTok(p, 1), "Expected normal or high for prio()")
+        _error(locFromTok(p, 1), "Expected normal, input, high or mediumhigh for prio()")
 
     p[0] = {'prio': kinds[p[1]]}
 

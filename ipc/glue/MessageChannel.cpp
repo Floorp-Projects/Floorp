@@ -2072,6 +2072,9 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
     case Message::HIGH_PRIORITY:
       *aPriority = PRIORITY_HIGH;
       break;
+    case Message::MEDIUMHIGH_PRIORITY:
+      *aPriority = PRIORITY_MEDIUMHIGH;
+      break;
     default:
       MOZ_ASSERT(false);
       break;

@@ -7,10 +7,13 @@ parent:
     prio(input) sync PMsg2();
     prio(high) async PMsg3();
     prio(high) sync PMsg4();
+    prio(mediumhigh) async PMsg5();
+    prio(mediumhigh) sync PMsg6();
 
 child:
     prio(input) async CMsg1();
     prio(high) async CMsg2();
+    prio(mediumhigh) async CMsg3();
 };
 
 } // namespace _ipdltest
