@@ -100,9 +100,9 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     if (aType === SCREEN_LENGTH_TYPE_PIXEL) {
       return aLength;
     } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_WIDTH) {
-      return aLength * content.innerWidth;
+      return aLength * content.visualViewport.width;
     } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_HEIGHT) {
-      return aLength * content.innerHeight;
+      return aLength * content.visualViewport.height;
     } else if (aType === SCREEN_LENGTH_DOCUMENT_WIDTH) {
       return aLength * content.document.body.scrollWidth;
     } else if (aType === SCREEN_LENGTH_DOCUMENT_HEIGHT) {
