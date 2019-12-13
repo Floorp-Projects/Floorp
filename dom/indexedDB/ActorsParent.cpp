@@ -6166,10 +6166,10 @@ class TransactionBase {
   typedef IDBTransaction::Mode Mode;
 
  private:
-  RefPtr<Database> mDatabase;
+  const RefPtr<Database> mDatabase;
   nsTArray<RefPtr<FullObjectStoreMetadata>>
       mModifiedAutoIncrementObjectStoreMetadataArray;
-  uint64_t mTransactionId;
+  InitializedOnceMustBeTrue<const uint64_t, LazyInit::Allow> mTransactionId;
   const nsCString mDatabaseId;
   const int64_t mLoggingSerialNumber;
   uint64_t mActiveRequestCount;
@@ -6213,7 +6213,7 @@ class TransactionBase {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aTransactionId);
 
-    mTransactionId = aTransactionId;
+    mTransactionId.init(aTransactionId);
     mInitialized.Flip();
   }
 
@@ -6227,7 +6227,7 @@ class TransactionBase {
 
   void Abort(nsresult aResultCode, bool aForce);
 
-  uint64_t TransactionId() const { return mTransactionId; }
+  uint64_t TransactionId() const { return *mTransactionId; }
 
   const nsCString& DatabaseId() const { return mDatabaseId; }
 
@@ -13665,7 +13665,6 @@ void Database::StartTransactionOp::Cleanup() {
 
 TransactionBase::TransactionBase(Database* aDatabase, Mode aMode)
     : mDatabase(aDatabase),
-      mTransactionId(0),
       mDatabaseId(aDatabase->Id()),
       mLoggingSerialNumber(
           aDatabase->GetLoggingInfo()->NextTransactionSN(aMode)),
