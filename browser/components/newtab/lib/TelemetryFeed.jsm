@@ -569,6 +569,7 @@ this.TelemetryFeed = class TelemetryFeed {
       case "cfr_user_event":
         event = await this.applyCFRPolicy(event);
         break;
+      case "snippets_local_testing_user_event":
       case "snippets_user_event":
         event = await this.applySnippetsPolicy(event);
         break;

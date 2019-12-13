@@ -80,7 +80,6 @@ async function runTest() {
 
 add_task(async function() {
   await pushPrefs(
-    ["full-screen-api.unprefix.enabled", true],
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]
   );
@@ -89,7 +88,6 @@ add_task(async function() {
 
 add_task(async function() {
   await pushPrefs(
-    ["full-screen-api.unprefix.enabled", true],
     ["full-screen-api.transition-duration.enter", "200 200"],
     ["full-screen-api.transition-duration.leave", "200 200"]
   );

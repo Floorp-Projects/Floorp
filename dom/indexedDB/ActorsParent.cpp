@@ -5822,6 +5822,7 @@ class Database final
   const nsCString mId;
   const nsString mFilePath;
   uint32_t mActiveMutableFileCount;
+  uint32_t mPendingCreateFileOpCount;
   int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
@@ -5916,6 +5917,10 @@ class Database final
   void NoteActiveMutableFile();
 
   void NoteInactiveMutableFile();
+
+  void NotePendingCreateFileOp();
+
+  void NoteCompletedCreateFileOp();
 
   void SetActorAlive();
 
@@ -12882,6 +12887,7 @@ Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
       mId(aMetadata->mDatabaseId),
       mFilePath(aMetadata->mFilePath),
       mActiveMutableFileCount(0),
+      mPendingCreateFileOpCount(0),
       mTelemetryId(aTelemetryId),
       mPersistenceType(aMetadata->mCommonMetadata.persistenceType()),
       mFileHandleDisabled(aFileHandleDisabled),
@@ -13046,18 +13052,8 @@ void Database::UnregisterTransaction(TransactionBase* aTransaction) {
 bool Database::RegisterMutableFile(MutableFile* aMutableFile) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aMutableFile);
-
-  // The lock might have been cleared already. See Bug 1577202.
-  //
-  // TODO: This might be reverted back to an assertion again if the behaviour of
-  // Close is changed to delay in case of a pending CreateFileOp. However, since
-  // support for mutable files is planned to be removed, it might not be
-  // worthwhile to implement this.
-  if (!mDirectoryLock) {
-    return false;
-  }
-
   MOZ_ASSERT(!mMutableFiles.GetEntry(aMutableFile));
+  MOZ_ASSERT(mDirectoryLock);
 
   if (NS_WARN_IF(!mMutableFiles.PutEntry(aMutableFile, fallible))) {
     return false;
@@ -13087,6 +13083,23 @@ void Database::NoteInactiveMutableFile() {
   MOZ_ASSERT(mActiveMutableFileCount > 0);
 
   --mActiveMutableFileCount;
+
+  MaybeCloseConnection();
+}
+
+void Database::NotePendingCreateFileOp() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(mPendingCreateFileOpCount < UINT32_MAX);
+
+  ++mPendingCreateFileOpCount;
+}
+
+void Database::NoteCompletedCreateFileOp() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPendingCreateFileOpCount > 0);
+
+  --mPendingCreateFileOpCount;
 
   MaybeCloseConnection();
 }
@@ -13235,8 +13248,8 @@ bool Database::CloseInternal() {
 void Database::MaybeCloseConnection() {
   AssertIsOnBackgroundThread();
 
-  if (!mTransactions.Count() && !mActiveMutableFileCount && IsClosed() &&
-      mDirectoryLock) {
+  if (!mTransactions.Count() && !mActiveMutableFileCount &&
+      !mPendingCreateFileOpCount && IsClosed() && mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
         NewRunnableMethod("dom::indexedDB::Database::ConnectionClosedCallback",
                           this, &Database::ConnectionClosedCallback);
@@ -13252,6 +13265,7 @@ void Database::ConnectionClosedCallback() {
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mTransactions.Count());
   MOZ_ASSERT(!mActiveMutableFileCount);
+  MOZ_ASSERT(!mPendingCreateFileOpCount);
 
   mDirectoryLock = nullptr;
 
@@ -13363,6 +13377,8 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != DatabaseRequestParams::T__None);
 
+  // TODO: Check here that the database has not been closed?
+
 #ifdef DEBUG
   // Always verify parameters in DEBUG builds!
   bool trustParams = false;
@@ -13383,6 +13399,8 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   switch (aParams.type()) {
     case DatabaseRequestParams::TCreateFileParams: {
       actor = new CreateFileOp(this, aParams);
+
+      NotePendingCreateFileOp();
       break;
     }
 
@@ -22863,6 +22881,12 @@ void CreateFileOp::SendResults() {
     Unused << PBackgroundIDBDatabaseRequestParent::Send__delete__(this,
                                                                   response);
   }
+
+  // XXX: "Complete" in CompletedCreateFileOp and State::Completed mean
+  // different things, and State::Completed should only be reached after
+  // notifying the database. Either should probably be renamed to avoid
+  // confusion.
+  mDatabase->NoteCompletedCreateFileOp();
 
   mState = State::Completed;
 }

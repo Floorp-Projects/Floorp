@@ -44,7 +44,6 @@ var gTestWindows = [
   { test: "file_fullscreen-backdrop.html" },
   { test: "file_fullscreen-nested.html" },
   { test: "file_fullscreen-prefixed.html" },
-  { test: "file_fullscreen-unprefix-disabled.html" },
   { test: "file_fullscreen-lenient-setters.html" },
   { test: "file_fullscreen-table.html" },
   { test: "file_fullscreen-event-order.html" },
@@ -173,7 +172,6 @@ addLoadEvent(function() {
   SpecialPowers.pushPrefEnv({
       "set": [
         ["full-screen-api.enabled", true],
-        ["full-screen-api.unprefix.enabled", true],
         ["full-screen-api.allow-trusted-requests-only", false],
         ["full-screen-api.transition-duration.enter", "0 0"],
         ["full-screen-api.transition-duration.leave", "0 0"]

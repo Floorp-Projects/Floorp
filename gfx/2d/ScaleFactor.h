@@ -36,6 +36,8 @@ struct ScaleFactor {
 
   ScaleFactor<dst, src> Inverse() { return ScaleFactor<dst, src>(1 / scale); }
 
+  ScaleFactor<src, dst>& operator=(const ScaleFactor<src, dst>&) = default;
+
   bool operator==(const ScaleFactor<src, dst>& aOther) const {
     return scale == aOther.scale;
   }

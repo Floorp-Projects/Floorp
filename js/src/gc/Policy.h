@@ -100,6 +100,15 @@ struct GCPolicy<js::WeakHeapPtr<T>> {
   }
 };
 
+template <>
+struct GCPolicy<JS::GCCellPtr> {
+  static void trace(JSTracer* trc, JS::GCCellPtr* thingp, const char* name) {
+    // It's not safe to trace unbarriered pointers except as part of root
+    // marking.
+    js::TraceGCCellPtrRoot(trc, thingp, name);
+  }
+};
+
 }  // namespace JS
 
 #endif  // gc_Policy_h

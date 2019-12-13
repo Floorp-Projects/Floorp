@@ -3331,6 +3331,20 @@ void gfxPlatform::InitWebRenderConfig() {
     featureComp.UserEnable("Enabled");
   }
 
+  // Initialize WebRender partial present config.
+  // It is used only for reporting to Decision Log.
+  if (StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0) {
+    // Partial present is used only when WebRender compositor is not used.
+    if (UseWebRender() && !gfxVars::UseWebRenderCompositor()) {
+      FeatureState& featurePartial =
+          gfxConfig::GetFeature(Feature::WEBRENDER_PARTIAL);
+      featurePartial.EnableByDefault();
+      // Call UserEnable() only for reporting to Decision Log.
+      // If feature is enabled by default. It is not reported to Decision Log.
+      featurePartial.UserEnable("Enabled");
+    }
+  }
+
   // Set features that affect WR's RendererOptions
   gfxVars::SetUseGLSwizzle(
       IsFeatureSupported(nsIGfxInfo::FEATURE_GL_SWIZZLE, true));

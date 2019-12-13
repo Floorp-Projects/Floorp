@@ -279,6 +279,17 @@ let ACTORS = {
     allFrames: true,
   },
 
+  SiteSpecificBrowser: {
+    parent: {
+      moduleURI: "resource:///actors/SiteSpecificBrowserParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/SiteSpecificBrowserChild.jsm",
+    },
+
+    allFrames: true,
+  },
+
   UITour: {
     parent: {
       moduleURI: "resource:///modules/UITourParent.jsm",
@@ -515,6 +526,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
@@ -2794,7 +2806,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 89;
+    const UI_VERSION = 90;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3244,6 +3256,21 @@ BrowserGlue.prototype = {
       );
     }
 
+    if (currentUIVersion < 90) {
+      this._migrateXULStoreForDocument(
+        "chrome://browser/content/places/historySidebar.xul",
+        "chrome://browser/content/places/historySidebar.xhtml"
+      );
+      this._migrateXULStoreForDocument(
+        "chrome://browser/content/places/places.xul",
+        "chrome://browser/content/places/places.xhtml"
+      );
+      this._migrateXULStoreForDocument(
+        "chrome://browser/content/places/bookmarksSidebar.xul",
+        "chrome://browser/content/places/bookmarksSidebar.xhtml"
+      );
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -3511,9 +3538,7 @@ BrowserGlue.prototype = {
         // same way that the url bar would.
         body = URIs[0].uri.replace(/([?#]).*$/, "$1");
         let wasTruncated = body.length < URIs[0].uri.length;
-        if (win.gURLBar) {
-          body = win.gURLBar.trimValue(body);
-        }
+        body = BrowserUtils.trimURL(body);
         if (wasTruncated) {
           body = bundle.formatStringFromName(
             "singleTabArrivingWithTruncatedURL.body",

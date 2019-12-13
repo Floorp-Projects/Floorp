@@ -292,9 +292,6 @@ class TouchBarHelper {
     );
 
     for (let inputName of Object.keys(kBuiltInInputs)) {
-      if (typeof kBuiltInInputs[inputName].context == "function") {
-        inputName = kBuiltInInputs[inputName].context();
-      }
       let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
@@ -334,16 +331,6 @@ class TouchBarHelper {
   getTouchBarInput(inputName) {
     if (inputName == "SearchPopover" && this._searchPopover) {
       return this._searchPopover;
-    }
-
-    // inputName might be undefined if an input's context() returns undefined.
-    if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
-      return null;
-    }
-
-    // context() may specify that one named input "point" to another.
-    if (typeof kBuiltInInputs[inputName].context == "function") {
-      inputName = kBuiltInInputs[inputName].context();
     }
 
     if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
