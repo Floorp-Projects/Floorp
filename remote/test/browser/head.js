@@ -187,3 +187,8 @@ function timeoutPromise(ms) {
     window.setTimeout(resolve, ms);
   });
 }
+
+/** Fail a test. */
+function fail(message) {
+  ok(false, message);
+}
