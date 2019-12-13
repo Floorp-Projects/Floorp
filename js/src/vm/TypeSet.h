@@ -288,7 +288,6 @@ class TypeSet {
 
     const JSClass* clasp();
     TaggedProto proto();
-    TypeNewScript* newScript();
 
     bool unknownProperties();
     bool hasFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
@@ -325,8 +324,6 @@ class TypeSet {
       MOZ_ASSERT(isPrimitive());
       return ValueType(data);
     }
-
-    bool isMagicArguments() const { return primitive() == ValueType::Magic; }
 
     bool isSomeObject() const {
       return data == JSVAL_TYPE_OBJECT || data > JSVAL_TYPE_UNKNOWN;
@@ -675,14 +672,6 @@ class ConstraintTypeSet : public TypeSet {
     }
     return constraintList_;
   }
-  void setConstraintList(TypeConstraint* constraint) {
-    MOZ_ASSERT(!constraintList_);
-    checkMagic();
-    if (constraint) {
-      constraint->checkMagic();
-    }
-    constraintList_ = constraint;
-  }
 
   /*
    * Add a type to this set, calling any constraint handlers if this is a new
@@ -757,10 +746,6 @@ class TemporaryTypeSet : public TypeSet {
 
   /* Get any type tag which all values in this set must have. */
   jit::MIRType getKnownMIRType();
-
-  bool isMagicArguments() {
-    return getKnownMIRType() == jit::MIRType::MagicOptimizedArguments;
-  }
 
   /* Whether this value may be an object. */
   bool maybeObject() { return unknownObject() || baseObjectCount() > 0; }
@@ -919,8 +904,6 @@ class HeapTypeSetKey {
   bool nonWritable(CompilerConstraintList* constraints);
   bool isOwnProperty(CompilerConstraintList* constraints,
                      bool allowEmptyTypesForGlobal = false);
-  bool knownSubset(CompilerConstraintList* constraints,
-                   const HeapTypeSetKey& other);
   JSObject* singleton(CompilerConstraintList* constraints);
   bool needsBarrier(CompilerConstraintList* constraints);
   bool constant(CompilerConstraintList* constraints, Value* valOut);

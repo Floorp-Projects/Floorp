@@ -1333,16 +1333,6 @@ TaggedProto TypeSet::ObjectKey::proto() {
   return isGroup() ? group()->proto() : singleton()->taggedProto();
 }
 
-TypeNewScript* TypeSet::ObjectKey::newScript() {
-  if (isGroup()) {
-    AutoSweepObjectGroup sweep(group());
-    if (group()->newScript(sweep)) {
-      return group()->newScript(sweep);
-    }
-  }
-  return nullptr;
-}
-
 ObjectGroup* TypeSet::ObjectKey::maybeGroup() {
   if (isGroup()) {
     return group();
@@ -1798,19 +1788,6 @@ bool HeapTypeSetKey::isOwnProperty(CompilerConstraintList* constraints,
   }
   freeze(constraints);
   return false;
-}
-
-bool HeapTypeSetKey::knownSubset(CompilerConstraintList* constraints,
-                                 const HeapTypeSetKey& other) {
-  if (!maybeTypes() || maybeTypes()->empty()) {
-    freeze(constraints);
-    return true;
-  }
-  if (!other.maybeTypes() || !maybeTypes()->isSubset(other.maybeTypes())) {
-    return false;
-  }
-  freeze(constraints);
-  return true;
 }
 
 JSObject* TemporaryTypeSet::maybeSingleton() {
@@ -3494,29 +3471,9 @@ void PreliminaryObjectArray::registerNewObject(PlainObject* res) {
   MOZ_CRASH("There should be room for registering the new object");
 }
 
-void PreliminaryObjectArray::unregisterObject(PlainObject* obj) {
-  for (size_t i = 0; i < COUNT; i++) {
-    if (objects[i] == obj) {
-      objects[i] = nullptr;
-      return;
-    }
-  }
-
-  MOZ_CRASH("The object should be in the array");
-}
-
 bool PreliminaryObjectArray::full() const {
   for (size_t i = 0; i < COUNT; i++) {
     if (!objects[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool PreliminaryObjectArray::empty() const {
-  for (size_t i = 0; i < COUNT; i++) {
-    if (objects[i]) {
       return false;
     }
   }
