@@ -920,7 +920,7 @@ nsresult nsContentSink::SelectDocAppCache(
   } else {
     // The document was not loaded from an application cache
     // Here we know the manifest has the same origin as the
-    // document. There is call to CheckMayLoad() on it above.
+    // document. There is call to CheckMayLoadWithReporting() on it above.
 
     if (!aFetchedWithHTTPGetOrEquiv) {
       // The document was not loaded using HTTP GET or equivalent
@@ -1058,7 +1058,8 @@ void nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec) {
     }
 
     // Documents must list a manifest from the same origin
-    rv = mDocument->NodePrincipal()->CheckMayLoad(manifestURI, true, false);
+    rv = mDocument->NodePrincipal()->CheckMayLoadWithReporting(
+        manifestURI, false, mDocument->InnerWindowID());
     if (NS_FAILED(rv)) {
       action = CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST;
     } else {
