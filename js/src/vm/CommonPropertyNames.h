@@ -374,7 +374,6 @@
   MACRO(RequireObjectCoercible, RequireObjectCoercible,                        \
         "RequireObjectCoercible")                                              \
   MACRO(resolve, resolve, "resolve")                                           \
-  MACRO(result, result, "result")                                              \
   MACRO(resumeGenerator, resumeGenerator, "resumeGenerator")                   \
   MACRO(return, return_, "return")                                             \
   MACRO(revoke, revoke, "revoke")                                              \
