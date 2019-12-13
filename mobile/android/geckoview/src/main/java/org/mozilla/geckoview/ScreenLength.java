@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class ScreenLength {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({PIXEL, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, DOCUMENT_WIDTH, DOCUMENT_HEIGHT})
+    @IntDef({PIXEL, VISUAL_VIEWPORT_WIDTH, VISUAL_VIEWPORT_HEIGHT, DOCUMENT_WIDTH, DOCUMENT_HEIGHT})
     /* package */ @interface ScreenLengthType {}
 
     /**
@@ -29,13 +29,13 @@ public class ScreenLength {
      * of 2.0 would represent a length of 200 pixels.
      * @see <a href="https://developer.mozilla.org/en-US/docs/Glossary/Visual_Viewport">MDN Visual Viewport</a>
      */
-    public static final int VIEWPORT_WIDTH = 1;
+    public static final int VISUAL_VIEWPORT_WIDTH = 1;
     /**
      * Units are in visual viewport height. If the visual viewport is 100 pixels high, then a value
      * of 2.0 would represent a length of 200 pixels.
      * @see <a href="https://developer.mozilla.org/en-US/docs/Glossary/Visual_Viewport">MDN Visual Viewport</a>
      */
-    public static final int VIEWPORT_HEIGHT = 2;
+    public static final int VISUAL_VIEWPORT_HEIGHT = 2;
     /**
      * Units represent the entire scrollable documents width. If the document is 1000 pixels wide
      * then a value of 1.0 would represent 1000 pixels.
@@ -96,7 +96,7 @@ public class ScreenLength {
 
     /**
      * Create a ScreenLength that uses the visual viewport width as units.
-     * Type is {@link #VIEWPORT_WIDTH}. Can be used with {@link PanZoomController#scrollBy(ScreenLength, ScreenLength)}
+     * Type is {@link #VISUAL_VIEWPORT_WIDTH}. Can be used with {@link PanZoomController#scrollBy(ScreenLength, ScreenLength)}
      * to scroll a value of the width of visual viewport content.
      * @param value Factor used to calculate length. A value of 2.0 would indicate a length
      *              twice as long as the length of the visual viewports width.
@@ -104,13 +104,13 @@ public class ScreenLength {
      */
     @NonNull
     @AnyThread
-    public static ScreenLength fromViewportWidth(final double value) {
-        return new ScreenLength(value, VIEWPORT_WIDTH);
+    public static ScreenLength fromVisualViewportWidth(final double value) {
+        return new ScreenLength(value, VISUAL_VIEWPORT_WIDTH);
     }
 
     /**
      * Create a ScreenLength that uses the visual viewport width as units.
-     * Type is {@link #VIEWPORT_HEIGHT}. Can be used with {@link PanZoomController#scrollBy(ScreenLength, ScreenLength)}
+     * Type is {@link #VISUAL_VIEWPORT_HEIGHT}. Can be used with {@link PanZoomController#scrollBy(ScreenLength, ScreenLength)}
      * to scroll a value of the height of visual viewport content.
      * @param value Factor used to calculate length. A value of 2.0 would indicate a length
      *              twice as long as the length of the visual viewports height.
@@ -118,8 +118,8 @@ public class ScreenLength {
      */
     @NonNull
     @AnyThread
-    public static ScreenLength fromViewportHeight(final double value) {
-        return new ScreenLength(value, VIEWPORT_HEIGHT);
+    public static ScreenLength fromVisualViewportHeight(final double value) {
+        return new ScreenLength(value, VISUAL_VIEWPORT_HEIGHT);
     }
 
     private final double mValue;
@@ -144,7 +144,7 @@ public class ScreenLength {
     /**
      * Returns the unit type of the length
      * The length can be one of the following:
-     * {@link #PIXEL}, {@link #VIEWPORT_WIDTH}, {@link #VIEWPORT_HEIGHT}, {@link #DOCUMENT_WIDTH}, {@link #DOCUMENT_HEIGHT}
+     * {@link #PIXEL}, {@link #VISUAL_VIEWPORT_WIDTH}, {@link #VISUAL_VIEWPORT_HEIGHT}, {@link #DOCUMENT_WIDTH}, {@link #DOCUMENT_HEIGHT}
      * @return Unit type of the length.
      */
 
