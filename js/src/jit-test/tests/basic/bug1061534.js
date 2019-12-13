@@ -1,7 +1,7 @@
 
 test = (function () {
   function f() {};
-  return "var obj = { x : 2 };" + f.toSource() + (4);
+  return "var obj = { x : 2 };" + f.toString() + (4);
 })();
 evalWithCache(test, {});
 function evalWithCache(code, ctx) {

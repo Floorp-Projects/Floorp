@@ -4,8 +4,8 @@ function f() {
     var o = Object.create(null);
     for (var p in o) {};
 }
-g1.eval(f.toSource());
-g2.eval(f.toSource());
+g1.eval(f.toString());
+g2.eval(f.toString());
 
 for (var i=0; i<10; i++) {
     g1.eval("f()");

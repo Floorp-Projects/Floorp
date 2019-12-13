@@ -8,7 +8,7 @@ var test = (function () {
 	return g;
     };
   };
-  return f.toSource();
+  return f.toString();
 })();
 
 try {

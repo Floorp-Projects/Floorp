@@ -30,7 +30,7 @@ eval(`testImport("../../modules/module3.js", "c", 3)`);
 
 // Import inside indirect eval.
 const indirect = eval;
-const defineTestFunc = testImport.toSource();
+const defineTestFunc = testImport.toString();
 indirect(defineTestFunc + `testImport("../../modules/module3.js");`);
 
 // Import inside dynamic function.

@@ -8,6 +8,6 @@ function TestCase(n, d, e, a) {
 }
 function f() {}
 function g(n, h) {
-    var t = g(TestCase.toSource());
+    var t = g(TestCase.toString());
 }
 g(80, f);

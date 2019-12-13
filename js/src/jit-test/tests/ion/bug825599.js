@@ -13,10 +13,10 @@ var typedSwitch0 = function (a) {
 };
 
 // reuse the same function for testing with different inputs & type.
-var typedSwitch1 = eval(typedSwitch0.toSource());
-var typedSwitch2 = eval(typedSwitch0.toSource());
-var typedSwitch3 = eval(typedSwitch0.toSource());
-var typedSwitch4 = eval(typedSwitch0.toSource());
+var typedSwitch1 = eval(`(${typedSwitch0})`);
+var typedSwitch2 = eval(`(${typedSwitch0})`);
+var typedSwitch3 = eval(`(${typedSwitch0})`);
+var typedSwitch4 = eval(`(${typedSwitch0})`);
 
 for (var i = 0; i < 100; i++) {
     assertEq(typedSwitch0(null), 0);

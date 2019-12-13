@@ -214,21 +214,21 @@ function z() {
 }
 
 // Split the functions in their respective globals.
-low .eval(a.toSource());
-high.eval(b.toSource());
-high.eval(c.toSource());
-high.eval(d.toSource());
-low .eval(e.toSource());
+low .eval(a.toString());
+high.eval(b.toString());
+high.eval(c.toString());
+high.eval(d.toString());
+low .eval(e.toString());
 
 low .b = high.b;
 high.e = low .e;
 
-low .eval(u.toSource());
-high.eval(v.toSource());
-high.eval(w.toSource());
-low .eval(x.toSource());
-low .eval(y.toSource());
-low .eval(z.toSource());
+low .eval(u.toString());
+high.eval(v.toString());
+high.eval(w.toString());
+low .eval(x.toString());
+low .eval(y.toString());
+low .eval(z.toString());
 
 low .v = high.v;
 low .w = high.w;
@@ -239,8 +239,8 @@ high.z = low .z;
 low .high = high;
 high.low  = low;
 
-low .eval(checkVisibleStack.toSource());
-high.eval(checkVisibleStack.toSource());
+low .eval(checkVisibleStack.toString());
+high.eval(checkVisibleStack.toString());
 
 // Execute the tests.
 low.a();

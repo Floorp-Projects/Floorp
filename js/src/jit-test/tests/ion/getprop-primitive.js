@@ -43,17 +43,17 @@ var template = function (set) {
 }
 
 // Set 1, Non existing properties.
-f = eval(template.toSource().replace(".placeholder", ".foo"));
+f = eval(`(${template})`.replace(".placeholder", ".foo"));
 f(testSet1);
 
 // Set 2, Non existing properties.
-f = eval(template.toSource().replace(".placeholder", ".foo"));
+f = eval(`(${template})`.replace(".placeholder", ".foo"));
 f(testSet2);
 
 // Set 1, Existing properties.
-f = eval(template.toSource().replace(".placeholder", ".bar"));
+f = eval(`(${template})`.replace(".placeholder", ".bar"));
 f(testSet1);
 
 // Set 2, Existing properties.
-f = eval(template.toSource().replace(".placeholder", ".bar"));
+f = eval(`(${template})`.replace(".placeholder", ".bar"));
 f(testSet2);
