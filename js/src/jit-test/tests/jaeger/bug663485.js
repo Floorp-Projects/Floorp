@@ -4,7 +4,7 @@ function makeExpectedMatch(arr) {
     }
 }
 var expected = makeExpectedMatch(new Int32Array);
-this.toSource();
+JSON.stringify(this);
 
 function testTypedArrayOther() {
     var ar = new Int32Array;

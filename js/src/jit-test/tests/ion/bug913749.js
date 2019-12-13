@@ -6,7 +6,7 @@ Object.defineProperty(x, 18, {
         y.length;
     }),
 });
-this.toSource();
+JSON.stringify(this);
 
 y = undefined;
 

@@ -12,12 +12,12 @@ function main() {
     var proto = Object.getPrototypeOf(this);
     Object.defineProperty(proto, "x", { value: 5});
     // not-scripted getter
-    Object.defineProperty(proto, "y", { get: Math.toSource });
+    Object.defineProperty(proto, "y", { get: String });
     // scripted getter
     Object.defineProperty(proto, "z", { get: function () { return 7;} });
     for (var i=0; i<20; i++) {
         assertEq(getx(), 5);
-        assertEq(gety(), "Math");
+        assertEq(gety(), "");
 	assertEq(getz(), 7);
     }
 }

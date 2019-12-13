@@ -13,7 +13,7 @@ function foo() {
         };
     } + ")();");
     try {
-      j('Number.prototype.toSource.call([])');
+      j('Number.prototype.toString.call([])');
     } catch (exc) {}
   })();
 } foo();
