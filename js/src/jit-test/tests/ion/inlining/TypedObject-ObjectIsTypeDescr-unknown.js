@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Used to verify that the JIT resolves the ObjectIsTypeDescr tests
- * internal to Type.toSource().
+ * internal to Type.equivalent().
  *
  * In this case the argument type is never a type descriptor object,
  * so ObjectIsTypeDescr resolves to false (and we have to catch
@@ -24,11 +24,11 @@ var T = TypedObject;
 var ST = new T.StructType({x:T.int32});
 
 function check(v) {
-    return v.toSource();
+    return v.equivalent(T.int32);
 }
 
 function test() {
-    var fake = { toSource: ST.toSource };
+    var fake = { equivalent: ST.equivalent };
     var a = [ ST, fake ];
     for ( var i=0 ; i < 1000 ; i++ )
 	try { check(a[i%2]); } catch (e) {}

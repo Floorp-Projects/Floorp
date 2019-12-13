@@ -15,7 +15,7 @@ var lfLogBuffer = `
             debuggeeGlobal.log += s;
         };
     } + ")();");
-      j('Number.prototype.toSource.call([])');
+      j('Number.prototype.toString.call([])');
 //corefuzz-dcd-endofdata
 //corefuzz-dcd-endofdata
 //corefuzz-dcd-endofdata

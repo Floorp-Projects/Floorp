@@ -5,9 +5,9 @@ function test() {\
   function removeAllProperties(o) {\
     bar() = thaw, patterns;\
   }\
-  var o = {};\
-  o.first = { toSource: function() { removeAllProperties(o); } };\
-  return o.toSource();\
+  var o = { method: function() { this.first.method(); } };\
+  o.first = { method: function() { removeAllProperties(o); } };\
+  return o.method();\
 }\
 ");
 lfcode.push("test();");
