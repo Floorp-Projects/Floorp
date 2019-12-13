@@ -20,7 +20,7 @@ const {
  *                                    `a.b.c.d.` is described as ['a', 'b', 'c', 'd'] ).
  */
 function autocompleteUpdate(force, getterPath) {
-  return ({ dispatch, getState, webConsoleUI, hud }) => {
+  return async ({ dispatch, getState, webConsoleUI, hud }) => {
     if (hud.inputHasSelection()) {
       return dispatch(autocompleteClear());
     }
@@ -29,7 +29,7 @@ function autocompleteUpdate(force, getterPath) {
     const {
       frameActor: frameActorId,
       webConsoleFront,
-    } = webConsoleUI.getFrameActor();
+    } = await webConsoleUI.getFrameActor();
     const cursor = webConsoleUI.getInputCursor();
 
     const state = getState().autocomplete;
