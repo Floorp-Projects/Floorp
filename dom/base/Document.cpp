@@ -3030,8 +3030,24 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // the checks for type_subdoc or type_object happen within
     // CheckFrameOptions.
     if (!FramingChecker::CheckFrameOptions(aChannel, mCSP)) {
-      // stop!  ERROR page!
-      aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
+      // Bug 1601887: Display error page but still fire onload
+      // event in case x-frame-options blocks a load.
+      // After Bug 1601887 the about:blank load here should disappear
+      // and we should cancel the channel by using
+      // aChannel->Cancel(NS_ERROR_XFO_VIOLATION) which then displays
+      // the error page.
+      aChannel->Cancel(NS_BINDING_ABORTED);
+      if (docShell) {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(docShell));
+        if (webNav) {
+          RefPtr<NullPrincipal> principal =
+              NullPrincipal::CreateWithInheritedAttributes(
+                  loadInfo->TriggeringPrincipal());
+          LoadURIOptions loadURIOptions;
+          loadURIOptions.mTriggeringPrincipal = principal;
+          webNav->LoadURI(NS_LITERAL_STRING("about:blank"), loadURIOptions);
+        }
+      }
     }
   }
 
