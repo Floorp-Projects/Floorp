@@ -9,6 +9,7 @@
 
 #include "mozilla/Logging.h"
 #include "MediaController.h"
+#include "MediaControlKeysEvent.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -27,6 +28,30 @@ inline const char* ToMediaControlActionsStr(MediaControlActions aAction) {
       MOZ_ASSERT_UNREACHABLE("Invalid action.");
   }
   return "UNKNOWN";
+}
+
+inline const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
+  switch (aKeyEvent) {
+    case MediaControlKeysEvent::ePause:
+      return "Pause";
+    case MediaControlKeysEvent::ePlay:
+      return "Play";
+    case MediaControlKeysEvent::ePlayPause:
+      return "Play & pause";
+    case MediaControlKeysEvent::ePrevTrack:
+      return "Previous track";
+    case MediaControlKeysEvent::eNextTrack:
+      return "Next track";
+    case MediaControlKeysEvent::eSeekBackward:
+      return "Seek backward";
+    case MediaControlKeysEvent::eSeekForward:
+      return "Seek forward";
+    case MediaControlKeysEvent::eStop:
+      return "Stop";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid action.");
+      return "Unknown";
+  }
 }
 
 void NotifyMediaStarted(uint64_t aWindowID);

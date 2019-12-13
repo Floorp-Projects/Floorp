@@ -57,10 +57,10 @@ static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
   switch (aKeyCode) {
     case NX_KEYTYPE_NEXT:
     case NX_KEYTYPE_FAST:
-      return MediaControlKeysEvent::eNext;
+      return MediaControlKeysEvent::eNextTrack;
     case NX_KEYTYPE_PREVIOUS:
     case NX_KEYTYPE_REWIND:
-      return MediaControlKeysEvent::ePrev;
+      return MediaControlKeysEvent::ePrevTrack;
     default:
       MOZ_ASSERT(aKeyCode == NX_KEYTYPE_PLAY);
       return MediaControlKeysEvent::ePlayPause;
