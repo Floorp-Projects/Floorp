@@ -6820,7 +6820,8 @@ void nsWindow::UpdateClientOffsetForCSDWindow() {
   if (mSizeState == nsSizeMode_Normal) {
     GtkBorder decorationSize = GetCSDDecorationSize(
         gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
-    mClientOffset = nsIntPoint(decorationSize.left, decorationSize.top);
+    mClientOffset = nsIntPoint(GdkCoordToDevicePixels(decorationSize.left),
+                               GdkCoordToDevicePixels(decorationSize.top));
   } else {
     mClientOffset = nsIntPoint(0, 0);
   }
