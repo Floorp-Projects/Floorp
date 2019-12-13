@@ -33,10 +33,12 @@ RELEASE_PROMOTION_PROJECTS = {
     'try-comm-central',
 } | RELEASE_PROJECTS
 
-_OPTIONAL_ATTRIBUTES = (
+_COPYABLE_ATTRIBUTES = (
     'accepted-mar-channel-ids',
     'artifact_map',
     'artifact_prefix',
+    'build_platform',
+    'build_type',
     'l10n_chunk',
     'locale',
     'mar-channel-id',
@@ -128,17 +130,10 @@ def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
 
 
 def copy_attributes_from_dependent_job(dep_job):
-    attributes = {
-        'build_platform': dep_job.attributes.get('build_platform'),
-        'build_type': dep_job.attributes.get('build_type'),
-    }
-
-    attributes.update({
+    return {
         attr: dep_job.attributes[attr]
-        for attr in _OPTIONAL_ATTRIBUTES if attr in dep_job.attributes
-    })
-
-    return attributes
+        for attr in _COPYABLE_ATTRIBUTES if attr in dep_job.attributes
+    }
 
 
 def sorted_unique_list(*args):
