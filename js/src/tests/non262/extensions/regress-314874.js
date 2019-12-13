@@ -31,7 +31,5 @@ function test()
 
   delete thisArg.f;
 
-  expect = expect.toSource();
-  actual = actual.toSource();
   reportCompare(expect, actual, summary);
 }

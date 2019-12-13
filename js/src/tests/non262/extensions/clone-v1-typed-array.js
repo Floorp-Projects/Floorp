@@ -121,7 +121,7 @@ if (os.getenv("JS_RECORD_RESULTS") !== undefined) {
   for (var i in captured) {
     var s = "captured[" + i + "] = ";
     if (captured[i] instanceof Error) {
-      print(s + captured[i].toSource() + ";");
+      print(s + captured[i].toString() + ";");
     } else {
       data = captured[i].clonebuffer.split('').map(c => c.charCodeAt(0));
       print(s + "serialize(0); captured[" + i + "].clonebuffer = String.fromCharCode(" + data.join(", ") + ");");

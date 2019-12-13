@@ -7,8 +7,8 @@ class toStringTest {
     }
 
     test() {
-        assertEq(super.toSource(), super["toSource"]());
-        assertEq(super.toSource(), this.toSource());
+        assertEq(super.toString(), super["toString"]());
+        assertEq(super.toString(), this.toString());
     }
 }
 
@@ -16,8 +16,8 @@ new toStringTest().test();
 
 let toStrOL = {
     test() {
-        assertEq(super.toSource(), super["toSource"]());
-        assertEq(super.toSource(), this.toSource());
+        assertEq(super.toString(), super["toString"]());
+        assertEq(super.toString(), this.toString());
     }
 }
 

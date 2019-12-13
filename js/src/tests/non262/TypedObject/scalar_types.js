@@ -6,7 +6,7 @@ var summary = 'Byte-sized type conversion';
 var T = TypedObject;
 
 function check(results, ctor) {
-  print("ctor = ", ctor.toSource());
+  print("ctor = ", describeType(ctor));
 
   // check applying the ctor directly
   for (var i = 0; i < results.length; i++)

@@ -1572,7 +1572,7 @@ function test(sharedMem) {
 
     // Protos and proxies, oh my!
     var alien = newGlobal();
-    var alien_data = alien.eval('data = ' + data1.toSource());
+    var alien_data = alien.eval('data = ' + JSON.stringify(data1));
     var alien_buffer = alien.eval(`buffer = new ${sharedMem ? 'Shared' : ''}ArrayBuffer(data.length)`);
     alien.eval('new Uint8Array(buffer).set(data)');
     var alien_view = alien.eval('view = new DataView(buffer, 0, 16)');

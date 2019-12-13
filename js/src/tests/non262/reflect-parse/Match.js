@@ -139,7 +139,7 @@ var Match =
             return true;
         }
 
-        throw new Error("bad pattern: " + exp.toSource());
+        throw new Error("bad pattern: " + JSON.stringify(exp));
     }
 
     // Match an object having at least the expected properties.
@@ -232,7 +232,7 @@ var Match =
         if (isObject(exp))
             return matchObjectWithAtLeast(act, exp);
 
-        throw new Error("bad pattern: " + exp.toSource());
+        throw new Error("bad pattern: " + JSON.stringify(exp));
     }
 
     return { Pattern: Pattern,
