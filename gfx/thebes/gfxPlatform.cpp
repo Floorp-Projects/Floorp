@@ -1149,6 +1149,10 @@ void gfxPlatform::ReportTelemetry() {
   gfxInfo->GetAdapterDeviceID(adapterDeviceId);
   Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DEVICE_ID,
                        adapterDeviceId);
+  // Temporary workaround for bug 1601091, should be removed once telemetry
+  // issue is fixed.
+  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DEVICE_ID_LAST_SEEN,
+                       adapterDeviceId);
 
   nsString adapterSubsystemId;
   gfxInfo->GetAdapterSubsysID(adapterSubsystemId);
@@ -3801,6 +3805,12 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
   if (XRE_IsParentProcess()) {
     Telemetry::ScalarSet(
         Telemetry::ScalarID::GFX_COMPOSITOR,
+        NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
+
+    // Temporary workaround for bug 1601091, should be removed once telemetry
+    // issue is fixed.
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::GFX_COMPOSITOR_LAST_SEEN,
         NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
   }
 
