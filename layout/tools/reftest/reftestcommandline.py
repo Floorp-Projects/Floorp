@@ -260,6 +260,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=False,
                           help="Enable the WebRender compositor in Gecko.")
 
+        self.add_argument("--headless",
+                          action="store_true",
+                          dest="headless",
+                          default=False,
+                          help="Run tests in headless mode.")
+
         mozlog.commandline.add_logging_group(self)
 
     def get_ip(self):
