@@ -3068,12 +3068,6 @@
   value: false
   mirror: always
 
-- name: full-screen-api.unprefix.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 - name: full-screen-api.allow-trusted-requests-only
   type: bool
   value: true

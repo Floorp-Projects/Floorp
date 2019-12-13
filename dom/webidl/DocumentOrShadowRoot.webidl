@@ -28,7 +28,7 @@ interface mixin DocumentOrShadowRoot {
   readonly attribute StyleSheetList styleSheets;
 
   readonly attribute Element? pointerLockElement;
-  [LenientSetter, Func="Document::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter]
   readonly attribute Element? fullscreenElement;
   [BinaryName="fullscreenElement"]
   readonly attribute Element? mozFullScreenElement;
