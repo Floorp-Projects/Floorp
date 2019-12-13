@@ -41,10 +41,6 @@ function test()
 // =====
   (function(){const x = 0, y = delete x;})()
 
-// Assertion failure: pnu->pn_lexdef == dn, at ../jsemit.cpp:1817
-// =====
-  uneval(function(){arguments = ({ get y(){} }); for(var [arguments] in y ) (x);});
-
 // Assertion failure: n != 0, at ../jsfun.cpp:2689
 // =====
   try
