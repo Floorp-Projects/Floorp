@@ -175,12 +175,13 @@ add_task(async function check_permission_state_change() {
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
 
   // Check if a popup opens.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-    let open = content.document.getElementById("pop");
-    open.click();
-  });
-
-  await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
+  await Promise.all([
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+      let open = content.document.getElementById("pop");
+      open.click();
+    }),
+    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen"),
+  ]);
   await BrowserTestUtils.waitForCondition(
     () => popup.linkedBrowser.currentURI.spec != "about:blank"
   );
