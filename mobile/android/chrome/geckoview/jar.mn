@@ -10,7 +10,7 @@ geckoview.jar:
 % override chrome://global/content/config.xhtml chrome://geckoview/content/config.xhtml
 
   content/ErrorPageEventHandler.js
-  content/geckoview.xul
+  content/geckoview.xhtml
   content/geckoview.js
   content/GeckoViewAutofillChild.js
   content/GeckoViewContentBlockingChild.js
