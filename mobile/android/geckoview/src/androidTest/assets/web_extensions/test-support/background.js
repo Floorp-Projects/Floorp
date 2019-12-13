@@ -26,6 +26,9 @@ const APIS = {
   SetPrefs: function({ oldPrefs, newPrefs }) {
     return browser.test.setPrefs(oldPrefs, newPrefs);
   },
+  SetResolutionAndScaleTo: function({ resolution }) {
+    return browser.test.setResolutionAndScaleTo(resolution);
+  },
 };
 
 port.onMessage.addListener(async message => {
