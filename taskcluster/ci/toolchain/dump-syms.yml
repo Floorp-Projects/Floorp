@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "dump_syms toolchain build"
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-dump-syms.sh
+    fetches:
+        fetch:
+            - dump-syms
+
+linux64-dump-syms:
+    treeherder:
+        symbol: TL(dump_syms)
+    worker-type: b-linux
+    run:
+        toolchain-artifact: public/build/dump_syms.tar.xz
+    fetches:
+        toolchain:
+            - linux64-rust
+
+win64-dump-syms:
+    treeherder:
+        symbol: TW64(dump_syms)
+    worker-type: b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+    run:
+        toolchain-artifact: public/build/dump_syms.tar.bz2
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - win64-rust
