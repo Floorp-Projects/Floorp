@@ -268,8 +268,13 @@ class MediaDecoderStateMachine::StateObject {
 
     auto* s = new S(master);
 
+    // It's possible to seek again during seeking, otherwise the new state
+    // should always be different from the original one.
     MOZ_ASSERT(GetState() != s->GetState() ||
-               GetState() == DECODER_STATE_SEEKING);
+               GetState() == DECODER_STATE_SEEKING_ACCURATE ||
+               GetState() == DECODER_STATE_SEEKING_FROMDORMANT ||
+               GetState() == DECODER_STATE_SEEKING_NEXTFRAMESEEKING ||
+               GetState() == DECODER_STATE_SEEKING_VIDEOONLY);
 
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
@@ -988,7 +993,7 @@ class MediaDecoderStateMachine::SeekingState
 
   virtual void Exit() override = 0;
 
-  State GetState() const override { return DECODER_STATE_SEEKING; }
+  State GetState() const override = 0;
 
   void HandleAudioDecoded(AudioData* aAudio) override = 0;
   void HandleVideoDecoded(VideoData* aVideo,
@@ -1034,6 +1039,8 @@ class MediaDecoderStateMachine::AccurateSeekingState
     : public MediaDecoderStateMachine::SeekingState {
  public:
   explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr) {}
+
+  State GetState() const override { return DECODER_STATE_SEEKING_ACCURATE; }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility) {
@@ -1438,6 +1445,10 @@ class MediaDecoderStateMachine::NextFrameSeekingState
  public:
   explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr) {}
 
+  State GetState() const override {
+    return DECODER_STATE_SEEKING_NEXTFRAMESEEKING;
+  }
+
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility) {
     MOZ_ASSERT(aSeekJob.mTarget->IsNextFrame());
@@ -1636,6 +1647,8 @@ class MediaDecoderStateMachine::NextFrameSeekingFromDormantState
   explicit NextFrameSeekingFromDormantState(Master* aPtr)
       : AccurateSeekingState(aPtr) {}
 
+  State GetState() const override { return DECODER_STATE_SEEKING_FROMDORMANT; }
+
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aCurrentSeekJob,
                                           SeekJob&& aFutureSeekJob) {
     mFutureSeekJob = std::move(aFutureSeekJob);
@@ -1671,6 +1684,8 @@ class MediaDecoderStateMachine::VideoOnlySeekingState
     : public MediaDecoderStateMachine::AccurateSeekingState {
  public:
   explicit VideoOnlySeekingState(Master* aPtr) : AccurateSeekingState(aPtr) {}
+
+  State GetState() const override { return DECODER_STATE_SEEKING_VIDEOONLY; }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility) {
@@ -2919,8 +2934,14 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(const TimeUnit& aTime) {
       return "DECODING_FIRSTFRAME";
     case DECODER_STATE_DECODING:
       return "DECODING";
-    case DECODER_STATE_SEEKING:
-      return "SEEKING";
+    case DECODER_STATE_SEEKING_ACCURATE:
+      return "SEEKING_ACCURATE";
+    case DECODER_STATE_SEEKING_FROMDORMANT:
+      return "SEEKING_FROMDORMANT";
+    case DECODER_STATE_SEEKING_NEXTFRAMESEEKING:
+      return "DECODER_STATE_SEEKING_NEXTFRAMESEEKING";
+    case DECODER_STATE_SEEKING_VIDEOONLY:
+      return "SEEKING_VIDEOONLY";
     case DECODER_STATE_BUFFERING:
       return "BUFFERING";
     case DECODER_STATE_COMPLETED:
