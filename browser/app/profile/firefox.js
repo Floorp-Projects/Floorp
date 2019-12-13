@@ -405,18 +405,13 @@ pref("permissions.default.xr", 0);
 pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
+pref("permissions.delegation.enabled", true);
 pref("permissions.desktop-notification.postPrompt.enabled", true);
 pref("permissions.desktop-notification.notNow.enabled", false);
 
 pref("permissions.fullscreen.allowed", false);
 
 pref("permissions.postPrompt.animate", true);
-
-#ifdef NIGHTLY_BUILD
-  pref("permissions.delegation.enabled", true);
-#else
-  pref("permissions.delegation.enabled", false);
-#endif
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -1708,11 +1703,7 @@ pref("view_source.tab", true);
 
 pref("dom.serviceWorkers.enabled", true);
 
-#ifdef NIGHTLY_BUILD
-  pref("dom.security.featurePolicy.enabled", true);
-#else
-  pref("dom.security.featurePolicy.enabled", false);
-#endif
+pref("dom.security.featurePolicy.enabled", true);
 
 // Enable Push API.
 pref("dom.push.enabled", true);
