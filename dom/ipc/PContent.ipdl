@@ -343,6 +343,12 @@ union PSHEntryOrSharedID
   uint64_t;
 };
 
+struct KeyValuePair
+{
+    nsString key;
+    nsString value;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -1573,6 +1579,14 @@ both:
     async WindowBlur(BrowsingContext aContext);
     async WindowPostMessage(BrowsingContext aContext, ClonedMessageData aMessage,
                             PostMessageData aData);
+
+    /**
+     * Move sessionStorage data between parent and content processes. See
+     * SessionStorageManager documentation for more details.
+     */
+    async SessionStorageData(BrowsingContext aTop, nsCString aOriginAttrs,
+                             nsCString aOriginKey, KeyValuePair[] aDefaultData,
+                             KeyValuePair[] aSessionData);
 };
 
 }

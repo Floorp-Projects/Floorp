@@ -3806,6 +3806,15 @@ mozilla::ipc::IPCResult ContentChild::RecvEvictContentViewers(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
+    BrowsingContext* const aTop, const nsACString& aOriginAttrs,
+    const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
+    const nsTArray<KeyValuePair>& aSessionData) {
+  aTop->GetSessionStorageManager()->LoadSessionStorageData(
+      nullptr, aOriginAttrs, aOriginKey, aDefaultData, aSessionData);
+  return IPC_OK();
+}
+
 already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
     const Message& aMsg) {
   switch (aMsg.type()) {

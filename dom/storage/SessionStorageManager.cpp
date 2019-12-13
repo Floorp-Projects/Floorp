@@ -7,9 +7,11 @@
 #include "SessionStorageManager.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "SessionStorage.h"
 #include "SessionStorageCache.h"
 #include "SessionStorageObserver.h"
+#include "SessionStorageService.h"
 #include "StorageUtils.h"
 
 namespace mozilla {
@@ -30,6 +32,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SessionStorageManager)
 SessionStorageManager::SessionStorageManager(
     RefPtr<BrowsingContext> aBrowsingContext)
     : mBrowsingContext(aBrowsingContext.forget()) {
+  if (const auto service = SessionStorageService::Get()) {
+    service->RegisterSessionStorageManager(this);
+  }
+
   StorageObserver* observer = StorageObserver::Self();
   NS_ASSERTION(
       observer,
@@ -69,6 +75,10 @@ SessionStorageManager::~SessionStorageManager() {
   if (observer) {
     observer->RemoveSink(this);
   }
+
+  if (const auto service = SessionStorageService::Get()) {
+    service->UnregisterSessionStorageManager(this);
+  }
 }
 
 NS_IMETHODIMP
@@ -104,35 +114,44 @@ nsresult SessionStorageManager::GetSessionStorageCacheHelper(
     const nsACString& aOriginAttrs, const nsACString& aOriginKey,
     bool aMakeIfNeeded, SessionStorageCache* aCloneFrom,
     RefPtr<SessionStorageCache>* aRetVal) {
-  *aRetVal = nullptr;
+  if (OriginRecord* const originRecord = GetOriginRecord(
+          aOriginAttrs, aOriginKey, aMakeIfNeeded, aCloneFrom)) {
+    *aRetVal = originRecord->mCache;
+  } else {
+    *aRetVal = nullptr;
+  }
+  return NS_OK;
+}
 
+SessionStorageManager::OriginRecord* SessionStorageManager::GetOriginRecord(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey,
+    const bool aMakeIfNeeded, SessionStorageCache* const aCloneFrom) {
   OriginKeyHashTable* table;
   if (!mOATable.Get(aOriginAttrs, &table)) {
     if (aMakeIfNeeded) {
       table = new OriginKeyHashTable();
       mOATable.Put(aOriginAttrs, table);
     } else {
-      return NS_OK;
+      return nullptr;
     }
   }
 
-  RefPtr<SessionStorageCache> cache;
-  if (!table->Get(aOriginKey, getter_AddRefs(cache))) {
+  OriginRecord* originRecord;
+  if (!table->Get(aOriginKey, &originRecord)) {
     if (aMakeIfNeeded) {
+      originRecord = new OriginRecord();
       if (aCloneFrom) {
-        cache = aCloneFrom->Clone();
+        originRecord->mCache = aCloneFrom->Clone();
       } else {
-        cache = new SessionStorageCache();
+        originRecord->mCache = new SessionStorageCache();
       }
-      table->Put(aOriginKey, cache);
+      table->Put(aOriginKey, originRecord);
     } else {
-      return NS_OK;
+      return nullptr;
     }
   }
 
-  *aRetVal = std::move(cache);
-
-  return NS_OK;
+  return originRecord;
 }
 
 NS_IMETHODIMP
@@ -250,16 +269,85 @@ void SessionStorageManager::ClearStorages(
     for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
       if (aOriginScope.IsEmpty() ||
           StringBeginsWith(iter2.Key(), aOriginScope)) {
+        const auto cache = iter2.Data()->mCache;
         if (aType == eAll) {
-          iter2.Data()->Clear(SessionStorageCache::eDefaultSetType, false);
-          iter2.Data()->Clear(SessionStorageCache::eSessionSetType, false);
+          cache->Clear(SessionStorageCache::eDefaultSetType, false);
+          cache->Clear(SessionStorageCache::eSessionSetType, false);
         } else {
           MOZ_ASSERT(aType == eSessionOnly);
-          iter2.Data()->Clear(SessionStorageCache::eSessionSetType, false);
+          cache->Clear(SessionStorageCache::eSessionSetType, false);
         }
       }
     }
   }
+}
+
+void SessionStorageManager::SendSessionStorageDataToParentProcess() {
+  if (!mBrowsingContext || mBrowsingContext->IsDiscarded()) {
+    return;
+  }
+
+  for (auto oaIter = mOATable.Iter(); !oaIter.Done(); oaIter.Next()) {
+    for (auto originIter = oaIter.Data()->Iter(); !originIter.Done();
+         originIter.Next()) {
+      SendSessionStorageCache(ContentChild::GetSingleton(), oaIter.Key(),
+                              originIter.Key(), originIter.Data()->mCache);
+    }
+  }
+}
+
+void SessionStorageManager::SendSessionStorageDataToContentProcess(
+    ContentParent* const aActor, nsIPrincipal* const aPrincipal) {
+  nsAutoCString originAttrs;
+  nsAutoCString originKey;
+  auto rv = GenerateOriginKey(aPrincipal, originAttrs, originKey);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  const auto originRecord =
+      GetOriginRecord(originAttrs, originKey, false, nullptr);
+  if (!originRecord) {
+    return;
+  }
+
+  const auto id = aActor->ChildID();
+  if (!originRecord->mKnownTo.Contains(id)) {
+    originRecord->mKnownTo.PutEntry(id);
+    SendSessionStorageCache(aActor, originAttrs, originKey,
+                            originRecord->mCache);
+  }
+}
+
+template <typename Actor>
+void SessionStorageManager::SendSessionStorageCache(
+    Actor* const aActor, const nsACString& aOriginAttrs,
+    const nsACString& aOriginKey, SessionStorageCache* const aCache) {
+  nsTArray<KeyValuePair> defaultData =
+      aCache->SerializeData(SessionStorageCache::eDefaultSetType);
+  nsTArray<KeyValuePair> sessionData =
+      aCache->SerializeData(SessionStorageCache::eSessionSetType);
+  Unused << aActor->SendSessionStorageData(
+      mBrowsingContext, nsCString{aOriginAttrs}, nsCString{aOriginKey},
+      defaultData, sessionData);
+}
+
+void SessionStorageManager::LoadSessionStorageData(
+    ContentParent* const aSource, const nsACString& aOriginAttrs,
+    const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
+    const nsTArray<KeyValuePair>& aSessionData) {
+  const auto originRecord =
+      GetOriginRecord(aOriginAttrs, aOriginKey, true, nullptr);
+  MOZ_ASSERT(originRecord);
+
+  if (aSource) {
+    originRecord->mKnownTo.RemoveEntry(aSource->ChildID());
+  }
+
+  originRecord->mCache->DeserializeData(SessionStorageCache::eDefaultSetType,
+                                        aDefaultData);
+  originRecord->mCache->DeserializeData(SessionStorageCache::eSessionSetType,
+                                        aSessionData);
 }
 
 nsresult SessionStorageManager::Observe(

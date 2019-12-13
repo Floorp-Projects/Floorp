@@ -693,6 +693,11 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvEvictContentViewers(
       nsTArray<uint64_t>&& aToEvictSharedStateIDs);
 
+  mozilla::ipc::IPCResult RecvSessionStorageData(
+      BrowsingContext* aTop, const nsACString& aOriginAttrs,
+      const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
+      const nsTArray<KeyValuePair>& aSessionData);
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //
