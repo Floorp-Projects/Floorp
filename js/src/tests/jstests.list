@@ -448,6 +448,9 @@ skip script test262/intl402/ListFormat/constructor/constructor/options-type-vali
 skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-realm.js
 skip script test262/intl402/Locale/proto-from-ctor-realm.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
+skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -467,6 +470,18 @@ skip script test262/intl402/DateTimeFormat/constructor-options-fractionalSecondD
 # Draft proposal doesn't yet implement the changes proposed in
 # <https://github.com/tc39/proposal-unified-intl-numberformat/issues/63>.
 skip script test262/intl402/NumberFormat/constructor-unit.js
+
+# The `intrinsicDefaultProto` for AggregateError is AggregateError.prototype.
+skip script test262/built-ins/AggregateError/newtarget-proto-fallback.js
+
+# The test exposes a potential spec issue in InitializeDateTimeFormat:
+# Let's assume the locale is "en", adding likely subtags results in "en-Latn-US".
+# Consulting CLDR's supplementalData.xml shows for the "US" region:
+#   <hours preferred="h" allowed="h hb H hB" regions="[...] US [...]"/>
+# So preferred is "h" (= hour-cycle "h12") and additionally allowed is "H" (=hc "h23").
+# But InitializeDateTimeFormat defaults for hour12=false and hcDefault="h12" the
+# hour-cycle to "h24", which isn't allowed per the above CLDR data.
+skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
 
 ####################################################
