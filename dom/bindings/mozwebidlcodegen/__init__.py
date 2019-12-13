@@ -12,6 +12,7 @@ import hashlib
 import json
 import logging
 import os
+import six
 
 from copy import deepcopy
 
@@ -318,8 +319,10 @@ class WebIDLCodegenManager(LoggingMixin):
         if self._make_deps_path:
             mk = Makefile()
             codegen_rule = mk.create_rule([self._make_deps_target])
-            codegen_rule.add_dependencies(global_hashes.keys())
-            codegen_rule.add_dependencies(self._input_paths)
+            codegen_rule.add_dependencies(six.ensure_text(s) for s in
+                                          global_hashes.keys())
+            codegen_rule.add_dependencies(six.ensure_text(p) for p in
+                                          self._input_paths)
 
             with FileAvoidWrite(self._make_deps_path) as fh:
                 mk.dump(fh)

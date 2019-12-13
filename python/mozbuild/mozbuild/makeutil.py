@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
@@ -20,11 +20,14 @@ class Makefile(object):
     def __init__(self):
         self._statements = []
 
-    def create_rule(self, targets=[]):
+    def create_rule(self, targets=()):
         '''
         Create a new rule in the makefile for the given targets.
         Returns the corresponding Rule instance.
         '''
+        targets = list(targets)
+        for target in targets:
+            assert isinstance(target, six.text_type)
         rule = Rule(targets)
         self._statements.append(rule)
         return rule
@@ -34,6 +37,7 @@ class Makefile(object):
         Add a raw statement in the makefile. Meant to be used for
         simple variable assignments.
         '''
+        assert isinstance(statement, six.text_type)
         self._statements.append(statement)
 
     def dump(self, fh, removal_guard=True):
@@ -70,6 +74,9 @@ class _SimpleOrderedSet(object):
     def __nonzero__(self):
         return bool(self._set)
 
+    def __bool__(self):
+        return bool(self._set)
+
     def __iter__(self):
         return iter(self._list)
 
@@ -97,7 +104,7 @@ class Rule(object):
                    ...
     '''
 
-    def __init__(self, targets=[]):
+    def __init__(self, targets=()):
         self._targets = _SimpleOrderedSet()
         self._dependencies = _SimpleOrderedSet()
         self._commands = []
@@ -105,19 +112,31 @@ class Rule(object):
 
     def add_targets(self, targets):
         '''Add additional targets to the rule.'''
-        assert isinstance(targets, Iterable) and not isinstance(targets, six.string_types)
+        assert isinstance(targets, Iterable) and not isinstance(
+            targets, six.string_types)
+        targets = list(targets)
+        for target in targets:
+            assert isinstance(target, six.text_type)
         self._targets.update(targets)
         return self
 
     def add_dependencies(self, deps):
         '''Add dependencies to the rule.'''
-        assert isinstance(deps, Iterable) and not isinstance(deps, six.string_types)
+        assert isinstance(deps, Iterable) and not isinstance(
+            deps, six.string_types)
+        deps = list(deps)
+        for dep in deps:
+            assert isinstance(dep, six.text_type)
         self._dependencies.update(deps)
         return self
 
     def add_commands(self, commands):
         '''Add commands to the rule.'''
-        assert isinstance(commands, Iterable) and not isinstance(commands, six.string_types)
+        assert isinstance(commands, Iterable) and not isinstance(
+            commands, six.string_types)
+        commands = list(commands)
+        for command in commands:
+            assert isinstance(command, six.text_type)
         self._commands.extend(commands)
         return self
 
@@ -162,6 +181,7 @@ def read_dep_makefile(fh):
 
     rule = ''
     for line in fh.readlines():
+        line = six.ensure_text(line)
         assert not line.startswith('\t')
         line = line.strip()
         if line.endswith('\\'):
