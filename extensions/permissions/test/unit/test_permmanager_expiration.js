@@ -140,5 +140,24 @@ function* do_run_test() {
     pm.getPermissionObject(principal, "test/expiration-session-exp2", false)
   );
 
+  // Add a persistent permission for private browsing
+  let principalPB = Services.scriptSecurityManager.createContentPrincipal(
+    permURI,
+    { privateBrowsingId: 1 }
+  );
+  pm.addFromPrincipal(
+    principalPB,
+    "test/expiration-session-pb",
+    pm.ALLOW_ACTION
+  );
+
+  // The permission should be set to session expiry
+  let perm = pm.getPermissionObject(
+    principalPB,
+    "test/expiration-session-pb",
+    true
+  );
+  Assert.equal(perm.expireType, pm.EXPIRE_SESSION);
+
   do_finish_generator_test(test_generator);
 }
