@@ -324,7 +324,8 @@ nsresult parse_sdp(StringView sdp, bool fail_on_warning, RustSdpSession** ret,
 RustSdpSession* sdp_new_reference(RustSdpSession* aSess);
 void sdp_free_session(RustSdpSession* ret);
 size_t sdp_get_error_line_num(const RustSdpError* err);
-StringView sdp_get_error_message(const RustSdpError* err);
+char* sdp_get_error_message(const RustSdpError* err);
+void sdp_free_error_message(char* message);
 void sdp_free_error(RustSdpError* err);
 
 RustSdpOrigin sdp_get_origin(const RustSdpSession* aSess);

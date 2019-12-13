@@ -180,7 +180,7 @@ pub unsafe extern "C" fn sdp_media_add_codec(sdp_media: *mut SdpMedia, pt: u8,
                      codec_name: match codec_name.try_into() {
                          Ok(x) => x,
                          Err(boxed_error) => {
-                             println!("Error while pasing string, description: {:?}", (*boxed_error).description());
+                             println!("Error while parsing string, description: {}", boxed_error);
                              return NS_ERROR_INVALID_ARG;
                          }
                      },

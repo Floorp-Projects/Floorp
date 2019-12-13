@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #![warn(clippy::all)]
 #![forbid(unsafe_code)]
 
@@ -159,6 +163,7 @@ pub enum SdpType {
 pub struct SdpLine {
     pub line_number: usize,
     pub sdp_type: SdpType,
+    pub text: String,
 }
 
 /*
@@ -365,9 +370,7 @@ impl AnonymizingClone for SdpSession {
             warnings: Vec::new(),
         };
         masked.origin = self.origin.masked_clone(anon);
-        masked.connection = masked
-            .connection
-            .and_then(|con| Some(con.masked_clone(anon)));
+        masked.connection = masked.connection.map(|con| con.masked_clone(anon));
         for i in &self.attribute {
             masked.attribute.push(i.masked_clone(anon));
         }
@@ -619,6 +622,7 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
     .map(|sdp_type| SdpLine {
         line_number,
         sdp_type,
+        text: line.to_owned(),
     })
     .map_err(|e| match e {
         SdpParserInternalError::UnknownAddressType(..)

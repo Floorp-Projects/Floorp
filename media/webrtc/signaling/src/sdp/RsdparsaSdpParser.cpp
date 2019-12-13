@@ -31,17 +31,29 @@ UniquePtr<SdpParser::Results> RsdparsaSdpParser::Parse(
   nsresult rv = parse_sdp(sdpTextView, false, &result, &err);
   if (rv != NS_OK) {
     size_t line = sdp_get_error_line_num(err);
-    std::string errMsg = convertStringView(sdp_get_error_message(err));
-    sdp_free_error(err);
-    results->AddParseError(line, errMsg);
+    char* cString = sdp_get_error_message(err);
+    if (cString) {
+      std::string errMsg(cString);
+      sdp_free_error_message(cString);
+      sdp_free_error(err);
+      results->AddParseError(line, errMsg);
+    } else {
+      results->AddParseError(line, "Unable to retreive parse error.");
+    }
     return results;
   }
 
   if (err) {
     size_t line = sdp_get_error_line_num(err);
-    std::string warningMsg = convertStringView(sdp_get_error_message(err));
-    sdp_free_error(err);
-    results->AddParseWarning(line, warningMsg);
+    char* cString = sdp_get_error_message(err);
+    if (cString) {
+      std::string warningMsg(cString);
+      results->AddParseWarning(line, warningMsg);
+      sdp_free_error_message(cString);
+      sdp_free_error(err);
+    } else {
+      results->AddParseWarning(line, "Unable to retreive parse warning.");
+    }
   }
 
   RsdparsaSessionHandle uniqueResult(result);
