@@ -15,6 +15,16 @@
 #include "DrawCommand.h"
 #include "Logging.h"
 
+// Command object is stored into record with header containing size and
+// redundant size of whole record. Some platforms may require Command
+// object to be stored on 8 bytes aligned address. Therefore we need to
+// adjust size of header for these platforms.
+#ifdef __sparc__
+typedef uint32_t kAdvance_t;
+#else
+typedef uint16_t kAdvance_t;
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -37,19 +47,19 @@ class CaptureCommandList {
 
   template <typename T>
   T* Append() {
-    static_assert(sizeof(T) + sizeof(uint16_t) + sizeof(uint16_t) <=
-                      std::numeric_limits<uint16_t>::max(),
+    static_assert(sizeof(T) + 2 * sizeof(kAdvance_t) <=
+                      std::numeric_limits<kAdvance_t>::max(),
                   "encoding is too small to contain advance");
-    const uint16_t kAdvance = sizeof(T) + sizeof(uint16_t) + sizeof(uint16_t);
+    const kAdvance_t kAdvance = sizeof(T) + 2 * sizeof(kAdvance_t);
 
     size_t size = mStorage.size();
     mStorage.resize(size + kAdvance);
 
     uint8_t* current = &mStorage.front() + size;
-    *(uint16_t*)(current) = kAdvance;
-    current += sizeof(uint16_t);
-    *(uint16_t*)(current) = ~kAdvance;
-    current += sizeof(uint16_t);
+    *(kAdvance_t*)(current) = kAdvance;
+    current += sizeof(kAdvance_t);
+    *(kAdvance_t*)(current) = ~kAdvance;
+    current += sizeof(kAdvance_t);
 
     T* command = reinterpret_cast<T*>(current);
     mLastCommand = command;
@@ -70,7 +80,7 @@ class CaptureCommandList {
 
   template <typename T>
   bool BufferWillAlloc() const {
-    const uint16_t kAdvance = sizeof(T) + sizeof(uint16_t) + sizeof(uint16_t);
+    const kAdvance_t kAdvance = sizeof(T) + 2 * sizeof(kAdvance_t);
     return mStorage.size() + kAdvance > mStorage.capacity();
   }
 
@@ -91,15 +101,16 @@ class CaptureCommandList {
     bool Done() const { return mCurrent >= mEnd; }
     void Next() {
       MOZ_ASSERT(!Done());
-      uint16_t advance = *reinterpret_cast<uint16_t*>(mCurrent);
-      uint16_t redundant =
-          ~*reinterpret_cast<uint16_t*>(mCurrent + sizeof(uint16_t));
+      kAdvance_t advance = *reinterpret_cast<kAdvance_t*>(mCurrent);
+      kAdvance_t redundant =
+          ~*reinterpret_cast<kAdvance_t*>(mCurrent + sizeof(kAdvance_t));
       MOZ_RELEASE_ASSERT(advance == redundant);
       mCurrent += advance;
     }
     DrawingCommand* Get() {
       MOZ_ASSERT(!Done());
-      return reinterpret_cast<DrawingCommand*>(mCurrent + sizeof(uint32_t));
+      return reinterpret_cast<DrawingCommand*>(mCurrent +
+                                               2 * sizeof(kAdvance_t));
     }
 
    private:
