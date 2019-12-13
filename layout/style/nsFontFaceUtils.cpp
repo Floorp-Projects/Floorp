@@ -33,10 +33,12 @@ enum class FontUsageKind {
 static FontUsageKind StyleFontUsage(ComputedStyle* aComputedStyle,
                                     nsPresContext* aPresContext,
                                     const gfxUserFontSet* aUserFontSet,
-                                    const gfxUserFontEntry* aFont) {
+                                    const gfxUserFontEntry* aFont,
+                                    const nsAString& aFamilyName) {
+  MOZ_ASSERT(NS_ConvertUTF8toUTF16(aFont->FamilyName()) == aFamilyName);
+
   // first, check if the family name is in the fontlist
-  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(
-          aFont->FamilyName())) {
+  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(aFamilyName)) {
     return FontUsageKind::None;
   }
 
@@ -59,11 +61,12 @@ static FontUsageKind StyleFontUsage(ComputedStyle* aComputedStyle,
 
 static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
                                     nsPresContext* aPresContext,
-                                    const gfxUserFontEntry* aFont) {
+                                    const gfxUserFontEntry* aFont,
+                                    const nsAString& aFamilyName) {
   // check the style of the frame
   gfxUserFontSet* ufs = aPresContext->GetUserFontSet();
   FontUsageKind kind =
-      StyleFontUsage(aFrame->Style(), aPresContext, ufs, aFont);
+      StyleFontUsage(aFrame->Style(), aPresContext, ufs, aFont, aFamilyName);
   if (kind == FontUsageKind::FrameAndFontMetrics) {
     return kind;
   }
@@ -73,8 +76,8 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
   for (ComputedStyle* extraContext;
        (extraContext = aFrame->GetAdditionalComputedStyle(contextIndex));
        ++contextIndex) {
-    kind =
-        std::max(kind, StyleFontUsage(extraContext, aPresContext, ufs, aFont));
+    kind = std::max(kind, StyleFontUsage(extraContext, aPresContext, ufs, aFont,
+                                         aFamilyName));
     if (kind == FontUsageKind::FrameAndFontMetrics) {
       break;
     }
@@ -133,6 +136,10 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
   nsPresContext* pc = aSubtreeRoot->PresContext();
   PresShell* presShell = pc->PresShell();
 
+  // gfxFontFamilyList::Contains expects a UTF-16 string. Convert it once
+  // here rather than on each call.
+  NS_ConvertUTF8toUTF16 familyName(aFont->FamilyName());
+
   // check descendants, iterating over subtrees that may include
   // additional subtrees associated with placeholders
   do {
@@ -149,7 +156,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
 
       // if this frame uses the font, mark its descendants dirty
       // and skip checking its children
-      FontUsageKind kind = FrameFontUsage(f, pc, aFont);
+      FontUsageKind kind = FrameFontUsage(f, pc, aFont, familyName);
       if (kind != FontUsageKind::None) {
         if (alreadyScheduled == ReflowAlreadyScheduled::No) {
           ScheduleReflow(presShell, f);
