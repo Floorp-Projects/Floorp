@@ -19,17 +19,19 @@ class FlippedOnce {
  public:
   FlippedOnce(const FlippedOnce&) = delete;
   FlippedOnce& operator=(const FlippedOnce&) = delete;
+  FlippedOnce(FlippedOnce&&) = default;
+  FlippedOnce& operator=(FlippedOnce&&) = default;
 
-  FlippedOnce() = default;
+  constexpr FlippedOnce() = default;
 
-  MOZ_IMPLICIT operator bool() const { return mValue; };
+  MOZ_IMPLICIT constexpr operator bool() const { return mValue; };
 
-  void Flip() {
+  constexpr void Flip() {
     MOZ_ASSERT(mValue == Initial);
     EnsureFlipped();
   }
 
-  void EnsureFlipped() { mValue = !Initial; }
+  constexpr void EnsureFlipped() { mValue = !Initial; }
 
  private:
   bool mValue = Initial;
