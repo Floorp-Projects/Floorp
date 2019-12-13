@@ -916,6 +916,18 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.applySnippetsPolicy);
     });
+    it("should call applySnippetsPolicy if action equals to snippets_local_testing_user_event", async () => {
+      const data = {
+        action: "snippets_local_testing_user_event",
+        event: "IMPRESSION",
+        message_id: "snippets_message_01",
+      };
+      sandbox.stub(instance, "applySnippetsPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applySnippetsPolicy);
+    });
     it("should call applyOnboardingPolicy if action equals to onboarding_user_event", async () => {
       const data = {
         action: "onboarding_user_event",
