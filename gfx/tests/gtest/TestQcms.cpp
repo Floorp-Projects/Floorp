@@ -315,6 +315,16 @@ class GfxQcms_ProfilePairBase : public ::testing::Test {
     // XXX: This means that we can't have qcms v2 unit test
     //      without changing the qcms API.
     qcms_enable_iccv4();
+#ifdef MOZILLA_MAY_SUPPORT_AVX
+    if (mozilla::supports_avx()) {
+      qcms_enable_avx();
+    }
+#endif
+#ifdef MOZILLA_MAY_SUPPORT_NEON
+    if (mozilla::supports_neon()) {
+      qcms_enable_neon();
+    }
+#endif
   }
 
   void TearDown() override {
@@ -478,6 +488,11 @@ void GfxQcms_ProfilePairBase::TransformPrecachePlatformExt() {
     EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_sse2));
   }
 #endif
+#ifdef MOZILLA_MAY_SUPPORT_AVX
+  if (mozilla::supports_avx()) {
+    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_avx));
+  }
+#endif
 #ifdef MOZILLA_MAY_SUPPORT_NEON
   if (mozilla::supports_neon()) {
     EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_neon));
@@ -498,6 +513,11 @@ void GfxQcms_ProfilePairBase::TransformPrecachePlatformExt() {
     EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_sse2));
   }
 #endif
+#ifdef MOZILLA_MAY_SUPPORT_AVX
+  if (mozilla::supports_avx()) {
+    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_avx));
+  }
+#endif
 #ifdef MOZILLA_MAY_SUPPORT_NEON
   if (mozilla::supports_neon()) {
     EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_neon));
@@ -516,6 +536,11 @@ void GfxQcms_ProfilePairBase::TransformPrecachePlatformExt() {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   if (mozilla::supports_sse2()) {
     EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_bgra_out_lut_sse2));
+  }
+#endif
+#ifdef MOZILLA_MAY_SUPPORT_AVX
+  if (mozilla::supports_avx()) {
+    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_bgra_out_lut_avx));
   }
 #endif
 #ifdef MOZILLA_MAY_SUPPORT_NEON
