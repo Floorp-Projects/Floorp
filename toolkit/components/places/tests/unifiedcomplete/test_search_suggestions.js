@@ -30,7 +30,6 @@ add_task(async function setup() {
     "browser.urlbar.matchBuckets",
     "general:5,suggestion:Infinity"
   );
-  Services.prefs.setBoolPref("browser.urlbar.geoSpecificDefaults", false);
 
   let engine = await addTestSuggestionsEngine(searchStr => {
     return suggestionsFn(searchStr);
