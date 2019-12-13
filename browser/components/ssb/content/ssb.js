@@ -19,6 +19,11 @@ let gSSB = null;
 function init() {
   gSSB = SiteSpecificBrowser.get(window.arguments[0]);
 
+  let uri = gSSB.startURI;
+  if (window.arguments.length > 1) {
+    uri = Services.io.newURI(window.arguments[1]);
+  }
+
   window.browserDOMWindow = new BrowserDOMWindow();
 
   gSSBBrowser = document.createXULElement("browser");
@@ -34,7 +39,7 @@ function init() {
   );
   actor.sendAsyncMessage("SetSSB", gSSB.id);
 
-  gSSBBrowser.src = gSSB.startURI.spec;
+  gSSBBrowser.src = uri.spec;
 }
 
 class BrowserDOMWindow {
