@@ -1764,34 +1764,14 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // If we can defer the LazyScript creation, we are now done.
   if (parseInfo_.isDeferred()) {
     // Move data into funbox
-    funbox->lazyScriptData() = mozilla::Some(std::move(data));
+    MOZ_ASSERT(funbox->functionCreationData());
+    funbox->functionCreationData()->lazyScriptData =
+        mozilla::Some(std::move(data));
     return true;
   }
 
   // Eager Function tree mode, emit the lazy script now.
   return data.create(cx_, funbox, sourceObject_, parseGoal());
-}
-
-bool ParserBase::publishLazyScripts(FunctionTree* root) {
-  if (root) {
-    auto visitor = [](ParserBase* parser, FunctionTree* tree) {
-      FunctionBox* funbox = tree->funbox();
-      if (!funbox) {
-        return true;
-      }
-
-      // No lazy script data, so not a lazy function.
-      if (!funbox->lazyScriptData().isSome()) {
-        return true;
-      }
-      mozilla::Maybe<LazyScriptCreationData> data =
-          std::move(funbox->lazyScriptData());
-      return data->create(parser->cx_, funbox, parser->sourceObject_,
-                          parser->parseGoal());
-    };
-    return root->visitRecursively(this->cx_, this, visitor);
-  }
-  return true;
 }
 
 bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
@@ -1813,8 +1793,15 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
       }
 
       funbox->initializeFunction(fun);
-      funbox->functionCreationData().reset();
-      return true;
+
+      mozilla::Maybe<LazyScriptCreationData> data =
+          std::move(funbox->functionCreationData()->lazyScriptData);
+      if (!data) {
+        return true;
+      }
+
+      return data->create(parser->cx_, funbox, parser->sourceObject_,
+                          parser->parseGoal());
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
@@ -2746,10 +2733,7 @@ void FunctionTree::dump(JSContext* cx, FunctionTree& node, int indent) {
     fprintf(stderr, " ");
   }
 
-  fprintf(stderr, "(*) %p %s", node.funbox_,
-          node.funbox_
-              ? (node.funbox_->lazyScriptData().isSome() ? "Lazy" : "Eager")
-              : "Nil");
+  fprintf(stderr, "(*) %p ", node.funbox_);
   if (node.funbox_ && node.funbox_->explicitName()) {
     UniqueChars bytes = AtomToPrintableString(cx, node.funbox_->explicitName());
     fprintf(stderr, " %s\n", bytes ? bytes.get() : "<nobytes>");
