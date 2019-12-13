@@ -3,6 +3,8 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
+load(libdir + "asserts.js");
+
 var map = new Map();
 map.set("self", map);
 
@@ -33,8 +35,8 @@ for (value of magic) {
     assertEq(value[0], values[i++]);
 }
 
-assertEq([...map.keys()].toSource(), [...magic.keys()].toSource());
-assertEq([...map.values()].toSource(), [...magic.values()].toSource());
+assertDeepEq([...map.keys()], [...magic.keys()]);
+assertDeepEq([...map.values()], [...magic.values()]);
 
 var obj = {a: 1};
 obj.map = new Map();
@@ -56,7 +58,7 @@ assertEq(magic.get("a").valueOf(), 1);
 assertEq(magic.get("b").valueOf(), "aaaa");
 assertEq(magic.get("c").valueOf(), NaN);
 
-assertEq([...magic.keys()].toSource(), ["a", "b", "c"].toSource());
+assertDeepEq([...map.keys()], ["a", "b", "c"]);
 
 map = new Map();
 map.set("x", new Map());
