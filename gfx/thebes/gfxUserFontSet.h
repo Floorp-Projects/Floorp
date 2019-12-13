@@ -644,10 +644,15 @@ class gfxUserFontEntry : public gfxFontEntry {
   static void Shutdown() { sFontLoadingThread = nullptr; }
 
  protected:
+  struct OTSMessage {
+    nsCString mMessage;
+    int mLevel;  // see OTSContext in gfx/ots/include/opentype-sanitizer.h
+  };
+
   const uint8_t* SanitizeOpenTypeData(const uint8_t* aData, uint32_t aLength,
                                       uint32_t& aSaneLength,
                                       gfxUserFontType& aFontType,
-                                      nsTArray<nsCString>& aMessages);
+                                      nsTArray<OTSMessage>& aMessages);
 
   // attempt to load the next resource in the src list.
   void LoadNextSrc();
@@ -683,7 +688,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   void ContinuePlatformFontLoadOnMainThread(
       const uint8_t* aOriginalFontData, uint32_t aOriginalLength,
       gfxUserFontType aFontType, const uint8_t* aSanitizedFontData,
-      uint32_t aSanitizedLength, nsTArray<nsCString>&& aMessages,
+      uint32_t aSanitizedLength, nsTArray<OTSMessage>&& aMessages,
       nsMainThreadPtrHandle<nsIFontLoadCompleteCallback> aCallback);
 
   // helper method for LoadPlatformFontSync and
@@ -692,7 +697,7 @@ class gfxUserFontEntry : public gfxFontEntry {
                         uint32_t aOriginalLength, gfxUserFontType aFontType,
                         const uint8_t* aSanitizedFontData,
                         uint32_t aSanitizedLength,
-                        nsTArray<nsCString>&& aMessages);
+                        nsTArray<OTSMessage>&& aMessages);
 
   // helper method for FontDataDownloadComplete and
   // ContinuePlatformFontLoadOnMainThread; runs on the main thread
