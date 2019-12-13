@@ -84,7 +84,7 @@ function evaluateExpression(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
+    const { frameActor, webConsoleFront } = await webConsoleUI.getFrameActor();
 
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
