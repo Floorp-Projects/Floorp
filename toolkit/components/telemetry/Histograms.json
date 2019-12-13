@@ -7259,61 +7259,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
-  "FX_PAGE_ACTION_ADDED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gijs@mozilla.com"],
-    "bug_numbers": [1393843],
-    "expires_in_version": "64",
-    "kind": "categorical",
-    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
-    "description": "Count how many times people add items to the url bar"
-  },
-  "FX_PAGE_ACTION_REMOVED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gijs@mozilla.com"],
-    "bug_numbers": [1393843],
-    "expires_in_version": "64",
-    "kind": "categorical",
-    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
-    "description": "Count how many times people remove items from the url bar"
-  },
-  "FX_PAGE_ACTION_MANAGED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gijs@mozilla.com"],
-    "bug_numbers": [1393843],
-    "expires_in_version": "64",
-    "kind": "categorical",
-    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
-    "description": "Count how many times people manage extensions via their actions in the url bar"
-  },
-  "FX_PAGE_ACTION_URLBAR_USED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gijs@mozilla.com"],
-    "bug_numbers": [1393843],
-    "expires_in_version": "64",
-    "kind": "categorical",
-    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
-    "description": "Count how many times people use items in the url bar"
-  },
-  "FX_PAGE_ACTION_PANEL_USED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gijs@mozilla.com"],
-    "bug_numbers": [1393843],
-    "expires_in_version": "64",
-    "kind": "categorical",
-    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
-    "description": "Count how many times people use items from the main page action button"
-  },
   "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
