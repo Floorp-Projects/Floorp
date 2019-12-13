@@ -14,6 +14,9 @@
 #include "nsHashKeys.h"
 
 class imgIRequest;
+namespace mozilla {
+struct MediaFeatureChange;
+}
 
 namespace mozilla {
 namespace dom {
