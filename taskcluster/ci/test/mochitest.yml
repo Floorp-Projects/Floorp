@@ -95,7 +95,10 @@ mochitest-a11y:
             windows10-aarch64.*: 2
             default: default
     e10s: false
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try']
+            default: built-projects
     mozharness:
         mochitest-flavor: a11y
 
