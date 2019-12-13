@@ -21,4 +21,4 @@ function foo(x, y) {
   return a;
 }
 var q = foo(0, 1);
-print(q.toSource());
+print(q.toString());

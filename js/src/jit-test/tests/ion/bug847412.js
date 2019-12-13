@@ -16,4 +16,4 @@ function testOverwritingSparseHole() {
 }
 testOverwritingSparseHole();
 test();
-this.toSource();
+JSON.stringify(this);

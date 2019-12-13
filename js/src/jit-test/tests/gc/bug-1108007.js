@@ -3,7 +3,7 @@
 gczeal(2);
 (function() {
     evaluate(cacheEntry((function() {
-        return "".toSource()
+        return "(new String(\"\"))"
     })()), Object.create({ global: newGlobal({ cloneSingletons: true }) }, {
         saveBytecode: {
             value: true
