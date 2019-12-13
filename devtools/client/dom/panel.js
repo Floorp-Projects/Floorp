@@ -182,8 +182,9 @@ DomPanel.prototype = {
   getRootGrip: async function() {
     // Attach Console. It might involve RDP communication, so wait
     // asynchronously for the result
-    const consoleFront = await this.target.getFront("console");
-    const { result } = await consoleFront.evaluateJSAsync("window");
+    const { result } = await this.target.activeConsole.evaluateJSAsync(
+      "window"
+    );
     return result;
   },
 

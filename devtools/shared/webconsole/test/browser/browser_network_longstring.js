@@ -15,7 +15,7 @@ add_task(async function() {
 
   const target = await getTargetForTab(tab);
   const { client } = target;
-  const webConsoleFront = await target.getFront("console");
+  const webConsoleFront = target.activeConsole;
 
   await webConsoleFront.startListeners(["NetworkActivity"]);
 

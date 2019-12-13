@@ -38,9 +38,8 @@ async function attachURL(url) {
   const tab = await addTab(url);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
-  const webConsoleFront = await target.getFront("console");
   return {
-    webConsoleFront,
+    webConsoleFront: target.activeConsole,
   };
 }
 

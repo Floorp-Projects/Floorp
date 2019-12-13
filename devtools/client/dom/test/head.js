@@ -188,9 +188,8 @@ function expandRow(panel, labelText) {
   });
 }
 
-async function evaluateJSAsync(panel, expression) {
-  const consoleFront = await panel.target.getFront("console");
-  return consoleFront.evaluateJSAsync(expression);
+function evaluateJSAsync(panel, expression) {
+  return panel.target.activeConsole.evaluateJSAsync(expression);
 }
 
 function refreshPanel(panel) {
