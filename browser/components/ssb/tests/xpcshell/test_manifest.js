@@ -56,3 +56,33 @@ add_task(async function manifest_with_start_url() {
   Assert.ok(!ssb.canLoad(uri("http://www.mozilla.org/")));
   Assert.ok(!ssb.canLoad(uri("https://test.mozilla.org/")));
 });
+
+add_task(async function update_manifest() {
+  let ssb = await SiteSpecificBrowser.createFromManifest(
+    parseManifest("https://www.mozilla.org/foo/bar/bas", {
+      start_url: "https://www.mozilla.org/foo/bar/bas",
+      scope: "https://www.mozilla.org/foo/bar/",
+    })
+  );
+
+  Assert.equal(ssb.startURI.spec, "https://www.mozilla.org/foo/bar/bas");
+
+  Assert.ok(ssb.canLoad(uri("https://www.mozilla.org/foo/bar/")));
+  Assert.ok(ssb.canLoad(uri("https://www.mozilla.org/foo/bar/foo")));
+
+  Assert.ok(!ssb.canLoad(uri("https://www.mozilla.org/foo")));
+  Assert.ok(!ssb.canLoad(uri("https://www.mozilla.org/foo/bar")));
+
+  await ssb.updateFromManifest(
+    parseManifest("https://www.mozilla.org/foo/bar/bas", {
+      start_url: "https://www.mozilla.org/foo/bar/bas",
+      scope: "https://www.mozilla.org/foo/",
+    })
+  );
+
+  Assert.ok(ssb.canLoad(uri("https://www.mozilla.org/foo/bar/")));
+  Assert.ok(ssb.canLoad(uri("https://www.mozilla.org/foo/bar/foo")));
+
+  Assert.ok(!ssb.canLoad(uri("https://www.mozilla.org/foo")));
+  Assert.ok(ssb.canLoad(uri("https://www.mozilla.org/foo/bar")));
+});
