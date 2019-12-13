@@ -39,8 +39,55 @@ function init() {
   );
   actor.sendAsyncMessage("SetSSB", gSSB.id);
 
+  gSSBBrowser.addProgressListener(
+    new ProgressListener(),
+    Ci.nsIWebProgress.NOTIFY_STATE_ALL
+  );
   gSSBBrowser.src = uri.spec;
 }
+
+class ProgressListener {
+  constructor() {
+    this.isInitial = true;
+  }
+
+  /**
+   * Called when the load state changes
+   *
+   * @param {nsIWebProgress} webProgress
+   * @param {nsIRequest} request
+   * @param {Number} state
+   * @param {Number} status
+   */
+  async onStateChange(webProgress, request, state, status) {
+    if (!webProgress.isTopLevel) {
+      return;
+    }
+
+    let final =
+      Ci.nsIWebProgressListener.STATE_IS_WINDOW +
+      Ci.nsIWebProgressListener.STATE_STOP;
+    if ((state & final) != final) {
+      return;
+    }
+
+    // Load complete. Does the SSB need an update?
+    let { isInitial } = this;
+    this.isInitial = false;
+    if (isInitial && gSSB.needsUpdate) {
+      await gSSB.updateFromBrowser(gSSBBrowser);
+    }
+
+    // So the testing harness knows when the ssb is properly initialized.
+    let event = new CustomEvent("SSBLoad");
+    gSSBBrowser.dispatchEvent(event);
+  }
+}
+
+ProgressListener.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIWebProgressListener,
+  Ci.nsISupportsWeakReference,
+]);
 
 class BrowserDOMWindow {
   /**
