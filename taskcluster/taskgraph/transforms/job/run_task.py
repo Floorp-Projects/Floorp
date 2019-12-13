@@ -163,7 +163,7 @@ def generic_worker_run_task(config, job, taskdesc):
         command = ['C:/mozilla-build/python3/python3.exe', 'run-task']
     elif is_mac:
         command = ['/tools/python37/bin/python3.7', 'run-task']
-        if job['worker-type'].endswith('1014'):
+        if job['worker-type'].endswith(('1014', '1014-pgo')):
             command = ['/usr/local/bin/python3', 'run-task']
     else:
         command = ['./run-task']
