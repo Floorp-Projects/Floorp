@@ -1,3 +1,5 @@
+// |reftest| skip-if(!Number.prototype.toSource)
+
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
