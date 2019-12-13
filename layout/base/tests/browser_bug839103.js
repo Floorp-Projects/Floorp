@@ -40,7 +40,7 @@ async function testBody(testRoot) {
   link.setAttribute("href", testRoot + gStyleSheet);
 
   let stateChanged = ContentTaskUtils.waitForEvent(
-    this,
+    docShell.chromeEventHandler,
     "StyleSheetApplicableStateChanged",
     true
   );
@@ -59,7 +59,7 @@ async function testBody(testRoot) {
   is(evt.applicable, true, "evt.applicable has the right value");
 
   stateChanged = ContentTaskUtils.waitForEvent(
-    this,
+    docShell.chromeEventHandler,
     "StyleSheetApplicableStateChanged",
     true
   );
