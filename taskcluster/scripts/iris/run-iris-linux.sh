@@ -21,6 +21,9 @@ touch ~/.Xauthority
 
 # start fluxbox
 fluxbox &
+killall fluxbox
+echo "Control Mod4 Up :MaximizeWindow" >> /builds/worker/.fluxbox/keys
+fluxbox reconfigure &
 
 # Install iris's pipenv
 cd $MOZ_FETCHES_DIR/iris_firefox
