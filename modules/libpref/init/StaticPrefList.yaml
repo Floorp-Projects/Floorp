@@ -2183,7 +2183,7 @@
 # HTMLIFrameElement objects.
 - name: dom.security.featurePolicy.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # This pref enables the featurePolicy header support.
@@ -7080,10 +7080,9 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "permissions."
 #---------------------------------------------------------------------------
-
 - name: permissions.delegation.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: permissions.isolateBy.userContext
