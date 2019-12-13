@@ -16,9 +16,19 @@ exclude: true
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
   manage installed extensions
+- ⚠️ Renamed `ScreenLength.VIEWPORT_WIDTH`, `ScreenLength.VIEWPORT_HEIGHT`,
+  `ScreenLength.fromViewportWidth` and `ScreenLength.fromViewportHeight` to
+  [`ScreenLength.VISUAL_VIEWPORT_WIDTH`][72.24],
+  [`ScreenLength.VISUAL_VIEWPORT_HEIGHT`][72.25],
+  [`ScreenLength.fromVisualViewportWidth`][72.26] and
+  [`ScreenLength.fromVisualViewportHeight`][72.27] respectively.
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
 [73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
+[73.3]: {{javadoc_uri}}/ScreenLength.html#VISUAL_VIEWPORT_WIDTH
+[73.4]: {{javadoc_uri}}/ScreenLength.html#VISUAL_VIEWPORT_HEIGHT
+[73.5]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportWidth-double-
+[73.6]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportHeight-double-
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -486,4 +496,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5856cdf682140fafdd09d74dbc004bf0b6bb7398
+[api-version]: 4e403762a0587e6127f69d51f3ad2dedf6557dba

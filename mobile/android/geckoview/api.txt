@@ -1320,8 +1320,8 @@ package org.mozilla.geckoview {
   public class ScreenLength {
     method @NonNull @AnyThread public static ScreenLength bottom();
     method @NonNull @AnyThread public static ScreenLength fromPixels(double);
-    method @NonNull @AnyThread public static ScreenLength fromViewportHeight(double);
-    method @NonNull @AnyThread public static ScreenLength fromViewportWidth(double);
+    method @NonNull @AnyThread public static ScreenLength fromVisualViewportHeight(double);
+    method @NonNull @AnyThread public static ScreenLength fromVisualViewportWidth(double);
     method @AnyThread public int getType();
     method @AnyThread public double getValue();
     method @NonNull @AnyThread public static ScreenLength top();
@@ -1329,8 +1329,8 @@ package org.mozilla.geckoview {
     field public static final int DOCUMENT_HEIGHT = 4;
     field public static final int DOCUMENT_WIDTH = 3;
     field public static final int PIXEL = 0;
-    field public static final int VIEWPORT_HEIGHT = 2;
-    field public static final int VIEWPORT_WIDTH = 1;
+    field public static final int VISUAL_VIEWPORT_HEIGHT = 2;
+    field public static final int VISUAL_VIEWPORT_WIDTH = 1;
   }
 
   @UiThread public class SessionAccessibility {

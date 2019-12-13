@@ -223,7 +223,7 @@ public class SessionAccessibility {
                     if (virtualViewId == View.NO_ID) {
                         // Scroll the viewport forwards by approximately 80%.
                         mSession.getPanZoomController().scrollBy(
-                                ScreenLength.zero(), ScreenLength.fromViewportHeight(0.8),
+                                ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(0.8),
                                 PanZoomController.SCROLL_BEHAVIOR_AUTO);
                     } else {
                         // XXX: It looks like we never call scroll on virtual views.
@@ -234,7 +234,7 @@ public class SessionAccessibility {
                     if (virtualViewId == View.NO_ID) {
                         // Scroll the viewport backwards by approximately 80%.
                         mSession.getPanZoomController().scrollBy(
-                                ScreenLength.zero(), ScreenLength.fromViewportHeight(-0.8),
+                                ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(-0.8),
                                 PanZoomController.SCROLL_BEHAVIOR_AUTO);
                     } else {
                         // XXX: It looks like we never call scroll on virtual views.
