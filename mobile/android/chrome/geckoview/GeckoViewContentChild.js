@@ -13,8 +13,8 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This needs to match ScreenLength.java
 const SCREEN_LENGTH_TYPE_PIXEL = 0;
-const SCREEN_LENGTH_TYPE_VIEWPORT_WIDTH = 1;
-const SCREEN_LENGTH_TYPE_VIEWPORT_HEIGHT = 2;
+const SCREEN_LENGTH_TYPE_VISUAL_VIEWPORT_WIDTH = 1;
+const SCREEN_LENGTH_TYPE_VISUAL_VIEWPORT_HEIGHT = 2;
 const SCREEN_LENGTH_DOCUMENT_WIDTH = 3;
 const SCREEN_LENGTH_DOCUMENT_HEIGHT = 4;
 
@@ -99,9 +99,9 @@ class GeckoViewContentChild extends GeckoViewChildModule {
   toPixels(aLength, aType) {
     if (aType === SCREEN_LENGTH_TYPE_PIXEL) {
       return aLength;
-    } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_WIDTH) {
+    } else if (aType === SCREEN_LENGTH_TYPE_VISUAL_VIEWPORT_WIDTH) {
       return aLength * content.visualViewport.width;
-    } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_HEIGHT) {
+    } else if (aType === SCREEN_LENGTH_TYPE_VISUAL_VIEWPORT_HEIGHT) {
       return aLength * content.visualViewport.height;
     } else if (aType === SCREEN_LENGTH_DOCUMENT_WIDTH) {
       return aLength * content.document.body.scrollWidth;
