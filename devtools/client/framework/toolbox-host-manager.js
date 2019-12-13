@@ -212,7 +212,7 @@ ToolboxHostManager.prototype = {
       throw new Error("Unknown hostType: " + hostType);
     }
 
-    const newHost = new Hosts[hostType](this.target.tab, options);
+    const newHost = new Hosts[hostType](this.target.localTab, options);
     return newHost;
   },
 

@@ -1946,16 +1946,16 @@ Toolbox.prototype = {
    * @param {Boolean} state
    */
   tellRDMAboutPickerState: async function(state) {
-    const { tab } = this.target;
+    const { localTab } = this.target;
 
     if (
-      !ResponsiveUIManager.isActiveForTab(tab) ||
+      !ResponsiveUIManager.isActiveForTab(localTab) ||
       (await !this.target.actorHasMethod("emulation", "setElementPickerState"))
     ) {
       return;
     }
 
-    const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
+    const ui = ResponsiveUIManager.getResponsiveUIForTab(localTab);
     await ui.emulationFront.setElementPickerState(state);
   },
 

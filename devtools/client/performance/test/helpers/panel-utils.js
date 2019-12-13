@@ -105,7 +105,7 @@ exports.initConsoleInTab = async function({ tab }) {
 exports.teardownToolboxAndRemoveTab = async function(panel) {
   dump("Destroying panel.\n");
 
-  const tab = panel.target.tab;
+  const tab = panel.target.localTab;
   await panel.toolbox.destroy();
   await removeTab(tab);
 };

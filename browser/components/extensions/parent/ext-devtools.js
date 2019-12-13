@@ -53,7 +53,7 @@ global.getDevToolsTargetForContext = async context => {
       );
     }
 
-    const tab = context.devToolsToolbox.target.tab;
+    const tab = context.devToolsToolbox.target.localTab;
     context.devToolsTargetPromise = DevToolsShim.createTargetForTab(tab);
   }
 
@@ -83,8 +83,10 @@ global.getTargetTabIdForToolbox = toolbox => {
     );
   }
 
-  let parentWindow = target.tab.linkedBrowser.ownerGlobal;
-  let tab = parentWindow.gBrowser.getTabForBrowser(target.tab.linkedBrowser);
+  let parentWindow = target.localTab.linkedBrowser.ownerGlobal;
+  let tab = parentWindow.gBrowser.getTabForBrowser(
+    target.localTab.linkedBrowser
+  );
 
   return tabTracker.getId(tab);
 };
@@ -249,7 +251,7 @@ class DevToolsPageDefinition {
   }
 
   buildForToolbox(toolbox) {
-    if (!this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)) {
+    if (!this.extension.canAccessWindow(toolbox.target.localTab.ownerGlobal)) {
       // We should never create a devtools page for a toolbox related to a private browsing window
       // if the extension is not allowed to access it.
       return;
@@ -310,7 +312,7 @@ class DevToolsPageDefinition {
     for (let toolbox of DevToolsShim.getToolboxes()) {
       if (
         !toolbox.target.isLocalTab ||
-        !this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)
+        !this.extension.canAccessWindow(toolbox.target.localTab.ownerGlobal)
       ) {
         // Skip any non-local tab and private browsing windows if the extension
         // is not allowed to access them.
@@ -411,7 +413,7 @@ this.devtools = class extends ExtensionAPI {
   onToolboxCreated(toolbox) {
     if (
       !toolbox.target.isLocalTab ||
-      !this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)
+      !this.extension.canAccessWindow(toolbox.target.localTab.ownerGlobal)
     ) {
       // Skip any non-local (as remote tabs are not yet supported, see Bug 1304378 for additional details
       // related to remote targets support), and private browsing windows if the extension

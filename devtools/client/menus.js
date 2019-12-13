@@ -150,10 +150,10 @@ exports.menuitems = [
       // If RDM is active, disable touch simulation events if they're enabled.
       // Similarly, enable them when the color picker is done picking.
       if (
-        ResponsiveUIManager.isActiveForTab(target.tab) &&
+        ResponsiveUIManager.isActiveForTab(target.localTab) &&
         target.actorHasMethod("emulation", "setElementPickerState")
       ) {
-        const ui = ResponsiveUIManager.getResponsiveUIForTab(target.tab);
+        const ui = ResponsiveUIManager.getResponsiveUIForTab(target.localTab);
         await ui.emulationFront.setElementPickerState(true);
 
         inspectorFront.once("color-picked", async () => {
