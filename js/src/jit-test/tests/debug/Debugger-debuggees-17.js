@@ -6,7 +6,7 @@ load(libdir + 'asserts.js');
 var dbg = new Debugger;
 
 function check(bad) {
-  print("check(" + uneval(bad) + ")");
+  print("check(" + JSON.stringify(bad) + ")");
   assertThrowsInstanceOf(function () { dbg.addDebuggee(bad); }, TypeError);
   assertEq(dbg.getDebuggees().length, 0);
   assertThrowsInstanceOf(function () { dbg.hasDebuggee(bad); }, TypeError);

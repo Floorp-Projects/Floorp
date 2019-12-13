@@ -5,7 +5,7 @@ var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 
 function check(expr) {
-  print("checking " + uneval(expr));
+  print("checking " + JSON.stringify(expr));
   let completion = gDO.executeInGlobal(expr);
   if (completion.throw)
     throw completion.throw.unsafeDereference();

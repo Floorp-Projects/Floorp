@@ -6,7 +6,7 @@ var gDO = dbg.addDebuggee(g);
 var hits = 0;
 
 function check(expr, expected) {
-  print("checking " + uneval(expr));
+  print("checking " + JSON.stringify(expr));
 
   let completion = gDO.executeInGlobal(expr);
   if (completion.throw)

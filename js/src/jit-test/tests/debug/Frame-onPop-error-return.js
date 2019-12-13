@@ -9,8 +9,8 @@ function test(type, provocation) {
     var wasConstructing;
 
     // Help people figure out which 'test' call failed.
-    print("type:        " + uneval(type));
-    print("provocation: " + uneval(provocation));
+    print("type:        " + JSON.stringify(type));
+    print("provocation: " + JSON.stringify(provocation));
 
     dbg.onDebuggerStatement = function handleDebuggerStatement(f) {
         log += 'd';

@@ -90,7 +90,7 @@ assertEq(dbg.removeDebuggee(dwg1), undefined); assertDebuggees();
 // |Direct| should be the Debugger.Object referring directly to the debuggee
 // global, for checking the results from addDebuggee and getDebuggees.
 function combo(addAs, designateAs, direct) {
-  print("combo(" + uneval(addAs) + ", " + uneval(designateAs) + ")");
+  print("combo(" + JSON.stringify(addAs) + ", " + JSON.stringify(designateAs) + ")");
   assertDebuggees();
   assertEq(dbg.addDebuggee(addAs), direct);
   assertDebuggees(direct);

@@ -8,7 +8,7 @@ g.non_debuggee = function non_debuggee () {}
 
 function checkExpr(expr, { isAsync, isGenerator })
 {
-  print("Evaluating: " + uneval(expr));
+  print("Evaluating: " + JSON.stringify(expr));
   let completion = gDO.executeInGlobal(expr);
   if (completion.throw)
     throw completion.throw.unsafeDereference();
