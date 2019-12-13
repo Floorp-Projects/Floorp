@@ -468,6 +468,10 @@ class RefTest(object):
             browserEnv["MOZ_ACCELERATED"] = "1"
         else:
             browserEnv["MOZ_WEBRENDER"] = "0"
+
+        if options.headless:
+            browserEnv["MOZ_HEADLESS"] = "1"
+
         return browserEnv
 
     def cleanup(self, profileDir):
