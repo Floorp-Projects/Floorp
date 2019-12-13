@@ -1,18 +1,28 @@
 .ds-dismiss-ds-text-promo {
-  width: 744px;
+  max-width: 744px;
   margin: auto;
 }
 
 .ds-text-promo {
-  display: flex;
   max-width: 640px;
-  margin: 18px 24px;
+  margin: 0;
+  padding: 18px;
+
+  @media(min-width: $break-point-medium) {
+    display: flex;
+    margin: 18px 24px;
+    padding: 0 32px 0 0;
+  }
 
   .ds-image {
     width: 40px;
     height: 40px;
-    margin: 4px 12px 0 0;
     flex-shrink: 0;
+    margin: 0 0 18px;
+
+    @media(min-width: $break-point-medium) {
+      margin: 4px 12px 0 0;
+    }
 
     img {
       border-radius: 4px;

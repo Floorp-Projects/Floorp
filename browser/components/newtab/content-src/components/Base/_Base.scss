@@ -5,6 +5,14 @@
   min-height: 100vh;
   padding: ($section-spacing + $section-vertical-padding) $base-gutter $base-gutter;
 
+  &.ds-outer-wrapper-breakpoint-override {
+    padding: 30px 0 32px;
+
+    @media(min-width: $break-point-medium) {
+      padding: 30px 32px 32px;
+    }
+  }
+
   &.only-search {
     display: block;
     padding-top: 134px;
@@ -60,15 +68,19 @@ main {
 
 .ds-outer-wrapper-breakpoint-override {
   main {
-    // Override Activity Stream breakpoints for Discovery Stream.
-    // Right now Discovery Stream doesn't have any breakpoints,
-    // and Activity Stream breakpoints do some wonky things.
-    width: 1042px;
-  }
+    width: 266px;
+    padding-bottom: 68px;
 
-  &:not(.fixed-search) {
-    .search-wrapper .search-inner-wrapper {
-      width: $searchbar-width-large;
+    @media (min-width: $break-point-medium) {
+      width: 510px;
+    }
+
+    @media (min-width: $break-point-large) {
+      width: 746px;
+    }
+
+    @media (min-width: $break-point-widest) {
+      width: 986px;
     }
   }
 }
