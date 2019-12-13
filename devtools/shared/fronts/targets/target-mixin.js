@@ -171,24 +171,6 @@ function TargetMixin(parentClass) {
       return null;
     }
 
-    /**
-     * For local tabs, returns the tab's contentPrincipal, which can be used as a
-     * `triggeringPrincipal` when opening links.  However, this is a hack as it is not
-     * correct for subdocuments and it won't work for remote debugging.  Bug 1467945 hopes
-     * to devise a better approach.
-     */
-    get contentPrincipal() {
-      return null;
-    }
-
-    /**
-     * Similar to the above get contentPrincipal(), the get csp()
-     * returns the CSP which should be used for opening links.
-     */
-    get csp() {
-      return null;
-    }
-
     // Get a promise of the RootActor's form
     get root() {
       return this.client.mainRoot.rootForm;

@@ -47,12 +47,6 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
   get tab() {
     return this._tab;
   }
-  get contentPrincipal() {
-    return this.tab.linkedBrowser.contentPrincipal;
-  }
-  get csp() {
-    return this.tab.linkedBrowser.csp;
-  }
   toString() {
     return `Target:${this.tab}`;
   }
