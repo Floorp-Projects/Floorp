@@ -277,7 +277,9 @@ function expectObserverCalledOnClose(
 
 function promiseMessage(aMessage, aAction, aCount = 1) {
   let promise = SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[aMessage, aCount]], async function([expectedMessage, expectedCount]) {
+    gBrowser.selectedBrowser,
+    [[aMessage, aCount]],
+    async function([expectedMessage, expectedCount]) {
       return new Promise(resolve => {
         function listenForMessage({ data }) {
           if (
@@ -445,7 +447,9 @@ function promiseRequestDevice(
 ) {
   info("requesting devices");
   return SpecialPowers.spawn(
-    aBrowser, [{ aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice }], async function(args) {
+    aBrowser,
+    [{ aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice }],
+    async function(args) {
       let global = content.wrappedJSObject;
       if (args.aFrameId) {
         global = global.document.getElementById(args.aFrameId).contentWindow;
@@ -480,15 +484,17 @@ async function closeStream(
   }
 
   info("closing the stream");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [aFrameId], async function(
-    contentFrameId
-  ) {
-    let global = content.wrappedJSObject;
-    if (contentFrameId) {
-      global = global.document.getElementById(contentFrameId).contentWindow;
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [aFrameId],
+    async function(contentFrameId) {
+      let global = content.wrappedJSObject;
+      if (contentFrameId) {
+        global = global.document.getElementById(contentFrameId).contentWindow;
+      }
+      global.closeStream();
     }
-    global.closeStream();
-  });
+  );
 
   await Promise.all(observerPromises);
 
@@ -504,7 +510,9 @@ async function reloadAndAssertClosedStreams() {
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], "() => content.location.reload()"
+    gBrowser.selectedBrowser,
+    [],
+    "() => content.location.reload()"
   );
 
   await loadedPromise;

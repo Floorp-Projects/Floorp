@@ -98,10 +98,14 @@ add_task(async function test_change_shipping() {
         PTU.Details.additionalDisplayItemsEUR
       );
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-          details: paymentDetails,
-        }], PTU.ContentTasks.updateWith
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+            details: paymentDetails,
+          },
+        ],
+        PTU.ContentTasks.updateWith
       );
       info("added shipping change handler to change to EUR");
 
@@ -109,9 +113,13 @@ add_task(async function test_change_shipping() {
       info("changed shipping address to DE country");
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
       info("got shippingaddresschange event");
 
@@ -198,7 +206,9 @@ add_task(async function test_change_shipping() {
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
       let result = await SpecialPowers.spawn(
-        browser, [], PTU.ContentTasks.addCompletionHandler
+        browser,
+        [],
+        PTU.ContentTasks.addCompletionHandler
       );
       is(result.response.methodName, "basic-card", "Check methodName");
 
@@ -279,13 +289,17 @@ add_task(async function test_default_shippingOptions_noneSelected() {
       );
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-          details: Object.assign(
-            shippingOptionDetailsEUR,
-            PTU.Details.total1pt75EUR
-          ),
-        }], PTU.ContentTasks.updateWith
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+            details: Object.assign(
+              shippingOptionDetailsEUR,
+              PTU.Details.total1pt75EUR
+            ),
+          },
+        ],
+        PTU.ContentTasks.updateWith
       );
       info("added shipping change handler to change to EUR");
 
@@ -293,9 +307,13 @@ add_task(async function test_default_shippingOptions_noneSelected() {
       info("changed shipping address to DE country");
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
       info("got shippingaddresschange event");
 
@@ -378,13 +396,17 @@ add_task(async function test_default_shippingOptions_allSelected() {
       });
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-          details: Object.assign(
-            shippingOptionDetailsEUR,
-            PTU.Details.total1pt75EUR
-          ),
-        }], PTU.ContentTasks.updateWith
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+            details: Object.assign(
+              shippingOptionDetailsEUR,
+              PTU.Details.total1pt75EUR
+            ),
+          },
+        ],
+        PTU.ContentTasks.updateWith
       );
       info("added shipping change handler to change to EUR");
 
@@ -392,9 +414,13 @@ add_task(async function test_default_shippingOptions_allSelected() {
       info("changed shipping address to DE country");
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
       info("got shippingaddresschange event");
 
@@ -465,9 +491,13 @@ add_task(async function test_no_shippingchange_without_shipping() {
       );
 
       SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.ensureNoPaymentRequestEvent
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.ensureNoPaymentRequestEvent
       );
       info("added shipping change handler");
 
@@ -485,7 +515,9 @@ add_task(async function test_no_shippingchange_without_shipping() {
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
       let result = await SpecialPowers.spawn(
-        browser, [], PTU.ContentTasks.addCompletionHandler
+        browser,
+        [],
+        PTU.ContentTasks.addCompletionHandler
       );
       is(result.response.methodName, "basic-card", "Check methodName");
 
@@ -540,18 +572,26 @@ add_task(async function test_address_edit() {
       is(selectedIndex, -1, "No address should be selected initially");
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.promisePaymentRequestEvent
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.promisePaymentRequestEvent
       );
 
       info("selecting the US address");
       await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       addressOptions = await spawnPaymentDialogTask(
@@ -657,9 +697,13 @@ add_task(async function test_address_removal() {
       await formAutofillStorage.addresses.remove(selectedAddressGuid);
 
       await SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.promisePaymentRequestEvent
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.promisePaymentRequestEvent
       );
 
       addressOptions = await spawnPaymentDialogTask(

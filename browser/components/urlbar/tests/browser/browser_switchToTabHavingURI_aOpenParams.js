@@ -14,7 +14,9 @@ add_task(async function test_ignoreFragment() {
   switchTab("about:mozilla", true);
 
   let hashChangePromise = SpecialPowers.spawn(
-    tabRefAboutHome.linkedBrowser, [], async function() {
+    tabRefAboutHome.linkedBrowser,
+    [],
+    async function() {
       await ContentTaskUtils.waitForEvent(this, "hashchange", false);
     }
   );

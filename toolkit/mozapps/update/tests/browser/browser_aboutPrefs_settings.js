@@ -9,7 +9,9 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 // UI. Requires a tab with about:preferences open to be passed in.
 async function changeAndVerifyPref(tab, newConfigValue) {
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ newConfigValue }], async function({ newConfigValue }) {
+    tab.linkedBrowser,
+    [{ newConfigValue }],
+    async function({ newConfigValue }) {
       let radioId = newConfigValue ? "autoDesktop" : "manualDesktop";
       let radioElement = content.document.getElementById(radioId);
       radioElement.click();
@@ -45,7 +47,9 @@ async function changeAndVerifyPref(tab, newConfigValue) {
   }
 
   await SpecialPowers.spawn(
-    tab.linkedBrowser, [{ newConfigValue }], async function({ newConfigValue }) {
+    tab.linkedBrowser,
+    [{ newConfigValue }],
+    async function({ newConfigValue }) {
       let updateRadioGroup = content.document.getElementById(
         "updateRadioGroup"
       );

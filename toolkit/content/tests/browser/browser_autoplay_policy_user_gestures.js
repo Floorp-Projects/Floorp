@@ -244,7 +244,9 @@ async function testWebAudioWithUserGesture(gesture) {
   info("- check whether audio context starts running -");
   try {
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [], checkingAudioContextRunningState
+      tab.linkedBrowser,
+      [],
+      checkingAudioContextRunningState
     );
   } catch (error) {
     ok(false, error.toString());
@@ -253,7 +255,9 @@ async function testWebAudioWithUserGesture(gesture) {
   info("- calling resume() -");
   try {
     await SpecialPowers.spawn(
-      tab.linkedBrowser, [], resumeWithoutExpectedSuccess
+      tab.linkedBrowser,
+      [],
+      resumeWithoutExpectedSuccess
     );
   } catch (error) {
     ok(false, error.toString());

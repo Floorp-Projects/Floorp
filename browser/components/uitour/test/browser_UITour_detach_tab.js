@@ -51,7 +51,9 @@ var tests = [
     }, "browser-delayed-startup-finished");
 
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [myDocIdentifier], contentMyDocIdentifier => {
+      gBrowser.selectedBrowser,
+      [myDocIdentifier],
+      contentMyDocIdentifier => {
         let onPageShow = () => {
           if (!content.document.hidden) {
             let win = Cu.waiveXrays(content);
@@ -79,7 +81,9 @@ var tests = [
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
     await SpecialPowers.spawn(
-      selectedTab.linkedBrowser, [myDocIdentifier], contentMyDocIdentifier => {
+      selectedTab.linkedBrowser,
+      [myDocIdentifier],
+      contentMyDocIdentifier => {
         is(
           content.document.myExpando,
           contentMyDocIdentifier,

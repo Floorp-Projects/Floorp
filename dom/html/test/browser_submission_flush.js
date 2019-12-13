@@ -25,7 +25,9 @@ async function runTest(aTestActions) {
 
   /* eslint-disable no-shadow */
   let frame_url = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [{ kFormId, kFrameId, kSubmitButtonId, aTestActions }], async function({ kFormId, kFrameId, kSubmitButtonId, aTestActions }) {
+    gBrowser.selectedBrowser,
+    [{ kFormId, kFrameId, kSubmitButtonId, aTestActions }],
+    async function({ kFormId, kFrameId, kSubmitButtonId, aTestActions }) {
       let form = content.document.getElementById(kFormId);
 
       form.addEventListener(

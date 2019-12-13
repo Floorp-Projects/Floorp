@@ -12,7 +12,9 @@ function promiseU2FRegister(tab, app_id) {
 
   /* eslint-disable no-shadow */
   return SpecialPowers.spawn(
-    tab.linkedBrowser, [[app_id, challenge]], async function([app_id, challenge]) {
+    tab.linkedBrowser,
+    [[app_id, challenge]],
+    async function([app_id, challenge]) {
       return new Promise(resolve => {
         let version = "U2F_V2";
         content.u2f.register(app_id, [{ version, challenge }], [], resolve);

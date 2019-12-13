@@ -36,7 +36,9 @@ async function sendMessages(receiver) {
   // then send a message from a tab in the same user context
   for (const sender of [sender1, sender2]) {
     await SpecialPowers.spawn(
-      sender.browser, [{ name: channelName, message: sender.message }], function(opts) {
+      sender.browser,
+      [{ name: channelName, message: sender.message }],
+      function(opts) {
         const bc = new content.BroadcastChannel(opts.name);
         bc.postMessage(opts.message);
       }

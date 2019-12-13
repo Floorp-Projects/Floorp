@@ -45,7 +45,9 @@ add_task(async function test() {
     let { tab, browser } = await openTabInUserContext(TEST_URL, userContextId);
 
     await SpecialPowers.spawn(
-      browser, [{ names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId] }], function(opts) {
+      browser,
+      [{ names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId] }],
+      function(opts) {
         for (let name of opts.names) {
           content.document.cookie = name + "=" + opts.value;
         }

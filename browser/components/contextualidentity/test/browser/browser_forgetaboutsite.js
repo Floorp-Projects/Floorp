@@ -295,7 +295,9 @@ async function test_storage_cleared() {
 
     // Check that the storages has been set correctly.
     await SpecialPowers.spawn(
-      tabInfo.browser, [{ userContext: USER_CONTEXTS[userContextId] }], async function(arg) {
+      tabInfo.browser,
+      [{ userContext: USER_CONTEXTS[userContextId] }],
+      async function(arg) {
         // Check that the local storage has been set correctly.
         Assert.equal(
           content.localStorage.getItem("userContext"),

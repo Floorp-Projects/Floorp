@@ -71,10 +71,14 @@ async function openNewTab(aWindow, aExpectedURL) {
     false,
     aExpectedURL
   );
-  let alreadyLoaded = await SpecialPowers.spawn(browser, [aExpectedURL], url => {
-    let doc = content.document;
-    return doc && doc.readyState === "complete" && doc.location.href == url;
-  });
+  let alreadyLoaded = await SpecialPowers.spawn(
+    browser,
+    [aExpectedURL],
+    url => {
+      let doc = content.document;
+      return doc && doc.readyState === "complete" && doc.location.href == url;
+    }
+  );
   if (!alreadyLoaded) {
     await loadPromise;
   }

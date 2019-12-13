@@ -83,7 +83,9 @@ async function runTestForReceiver(receiver) {
   // then send a message from a tab in the same user context
   for (let sender of [sender1, sender2]) {
     await SpecialPowers.spawn(
-      sender.browser, [{ name: channelName, message: sender.message }], function(opts) {
+      sender.browser,
+      [{ name: channelName, message: sender.message }],
+      function(opts) {
         let bc = new content.window.BroadcastChannel(opts.name);
         bc.postMessage(opts.message);
       }

@@ -260,12 +260,16 @@ body > div > div {width: 1000px;height: 1000px;}\
     let scrollHori = test.expected & expectScrollHori;
 
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{
-        scrollVert,
-        scrollHori,
-        elemid: test.elem,
-        checkWindow: test.testwindow,
-      }], async function(args) {
+      gBrowser.selectedBrowser,
+      [
+        {
+          scrollVert,
+          scrollHori,
+          elemid: test.elem,
+          checkWindow: test.testwindow,
+        },
+      ],
+      async function(args) {
         let msg = "";
         if (args.checkWindow) {
           if (

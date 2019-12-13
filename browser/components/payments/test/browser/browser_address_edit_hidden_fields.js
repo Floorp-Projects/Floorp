@@ -49,9 +49,13 @@ add_task(async function test_hiddenFieldNotSaved() {
       newAddress["given-name"] = "hiddenFields";
 
       let shippingAddressChangePromise = SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       let options = {
@@ -138,9 +142,13 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
       });
 
       let shippingAddressChangePromise = SpecialPowers.spawn(
-        browser, [{
-          eventName: "shippingaddresschange",
-        }], PTU.ContentTasks.awaitPaymentEventPromise
+        browser,
+        [
+          {
+            eventName: "shippingaddresschange",
+          },
+        ],
+        PTU.ContentTasks.awaitPaymentEventPromise
       );
 
       await spawnPaymentDialogTask(frame, async args => {
