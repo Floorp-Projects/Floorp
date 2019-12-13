@@ -5,7 +5,7 @@
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
     const val kotlin = "1.3.61"
-    const val coroutines = "1.3.2"
+    const val coroutines = "1.3.3"
 
     const val junit = "4.12"
     const val robolectric = "4.1"
