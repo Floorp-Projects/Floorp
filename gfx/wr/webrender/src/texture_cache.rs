@@ -25,6 +25,7 @@ use std::cmp;
 use std::mem;
 use std::time::{Duration, SystemTime};
 use std::rc::Rc;
+use euclid::size2;
 
 /// The size of each region/layer in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
@@ -61,12 +62,13 @@ enum EntryDetails {
         /// The layer index of the texture array.
         layer_index: usize,
     },
+    Empty,
 }
 
 impl EntryDetails {
     fn describe(&self) -> (LayerIndex, DeviceIntPoint) {
         match *self {
-            EntryDetails::Standalone => (0, DeviceIntPoint::zero()),
+            EntryDetails::Standalone | EntryDetails::Empty => (0, DeviceIntPoint::zero()),
             EntryDetails::Picture { layer_index, .. } => (layer_index, DeviceIntPoint::zero()),
             EntryDetails::Cache { origin, layer_index } => (layer_index, origin),
         }
@@ -80,6 +82,7 @@ impl EntryDetails {
             EntryDetails::Standalone => EntryKind::Standalone,
             EntryDetails::Picture { .. } => EntryKind::Picture,
             EntryDetails::Cache { .. } => EntryKind::Shared,
+            EntryDetails::Empty => EntryKind::Empty,
         }
     }
 }
@@ -90,6 +93,7 @@ enum EntryKind {
     Standalone,
     Picture,
     Shared,
+    Empty,
 }
 
 #[derive(Debug)]
@@ -146,6 +150,24 @@ impl CacheEntry {
             uv_rect_handle: GpuCacheHandle::new(),
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
+            eviction: Eviction::Auto,
+        }
+    }
+
+    // Create a new entry for a standalone texture.
+    fn new_empty(last_access: FrameStamp) -> Self {
+        CacheEntry {
+            size: size2(0, 0),
+            user_data: [0.0; 3],
+            last_access,
+            details: EntryDetails::Empty,
+            texture_id: CacheTextureId(std::u64::MAX),
+            input_format: ImageFormat::BGRA8,
+            filter: TextureFilter::Linear,
+            swizzle: Swizzle::default(),
+            uv_rect_handle: GpuCacheHandle::new(),
+            eviction_notice: None,
+            uv_rect_kind: UvRectKind::Rect,
             eviction: Eviction::Auto,
         }
     }
@@ -343,6 +365,8 @@ struct EntryHandles {
     picture: Vec<FreeListHandle<CacheEntryMarker>>,
     /// Handles for each shared texture cache entry.
     shared: Vec<FreeListHandle<CacheEntryMarker>>,
+    /// Handles for each shared texture cache entry.
+    empty: Vec<FreeListHandle<CacheEntryMarker>>,
 }
 
 impl EntryHandles {
@@ -352,6 +376,7 @@ impl EntryHandles {
             EntryKind::Standalone => &mut self.standalone,
             EntryKind::Picture => &mut self.picture,
             EntryKind::Shared => &mut self.shared,
+            EntryKind::Empty => &mut self.empty,
         }
     }
 }
@@ -1167,7 +1192,8 @@ impl TextureCache {
                 }
                 region.free(origin, &mut unit.empty_regions);
             }
-        }
+            EntryDetails::Empty => {}
+         }
     }
 
     /// Check if we can allocate this entry without growing any of the texture cache arrays.
@@ -1262,7 +1288,8 @@ impl TextureCache {
         //           case, add support for storing these in a standalone
         //           texture array.
         if descriptor.size.width > TEXTURE_REGION_DIMENSIONS ||
-           descriptor.size.height > TEXTURE_REGION_DIMENSIONS
+           descriptor.size.height > TEXTURE_REGION_DIMENSIONS ||
+           descriptor.size.is_empty_or_negative()
         {
             allowed_in_shared_cache = false;
         }
@@ -1323,8 +1350,9 @@ impl TextureCache {
         &mut self,
         params: &CacheAllocParams,
     ) -> CacheEntry {
-        assert!(!params.descriptor.size.is_empty_or_negative());
-
+        if params.descriptor.size.is_empty_or_negative() {
+            return CacheEntry::new_empty(self.now);
+        }
         // If this image doesn't qualify to go in the shared (batching) cache,
         // allocate a standalone entry.
         if self.is_allowed_in_shared_cache(params.filter, &params.descriptor) {
@@ -1363,7 +1391,7 @@ impl TextureCache {
                     let (from, to) = match new_kind {
                         EntryKind::Standalone =>
                             (&mut self.doc_data.handles.shared, &mut self.doc_data.handles.standalone),
-                        EntryKind::Picture => unreachable!(),
+                        EntryKind::Picture | EntryKind::Empty => unreachable!(),
                         EntryKind::Shared =>
                             (&mut self.doc_data.handles.standalone, &mut self.doc_data.handles.shared),
                     };
