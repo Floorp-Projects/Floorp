@@ -6,7 +6,7 @@ function check(obj) {
   for (let prop of props) {
     let desc = Object.getOwnPropertyDescriptor(proto, prop);
     if (desc.set) {
-      print("bleah: " + uneval(prop));
+      print("bleah: " + JSON.stringify(prop));
       assertEq(typeof desc.set, 'function');
       try {
         desc.set.call(obj);

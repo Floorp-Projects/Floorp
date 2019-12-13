@@ -63,7 +63,7 @@ function test(code, debugStmts, followupStmts) {
     code = code.replace("@@", debugStmts);
     if (followupStmts !== undefined)
         code += " " + followupStmts;
-    code = code.replace(/VAL/g, uneval(val));
+    code = code.replace(/VAL/g, String(val));
     g.eval(code);
     assertEq(hits, 1);
 }

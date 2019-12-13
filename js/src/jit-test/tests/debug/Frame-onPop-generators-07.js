@@ -23,7 +23,7 @@ dbg.onEnterFrame = frame => {
 };
 
 assertDeepEq([... g.f()], ["yielding"]);
-print(uneval(completions));
+print(JSON.stringify(completions));
 Pattern([
   X({
     return: new DebuggerObjectPattern("Generator", {}),
