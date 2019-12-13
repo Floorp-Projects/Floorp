@@ -128,6 +128,7 @@ async function test_cookie_settings({
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ cookiesEnabled, cookieSettingsLocked }],
+    // eslint-disable-next-line no-shadow
     async function({ cookiesEnabled, cookieSettingsLocked }) {
       let deleteOnCloseCheckbox = content.document.getElementById(
         "deleteOnClose"
