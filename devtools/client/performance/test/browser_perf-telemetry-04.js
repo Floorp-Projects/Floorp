@@ -25,7 +25,7 @@ add_task(async function() {
     win: window,
   });
 
-  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.localTab });
 
   const started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings

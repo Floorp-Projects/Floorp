@@ -29,7 +29,7 @@ add_task(async function() {
   await console.profile("rust");
   await console.profileEnd("rust");
 
-  const { panel } = await initPerformanceInTab({ tab: target.tab });
+  const { panel } = await initPerformanceInTab({ tab: target.localTab });
   const { PerformanceController, WaterfallView } = panel.panelWin;
 
   await waitUntil(() => PerformanceController.getRecordings().length == 1);

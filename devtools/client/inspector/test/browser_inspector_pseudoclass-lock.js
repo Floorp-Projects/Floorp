@@ -58,7 +58,7 @@ add_task(async function() {
   );
 
   info("Destroying the toolbox");
-  const tab = toolbox.target.tab;
+  const tab = toolbox.target.localTab;
   await toolbox.destroy();
 
   // As the toolbox get detroyed, we need to fetch a new test-actor

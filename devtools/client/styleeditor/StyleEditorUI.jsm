@@ -1078,8 +1078,8 @@ StyleEditorUI.prototype = {
    *         Object with width or/and height properties.
    */
   async _launchResponsiveMode(options = {}) {
-    const tab = this._target.tab;
-    const win = this._target.tab.ownerDocument.defaultView;
+    const tab = this._target.localTab;
+    const win = this._target.localTab.ownerDocument.defaultView;
 
     await ResponsiveUIManager.openIfNeeded(win, tab, {
       trigger: "style_editor",

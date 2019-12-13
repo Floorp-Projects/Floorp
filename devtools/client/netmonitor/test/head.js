@@ -387,7 +387,7 @@ function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
   return (async function() {
-    const tab = monitor.toolbox.target.tab;
+    const tab = monitor.toolbox.target.localTab;
     const url = newUrl || tab.linkedBrowser.currentURI.spec;
 
     await waitForAllNetworkUpdateEvents();
@@ -405,7 +405,7 @@ function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
   return (async function() {
-    const tab = monitor.toolbox.target.tab;
+    const tab = monitor.toolbox.target.localTab;
 
     await waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
