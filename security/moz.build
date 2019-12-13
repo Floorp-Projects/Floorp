@@ -83,8 +83,7 @@ gyp_vars['nss_public_dist_dir'] = '$PRODUCT_DIR/dist'
 gyp_vars['nss_dist_obj_dir'] = '$PRODUCT_DIR/dist/bin'
 # We don't currently build NSS tests.
 gyp_vars['disable_tests'] = 1
-if CONFIG['NSS_DISABLE_DBM']:
-    gyp_vars['disable_dbm'] = 1
+gyp_vars['disable_dbm'] = 1
 gyp_vars['disable_libpkix'] = 1
 gyp_vars['enable_sslkeylogfile'] = 1
 # pkg-config won't reliably find zlib on our builders, so just force it.
