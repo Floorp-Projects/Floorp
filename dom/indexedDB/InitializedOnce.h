@@ -22,13 +22,33 @@ namespace mozilla {
 
 enum struct LazyInit { Allow, Forbid };
 
+namespace ValueCheckPolicies {
+template <typename T>
+struct AllowAnyValue {
+  constexpr static bool Check(const T& /*aValue*/) { return true; }
+};
+
+template <typename T>
+struct ConvertsToTrue {
+  constexpr static bool Check(const T& aValue) {
+    return static_cast<bool>(aValue);
+  }
+};
+}  // namespace ValueCheckPolicies
+
 // A kind of mozilla::Maybe that can only be initialized and cleared once. It
 // cannot be re-initialized. This is a more stateful than a const Maybe<T> in
 // that it can be cleared, but much less stateful than a non-const Maybe<T>
-// which could be reinitialized multiple times. Use with a const T to ensure
-// that the contents cannot be modified either.
-template <typename T, LazyInit LazyInit = LazyInit::Forbid>
+// which could be reinitialized multiple times. Can only be used with const T
+// to ensure that the contents cannot be modified either.
+// TODO: Make constructors constexpr when Maybe's constructors are constexpr
+// (Bug 1601336).
+template <typename T, LazyInit LazyInit = LazyInit::Forbid,
+          template <typename> class ValueCheckPolicy =
+              ValueCheckPolicies::AllowAnyValue>
 class InitializedOnce final {
+  static_assert(std::is_const_v<T>);
+
  public:
   template <typename Dummy = void>
   explicit InitializedOnce(
@@ -36,8 +56,12 @@ class InitializedOnce final {
 
   template <typename... Args>
   explicit InitializedOnce(Args&&... aArgs)
-      : mMaybe{Some(T{std::forward<Args>(aArgs)...})} {}
+      : mMaybe{Some(T{std::forward<Args>(aArgs)...})} {
+    MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
+  }
 
+  InitializedOnce(const InitializedOnce&) = delete;
+  InitializedOnce(InitializedOnce&&) = default;
   InitializedOnce& operator=(const InitializedOnce&) = delete;
   InitializedOnce& operator=(InitializedOnce&&) = delete;
 
@@ -46,6 +70,7 @@ class InitializedOnce final {
     MOZ_ASSERT(mMaybe.isNothing());
     MOZ_ASSERT(!mWasReset);
     mMaybe.emplace(T{std::forward<Args>(aArgs)...});
+    MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
   }
 
   explicit operator bool() const { return isSome(); }
@@ -72,6 +97,10 @@ class InitializedOnce final {
   bool mWasReset = false;
 #endif
 };
+
+template <typename T, LazyInit LazyInit = LazyInit::Forbid>
+using InitializedOnceMustBeTrue =
+    InitializedOnce<T, LazyInit, ValueCheckPolicies::ConvertsToTrue>;
 
 }  // namespace mozilla
 
