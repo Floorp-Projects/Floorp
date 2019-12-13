@@ -15,7 +15,7 @@ function m(f) {
             a.push(e.toString());
         }
     }
-    p(uneval(a));
+    p(JSON.stringify(a));
 }
 f = Function("\
     function f() {\

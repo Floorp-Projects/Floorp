@@ -11,12 +11,12 @@ Match.Pattern([{node: {}, edge: "w"},
                {node: {}, edge: "y"},
                {node: {}, edge: "z"}])
   .assert(findPath(o, o.w.x.y.z));
-print(uneval(findPath(o, o.w.x.y.z)));
+print(JSON.stringify(findPath(o, o.w.x.y.z)));
 
 var a = [ , o ];
 Match.Pattern([{node: {}, edge: "objectElements[1]"}])
   .assert(findPath(a, o));
-print(uneval(findPath(a, o)));
+print(JSON.stringify(findPath(a, o)));
 
 function C() {}
 C.prototype.obj = {};
@@ -25,7 +25,7 @@ Match.Pattern([{node: {}, edge: "group"},
                {node: Match.Pattern.ANY, edge: "group_proto"},
                {node: { constructor: Match.Pattern.ANY }, edge: "obj"}])
   .assert(findPath(c, c.obj));
-print(uneval(findPath(c, c.obj)));
+print(JSON.stringify(findPath(c, c.obj)));
 
 function f(x) { return function g(y) { return x+y; }; }
 var o = {}
@@ -33,7 +33,7 @@ var gc = f(o);
 Match.Pattern([{node: gc, edge: "fun_environment"},
                {node: Match.Pattern.ANY, edge: "x"}])
   .assert(findPath(gc, o));
-print(uneval(findPath(gc, o)));
+print(JSON.stringify(findPath(gc, o)));
 
 Match.Pattern([{node: {}, edge: "group"},
                {node: Match.Pattern.ANY, edge: "group_global"},

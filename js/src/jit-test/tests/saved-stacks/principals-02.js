@@ -8,7 +8,7 @@ var count = 0;
 // the string, say a, b, and then c. Younger frames appear earlier in
 // |expected| than older frames.
 function check(expected, stack) {
-  print("check(" + uneval(expected) + ") against:\n" + stack);
+  print("check(" + JSON.stringify(expected) + ") against:\n" + stack);
   count++;
 
   // Extract only the function names from the stack trace. Omit the frames

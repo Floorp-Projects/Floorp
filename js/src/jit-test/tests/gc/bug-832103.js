@@ -11,7 +11,7 @@ Object.defineProperty(this, "y", {
     }
 })
 r = RegExp("");
-uneval(undefined)
+String(undefined)
 with({
     b: gczeal(9, 2)
 });
