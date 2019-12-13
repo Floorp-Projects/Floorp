@@ -300,14 +300,13 @@ class FontFamilyList {
   }
 
   // searches for a specific non-generic name, case-insensitive comparison
-  bool Contains(const nsACString& aFamilyName) const {
-    NS_ConvertUTF8toUTF16 fam(aFamilyName);
+  bool Contains(const nsAString& aFamilyName) const {
     for (const FontFamilyName& name : mFontlist->mNames) {
       if (!name.IsNamed()) {
         continue;
       }
       nsDependentAtomString listname(name.mName);
-      if (listname.Equals(fam, nsCaseInsensitiveStringComparator())) {
+      if (listname.Equals(aFamilyName, nsCaseInsensitiveStringComparator())) {
         return true;
       }
     }
