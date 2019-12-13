@@ -205,7 +205,11 @@ add_task(async function() {
     // open a file for writing in $HOME, this should fail
     let path = fileInHomeDir().path;
     let flags = openWriteCreateFlags();
-    let fd = await SpecialPowers.spawn(browser, [{ lib, path, flags }], callOpen);
+    let fd = await SpecialPowers.spawn(
+      browser,
+      [{ lib, path, flags }],
+      callOpen
+    );
     ok(fd < 0, "opening a file for writing in home is not permitted");
   }
 
@@ -216,7 +220,11 @@ add_task(async function() {
     // the file for us
     let path = fileInTempDir().path;
     let flags = openWriteCreateFlags();
-    let fd = await SpecialPowers.spawn(browser, [{ lib, path, flags }], callOpen);
+    let fd = await SpecialPowers.spawn(
+      browser,
+      [{ lib, path, flags }],
+      callOpen
+    );
     if (isMac()) {
       ok(
         fd === -1,
@@ -239,16 +247,24 @@ add_task(async function() {
   // remove support for macOS 10.9.
   if (isMac() && Services.sysinfo.getProperty("version") >= "14.0.0") {
     let rv = await SpecialPowers.spawn(
-      browser, [{ lib, name: "kern.boottime" }], callSysctl
+      browser,
+      [{ lib, name: "kern.boottime" }],
+      callSysctl
     );
     ok(rv == -1, "calling sysctl('kern.boottime') is not permitted");
 
     rv = await SpecialPowers.spawn(
-      browser, [{ lib, name: "net.inet.ip.ttl" }], callSysctl
+      browser,
+      [{ lib, name: "net.inet.ip.ttl" }],
+      callSysctl
     );
     ok(rv == -1, "calling sysctl('net.inet.ip.ttl') is not permitted");
 
-    rv = await SpecialPowers.spawn(browser, [{ lib, name: "hw.ncpu" }], callSysctl);
+    rv = await SpecialPowers.spawn(
+      browser,
+      [{ lib, name: "hw.ncpu" }],
+      callSysctl
+    );
     ok(rv == 0, "calling sysctl('hw.ncpu') is permitted");
   }
 });

@@ -60,7 +60,9 @@ add_task(async function block_multiple_media() {
 
   info("- non-autoplay can't start playback when the tab is blocked -");
   await SpecialPowers.spawn(
-    browser, [], play_nonautoplay_audio_should_be_blocked
+    browser,
+    [],
+    play_nonautoplay_audio_should_be_blocked
   );
 
   info("- select tab as foreground tab -");

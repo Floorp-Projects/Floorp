@@ -273,7 +273,9 @@ var setViewportSize = async function(ui, manager, width, height) {
 var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
   await setViewportSize(ui, manager, width, height);
   const reflowed = SpecialPowers.spawn(
-    ui.getViewportBrowser(), [], async function() {
+    ui.getViewportBrowser(),
+    [],
+    async function() {
       return new Promise(resolve => {
         content.requestAnimationFrame(resolve);
       });

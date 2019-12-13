@@ -9,7 +9,9 @@ const TEST_URL =
 
 async function assertStatus(tab, expected) {
   let actual = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], async function() {
+    tab.linkedBrowser,
+    [],
+    async function() {
       info("visbility state: " + content.document.visibilityState);
       info("docshell active: " + docShell.isActive);
       return content.document.getElementById("status").value;

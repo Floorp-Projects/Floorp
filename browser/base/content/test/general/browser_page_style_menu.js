@@ -33,7 +33,9 @@ add_task(async function() {
   }));
 
   let validLinks = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [items], function(contentItems) {
+    gBrowser.selectedBrowser,
+    [items],
+    function(contentItems) {
       let contentValidLinks = 0;
       Array.prototype.forEach.call(
         content.document.querySelectorAll("link, style"),

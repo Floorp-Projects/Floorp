@@ -26,7 +26,9 @@ add_task(async function testDismissHanger() {
   info("Clicked outside the Geolocation panel to dismiss it");
 
   let hasLocation = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       return content.document.body.innerHTML.includes("location...");
     }
   );

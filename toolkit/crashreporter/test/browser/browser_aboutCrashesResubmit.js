@@ -187,8 +187,8 @@ function test() {
   );
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:crashes").then(tab => {
-    SpecialPowers.spawn(tab.linkedBrowser, [crashes], check_crash_list).then(() =>
-      check_submit_pending(tab, crashes)
+    SpecialPowers.spawn(tab.linkedBrowser, [crashes], check_crash_list).then(
+      () => check_submit_pending(tab, crashes)
     );
   });
 }

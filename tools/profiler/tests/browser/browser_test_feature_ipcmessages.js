@@ -39,7 +39,9 @@ add_task(async function test_profile_feature_ipcmessges() {
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
-      contentBrowser, [], () => Services.appinfo.processID
+      contentBrowser,
+      [],
+      () => Services.appinfo.processID
     );
     await waitForLoad();
 
@@ -73,7 +75,9 @@ add_task(async function test_profile_feature_ipcmessges() {
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
-      contentBrowser, [], () => Services.appinfo.processID
+      contentBrowser,
+      [],
+      () => Services.appinfo.processID
     );
     await waitForLoad();
 

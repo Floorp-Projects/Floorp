@@ -142,7 +142,9 @@ add_task(async function() {
     }
 
     await SpecialPowers.spawn(
-      gBrowser.selectedBrowser, [{ selectElement: test.isSelected ? test.id : null }], async function(arg) {
+      gBrowser.selectedBrowser,
+      [{ selectElement: test.isSelected ? test.id : null }],
+      async function(arg) {
         let selection = content.getSelection();
         selection.removeAllRanges();
 

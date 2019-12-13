@@ -852,14 +852,18 @@ var BrowserTestUtils = {
 
     // We cannot use the regular BrowserTestUtils helper for waiting here, since that
     // would try to insert the preloaded browser, which would only break things.
-    await gBrowser.preloadedBrowser.ownerGlobal.SpecialPowers.spawn(gBrowser.preloadedBrowser, [], async () => {
-      await ContentTaskUtils.waitForCondition(() => {
-        return (
-          this.content.document &&
-          this.content.document.readyState == "complete"
-        );
-      });
-    });
+    await gBrowser.preloadedBrowser.ownerGlobal.SpecialPowers.spawn(
+      gBrowser.preloadedBrowser,
+      [],
+      async () => {
+        await ContentTaskUtils.waitForCondition(() => {
+          return (
+            this.content.document &&
+            this.content.document.readyState == "complete"
+          );
+        });
+      }
+    );
   },
 
   /**

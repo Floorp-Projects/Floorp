@@ -41,7 +41,9 @@ add_task(async function checkFormStateSaved() {
       });
       await BrowserTestUtils.withNewTab(fileURISpec, async otherBrowser => {
         await SpecialPowers.spawn(
-          otherBrowser, [{ textareas, textboxes }], checkform
+          otherBrowser,
+          [{ textareas, textboxes }],
+          checkform
         );
       });
     }

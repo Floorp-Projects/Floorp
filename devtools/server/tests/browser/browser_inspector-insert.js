@@ -40,7 +40,9 @@ async function testRearrange(walker) {
   await walker.insertBefore(nodeA, longlist, nextNode);
 
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[nextNode.actorID]], async function(actorID) {
+    gBrowser.selectedBrowser,
+    [[nextNode.actorID]],
+    async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
@@ -77,7 +79,9 @@ async function testInsertInvalidInput(walker) {
 
   // Now move it to the original location and make sure no mutation happens.
   await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [[longlist.actorID]], async function(actorID) {
+    gBrowser.selectedBrowser,
+    [[longlist.actorID]],
+    async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
@@ -98,7 +102,9 @@ async function testInsertInvalidInput(walker) {
 
   await walker.insertBefore(nodeA, longlist, nodeA);
   let hasMutated = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -108,7 +114,9 @@ async function testInsertInvalidInput(walker) {
 
   await walker.insertBefore(nodeA, longlist, nextSibling);
   hasMutated = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -118,7 +126,9 @@ async function testInsertInvalidInput(walker) {
 
   await walker.insertBefore(nodeA, longlist);
   hasMutated = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -128,7 +138,9 @@ async function testInsertInvalidInput(walker) {
 
   await walker.insertBefore(nodeA, longlist);
   hasMutated = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [], async function() {
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;

@@ -52,7 +52,9 @@ function verifyDirectCertificate(attestationObject) {
 function promiseWebAuthnRegister(tab, attestation = "indirect") {
   /* eslint-disable no-shadow */
   return SpecialPowers.spawn(
-    tab.linkedBrowser, [[attestation]], ([attestation]) => {
+    tab.linkedBrowser,
+    [[attestation]],
+    ([attestation]) => {
       const cose_alg_ECDSA_w_SHA256 = -7;
 
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));

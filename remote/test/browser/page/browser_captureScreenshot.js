@@ -150,7 +150,9 @@ async function getImageDetails(image) {
   const mimeType = getMimeType(image);
 
   return SpecialPowers.spawn(
-    gBrowser.selectedBrowser, [{ mimeType, image }], async function({ mimeType, image }) {
+    gBrowser.selectedBrowser,
+    [{ mimeType, image }],
+    async function({ mimeType, image }) {
       return new Promise(resolve => {
         const img = new content.Image();
         img.addEventListener(

@@ -39,10 +39,14 @@ function promiseLoaded(browser) {
   return SpecialPowers.spawn(browser, [undefined], async () => {
     if (!["interactive", "complete"].includes(content.document.readyState)) {
       await new Promise(resolve =>
-        docShell.chromeEventHandler.addEventListener("DOMContentLoaded", resolve, {
-          once: true,
-          capture: true,
-        })
+        docShell.chromeEventHandler.addEventListener(
+          "DOMContentLoaded",
+          resolve,
+          {
+            once: true,
+            capture: true,
+          }
+        )
       );
     }
   });
@@ -64,7 +68,9 @@ async function testURL(url, loadFunc, endFunc) {
   await pageShowPromise;
 
   await SpecialPowers.spawn(
-    browser, [{ isRemote: gMultiProcessBrowser }], async function(arg) {
+    browser,
+    [{ isRemote: gMultiProcessBrowser }],
+    async function(arg) {
       Assert.equal(
         Services.focus.focusedElement,
         null,

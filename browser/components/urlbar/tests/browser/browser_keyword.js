@@ -188,7 +188,9 @@ add_task(async function test_keyword_using_post() {
   );
 
   let postData = await SpecialPowers.spawn(
-    tab.linkedBrowser, [], async function() {
+    tab.linkedBrowser,
+    [],
+    async function() {
       return content.document.body.textContent;
     }
   );
