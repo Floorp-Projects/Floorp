@@ -55,7 +55,7 @@ function f(j,k,a)
 
   status = inSection(5);
   actual = formatArray(a[2][j]);
-  expect = '[3, ,]';
+  expect = formatArray([3, ,]);
   addThis();
 }
 
