@@ -25,6 +25,7 @@ class HybridSdpParser : public SdpParser {
       -> UniquePtr<SdpParser::Results> override;
 
  private:
+  const bool mStrictSuccess;
   const UniquePtr<SdpParser> mPrimary;
   const Maybe<UniquePtr<SdpParser>> mSecondary;
   const Maybe<UniquePtr<SdpParser>> mFailover;

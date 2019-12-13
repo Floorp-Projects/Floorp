@@ -586,34 +586,52 @@ void RsdparsaSdpAttributeList::LoadSsrc(RustAttributeList* attributeList) {
   SetAttribute(ssrcs.release());
 }
 
-SdpRtpmapAttributeList::CodecType strToCodecType(const std::string& name) {
+struct FmtDefaults {
+  uint32_t minimumChannels = 0;
+};
+
+std::tuple<SdpRtpmapAttributeList::CodecType, FmtDefaults> strToCodecType(
+    const std::string& name) {
   auto codec = SdpRtpmapAttributeList::kOtherCodec;
+  FmtDefaults defaults = {0};  // This is tracked to match SIPCC behavior only
   if (!nsCRT::strcasecmp(name.c_str(), "opus")) {
     codec = SdpRtpmapAttributeList::kOpus;
+    defaults = {0};
   } else if (!nsCRT::strcasecmp(name.c_str(), "G722")) {
     codec = SdpRtpmapAttributeList::kG722;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "PCMU")) {
     codec = SdpRtpmapAttributeList::kPCMU;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "PCMA")) {
     codec = SdpRtpmapAttributeList::kPCMA;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "VP8")) {
     codec = SdpRtpmapAttributeList::kVP8;
+    defaults = {0};
   } else if (!nsCRT::strcasecmp(name.c_str(), "VP9")) {
     codec = SdpRtpmapAttributeList::kVP9;
+    defaults = {0};
   } else if (!nsCRT::strcasecmp(name.c_str(), "iLBC")) {
     codec = SdpRtpmapAttributeList::kiLBC;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "iSAC")) {
     codec = SdpRtpmapAttributeList::kiSAC;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "H264")) {
     codec = SdpRtpmapAttributeList::kH264;
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "red")) {
     codec = SdpRtpmapAttributeList::kRed;
+    defaults = {0};
   } else if (!nsCRT::strcasecmp(name.c_str(), "ulpfec")) {
     codec = SdpRtpmapAttributeList::kUlpfec;
+    defaults = {0};
   } else if (!nsCRT::strcasecmp(name.c_str(), "telephone-event")) {
     codec = SdpRtpmapAttributeList::kTelephoneEvent;
+    defaults = {1};
   }
-  return codec;
+  return std::make_tuple(codec, defaults);
 }
 
 void RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList) {
@@ -628,8 +646,11 @@ void RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList) {
     RustSdpAttributeRtpmap& rtpmap = rustRtpmaps[i];
     std::string payloadType = std::to_string(rtpmap.payloadType);
     std::string name = convertStringView(rtpmap.codecName);
-    auto codec = strToCodecType(name);
+    auto [codec, defaults] = strToCodecType(name);
     uint32_t channels = rtpmap.channels;
+    if (channels == 0) {
+      channels = defaults.minimumChannels;
+    }
     rtpmapList->PushEntry(payloadType, codec, name, rtpmap.frequency, channels);
   }
   SetAttribute(rtpmapList.release());

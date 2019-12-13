@@ -43,6 +43,9 @@ extern "C" {
     return;                         \
   }
 
+// If you want to see the SDP as it is parsed
+// #define DEBUG_DISPLAY_SDP
+
 using namespace mozilla;
 
 namespace test {
@@ -1572,6 +1575,19 @@ class NewSdpTest
       firstParser.swap(secondParser);
     }
     mResults = firstParser->Parse(sdp);
+#ifdef DEBUG_DISPLAY_SDP
+    std::cout << firstParser->Name() << " Parsing SDP:" << std::endl;
+    std::stringstream sdpStream(sdp);
+    std::string line;
+    size_t lineNumber = 0;
+    while (std::getline(sdpStream, line, '\n')) {
+      if (line.length() && line.back() == '\r') {
+        line.pop_back();
+      }
+      lineNumber++;
+      std::cout << std::setw(4) << lineNumber << " " << line << std::endl;
+    }
+#endif
     // Are we configured to do a parse and serialize before actually
     // running the test?
     if (::testing::get<0>(GetParam())) {
@@ -1655,6 +1671,7 @@ class NewSdpTest
     auto attr = rtpmaps.GetEntry(search_pt);
     ASSERT_EQ(expected_pt, attr.pt);
     ASSERT_EQ(codec, attr.codec);
+    std::cout << "Codec = " << name << std::endl;
     ASSERT_EQ(name, attr.name);
     ASSERT_EQ(clock, attr.clock);
     ASSERT_EQ(channels, attr.channels);
@@ -3883,7 +3900,8 @@ TEST_P(NewSdpTest, CheckClearCodecs) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120 110" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendonly" CRLF "a=rtpmap:110 opus/48000/2" CRLF);
+           "a=sendonly" CRLF "a=rtpmap:110 opus/48000" CRLF);
+  // SIPCC strips the channels on opus so the /2 was omitted
 
   ASSERT_TRUE(!!Sdp())
   << "Parse failed: " << SerializeParseErrors();
@@ -4071,7 +4089,7 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
   const std::string kBasicOpusFmtp1 =
       "v=0" CRLF "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
       "s=SIP Call" CRLF "c=IN IP4 224.0.0.1/100/12" CRLF "t=0 0" CRLF
-      "m=video 9 RTP/SAVPF 120" CRLF "a=rtpmap:120 opus/48000" CRLF
+      "m=video 9 RTP/SAVPF 120" CRLF "a=rtpmap:120 opus/48000/1" CRLF
       "a=fmtp:120 stereo=1;useinbandfec=1" CRLF;
   ASSERT_TRUE(check_comparison(kBasicOpusFmtp1));
 
