@@ -990,8 +990,6 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 }
 
 void nsWindow::ApplySizeConstraints(void) {
-  LOG(("nsWindow::ApplySizeConstraints [%p]\n", (void*)this));
-
   if (mShell) {
     GdkGeometry geometry;
     geometry.min_width =
@@ -1003,11 +1001,6 @@ void nsWindow::ApplySizeConstraints(void) {
     geometry.max_height =
         DevicePixelsToGdkCoordRoundDown(mSizeConstraints.mMaxSize.height);
 
-    LOG(("    min width %d min height %d\n", geometry.min_width,
-         geometry.min_height));
-    LOG(("    max width %d max height %d\n", geometry.max_width,
-         geometry.max_height));
-
     uint32_t hints = 0;
     if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
       hints |= GDK_HINT_MIN_SIZE;
@@ -1018,7 +1011,6 @@ void nsWindow::ApplySizeConstraints(void) {
     }
 
     if (mAspectRatio != 0.0f) {
-      LOG(("    aspect %f\n", mAspectRatio));
       geometry.min_aspect = mAspectRatio;
       geometry.max_aspect = mAspectRatio;
       hints |= GDK_HINT_ASPECT;
@@ -4798,11 +4790,8 @@ void nsWindow::UpdateOpaqueRegionGtk(cairo_region_t* aRegion) {
 }
 
 void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
-  LOG(("nsWindow::UpdateOpaqueRegion [%p]\n", (void*)this));
-
   // Also don't set shape mask if we use transparency bitmap.
   if (mTransparencyBitmapForTitlebar) {
-    LOG(("    disabled due to transparency bitmap\n"));
     return;
   }
 
@@ -4811,7 +4800,6 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
   // We don't tweak opaque regions for non-toplevel windows (popup, panels etc.)
   // as they can be transparent by gecko.
   if (mWindowType != eWindowType_toplevel) {
-    LOG(("    setting for non-toplevel window\n"));
     if (!aOpaqueRegion.IsEmpty()) {
       region = cairo_region_create();
       for (auto iter = aOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
@@ -4841,15 +4829,11 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
                                   width, height};
     cairo_region_union_rectangle(region, &rect);
 
-    LOG(("    setting for toplevel window %d,%d -> %d x %d\n", rect.x, rect.y,
-         rect.width, rect.height));
-
     // Subtract transparent corners which are used by
     // various Gtk themes for toplevel windows when titlebar
     // is rendered by gecko.
     if (mDrawInTitlebar && !mIsPIPWindow && mSizeState == nsSizeMode_Normal &&
         !mIsTiled) {
-      LOG(("    substracted corners for titlebar decoration\n"));
       cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
                                     TITLEBAR_SHAPE_MASK_HEIGHT,
                                     TITLEBAR_SHAPE_MASK_HEIGHT};
