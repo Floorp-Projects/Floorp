@@ -715,7 +715,10 @@ decorate_task(
 
 decorate_task(
   withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", false]],
+    set: [
+      ["features.normandy-remote-settings.enabled", false],
+      ["app.normandy.onsync_skew_sec", 0],
+    ],
   }),
   withStub(RecipeRunner, "run"),
   async function testRunOnSyncRemoteSettings(runStub) {
@@ -775,6 +778,27 @@ decorate_task(
 );
 
 decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", true],
+      ["app.normandy.onsync_skew_sec", 600], // 10 minutes, much longer than the test will take to run
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  async function testOnSyncRunDelayed(runStub) {
+    ok(
+      !RecipeRunner._syncSkewTimeout,
+      "precondition: No timer should be active"
+    );
+    const rsClient = RecipeRunner._remoteSettingsClientForTesting;
+    await rsClient.emit("sync", {});
+    ok(runStub.notCalled, "run() should be not called yet");
+    ok(RecipeRunner._syncSkewTimeout, "A timer should be set");
+    clearInterval(RecipeRunner._syncSkewTimeout); // cleanup
+  }
+);
+
+decorate_task(
   withStub(RecipeRunner, "loadRecipes"),
   async function testRunCanRunOnlyOnce(loadRecipesStub) {
     loadRecipesStub.returns(
@@ -795,6 +819,7 @@ decorate_task(
       ["features.normandy-remote-settings.enabled", true],
       // Enable update timer logs.
       ["app.update.log", true],
+      ["app.normandy.onsync_skew_sec", 0],
     ],
   }),
   withStub(RecipeRunner, "loadRecipes"),
