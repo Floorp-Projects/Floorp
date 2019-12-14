@@ -1123,6 +1123,9 @@ win64-aarch64-shippable/opt:
             - artifact: target.raptor.tests.tar.gz
               extract: false
               dest: ../public/build
+            - artifact: target.condprof.tests.tar.gz
+              extract: false
+              dest: ../public/build
             - artifact: target.awsy.tests.tar.gz
               extract: false
               dest: ../public/build
