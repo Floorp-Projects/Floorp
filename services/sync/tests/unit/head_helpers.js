@@ -387,7 +387,10 @@ async function wait_for_ping(callback, allowErrorPings, getFullPing = false) {
 // is null, we just check the ping records success. If fnValidate is specified,
 // then the sync must have recorded just a single sync, and that sync will be
 // passed to the function to be checked.
-async function sync_and_validate_telem(fnValidate = null) {
+async function sync_and_validate_telem(
+  fnValidate = null,
+  wantFullPing = false
+) {
   let numErrors = 0;
   let telem = get_sync_test_telemetry();
   let oldSubmit = telem.submit;
@@ -399,10 +402,14 @@ async function sync_and_validate_telem(fnValidate = null) {
         // All pings must be valid.
         assert_valid_ping(record);
         if (fnValidate) {
-          // for historical reasons these callbacks expect a "sync" record, not
-          // the entire ping.
-          Assert.equal(record.syncs.length, 1);
-          fnValidate(record.syncs[0]);
+          // for historical reasons most of these callbacks expect a "sync"
+          // record, not the entire ping.
+          if (wantFullPing) {
+            fnValidate(record);
+          } else {
+            Assert.equal(record.syncs.length, 1);
+            fnValidate(record.syncs[0]);
+          }
         } else {
           // no validation function means it must be a "success" ping.
           assert_success_ping(record);
