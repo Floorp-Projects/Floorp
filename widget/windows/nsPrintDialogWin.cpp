@@ -8,8 +8,9 @@
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
-#include "nsIBrowserChild.h"
 #include "nsIDialogParamBlock.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDocShell.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -160,13 +161,14 @@ HWND nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow) {
   // Now we might be the Browser so check this path
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
-  nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
-  if (!docShell) return nullptr;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = window->GetDocShell();
+  if (!treeItem) return nullptr;
 
-  nsCOMPtr<nsIBrowserChild> bc = docShell->GetBrowserChild();
-  if (!bc) return nullptr;
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) return nullptr;
 
-  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(bc));
+  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(treeOwner));
   if (!webBrowserChrome) return nullptr;
 
   nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(webBrowserChrome));

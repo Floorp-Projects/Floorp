@@ -7,8 +7,8 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsArray.h"
-#include "nsIBrowserChild.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIAppWindow.h"
@@ -72,8 +72,10 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(
     nsCOMPtr<nsIDocShell> docShell = pParentWindow->GetDocShell();
     NS_ENSURE_STATE(docShell);
 
-    nsCOMPtr<nsIBrowserChild> bc = docShell->GetBrowserChild();
-    nsCOMPtr<nsIAppWindow> ownerAppWindow = do_GetInterface(bc);
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    docShell->GetTreeOwner(getter_AddRefs(owner));
+
+    nsCOMPtr<nsIAppWindow> ownerAppWindow = do_GetInterface(owner);
     nsCOMPtr<mozIDOMWindowProxy> ownerWindow = do_GetInterface(ownerAppWindow);
     NS_ENSURE_STATE(ownerWindow);
 
