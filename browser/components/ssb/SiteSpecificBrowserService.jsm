@@ -51,6 +51,22 @@ const IS_MAIN_PROCESS =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
 
 /**
+ * Tests whether an app manifest's scope includes the given URI.
+ *
+ * @param {nsIURI} scope the manifest's scope.
+ * @param {nsIURI} uri the URI to test.
+ * @returns {boolean} true if the uri is included in the scope.
+ */
+function scopeIncludes(scope, uri) {
+  // https://w3c.github.io/manifest/#dfn-within-scope
+  if (scope.prePath != uri.prePath) {
+    return false;
+  }
+
+  return uri.filePath.startsWith(scope.filePath);
+}
+
+/**
  * Generates a basic app manifest for a URI.
  *
  * @param {nsIURI} uri the start URI for the site.
@@ -85,7 +101,11 @@ async function buildManifestForBrowser(browser) {
     console.error(e);
   }
 
-  if (!manifest) {
+  // Reject the manifest if its scope doesn't include the current document.
+  if (
+    !manifest ||
+    !scopeIncludes(Services.io.newURI(manifest.scope), browser.currentURI)
+  ) {
     manifest = manifestForURI(browser.currentURI);
   }
 
@@ -158,24 +178,25 @@ class SiteSpecificBrowserBase {
       return true;
     }
 
-    // https://w3c.github.io/manifest/#dfn-within-scope
-    if (this._scope.prePath != uri.prePath) {
-      return false;
-    }
-
-    return uri.filePath.startsWith(this._scope.filePath);
+    return scopeIncludes(this._scope, uri);
   }
 }
 
 /**
  * The SSB instance used in the main process.
  *
- * We maintain two pieces of data for an SSB:
+ * We maintain three pieces of data for an SSB:
  *
  * First is the string UUID for identification purposes.
  *
  * Second is an app manifest (https://w3c.github.io/manifest/). If the site does
- * not provide one a basic one will be automatically generated.
+ * not provide one a basic one will be automatically generated. The intent is to
+ * never modify this such that it can be updated from the site when needed
+ * without blowing away any configuration changes a user might want to make to
+ * the SSB itself.
+ *
+ * Thirdly there is the SSB configuration. This includes internal data, user
+ * overrides for the app manifest and custom SSB extensions to the app manifest.
  *
  * We pass data based on these down to the SiteSpecificBrowserBase in this and
  * other processes (via `_updateSharedData`).
@@ -187,8 +208,9 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    *
    * @param {string} id the SSB's unique ID.
    * @param {Manifest} manifest the app manifest for the SSB.
+   * @param {object?} config the SSB configuration settings.
    */
-  constructor(id, manifest) {
+  constructor(id, manifest, config = {}) {
     if (!IS_MAIN_PROCESS) {
       throw new Error(
         "SiteSpecificBrowser instances are only available in the main process."
@@ -198,6 +220,12 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     super(Services.io.newURI(manifest.scope));
     this._id = id;
     this._manifest = manifest;
+    this._config = Object.assign(
+      {
+        needsUpdate: true,
+      },
+      config
+    );
 
     // Cache the SSB for retrieval.
     SSBMap.set(id, this);
@@ -239,7 +267,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
       );
     }
 
-    return new SiteSpecificBrowser(uuid(), manifest);
+    return new SiteSpecificBrowser(uuid(), manifest, { needsUpdate: false });
   }
 
   /**
@@ -304,6 +332,36 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    */
   get startURI() {
     return Services.io.newURI(this._manifest.start_url);
+  }
+
+  /**
+   * Whether this SSB needs to be checked for an updated manifest.
+   */
+  get needsUpdate() {
+    return this._config.needsUpdate;
+  }
+
+  /**
+   * Updates this SSB from a new app manifest.
+   *
+   * @param {Manifest} manifest the new app manifest.
+   */
+  async updateFromManifest(manifest) {
+    this._manifest = manifest;
+    this._scope = Services.io.newURI(this._manifest.scope);
+    this._config.needsUpdate = false;
+
+    this._updateSharedData();
+  }
+
+  /**
+   * Updates this SSB from the site loaded in the browser element.
+   *
+   * @param {Element} browser the browser element.
+   */
+  async updateFromBrowser(browser) {
+    let manifest = await buildManifestForBrowser(browser);
+    await this.updateFromManifest(manifest);
   }
 
   /**

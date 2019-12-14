@@ -2373,8 +2373,6 @@ void ScriptLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   if (NS_FAILED(rv)) {
     FinishDynamicImport(aRequest, rv);
   }
-
-  return;
 }
 
 void ScriptLoader::FireScriptAvailable(nsresult aResult,

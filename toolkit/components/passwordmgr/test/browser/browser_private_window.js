@@ -704,16 +704,20 @@ add_task(async function test_normal_http_basic_auth() {
       ok(true, "Auth-required page loaded");
 
       // verify result in the response document
-      let fieldValues = await ContentTask.spawn(browser, [], async function() {
-        let username = content.document.getElementById("user").textContent;
-        let password = content.document.getElementById("pass").textContent;
-        let ok = content.document.getElementById("ok").textContent;
-        return {
-          username,
-          password,
-          ok,
-        };
-      });
+      let fieldValues = await SpecialPowers.spawn(
+        browser,
+        [[]],
+        async function() {
+          let username = content.document.getElementById("user").textContent;
+          let password = content.document.getElementById("pass").textContent;
+          let ok = content.document.getElementById("ok").textContent;
+          return {
+            username,
+            password,
+            ok,
+          };
+        }
+      );
       is(fieldValues.ok, "PASS", "Checking authorization passed");
       is(fieldValues.username, "test", "Checking authorized username");
       is(fieldValues.password, "testpass", "Checking authorized password");

@@ -18,9 +18,9 @@ async function checkForErrorSection(infoMessage, url, errorMessage, testType) {
   info(infoMessage);
 
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       browser,
-      { errorMessage, testType },
+      [{ errorMessage, testType }],
       async function({ errorMessage, testType }) {
         let errorSection;
 

@@ -10,8 +10,11 @@ add_task(async function test_getSelectionDetails_input() {
   // Mostly a regression test for bug 1420560
   const url = kFixtureBaseURL + "file_getSelectionDetails_inputs.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       function checkSelection({ id, text, linkURL }) {
+        const { BrowserUtils } = ChromeUtils.import(
+          "resource://gre/modules/BrowserUtils.jsm"
+        );
         content.document.getElementById(id).select();
         // It seems that when running as a test, the previous line will set
         // the both the window's selection and the input's selection to contain

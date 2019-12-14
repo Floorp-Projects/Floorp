@@ -353,26 +353,6 @@ var PageActions = {
     }
   },
 
-  logTelemetry(type, action, node = null) {
-    if (type == "used") {
-      type =
-        node && node.closest("#urlbar-container")
-          ? "urlbar_used"
-          : "panel_used";
-    }
-    let histogramID = "FX_PAGE_ACTION_" + type.toUpperCase();
-    try {
-      let histogram = Services.telemetry.getHistogramById(histogramID);
-      if (action._isMozillaAction) {
-        histogram.add(action.labelForHistogram);
-      } else {
-        histogram.add("other");
-      }
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-  },
-
   // For tests.  See Bug 1413692.
   _reset() {
     PageActions._purgeUnregisteredPersistedActions();

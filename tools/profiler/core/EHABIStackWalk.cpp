@@ -516,9 +516,9 @@ const EHEntry* EHTable::lookup(uint32_t aPC) const {
   return entryGet(begin);
 }
 
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
 static const unsigned char hostEndian = ELFDATA2LSB;
-#elif MOZ_BIG_ENDIAN
+#elif MOZ_BIG_ENDIAN()
 static const unsigned char hostEndian = ELFDATA2MSB;
 #else
 #  error "No endian?"

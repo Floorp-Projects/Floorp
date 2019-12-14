@@ -262,7 +262,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         return true;
       }
 
-      let fireForTab = (tab, changed) => {
+      let fireForTab = (tab, changed, nativeTab) => {
         // Tab may be null if private and not_allowed.
         if (!tab || !matchFilters(tab, changed)) {
           return;
@@ -270,11 +270,21 @@ class TabsUpdateFilterEventManager extends EventManager {
 
         let changeInfo = sanitize(extension, changed);
         if (changeInfo) {
-          fire.async(tab.id, changeInfo, tab.convert());
+          tabTracker.maybeWaitForTabOpen(nativeTab).then(() => {
+            if (!nativeTab.parentNode) {
+              // If the tab is already be destroyed, do nothing.
+              return;
+            }
+            fire.async(tab.id, changeInfo, tab.convert());
+          });
         }
       };
 
       let listener = event => {
+        // Ignore any events prior to TabOpen
+        if (event.originalTarget.initializingTab) {
+          return;
+        }
         if (!context.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
@@ -337,7 +347,7 @@ class TabsUpdateFilterEventManager extends EventManager {
           changeInfo[prop] = tab[prop];
         }
 
-        fireForTab(tab, changeInfo);
+        fireForTab(tab, changeInfo, event.originalTarget);
       };
 
       let statusListener = ({ browser, status, url }) => {
@@ -353,7 +363,7 @@ class TabsUpdateFilterEventManager extends EventManager {
             changed.url = url;
           }
 
-          fireForTab(tabManager.wrapTab(tabElem), changed);
+          fireForTab(tabManager.wrapTab(tabElem), changed, tabElem);
         }
       };
 
@@ -363,7 +373,7 @@ class TabsUpdateFilterEventManager extends EventManager {
 
         if (nativeTab && context.canAccessWindow(nativeTab.ownerGlobal)) {
           let tab = tabManager.getWrapper(nativeTab);
-          fireForTab(tab, { isArticle: message.data.isArticle });
+          fireForTab(tab, { isArticle: message.data.isArticle }, nativeTab);
         }
       };
 

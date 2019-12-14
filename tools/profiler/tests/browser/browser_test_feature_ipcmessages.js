@@ -5,7 +5,7 @@
 requestLongerTimeout(10);
 
 async function waitForLoad() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(function(resolve) {
       if (content.document.readyState !== "complete") {
         content.document.addEventListener("readystatechange", () => {
@@ -38,9 +38,9 @@ add_task(async function test_profile_feature_ipcmessges() {
   startProfiler({ features: ["threads", "leaf", "ipcmessages"] });
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
+    const contentPid = await SpecialPowers.spawn(
       contentBrowser,
-      null,
+      [],
       () => Services.appinfo.processID
     );
     await waitForLoad();
@@ -74,9 +74,9 @@ add_task(async function test_profile_feature_ipcmessges() {
   startProfiler({ features: ["threads", "leaf"] });
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
+    const contentPid = await SpecialPowers.spawn(
       contentBrowser,
-      null,
+      [],
       () => Services.appinfo.processID
     );
     await waitForLoad();

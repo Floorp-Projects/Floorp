@@ -605,9 +605,9 @@ function promiseRemoveTabAndSessionState(tab) {
 
 // Write DOMSessionStorage data to the given browser.
 function modifySessionStorage(browser, storageData, storageOptions = {}) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     browser,
-    [storageData, storageOptions],
+    [[storageData, storageOptions]],
     async function([data, options]) {
       let frame = content;
       if (options && "frameIndex" in options) {
@@ -619,7 +619,7 @@ function modifySessionStorage(browser, storageData, storageOptions = {}) {
       let storage = frame.sessionStorage;
 
       return new Promise(resolve => {
-        addEventListener(
+        docShell.chromeEventHandler.addEventListener(
           "MozSessionStorageChanged",
           function onStorageChanged(event) {
             if (event.storageArea == storage) {
@@ -627,7 +627,7 @@ function modifySessionStorage(browser, storageData, storageOptions = {}) {
             }
 
             if (keys.size == 0) {
-              removeEventListener(
+              docShell.chromeEventHandler.removeEventListener(
                 "MozSessionStorageChanged",
                 onStorageChanged,
                 true

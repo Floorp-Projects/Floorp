@@ -85,7 +85,7 @@ add_task(async function test() {
         TESTROOT + "file_pdfjs_test.pdf#zoom=100"
       );
 
-      await ContentTask.spawn(newTabBrowser, TESTS, async function(
+      await SpecialPowers.spawn(newTabBrowser, [TESTS], async function(
         contentTESTS
       ) {
         let document = content.document;
@@ -139,7 +139,7 @@ add_task(async function test() {
             }
 
             // Dispatch the event for changing the zoom
-            ev = new Event(subTest.action.event);
+            ev = new content.Event(subTest.action.event);
           } else {
             // We zoom using keyboard
             // Simulate key press
@@ -191,7 +191,7 @@ add_task(async function test() {
 });
 
 async function waitForRenderAndGetWidth(newTabBrowser) {
-  return ContentTask.spawn(newTabBrowser, null, async function() {
+  return SpecialPowers.spawn(newTabBrowser, [], async function() {
     function waitForRender(document) {
       return new Promise(resolve => {
         document.addEventListener(
@@ -253,7 +253,7 @@ add_task(async function test_browser_zoom() {
       );
 
       // Clean-up after the PDF viewer.
-      await ContentTask.spawn(newTabBrowser, null, function() {
+      await SpecialPowers.spawn(newTabBrowser, [], function() {
         const viewer = content.wrappedJSObject.PDFViewerApplication;
         return viewer.close();
       });

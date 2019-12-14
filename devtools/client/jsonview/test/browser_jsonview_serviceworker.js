@@ -21,9 +21,9 @@ add_task(async function() {
   const swTab = BrowserTestUtils.addTab(gBrowser, EMPTY_PAGE);
   const browser = gBrowser.getBrowserForTab(swTab);
   await BrowserTestUtils.browserLoaded(browser);
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { script: SW, scope: TEST_JSON_URL },
+    [{ script: SW, scope: TEST_JSON_URL }],
     async opts => {
       const reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
@@ -70,9 +70,9 @@ add_task(async function() {
   await clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
   is(await countRows(), 1, "There must be one row");
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { script: SW, scope: TEST_JSON_URL },
+    [{ script: SW, scope: TEST_JSON_URL }],
     async opts => {
       const reg = await content.navigator.serviceWorker.getRegistration(
         opts.scope

@@ -5,7 +5,7 @@ const FORMLESS_URL = `https://example.org${TEST_URL_PATH}formless_basic.html`;
 const testUrls = [FORM_URL, FORMLESS_URL];
 
 async function getDocumentVisibilityState(browser) {
-  let visibility = await ContentTask.spawn(browser, null, async function() {
+  let visibility = await SpecialPowers.spawn(browser, [], async function() {
     return content.document.visibilityState;
   });
   return visibility;
@@ -119,9 +119,9 @@ testUrls.forEach(testUrl => {
     );
 
     // the form should have been autofilled with the login
-    let fieldValues = await ContentTask.spawn(
+    let fieldValues = await SpecialPowers.spawn(
       tab1.linkedBrowser,
-      null,
+      [],
       function() {
         let doc = content.document;
         return {

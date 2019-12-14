@@ -14,9 +14,9 @@ add_task(async function() {
     xhr.send();
   });
 
-  let viewSourceContentPromise = ContentTask.spawn(
+  let viewSourceContentPromise = SpecialPowers.spawn(
     viewSourceTab.linkedBrowser,
-    null,
+    [],
     async function() {
       return content.document.body.textContent;
     }

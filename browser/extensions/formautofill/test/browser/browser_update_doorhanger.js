@@ -17,7 +17,7 @@ add_task(async function test_update_address() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let org = form.querySelector("#organization");
       await new Promise(resolve => content.setTimeout(resolve, 1000));
@@ -52,7 +52,7 @@ add_task(async function test_create_new_address() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let tel = form.querySelector("#tel");
       await new Promise(resolve => content.setTimeout(resolve, 1000));
@@ -88,7 +88,7 @@ add_task(async function test_create_new_address_merge() {
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
     // Choose the latest address and revert to the original phone number
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let tel = form.querySelector("#tel");
       tel.setUserInput("+16172535702");
@@ -124,7 +124,7 @@ add_task(async function test_submit_untouched_fields() {
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
     info("after return");
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
       let org = form.querySelector("#organization");
       await new Promise(resolve => content.setTimeout(resolve, 1000));
@@ -165,7 +165,7 @@ add_task(async function test_submit_reduced_fields() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.querySelector("form#simple");
       let tel = form.querySelector("input[name=tel]");
       await new Promise(resolve => content.setTimeout(resolve, 1000));

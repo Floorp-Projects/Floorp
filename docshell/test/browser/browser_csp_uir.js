@@ -9,13 +9,14 @@ const RESULT_URI =
   TEST_PATH.replace("http://", "https://") + "file_csp_uir_dummy.html";
 
 function verifyCSP(aTestName, aBrowser, aResultURI) {
-  return ContentTask.spawn(aBrowser, { aTestName, aResultURI }, async function({
-    aTestName,
-    aResultURI,
-  }) {
-    let channel = content.docShell.currentDocumentChannel;
-    is(channel.URI.asciiSpec, aResultURI, "testing CSP for " + aTestName);
-  });
+  return SpecialPowers.spawn(
+    aBrowser,
+    [{ aTestName, aResultURI }],
+    async function({ aTestName, aResultURI }) {
+      let channel = content.docShell.currentDocumentChannel;
+      is(channel.URI.asciiSpec, aResultURI, "testing CSP for " + aTestName);
+    }
+  );
 }
 
 add_task(async function test_csp_inheritance_regular_click() {

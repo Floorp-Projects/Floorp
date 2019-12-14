@@ -50,9 +50,9 @@ var tests = [
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished");
 
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      myDocIdentifier,
+      [myDocIdentifier],
       contentMyDocIdentifier => {
         let onPageShow = () => {
           if (!content.document.hidden) {
@@ -80,9 +80,9 @@ var tests = [
     await elementVisiblePromise(newWindowHighlight, "new window highlight");
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       selectedTab.linkedBrowser,
-      myDocIdentifier,
+      [myDocIdentifier],
       contentMyDocIdentifier => {
         is(
           content.document.myExpando,

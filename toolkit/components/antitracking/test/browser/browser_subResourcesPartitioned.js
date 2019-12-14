@@ -7,7 +7,7 @@ async function runTests(topPage) {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Loading scripts and images");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
@@ -70,13 +70,15 @@ async function runTests(topPage) {
     });
 
   info("Creating a 3rd party content");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    {
-      page: TEST_3RD_PARTY_PAGE_WO,
-      blockingCallback: (async _ => {}).toString(),
-      nonBlockingCallback: (async _ => {}).toString(),
-    },
+    [
+      {
+        page: TEST_3RD_PARTY_PAGE_WO,
+        blockingCallback: (async _ => {}).toString(),
+        nonBlockingCallback: (async _ => {}).toString(),
+      },
+    ],
     async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
@@ -112,7 +114,7 @@ async function runTests(topPage) {
   );
 
   info("Loading scripts and images again");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");

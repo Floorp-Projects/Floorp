@@ -868,9 +868,9 @@ function runAboutPrefsUpdateTest(params, steps) {
 
     const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         tab.linkedBrowser,
-        { panelId },
+        [{ panelId }],
         async ({ panelId }) => {
           let updateDeck = content.document.getElementById("updateDeck");
           // Also continue if the selected panel ID is 'apply' since there are no
@@ -952,9 +952,9 @@ function runAboutPrefsUpdateTest(params, steps) {
         await continueFileHandler(continueFile);
       }
 
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         tab.linkedBrowser,
-        { panelId, gDetailsURL },
+        [{ panelId, gDetailsURL }],
         async ({ panelId, gDetailsURL }) => {
           let linkPanels = [
             "downloadFailed",
@@ -1059,7 +1059,7 @@ function runAboutPrefsUpdateTest(params, steps) {
     });
 
     // Scroll the UI into view so it is easier to troubleshoot tests.
-    await ContentTask.spawn(tab.linkedBrowser, null, async () => {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
       content.document.getElementById("updatesCategory").scrollIntoView();
     });
 

@@ -11,7 +11,7 @@ const kURL =
 add_task(async function() {
   await BrowserTestUtils.withNewTab(kURL, async function(browser) {
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let a = content.document.createElement("a");
       // newTabPromise won't resolve until it has a URL that's not "about:blank".
       // But doing document.open() from inside that same document does not change

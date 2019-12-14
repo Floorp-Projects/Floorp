@@ -1,7 +1,7 @@
 add_task(async function browserNoopenerNullUri() {
   await BrowserTestUtils.withNewTab({ gBrowser }, async function(aBrowser) {
     let numTabs = gBrowser.tabs.length;
-    await ContentTask.spawn(aBrowser, null, async () => {
+    await SpecialPowers.spawn(aBrowser, [], async () => {
       ok(
         !content.window.open(undefined, undefined, "noopener"),
         "window.open should return null"

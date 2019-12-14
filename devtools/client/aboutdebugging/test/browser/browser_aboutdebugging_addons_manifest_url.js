@@ -42,9 +42,9 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(target.linkedBrowser);
 
   info("Retrieve the text content of the new tab");
-  const textContent = await ContentTask.spawn(
+  const textContent = await SpecialPowers.spawn(
     target.linkedBrowser,
-    {},
+    [],
     function() {
       return content.wrappedJSObject.document.body.textContent;
     }

@@ -643,7 +643,7 @@ add_task(async function dontTemporarilyShowAboutExtensionPath() {
 
   gBrowser.removeProgressListener(wpl);
   is(gURLBar.value, "", "URL bar value should be empty.");
-  ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     is(
       content.document.body.textContent,
       "New tab!",

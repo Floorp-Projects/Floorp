@@ -531,7 +531,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       info.script->scriptSource()->recordEmitStarted();
 
       // Publish deferred items
-      if (!parser->publishDeferredItems()) {
+      if (!parser->publishDeferredFunctions()) {
         return nullptr;
       }
 
@@ -598,7 +598,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  if (!parser->publishDeferredItems()) {
+  if (!parser->publishDeferredFunctions()) {
     return nullptr;
   }
 
@@ -676,7 +676,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
       return false;
     }
 
-    if (!parser->publishDeferredItems()) {
+    if (!parser->publishDeferredFunctions()) {
       return false;
     }
 
@@ -1004,7 +1004,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   if (!pn) {
     return false;
   }
-  if (!parser.publishDeferredItems()) {
+  if (!parser.publishDeferredFunctions()) {
     return false;
   }
 

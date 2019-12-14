@@ -124,9 +124,9 @@ add_task(async function fill_generated_password_empty_field() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
           is(input.value.length, 0, "Password field is empty");
@@ -142,9 +142,9 @@ add_task(async function fill_generated_password_empty_field() {
         browser,
         passwordInputSelector
       );
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"
@@ -192,9 +192,9 @@ add_task(async function fill_generated_password_nonempty_field() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
           input.setUserInput("aa");
@@ -210,9 +210,9 @@ add_task(async function fill_generated_password_nonempty_field() {
         browser,
         passwordInputSelector
       );
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"
@@ -260,9 +260,9 @@ add_task(async function fill_generated_password_with_matching_logins() {
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await formFilled;
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           is(
             content.document.querySelector(inputSelector).value,
@@ -276,9 +276,9 @@ add_task(async function fill_generated_password_with_matching_logins() {
         browser,
         passwordInputSelector
       );
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"
@@ -331,9 +331,9 @@ add_task(async function fill_generated_password_with_matching_logins() {
         browser
       );
 
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkFieldNotGeneratedPassword(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"
@@ -376,9 +376,9 @@ add_task(async function test_edited_generated_password_in_new_tab() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
           is(input.value.length, 0, "Password field is empty");
@@ -394,9 +394,9 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         browser,
         passwordInputSelector
       );
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkAndEditFieldValue(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"
@@ -448,9 +448,9 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         passwordInputSelector
       );
 
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [passwordInputSelector],
+        [[passwordInputSelector]],
         function checkAndEditFieldValue(inputSelector) {
           let { LoginTestUtils: LTU } = ChromeUtils.import(
             "resource://testing-common/LoginTestUtils.jsm"

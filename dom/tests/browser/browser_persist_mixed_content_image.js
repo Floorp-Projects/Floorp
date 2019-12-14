@@ -48,13 +48,13 @@ add_task(async function test_image_download() {
     TEST_PATH + "test_mixed_content_image.html",
     async browser => {
       // Add the image, and wait for it to load.
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let loc = content.document.location.href;
         let httpRoot = loc.replace("https", "http");
         let imgloc = new content.URL("dummy.png", httpRoot);
         let img = content.document.createElement("img");
         img.src = imgloc;
-        return new Promise(resolve => {
+        await new Promise(resolve => {
           img.onload = resolve;
           content.document.body.appendChild(img);
         });

@@ -33,7 +33,7 @@ add_task(async function start_test() {
       url: PAGE,
     },
     async browser => {
-      await ContentTask.spawn(browser, null, test_suspend_video_decoding);
+      await SpecialPowers.spawn(browser, [], test_suspend_video_decoding);
     }
   );
 });

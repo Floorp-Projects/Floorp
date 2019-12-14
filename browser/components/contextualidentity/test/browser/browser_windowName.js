@@ -24,7 +24,7 @@ add_task(async function test() {
   });
   let browser1 = gBrowser.getBrowserForTab(tab1);
   await BrowserTestUtils.browserLoaded(browser1);
-  await ContentTask.spawn(browser1, null, function(opts) {
+  await SpecialPowers.spawn(browser1, [], function(opts) {
     content.window.name = "tab-1";
   });
 
@@ -34,22 +34,24 @@ add_task(async function test() {
   });
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
-  await ContentTask.spawn(browser2, null, function(opts) {
+  await SpecialPowers.spawn(browser2, [], function(opts) {
     content.window.name = "tab-2";
   });
 
   // Let's try to open a window from tab1 with a name 'tab-2'.
   info("Opening a window from the first tab...");
-  await ContentTask.spawn(browser1, { url: BASE_URI + "?new" }, async function(
-    opts
-  ) {
-    await new content.window.wrappedJSObject.Promise(resolve => {
-      let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
-      w.onload = function() {
-        resolve();
-      };
-    });
-  });
+  await SpecialPowers.spawn(
+    browser1,
+    [{ url: BASE_URI + "?new" }],
+    async function(opts) {
+      await new content.window.wrappedJSObject.Promise(resolve => {
+        let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
+        w.onload = function() {
+          resolve();
+        };
+      });
+    }
+  );
 
   is(browser1.contentTitle, "?old", "Tab1 title must be 'old'");
   is(browser1.contentPrincipal.userContextId, 1, "Tab1 UCI must be 1");

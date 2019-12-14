@@ -254,9 +254,9 @@ async function finishTests(target) {
 async function addCookie(name, value) {
   info(`addCookie("${name}", "${value}")`);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [name, value],
+    [[name, value]],
     ([iName, iValue]) => {
       content.wrappedJSObject.window.addCookie(iName, iValue);
     }
@@ -266,7 +266,7 @@ async function addCookie(name, value) {
 async function removeCookie(name) {
   info(`removeCookie("${name}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, name, iName => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [name], iName => {
     content.wrappedJSObject.window.removeCookie(iName);
   });
 }
@@ -274,9 +274,9 @@ async function removeCookie(name) {
 async function localStorageSetItem(name, value) {
   info(`localStorageSetItem("${name}", "${value}")`);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [name, value],
+    [[name, value]],
     ([iName, iValue]) => {
       content.window.localStorage.setItem(iName, iValue);
     }
@@ -286,7 +286,7 @@ async function localStorageSetItem(name, value) {
 async function localStorageRemoveItem(name) {
   info(`localStorageRemoveItem("${name}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, name, iName => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [name], iName => {
     content.window.localStorage.removeItem(iName);
   });
 }
@@ -294,9 +294,9 @@ async function localStorageRemoveItem(name) {
 async function sessionStorageSetItem(name, value) {
   info(`sessionStorageSetItem("${name}", "${value}")`);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [name, value],
+    [[name, value]],
     ([iName, iValue]) => {
       content.window.sessionStorage.setItem(iName, iValue);
     }
@@ -306,7 +306,7 @@ async function sessionStorageSetItem(name, value) {
 async function sessionStorageRemoveItem(name) {
   info(`sessionStorageRemoveItem("${name}")`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, name, iName => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [name], iName => {
     content.window.sessionStorage.removeItem(iName);
   });
 }
@@ -314,7 +314,7 @@ async function sessionStorageRemoveItem(name) {
 async function clearCookies() {
   info(`clearCookies()`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.window.clearCookies();
   });
 }
@@ -322,7 +322,7 @@ async function clearCookies() {
 async function clearLocalAndSessionStores() {
   info(`clearLocalAndSessionStores()`);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.window.clearLocalAndSessionStores();
   });
 }

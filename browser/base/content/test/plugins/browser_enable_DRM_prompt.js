@@ -34,7 +34,7 @@ add_task(async function() {
 
     // Have content request access to Widevine, UI should drop down to
     // prompt user to enable DRM.
-    let result = await ContentTask.spawn(browser, {}, async function() {
+    let result = await SpecialPowers.spawn(browser, [], async function() {
       try {
         let config = [
           {

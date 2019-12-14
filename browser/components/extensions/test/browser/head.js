@@ -209,7 +209,7 @@ function promisePopupNotificationShown(name, win = window) {
 }
 
 function promisePossiblyInaccurateContentDimensions(browser) {
-  return ContentTask.spawn(browser, null, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     function copyProps(obj, props) {
       let res = {};
       for (let prop of props) {
@@ -281,7 +281,7 @@ async function awaitPopupResize(browser) {
 
 function alterContent(browser, task, arg = null) {
   return Promise.all([
-    ContentTask.spawn(browser, arg, task),
+    SpecialPowers.spawn(browser, [arg], task),
     awaitPopupResize(browser),
   ]).then(([, dims]) => dims);
 }
@@ -846,7 +846,7 @@ function* BrowserWindowIterator() {
 
 async function locationChange(tab, url, task) {
   let locationChanged = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-  await ContentTask.spawn(tab.linkedBrowser, url, task);
+  await SpecialPowers.spawn(tab.linkedBrowser, [url], task);
   return locationChanged;
 }
 

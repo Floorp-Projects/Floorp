@@ -882,12 +882,12 @@ struct CbData {
 };
 
 static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
-                                         Document* aDocument) {
+                                         Document& aDocument) {
   // Although this is the actual subdocument, it might not be
   // what painting uses. Walk up to the nsSubDocumentFrame owning
   // us, and then ask that which subdoc it's going to paint.
 
-  PresShell* presShell = aDocument->GetPresShell();
+  PresShell* presShell = aDocument.GetPresShell();
   if (!presShell) {
     return nullptr;
   }
@@ -922,19 +922,16 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
   return presShell ? presShell->GetRootFrame() : nullptr;
 }
 
-static bool SubDocEnumCb(Document* aDocument, void* aData) {
-  MOZ_ASSERT(aDocument);
+static bool SubDocEnumCb(Document& aDocument, void* aData) {
   MOZ_ASSERT(aData);
 
-  CbData* data = static_cast<CbData*>(aData);
+  auto* data = static_cast<CbData*>(aData);
 
-  nsIFrame* rootFrame = GetRootFrameForPainting(data->builder, aDocument);
-  if (rootFrame) {
+  if (nsIFrame* rootFrame = GetRootFrameForPainting(data->builder, aDocument)) {
     TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
         data->builder, data->modifiedFrames, data->framesWithProps, rootFrame);
 
-    Document* innerDoc = rootFrame->PresShell()->GetDocument();
-    if (innerDoc) {
+    if (Document* innerDoc = rootFrame->PresShell()->GetDocument()) {
       innerDoc->EnumerateSubDocuments(SubDocEnumCb, aData);
     }
   }
@@ -951,11 +948,8 @@ static void GetModifiedAndFramesWithProps(
       aBuilder, aOutModifiedFrames, aOutFramesWithProps, rootFrame);
 
   Document* rootdoc = rootFrame->PresContext()->Document();
-  if (rootdoc) {
-    CbData data = {aBuilder, aOutModifiedFrames, aOutFramesWithProps};
-
-    rootdoc->EnumerateSubDocuments(SubDocEnumCb, &data);
-  }
+  CbData data = {aBuilder, aOutModifiedFrames, aOutFramesWithProps};
+  rootdoc->EnumerateSubDocuments(SubDocEnumCb, &data);
 }
 
 // ComputeRebuildRegion  debugging

@@ -13,9 +13,9 @@ add_task(async function() {
   ok(true, "Can start recording allocations");
 
   // Allocate some objects.
-  const [line1, line2, line3] = await ContentTask.spawn(
+  const [line1, line2, line3] = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     function() {
       // Use eval to ensure allocating the object in the page's compartment
       return content.eval(

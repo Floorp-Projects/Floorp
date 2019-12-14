@@ -235,7 +235,7 @@ async function createFileInHome() {
   let browser = gBrowser.selectedBrowser;
   let homeFile = fileInHomeDir();
   let path = homeFile.path;
-  let fileCreated = await ContentTask.spawn(browser, path, createFile);
+  let fileCreated = await SpecialPowers.spawn(browser, [path], createFile);
   ok(!fileCreated, "creating a file in home dir is not permitted");
   if (fileCreated) {
     // content process successfully created the file, now remove it
@@ -249,14 +249,14 @@ async function createFileInHome() {
 async function createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
-  let fileCreated = await ContentTask.spawn(browser, path, createFile);
+  let fileCreated = await SpecialPowers.spawn(browser, [path], createFile);
   if (isMac()) {
     ok(!fileCreated, "creating a file in content temp is not permitted");
   } else {
     ok(!!fileCreated, "creating a file in content temp is permitted");
   }
   // now delete the file
-  let fileDeleted = await ContentTask.spawn(browser, path, deleteFile);
+  let fileDeleted = await SpecialPowers.spawn(browser, [path], deleteFile);
   if (isMac()) {
     // On macOS we do not allow file deletion - it is not needed by the content
     // process itself, and macOS uses a different permission to control access
@@ -264,7 +264,11 @@ async function createTempFile() {
     ok(!fileDeleted, "deleting a file in content temp is not permitted");
 
     let path = fileInTempDir().path;
-    let symlinkCreated = await ContentTask.spawn(browser, path, createSymlink);
+    let symlinkCreated = await SpecialPowers.spawn(
+      browser,
+      [path],
+      createSymlink
+    );
     ok(!symlinkCreated, "created a symlink in content temp is not permitted");
   } else {
     ok(!!fileDeleted, "deleting a file in content temp is permitted");

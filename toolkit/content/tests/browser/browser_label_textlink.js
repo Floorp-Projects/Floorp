@@ -3,7 +3,9 @@ add_task(async function() {
     { gBrowser, url: "about:preferences" },
     async function(browser) {
       let newTabURL = "http://www.example.com/";
-      await ContentTask.spawn(browser, newTabURL, async function(newTabURL) {
+      await SpecialPowers.spawn(browser, [newTabURL], async function(
+        newTabURL
+      ) {
         let doc = content.document;
         let label = doc.createXULElement("label", { is: "text-link" });
         label.href = newTabURL;

@@ -8,7 +8,7 @@ function waitForPluginVisibility(browser, shouldBeVisible, errorMessage) {
     let windowUtils = window.windowUtils;
     let lastTransactionId = windowUtils.lastTransactionId;
     let listener = async event => {
-      let visibility = await ContentTask.spawn(browser, null, async function() {
+      let visibility = await SpecialPowers.spawn(browser, [], async function() {
         let doc = content.document;
         let plugin = doc.getElementById("testplugin");
         return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
@@ -48,9 +48,9 @@ add_task(async function() {
     gTestRoot + "plugin_test.html"
   );
 
-  result = await ContentTask.spawn(
+  result = await SpecialPowers.spawn(
     pluginTab1.linkedBrowser,
-    null,
+    [],
     async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
@@ -59,9 +59,9 @@ add_task(async function() {
   );
   is(result, true, "plugin1 is loaded");
 
-  result = await ContentTask.spawn(
+  result = await SpecialPowers.spawn(
     pluginTab2.linkedBrowser,
-    null,
+    [],
     async function() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");

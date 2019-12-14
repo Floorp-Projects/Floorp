@@ -185,9 +185,9 @@ async function openDocumentSelect(aURI, aCSSSelector) {
     gBrowser.removeTab(tab);
   });
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    { selector: aCSSSelector },
+    [{ selector: aCSSSelector }],
     async function(arg) {
       let element = content.document.querySelector(arg.selector);
       content.getSelection().selectAllChildren(element);

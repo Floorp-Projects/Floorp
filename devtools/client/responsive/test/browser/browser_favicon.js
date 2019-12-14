@@ -5,6 +5,13 @@
 
 // Test that favicons make it to the parent process.
 
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Permission denied to access property "document" on cross-origin object/
+);
+
 const TEST_URL = `${URL_ROOT}favicon.html`;
 
 function waitForLinkAvailable(browser) {

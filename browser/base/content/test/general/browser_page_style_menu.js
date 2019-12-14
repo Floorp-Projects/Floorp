@@ -32,9 +32,9 @@ add_task(async function() {
     checked: el.getAttribute("checked") == "true",
   }));
 
-  let validLinks = await ContentTask.spawn(
+  let validLinks = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    items,
+    [items],
     function(contentItems) {
       let contentValidLinks = 0;
       Array.prototype.forEach.call(

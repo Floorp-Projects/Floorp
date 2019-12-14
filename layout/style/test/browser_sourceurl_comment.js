@@ -32,7 +32,7 @@ add_task(async function() {
       url: uri,
     },
     async function(browser) {
-      await ContentTask.spawn(browser, test_cases, function*(tests) {
+      await SpecialPowers.spawn(browser, [test_cases], function(tests) {
         for (let i = 0; i < content.document.styleSheets.length; ++i) {
           let sheet = content.document.styleSheets[i];
 

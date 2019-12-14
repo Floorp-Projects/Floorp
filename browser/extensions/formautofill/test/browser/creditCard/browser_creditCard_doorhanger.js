@@ -12,7 +12,7 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -60,7 +60,7 @@ add_task(async function test_submit_creditCard_saved() {
         "popupshown"
       );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -123,7 +123,7 @@ add_task(async function test_submit_untouched_creditCard_form() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
 
         // Wait 1000ms before submission to make sure the input value applied
@@ -223,7 +223,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
 
@@ -273,7 +273,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -320,7 +320,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -368,7 +368,7 @@ add_task(async function test_submit_creditCard_never_save() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -419,7 +419,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -515,7 +515,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -555,7 +555,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
         PopupNotifications.panel,
         "popupshown"
       );
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();
@@ -618,7 +618,7 @@ add_task(async function test_update_autofill_form_name() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -685,7 +685,7 @@ add_task(async function test_update_autofill_form_exp_date() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -751,7 +751,7 @@ add_task(async function test_create_new_autofill_form() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let name = form.querySelector("#cc-name");
@@ -821,7 +821,7 @@ add_task(async function test_update_duplicate_autofill_form() {
       await openPopupOn(browser, "form #cc-number");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForCondition(() => {
           let form = content.document.getElementById("form");
           let number = form.querySelector("#cc-number");
@@ -865,7 +865,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
         "popupshown"
       );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.focus();

@@ -40,7 +40,7 @@ add_task(async function() {
 
   info("Call the log function defined in the test page");
   const onMessage = waitForMessage(hud, "thenTrace");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.waitForData();
   });
   const message = await onMessage;

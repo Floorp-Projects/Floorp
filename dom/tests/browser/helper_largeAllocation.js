@@ -41,13 +41,13 @@ function expectNoProcess() {
 }
 
 function getPID(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return ContentTask.spawn(aBrowser, [], () => {
     return Services.appinfo.processID;
   });
 }
 
 function getInLAProc(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return ContentTask.spawn(aBrowser, [], () => {
     return Services.appinfo.remoteType == "webLargeAllocation";
   });
 }
@@ -188,7 +188,7 @@ async function largeAllocSuccessTests() {
 
     await ContentTask.spawn(
       aBrowser,
-      null,
+      [],
       () => (content.document.location = "about:blank")
     );
 
@@ -235,7 +235,7 @@ async function largeAllocSuccessTests() {
     await BrowserTestUtils.browserLoaded(aBrowser);
 
     // Switch to about:blank, so we can navigate back
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       content.document.location = "about:blank";
     });
 
@@ -340,7 +340,7 @@ async function largeAllocSuccessTests() {
 
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       this.__newWindow = content.window.open("about:blank");
       content.document.location = "about:blank";
     });
@@ -354,7 +354,7 @@ async function largeAllocSuccessTests() {
 
     stopExpectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       ok(this.__newWindow, "The window should have been stored");
       this.__newWindow.close();
     });
@@ -390,7 +390,7 @@ async function largeAllocSuccessTests() {
       gBrowser,
       "about:blank"
     );
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       this.__newWindow = content.window.open("about:blank");
     });
     await promiseTabOpened;
@@ -410,7 +410,7 @@ async function largeAllocSuccessTests() {
 
     stopExpectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       ok(this.__newWindow, "The window should have been stored");
       this.__newWindow.close();
     });
@@ -517,7 +517,7 @@ async function largeAllocSuccessTests() {
     // Fail the test if we create a process
     let stopExpectNoProcess = expectNoProcess();
 
-    await ContentTask.spawn(aBrowser, null, () => {
+    await ContentTask.spawn(aBrowser, [], () => {
       content.document.location = "view-source:http://example.com";
     });
 
@@ -606,7 +606,7 @@ async function largeAllocSuccessTests() {
       BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
-    let innerText = await ContentTask.spawn(aBrowser, null, () => {
+    let innerText = await SpecialPowers.spawn(aBrowser, [], () => {
       return content.document.body.innerText;
     });
     isnot(innerText, "FAIL", "We should not have sent a get request!");

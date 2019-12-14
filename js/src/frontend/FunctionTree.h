@@ -70,13 +70,6 @@ class FunctionTree {
 
 // Owner of a function tree
 //
-// The holder mode can be eager or deferred:
-//
-// - In Eager mode, deferred items happens right away and the tree is not
-//   constructed.
-// - In Deferred mode, deferred items happens only when publishDeferredItems
-//   is called.
-//
 // Note: Function trees point to function boxes, which only have the lifetime of
 //       the BytecodeCompiler, so exercise caution when holding onto a
 //       holder.

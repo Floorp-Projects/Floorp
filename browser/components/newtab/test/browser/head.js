@@ -49,7 +49,7 @@ async function clearHistoryAndBookmarks() {
 async function waitForPreloaded(browser) {
   let readyState = await ContentTask.spawn(
     browser,
-    {},
+    null,
     () => content.document.readyState
   );
   if (readyState !== "complete") {
@@ -174,14 +174,14 @@ function test_newtab(testInfo) {
     await waitForPreloaded(browser);
 
     // Add shared helpers to the content process
-    ContentTask.spawn(browser, {}, addContentHelpers);
+    SpecialPowers.spawn(browser, [], addContentHelpers);
 
     // Wait for React to render something
     await BrowserTestUtils.waitForCondition(
       () =>
-        ContentTask.spawn(
+        SpecialPowers.spawn(
           browser,
-          {},
+          [],
           () => content.document.getElementById("root").children.length
         ),
       "Should render activity stream content"
@@ -190,9 +190,9 @@ function test_newtab(testInfo) {
     // Chain together before -> contentTask -> after data passing
     try {
       let contentArg = await before({ pushPrefs: scopedPushPrefs, tab });
-      let contentResult = await ContentTask.spawn(
+      let contentResult = await SpecialPowers.spawn(
         browser,
-        contentArg,
+        [contentArg],
         contentTask
       );
       await after(contentResult);

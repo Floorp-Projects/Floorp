@@ -36,13 +36,17 @@ function promiseNewTabSwitched() {
 }
 
 function promiseLoaded(browser) {
-  return ContentTask.spawn(browser, undefined, async () => {
+  return SpecialPowers.spawn(browser, [undefined], async () => {
     if (!["interactive", "complete"].includes(content.document.readyState)) {
       await new Promise(resolve =>
-        addEventListener("DOMContentLoaded", resolve, {
-          once: true,
-          capture: true,
-        })
+        docShell.chromeEventHandler.addEventListener(
+          "DOMContentLoaded",
+          resolve,
+          {
+            once: true,
+            capture: true,
+          }
+        )
       );
     }
   });
@@ -63,9 +67,9 @@ async function testURL(url, loadFunc, endFunc) {
   loadFunc(url);
   await pageShowPromise;
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { isRemote: gMultiProcessBrowser },
+    [{ isRemote: gMultiProcessBrowser }],
     async function(arg) {
       Assert.equal(
         Services.focus.focusedElement,

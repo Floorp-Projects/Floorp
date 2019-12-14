@@ -25,9 +25,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn") !== null
       ),
@@ -36,9 +36,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
@@ -49,9 +49,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn")
             .hidden === false
@@ -59,15 +59,15 @@ add_task(async function testRestoreDefaultsBtn_visible() {
     "Should show the Restore Defaults btn because pref is changed"
   );
 
-  await ContentTask.spawn(browser, {}, () =>
+  await SpecialPowers.spawn(browser, [], () =>
     content.document.getElementById("restoreDefaultHomePageBtn").click()
   );
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
@@ -78,9 +78,9 @@ add_task(async function testRestoreDefaultsBtn_visible() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn").style
             .visibility === "hidden"
@@ -122,9 +122,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn") !== null
       ),
@@ -133,9 +133,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
@@ -144,9 +144,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
     "Wait for the preference checkbox to load"
   );
 
-  const btnDefault = await ContentTask.spawn(
+  const btnDefault = await SpecialPowers.spawn(
     browser,
-    {},
+    [],
     () =>
       content.document.getElementById("restoreDefaultHomePageBtn").style
         .visibility
@@ -159,9 +159,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
@@ -171,7 +171,7 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
   );
 
   // Uncheck a pref
-  await ContentTask.spawn(browser, {}, () =>
+  await SpecialPowers.spawn(browser, [], () =>
     content.document
       .querySelector("[data-subcategory='topsites'] checkbox")
       .click()
@@ -179,9 +179,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           !content.document.querySelector(
             "[data-subcategory='topsites'] checkbox"
@@ -192,9 +192,9 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        {},
+        [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn").style
             .visibility === "visible"

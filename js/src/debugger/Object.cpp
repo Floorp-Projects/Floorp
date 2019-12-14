@@ -21,6 +21,7 @@
 
 #include "builtin/Array.h"       // for NewDenseCopiedArray
 #include "debugger/Debugger.h"   // for Completion, Debugger
+#include "debugger/Frame.h"      // for DebuggerFrame
 #include "debugger/NoExecute.h"  // for LeaveDebuggeeNoExecute
 #include "debugger/Script.h"     // for DebuggerScript
 #include "debugger/Source.h"     // for DebuggerSource
@@ -30,35 +31,38 @@
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject
 #include "js/HeapAPI.h"                   // for IsInsideNursery
-#include "js/Promise.h"                   // for PromiseState
-#include "js/Proxy.h"                     // for PropertyDescriptor
-#include "js/StableStringChars.h"         // for AutoStableStringChars
-#include "proxy/ScriptedProxyHandler.h"   // for ScriptedProxyHandler
-#include "vm/ArgumentsObject.h"           // for ARGS_LENGTH_MAX
-#include "vm/ArrayObject.h"               // for ArrayObject
-#include "vm/BytecodeUtil.h"              // for JSDVG_SEARCH_STACK
-#include "vm/Compartment.h"               // for Compartment
-#include "vm/EnvironmentObject.h"         // for GetDebugEnvironmentForFunction
-#include "vm/ErrorObject.h"               // for JSObject::is, ErrorObject
-#include "vm/GlobalObject.h"              // for JSObject::is, GlobalObject
-#include "vm/Instrumentation.h"           // for RealmInstrumentation
-#include "vm/Interpreter.h"               // for Call
-#include "vm/JSAtom.h"                    // for Atomize, js_apply_str
-#include "vm/JSContext.h"                 // for JSContext, ReportValueError
-#include "vm/JSFunction.h"                // for JSFunction
-#include "vm/JSScript.h"                  // for JSScript
-#include "vm/NativeObject.h"              // for NativeObject, JSObject::is
-#include "vm/ObjectGroup.h"               // for GenericObject, NewObjectKind
-#include "vm/ObjectOperations.h"          // for DefineProperty
-#include "vm/Realm.h"                     // for AutoRealm, ErrorCopier, Realm
-#include "vm/Runtime.h"                   // for JSAtomState
-#include "vm/SavedFrame.h"                // for SavedFrame
-#include "vm/Scope.h"                     // for PositionalFormalParameterIter
-#include "vm/SelfHosting.h"               // for GetClonedSelfHostedFunctionName
-#include "vm/Shape.h"                     // for Shape
-#include "vm/Stack.h"                     // for InvokeArgs
-#include "vm/StringType.h"                // for JSAtom, PropertyName
-#include "vm/WrapperObject.h"             // for JSObject::is, WrapperObject
+#include "js/Promise.h"  // for PromiseState, PromiseReactionRecordBuilder
+#include "js/Proxy.h"    // for PropertyDescriptor
+#include "js/StableStringChars.h"        // for AutoStableStringChars
+#include "proxy/ScriptedProxyHandler.h"  // for ScriptedProxyHandler
+#include "vm/ArgumentsObject.h"          // for ARGS_LENGTH_MAX
+#include "vm/ArrayObject.h"              // for ArrayObject
+#include "vm/AsyncFunction.h"            // for AsyncGeneratorObject
+#include "vm/AsyncIteration.h"           // for AsyncFunctionGeneratorObject
+#include "vm/BytecodeUtil.h"             // for JSDVG_SEARCH_STACK
+#include "vm/Compartment.h"              // for Compartment
+#include "vm/EnvironmentObject.h"        // for GetDebugEnvironmentForFunction
+#include "vm/ErrorObject.h"              // for JSObject::is, ErrorObject
+#include "vm/GeneratorObject.h"          // for AbstractGeneratorObject
+#include "vm/GlobalObject.h"             // for JSObject::is, GlobalObject
+#include "vm/Instrumentation.h"          // for RealmInstrumentation
+#include "vm/Interpreter.h"              // for Call
+#include "vm/JSAtom.h"                   // for Atomize, js_apply_str
+#include "vm/JSContext.h"                // for JSContext, ReportValueError
+#include "vm/JSFunction.h"               // for JSFunction
+#include "vm/JSScript.h"                 // for JSScript
+#include "vm/NativeObject.h"             // for NativeObject, JSObject::is
+#include "vm/ObjectGroup.h"              // for GenericObject, NewObjectKind
+#include "vm/ObjectOperations.h"         // for DefineProperty
+#include "vm/Realm.h"                    // for AutoRealm, ErrorCopier, Realm
+#include "vm/Runtime.h"                  // for JSAtomState
+#include "vm/SavedFrame.h"               // for SavedFrame
+#include "vm/Scope.h"                    // for PositionalFormalParameterIter
+#include "vm/SelfHosting.h"              // for GetClonedSelfHostedFunctionName
+#include "vm/Shape.h"                    // for Shape
+#include "vm/Stack.h"                    // for InvokeArgs
+#include "vm/StringType.h"               // for JSAtom, PropertyName
+#include "vm/WrapperObject.h"            // for JSObject::is, WrapperObject
 
 #include "vm/Compartment-inl.h"       // for Compartment::wrap
 #include "vm/JSAtom-inl.h"            // for ValueToId
@@ -211,6 +215,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool unwrapMethod();
   bool setInstrumentationMethod();
   bool setInstrumentationActiveMethod();
+  bool getPromiseReactionsMethod();
 
   using Method = bool (CallData::*)();
 
@@ -1417,6 +1422,101 @@ bool DebuggerObject::CallData::setInstrumentationActiveMethod() {
   return true;
 }
 
+struct DebuggerObject::PromiseReactionRecordBuilder
+    : js::PromiseReactionRecordBuilder {
+  Debugger* dbg;
+  HandleArrayObject records;
+
+  PromiseReactionRecordBuilder(Debugger* dbg, HandleArrayObject records)
+      : dbg(dbg), records(records) {}
+
+  bool then(JSContext* cx, HandleObject resolve, HandleObject reject,
+            HandleObject result) override {
+    RootedPlainObject record(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!record) {
+      return false;
+    }
+
+    if (!setIfNotNull(cx, record, cx->names().resolve, resolve) ||
+        !setIfNotNull(cx, record, cx->names().reject, reject) ||
+        !setIfNotNull(cx, record, cx->names().result, result)) {
+      return false;
+    }
+
+    return push(cx, record);
+  }
+
+  bool direct(JSContext* cx, Handle<PromiseObject*> unwrappedPromise) override {
+    RootedValue v(cx, ObjectValue(*unwrappedPromise));
+    return dbg->wrapDebuggeeValue(cx, &v) && push(cx, v);
+  }
+
+  bool asyncFunction(
+      JSContext* cx,
+      Handle<AsyncFunctionGeneratorObject*> unwrappedGenerator) override {
+    return pushGenerator(cx, unwrappedGenerator);
+  }
+
+  bool asyncGenerator(
+      JSContext* cx,
+      Handle<AsyncGeneratorObject*> unwrappedGenerator) override {
+    return pushGenerator(cx, unwrappedGenerator);
+  }
+
+ private:
+  bool push(JSContext* cx, HandleObject record) {
+    RootedValue recordVal(cx, ObjectValue(*record));
+    return push(cx, recordVal);
+  }
+
+  bool push(JSContext* cx, HandleValue recordVal) {
+    return NewbornArrayPush(cx, records, recordVal);
+  }
+
+  bool pushGenerator(JSContext* cx,
+                     Handle<AbstractGeneratorObject*> unwrappedGenerator) {
+    RootedDebuggerFrame frame(cx);
+    return dbg->getFrame(cx, unwrappedGenerator, &frame) && push(cx, frame);
+  }
+
+  bool setIfNotNull(JSContext* cx, HandlePlainObject obj,
+                    Handle<PropertyName*> name, HandleObject prop) {
+    if (!prop) {
+      return true;
+    }
+
+    RootedValue v(cx, ObjectValue(*prop));
+    if (!dbg->wrapDebuggeeValue(cx, &v) ||
+        !DefineDataProperty(cx, obj, name, v)) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+bool DebuggerObject::CallData::getPromiseReactionsMethod() {
+  Debugger* dbg = Debugger::fromChildJSObject(object);
+
+  Rooted<PromiseObject*> unwrappedPromise(cx, EnsurePromise(cx, referent));
+  if (!unwrappedPromise) {
+    return false;
+  }
+
+  RootedArrayObject holder(cx, NewDenseEmptyArray(cx));
+  if (!holder) {
+    return false;
+  }
+
+  PromiseReactionRecordBuilder builder(dbg, holder);
+  if (!unwrappedPromise->forEachReactionRecord(cx, builder)) {
+    return false;
+  }
+
+  args.rval().setObject(*builder.records);
+  return true;
+}
+
 const JSPropertySpec DebuggerObject::properties_[] = {
     JS_DEBUG_PSG("callable", callableGetter),
     JS_DEBUG_PSG("isBoundFunction", isBoundFunctionGetter),
@@ -1489,6 +1589,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_DEBUG_FN("unwrap", unwrapMethod, 0),
     JS_DEBUG_FN("setInstrumentation", setInstrumentationMethod, 2),
     JS_DEBUG_FN("setInstrumentationActive", setInstrumentationActiveMethod, 1),
+    JS_DEBUG_FN("getPromiseReactions", getPromiseReactionsMethod, 0),
     JS_FS_END};
 
 /* static */

@@ -51,44 +51,40 @@ function verifyDirectCertificate(attestationObject) {
 
 function promiseWebAuthnRegister(tab, attestation = "indirect") {
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    [attestation],
-    ([attestation]) => {
-      const cose_alg_ECDSA_w_SHA256 = -7;
+  return ContentTask.spawn(tab.linkedBrowser, attestation, attestation => {
+    const cose_alg_ECDSA_w_SHA256 = -7;
 
-      let challenge = content.crypto.getRandomValues(new Uint8Array(16));
+    let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
-      let pubKeyCredParams = [
-        {
-          type: "public-key",
-          alg: cose_alg_ECDSA_w_SHA256,
-        },
-      ];
+    let pubKeyCredParams = [
+      {
+        type: "public-key",
+        alg: cose_alg_ECDSA_w_SHA256,
+      },
+    ];
 
-      let publicKey = {
-        rp: { id: content.document.domain, name: "none", icon: "none" },
-        user: {
-          id: new Uint8Array(),
-          name: "none",
-          icon: "none",
-          displayName: "none",
-        },
-        pubKeyCredParams,
-        attestation,
-        challenge,
-      };
+    let publicKey = {
+      rp: { id: content.document.domain, name: "none", icon: "none" },
+      user: {
+        id: new Uint8Array(),
+        name: "none",
+        icon: "none",
+        displayName: "none",
+      },
+      pubKeyCredParams,
+      attestation,
+      challenge,
+    };
 
-      return content.navigator.credentials
-        .create({ publicKey })
-        .then(cred => cred.response.attestationObject);
-    }
-  );
+    return content.navigator.credentials
+      .create({ publicKey })
+      .then(cred => cred.response.attestationObject);
+  });
   /* eslint-enable no-shadow */
 }
 
 function promiseWebAuthnSign(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, [], () => {
+  return ContentTask.spawn(tab.linkedBrowser, null, () => {
     let challenge = content.crypto.getRandomValues(new Uint8Array(16));
     let key_handle = content.crypto.getRandomValues(new Uint8Array(16));
 

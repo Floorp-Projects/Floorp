@@ -226,7 +226,7 @@ function removeSubframeFrom(browser, frameDepth = 0) {
  * @return {Promise}
  */
 function controlFrameAt(browser, frameDepth, command) {
-  return ContentTask.spawn(browser, { frameDepth, command }, async function(
+  return SpecialPowers.spawn(browser, [{ frameDepth, command }], async function(
     args
   ) {
     ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
@@ -313,7 +313,7 @@ function controlFrameAt(browser, frameDepth, command) {
         break;
       }
     }
-  });
+  }).catch(Cu.reportError);
 }
 
 /**
@@ -359,7 +359,9 @@ async function prepareSubframes(browser, options) {
   browser.reload();
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, { options, PAGE_URL }, async function(args) {
+  await SpecialPowers.spawn(browser, [{ options, PAGE_URL }], async function(
+    args
+  ) {
     let { options: allSubframeOptions, PAGE_URL: contentPageURL } = args;
     function loadBeforeUnloadHelper(doc, subframeOptions) {
       let subframe = doc.getElementById("subframe");

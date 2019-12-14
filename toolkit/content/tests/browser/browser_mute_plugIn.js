@@ -55,10 +55,10 @@ add_task(async function block_plug_in() {
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
 
   info("- stop plugin -");
-  await ContentTask.spawn(tab.linkedBrowser, null, stop_plugin);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], stop_plugin);
 
   info("- start plugin -");
-  await ContentTask.spawn(tab.linkedBrowser, null, start_plugin);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], start_plugin);
 
   info("- unmute browser -");
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");

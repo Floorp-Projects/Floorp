@@ -84,7 +84,7 @@ async function testCopyPaste(isPrivate) {
 
   let initialFdCount = getClipboardCacheFDCount();
 
-  await ContentTask.spawn(browser, Ipsum, async largeString => {
+  await SpecialPowers.spawn(browser, [Ipsum], async largeString => {
     await content.navigator.clipboard.writeText(largeString);
   });
 
@@ -95,7 +95,7 @@ async function testCopyPaste(isPrivate) {
     is(fdCountAfterCopy, initialFdCount + 1, "Cached write");
   }
 
-  let readStr = await ContentTask.spawn(browser, null, async () => {
+  let readStr = await SpecialPowers.spawn(browser, [], async () => {
     let { document } = content;
     document.body.contentEditable = true;
     document.body.focus();
@@ -123,9 +123,13 @@ async function testCopyPaste(isPrivate) {
   }
 
   // Cleanup.
-  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async shortStr => {
-    await content.navigator.clipboard.writeText(shortStr);
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [SHORT_STRING_NO_CACHE],
+    async shortStr => {
+      await content.navigator.clipboard.writeText(shortStr);
+    }
+  );
   is(getClipboardCacheFDCount(), initialFdCount, "Drop clipboard cache if any");
 
   BrowserTestUtils.removeTab(tab);

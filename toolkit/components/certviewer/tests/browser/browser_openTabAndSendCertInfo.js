@@ -94,9 +94,9 @@ add_task(async function openFromPopUp() {
 });
 
 function injectErrorPageFrame(tab, src) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     tab.linkedBrowser,
-    { frameSrc: src },
+    [{ frameSrc: src }],
     async function({ frameSrc }) {
       let loaded = ContentTaskUtils.waitForEvent(
         content.wrappedJSObject,
@@ -159,7 +159,7 @@ add_task(async function testBadCert() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let advancedButton = content.document.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
     Assert.equal(
@@ -197,7 +197,7 @@ add_task(async function testBadCertIframe() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let doc = content.document.querySelector("iframe").contentDocument;
     let advancedButton = doc.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");

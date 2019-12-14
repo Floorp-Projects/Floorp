@@ -110,15 +110,16 @@ function resumeWithExpectedSuccess() {
   });
 }
 
-function callGUM(testParameters) {
+async function callGUM(testParameters) {
   info("- calling gum with " + JSON.stringify(testParameters.constraints));
   if (testParameters.shouldAllowStartingContext) {
     // Because of the prefs we've set and passed, this is going to allow the
     // window to start an AudioContext synchronously.
     testParameters.constraints.fake = true;
-    return content.navigator.mediaDevices.getUserMedia(
+    await content.navigator.mediaDevices.getUserMedia(
       testParameters.constraints
     );
+    return;
   }
 
   // Call gUM, without sucess: we've made it so that only fake requests
@@ -130,7 +131,6 @@ function callGUM(testParameters) {
   // because of saved permissions for an origin or explicit user consent using
   // the prompt.
   content.navigator.mediaDevices.getUserMedia(testParameters.constraints);
-  return Promise.resolve();
 }
 
 async function testWebAudioWithGUM(testParameters) {
@@ -147,9 +147,9 @@ async function testWebAudioWithGUM(testParameters) {
 
   info("- check whether audio context starts running -");
   try {
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       tab.linkedBrowser,
-      null,
+      [],
       checkingAudioContextRunningState
     );
   } catch (error) {
@@ -157,7 +157,7 @@ async function testWebAudioWithGUM(testParameters) {
   }
 
   try {
-    await ContentTask.spawn(tab.linkedBrowser, testParameters, callGUM);
+    await SpecialPowers.spawn(tab.linkedBrowser, [testParameters], callGUM);
   } catch (error) {
     ok(false, error.toString());
   }
@@ -167,7 +167,7 @@ async function testWebAudioWithGUM(testParameters) {
     let resumeFunc = testParameters.shouldAllowStartingContext
       ? resumeWithExpectedSuccess
       : resumeWithoutExpectedSuccess;
-    await ContentTask.spawn(tab.linkedBrowser, null, resumeFunc);
+    await SpecialPowers.spawn(tab.linkedBrowser, [], resumeFunc);
   } catch (error) {
     ok(false, error.toString());
   }

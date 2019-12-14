@@ -16,7 +16,7 @@ add_task(async function test_doorhanger_dismissal_un() {
       // we automatically dismiss the save logins prompt on submission.
 
       let processedPromise = listenForTestNotification("FormSubmit");
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.document
           .getElementById("form-basic-username")
           .setUserInput("4111111111111111");
@@ -49,7 +49,7 @@ add_task(async function test_doorhanger_dismissal_pw() {
       // we automatically dismiss the save logins prompt on submission.
 
       let processedPromise = listenForTestNotification("FormSubmit");
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.document
           .getElementById("form-basic-username")
           .setUserInput("aaa");
@@ -84,7 +84,7 @@ add_task(async function test_doorhanger_shown_on_un_with_invalid_ccnumber() {
       // we show the doorhanger to save logins like we usually do.
 
       let processedPromise = listenForTestNotification("FormSubmit");
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.document
           .getElementById("form-basic-username")
           .setUserInput("1234123412341234");
@@ -131,7 +131,7 @@ add_task(async function test_doorhanger_dismissal_on_change() {
       Services.logins.addLogin(login);
 
       let processedPromise = listenForTestNotification("FormSubmit");
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.document
           .getElementById("form-basic-password")
           .setUserInput("111");

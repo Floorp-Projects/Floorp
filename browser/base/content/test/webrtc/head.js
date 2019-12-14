@@ -446,9 +446,9 @@ function promiseRequestDevice(
   aBadDevice = false
 ) {
   info("requesting devices");
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     aBrowser,
-    { aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice },
+    [{ aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice }],
     async function(args) {
       let global = content.wrappedJSObject;
       if (args.aFrameId) {
@@ -484,15 +484,17 @@ async function closeStream(
   }
 
   info("closing the stream");
-  await ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, async function(
-    contentFrameId
-  ) {
-    let global = content.wrappedJSObject;
-    if (contentFrameId) {
-      global = global.document.getElementById(contentFrameId).contentWindow;
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [aFrameId],
+    async function(contentFrameId) {
+      let global = content.wrappedJSObject;
+      if (contentFrameId) {
+        global = global.document.getElementById(contentFrameId).contentWindow;
+      }
+      global.closeStream();
     }
-    global.closeStream();
-  });
+  );
 
   await Promise.all(observerPromises);
 
@@ -507,10 +509,8 @@ async function reloadAndAssertClosedStreams() {
   await disableObserverVerification();
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    "() => content.location.reload()"
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () =>
+    content.location.reload()
   );
 
   await loadedPromise;

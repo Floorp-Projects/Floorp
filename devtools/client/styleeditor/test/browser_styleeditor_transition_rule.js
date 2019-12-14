@@ -23,9 +23,9 @@ add_task(async function() {
 
   await styleChanges;
 
-  const rules = await ContentTask.spawn(
+  const rules = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    0,
+    [0],
     async function(index) {
       const sheet = content.document.styleSheets[index];
       return [...sheet.cssRules].map(rule => rule.cssText);

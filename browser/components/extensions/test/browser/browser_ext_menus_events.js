@@ -454,9 +454,9 @@ add_task(async function test_show_hide_frame() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      frameId = await ContentTask.spawn(
+      frameId = await SpecialPowers.spawn(
         gBrowser.selectedBrowser,
-        {},
+        [],
         function() {
           const { WebNavigationFrames } = ChromeUtils.import(
             "resource://gre/modules/WebNavigationFrames.jsm"
@@ -595,9 +595,9 @@ add_task(async function test_show_hide_editable_selection() {
     },
     async doOpenMenu() {
       // Select lots of text in the test page before opening the menu.
-      selectionText = await ContentTask.spawn(
+      selectionText = await SpecialPowers.spawn(
         gBrowser.selectedBrowser,
-        {},
+        [],
         function() {
           let node = content.document.getElementById("editabletext");
           node.select();
@@ -639,7 +639,7 @@ add_task(async function test_show_hide_video() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await ContentTask.spawn(gBrowser.selectedBrowser, VIDEO_URL, function(
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [VIDEO_URL], function(
         VIDEO_URL
       ) {
         let video = content.document.createElement("video");
@@ -682,7 +682,7 @@ add_task(async function test_show_hide_audio() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await ContentTask.spawn(gBrowser.selectedBrowser, AUDIO_URL, function(
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUDIO_URL], function(
         AUDIO_URL
       ) {
         let audio = content.document.createElement("audio");

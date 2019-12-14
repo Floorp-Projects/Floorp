@@ -7,9 +7,9 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
     async function(browser) {
-      let keyLocationServiceGoogleStatus = await ContentTask.spawn(
+      let keyLocationServiceGoogleStatus = await SpecialPowers.spawn(
         browser,
-        null,
+        [],
         async function() {
           let textBox = content.document.getElementById(
             "key-location-service-google-box"
@@ -26,9 +26,9 @@ add_task(async function() {
         "Google location service API key status shown"
       );
 
-      let keySafebrowsingGoogleStatus = await ContentTask.spawn(
+      let keySafebrowsingGoogleStatus = await SpecialPowers.spawn(
         browser,
-        null,
+        [],
         async function() {
           let textBox = content.document.getElementById(
             "key-safebrowsing-google-box"
@@ -45,9 +45,9 @@ add_task(async function() {
         "Google Safebrowsing API key status shown"
       );
 
-      let keyMozillaStatus = await ContentTask.spawn(
+      let keyMozillaStatus = await SpecialPowers.spawn(
         browser,
-        null,
+        [],
         async function() {
           let textBox = content.document.getElementById("key-mozilla-box");
           await ContentTaskUtils.waitForCondition(

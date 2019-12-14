@@ -54,7 +54,9 @@ add_task(async function test1() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http image";
 
-  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+    condition
+  ) {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 1!"
@@ -77,7 +79,9 @@ add_task(async function test2() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http font";
 
-  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+    condition
+  ) {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 2!"
@@ -100,7 +104,9 @@ add_task(async function test3() {
   expected +=
     "with https css that imports another http css which includes http font";
 
-  await ContentTask.spawn(gTestBrowser, expected, async function(condition) {
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+    condition
+  ) {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("testDiv").innerHTML == condition,
       "Waited too long for status in Test 3!"

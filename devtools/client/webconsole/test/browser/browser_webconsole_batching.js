@@ -18,7 +18,7 @@ add_task(async function() {
 });
 
 async function testSimpleBatchLogging(hud, messageNumber) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber, function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [messageNumber], function(
     numMessages
   ) {
     content.wrappedJSObject.batchLog(numMessages);
@@ -35,7 +35,7 @@ async function testSimpleBatchLogging(hud, messageNumber) {
 }
 
 async function testBatchLoggingAndClear(hud, messageNumber) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber, function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [messageNumber], function(
     numMessages
   ) {
     content.wrappedJSObject.batchLogAndClear(numMessages);

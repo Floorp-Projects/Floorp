@@ -226,7 +226,7 @@ add_task(async function test_prevent_install_ui() {
     gBrowser,
     "about:preferences#search"
   );
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let linkContainer = content.document.getElementById("addEnginesBox");
     if (!linkContainer.hidden) {
       await new Promise(resolve => {
@@ -280,9 +280,9 @@ add_task(async function test_AddSearchProvider() {
     "chrome://mochitests/content",
     "http://example.com"
   );
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    { engineURL },
+    [{ engineURL }],
     async function(args) {
       content.window.external.AddSearchProvider(args.engineURL);
     }

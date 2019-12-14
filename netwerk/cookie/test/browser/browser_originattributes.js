@@ -44,9 +44,9 @@ add_task(async function test() {
     // open our tab in the given user context
     let { tab, browser } = await openTabInUserContext(TEST_URL, userContextId);
 
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       browser,
-      { names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId] },
+      [{ names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId] }],
       function(opts) {
         for (let name of opts.names) {
           content.document.cookie = name + "=" + opts.value;
@@ -104,7 +104,7 @@ async function getCookiesFromJS(userContextId) {
   let { tab, browser } = await openTabInUserContext(TEST_URL, userContextId);
 
   // get the cookies
-  let cookieString = await ContentTask.spawn(browser, null, function() {
+  let cookieString = await SpecialPowers.spawn(browser, [], function() {
     return content.document.cookie;
   });
 

@@ -28,7 +28,7 @@ function clearOrigin() {
 }
 
 async function applyMutations(knownTab, mutations) {
-  await ContentTask.spawn(knownTab.tab.linkedBrowser, mutations, function(
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [mutations], function(
     mutations
   ) {
     return content.wrappedJSObject.applyMutations(
@@ -38,9 +38,9 @@ async function applyMutations(knownTab, mutations) {
 }
 
 async function verifyState(knownTab, expectedState) {
-  let actualState = await ContentTask.spawn(
+  let actualState = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    {},
+    [],
     function() {
       return content.wrappedJSObject.getState();
     }
@@ -58,9 +58,9 @@ async function verifyState(knownTab, expectedState) {
 }
 
 async function getKeys(knownTab) {
-  let keys = await ContentTask.spawn(
+  let keys = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    null,
+    [],
     function() {
       return content.wrappedJSObject.getKeys();
     }
@@ -69,13 +69,13 @@ async function getKeys(knownTab) {
 }
 
 async function beginExplicitSnapshot(knownTab) {
-  await ContentTask.spawn(knownTab.tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
     return content.wrappedJSObject.beginExplicitSnapshot();
   });
 }
 
 async function endExplicitSnapshot(knownTab) {
-  await ContentTask.spawn(knownTab.tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
     return content.wrappedJSObject.endExplicitSnapshot();
   });
 }

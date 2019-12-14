@@ -48,7 +48,7 @@
 /* A union which permits us to convert between a long double and
    four 32 bit ints.  */
 
-#if MOZ_BIG_ENDIAN
+#if MOZ_BIG_ENDIAN()
 
 typedef union
 {
@@ -67,7 +67,7 @@ typedef union
 
 #endif
 
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
 
 typedef union
 {
@@ -91,7 +91,7 @@ typedef union
  * ints.
  */
 
-#if MOZ_BIG_ENDIAN
+#if MOZ_BIG_ENDIAN()
 
 typedef union
 {
@@ -109,7 +109,7 @@ typedef union
 
 #endif
 
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
 
 typedef union
 {

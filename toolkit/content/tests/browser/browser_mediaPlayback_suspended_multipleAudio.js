@@ -161,54 +161,50 @@ async function suspended_pause(url, browser) {
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the default suspended state of all audio should be non-suspened-");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 
   info("- pause all audio in the page -");
   browser.pauseMedia(false /* non-disposable */);
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [true], check_autoplay_audio_pause_state);
+  await SpecialPowers.spawn(
     browser,
-    true /* expect for pause */,
-    check_autoplay_audio_pause_state
-  );
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.SUSPENDED_PAUSE,
+    [SuspendedType.SUSPENDED_PAUSE],
     check_autoplay_audio_suspended
   );
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_nonautoplay_audio_suspended
   );
 
   info("- no audio can be playback during suspended-paused -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    null,
+    [],
     play_nonautoplay_audio_should_be_paused
   );
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.SUSPENDED_PAUSE,
+    [SuspendedType.SUSPENDED_PAUSE],
     check_nonautoplay_audio_suspended
   );
 
   info("- both audio should be resumed at the same time -");
   browser.resumeMedia();
-  await ContentTask.spawn(browser, null, all_audio_onresume);
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [], all_audio_onresume);
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 
   info("- both audio should be paused at the same time -");
   browser.pauseMedia(false /* non-disposable */);
-  await ContentTask.spawn(browser, null, all_audio_onpause);
+  await SpecialPowers.spawn(browser, [], all_audio_onpause);
 }
 
 async function suspended_pause_disposable(url, browser) {
@@ -219,47 +215,39 @@ async function suspended_pause_disposable(url, browser) {
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the default suspended state of all audio should be non-suspened -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 
   info("- only pause playing audio in the page -");
   browser.pauseMedia(true /* non-disposable */);
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [true], check_autoplay_audio_pause_state);
+  await SpecialPowers.spawn(
     browser,
-    true /* expect for pause */,
-    check_autoplay_audio_pause_state
-  );
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.SUSPENDED_PAUSE_DISPOSABLE,
+    [SuspendedType.SUSPENDED_PAUSE_DISPOSABLE],
     check_autoplay_audio_suspended
   );
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_nonautoplay_audio_suspended
   );
 
   info("- new playing audio should be playback correctly -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    null,
+    [],
     play_nonautoplay_audio_should_play_until_ended
   );
 
   info("- should only resume one audio -");
   browser.resumeMedia();
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [false], check_autoplay_audio_pause_state);
+  await SpecialPowers.spawn(
     browser,
-    false /* expect for playing */,
-    check_autoplay_audio_pause_state
-  );
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 }
@@ -272,39 +260,35 @@ async function suspended_stop_disposable(url, browser) {
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
 
   info("- the default suspended state of all audio should be non-suspened -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 
   info("- only stop playing audio in the page -");
   browser.stopMedia();
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [true], check_autoplay_audio_pause_state);
+  await SpecialPowers.spawn(
     browser,
-    true /* expect for pause */,
-    check_autoplay_audio_pause_state
-  );
-  await ContentTask.spawn(
-    browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 
   info("- new playing audio should be playback correctly -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    null,
+    [],
     play_nonautoplay_audio_should_play_until_ended
   );
 
   info("- no any audio can be resumed by page -");
   browser.resumeMedia();
-  await ContentTask.spawn(browser, null, no_audio_resumed);
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(browser, [], no_audio_resumed);
+  await SpecialPowers.spawn(
     browser,
-    SuspendedType.NONE_SUSPENDED,
+    [SuspendedType.NONE_SUSPENDED],
     check_all_audio_suspended
   );
 }

@@ -116,7 +116,6 @@ class FinalizationRecordVectorObject : public NativeObject {
   enum { RecordsSlot = 0, SlotCount };
 
  public:
-
   static const JSClass class_;
 
   static FinalizationRecordVectorObject* create(JSContext* cx);

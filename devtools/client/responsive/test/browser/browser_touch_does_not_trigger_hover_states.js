@@ -26,49 +26,53 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 async function testButtonHoverState(ui, expected) {
-  await ContentTask.spawn(ui.getViewportBrowser(), { expected }, async function(
-    args
-  ) {
-    let button = content.document.querySelector("button");
-    const { expected: contentExpected } = args;
+  await SpecialPowers.spawn(
+    ui.getViewportBrowser(),
+    [{ expected }],
+    async function(args) {
+      let button = content.document.querySelector("button");
+      const { expected: contentExpected } = args;
 
-    info("Move mouse into the button element.");
-    await EventUtils.synthesizeMouseAtCenter(
-      button,
-      { type: "mousemove", isSynthesized: false },
-      content
-    );
-    button = content.document.querySelector("button");
-    const win = content.document.defaultView;
+      info("Move mouse into the button element.");
+      await EventUtils.synthesizeMouseAtCenter(
+        button,
+        { type: "mousemove", isSynthesized: false },
+        content
+      );
+      button = content.document.querySelector("button");
+      const win = content.document.defaultView;
 
-    is(
-      win.getComputedStyle(button).getPropertyValue("background-color"),
-      contentExpected,
-      `Button background color is ${contentExpected}.`
-    );
-  });
+      is(
+        win.getComputedStyle(button).getPropertyValue("background-color"),
+        contentExpected,
+        `Button background color is ${contentExpected}.`
+      );
+    }
+  );
 }
 
 async function testDropDownHoverState(ui, expected) {
-  await ContentTask.spawn(ui.getViewportBrowser(), { expected }, async function(
-    args
-  ) {
-    const dropDownMenu = content.document.querySelector(".drop-down-menu");
-    const { expected: contentExpected } = args;
+  await SpecialPowers.spawn(
+    ui.getViewportBrowser(),
+    [{ expected }],
+    async function(args) {
+      const dropDownMenu = content.document.querySelector(".drop-down-menu");
+      const { expected: contentExpected } = args;
 
-    info("Move mouse into the drop down menu.");
-    await EventUtils.synthesizeMouseAtCenter(
-      dropDownMenu,
-      { type: "mousemove", isSynthesized: false },
-      content
-    );
-    const win = content.document.defaultView;
-    const menuItems = content.document.querySelector(".menu-items-list");
+      info("Move mouse into the drop down menu.");
+      await EventUtils.synthesizeMouseAtCenter(
+        dropDownMenu,
+        { type: "mousemove", isSynthesized: false },
+        content
+      );
+      const win = content.document.defaultView;
+      const menuItems = content.document.querySelector(".menu-items-list");
 
-    is(
-      win.getComputedStyle(menuItems).getPropertyValue("display"),
-      contentExpected,
-      `Menu items is display: ${contentExpected}.`
-    );
-  });
+      is(
+        win.getComputedStyle(menuItems).getPropertyValue("display"),
+        contentExpected,
+        `Menu items is display: ${contentExpected}.`
+      );
+    }
+  );
 }

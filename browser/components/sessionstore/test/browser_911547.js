@@ -27,7 +27,7 @@ add_task(async function test() {
   );
 
   let loadedPromise = promiseBrowserLoaded(browser);
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     is(
       content.document.getElementById("test_id1").value,
       "id1_initial",
@@ -38,7 +38,8 @@ add_task(async function test() {
 
   await loadedPromise;
 
-  await ContentTask.spawn(browser, {}, function( {}) { // eslint-disable-line
+  await SpecialPowers.spawn(browser, [], function() {
+    // eslint-disable-line
     // the data: URI inherits the CSP and the inline script needs to be blocked
     is(
       content.document.getElementById("test_id2").value,
@@ -55,7 +56,8 @@ add_task(async function test() {
   await promiseTabRestored(tab);
   browser = tab.linkedBrowser;
 
-  await ContentTask.spawn(browser, {}, function({}) { // eslint-disable-line
+  await SpecialPowers.spawn(browser, [], function() {
+    // eslint-disable-line
     // the data: URI should be restored including the inherited CSP and the
     // inline script should be blocked.
     is(
@@ -71,7 +73,7 @@ add_task(async function test() {
 
 // injects an inline script element (with a text body)
 function injectInlineScript(browser, scriptText) {
-  return ContentTask.spawn(browser, scriptText, function(text) {
+  return SpecialPowers.spawn(browser, [scriptText], function(text) {
     let scriptElt = content.document.createElement("script");
     scriptElt.type = "text/javascript";
     scriptElt.text = text;

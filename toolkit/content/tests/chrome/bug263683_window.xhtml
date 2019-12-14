@@ -19,8 +19,6 @@
   <script type="application/javascript"><![CDATA[
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ContentTask.setTestScope(window.arguments[0]);
 
     var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     var gFindBar = null;
@@ -88,10 +86,10 @@
       gFindBar._find();
       await promise;
 
-      await ContentTask.spawn(gBrowser, { search }, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
         Assert.ok("SELECTION_FIND" in controller, "Correctly detects new selection type");
         let selection = controller.getSelection(controller.SELECTION_FIND);
 
@@ -103,10 +101,10 @@
 
       await toggleHighlightAndWait(false);
 
-      await ContentTask.spawn(gBrowser, { search }, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
         let selection = controller.getSelection(controller.SELECTION_FIND);
         Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
 
@@ -116,7 +114,7 @@
  
       await toggleHighlightAndWait(true);
 
-      await ContentTask.spawn(gBrowser, { search }, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
         let input = content.document.getElementById("inp");
         let inputController = input.editor.selectionController;
         let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
@@ -129,7 +127,7 @@
 
       await toggleHighlightAndWait(false);
 
-      await ContentTask.spawn(gBrowser, null, async function() {
+      await SpecialPowers.spawn(gBrowser, [], async function() {
         let input = content.document.getElementById("inp");
         let inputController = input.editor.selectionController;
         let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
@@ -146,11 +144,11 @@
 
       await toggleHighlightAndWait(true);
 
-      await ContentTask.spawn(gBrowser, { search }, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{ search }], async function(args) {
         function getSelection(docShell) {
           let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsISelectionDisplay)
-                                   .QueryInterface(Ci.nsISelectionController);
+                                     .getInterface(Ci.nsISelectionDisplay)
+                                     .QueryInterface(Ci.nsISelectionController);
           return controller.getSelection(controller.SELECTION_FIND);
         }
 
@@ -175,11 +173,11 @@
       let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
       is(matches[1], "2", "Found correct amount of matches")
 
-      await ContentTask.spawn(gBrowser, null, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [], async function(args) {
         function getSelection(docShell) {
           let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsISelectionDisplay)
-                                   .QueryInterface(Ci.nsISelectionController);
+                                     .getInterface(Ci.nsISelectionDisplay)
+                                     .QueryInterface(Ci.nsISelectionController);
           return controller.getSelection(controller.SELECTION_FIND);
         }
 

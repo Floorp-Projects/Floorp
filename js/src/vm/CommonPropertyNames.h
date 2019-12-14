@@ -342,9 +342,13 @@
   MACRO(pattern, pattern, "pattern")                                           \
   MACRO(pending, pending, "pending")                                           \
   MACRO(percentSign, percentSign, "percentSign")                               \
+  MACRO(pipeTo, pipeTo, "pipeTo")                                              \
   MACRO(plusSign, plusSign, "plusSign")                                        \
   MACRO(public, public_, "public")                                             \
   MACRO(pull, pull, "pull")                                                    \
+  MACRO(preventAbort, preventAbort, "preventAbort")                            \
+  MACRO(preventClose, preventClose, "preventClose")                            \
+  MACRO(preventCancel, preventCancel, "preventCancel")                         \
   MACRO(preventExtensions, preventExtensions, "preventExtensions")             \
   MACRO(private, private_, "private")                                          \
   MACRO(promise, promise, "promise")                                           \
@@ -374,6 +378,7 @@
   MACRO(RequireObjectCoercible, RequireObjectCoercible,                        \
         "RequireObjectCoercible")                                              \
   MACRO(resolve, resolve, "resolve")                                           \
+  MACRO(result, result, "result")                                              \
   MACRO(resumeGenerator, resumeGenerator, "resumeGenerator")                   \
   MACRO(return, return_, "return")                                             \
   MACRO(revoke, revoke, "revoke")                                              \
@@ -391,6 +396,7 @@
   MACRO(setPrefix, setPrefix, "set ")                                          \
   MACRO(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                      \
   MACRO(shape, shape, "shape")                                                 \
+  MACRO(signal, signal, "signal")                                              \
   MACRO(signDisplay, signDisplay, "signDisplay")                               \
   MACRO(size, size, "size")                                                    \
   MACRO(source, source, "source")                                              \

@@ -104,7 +104,7 @@ add_task(async function() {
   const target = await TargetFactory.forTab(tab);
 
   // Set up some cached messages for the web console.
-  await ContentTask.spawn(tab.linkedBrowser, {}, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.console.log("test 1");
     content.console.log("test 2");
     content.console.log("test 3");

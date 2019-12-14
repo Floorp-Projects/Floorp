@@ -14,7 +14,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // "Type in" some random values.
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     function typeText(aTextField, aValue) {
       aTextField.value = aValue;
 
@@ -36,7 +36,7 @@ add_task(async function() {
   await promiseTabRestored(tab2);
 
   // Query a few values from the top and its child frames.
-  await ContentTask.spawn(tab2.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
     Assert.notEqual(
       content.document.getElementById("out1").value,
       content.frames[1].document.getElementById("out1").value,

@@ -49,9 +49,9 @@ add_task(async function test_autocompleteFromUsername() {
     forceNewProcess: true,
   });
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     newTab.linkedBrowser,
-    null,
+    [],
     function checkInitialValues() {
       let doc = content.document;
       let uname = doc.querySelector("#uname");
@@ -87,7 +87,7 @@ add_task(async function test_autocompleteFromUsername() {
 
   await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, newTab.linkedBrowser);
 
-  await ContentTask.spawn(newTab.linkedBrowser, null, function checkFill() {
+  await SpecialPowers.spawn(newTab.linkedBrowser, [], function checkFill() {
     let doc = content.document;
     let uname = doc.querySelector("#uname");
     let pword = doc.querySelector("#pword");

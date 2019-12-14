@@ -1,10 +1,6 @@
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
-const { ContentTask } = ChromeUtils.import(
-  "resource://testing-common/ContentTask.jsm"
-);
-
 function waitForFullScreenState(browser, state) {
   info("inside waitforfullscreenstate");
   return new Promise(resolve => {
@@ -40,7 +36,7 @@ async function changeFullscreen(browser, fullScreenState) {
     SimpleTest.waitForFocus(resolve, browser.ownerGlobal)
   );
   let fullScreenChange = waitForFullScreenState(browser, fullScreenState);
-  ContentTask.spawn(browser, fullScreenState, async state => {
+  SpecialPowers.spawn(browser, [fullScreenState], async state => {
     // Wait for document focus before requesting full-screen
     await ContentTaskUtils.waitForCondition(
       () => docShell.isActive && content.document.hasFocus(),

@@ -1146,7 +1146,7 @@ add_task(async function() {
     "Audit result for document is correct."
   );
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.document.title = "Hello world";
   });
   audit = await front.audit({ types: [TEXT_LABEL] });

@@ -86,7 +86,7 @@ add_task(async function() {
   );
   ok(pluginInfo.activated, "Test 4, plugin node should not be activated");
 
-  await ContentTask.spawn(gTestBrowser, null, async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let plugin = content.document.getElementById("test");
     let npobj1 = Cu.waiveXrays(plugin).getObjectValue();
     // eslint-disable-next-line no-self-assign

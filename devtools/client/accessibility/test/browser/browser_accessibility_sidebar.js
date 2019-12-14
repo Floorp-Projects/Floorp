@@ -40,7 +40,7 @@ const tests = [
   {
     desc: "Mark document as disabled for accessibility.",
     setup: async ({ browser }) =>
-      ContentTask.spawn(browser, {}, () =>
+      SpecialPowers.spawn(browser, [], () =>
         content.document.body.setAttribute("aria-disabled", true)
       ),
     expected: {
@@ -52,7 +52,7 @@ const tests = [
   {
     desc: "Append a new child to the document.",
     setup: async ({ browser }) =>
-      ContentTask.spawn(browser, {}, () => {
+      SpecialPowers.spawn(browser, [], () => {
         const doc = content.document;
         const button = doc.createElement("button");
         button.textContent = "Press Me!";

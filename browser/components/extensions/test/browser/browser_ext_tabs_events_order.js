@@ -68,13 +68,21 @@ add_task(async function testTabEvents() {
         `Got expected number of events for ${tabId}`
       );
 
-      for (let [i, name] of expectedEvents.entries()) {
-        browser.test.assertEq(
-          name,
-          i in events[tabId] && events[tabId][i],
+      for (let name of expectedEvents) {
+        browser.test.assertTrue(
+          events[tabId].includes(name),
           `Got expected ${name} event`
         );
       }
+
+      if (expectedEvents.includes("onCreated")) {
+        browser.test.assertEq(
+          events[tabId].indexOf("onCreated"),
+          0,
+          "onCreated happened first"
+        );
+      }
+
       delete events[tabId];
     }
 

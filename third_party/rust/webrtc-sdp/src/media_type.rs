@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 use anonymizer::{AnonymizingClone, StatefulSdpAnonymizer};
 use attribute_type::{
     maybe_print_param, SdpAttribute, SdpAttributeRtpmap, SdpAttributeSctpmap, SdpAttributeType,
@@ -448,10 +452,7 @@ pub fn parse_media_vector(lines: &mut Vec<SdpLine>) -> Result<Vec<SdpMedia>, Sdp
                             payload_type: rtpmap.payload_type,
                             codec_name: rtpmap.codec_name.clone(),
                             frequency: rtpmap.frequency,
-                            channels: match sdp_media.media.media {
-                                SdpMediaValue::Video => Some(0),
-                                _ => rtpmap.channels,
-                            },
+                            channels: rtpmap.channels,
                         }))
                     }
                     _ => sdp_media.add_attribute(a),
@@ -794,6 +795,7 @@ mod tests {
         let line = SdpLine {
             line_number: 0,
             sdp_type: SdpType::Session("hello".to_string()),
+            text: "".to_owned(),
         };
         sdp_lines.push(line);
         assert!(parse_media_vector(&mut sdp_lines).is_err());
@@ -812,6 +814,7 @@ mod tests {
         let media = SdpLine {
             line_number: 0,
             sdp_type: SdpType::Media(media_line),
+            text: "".to_owned(),
         };
         sdp_lines.push(media);
         let c = SdpConnection {
@@ -822,11 +825,13 @@ mod tests {
         let c1 = SdpLine {
             line_number: 1,
             sdp_type: SdpType::Connection(c.clone()),
+            text: "".to_owned(),
         };
         sdp_lines.push(c1);
         let c2 = SdpLine {
             line_number: 2,
             sdp_type: SdpType::Connection(c),
+            text: "".to_owned(),
         };
         sdp_lines.push(c2);
         assert!(parse_media_vector(&mut sdp_lines).is_err());
@@ -845,6 +850,7 @@ mod tests {
         let media = SdpLine {
             line_number: 0,
             sdp_type: SdpType::Media(media_line),
+            text: "".to_owned(),
         };
         sdp_lines.push(media);
         use SdpTiming;
@@ -852,6 +858,7 @@ mod tests {
         let tline = SdpLine {
             line_number: 1,
             sdp_type: SdpType::Timing(t),
+            text: "".to_owned(),
         };
         sdp_lines.push(tline);
         assert!(parse_media_vector(&mut sdp_lines).is_err());
@@ -870,12 +877,14 @@ mod tests {
         let media = SdpLine {
             line_number: 0,
             sdp_type: SdpType::Media(media_line),
+            text: "".to_owned(),
         };
         sdp_lines.push(media);
         let a = SdpAttribute::IceLite;
         let aline = SdpLine {
             line_number: 1,
             sdp_type: SdpType::Attribute(a),
+            text: "".to_owned(),
         };
         sdp_lines.push(aline);
         assert!(parse_media_vector(&mut sdp_lines).is_err());

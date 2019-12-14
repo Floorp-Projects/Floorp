@@ -34,9 +34,9 @@ add_task(async function() {
       TEST_HTTP_POST
     );
     /* eslint-disable no-shadow */
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       fileBrowser,
-      [TEST_HTTP_POST, filePaths],
+      [[TEST_HTTP_POST, filePaths]],
       ([actionUri, filePaths]) => {
         Cu.importGlobalProperties(["File"]);
 
@@ -95,7 +95,7 @@ add_task(async function() {
     } else {
       binContentType = "application/octet-stream";
     }
-    await ContentTask.spawn(fileBrowser, { binContentType }, args => {
+    await SpecialPowers.spawn(fileBrowser, [{ binContentType }], args => {
       let data = JSON.parse(content.document.body.textContent);
       is(
         data[0].headers["Content-Disposition"],

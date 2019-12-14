@@ -3705,7 +3705,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     pn = pn->as<ModuleNode>().body();
   }
 
-  if (!parser.publishDeferredItems()) {
+  if (!parser.publishDeferredFunctions()) {
     return false;
   }
 

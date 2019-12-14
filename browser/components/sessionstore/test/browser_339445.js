@@ -10,9 +10,9 @@ add_task(async function test() {
     "browser/components/sessionstore/test/browser_339445_sample.html";
 
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
-  await promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseBrowserLoaded(tab.linkedBrowser, true, testURL);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     let doc = content.document;
     is(
       doc.getElementById("storageTestItem").textContent,

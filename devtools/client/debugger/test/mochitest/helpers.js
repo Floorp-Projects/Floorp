@@ -1082,22 +1082,25 @@ function waitForActive(dbg) {
  */
 function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
-  return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, function*({
-    fnc,
-    args,
-  }) {
-    return content.wrappedJSObject[fnc](...args);
-  });
+  return ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    { fnc, args },
+    function({ fnc, args }) {
+      return content.wrappedJSObject[fnc](...args);
+    }
+  );
 }
 
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return ContentTask.spawn(gBrowser.selectedBrowser, { selector }, function*({
-    selector,
-  }) {
-    content.wrappedJSObject.document.querySelector(selector).click();
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ selector }],
+    function({ selector }) {
+      content.wrappedJSObject.document.querySelector(selector).click();
+    }
+  );
 }
 
 const isLinux = Services.appinfo.OS === "Linux";

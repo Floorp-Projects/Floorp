@@ -67,9 +67,9 @@ add_task(async function() {
       `${gTestRoot}plugin_favorfallback.html?testcase=${testcase.name}`
     );
 
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       tab.linkedBrowser,
-      testcase.name,
+      [testcase.name],
       async function testPlugins(name) {
         let testcaseDiv = content.document.getElementById(`testcase_${name}`);
         let ctpPlugins = testcaseDiv.querySelectorAll(".expected_ctp");

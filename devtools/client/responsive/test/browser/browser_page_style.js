@@ -51,17 +51,19 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 function waitForContentPageTextColor(ui, expectedColor) {
-  return ContentTask.spawn(ui.getViewportBrowser(), { expectedColor }, function(
-    args
-  ) {
-    return new Promise(resolve => {
-      const interval = content.setInterval(() => {
-        const color = content.getComputedStyle(content.document.body).color;
-        if (color === args.expectedColor) {
-          content.clearInterval(interval);
-          resolve(color);
-        }
-      }, 200);
-    });
-  });
+  return SpecialPowers.spawn(
+    ui.getViewportBrowser(),
+    [{ expectedColor }],
+    function(args) {
+      return new Promise(resolve => {
+        const interval = content.setInterval(() => {
+          const color = content.getComputedStyle(content.document.body).color;
+          if (color === args.expectedColor) {
+            content.clearInterval(interval);
+            resolve(color);
+          }
+        }, 200);
+      });
+    }
+  );
 }

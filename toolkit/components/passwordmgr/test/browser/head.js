@@ -141,9 +141,9 @@ async function submitFormAndGetResults(
     }
     form.submit();
   }
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    [formAction, selectorValues],
+    [[formAction, selectorValues]],
     contentSubmitForm
   );
   let result = await getFormSubmitResponseResult(
@@ -499,7 +499,7 @@ async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
   ok(tab, "got password management tab");
   let filterValue;
   if (waitForFilter) {
-    filterValue = await ContentTask.spawn(tab.linkedBrowser, null, async () => {
+    filterValue = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
       let loginFilter = Cu.waiveXrays(
         content.document.querySelector("login-filter")
       );
@@ -533,11 +533,13 @@ async function openACPopup(popup, browser, inputSelector) {
   info("content window focused");
 
   // Focus the username field to open the popup.
-  await ContentTask.spawn(browser, [inputSelector], function openAutocomplete(
-    sel
-  ) {
-    content.document.querySelector(sel).focus();
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [[inputSelector]],
+    function openAutocomplete(sel) {
+      content.document.querySelector(sel).focus();
+    }
+  );
 
   let shown = await promiseShown;
   ok(shown, "autocomplete popup shown");

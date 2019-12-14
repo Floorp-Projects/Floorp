@@ -20,7 +20,7 @@ add_task(async function() {
 
   await EventUtils.synthesizeAndWaitKey("d", { repeat: 3 });
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     is(
       content.document.body.getAttribute("data-down"),
       "2",
@@ -35,7 +35,7 @@ add_task(async function() {
 
   await EventUtils.synthesizeAndWaitKey("p", { repeat: 3 });
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     is(
       content.document.body.getAttribute("data-down"),
       "4",

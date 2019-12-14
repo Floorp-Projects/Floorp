@@ -108,10 +108,15 @@ interface nsIScriptSecurityManager : nsISupports
      * @param aPrincipal the principal identifying the actor causing the load
      * @param uri the URI that is being loaded
      * @param flags the permission set, see above
+     * @param innerWindowID the window ID for error reporting.  If this is 0
+     *        (which happens automatically if it's not passed from JS), errors
+     *        will only appear in the browser console, not window-associated
+     *        consoles like the web console.
      */
     void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
                                    in nsIURI uri,
-                                   in unsigned long flags);
+                                   in unsigned long flags,
+                                   [optional] in unsigned long long innerWindowID);
 
     /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:

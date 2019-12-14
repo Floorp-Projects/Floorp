@@ -25,7 +25,7 @@ add_task(async function test_view_source_in_tab() {
       let sourceTab = await openViewSourceForBrowser(browser);
       let sourceBrowser = sourceTab.linkedBrowser;
 
-      await ContentTask.spawn(sourceBrowser, null, async function() {
+      await SpecialPowers.spawn(sourceBrowser, [], async function() {
         Assert.equal(
           content.document.body.id,
           "viewsource",

@@ -129,19 +129,19 @@ function openSelectPopup(
 }
 
 function getInputEvents() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.gInputEvents;
   });
 }
 
 function getChangeEvents() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.gChangeEvents;
   });
 }
 
 function getClickEvents() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.gClickEvents;
   });
 }
@@ -210,7 +210,7 @@ async function doSelectTests(contentType, content) {
   is(await getClickEvents(), 0, "Before closed - number of click events");
 
   EventUtils.synthesizeKey("a", { accelKey: true });
-  await ContentTask.spawn(gBrowser.selectedBrowser, { isWindows }, function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [{ isWindows }], function(
     args
   ) {
     Assert.equal(
@@ -354,7 +354,7 @@ add_task(async function() {
   // First, try it when a different <select> element than the one that is open is removed
   await openSelectPopup(selectPopup, "click", "#one");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.body.removeChild(content.document.getElementById("two"));
   });
 
@@ -372,7 +372,7 @@ add_task(async function() {
     selectPopup,
     "popuphidden"
   );
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.body.removeChild(content.document.getElementById("three"));
   });
   await popupHiddenPromise;
@@ -444,7 +444,7 @@ add_task(async function() {
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     let step = steps[stepIndex];
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, step, async function(
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [step], async function(
       contentStep
     ) {
       return new Promise(resolve => {
@@ -550,9 +550,9 @@ add_task(async function test_event_order() {
           mode == "enter" ? "#one" : "#two"
         );
 
-        let eventsPromise = ContentTask.spawn(
+        let eventsPromise = SpecialPowers.spawn(
           browser,
-          [mode, expected],
+          [[mode, expected]],
           async function([contentMode, contentExpected]) {
             return new Promise(resolve => {
               function onEvent(event) {
@@ -610,7 +610,7 @@ add_task(async function test_event_order() {
 async function performLargePopupTests(win) {
   let browser = win.gBrowser.selectedBrowser;
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
     let select = doc.getElementById("one");
     for (var i = 0; i < 180; i++) {
@@ -829,7 +829,9 @@ async function performLargePopupTests(win) {
       browser,
       "MozAfterPaint"
     );
-    await ContentTask.spawn(browser, position, async function(contentPosition) {
+    await SpecialPowers.spawn(browser, [position], async function(
+      contentPosition
+    ) {
       let select = content.document.getElementById("one");
       select.setAttribute("style", contentPosition || "");
       select.getBoundingClientRect();
@@ -838,7 +840,7 @@ async function performLargePopupTests(win) {
   }
 
   if (navigator.platform.indexOf("Mac") == 0) {
-    await ContentTask.spawn(browser, null, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       let doc = content.document;
       doc.body.style = "padding-top: 400px;";
 
@@ -901,7 +903,7 @@ add_task(async function test_large_popup_in_small_window() {
 
 async function performSelectSearchTests(win) {
   let browser = win.gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let doc = content.document;
     let select = doc.getElementById("one");
 
@@ -1110,7 +1112,7 @@ add_task(async function test_blur_hides_popup() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     content.addEventListener(
       "blur",
       function(event) {
@@ -1133,7 +1135,7 @@ add_task(async function test_blur_hides_popup() {
     "popuphidden"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     content.document.getElementById("one").blur();
   });
 
@@ -1145,7 +1147,7 @@ add_task(async function test_blur_hides_popup() {
 });
 
 function getIsHandlingUserInput(browser, elementId, eventName) {
-  return ContentTask.spawn(browser, [elementId, eventName], async function([
+  return SpecialPowers.spawn(browser, [[elementId, eventName]], async function([
     contentElementId,
     contentEventName,
   ]) {

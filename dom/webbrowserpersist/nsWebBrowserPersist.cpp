@@ -317,10 +317,8 @@ NS_IMETHODIMP nsWebBrowserPersist::GetPersistFlags(uint32_t* aPersistFlags) {
 }
 NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(uint32_t aPersistFlags) {
   mPersistFlags = aPersistFlags;
-  mReplaceExisting =
-      (mPersistFlags & PERSIST_FLAGS_REPLACE_EXISTING_FILES) ? true : false;
-  mSerializingOutput =
-      (mPersistFlags & PERSIST_FLAGS_SERIALIZE_OUTPUT) ? true : false;
+  mReplaceExisting = (mPersistFlags & PERSIST_FLAGS_REPLACE_EXISTING_FILES);
+  mSerializingOutput = (mPersistFlags & PERSIST_FLAGS_SERIALIZE_OUTPUT);
   return NS_OK;
 }
 

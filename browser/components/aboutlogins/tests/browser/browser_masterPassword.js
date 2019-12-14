@@ -30,13 +30,19 @@ function waitForMPDialog(action) {
 }
 
 function waitForLoginCountToReach(browser, loginCount) {
-  return ContentTask.spawn(browser, loginCount, async expectedLoginCount => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    await ContentTaskUtils.waitForCondition(() => {
-      return loginList._loginGuidsSortedOrder.length == expectedLoginCount;
-    });
-    return loginList._loginGuidsSortedOrder.length;
-  });
+  return SpecialPowers.spawn(
+    browser,
+    [loginCount],
+    async expectedLoginCount => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      await ContentTaskUtils.waitForCondition(() => {
+        return loginList._loginGuidsSortedOrder.length == expectedLoginCount;
+      });
+      return loginList._loginGuidsSortedOrder.length;
+    }
+  );
 }
 
 add_task(async function test() {
@@ -96,7 +102,7 @@ add_task(async function test() {
 
   // Show MP dialog when Copy Password button clicked
   mpDialogShown = waitForMPDialog("cancel");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -107,7 +113,7 @@ add_task(async function test() {
   info("Master Password dialog shown and canceled");
   mpDialogShown = waitForMPDialog("authenticate");
   info("Clicking copy password button again");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -116,7 +122,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Master Password dialog shown and authenticated");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -129,7 +135,7 @@ add_task(async function test() {
 
   // Show MP dialog when Reveal Password checkbox is checked if not on a new login
   mpDialogShown = waitForMPDialog("cancel");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -138,7 +144,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Master Password dialog shown and canceled");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -149,7 +155,7 @@ add_task(async function test() {
     );
   });
   mpDialogShown = waitForMPDialog("authenticate");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -158,7 +164,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Master Password dialog shown and authenticated");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -170,7 +176,7 @@ add_task(async function test() {
   });
 
   info("Test toggling the password visibility on a new login");
-  await ContentTask.spawn(browser, null, async function createNewToggle() {
+  await SpecialPowers.spawn(browser, [], async function createNewToggle() {
     let createButton = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector(".create-login-button");
@@ -197,7 +203,7 @@ add_task(async function test() {
     cancelButton.click();
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginFilter = Cu.waiveXrays(
       content.document.querySelector("login-filter")
     );
@@ -220,7 +226,7 @@ add_task(async function test() {
     );
   });
   LoginTestUtils.masterPassword.disable();
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     Cu.waiveXrays(content).AboutLoginsUtils.masterPasswordEnabled = false;
     let loginFilter = Cu.waiveXrays(
       content.document.querySelector("login-filter")

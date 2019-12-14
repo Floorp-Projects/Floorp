@@ -221,9 +221,9 @@ add_task(async function() {
 });
 
 async function addCookie(name, value, path) {
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [name, value, path],
+    [[name, value, path]],
     ([nam, valu, pat]) => {
       content.wrappedJSObject.addCookie(nam, valu, pat);
     }
@@ -231,9 +231,9 @@ async function addCookie(name, value, path) {
 }
 
 async function removeCookie(name, path) {
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [name, path],
+    [[name, path]],
     ([nam, pat]) => {
       content.wrappedJSObject.removeCookie(nam, pat);
     }
