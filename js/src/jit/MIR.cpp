@@ -2345,6 +2345,8 @@ bool MPhi::addBackedgeType(TempAllocator& alloc, MIRType type,
 }
 
 bool MPhi::typeIncludes(MDefinition* def) {
+  MOZ_ASSERT(!IsMagicType(def->type()));
+
   if (def->type() == MIRType::Int32 && this->type() == MIRType::Double) {
     return true;
   }

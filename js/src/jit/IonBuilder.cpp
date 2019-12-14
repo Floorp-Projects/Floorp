@@ -6340,7 +6340,14 @@ AbortReasonOr<bool> IonBuilder::testShouldDOMCall(TypeSet* inTypes,
 }
 
 static bool ArgumentTypesMatch(MDefinition* def, StackTypeSet* calleeTypes) {
-  if (!calleeTypes) {
+  MOZ_ASSERT(calleeTypes);
+
+  if (calleeTypes->unknown()) {
+    return true;
+  }
+
+  if (TypeSet::IsUntrackedMIRType(def->type())) {
+    // The TypeSet has to be marked as unknown. See JitScript::MonitorThisType.
     return false;
   }
 
@@ -6837,10 +6844,7 @@ static bool ObjectOrSimplePrimitive(MDefinition* op) {
   return !op->mightBeType(MIRType::String) &&
          !op->mightBeType(MIRType::BigInt) &&
          !op->mightBeType(MIRType::Double) &&
-         !op->mightBeType(MIRType::Float32) &&
-         !op->mightBeType(MIRType::MagicOptimizedArguments) &&
-         !op->mightBeType(MIRType::MagicHole) &&
-         !op->mightBeType(MIRType::MagicIsConstructing);
+         !op->mightBeType(MIRType::Float32) && !op->mightBeMagicType();
 }
 
 AbortReasonOr<Ok> IonBuilder::compareTrySpecialized(bool* emitted, JSOp op,

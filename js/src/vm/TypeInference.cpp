@@ -396,18 +396,6 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
       return baseFlags() & TYPE_FLAG_BIGINT;
     case jit::MIRType::MagicOptimizedArguments:
       return baseFlags() & TYPE_FLAG_LAZYARGS;
-    case jit::MIRType::MagicHole:
-    case jit::MIRType::MagicIsConstructing:
-      // These magic constants do not escape to script and are not observed
-      // in the type sets.
-      //
-      // The reason we can return false here is subtle: if Ion is asking the
-      // type set if it has seen such a magic constant, then the MIR in
-      // question is the most generic type, MIRType::Value. A magic constant
-      // could only be emitted by a MIR of MIRType::Value if that MIR is a
-      // phi, and we check that different magic constants do not flow to the
-      // same join point in GuessPhiType.
-      return false;
     default:
       MOZ_CRASH("Bad MIR type");
   }

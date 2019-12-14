@@ -1877,10 +1877,13 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
       continue;
     }
 
-    // The input is being explicitly unboxed, so sneak past and grab
-    // the original box.
-    if (in->isUnbox() && phi->typeIncludes(in->toUnbox()->input())) {
-      in = in->toUnbox()->input();
+    // The input is being explicitly unboxed, so sneak past and grab the
+    // original box. Don't bother optimizing if magic values are involved.
+    if (in->isUnbox()) {
+      MDefinition* unboxInput = in->toUnbox()->input();
+      if (!IsMagicType(unboxInput->type()) && phi->typeIncludes(unboxInput)) {
+        in = in->toUnbox()->input();
+      }
     }
 
     if (in->type() != MIRType::Value) {
