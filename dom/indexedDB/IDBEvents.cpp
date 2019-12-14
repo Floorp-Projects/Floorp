@@ -34,8 +34,7 @@ already_AddRefed<Event> CreateGenericEvent(EventTarget* aOwner,
                                            Cancelable aCancelable) {
   RefPtr<Event> event = new Event(aOwner, nullptr, nullptr);
 
-  event->InitEvent(aType, aBubbles == eDoesBubble ? true : false,
-                   aCancelable == eCancelable ? true : false);
+  event->InitEvent(aType, aBubbles == eDoesBubble, aCancelable == eCancelable);
 
   event->SetTrusted(true);
 

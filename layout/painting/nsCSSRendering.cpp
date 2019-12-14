@@ -4380,7 +4380,7 @@ void nsCSSRendering::PaintDecorationLineInternal(
       // In vertical mode, to go "down" relative to the text we need to
       // decrease the block coordinate, whereas in horizontal we increase
       // it. So the sense of this flag is effectively inverted.
-      bool goDown = aParams.vertical ? false : true;
+      bool goDown = !aParams.vertical;
       uint32_t iter = 0;
       while (ptICoord < iCoordLimit) {
         if (++iter > 1000) {
