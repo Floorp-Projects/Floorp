@@ -3162,7 +3162,7 @@ class IDLBuiltinType(IDLType):
         self._clamped = None
         self._rangeEnforced = None
         self._withTreatNullAs = None
-        if self.isNumeric():
+        if self.isInteger():
             if clamp:
                 self.clamp = True
                 self.name = "Clamped" + self.name
@@ -3172,7 +3172,7 @@ class IDLBuiltinType(IDLType):
                 self.name = "RangeEnforced" + self.name
                 self._extendedAttrDict["EnforceRange"] = True
         elif clamp or enforceRange:
-            raise WebIDLError("Non-numeric types cannot be [Clamp] or [EnforceRange]", attrLocation)
+            raise WebIDLError("Non-integer types cannot be [Clamp] or [EnforceRange]", attrLocation)
         if self.isDOMString():
             if treatNullAsEmpty:
                 self.treatNullAsEmpty = True

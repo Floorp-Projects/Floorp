@@ -167,30 +167,32 @@ def WebIDLTest(parser, harness):
 
     harness.ok(threw, "Should not allow mixing [Clamp] and [EnforceRange] via typedefs")
 
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            typedef [Clamp] DOMString Foo;
-        """)
-        parser.finish()
-    except:
-        threw = True
+    TYPES = ["DOMString", "unrestricted float", "float", "unrestricted double", "double"]
 
-    harness.ok(threw, "Should not allow [Clamp] on DOMString")
+    for type in TYPES:
+        parser = parser.reset()
+        threw = False
+        try:
+            parser.parse("""
+                typedef [Clamp] %s Foo;
+            """ % type)
+            parser.finish()
+        except:
+            threw = True
 
+        harness.ok(threw, "Should not allow [Clamp] on %s" % type)
 
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            typedef [EnforceRange] DOMString Foo;
-        """)
-        parser.finish()
-    except:
-        threw = True
+        parser = parser.reset()
+        threw = False
+        try:
+            parser.parse("""
+                typedef [EnforceRange] %s Foo;
+            """ % type)
+            parser.finish()
+        except:
+            threw = True
 
-    harness.ok(threw, "Should not allow [EnforceRange] on DOMString")
+        harness.ok(threw, "Should not allow [EnforceRange] on %s" % type)
 
 
     parser = parser.reset()
