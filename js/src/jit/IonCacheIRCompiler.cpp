@@ -1293,8 +1293,8 @@ static void EmitCheckPropertyTypes(MacroAssembler& masm,
     // registers.
     TypedOrValueRegister reg = val.reg();
     if (reg.hasTyped() && reg.type() != MIRType::Object) {
-      JSValueType valType = ValueTypeFromMIRType(reg.type());
-      if (!propTypes || !propTypes->hasType(TypeSet::PrimitiveType(valType))) {
+      MIRType type = reg.type();
+      if (!propTypes || !propTypes->hasType(TypeSet::PrimitiveType(type))) {
         masm.jump(&failedFastPath);
       }
       checkTypeSet = false;

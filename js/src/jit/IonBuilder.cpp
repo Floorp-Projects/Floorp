@@ -1395,7 +1395,7 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
              type == MIRType::MagicOptimizedArguments) {
     // No unbox instruction will be added below, so check the type by
     // adding a type barrier for a singleton type set.
-    TypeSet::Type ntype = TypeSet::PrimitiveType(ValueTypeFromMIRType(type));
+    TypeSet::Type ntype = TypeSet::PrimitiveType(type);
     LifoAlloc* lifoAlloc = alloc().lifoAlloc();
     typeSet = lifoAlloc->new_<TemporaryTypeSet>(lifoAlloc, ntype);
     if (!typeSet) {
@@ -1420,6 +1420,13 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
       break;
   }
 
+  // Unbox the OSR value to the type expected by the loop header.
+  //
+  // The only specialized types that can show up here are MIRTypes with a
+  // corresponding TypeSet::Type because NewBaselineFrameInspector and
+  // newPendingLoopHeader use TypeSet::Type for Values from the BaselineFrame.
+  // This means magic values other than MagicOptimizedArguments are represented
+  // as UnknownType() and MIRType::Value. See also TypeSet::IsUntrackedValue.
   switch (type) {
     case MIRType::Boolean:
     case MIRType::Int32:
@@ -1434,6 +1441,10 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
         osrBlock->rewriteSlot(slot, unbox);
         def = unbox;
       }
+      break;
+
+    case MIRType::Value:
+      // Nothing to do.
       break;
 
     case MIRType::Null: {
@@ -1463,7 +1474,7 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
     }
 
     default:
-      break;
+      MOZ_CRASH("Unexpected type");
   }
 
   MOZ_ASSERT(def == osrBlock->getSlot(slot));
@@ -2802,7 +2813,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
       return Ok();
     }
     inputTypes = &tmp;
-    tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())),
+    tmp.addType(TypeSet::PrimitiveOrAnyObjectType(subject->type()),
                 alloc_->lifoAlloc());
   }
 
@@ -2893,7 +2904,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtNullOrUndefinedCompare(
       return Ok();
     }
     inputTypes = &tmp;
-    tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())),
+    tmp.addType(TypeSet::PrimitiveOrAnyObjectType(subject->type()),
                 alloc_->lifoAlloc());
   }
 
@@ -2976,9 +2987,8 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
           return Ok();
         }
         oldType = &tmp;
-        tmp.addType(
-            TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())),
-            alloc_->lifoAlloc());
+        tmp.addType(TypeSet::PrimitiveOrAnyObjectType(subject->type()),
+                    alloc_->lifoAlloc());
       }
 
       if (oldType->unknown()) {
@@ -3010,9 +3020,8 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
           return Ok();
         }
         oldType = &tmp;
-        tmp.addType(
-            TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())),
-            alloc_->lifoAlloc());
+        tmp.addType(TypeSet::PrimitiveOrAnyObjectType(subject->type()),
+                    alloc_->lifoAlloc());
       }
 
       // If ins does not have a typeset we return as we cannot optimize.
@@ -3060,7 +3069,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
       return Ok();
     }
     oldType = &tmp;
-    tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type())),
+    tmp.addType(TypeSet::PrimitiveOrAnyObjectType(ins->type()),
                 alloc_->lifoAlloc());
   }
 
@@ -6331,7 +6340,14 @@ AbortReasonOr<bool> IonBuilder::testShouldDOMCall(TypeSet* inTypes,
 }
 
 static bool ArgumentTypesMatch(MDefinition* def, StackTypeSet* calleeTypes) {
-  if (!calleeTypes) {
+  MOZ_ASSERT(calleeTypes);
+
+  if (calleeTypes->unknown()) {
+    return true;
+  }
+
+  if (TypeSet::IsUntrackedMIRType(def->type())) {
+    // The TypeSet has to be marked as unknown. See JitScript::MonitorThisType.
     return false;
   }
 
@@ -6828,10 +6844,7 @@ static bool ObjectOrSimplePrimitive(MDefinition* op) {
   return !op->mightBeType(MIRType::String) &&
          !op->mightBeType(MIRType::BigInt) &&
          !op->mightBeType(MIRType::Double) &&
-         !op->mightBeType(MIRType::Float32) &&
-         !op->mightBeType(MIRType::MagicOptimizedArguments) &&
-         !op->mightBeType(MIRType::MagicHole) &&
-         !op->mightBeType(MIRType::MagicIsConstructing);
+         !op->mightBeType(MIRType::Float32) && !op->mightBeMagicType();
 }
 
 AbortReasonOr<Ok> IonBuilder::compareTrySpecialized(bool* emitted, JSOp op,

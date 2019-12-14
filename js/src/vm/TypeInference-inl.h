@@ -148,27 +148,113 @@ inline JS::Compartment* TypeSet::ObjectKey::maybeCompartment() {
   return Type(uintptr_t(obj));
 }
 
-inline TypeSet::Type TypeSet::GetValueType(const Value& val) {
+// static
+inline TypeSet::Type TypeSet::PrimitiveType(const JS::Value& val) {
+  MOZ_ASSERT(!val.isObject());
+  MOZ_ASSERT(!IsUntrackedValue(val));
+
   if (val.isDouble()) {
-    return TypeSet::DoubleType();
+    return DoubleType();
   }
+  return Type(val.extractNonDoubleType());
+}
+
+// static
+inline TypeSet::Type TypeSet::PrimitiveType(jit::MIRType type) {
+  switch (type) {
+    case jit::MIRType::Undefined:
+      return UndefinedType();
+    case jit::MIRType::Null:
+      return NullType();
+    case jit::MIRType::Boolean:
+      return BooleanType();
+    case jit::MIRType::Int32:
+      return Int32Type();
+    case jit::MIRType::Float32:
+    case jit::MIRType::Double:
+      return DoubleType();
+    case jit::MIRType::String:
+      return StringType();
+    case jit::MIRType::Symbol:
+      return SymbolType();
+    case jit::MIRType::BigInt:
+      return BigIntType();
+    case jit::MIRType::MagicOptimizedArguments:
+      return MagicArgType();
+    default:
+      MOZ_CRASH("Unexpected MIR type");
+  }
+}
+
+// static
+inline TypeSet::Type TypeSet::PrimitiveOrAnyObjectType(jit::MIRType type) {
+  if (type == jit::MIRType::Object) {
+    return AnyObjectType();
+  }
+  return PrimitiveType(type);
+}
+
+// static
+inline TypeSet::Type TypeSet::GetMaybeUntrackedType(jit::MIRType type) {
+  if (IsUntrackedMIRType(type)) {
+    // This type cannot be represented in a TypeSet.
+    return UnknownType();
+  }
+  return PrimitiveOrAnyObjectType(type);
+}
+
+// static
+inline TypeSet::Type TypeSet::PrimitiveTypeFromTypeFlag(TypeFlags flag) {
+  switch (flag) {
+    case TYPE_FLAG_UNDEFINED:
+      return UndefinedType();
+    case TYPE_FLAG_NULL:
+      return NullType();
+    case TYPE_FLAG_BOOLEAN:
+      return BooleanType();
+    case TYPE_FLAG_INT32:
+      return Int32Type();
+    case TYPE_FLAG_DOUBLE:
+      return DoubleType();
+    case TYPE_FLAG_STRING:
+      return StringType();
+    case TYPE_FLAG_SYMBOL:
+      return SymbolType();
+    case TYPE_FLAG_BIGINT:
+      return BigIntType();
+    case TYPE_FLAG_LAZYARGS:
+      return MagicArgType();
+    default:
+      MOZ_CRASH("Unexpected TypeFlag");
+  }
+}
+
+inline TypeSet::Type TypeSet::GetValueType(const Value& val) {
   if (val.isObject()) {
     return TypeSet::ObjectType(&val.toObject());
   }
-  return TypeSet::PrimitiveType(val.extractNonDoubleType());
+  return TypeSet::PrimitiveType(val);
 }
 
 inline bool TypeSet::IsUntrackedValue(const Value& val) {
-  return val.isMagic() && (val.whyMagic() == JS_OPTIMIZED_OUT ||
-                           val.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+  // JS_OPTIMIZED_ARGUMENTS is the only MagicValue that can be stored in a
+  // TypeSet.
+  return val.isMagic() && val.whyMagic() != JS_OPTIMIZED_ARGUMENTS;
+}
+
+inline bool TypeSet::IsUntrackedMIRType(jit::MIRType type) {
+  return jit::IsMagicType(type) &&
+         type != jit::MIRType::MagicOptimizedArguments;
 }
 
 inline TypeSet::Type TypeSet::GetMaybeUntrackedValueType(const Value& val) {
   return IsUntrackedValue(val) ? UnknownType() : GetValueType(val);
 }
 
-inline TypeFlags PrimitiveTypeFlag(ValueType type) {
-  switch (type) {
+inline TypeFlags PrimitiveTypeFlag(TypeSet::Type type) {
+  MOZ_ASSERT(type.isPrimitive());
+
+  switch (type.primitive()) {
     case ValueType::Undefined:
       return TYPE_FLAG_UNDEFINED;
     case ValueType::Null:
@@ -192,7 +278,7 @@ inline TypeFlags PrimitiveTypeFlag(ValueType type) {
       break;
   }
 
-  MOZ_CRASH("Bad ValueType");
+  MOZ_CRASH("Bad primitive type");
 }
 
 inline JSValueType TypeFlagPrimitive(TypeFlags flags) {
@@ -242,6 +328,11 @@ static inline const char* TypeIdString(jsid id) {
 #else
   return "(missing)";
 #endif
+}
+
+TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type)
+    : TemporaryTypeSet(alloc, PrimitiveOrAnyObjectType(type)) {
+  MOZ_ASSERT(type != jit::MIRType::Value);
 }
 
 // New script properties analyses overview.
@@ -570,6 +661,14 @@ MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
 
 MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
                                          const Value& value) {
+  // Some magic values can be used with environment objects but are never
+  // exposed directly to script.
+  if (MOZ_UNLIKELY(value.isMagic())) {
+    MOZ_ASSERT(value.whyMagic() == JS_UNINITIALIZED_LEXICAL ||
+               value.whyMagic() == JS_OPTIMIZED_OUT);
+    MOZ_ASSERT(obj->is<EnvironmentObject>());
+    return;
+  }
   return AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
 }
 
@@ -621,6 +720,11 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 /* static */ inline void jit::JitScript::MonitorBytecodeType(
     JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
     const js::Value& rval) {
+  if (MOZ_UNLIKELY(rval.isMagic())) {
+    MonitorMagicValueBytecodeType(cx, script, pc, rval);
+    return;
+  }
+
   TypeSet::Type type = TypeSet::GetValueType(rval);
   if (!types->hasType(type)) {
     MonitorBytecodeTypeSlow(cx, script, pc, types, type);
@@ -679,6 +783,15 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 
 /* static */ inline void jit::JitScript::MonitorThisType(
     JSContext* cx, JSScript* script, const js::Value& value) {
+  // Bound functions or class constructors can use the magic TDZ value as
+  // |this| argument. See CreateThis.
+  if (MOZ_UNLIKELY(value.isMagic())) {
+    MOZ_ASSERT(value.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+    MOZ_ASSERT(script->function());
+    MonitorThisType(cx, script, TypeSet::UnknownType());
+    return;
+  }
+
   MonitorThisType(cx, script, TypeSet::GetValueType(value));
 }
 
@@ -1057,7 +1170,7 @@ MOZ_ALWAYS_INLINE bool TypeSet::hasType(Type type) const {
   if (type.isUnknown()) {
     return false;
   } else if (type.isPrimitive()) {
-    return !!(flags & PrimitiveTypeFlag(type.primitive()));
+    return !!(flags & PrimitiveTypeFlag(type));
   } else if (type.isAnyObject()) {
     return !!(flags & TYPE_FLAG_ANYOBJECT);
   } else {

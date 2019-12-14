@@ -39,6 +39,9 @@
 }
 
 .browserContainer.responsive-mode > .browserStack > * {
+  box-sizing: content-box; /* This is important to ensure that the pane has the
+                              precise number of pixels defined by --rdm-width
+                              and --rdm-height. */
   height: var(--rdm-height);
   width: var(--rdm-width);
 }

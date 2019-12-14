@@ -382,10 +382,18 @@ class TypeSet {
   static inline Type AnyObjectType() { return Type(JSVAL_TYPE_OBJECT); }
   static inline Type UnknownType() { return Type(JSVAL_TYPE_UNKNOWN); }
 
-  static inline Type PrimitiveType(JSValueType type) {
-    MOZ_ASSERT(type < JSVAL_TYPE_UNKNOWN);
-    return Type(type);
-  }
+ protected:
+  static inline Type PrimitiveTypeFromTypeFlag(TypeFlags flag);
+
+ public:
+  // Returns the Type corresponding to a primitive JS::Value or MIRType. The
+  // argument must not be a magic value we can't represent directly (see
+  // IsUntrackedValueType and IsUntrackedMIRType).
+  static inline Type PrimitiveType(const JS::Value& val);
+  static inline Type PrimitiveType(jit::MIRType type);
+
+  // Like PrimitiveType above but also accepts MIRType::Object.
+  static inline Type PrimitiveOrAnyObjectType(jit::MIRType type);
 
   static inline Type ObjectType(const JSObject* obj);
   static inline Type ObjectType(const ObjectGroup* group);
@@ -396,7 +404,6 @@ class TypeSet {
   static JS::UniqueChars TypeString(const Type type);
   static JS::UniqueChars ObjectGroupString(const ObjectGroup* group);
 
- public:
   void print(FILE* fp = stderr);
 
   /* Whether this set contains a specific type. */
@@ -546,12 +553,15 @@ class TypeSet {
  public:
   static inline Type GetValueType(const JS::Value& val);
 
+  // An 'untracked' type is a value type we can't represent in a TypeSet
+  // (all magic types except JS_OPTIMIZED_ARGUMENTS).
   static inline bool IsUntrackedValue(const JS::Value& val);
+  static inline bool IsUntrackedMIRType(jit::MIRType type);
 
-  // Get the type of a possibly optimized out or uninitialized let value.
-  // This generally only happens on unconditional type monitors on bailing
-  // out of Ion, such as for argument and local types.
+  // Get the type of a possibly untracked value. Returns UnknownType() for
+  // such untracked values.
   static inline Type GetMaybeUntrackedValueType(const JS::Value& val);
+  static inline Type GetMaybeUntrackedType(jit::MIRType type);
 
   static bool IsTypeMarked(JSRuntime* rt, Type* v);
   static bool IsTypeAboutToBeFinalized(Type* v);
@@ -730,10 +740,7 @@ class TemporaryTypeSet : public TypeSet {
     this->objectSet = objectSet;
   }
 
-  TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type)
-      : TemporaryTypeSet(alloc, PrimitiveType(ValueTypeFromMIRType(type))) {
-    MOZ_ASSERT(type != jit::MIRType::Value);
-  }
+  inline TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type);
 
   /*
    * Constraints for JIT compilation.

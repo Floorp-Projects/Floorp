@@ -2178,10 +2178,9 @@ bool MPhi::updateForReplacement(MDefinition* def) {
 static inline TemporaryTypeSet* MakeMIRTypeSet(TempAllocator& alloc,
                                                MIRType type) {
   MOZ_ASSERT(type != MIRType::Value);
-  TypeSet::Type ntype =
-      type == MIRType::Object
-          ? TypeSet::AnyObjectType()
-          : TypeSet::PrimitiveType(ValueTypeFromMIRType(type));
+
+  TypeSet::Type ntype = TypeSet::GetMaybeUntrackedType(type);
+
   return alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype);
 }
 
@@ -2248,8 +2247,7 @@ bool jit::TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes) {
     case MIRType::Symbol:
     case MIRType::BigInt:
     case MIRType::MagicOptimizedArguments:
-      return types->hasType(
-          TypeSet::PrimitiveType(ValueTypeFromMIRType(input)));
+      return types->hasType(TypeSet::PrimitiveType(input));
 
     case MIRType::Object:
       return types->unknownObject() ||
@@ -2287,32 +2285,6 @@ bool jit::EqualTypes(MIRType type1, TemporaryTypeSet* typeset1, MIRType type2,
 
   // Typesets should equal.
   return typeset1->equals(typeset2);
-}
-
-// Tests whether input/inputTypes can always be stored to an unboxed
-// object/array property with the given unboxed type.
-bool jit::CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType,
-                              MIRType input, TypeSet* inputTypes) {
-  TemporaryTypeSet types;
-
-  switch (unboxedType) {
-    case JSVAL_TYPE_BOOLEAN:
-    case JSVAL_TYPE_INT32:
-    case JSVAL_TYPE_DOUBLE:
-    case JSVAL_TYPE_STRING:
-      types.addType(TypeSet::PrimitiveType(unboxedType), alloc.lifoAlloc());
-      break;
-
-    case JSVAL_TYPE_OBJECT:
-      types.addType(TypeSet::AnyObjectType(), alloc.lifoAlloc());
-      types.addType(TypeSet::NullType(), alloc.lifoAlloc());
-      break;
-
-    default:
-      MOZ_CRASH("Bad unboxed type");
-  }
-
-  return TypeSetIncludes(&types, input, inputTypes);
 }
 
 bool MPhi::specializeType(TempAllocator& alloc) {
@@ -2373,6 +2345,8 @@ bool MPhi::addBackedgeType(TempAllocator& alloc, MIRType type,
 }
 
 bool MPhi::typeIncludes(MDefinition* def) {
+  MOZ_ASSERT(!IsMagicType(def->type()));
+
   if (def->type() == MIRType::Int32 && this->type() == MIRType::Double) {
     return true;
   }
@@ -2412,6 +2386,17 @@ bool MPhi::checkForTypeChange(TempAllocator& alloc, MDefinition* ins,
     setResultTypeSet(resultTypeSet);
   }
   return true;
+}
+
+MBox::MBox(TempAllocator& alloc, MDefinition* ins)
+    : MUnaryInstruction(classOpcode, ins) {
+  setResultType(MIRType::Value);
+  if (ins->resultTypeSet()) {
+    setResultTypeSet(ins->resultTypeSet());
+  } else if (ins->type() != MIRType::Value) {
+    setResultTypeSet(MakeMIRTypeSet(alloc, ins->type()));
+  }
+  setMovable();
 }
 
 void MCall::addArg(size_t argnum, MDefinition* arg) {
@@ -6096,8 +6081,7 @@ static bool PropertyTypeIncludes(TempAllocator& alloc, HeapTypeSetKey property,
   // explicitly contains the type.
   TypeSet* types = property.maybeTypes();
   if (implicitType != MIRType::None) {
-    TypeSet::Type newType =
-        TypeSet::PrimitiveType(ValueTypeFromMIRType(implicitType));
+    TypeSet::Type newType = TypeSet::PrimitiveType(implicitType);
     if (types) {
       types = types->clone(alloc.lifoAlloc());
     } else {
