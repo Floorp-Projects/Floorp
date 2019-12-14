@@ -119,6 +119,11 @@ Structure:
             }
           ]
         }],
+        // The "node type" as reported by the token server. This will not change
+        // from sync to sync, so is reported once per ping. Optional because it
+        // will not appear if the token server omits this information, but in
+        // general, we will expect all "new" pings to have it.
+        syncNodeType: <string>,
         events: [
           event_array // See events below.
         ],
