@@ -181,6 +181,7 @@
 
 .content-blocking-warning.reload-tabs .indent {
   min-height: 30px;
+  display: flex; /* We don't use -moz-box because of bug 1599783, flex is used to center the elements */
 }
 
 .content-blocking-warning.reload-tabs .content-blocking-info-image {
