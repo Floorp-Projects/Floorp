@@ -1402,7 +1402,7 @@ bool PluginInstanceChild::RegisterWindowClass() {
   wcex.lpszClassName = kWindowClassName;
   wcex.hIconSm = 0;
 
-  return RegisterClassEx(&wcex) ? true : false;
+  return RegisterClassEx(&wcex);
 }
 
 bool PluginInstanceChild::CreatePluginWindow() {

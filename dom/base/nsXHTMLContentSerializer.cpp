@@ -80,7 +80,7 @@ nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   mIsFirstChildOfOL = false;
   mInBody = 0;
   mDisableEntityEncoding = 0;
-  mBodyOnly = (mFlags & nsIDocumentEncoder::OutputBodyOnly) ? true : false;
+  mBodyOnly = (mFlags & nsIDocumentEncoder::OutputBodyOnly);
 
   return NS_OK;
 }
