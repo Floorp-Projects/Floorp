@@ -895,10 +895,7 @@ static inline bool SimpleArithOperand(MDefinition* op) {
   return !op->emptyResultTypeSet() && !op->mightBeType(MIRType::Object) &&
          !op->mightBeType(MIRType::String) &&
          !op->mightBeType(MIRType::Symbol) &&
-         !op->mightBeType(MIRType::BigInt) &&
-         !op->mightBeType(MIRType::MagicOptimizedArguments) &&
-         !op->mightBeType(MIRType::MagicHole) &&
-         !op->mightBeType(MIRType::MagicIsConstructing);
+         !op->mightBeType(MIRType::BigInt) && !op->mightBeMagicType();
 }
 
 // An MUseDefIterator walks over uses in a definition, skipping any use that is
