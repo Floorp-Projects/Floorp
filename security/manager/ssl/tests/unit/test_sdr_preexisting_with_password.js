@@ -58,8 +58,8 @@ function run_test() {
   });
 
   let profile = do_get_profile();
-  let keyDBFile = do_get_file("test_sdr_preexisting_with_password/key3.db");
-  keyDBFile.copyTo(profile, "key3.db");
+  let keyDBFile = do_get_file("test_sdr_preexisting_with_password/key4.db");
+  keyDBFile.copyTo(profile, "key4.db");
 
   let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
     Ci.nsISecretDecoderRing
