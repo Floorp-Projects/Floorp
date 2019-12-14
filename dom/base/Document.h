@@ -292,7 +292,7 @@ class DocHeaderData {
 };
 
 class ExternalResourceMap {
-  typedef bool (*SubDocEnumFunc)(Document* aDocument, void* aData);
+  typedef bool (*SubDocEnumFunc)(Document& aDocument, void* aData);
 
  public:
   /**
@@ -2594,7 +2594,7 @@ class Document : public nsINode,
    * The enumerator callback should return true to continue enumerating, or
    * false to stop.  This will never get passed a null aDocument.
    */
-  typedef bool (*SubDocEnumFunc)(Document* aDocument, void* aData);
+  typedef bool (*SubDocEnumFunc)(Document&, void* aData);
   void EnumerateSubDocuments(SubDocEnumFunc aCallback, void* aData);
 
   /**

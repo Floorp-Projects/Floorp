@@ -536,11 +536,8 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
-static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
-  if (!aDoc) {
-    return true;
-  }
-  Element* root = aDoc->GetRootElement();
+static bool DocHasPrintCallbackCanvas(Document& aDoc, void* aData) {
+  Element* root = aDoc.GetRootElement();
   if (!root) {
     return true;
   }
@@ -560,10 +557,10 @@ static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
   return true;
 }
 
-static bool AnySubdocHasPrintCallbackCanvas(Document* aDoc) {
+static bool AnySubdocHasPrintCallbackCanvas(Document& aDoc) {
   bool result = false;
-  aDoc->EnumerateSubDocuments(&DocHasPrintCallbackCanvas,
-                              static_cast<void*>(&result));
+  aDoc.EnumerateSubDocuments(DocHasPrintCallbackCanvas,
+                             static_cast<void*>(&result));
   return result;
 }
 
@@ -636,10 +633,10 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   }
 
   bool hasMozPrintCallback = false;
-  DocHasPrintCallbackCanvas(aOriginalDoc,
+  DocHasPrintCallbackCanvas(*aOriginalDoc,
                             static_cast<void*>(&hasMozPrintCallback));
   mHasMozPrintCallback =
-      hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(aOriginalDoc);
+      hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(*aOriginalDoc);
 
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
