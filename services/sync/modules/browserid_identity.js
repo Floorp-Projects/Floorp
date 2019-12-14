@@ -139,6 +139,11 @@ this.BrowserIDManager.prototype = {
     return Utils.sha256(deviceID + uid);
   },
 
+  // The "node type" reported to telemetry or null if not specified.
+  get telemetryNodeType() {
+    return this._token && this._token.node_type ? this._token.node_type : null;
+  },
+
   finalize() {
     // After this is called, we can expect Service.identity != this.
     for (let topic of OBSERVER_TOPICS) {

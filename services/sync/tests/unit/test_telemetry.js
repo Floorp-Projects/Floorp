@@ -1239,3 +1239,51 @@ add_task(async function test_fxa_device_telem() {
     t.sanitizeFxaDeviceId = oldSanitizeFxaDeviceId;
   }
 });
+
+add_task(async function test_no_node_type() {
+  let server = sync_httpd_setup({});
+  await configureIdentity(null, server);
+
+  await sync_and_validate_telem(ping => {
+    ok(ping.syncNodeType === undefined);
+  }, true);
+  await promiseStopServer(server);
+});
+
+add_task(async function test_node_type() {
+  Service.identity.logout();
+  let server = sync_httpd_setup({});
+  await configureIdentity({ node_type: "the-node-type" }, server);
+
+  await sync_and_validate_telem(ping => {
+    equal(ping.syncNodeType, "the-node-type");
+  }, true);
+  await promiseStopServer(server);
+});
+
+add_task(async function test_node_type_change() {
+  let pingPromise = wait_for_pings(2);
+
+  Service.identity.logout();
+  let server = sync_httpd_setup({});
+  await configureIdentity({ node_type: "first-node-type" }, server);
+  // Default to submitting each hour - we should still submit on node change.
+  let telem = get_sync_test_telemetry();
+  telem.submissionInterval = 60 * 60 * 1000;
+  // do 2 syncs with the same node type.
+  await Service.sync();
+  await Service.sync();
+  // then another with a different node type.
+  Service.identity.logout();
+  await configureIdentity({ node_type: "second-node-type" }, server);
+  await Service.sync();
+  telem.finish();
+
+  let pings = await pingPromise;
+  equal(pings.length, 2);
+  equal(pings[0].syncs.length, 2, "2 syncs in first ping");
+  equal(pings[0].syncNodeType, "first-node-type");
+  equal(pings[1].syncs.length, 1, "1 sync in second ping");
+  equal(pings[1].syncNodeType, "second-node-type");
+  await promiseStopServer(server);
+});
