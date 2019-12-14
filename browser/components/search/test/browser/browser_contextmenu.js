@@ -76,7 +76,7 @@ async function checkContextMenu(
     "data:text/plain;charset=utf8,test%20search"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, "", async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
     return new Promise(resolve => {
       content.document.addEventListener(
         "selectionchange",

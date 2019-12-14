@@ -17,11 +17,11 @@ async function checkFrameSource() {
   });
 
   let browser = gBrowser.selectedBrowser;
-  let textContent = await ContentTask.spawn(browser, {}, async function() {
+  let textContent = await SpecialPowers.spawn(browser, [], async function() {
     return content.document.body.textContent;
   });
   is(textContent, frameSource, "Correct content loaded");
-  let id = await ContentTask.spawn(browser, {}, async function() {
+  let id = await SpecialPowers.spawn(browser, [], async function() {
     return content.document.body.id;
   });
   is(id, "viewsource", "View source mode enabled");

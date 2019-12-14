@@ -32,15 +32,13 @@ add_task(async function test() {
                 addEventListener(
                   "load",
                   function onLoad() {
-                    removeEventListener("load", onLoad, true);
-
                     Assert.ok(
                       history.index < history.count,
                       "history.index is valid"
                     );
                     testDone.resolve();
                   },
-                  true
+                  { capture: true, once: true }
                 );
 
                 history.legacySHistory.removeSHistoryListener(listener);
@@ -94,8 +92,8 @@ add_task(async function test() {
         async OnHistoryNewEntry(aNewURI) {
           if (aNewURI.spec == URL && 5 == ++count) {
             history.removeSHistoryListener(listener);
-            await ContentTask.spawn(browser, null, async () => {
-              let promise = new Promise(resolve => {
+            await ContentTask.spawn(browser, null, () => {
+              return new Promise(resolve => {
                 addEventListener(
                   "load",
                   evt => {
@@ -109,10 +107,9 @@ add_task(async function test() {
                   },
                   { capture: true, once: true }
                 );
-              });
 
-              content.location.reload();
-              await promise;
+                content.location.reload();
+              });
             });
             testDone.resolve();
           }

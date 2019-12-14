@@ -6,12 +6,18 @@ function runTest(obj) {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.ipc.processCount", 1],
-        ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+        [
+          "network.cookie.cookieBehavior",
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+        ],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
         ["privacy.storagePrincipal.enabledForTrackers", false],
-        ["privacy.trackingprotection.socialtracking.enabled", obj.protectionEnabled],
+        [
+          "privacy.trackingprotection.socialtracking.enabled",
+          obj.protectionEnabled,
+        ],
         ["privacy.socialtracking.block_cookies.enabled", obj.cookieBlocking],
       ],
     });
@@ -24,14 +30,16 @@ function runTest(obj) {
     await BrowserTestUtils.browserLoaded(browser);
 
     info("The non-tracker page opens a tracker iframe");
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       browser,
-      {
-        page: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "localStorage.html",
-        image: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "raptor.jpg",
-        loading: obj.loading,
-        result: obj.result,
-      },
+      [
+        {
+          page: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "localStorage.html",
+          image: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "raptor.jpg",
+          loading: obj.loading,
+          result: obj.result,
+        },
+      ],
       async obj => {
         let loading = await new content.Promise(resolve => {
           let image = new content.Image();
@@ -54,8 +62,13 @@ function runTest(obj) {
           });
 
           let p = new Promise(resolve => {
-            content.addEventListener("message", e => { resolve(e.data); },
-              { once: true });
+            content.addEventListener(
+              "message",
+              e => {
+                resolve(e.data);
+              },
+              { once: true }
+            );
           });
 
           info("Setting localStorage value...");
@@ -92,19 +105,21 @@ function runTest(obj) {
 }
 
 runTest({
-  testName: "Socialtracking-annotation feature enabled but not considered for tracking detection.",
+  testName:
+    "Socialtracking-annotation feature enabled but not considered for tracking detection.",
   protectionEnabled: false,
   loading: true,
   cookieBlocking: false,
   result: true,
   expectedLogItems: [
     [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED, true, 1],
-    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1]
+    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1],
   ],
 });
 
 runTest({
-  testName: "Socialtracking-annotation feature enabled and considered for tracking detection.",
+  testName:
+    "Socialtracking-annotation feature enabled and considered for tracking detection.",
   protectionEnabled: false,
   loading: true,
   cookieBlocking: true,
@@ -113,7 +128,7 @@ runTest({
     [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED, true, 1],
     [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1],
     [Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT, true, 2],
-    [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER, true, 2]
+    [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER, true, 2],
   ],
 });
 
@@ -124,6 +139,6 @@ runTest({
   cookieBlocking: true,
   result: false,
   expectedLogItems: [
-    [Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT, true, 1]
+    [Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT, true, 1],
   ],
 });

@@ -247,9 +247,9 @@ function promiseCookiesCleared() {
 async function loadServiceWorkerTestPage(url) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await BrowserTestUtils.waitForCondition(() => {
-    return ContentTask.spawn(
+    return SpecialPowers.spawn(
       tab.linkedBrowser,
-      {},
+      [],
       () =>
         content.document.body.getAttribute(
           "data-test-service-worker-registered"

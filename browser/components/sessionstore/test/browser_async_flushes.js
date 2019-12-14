@@ -20,12 +20,13 @@ add_task(async function test_flush() {
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate, this will add second shistory entry.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      addEventListener("hashchange", function onHashChange() {
-        removeEventListener("hashchange", onHashChange);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "hashchange",
+        () => resolve(),
+        { once: true }
+      );
 
       // Click the link.
       content.document.querySelector("a").click();
@@ -58,12 +59,13 @@ add_task(async function test_crash() {
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      addEventListener("hashchange", function onHashChange() {
-        removeEventListener("hashchange", onHashChange);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "hashchange",
+        () => resolve(),
+        { once: true }
+      );
 
       // Click the link.
       content.document.querySelector("a").click();
@@ -100,12 +102,13 @@ add_task(async function test_remove() {
   is(entries.length, 1, "there is a single history entry");
 
   // Click the link to navigate.
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     return new Promise(resolve => {
-      addEventListener("hashchange", function onHashChange() {
-        removeEventListener("hashchange", onHashChange);
-        resolve();
-      });
+      docShell.chromeEventHandler.addEventListener(
+        "hashchange",
+        () => resolve(),
+        { once: true }
+      );
 
       // Click the link.
       content.document.querySelector("a").click();

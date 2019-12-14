@@ -83,7 +83,7 @@ add_task(async function test_pageshow() {
 
   // Wait until shistory changes.
   let pageShowPromise = ContentTask.spawn(browser, null, async () => {
-    return ContentTaskUtils.waitForEvent(this, "pageshow", true);
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
 
   // Go back to the previous url which is loaded from the bfcache.
@@ -195,7 +195,7 @@ add_task(async function test_pushstate_replacestate() {
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "http://example.com/1", "url is correct");
 
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     content.window.history.pushState({}, "", "test-entry/");
   });
 
@@ -205,7 +205,7 @@ add_task(async function test_pushstate_replacestate() {
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
-  await ContentTask.spawn(browser, {}, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     content.window.history.replaceState({}, "", "test-entry2/");
   });
 

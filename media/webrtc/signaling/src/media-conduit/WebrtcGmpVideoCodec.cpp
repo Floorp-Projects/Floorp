@@ -549,7 +549,7 @@ void WebrtcGmpVideoEncoder::Encoded(
           break;
         case GMP_BufferLength16:
 // The plugin is expected to encode data in native byte order
-#ifdef MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
           size = LittleEndian::readUint16(buffer);
 #else
           size = BigEndian::readUint16(buffer);
@@ -566,7 +566,7 @@ void WebrtcGmpVideoEncoder::Encoded(
           break;
         case GMP_BufferLength32:
 // The plugin is expected to encode data in native byte order
-#ifdef MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
           size = LittleEndian::readUint32(buffer);
 #else
           size = BigEndian::readUint32(buffer);

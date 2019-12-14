@@ -12,7 +12,7 @@ add_task(async function() {
   const webConsoleFront = target.activeConsole;
 
   // Fetch WebConsoleCommands so that it is available for next Content Tasks
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
@@ -37,7 +37,7 @@ async function evaluateJSAndCheckResult(webConsoleFront, input, expected) {
 }
 
 async function registerNewCommand(webConsoleFront) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.register("setFoo", (owner, value) => {
       owner.window.foo = value;
       return "ok";
@@ -55,13 +55,13 @@ async function registerNewCommand(webConsoleFront) {
     result: "ok",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     is(content.top.foo, "bar", "top.foo should equal to 'bar'");
   });
 }
 
 async function wrapCommand(webConsoleFront) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const origKeys = this.WebConsoleCommands.getCommand("keys");
 
     const newKeys = (...args) => {
@@ -97,7 +97,7 @@ async function wrapCommand(webConsoleFront) {
     },
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.register("keys", this.origKeys);
     is(
       this.WebConsoleCommands.getCommand("keys"),
@@ -109,7 +109,7 @@ async function wrapCommand(webConsoleFront) {
 }
 
 async function unregisterCommand(webConsoleFront) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.unregister("setFoo");
   });
 
@@ -123,7 +123,7 @@ async function unregisterCommand(webConsoleFront) {
 }
 
 async function registerAccessor(webConsoleFront) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.register("$foo", {
       get(owner) {
         const foo = owner.window.document.getElementById("quack");
@@ -138,7 +138,7 @@ async function registerAccessor(webConsoleFront) {
     result: ">o_/",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     is(
       content.document.getElementById("quack").textContent,
       ">o_/",
@@ -153,7 +153,7 @@ async function registerAccessor(webConsoleFront) {
 }
 
 async function unregisterAfterOverridingTwice(webConsoleFront) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.register("keys", (owner, obj) => "command 1");
   });
 
@@ -162,7 +162,7 @@ async function unregisterAfterOverridingTwice(webConsoleFront) {
     result: "command 1",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const orig = this.WebConsoleCommands.getCommand("keys");
     this.WebConsoleCommands.register("keys", (owner, obj) => {
       if (obj === "quack") {
@@ -180,7 +180,7 @@ async function unregisterAfterOverridingTwice(webConsoleFront) {
     result: "bang!",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     this.WebConsoleCommands.unregister("keys");
   });
 

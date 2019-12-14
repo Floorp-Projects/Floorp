@@ -15,7 +15,7 @@ function countDpiPrefReadsInThread(thread) {
 }
 
 async function waitForPaintAfterLoad() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(function(resolve) {
       function listener() {
         if (content.document.readyState == "complete") {
@@ -47,9 +47,9 @@ add_task(async function test_profile_feature_preferencereads() {
 
   const url = BASE_URL + "fixed_height.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
+    const contentPid = await SpecialPowers.spawn(
       contentBrowser,
-      null,
+      [],
       () => Services.appinfo.processID
     );
 

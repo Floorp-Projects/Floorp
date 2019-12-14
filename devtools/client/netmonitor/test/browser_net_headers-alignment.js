@@ -32,7 +32,7 @@ add_task(async function() {
   testColumnsAlignment(headers, requestsContainer);
 
   // Stop doing requests.
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     content.wrappedJSObject.stopRequests();
   });
 

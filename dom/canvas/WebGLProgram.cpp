@@ -1163,18 +1163,6 @@ bool WebGLProgram::ValidateForLink() {
   const auto& gl = mContext->gl;
 
   if (gl->WorkAroundDriverBugs() && mContext->mIsMesa) {
-    // Bug 777028: Mesa can't handle more than 16 samplers per program,
-    // counting each array entry.
-    size_t numSamplerUniforms_upperBound =
-        mVertShader->CalcNumSamplerUniforms() +
-        mFragShader->CalcNumSamplerUniforms();
-    if (numSamplerUniforms_upperBound > 16) {
-      mLinkLog.AssignLiteral(
-          "Programs with more than 16 samplers are disallowed on"
-          " Mesa drivers to avoid crashing.");
-      return false;
-    }
-
     // Bug 1203135: Mesa crashes internally if we exceed the reported maximum
     // attribute count.
     if (mVertShader->NumAttributes() > mContext->MaxVertexAttribs()) {

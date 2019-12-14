@@ -6,7 +6,7 @@ registerCleanupFunction(() => {
 });
 
 async function getListenerEvents(browser) {
-  let result = await ContentTask.spawn(browser, null, async function() {
+  let result = await SpecialPowers.spawn(browser, [], async function() {
     return content.document.getElementById("result").textContent;
   });
 

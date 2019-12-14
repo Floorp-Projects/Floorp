@@ -64,20 +64,18 @@ function spawnInNewReaderTab(url, func) {
   return BrowserTestUtils.withNewTab(
     { gBrowser, url: `about:reader?url=${encodeURIComponent(url)}` },
     async function(browser) {
-      await ContentTask.spawn(browser, null, async function() {
-        // This imports the test utils for all tests, so we'll declare it as
-        // a global here which will make it ESLint happy.
-        /* global NarrateTestUtils */
-        ChromeUtils.import(
-          "chrome://mochitests/content/browser/" +
-            "toolkit/components/narrate/test/NarrateTestUtils.jsm",
-          Cu.getGlobalForObject({})
-        );
-
+      // This imports the test utils for all tests, so we'll declare it as
+      // a global here which will make it ESLint happy.
+      /* global NarrateTestUtils */
+      SpecialPowers.addTaskImport(
+        "NarrateTestUtils",
+        "chrome://mochitests/content/browser/" +
+          "toolkit/components/narrate/test/NarrateTestUtils.jsm"
+      );
+      await SpecialPowers.spawn(browser, [], async function() {
         await NarrateTestUtils.getReaderReadyPromise(content);
       });
-
-      await ContentTask.spawn(browser, null, func);
+      await SpecialPowers.spawn(browser, [], func);
     }
   );
 }

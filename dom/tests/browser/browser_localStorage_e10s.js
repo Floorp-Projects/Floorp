@@ -107,9 +107,9 @@ function clearOriginStorageEnsuringNoPreload() {
 }
 
 async function verifyTabPreload(knownTab, expectStorageExists) {
-  let storageExists = await ContentTask.spawn(
+  let storageExists = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    HELPER_PAGE_ORIGIN,
+    [HELPER_PAGE_ORIGIN],
     function(origin) {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
@@ -132,9 +132,9 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
  * simplicity, the mutations representation matches the expected events rep.
  */
 async function mutateTabStorage(knownTab, mutations, sentinelValue) {
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    { mutations, sentinelValue },
+    [{ mutations, sentinelValue }],
     function(args) {
       return content.wrappedJSObject.mutateStorage(Cu.cloneInto(args, content));
     }
@@ -147,11 +147,13 @@ async function mutateTabStorage(knownTab, mutations, sentinelValue) {
  * check and assert the recorded events.
  */
 async function recordTabStorageEvents(knownTab, sentinelValue) {
-  await ContentTask.spawn(knownTab.tab.linkedBrowser, sentinelValue, function(
-    sentinelValue
-  ) {
-    return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
-  });
+  await SpecialPowers.spawn(
+    knownTab.tab.linkedBrowser,
+    [sentinelValue],
+    function(sentinelValue) {
+      return content.wrappedJSObject.listenForStorageEvents(sentinelValue);
+    }
+  );
 }
 
 /**
@@ -167,9 +169,9 @@ async function recordTabStorageEvents(knownTab, sentinelValue) {
  * writes were performed or verifyTabStorageEvents was used.
  */
 async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
-  let actualState = await ContentTask.spawn(
+  let actualState = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    maybeSentinel,
+    [maybeSentinel],
     function(maybeSentinel) {
       return content.wrappedJSObject.getStorageState(maybeSentinel);
     }
@@ -195,9 +197,9 @@ async function verifyTabStorageState(knownTab, expectedState, maybeSentinel) {
  * the sentinel value, but we don't actually care what it is.
  */
 async function verifyTabStorageEvents(knownTab, expectedEvents) {
-  let actualEvents = await ContentTask.spawn(
+  let actualEvents = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
-    {},
+    [],
     function() {
       return content.wrappedJSObject.returnAndClearStorageEvents();
     }

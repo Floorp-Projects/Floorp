@@ -170,13 +170,15 @@ this.PartitionedStorageHelper = {
       await BrowserTestUtils.browserLoaded(browser3);
 
       async function getDataFromThirdParty(browser, result) {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           browser,
-          {
-            page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
-            getDataCallback: getDataCallback.toString(),
-            result,
-          },
+          [
+            {
+              page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
+              getDataCallback: getDataCallback.toString(),
+              result,
+            },
+          ],
           async obj => {
             await new content.Promise(resolve => {
               let ifr = content.document.createElement("iframe");
@@ -206,13 +208,15 @@ this.PartitionedStorageHelper = {
       }
 
       async function getDataFromFirstParty(browser, result) {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           browser,
-          {
-            getDataCallback: getDataCallback.toString(),
-            result,
-            variant,
-          },
+          [
+            {
+              getDataCallback: getDataCallback.toString(),
+              result,
+              variant,
+            },
+          ],
           async obj => {
             let runnableStr = `(() => {return (${obj.getDataCallback});})();`;
             let runnable = eval(runnableStr); // eslint-disable-line no-eval
@@ -245,13 +249,15 @@ this.PartitionedStorageHelper = {
       await getDataFromFirstParty(browser3, "");
 
       async function createDataInThirdParty(browser, value) {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           browser,
-          {
-            page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
-            addDataCallback: addDataCallback.toString(),
-            value,
-          },
+          [
+            {
+              page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
+              addDataCallback: addDataCallback.toString(),
+              value,
+            },
+          ],
           async obj => {
             await new content.Promise(resolve => {
               let ifr = content.document.getElementsByTagName("iframe")[0];
@@ -277,13 +283,15 @@ this.PartitionedStorageHelper = {
       }
 
       async function createDataInFirstParty(browser, value) {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           browser,
-          {
-            addDataCallback: addDataCallback.toString(),
-            value,
-            variant,
-          },
+          [
+            {
+              addDataCallback: addDataCallback.toString(),
+              value,
+              variant,
+            },
+          ],
           async obj => {
             let runnableStr = `(() => {return (${obj.addDataCallback});})();`;
             let runnable = eval(runnableStr); // eslint-disable-line no-eval

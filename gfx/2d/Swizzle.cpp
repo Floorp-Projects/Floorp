@@ -52,7 +52,7 @@ namespace gfx {
 // Whether B comes before R in pixel memory layout.
 static constexpr bool IsBGRFormat(SurfaceFormat aFormat) {
   return aFormat == SurfaceFormat::B8G8R8A8 ||
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
          aFormat == SurfaceFormat::R5G6B5_UINT16 ||
 #endif
          aFormat == SurfaceFormat::B8G8R8X8 || aFormat == SurfaceFormat::B8G8R8;
@@ -79,7 +79,7 @@ static constexpr uint32_t AlphaByteIndex(SurfaceFormat aFormat) {
 
 // The endian-dependent bit shift to access RGB of a UINT32 pixel.
 static constexpr uint32_t RGBBitShift(SurfaceFormat aFormat) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   return 8 * RGBByteIndex(aFormat);
 #else
   return 8 - 8 * RGBByteIndex(aFormat);
@@ -684,7 +684,7 @@ static void SwizzleChunkSwap(const uint8_t*& aSrc, uint8_t*& aDst,
   do {
     // Use an endian swap to move the bytes, i.e. BGRA -> ARGB.
     uint32_t rgba = *reinterpret_cast<const uint32_t*>(aSrc);
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
     rgba = NativeEndian::swapToBigEndian(rgba);
 #else
     rgba = NativeEndian::swapToLittleEndian(rgba);

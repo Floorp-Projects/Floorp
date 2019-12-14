@@ -77,7 +77,7 @@ PresentationConnectionList::FindConnectionById(const nsAString& aId) {
   for (ConnectionArrayIndex i = 0; i < mConnections.Length(); i++) {
     nsAutoString id;
     mConnections[i]->GetId(id);
-    if (id == nsAutoString(aId)) {
+    if (id == aId) {
       return i;
     }
   }
@@ -93,7 +93,7 @@ void PresentationConnectionList::NotifyStateChange(
   }
 
   bool connectionFound =
-      FindConnectionById(aSessionId) != ConnectionArray::NoIndex ? true : false;
+      FindConnectionById(aSessionId) != ConnectionArray::NoIndex;
 
   PresentationConnectionList_Binding::ClearCachedConnectionsValue(this);
   switch (aConnection->State()) {

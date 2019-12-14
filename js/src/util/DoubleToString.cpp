@@ -19,7 +19,7 @@
 
 using namespace js;
 
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
 #  define IEEE_8087
 #else
 #  define IEEE_MC68k

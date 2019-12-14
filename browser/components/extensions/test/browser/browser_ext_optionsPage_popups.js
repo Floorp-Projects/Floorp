@@ -16,7 +16,7 @@ async function openContextMenuInOptionsPage(optionsBrowser) {
   // Instead of BrowserTestUtils.synthesizeMouseAtCenter, we are dispatching a contextmenu
   // event directly on the target element to prevent intermittent failures on debug builds
   // (especially linux32-debug), see Bug 1519808 for a rationale.
-  ContentTask.spawn(optionsBrowser, null, () => {
+  SpecialPowers.spawn(optionsBrowser, [], () => {
     let el = content.document.querySelector("a");
     el.dispatchEvent(
       new content.MouseEvent("contextmenu", {

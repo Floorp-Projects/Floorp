@@ -15,7 +15,7 @@ add_task(async function test_ignoreFragment() {
 
   let hashChangePromise = ContentTask.spawn(
     tabRefAboutHome.linkedBrowser,
-    null,
+    [],
     async function() {
       await ContentTaskUtils.waitForEvent(this, "hashchange", false);
     }

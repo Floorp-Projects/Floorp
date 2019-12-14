@@ -59,7 +59,7 @@ add_task(async function() {
   // Tab 2's window _and_ its iframes should be inactive
   ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
 
-  await ContentTask.spawn(ctx.tab2Browser, null, async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
     Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
@@ -79,7 +79,7 @@ add_task(async function() {
   // Step 4.
 
   async function checkTab2Active(outerExpected) {
-    await ContentTask.spawn(ctx.tab2Browser, outerExpected, async function(
+    await SpecialPowers.spawn(ctx.tab2Browser, [outerExpected], async function(
       expected
     ) {
       function isActive(aWindow) {
@@ -158,7 +158,7 @@ add_task(async function() {
     "Got expected tab 2 url in step 5"
   );
 
-  await ContentTask.spawn(ctx.tab2Browser, null, async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
     for (var i = 0; i < content.frames.length; i++) {
       let docShell = content.frames[i].docShell;
       Assert.ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
@@ -187,7 +187,7 @@ add_task(async function() {
     "Got expected tab 1 url in step 6"
   );
 
-  await ContentTask.spawn(ctx.tab1Browser, null, async function() {
+  await SpecialPowers.spawn(ctx.tab1Browser, [], async function() {
     function isActive(aWindow) {
       var docshell = aWindow.docShell;
       return docshell.isActive;
@@ -203,7 +203,7 @@ add_task(async function() {
 
   ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
 
-  await ContentTask.spawn(ctx.tab2Browser, null, async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
     for (var i = 0; i < content.frames.length; i++) {
       let docShell = content.frames[i].docShell;
       Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
@@ -222,7 +222,10 @@ add_task(async function() {
 
   async function checkBrowser(browser, outerTabNum, outerActive) {
     let data = { tabNum: outerTabNum, active: outerActive };
-    await ContentTask.spawn(browser, data, async function({ tabNum, active }) {
+    await SpecialPowers.spawn(browser, [data], async function({
+      tabNum,
+      active,
+    }) {
       function isActive(aWindow) {
         var docshell = aWindow.docShell;
         return docshell.isActive;

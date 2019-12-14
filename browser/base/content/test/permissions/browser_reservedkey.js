@@ -170,7 +170,7 @@ add_task(async function test_backspace() {
     "<input id='field' value='something'></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     content.document.getElementById("field").focus();
 
     // Add a promise that resolves when the backspace key gets received
@@ -188,9 +188,9 @@ add_task(async function test_backspace() {
   EventUtils.synthesizeKey("KEY_ArrowRight", {});
   EventUtils.synthesizeKey("KEY_Backspace", {});
 
-  let fieldValue = await ContentTask.spawn(
+  let fieldValue = await SpecialPowers.spawn(
     tab.linkedBrowser,
-    {},
+    [],
     async function() {
       return content.keysPromise;
     }

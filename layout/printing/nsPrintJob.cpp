@@ -521,11 +521,8 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
-static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
-  if (!aDoc) {
-    return true;
-  }
-  Element* root = aDoc->GetRootElement();
+static bool DocHasPrintCallbackCanvas(Document& aDoc, void* aData) {
+  Element* root = aDoc.GetRootElement();
   if (!root) {
     return true;
   }
@@ -545,10 +542,10 @@ static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
   return true;
 }
 
-static bool AnySubdocHasPrintCallbackCanvas(Document* aDoc) {
+static bool AnySubdocHasPrintCallbackCanvas(Document& aDoc) {
   bool result = false;
-  aDoc->EnumerateSubDocuments(&DocHasPrintCallbackCanvas,
-                              static_cast<void*>(&result));
+  aDoc.EnumerateSubDocuments(DocHasPrintCallbackCanvas,
+                             static_cast<void*>(&result));
   return result;
 }
 
@@ -620,10 +617,10 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   }
 
   bool hasMozPrintCallback = false;
-  DocHasPrintCallbackCanvas(aOriginalDoc,
+  DocHasPrintCallbackCanvas(*aOriginalDoc,
                             static_cast<void*>(&hasMozPrintCallback));
   mHasMozPrintCallback =
-      hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(aOriginalDoc);
+      hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(*aOriginalDoc);
 
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
@@ -1969,8 +1966,7 @@ bool nsPrintJob::DoSetPixelScale() {
 
 nsView* nsPrintJob::GetParentViewForRoot() {
   if (mIsCreatingPrintPreview) {
-    nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-    if (cv) {
+    if (nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint)) {
       return cv->FindContainerView();
     }
   }
@@ -2068,7 +2064,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
                            : GetParentViewForRoot();
   aPO->mPresContext = parentView ? new nsPresContext(aPO->mDocument, type)
                                  : new nsRootPresContext(aPO->mDocument, type);
-  NS_ENSURE_TRUE(aPO->mPresContext, NS_ERROR_OUT_OF_MEMORY);
   aPO->mPresContext->SetPrintSettings(printData->mPrintSettings);
 
   // set the presentation context to the value in the print settings
@@ -2102,10 +2097,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
                           aPO->mDocument);
   }
 
-  // The pres shell now owns the style set object.
-
   bool doReturn = false;
-  ;
   bool documentIsTopLevel = false;
   nsSize adjSize;
 
@@ -2120,15 +2112,23 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
          adjSize.width, adjSize.height));
 
   aPO->mPresShell->BeginObservingDocument();
-
   aPO->mPresContext->SetPageSize(adjSize);
-  aPO->mPresContext->SetVisibleArea(
-      nsRect(0, 0, adjSize.width, adjSize.height));
+
+  int32_t p2a = aPO->mPresContext->DeviceContext()->AppUnitsPerDevPixel();
+  if (documentIsTopLevel && mIsCreatingPrintPreview) {
+    if (nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint)) {
+      // If we're print-previewing and the top level document, use the bounds
+      // from our doc viewer. Page bounds is not what we want.
+      nsIntRect bounds;
+      cv->GetBounds(bounds);
+      adjSize = nsSize(bounds.width * p2a, bounds.height * p2a);
+    }
+  }
+  aPO->mPresContext->SetVisibleArea(nsRect(nsPoint(), adjSize));
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
-  float printDPI = float(AppUnitsPerCSSInch()) /
-                   float(printData->mPrintDC->AppUnitsPerDevPixel());
+  float printDPI = float(AppUnitsPerCSSInch()) / float(p2a);
   aPO->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {

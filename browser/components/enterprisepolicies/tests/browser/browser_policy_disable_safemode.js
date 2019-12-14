@@ -26,7 +26,7 @@ add_task(async function test_safemode_from_about_support() {
     "about:support"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let button = content.document.getElementById("restart-in-safe-mode-button");
     is(
       button.getAttribute("disabled"),
@@ -44,7 +44,7 @@ add_task(async function test_safemode_from_about_profiles() {
     "about:profiles"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let button = content.document.getElementById("restart-in-safe-mode-button");
     is(
       button.getAttribute("disabled"),

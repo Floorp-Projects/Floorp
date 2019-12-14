@@ -1764,34 +1764,14 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // If we can defer the LazyScript creation, we are now done.
   if (parseInfo_.isDeferred()) {
     // Move data into funbox
-    funbox->lazyScriptData() = mozilla::Some(std::move(data));
+    MOZ_ASSERT(funbox->functionCreationData());
+    funbox->functionCreationData()->lazyScriptData =
+        mozilla::Some(std::move(data));
     return true;
   }
 
   // Eager Function tree mode, emit the lazy script now.
   return data.create(cx_, funbox, sourceObject_, parseGoal());
-}
-
-bool ParserBase::publishLazyScripts(FunctionTree* root) {
-  if (root) {
-    auto visitor = [](ParserBase* parser, FunctionTree* tree) {
-      FunctionBox* funbox = tree->funbox();
-      if (!funbox) {
-        return true;
-      }
-
-      // No lazy script data, so not a lazy function.
-      if (!funbox->lazyScriptData().isSome()) {
-        return true;
-      }
-      mozilla::Maybe<LazyScriptCreationData> data =
-          std::move(funbox->lazyScriptData());
-      return data->create(parser->cx_, funbox, parser->sourceObject_,
-                          parser->parseGoal());
-    };
-    return root->visitRecursively(this->cx_, this, visitor);
-  }
-  return true;
 }
 
 bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
@@ -1813,8 +1793,15 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
       }
 
       funbox->initializeFunction(fun);
-      funbox->functionCreationData().reset();
-      return true;
+
+      mozilla::Maybe<LazyScriptCreationData> data =
+          std::move(funbox->functionCreationData()->lazyScriptData);
+      if (!data) {
+        return true;
+      }
+
+      return data->create(parser->cx_, funbox, parser->sourceObject_,
+                          parser->parseGoal());
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
@@ -2096,12 +2083,17 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
-FunctionCreationData GenerateFunctionCreationData(
-    HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, bool isSelfHosting /* = false */,
-    bool inFunctionBox /* = false */) {
-  gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-  FunctionFlags flags;
+FunctionCreationData::FunctionCreationData(HandleAtom atom,
+                                           FunctionSyntaxKind kind,
+                                           GeneratorKind generatorKind,
+                                           FunctionAsyncKind asyncKind,
+                                           bool isSelfHosting /* = false */,
+                                           bool inFunctionBox /* = false */)
+    : atom(atom),
+      kind(kind),
+      generatorKind(generatorKind),
+      asyncKind(asyncKind),
+      isSelfHosting(isSelfHosting) {
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
@@ -2144,9 +2136,6 @@ FunctionCreationData GenerateFunctionCreationData(
                    ? FunctionFlags::INTERPRETED_NORMAL
                    : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
-
-  return FunctionCreationData{atom,      kind,  generatorKind, asyncKind,
-                              allocKind, flags, isSelfHosting};
 }
 
 HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
@@ -2744,10 +2733,7 @@ void FunctionTree::dump(JSContext* cx, FunctionTree& node, int indent) {
     fprintf(stderr, " ");
   }
 
-  fprintf(stderr, "(*) %p %s", node.funbox_,
-          node.funbox_
-              ? (node.funbox_->lazyScriptData().isSome() ? "Lazy" : "Eager")
-              : "Nil");
+  fprintf(stderr, "(*) %p ", node.funbox_);
   if (node.funbox_ && node.funbox_->explicitName()) {
     UniqueChars bytes = AtomToPrintableString(cx, node.funbox_->explicitName());
     fprintf(stderr, " %s\n", bytes ? bytes.get() : "<nobytes>");
@@ -2780,9 +2766,9 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   Rooted<FunctionCreationData> fcd(
-      cx_, GenerateFunctionCreationData(funName, kind, generatorKind, asyncKind,
-                                        options().selfHostingMode,
-                                        pc_->isFunctionBox()));
+      cx_,
+      FunctionCreationData(funName, kind, generatorKind, asyncKind,
+                           options().selfHostingMode, pc_->isFunctionBox()));
 
   // Speculatively parse using the directives of the parent parsing context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -7380,7 +7366,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
           : FunctionSyntaxKind::ClassConstructor;
 
   Rooted<FunctionCreationData> data(
-      cx_, GenerateFunctionCreationData(
+      cx_, FunctionCreationData(
                className, functionSyntaxKind, GeneratorKind::NotGenerator,
                FunctionAsyncKind::SyncFunction, options().selfHostingMode,
                pc_->isFunctionBox()));
@@ -7550,7 +7536,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   Rooted<FunctionCreationData> data(
-      cx_, GenerateFunctionCreationData(
+      cx_, FunctionCreationData(
                nullptr, FunctionSyntaxKind::Method, GeneratorKind::NotGenerator,
                FunctionAsyncKind::SyncFunction, options().selfHostingMode,
                pc_->isFunctionBox()));

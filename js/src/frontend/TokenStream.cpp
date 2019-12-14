@@ -711,14 +711,14 @@ static MOZ_ALWAYS_INLINE void RetractPointerToCodePointBoundary(
   }
 
   // Otherwise rewind past trailing units to the start of the code point.
-#  ifdef DEBUG
+#ifdef DEBUG
   size_t retracted = 0;
-#  endif
+#endif
   while (MOZ_UNLIKELY(IsTrailingUnit((*ptr)[0]))) {
     --*ptr;
-#  ifdef DEBUG
+#ifdef DEBUG
     retracted++;
-#  endif
+#endif
   }
 
   MOZ_ASSERT(retracted < 4,
@@ -848,9 +848,9 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
   const Unit* const limit = sourceUnits.codeUnitPtrAt(offset);
 
   auto RetractedOffsetOfChunk = [
-#  ifdef DEBUG
+#ifdef DEBUG
                                     this,
-#  endif
+#endif
                                     start, limit,
                                     &sourceUnits](uint32_t index) {
     MOZ_ASSERT(index < this->lastChunkVectorForLine_->length());
@@ -861,12 +861,12 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     const Unit* actualPtr = naivePtr;
     RetractPointerToCodePointBoundary(&actualPtr, limit);
 
-#  ifdef DEBUG
+#ifdef DEBUG
     if ((*this->lastChunkVectorForLine_)[index].unitsType() ==
         UnitsType::GuaranteedSingleUnit) {
       MOZ_ASSERT(naivePtr == actualPtr, "miscomputed unitsType value");
     }
-#  endif
+#endif
 
     return naiveOffset - PointerRangeSize(actualPtr, naivePtr);
   };
@@ -928,10 +928,10 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       MOZ_ASSERT(begin < chunkLimit);
       MOZ_ASSERT(chunkLimit <= limit);
 
-      static_assert(ColumnChunkLength >
-                        SourceUnitTraits<Unit>::maxUnitsLength - 1,
-                    "any retraction below is assumed to never underflow to the "
-                    "preceding chunk, even for the longest code point");
+      static_assert(
+          ColumnChunkLength > SourceUnitTraits<Unit>::maxUnitsLength - 1,
+          "any retraction below is assumed to never underflow to the "
+          "preceding chunk, even for the longest code point");
 
       // Prior tokenizing ensured that [begin, limit) is validly encoded, and
       // |begin < chunkLimit|, so any retraction here can't underflow.

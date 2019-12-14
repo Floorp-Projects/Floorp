@@ -223,7 +223,7 @@ function waitForNetObserver(aBrowser, aTest) {
     return Promise.resolve();
   }
 
-  return ContentTask.spawn(aBrowser, null, () => {
+  return ContentTask.spawn(aBrowser, [], () => {
     return new Promise(resolve => {
       function observe(subject, topic) {
         Services.obs.removeObserver(observe, "csp-on-violate-policy");

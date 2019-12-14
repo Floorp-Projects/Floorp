@@ -27,7 +27,7 @@ add_task(async function() {
   ok(popup.getItems().length > 0, "'window.' gave a list of suggestions");
 
   info("Add a property on the window object");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.window.docfoobar = true;
   });
 
@@ -58,7 +58,7 @@ add_task(async function() {
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     delete content.wrappedJSObject.window.docfoobar;
   });
 
@@ -82,7 +82,7 @@ add_task(async function() {
   ok(popup.getItems().length > 0, "'dump(window.' gave a list of suggestions");
 
   info("Add a property on the window object");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.window.docfoobar = true;
   });
 

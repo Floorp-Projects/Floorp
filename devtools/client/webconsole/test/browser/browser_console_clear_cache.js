@@ -43,7 +43,7 @@ add_task(async function() {
 
 function logTextToConsole(hud, text) {
   const onMessage = waitForMessage(hud, text);
-  ContentTask.spawn(gBrowser.selectedBrowser, text, function(str) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
     content.wrappedJSObject.console.log(str);
   });
   return onMessage;

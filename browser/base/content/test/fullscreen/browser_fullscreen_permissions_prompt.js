@@ -8,24 +8,25 @@
 // same histogram ID) overlap. That causes TelemetryStopwatch to log an
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/Not in fullscreen mode/);
 
 SimpleTest.requestCompleteLog();
 
 async function requestNotificationPermission(browser) {
-  return ContentTask.spawn(browser, null, () => {
+  return SpecialPowers.spawn(browser, [], () => {
     return content.Notification.requestPermission();
   });
 }
 
 async function requestCameraPermission(browser) {
-  return ContentTask.spawn(browser, null, () => {
-    return new Promise(resolve => {
-      content.navigator.mediaDevices
-        .getUserMedia({ video: true, fake: true })
-        .catch(resolve(false))
-        .then(resolve(true));
-    });
-  });
+  return SpecialPowers.spawn(browser, [], () =>
+    content.navigator.mediaDevices
+      .getUserMedia({ video: true, fake: true })
+      .then(() => true, () => false)
+  );
 }
 
 add_task(async function test_fullscreen_closes_permissionui_prompt() {
@@ -145,7 +146,7 @@ add_task(async function test_permission_prompt_closes_fullscreen() {
   let fullScreenExit = waitForFullScreenState(browser, false);
 
   info("Requesting notification permission");
-  requestNotificationPermission(browser);
+  requestNotificationPermission(browser).catch(() => {});
   await popupShown;
 
   info("Waiting for full-screen exit");

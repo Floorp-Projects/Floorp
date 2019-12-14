@@ -18,8 +18,8 @@
         title="360437 test">
 
   <script type="application/javascript"><![CDATA[
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
@@ -50,10 +50,7 @@
       let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser);
       let contentLoadedPromise = ContentTask.spawn(gBrowser, null, async function() {
         return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
+          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
         });
       });
       BrowserTestUtils.loadURI(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
@@ -75,7 +72,7 @@
         gFindBar.close();
       });
       gFindBar.onFindAgainCommand(false);
-      await ContentTask.spawn(gBrowser, null, async function() {
+      await SpecialPowers.spawn(gBrowser, [], async function() {
         Assert.equal(content.document.activeElement,
          content.document.getElementById("input"), "Input Element isn't focused");
       });

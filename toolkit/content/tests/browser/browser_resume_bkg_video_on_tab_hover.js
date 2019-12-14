@@ -82,9 +82,9 @@ function check_should_not_send_unselected_tab_hover_msg(browser) {
 
 function get_video_decoding_suspend_promise(browser, reload) {
   let suspend = true;
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     browser,
-    { suspend, reload },
+    [{ suspend, reload }],
     check_video_decoding_state
   );
 }

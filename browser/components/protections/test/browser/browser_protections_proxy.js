@@ -20,7 +20,7 @@ add_task(async function() {
   });
 
   info("Secure Proxy card should be hidden by default");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       const proxyCard = content.document.querySelector(".proxy-card");
       return !proxyCard["data-enabled"];
@@ -86,9 +86,9 @@ add_task(async function() {
 });
 
 async function checkProxyCardVisibility(tab, shouldBeHidden) {
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     tab.linkedBrowser,
-    { _shouldBeHidden: shouldBeHidden },
+    [{ _shouldBeHidden: shouldBeHidden }],
     async function({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const proxyCard = content.document.querySelector(".proxy-card");

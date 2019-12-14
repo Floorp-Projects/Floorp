@@ -75,7 +75,7 @@ async function testNewWindow(client, win) {
 
 async function testFocusFirst(client) {
   const tab = window.gBrowser.selectedTab;
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     const onFocus = new Promise(resolve => {
       content.addEventListener("focus", resolve, { once: true });
     });

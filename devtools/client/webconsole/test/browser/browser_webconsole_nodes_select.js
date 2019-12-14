@@ -30,7 +30,7 @@ add_task(async function() {
   await toolbox.loadTool("inspector");
   const inspector = toolbox.getPanel("inspector");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.logNode("h1");
   });
 

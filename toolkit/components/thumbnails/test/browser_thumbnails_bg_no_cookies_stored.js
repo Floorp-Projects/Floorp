@@ -27,7 +27,7 @@ add_task(async function thumbnails_bg_no_cookies_stored() {
     },
     async browser => {
       // The root element of the page shouldn't be red.
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         Assert.notEqual(
           content.document.documentElement.style.backgroundColor,
           "rgb(255, 0, 0)",

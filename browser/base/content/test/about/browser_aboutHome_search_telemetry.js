@@ -24,9 +24,9 @@ add_task(async function() {
         Services.search.setDefault(engine),
       ]);
 
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        { expectedName: engine.name },
+        [{ expectedName: engine.name }],
         async function(args) {
           let engineName =
             content.wrappedJSObject.gContentSearchController.defaultEngine.name;
@@ -65,7 +65,7 @@ add_task(async function() {
       );
 
       // Perform a search to increase the SEARCH_COUNT histogram.
-      await ContentTask.spawn(browser, { searchStr }, async function(args) {
+      await SpecialPowers.spawn(browser, [{ searchStr }], async function(args) {
         let doc = content.document;
         info("Perform a search.");
         let el = doc.querySelector(["#searchText", "#newtab-search-text"]);

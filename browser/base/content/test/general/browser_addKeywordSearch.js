@@ -29,9 +29,9 @@ add_task(async function() {
         "popupshown"
       );
 
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         tab.linkedBrowser,
-        { action, param, method, id },
+        [{ action, param, method, id }],
         async function(args) {
           let doc = content.document;
           let form = doc.createElement("form");

@@ -26,7 +26,7 @@ add_task(async function() {
   info(
     "Loading tracking scripts and tracking images before restricting 3rd party cookies"
   );
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
@@ -115,9 +115,9 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Creating a 3rd party content");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { page: TEST_3RD_PARTY_PAGE, callback: (async _ => {}).toString() },
+    [{ page: TEST_3RD_PARTY_PAGE, callback: (async _ => {}).toString() }],
     async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
@@ -153,7 +153,7 @@ add_task(async function() {
   );
 
   info("Loading tracking scripts and tracking images again");
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");

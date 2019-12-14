@@ -31,55 +31,57 @@ async function openTabInUserContext(uri, userContextId) {
 
 // Setup an entry for the indexedDB.
 async function setupIndexedDB(browser) {
-  await ContentTask.spawn(browser, { input: "TestForgetAPIs" }, async function(
-    arg
-  ) {
-    let request = content.indexedDB.open("idb", 1);
+  await SpecialPowers.spawn(
+    browser,
+    [{ input: "TestForgetAPIs" }],
+    async function(arg) {
+      let request = content.indexedDB.open("idb", 1);
 
-    request.onerror = function() {
-      throw new Error("error opening db connection");
-    };
-
-    request.onupgradeneeded = event => {
-      let db = event.target.result;
-      let store = db.createObjectStore("obj", { keyPath: "id" });
-      store.createIndex("userContext", "userContext", { unique: false });
-    };
-
-    let db = await new Promise(resolve => {
-      request.onsuccess = event => {
-        resolve(event.target.result);
+      request.onerror = function() {
+        throw new Error("error opening db connection");
       };
-    });
 
-    // Add an entry into the indexedDB.
-    let transaction = db.transaction(["obj"], "readwrite");
-    let store = transaction.objectStore("obj");
-    store.add({ id: 1, userContext: arg.input });
-
-    await new Promise(resolve => {
-      transaction.oncomplete = () => {
-        resolve();
+      request.onupgradeneeded = event => {
+        let db = event.target.result;
+        let store = db.createObjectStore("obj", { keyPath: "id" });
+        store.createIndex("userContext", "userContext", { unique: false });
       };
-    });
 
-    // Check the indexedDB has been set properly.
-    transaction = db.transaction(["obj"], "readonly");
-    store = transaction.objectStore("obj");
-    let getRequest = store.get(1);
-    await new Promise(resolve => {
-      getRequest.onsuccess = () => {
-        let res = getRequest.result;
-        is(res.userContext, arg.input, "Check the indexedDB value");
-        resolve();
-      };
-    });
-  });
+      let db = await new Promise(resolve => {
+        request.onsuccess = event => {
+          resolve(event.target.result);
+        };
+      });
+
+      // Add an entry into the indexedDB.
+      let transaction = db.transaction(["obj"], "readwrite");
+      let store = transaction.objectStore("obj");
+      store.add({ id: 1, userContext: arg.input });
+
+      await new Promise(resolve => {
+        transaction.oncomplete = () => {
+          resolve();
+        };
+      });
+
+      // Check the indexedDB has been set properly.
+      transaction = db.transaction(["obj"], "readonly");
+      store = transaction.objectStore("obj");
+      let getRequest = store.get(1);
+      await new Promise(resolve => {
+        getRequest.onsuccess = () => {
+          let res = getRequest.result;
+          is(res.userContext, arg.input, "Check the indexedDB value");
+          resolve();
+        };
+      });
+    }
+  );
 }
 
 // Check whether the indexedDB has been cleared.
 async function checkIndexedDB(browser) {
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     let request = content.indexedDB.open("idb", 1);
 
     let db = await new Promise(done => {

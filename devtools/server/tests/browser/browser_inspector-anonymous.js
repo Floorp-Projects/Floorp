@@ -21,7 +21,7 @@ add_task(async function() {
 
 async function testXBLAnonymousInHTMLDocument(walker) {
   info("Testing XBL anonymous in an HTML document.");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const XUL_NS =
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     const rawToolbarbutton = content.document.createElementNS(
@@ -54,9 +54,9 @@ async function testNativeAnonymous(walker) {
 async function testNativeAnonymousStartingNode(walker) {
   info("Tests attaching an element that a walker can't see.");
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [walker.actorID],
+    [[walker.actorID]],
     async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"

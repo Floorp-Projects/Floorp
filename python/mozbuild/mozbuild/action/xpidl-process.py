@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import os
+import six
 import sys
 
 from xpidl import jsonxpt
@@ -39,7 +40,8 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
 
     # Write out dependencies for Python modules we import. If this list isn't
     # up to date, we will not re-process XPIDL files if the processor changes.
-    rule.add_dependencies(iter_modules_in_path(topsrcdir))
+    rule.add_dependencies(six.ensure_text(s) for s in
+                          iter_modules_in_path(topsrcdir))
 
     for path in idl_files:
         basename = os.path.basename(path)
@@ -55,7 +57,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
 
         xpts.append(jsonxpt.build_typelib(idl))
 
-        rule.add_dependencies(idl.deps)
+        rule.add_dependencies(six.ensure_text(s) for s in idl.deps)
 
         with FileAvoidWrite(header_path) as fh:
             print_header(idl, fh, path)
@@ -75,7 +77,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     with open(xpt_path, 'w') as fh:
         jsonxpt.write(jsonxpt.link(xpts), fh)
 
-    rule.add_targets([xpt_path])
+    rule.add_targets([six.ensure_text(xpt_path)])
     if deps_dir:
         deps_path = os.path.join(deps_dir, '%s.pp' % module)
         with FileAvoidWrite(deps_path) as fh:

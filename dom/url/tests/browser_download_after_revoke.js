@@ -33,7 +33,7 @@ function test() {
     Services.wm.addListener(listener);
 
     info("Creating BlobURL and clicking on a HTMLAnchorElement...");
-    ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
       let blob = new content.Blob(["test"], { type: "text/plain" });
       let url = content.URL.createObjectURL(blob);
 

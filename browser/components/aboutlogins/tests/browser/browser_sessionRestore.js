@@ -8,7 +8,7 @@ const { TabState } = ChromeUtils.import(
 );
 
 async function checkLoginDisplayed(browser, testGuid) {
-  await ContentTask.spawn(browser, testGuid, async function(guid) {
+  await SpecialPowers.spawn(browser, [testGuid], async function(guid) {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (

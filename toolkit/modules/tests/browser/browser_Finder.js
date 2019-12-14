@@ -44,7 +44,7 @@ add_task(async function() {
   findResult = await promiseFind;
   is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "should find link");
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function(arg) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function(arg) {
     Assert.ok(
       !!content.document.getElementsByTagName("a")[0].style.outline,
       "outline set"
@@ -61,7 +61,7 @@ add_task(async function() {
     "should find link again"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function(arg) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function(arg) {
     Assert.ok(
       !content.document.getElementsByTagName("a")[0].style.outline,
       "outline not set"

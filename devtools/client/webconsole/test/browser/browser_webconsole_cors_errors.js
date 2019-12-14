@@ -185,9 +185,9 @@ async function checkCorsMessage(message, category) {
 }
 
 function makeFaultyCorsCall(errorCategory, corsUrl) {
-  ContentTask.spawn(
+  SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [errorCategory, corsUrl],
+    [[errorCategory, corsUrl]],
     ([category, url]) => {
       if (!url) {
         const baseUrl =

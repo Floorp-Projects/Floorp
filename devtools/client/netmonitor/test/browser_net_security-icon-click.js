@@ -48,7 +48,9 @@ add_task(async function() {
 
   async function performRequestAndWait(url) {
     const wait = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, { url }, async function(args) {
+    await SpecialPowers.spawn(tab.linkedBrowser, [{ url }], async function(
+      args
+    ) {
       content.wrappedJSObject.performRequests(1, args.url);
     });
     return wait;

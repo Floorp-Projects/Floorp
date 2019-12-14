@@ -24,9 +24,9 @@ add_task(async function test_showLoginItemErrors() {
   LOGIN_TO_UPDATE = Services.logins.addLogin(LOGIN_TO_UPDATE);
   EXPECTED_ERROR_MESSAGE = "This login already exists.";
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE),
+    [LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE)],
     async loginToUpdate => {
       const loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")

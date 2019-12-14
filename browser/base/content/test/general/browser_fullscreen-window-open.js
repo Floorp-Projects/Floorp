@@ -276,9 +276,9 @@ function waitForWindowOpen(aOptions) {
 }
 
 function executeWindowOpenInContent(aParam) {
-  ContentTask.spawn(
+  SpecialPowers.spawn(
     newBrowser.selectedBrowser,
-    JSON.stringify(aParam),
+    [JSON.stringify(aParam)],
     async function(dataTestParam) {
       let testElm = content.document.getElementById("test");
       testElm.setAttribute("data-test-param", dataTestParam);

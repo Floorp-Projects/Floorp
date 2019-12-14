@@ -75,6 +75,8 @@ async function generatePageErrorStubs() {
       expectUncaughtException();
     }
 
+    // Note: This needs to use ContentTask rather than SpecialPowers.spawn
+    // because the latter includes cross-process stack information.
     await ContentTask.spawn(gBrowser.selectedBrowser, code, function(subCode) {
       const script = content.document.createElement("script");
       script.append(content.document.createTextNode(subCode));

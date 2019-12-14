@@ -119,10 +119,10 @@ function testPermission() {
 }
 
 async function withNewTabNoInput(grantPermission, browser) {
-  await ContentTask.spawn(browser, null, initTab);
+  await SpecialPowers.spawn(browser, [], initTab);
   await enableResistFingerprinting(false);
   let popupShown = promisePopupShown();
-  await ContentTask.spawn(browser, null, extractCanvasData);
+  await SpecialPowers.spawn(browser, [], extractCanvasData);
   await popupShown;
   let popupHidden = promisePopupHidden();
   if (grantPermission) {
@@ -134,7 +134,7 @@ async function withNewTabNoInput(grantPermission, browser) {
     await popupHidden;
     is(testPermission(), Services.perms.DENY_ACTION, "permission denied");
   }
-  await ContentTask.spawn(browser, grantPermission, extractCanvasData);
+  await SpecialPowers.spawn(browser, [grantPermission], extractCanvasData);
   await SpecialPowers.popPrefEnv();
 }
 
@@ -154,7 +154,7 @@ add_task(doTestNoInput.bind(null, false));
 add_task(doTestNoInput.bind(null, true));
 
 async function withNewTabAutoBlockNoInput(browser) {
-  await ContentTask.spawn(browser, null, initTab);
+  await SpecialPowers.spawn(browser, [], initTab);
   await enableResistFingerprinting(true);
 
   let noShowHandler = () => {
@@ -169,7 +169,7 @@ async function withNewTabAutoBlockNoInput(browser) {
   );
 
   // Try to extract canvas data without user inputs.
-  await ContentTask.spawn(browser, null, extractCanvasData);
+  await SpecialPowers.spawn(browser, [], extractCanvasData);
 
   await promisePopupObserver;
   info("There should be no popup shown on the panel.");
@@ -220,10 +220,10 @@ function extractCanvasDataUserInput(grantPermission) {
 }
 
 async function withNewTabInput(grantPermission, browser) {
-  await ContentTask.spawn(browser, null, initTab);
+  await SpecialPowers.spawn(browser, [], initTab);
   await enableResistFingerprinting(true);
   let popupShown = promisePopupShown();
-  await ContentTask.spawn(browser, null, function(host) {
+  await SpecialPowers.spawn(browser, [], function(host) {
     E10SUtils.wrapHandlingUserInput(content, true, function() {
       var button = content.document.getElementById("clickme");
       button.click();
@@ -240,7 +240,11 @@ async function withNewTabInput(grantPermission, browser) {
     await popupHidden;
     is(testPermission(), Services.perms.DENY_ACTION, "permission denied");
   }
-  await ContentTask.spawn(browser, grantPermission, extractCanvasDataUserInput);
+  await SpecialPowers.spawn(
+    browser,
+    [grantPermission],
+    extractCanvasDataUserInput
+  );
   await SpecialPowers.popPrefEnv();
 }
 

@@ -38,7 +38,7 @@ var state = {
 add_task(async function test() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseTabState(tab, state);
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     function compareEntries(i, j, history) {
       let e1 = history.getEntryAtIndex(i);
       let e2 = history.getEntryAtIndex(j);

@@ -14,7 +14,7 @@ add_task(async function setup() {
 
 add_task(async function test_create_login() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     ok(!loginList._selectedGuid, "should not be a selected guid by default");
     ok(
@@ -51,9 +51,9 @@ add_task(async function test_create_login() {
       (_, data) => data == "addLogin"
     );
 
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       browser,
-      [originTuple, i],
+      [[originTuple, i]],
       async ([aOriginTuple, index]) => {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
@@ -130,7 +130,7 @@ add_task(async function test_create_login() {
       "passwordmgr-storage-changed",
       (_, data) => data == "modifyLogin"
     );
-    await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
+    await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
       ok(
         !content.document.documentElement.classList.contains("no-logins"),
         "Should no longer be in no logins view"
@@ -216,7 +216,7 @@ add_task(async function test_create_login() {
     await storageChangedPromised;
     info("login modified in storage");
 
-    await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
+    await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
@@ -241,19 +241,25 @@ add_task(async function test_create_login() {
     });
   }
 
-  await ContentTask.spawn(browser, testCases.length, async testCasesLength => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    is(
-      loginList._loginGuidsSortedOrder.length,
-      5,
-      "login list should have a login per testcase"
-    );
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [testCases.length],
+    async testCasesLength => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      is(
+        loginList._loginGuidsSortedOrder.length,
+        5,
+        "login list should have a login per testcase"
+      );
+    }
+  );
 });
 
 add_task(async function test_cancel_create_login() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     ok(
       loginList._selectedGuid,
@@ -296,7 +302,7 @@ add_task(async function test_cancel_create_login() {
 add_task(
   async function test_cancel_create_login_with_filter_showing_one_login() {
     let browser = gBrowser.selectedBrowser;
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
@@ -347,7 +353,7 @@ add_task(
 
 add_task(async function test_cancel_create_login_with_logins_filtered_out() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginFilter = Cu.waiveXrays(
       content.document.querySelector("login-filter")
     );
@@ -398,7 +404,7 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
 add_task(async function test_create_duplicate_login() {
   let browser = gBrowser.selectedBrowser;
   EXPECTED_ERROR_MESSAGE = "This login already exists.";
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let createButton = loginList._createLoginButton;
     createButton.click();

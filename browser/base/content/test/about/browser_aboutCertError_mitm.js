@@ -38,7 +38,7 @@ add_task(async function checkMitmPriming() {
   // The page will reload after the initial canary request, so we'll just
   // wait until we're seeing the dedicated MitM page.
   await TestUtils.waitForCondition(function() {
-    return ContentTask.spawn(browser, {}, () => {
+    return SpecialPowers.spawn(browser, [], () => {
       return (
         content.document.body.getAttribute("code") ==
         "MOZILLA_PKIX_ERROR_MITM_DETECTED"
@@ -54,7 +54,7 @@ add_task(async function checkMitmPriming() {
     "Stored the correct issuer"
   );
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let mitmName1 = content.document.querySelector(
       "#errorShortDescText .mitm-name"
     );
@@ -113,7 +113,7 @@ add_task(async function checkMitmAutoEnableEnterpriseRoots() {
   // The page will reload after the initial canary request, so we'll just
   // wait until we're seeing the dedicated MitM page.
   await TestUtils.waitForCondition(function() {
-    return ContentTask.spawn(browser, {}, () => {
+    return SpecialPowers.spawn(browser, [], () => {
       return (
         content.document.body.getAttribute("code") ==
         "MOZILLA_PKIX_ERROR_MITM_DETECTED"

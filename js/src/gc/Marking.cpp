@@ -468,10 +468,10 @@ DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION(SavedFrame*)
 
 #undef DEFINE_TRACE_EXTERNAL_EDGE_FUNCTION
 
-#define DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(type)                           \
+#define DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(type)                       \
   JS_PUBLIC_API void JS::UnsafeTraceRoot(JSTracer* trc, type* thingp, \
-                                         const char* name) { \
-    UnsafeTraceRootHelper(trc, thingp, name); \
+                                         const char* name) {          \
+    UnsafeTraceRootHelper(trc, thingp, name);                         \
   }
 
 // Define UnsafeTraceRoot for each public GC pointer type.
@@ -2622,7 +2622,8 @@ void GCMarker::enterWeakMarkingMode() {
   for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
     for (auto r = zone->gcWeakKeys().all(); !r.empty(); r.popFront()) {
       for (auto markable : r.front().value) {
-        MOZ_ASSERT(markable.weakmap->mapColor, "unmarked weakmaps in weak keys table");
+        MOZ_ASSERT(markable.weakmap->mapColor,
+                   "unmarked weakmaps in weak keys table");
       }
     }
   }

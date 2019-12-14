@@ -209,7 +209,7 @@ add_task(async _ => {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let p = ContentTask.spawn(browser, null, () => {
+  let p = SpecialPowers.spawn(browser, [], () => {
     return new content.Promise(resolve => {
       content.addEventListener(
         "DOMPopupBlocked",
@@ -264,7 +264,7 @@ add_task(async _ => {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let p = ContentTask.spawn(browser, null, () => {
+  let p = SpecialPowers.spawn(browser, [], () => {
     return new content.Promise(resolve => {
       content.addEventListener(
         "DOMPopupBlocked",
@@ -317,7 +317,7 @@ add_task(async _ => {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, null, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     return new content.Promise(resolve => {
       let count = 0;
       content.addEventListener("DOMPopupBlocked", function cb() {
@@ -460,7 +460,7 @@ add_task(async _ => {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let p = ContentTask.spawn(browser, null, () => {
+  let p = SpecialPowers.spawn(browser, [], () => {
     return new content.Promise(resolve => {
       content.addEventListener(
         "DOMPopupBlocked",

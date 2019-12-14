@@ -44,20 +44,24 @@ add_task(async function media_should_be_able_to_play_in_visible_tab() {
   info("- open new background tab, and check tab's media pause state -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
+  await SpecialPowers.spawn(tab.linkedBrowser, [true], check_audio_pause_state);
 
   info(
     "- select tab as foreground tab, and tab's media should still be paused -"
   );
   await BrowserTestUtils.switchTab(window.gBrowser, tab);
-  await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
+  await SpecialPowers.spawn(tab.linkedBrowser, [true], check_audio_pause_state);
 
   info("- start audio in tab -");
-  await ContentTask.spawn(tab.linkedBrowser, null, play_audio);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], play_audio);
 
   info("- audio should be playing -");
   await waitForTabBlockEvent(tab, false);
-  await ContentTask.spawn(tab.linkedBrowser, false, check_audio_pause_state);
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [false],
+    check_audio_pause_state
+  );
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);

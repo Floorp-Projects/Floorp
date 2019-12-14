@@ -60,14 +60,14 @@ add_task(async function() {
   await waitFor(() => checkbox.checked);
 
   info("Changing attribute to trigger debugger pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("#attribute").click();
   });
   await waitForPaused(dbg);
   await resume(dbg);
 
   info("Changing subtree to trigger debugger pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("#subtree").click();
   });
   await waitForPaused(dbg);

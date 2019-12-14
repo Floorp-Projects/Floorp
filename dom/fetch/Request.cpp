@@ -233,7 +233,7 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mReferrerURL))) {
       nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
       if (principal) {
-        mResult = principal->CheckMayLoad(uri, /* report */ false,
+        mResult = principal->CheckMayLoad(uri,
                                           /* allowIfInheritsPrincipal */ false);
       }
     }
@@ -362,7 +362,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
           nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
           if (principal) {
             nsresult rv =
-                principal->CheckMayLoad(uri, /* report */ false,
+                principal->CheckMayLoad(uri,
                                         /* allowIfInheritsPrincipal */ false);
             if (NS_FAILED(rv)) {
               referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);

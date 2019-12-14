@@ -42,7 +42,7 @@ async function onViewSourceWindowOpen(aWindow) {
   gCopyEmailMenuItem = aWindow.document.getElementById("context-copyemail");
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async function(arg) {
+  await SpecialPowers.spawn(browser, [], async function(arg) {
     let tags = content.document.querySelectorAll("a[href]");
     Assert.equal(
       tags[0].href,
@@ -65,7 +65,7 @@ async function checkMenuItems(
   expectedClipboardContent
 ) {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, { selector }, async function(arg) {
+  await SpecialPowers.spawn(browser, [{ selector }], async function(arg) {
     content.document.querySelector(arg.selector).scrollIntoView();
   });
 

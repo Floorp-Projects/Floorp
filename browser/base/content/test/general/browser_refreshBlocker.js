@@ -20,7 +20,7 @@ const PREF = "accessibility.blockautorefresh";
  * @returns Promise
  */
 async function attemptFakeRefresh(browser, expectRefresh) {
-  await ContentTask.spawn(browser, expectRefresh, async function(
+  await SpecialPowers.spawn(browser, [expectRefresh], async function(
     contentExpectRefresh
   ) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;

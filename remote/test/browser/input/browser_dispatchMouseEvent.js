@@ -8,7 +8,7 @@ add_task(async function testDispatchMouseEvent(client) {
 
   const { Input } = client;
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const div = content.document.querySelector("div");
     this.mouseDownPromise = new Promise(resolve => {
       div.addEventListener("mousedown", resolve, { once: true });
@@ -21,9 +21,13 @@ add_task(async function testDispatchMouseEvent(client) {
     });
   });
 
-  const { x, y } = await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    return content.document.querySelector("div").getBoundingClientRect();
-  });
+  const { x, y } = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      return content.document.querySelector("div").getBoundingClientRect();
+    }
+  );
 
   await Input.dispatchMouseEvent({
     type: "mousePressed",
@@ -32,7 +36,7 @@ add_task(async function testDispatchMouseEvent(client) {
   });
 
   info("Waiting for DOM mousedown event on the div");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return this.mouseDownPromise;
   });
 
@@ -43,12 +47,12 @@ add_task(async function testDispatchMouseEvent(client) {
   });
 
   info("Waiting for DOM mouseup event on the div");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return this.mouseUpPromise;
   });
 
   info("Waiting for DOM click event on the div");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return this.clickPromise;
   });
 

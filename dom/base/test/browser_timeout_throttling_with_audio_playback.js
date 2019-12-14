@@ -43,7 +43,9 @@ async function runTest(url) {
   // Put the tab in the background.
   await BrowserTestUtils.switchTab(gBrowser, currentTab);
 
-  let timeout = await ContentTask.spawn(newBrowser, kDelay, function(delay) {
+  let timeout = await SpecialPowers.spawn(newBrowser, [kDelay], function(
+    delay
+  ) {
     return new Promise(resolve => {
       let before = new Date();
       content.window.setTimeout(function() {

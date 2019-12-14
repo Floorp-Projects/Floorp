@@ -361,9 +361,9 @@ async function test_contextmenu(selector, menuItems, options = {}) {
   }
 
   if (!options.skipFocusChange) {
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      [lastElementSelector, selector],
+      [[lastElementSelector, selector]],
       async function([contentLastElementSelector, contentSelector]) {
         if (contentLastElementSelector) {
           let contentLastElement = content.document.querySelector(
@@ -386,16 +386,18 @@ async function test_contextmenu(selector, menuItems, options = {}) {
 
   if (options.waitForSpellCheck) {
     info("Waiting for spell check");
-    await ContentTask.spawn(gBrowser.selectedBrowser, selector, async function(
-      contentSelector
-    ) {
-      let { onSpellCheck } = ChromeUtils.import(
-        "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
-      );
-      let element = content.document.querySelector(contentSelector);
-      await new Promise(resolve => onSpellCheck(element, resolve));
-      info("Spell check running");
-    });
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [selector],
+      async function(contentSelector) {
+        let { onSpellCheck } = ChromeUtils.import(
+          "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+        );
+        let element = content.document.querySelector(contentSelector);
+        await new Promise(resolve => onSpellCheck(element, resolve));
+        info("Spell check running");
+      }
+    );
   }
 
   let awaitPopupShown = BrowserTestUtils.waitForEvent(

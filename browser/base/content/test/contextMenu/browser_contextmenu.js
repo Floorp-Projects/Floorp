@@ -109,7 +109,7 @@ add_task(async function test_setup_html() {
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let doc = content.document;
     let audioIframe = doc.querySelector("#test-audio-in-iframe");
     // media documents always use a <video> tag.
@@ -1128,7 +1128,7 @@ add_task(async function test_copylinkcommand() {
 
       // The easiest way to check the clipboard is to paste the contents
       // into a textbox.
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         let doc = content.document;
         let input = doc.getElementById("test-input");
         input.focus();
@@ -1137,7 +1137,7 @@ add_task(async function test_copylinkcommand() {
       document.commandDispatcher
         .getControllerForCommand("cmd_paste")
         .doCommand("cmd_paste");
-      await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         let doc = content.document;
         let input = doc.getElementById("test-input");
         Assert.equal(
@@ -1242,9 +1242,9 @@ add_task(async function test_pagemenu() {
         )[0];
         ok(item, "Got generated XUL menu item");
         item.doCommand();
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          null,
+          [],
           async function() {
             let pagemenu = content.document.getElementById("test-pagemenu");
             Assert.ok(
@@ -1313,9 +1313,9 @@ add_task(async function test_dom_full_screen() {
           ["full-screen-api.transition-duration.enter", "0 0"],
           ["full-screen-api.transition-duration.leave", "0 0"]
         );
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          null,
+          [],
           async function() {
             let doc = content.document;
             let win = doc.defaultView;
@@ -1332,9 +1332,9 @@ add_task(async function test_dom_full_screen() {
         );
       },
       async postCheckContextMenuFn() {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          null,
+          [],
           async function() {
             let win = content.document.defaultView;
             let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
@@ -1470,9 +1470,9 @@ add_task(async function test_select_text_link() {
         await selectText("#test-select-text-link");
       },
       async postCheckContextMenuFn() {
-        await ContentTask.spawn(
+        await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          null,
+          [],
           async function() {
             let win = content.document.defaultView;
             win.getSelection().removeAllRanges();
@@ -1976,18 +1976,20 @@ add_task(async function test_cleanup_html() {
  *        the element that will be referenced.
  */
 async function selectText(selector) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, selector, async function(
-    contentSelector
-  ) {
-    info(`Selecting text of ${contentSelector}`);
-    let doc = content.document;
-    let win = doc.defaultView;
-    win.getSelection().removeAllRanges();
-    let div = doc.createRange();
-    let element = doc.querySelector(contentSelector);
-    Assert.ok(element, "Found element to select text from");
-    div.setStartBefore(element);
-    div.setEndAfter(element);
-    win.getSelection().addRange(div);
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    async function(contentSelector) {
+      info(`Selecting text of ${contentSelector}`);
+      let doc = content.document;
+      let win = doc.defaultView;
+      win.getSelection().removeAllRanges();
+      let div = doc.createRange();
+      let element = doc.querySelector(contentSelector);
+      Assert.ok(element, "Found element to select text from");
+      div.setStartBefore(element);
+      div.setEndAfter(element);
+      win.getSelection().addRange(div);
+    }
+  );
 }

@@ -185,13 +185,15 @@ class ResponsiveUI {
     const fullZoom = rdmContent.fullZoom;
     const textZoom = rdmContent.textZoom;
 
-    if (!this.isBrowserUIEnabled) {
+    // Listen to FullZoomChange events coming from the browser window,
+    // so that we can zoom the size of the viewport by the same amount.
+    if (this.isBrowserUIEnabled) {
+      this.browserWindow.addEventListener("FullZoomChange", this);
+    } else {
       this.docShell.contentViewer.fullZoom = 1;
       this.docShell.contentViewer.textZoom = 1;
 
-      // Listen to FullZoomChange events coming from the linkedBrowser,
-      // so that we can zoom the size of the viewport by the same amount.
-      rdmContent.addEventListener("FullZoomChange", this);
+      this.tab.linkedBrowser.addEventListener("FullZoomChange", this);
     }
 
     this.tab.addEventListener("BeforeTabRemotenessChange", this);
@@ -323,6 +325,7 @@ class ResponsiveUI {
       this.tab.linkedBrowser.removeEventListener("FullZoomChange", this);
       this.toolWindow.removeEventListener("message", this);
     } else {
+      this.browserWindow.removeEventListener("FullZoomChange", this);
       this.rdmFrame.contentWindow.removeEventListener("message", this);
       this.rdmFrame.remove();
 
@@ -419,8 +422,18 @@ class ResponsiveUI {
         this.handleMessage(event);
         break;
       case "FullZoomChange":
-        const zoom = tab.linkedBrowser.fullZoom;
-        toolWindow.setViewportZoom(zoom);
+        if (this.isBrowserUIEnabled) {
+          // Get the current device size and update to that size, which
+          // will pick up changes to the zoom.
+          const {
+            width,
+            height,
+          } = this.rdmFrame.contentWindow.getViewportSize();
+          this.updateViewportSize(width, height);
+        } else {
+          const zoom = tab.linkedBrowser.fullZoom;
+          toolWindow.setViewportZoom(zoom);
+        }
         break;
       case "BeforeTabRemotenessChange":
       case "TabClose":
@@ -821,17 +834,26 @@ class ResponsiveUI {
       return;
     }
 
+    const zoom = this.tab.linkedBrowser.fullZoom;
+
+    const scaledWidth = width * zoom;
+    const scaledHeight = height * zoom;
+
     // Setting this with a variable on the stack instead of directly as width/height
     // on the <browser> because we'll need to use this for the alert dialog as well.
-    this.browserStackEl.style.setProperty("--rdm-width", `${width}px`);
-    this.browserStackEl.style.setProperty("--rdm-height", `${height}px`);
+    this.browserStackEl.style.setProperty("--rdm-width", `${scaledWidth}px`);
+    this.browserStackEl.style.setProperty("--rdm-height", `${scaledHeight}px`);
   }
 
   /**
    * Helper for tests. Assumes a single viewport for now.
    */
   getViewportSize() {
-    return this.toolWindow.getViewportSize();
+    if (!this.isBrowserUIEnabled) {
+      return this.toolWindow.getViewportSize();
+    }
+
+    return this.rdmFrame.contentWindow.getViewportSize();
   }
 
   /**
@@ -839,7 +861,13 @@ class ResponsiveUI {
    */
   async setViewportSize(size) {
     await this.inited;
-    this.toolWindow.setViewportSize(size);
+    if (!this.isBrowserUIEnabled) {
+      this.toolWindow.setViewportSize(size);
+      return;
+    }
+
+    const { width, height } = size;
+    this.updateViewportSize(width, height);
   }
 
   /**
@@ -849,6 +877,7 @@ class ResponsiveUI {
     if (!this.isBrowserUIEnabled) {
       return this.toolWindow.getViewportBrowser();
     }
+
     return this.tab.linkedBrowser;
   }
 

@@ -14,7 +14,7 @@ add_task(async function testNoSessionRestoreButton() {
 
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     Assert.ok(
       content.document.getElementById("errorTryAgain").disabled,
       "The Restore about:sessionrestore button should be disabled"

@@ -31,7 +31,7 @@ function check_menu_at_page(url, testFn) {
     async function(browser) {
       // We don't get load events when the DocShell redirects to error
       // pages, but we do get DOMContentLoaded, so we'll wait for that.
-      let dclPromise = ContentTask.spawn(browser, null, async function() {
+      let dclPromise = SpecialPowers.spawn(browser, [], async function() {
         await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
       });
       BrowserTestUtils.loadURI(browser, url);

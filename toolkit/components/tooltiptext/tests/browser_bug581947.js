@@ -1,7 +1,7 @@
 function check(aBrowser, aElementName, aBarred, aType) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     aBrowser,
-    [aElementName, aBarred, aType],
+    [[aElementName, aBarred, aType]],
     async function([aElementName, aBarred, aType]) {
       let e = content.document.createElement(aElementName);
       let contentElement = content.document.getElementById("content");
@@ -52,25 +52,26 @@ function check(aBrowser, aElementName, aBarred, aType) {
 }
 
 function todo_check(aBrowser, aElementName, aBarred) {
-  return ContentTask.spawn(aBrowser, [aElementName, aBarred], async function([
-    aElementName,
-    aBarred,
-  ]) {
-    let e = content.document.createElement(aElementName);
-    let contentElement = content.document.getElementById("content");
-    contentElement.appendChild(e);
+  return SpecialPowers.spawn(
+    aBrowser,
+    [[aElementName, aBarred]],
+    async function([aElementName, aBarred]) {
+      let e = content.document.createElement(aElementName);
+      let contentElement = content.document.getElementById("content");
+      contentElement.appendChild(e);
 
-    let caught = false;
-    try {
-      e.setCustomValidity("foo");
-    } catch (e) {
-      caught = true;
+      let caught = false;
+      try {
+        e.setCustomValidity("foo");
+      } catch (e) {
+        caught = true;
+      }
+
+      todo(!caught, "setCustomValidity should exist for " + aElementName);
+
+      e.remove();
     }
-
-    todo(!caught, "setCustomValidity should exist for " + aElementName);
-
-    e.remove();
-  });
+  );
 }
 
 add_task(async function() {

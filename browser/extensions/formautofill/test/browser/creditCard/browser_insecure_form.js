@@ -95,9 +95,13 @@ add_task(async function test_click_on_insecure_warning() {
       await EventUtils.synthesizeMouseAtCenter(insecureItem, {});
       // Check input's value after popup closed to ensure the completion of autofilling.
       await expectPopupClose(browser);
-      const inputValue = await ContentTask.spawn(browser, {}, async function() {
-        return content.document.querySelector("#cc-name").value;
-      });
+      const inputValue = await SpecialPowers.spawn(
+        browser,
+        [],
+        async function() {
+          return content.document.querySelector("#cc-name").value;
+        }
+      );
       is(inputValue, "");
 
       await closePopup(browser);
@@ -115,9 +119,13 @@ add_task(async function test_press_enter_on_insecure_warning() {
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       // Check input's value after popup closed to ensure the completion of autofilling.
       await expectPopupClose(browser);
-      const inputValue = await ContentTask.spawn(browser, {}, async function() {
-        return content.document.querySelector("#cc-name").value;
-      });
+      const inputValue = await SpecialPowers.spawn(
+        browser,
+        [],
+        async function() {
+          return content.document.querySelector("#cc-name").value;
+        }
+      );
       is(inputValue, "");
 
       await closePopup(browser);

@@ -113,9 +113,9 @@ add_task(async function test() {
   let keyInfo = generateKeyInfo(TESTKEY);
 
   // Update the media key for the default container.
-  let result = await ContentTask.spawn(
+  let result = await SpecialPowers.spawn(
     defaultContainer.browser,
-    keyInfo,
+    [keyInfo],
     async function(aKeyInfo) {
       let access = await content.navigator.requestMediaKeySystemAccess(
         "org.w3.clearkey",
@@ -182,32 +182,38 @@ add_task(async function test() {
     USER_ID_PERSONAL
   );
 
-  await ContentTask.spawn(personalContainer.browser, keyInfo, async function(
-    aKeyInfo
-  ) {
-    let access = await content.navigator.requestMediaKeySystemAccess(
-      "org.w3.clearkey",
-      [
-        {
-          initDataTypes: [aKeyInfo.initDataType],
-          videoCapabilities: [{ contentType: "video/webm" }],
-          sessionTypes: ["persistent-license"],
-          persistentState: "required",
-        },
-      ]
-    );
-    let mediaKeys = await access.createMediaKeys();
-    let session = mediaKeys.createSession(aKeyInfo.sessionType);
+  await SpecialPowers.spawn(
+    personalContainer.browser,
+    [keyInfo],
+    async function(aKeyInfo) {
+      let access = await content.navigator.requestMediaKeySystemAccess(
+        "org.w3.clearkey",
+        [
+          {
+            initDataTypes: [aKeyInfo.initDataType],
+            videoCapabilities: [{ contentType: "video/webm" }],
+            sessionTypes: ["persistent-license"],
+            persistentState: "required",
+          },
+        ]
+      );
+      let mediaKeys = await access.createMediaKeys();
+      let session = mediaKeys.createSession(aKeyInfo.sessionType);
 
-    // First, load the session to check that mediakeys do not share with
-    // default container.
-    await session.load(aKeyInfo.sessionId);
+      // First, load the session to check that mediakeys do not share with
+      // default container.
+      await session.load(aKeyInfo.sessionId);
 
-    let map = session.keyStatuses;
+      let map = session.keyStatuses;
 
-    // Check that there is no media key here.
-    is(map.size, 0, "No media key should be here for the personal container.");
-  });
+      // Check that there is no media key here.
+      is(
+        map.size,
+        0,
+        "No media key should be here for the personal container."
+      );
+    }
+  );
 
   // Close default container tab.
   BrowserTestUtils.removeTab(defaultContainer.tab);

@@ -15,8 +15,6 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ContentTask.setTestScope(window.arguments[0]);
     const SEARCH_TEXT = "minefield";
 
     let gFindBar = null;
@@ -70,7 +68,7 @@
 
       // Initialise input
       info(`setting element value to ${aText}`);
-      await ContentTask.spawn(gBrowser, {elementId, aText}, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{elementId, aText}], async function(args) {
         let {elementId, aText} = args;
         let doc = content.document;
         let element = doc.getElementById(elementId);
@@ -87,7 +85,7 @@
 
       // Move caret to start of element
       info(`focusing element`);
-      await ContentTask.spawn(gBrowser, elementId, async function(elementId) {
+      await SpecialPowers.spawn(gBrowser, [elementId], async function(elementId) {
         let doc = content.document;
         let element = doc.getElementById(elementId);
         element.focus();
@@ -101,7 +99,7 @@
     }
 
     async function testSelection(elementId, expectedRangeCount, message) {
-      await ContentTask.spawn(gBrowser, {elementId, expectedRangeCount, message}, async function(args) {
+      await SpecialPowers.spawn(gBrowser, [{elementId, expectedRangeCount, message}], async function(args) {
         let {elementId, expectedRangeCount, message} = args;
         let doc = content.document;
         let element = doc.getElementById(elementId);
@@ -112,7 +110,7 @@
     }
 
     async function testInput(elementId, testTypeText) {
-      let isEditableElement = await ContentTask.spawn(gBrowser, elementId, async function(elementId) {
+      let isEditableElement = await SpecialPowers.spawn(gBrowser, [elementId], async function(elementId) {
         let doc = content.document;
         let element = doc.getElementById(elementId);
         let elementClass = ChromeUtils.getClassName(element);

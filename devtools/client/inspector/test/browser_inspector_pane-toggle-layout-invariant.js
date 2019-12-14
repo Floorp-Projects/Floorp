@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_pane-toggle-layout-invariant.html";
 
 async function getInvariantRect() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     const invariant = content.document.getElementById("invariant");
     return invariant.getBoundingClientRect();
   });

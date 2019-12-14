@@ -39,33 +39,33 @@ async function runTest() {
 
       count++;
       index++;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
-        count,
-        index,
-        url,
-      }) {
-        docShell.QueryInterface(Ci.nsIWebNavigation);
+      await SpecialPowers.spawn(
+        aBrowser,
+        [{ count, index, url }],
+        async function({ count, index, url }) {
+          docShell.QueryInterface(Ci.nsIWebNavigation);
 
-        is(
-          docShell.sessionHistory.count,
-          count,
-          "Initial Navigation Count Match"
-        );
-        is(
-          docShell.sessionHistory.index,
-          index,
-          "Initial Navigation Index Match"
-        );
+          is(
+            docShell.sessionHistory.count,
+            count,
+            "Initial Navigation Count Match"
+          );
+          is(
+            docShell.sessionHistory.index,
+            index,
+            "Initial Navigation Index Match"
+          );
 
-        let real = Services.io.newURI(content.location.href);
-        let expect = Services.io.newURI(url);
-        is(real.scheme, expect.scheme, "Initial Navigation URL Scheme");
-      });
+          let real = Services.io.newURI(content.location.href);
+          let expect = Services.io.newURI(url);
+          is(real.scheme, expect.scheme, "Initial Navigation URL Scheme");
+        }
+      );
     }
 
     // Go back to the first entry.
     for (let { url } of reversed(HISTORY).slice(1)) {
-      ContentTask.spawn(aBrowser, {}, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         content.history.back();
       });
       await BrowserTestUtils.browserLoaded(aBrowser, false, loaded => {
@@ -75,25 +75,25 @@ async function runTest() {
       });
 
       index--;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
-        count,
-        index,
-        url,
-      }) {
-        docShell.QueryInterface(Ci.nsIWebNavigation);
+      await SpecialPowers.spawn(
+        aBrowser,
+        [{ count, index, url }],
+        async function({ count, index, url }) {
+          docShell.QueryInterface(Ci.nsIWebNavigation);
 
-        is(docShell.sessionHistory.count, count, "Go Back Count Match");
-        is(docShell.sessionHistory.index, index, "Go Back Index Match");
+          is(docShell.sessionHistory.count, count, "Go Back Count Match");
+          is(docShell.sessionHistory.index, index, "Go Back Index Match");
 
-        let real = Services.io.newURI(content.location.href);
-        let expect = Services.io.newURI(url);
-        is(real.scheme, expect.scheme, "Go Back URL Scheme");
-      });
+          let real = Services.io.newURI(content.location.href);
+          let expect = Services.io.newURI(url);
+          is(real.scheme, expect.scheme, "Go Back URL Scheme");
+        }
+      );
     }
 
     // Go forward to the last entry.
     for (let { url } of HISTORY.slice(1)) {
-      ContentTask.spawn(aBrowser, {}, () => {
+      SpecialPowers.spawn(aBrowser, [], () => {
         content.history.forward();
       });
       await BrowserTestUtils.browserLoaded(aBrowser, false, loaded => {
@@ -103,20 +103,20 @@ async function runTest() {
       });
 
       index++;
-      await ContentTask.spawn(aBrowser, { count, index, url }, async function({
-        count,
-        index,
-        url,
-      }) {
-        docShell.QueryInterface(Ci.nsIWebNavigation);
+      await SpecialPowers.spawn(
+        aBrowser,
+        [{ count, index, url }],
+        async function({ count, index, url }) {
+          docShell.QueryInterface(Ci.nsIWebNavigation);
 
-        is(docShell.sessionHistory.count, count, "Go Forward Count Match");
-        is(docShell.sessionHistory.index, index, "Go Forward Index Match");
+          is(docShell.sessionHistory.count, count, "Go Forward Count Match");
+          is(docShell.sessionHistory.index, index, "Go Forward Index Match");
 
-        let real = Services.io.newURI(content.location.href);
-        let expect = Services.io.newURI(url);
-        is(real.scheme, expect.scheme, "Go Forward URL Scheme");
-      });
+          let real = Services.io.newURI(content.location.href);
+          let expect = Services.io.newURI(url);
+          is(real.scheme, expect.scheme, "Go Forward URL Scheme");
+        }
+      );
     }
   });
 }

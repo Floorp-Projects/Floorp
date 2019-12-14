@@ -2,55 +2,61 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function setTrackEnabled(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
-    args
-  ) {
-    let stream = content.wrappedJSObject.gStreams[0];
-    if (args.audio != null) {
-      stream.getAudioTracks()[0].enabled = args.audio;
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ audio, video }],
+    function(args) {
+      let stream = content.wrappedJSObject.gStreams[0];
+      if (args.audio != null) {
+        stream.getAudioTracks()[0].enabled = args.audio;
+      }
+      if (args.video != null) {
+        stream.getVideoTracks()[0].enabled = args.video;
+      }
     }
-    if (args.video != null) {
-      stream.getVideoTracks()[0].enabled = args.video;
-    }
-  });
+  );
 }
 
 function cloneTracks(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
-    args
-  ) {
-    if (!content.wrappedJSObject.gClones) {
-      content.wrappedJSObject.gClones = [];
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ audio, video }],
+    function(args) {
+      if (!content.wrappedJSObject.gClones) {
+        content.wrappedJSObject.gClones = [];
+      }
+      let clones = content.wrappedJSObject.gClones;
+      let stream = content.wrappedJSObject.gStreams[0];
+      if (args.audio != null) {
+        clones.push(stream.getAudioTracks()[0].clone());
+      }
+      if (args.video != null) {
+        clones.push(stream.getVideoTracks()[0].clone());
+      }
     }
-    let clones = content.wrappedJSObject.gClones;
-    let stream = content.wrappedJSObject.gStreams[0];
-    if (args.audio != null) {
-      clones.push(stream.getAudioTracks()[0].clone());
-    }
-    if (args.video != null) {
-      clones.push(stream.getVideoTracks()[0].clone());
-    }
-  });
+  );
 }
 
 function stopClonedTracks(audio, video) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, { audio, video }, function(
-    args
-  ) {
-    let clones = content.wrappedJSObject.gClones || [];
-    if (args.audio != null) {
-      clones.filter(t => t.kind == "audio").forEach(t => t.stop());
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ audio, video }],
+    function(args) {
+      let clones = content.wrappedJSObject.gClones || [];
+      if (args.audio != null) {
+        clones.filter(t => t.kind == "audio").forEach(t => t.stop());
+      }
+      if (args.video != null) {
+        clones.filter(t => t.kind == "video").forEach(t => t.stop());
+      }
+      let liveClones = clones.filter(t => t.readyState == "live");
+      if (!liveClones.length) {
+        delete content.wrappedJSObject.gClones;
+      } else {
+        content.wrappedJSObject.gClones = liveClones;
+      }
     }
-    if (args.video != null) {
-      clones.filter(t => t.kind == "video").forEach(t => t.stop());
-    }
-    let liveClones = clones.filter(t => t.readyState == "live");
-    if (!liveClones.length) {
-      delete content.wrappedJSObject.gClones;
-    } else {
-      content.wrappedJSObject.gClones = liveClones;
-    }
-  });
+  );
 }
 
 var gTests = [

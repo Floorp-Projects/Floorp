@@ -66,7 +66,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:home");
 
   info("Wait for ContentSearchUI search provider to initialize.");
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(
       () => content.wrappedJSObject.gContentSearchController.defaultEngine
     );

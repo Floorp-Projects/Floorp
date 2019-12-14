@@ -18,7 +18,9 @@ add_task(async function() {
     let browser2 = tab2.linkedBrowser;
     await promiseTabRestored(tab2);
 
-    await ContentTask.spawn(browser2, { expectedId: i }, async function(args) {
+    await SpecialPowers.spawn(browser2, [{ expectedId: i }], async function(
+      args
+    ) {
       let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
       Assert.equal(
         loadContext.originAttributes.userContextId,
@@ -46,7 +48,9 @@ add_task(async function() {
   let browser2 = tab2.linkedBrowser;
   await promiseTabRestored(tab2);
 
-  await ContentTask.spawn(browser2, { expectedId: 1 }, async function(args) {
+  await SpecialPowers.spawn(browser2, [{ expectedId: 1 }], async function(
+    args
+  ) {
     Assert.equal(
       docShell.getOriginAttributes().userContextId,
       args.expectedId,
@@ -71,15 +75,17 @@ add_task(async function() {
   let tab2 = ss.undoCloseTab(window, 0);
   Assert.equal(tab2.getAttribute("usercontextid"), 1);
   await promiseTabRestored(tab2);
-  await ContentTask.spawn(tab2.linkedBrowser, { expectedId: 1 }, async function(
-    args
-  ) {
-    Assert.equal(
-      docShell.getOriginAttributes().userContextId,
-      args.expectedId,
-      "The docShell has the correct userContextId"
-    );
-  });
+  await SpecialPowers.spawn(
+    tab2.linkedBrowser,
+    [{ expectedId: 1 }],
+    async function(args) {
+      Assert.equal(
+        docShell.getOriginAttributes().userContextId,
+        args.expectedId,
+        "The docShell has the correct userContextId"
+      );
+    }
+  );
 
   BrowserTestUtils.removeTab(tab2);
 });
@@ -136,9 +142,9 @@ add_task(async function test() {
 
     await Promise.all([
       waitForNewCookie(),
-      ContentTask.spawn(
+      SpecialPowers.spawn(
         browser,
-        cookie,
+        [cookie],
         passedCookie => (content.document.cookie = passedCookie)
       ),
     ]);

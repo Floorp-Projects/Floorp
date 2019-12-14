@@ -70,8 +70,8 @@ async function waitForRegistration(tab) {
   info("Wait until the registration appears on the window");
   const swBrowser = tab.linkedBrowser;
   await asyncWaitUntil(async () =>
-    ContentTask.spawn(swBrowser, {}, function() {
-      return content.wrappedJSObject.getRegistration();
+    SpecialPowers.spawn(swBrowser, [], async function() {
+      return !!(await content.wrappedJSObject.getRegistration());
     })
   );
 }
@@ -105,7 +105,7 @@ function forwardServiceWorkerMessage(tab) {
  *        The tab on which the service worker should be removed.
  */
 async function unregisterServiceWorker(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     const win = content.wrappedJSObject;
     // Check that the content page defines getRegistration.
     is(

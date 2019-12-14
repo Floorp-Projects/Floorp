@@ -58,9 +58,9 @@ add_task(async function test_complete_success() {
 
       // Add a handler to complete the payment above.
       info("acknowledging the completion from the merchant page");
-      let { completeException } = await ContentTask.spawn(
+      let { completeException } = await SpecialPowers.spawn(
         browser,
-        { result: "success" },
+        [{ result: "success" }],
         PTU.ContentTasks.addCompletionHandler
       );
 
@@ -121,9 +121,9 @@ add_task(async function test_complete_fail() {
       await loginAndCompletePayment(frame);
 
       info("acknowledging the completion from the merchant page");
-      let { completeException } = await ContentTask.spawn(
+      let { completeException } = await SpecialPowers.spawn(
         browser,
-        { result: "fail" },
+        [{ result: "fail" }],
         PTU.ContentTasks.addCompletionHandler
       );
       ok(
@@ -189,9 +189,9 @@ add_task(async function test_complete_timeout() {
       await loginAndCompletePayment(frame);
 
       info("acknowledging the completion from the merchant page after a delay");
-      let { completeException } = await ContentTask.spawn(
+      let { completeException } = await SpecialPowers.spawn(
         browser,
-        { result: "fail", delayMs: 1000 },
+        [{ result: "fail", delayMs: 1000 }],
         PTU.ContentTasks.addCompletionHandler
       );
       ok(

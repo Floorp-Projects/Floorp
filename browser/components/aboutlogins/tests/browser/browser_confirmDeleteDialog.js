@@ -14,7 +14,7 @@ add_task(async function setup() {
 add_task(async function test() {
   let browser = gBrowser.selectedBrowser;
 
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
     let showPromise = loginItem.showConfirmationDialog("delete");

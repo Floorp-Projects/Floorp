@@ -7,9 +7,9 @@ const TEST_TOP_PAGE = TEST_DOMAIN + TEST_PATH + "empty.html";
 const TEST_SJS = TEST_DOMAIN + TEST_PATH + "delivering.sjs";
 
 async function storeReportingHeader(browser, extraParams = "") {
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { url: TEST_SJS, extraParams },
+    [{ url: TEST_SJS, extraParams }],
     async obj => {
       await content
         .fetch(
@@ -155,7 +155,7 @@ add_task(async function() {
   await storeReportingHeader(browser, "410=true");
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
-  await ContentTask.spawn(browser, null, async _ => {
+  await SpecialPowers.spawn(browser, [], async _ => {
     let testingInterface = new content.TestingDeprecatedInterface();
     ok(!!testingInterface, "Created a deprecated interface");
   });

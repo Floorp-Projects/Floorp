@@ -27,6 +27,11 @@ class ParserBase;
 // as well as controls the lifetime of parse nodes and other data
 // by controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII ParseInfo {
+  // ParseInfo's mode can be eager or deferred:
+  //
+  // - In Eager mode, allocation happens right away and the Function Tree is not
+  //   constructed.
+  // - In Deferred mode, allocation is deferred as late as possible.
   enum Mode { Eager, Deferred };
 
   UsedNameTracker usedNames;

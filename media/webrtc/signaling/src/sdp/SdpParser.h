@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include "signaling/src/sdp/Sdp.h"
+#include "signaling/src/sdp/SdpLog.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -55,10 +56,16 @@ class SdpParser {
     void SetSdp(UniquePtr<mozilla::Sdp>&& aSdp) { mSdp = std::move(aSdp); }
 
     void AddParseError(size_t line, const std::string& message) {
+      MOZ_LOG(SdpLog, LogLevel::Error,
+              ("%s: parser error %s, at line %zu", mParserName.c_str(),
+               message.c_str(), line));
       mErrors.push_back(std::make_pair(line, message));
     }
 
     void AddParseWarning(size_t line, const std::string& message) {
+      MOZ_LOG(SdpLog, LogLevel::Warning,
+              ("%s: parser warning %s, at line %zu", mParserName.c_str(),
+               message.c_str(), line));
       mWarnings.push_back(std::make_pair(line, message));
     }
 

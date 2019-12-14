@@ -83,14 +83,13 @@ add_task(async function test_crash_in_previous_frameloader() {
 
       // The name of the game is to cause a crash in a remote browser,
       // and then immediately swap out the browser for a non-remote one.
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         const { ctypes } = ChromeUtils.import(
           "resource://gre/modules/ctypes.jsm"
         );
-        ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
         let dies = function() {
-          privateNoteIntentionalCrash();
+          ChromeUtils.privateNoteIntentionalCrash();
           let zero = new ctypes.intptr_t(8);
           let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
           badptr.contents;
@@ -99,7 +98,7 @@ add_task(async function test_crash_in_previous_frameloader() {
         // When the parent flips the remoteness of the browser, the
         // page should receive the pagehide event, which we'll then
         // use to crash the frameloader.
-        addEventListener("pagehide", function() {
+        docShell.chromeEventHandler.addEventListener("pagehide", function() {
           dump("\nEt tu, Brute?\n");
           dies();
         });

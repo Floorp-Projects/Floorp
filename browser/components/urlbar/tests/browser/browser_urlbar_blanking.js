@@ -24,7 +24,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   is(gURLBar.value, TEST_URL, "The URL bar should match the URI");
   let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  ContentTask.spawn(tab.linkedBrowser, null, function() {
+  SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.document.querySelector("a").click();
   });
   await browserLoaded;
@@ -34,12 +34,12 @@ add_task(async function() {
   );
   // When reloading, the javascript: uri we're using will throw an exception.
   // That's deliberate, so we need to tell mochitest to ignore it:
-  SimpleTest.expectUncaughtException(true);
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     // This is sync, so by the time we return we should have changed the URL bar.
     content.location.reload();
+  }).catch(e => {
+    // Ignore expected exception.
   });
   ok(!!gURLBar.value, "URL bar should not be blank.");
   BrowserTestUtils.removeTab(tab);
-  SimpleTest.expectUncaughtException(false);
 });

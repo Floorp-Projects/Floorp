@@ -41,7 +41,7 @@ add_task(async function() {
   ok(selReq.cause.type === "img", "Correct type of selected");
   ok(origReq.cause.type === selReq.cause.type, "Orig and Sel type match");
 
-  const cspOBJ = await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
+  const cspOBJ = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     return JSON.parse(content.document.cspJSON);
   });
 

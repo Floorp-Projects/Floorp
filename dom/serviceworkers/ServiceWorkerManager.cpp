@@ -910,8 +910,12 @@ class GetRegistrationsRunnable final : public Runnable {
         break;
       }
 
-      rv = principal->CheckMayLoad(scopeURI, true /* report */,
-                                   false /* allowIfInheritsPrincipal */);
+      // Unfortunately we don't seem to have an obvious window id here; in
+      // particular ClientInfo does not have one, and neither do service worker
+      // registrations, as far as I can tell.
+      rv = principal->CheckMayLoadWithReporting(
+          scopeURI, false /* allowIfInheritsPrincipal */,
+          0 /* innerWindowID */);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }
@@ -973,8 +977,11 @@ class GetRegistrationRunnable final : public Runnable {
       return NS_OK;
     }
 
-    rv = principal->CheckMayLoad(uri, true /* report */,
-                                 false /* allowIfInheritsPrinciple */);
+    // Unfortunately we don't seem to have an obvious window id here; in
+    // particular ClientInfo does not have one, and neither do service worker
+    // registrations, as far as I can tell.
+    rv = principal->CheckMayLoadWithReporting(
+        uri, false /* allowIfInheritsPrincipal */, 0 /* innerWindowID */);
     if (NS_FAILED(rv)) {
       mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
       return NS_OK;
