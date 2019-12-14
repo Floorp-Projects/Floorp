@@ -895,10 +895,7 @@ static inline bool SimpleArithOperand(MDefinition* op) {
   return !op->emptyResultTypeSet() && !op->mightBeType(MIRType::Object) &&
          !op->mightBeType(MIRType::String) &&
          !op->mightBeType(MIRType::Symbol) &&
-         !op->mightBeType(MIRType::BigInt) &&
-         !op->mightBeType(MIRType::MagicOptimizedArguments) &&
-         !op->mightBeType(MIRType::MagicHole) &&
-         !op->mightBeType(MIRType::MagicIsConstructing);
+         !op->mightBeType(MIRType::BigInt) && !op->mightBeMagicType();
 }
 
 // An MUseDefIterator walks over uses in a definition, skipping any use that is
@@ -1997,9 +1994,6 @@ bool TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes);
 
 bool EqualTypes(MIRType type1, TemporaryTypeSet* typeset1, MIRType type2,
                 TemporaryTypeSet* typeset2);
-
-bool CanStoreUnboxedType(TempAllocator& alloc, JSValueType unboxedType,
-                         MIRType input, TypeSet* inputTypes);
 
 class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
@@ -3299,21 +3293,7 @@ class MSameValue : public MBinaryInstruction, public SameValuePolicy::Data {
 
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
-  MBox(TempAllocator& alloc, MDefinition* ins)
-      : MUnaryInstruction(classOpcode, ins) {
-    setResultType(MIRType::Value);
-    if (ins->resultTypeSet()) {
-      setResultTypeSet(ins->resultTypeSet());
-    } else if (ins->type() != MIRType::Value) {
-      TypeSet::Type ntype =
-          ins->type() == MIRType::Object
-              ? TypeSet::AnyObjectType()
-              : TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type()));
-      setResultTypeSet(
-          alloc.lifoAlloc()->new_<TemporaryTypeSet>(alloc.lifoAlloc(), ntype));
-    }
-    setMovable();
-  }
+  MBox(TempAllocator& alloc, MDefinition* ins);
 
  public:
   INSTRUCTION_HEADER(Box)
