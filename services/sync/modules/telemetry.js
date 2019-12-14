@@ -326,6 +326,7 @@ class TelemetryRecord {
     // error actually occurred.
     this.failureReason = undefined;
     this.uid = "";
+    this.syncNodeType = null;
     this.when = Date.now();
     this.startTime = tryGetMonotonicTimestamp();
     this.took = 0; // will be set later.
@@ -376,6 +377,8 @@ class TelemetryRecord {
     } catch (e) {
       this.uid = EMPTY_UID;
     }
+
+    this.syncNodeType = Weave.Service.identity.telemetryNodeType;
 
     // Check for engine statuses. -- We do this now, and not in engine.finished
     // to make sure any statuses that get set "late" are recorded
@@ -552,6 +555,7 @@ class SyncTelemetryImpl {
       Svc.Prefs.get("telemetry.submissionInterval") * 1000;
     this.lastSubmissionTime = Telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
+    this.lastSyncNodeType = null;
     // Note that the sessionStartDate is somewhat arbitrary - the telemetry
     // modules themselves just use `new Date()`. This means that our startDate
     // isn't going to be the same as the sessionStartDate in the main pings,
@@ -672,6 +676,7 @@ class SyncTelemetryImpl {
       version: PING_FORMAT_VERSION,
       syncs: this.payloads.slice(),
       uid: this.lastUID,
+      syncNodeType: this.lastSyncNodeType || undefined,
       deviceID,
       sessionStartDate: this.sessionStartDate,
       events: this.events.length == 0 ? undefined : this.events,
@@ -750,14 +755,29 @@ class SyncTelemetryImpl {
     return true;
   }
 
-  shouldSubmitForIDChange(newID, oldID, defaultForID) {
-    if (newID != defaultForID && oldID != defaultForID) {
+  shouldSubmitForDataChange() {
+    let newID = this.current.uid;
+    let oldID = this.lastUID;
+    if (
+      newID != EMPTY_UID &&
+      oldID != EMPTY_UID &&
       // Both are "real" uids, so we care if they've changed.
-      return newID != oldID;
+      newID != oldID
+    ) {
+      return true;
     }
     // We've gone from knowing one of the ids to not knowing it (which we
     // ignore) or we've gone from not knowing it to knowing it (which is fine),
-    // so we shouldn't submit.
+    // Now check the node type because a change there also means we should
+    // submit.
+    if (
+      this.current.syncNodeType &&
+      this.lastSyncNodeType &&
+      this.current.syncNodeType != this.lastSyncNodeType
+    ) {
+      return true;
+    }
+    // We don't need to submit.
     return false;
   }
 
@@ -782,9 +802,7 @@ class SyncTelemetryImpl {
     }
     this.current.finished(error);
     if (this.payloads.length) {
-      if (
-        this.shouldSubmitForIDChange(this.current.uid, this.lastUID, EMPTY_UID)
-      ) {
+      if (this.shouldSubmitForDataChange()) {
         log.info("Early submission of sync telemetry due to changed IDs");
         this.finish("idchange");
         this.lastSubmissionTime = Telemetry.msSinceProcessStart();
@@ -793,6 +811,9 @@ class SyncTelemetryImpl {
     // Only update the last UIDs if we actually know them.
     if (this.current.uid !== EMPTY_UID) {
       this.lastUID = this.current.uid;
+    }
+    if (this.current.syncNodeType) {
+      this.lastSyncNodeType = this.current.syncNodeType;
     }
     if (this.payloads.length < this.maxPayloadCount) {
       this.payloads.push(this.current.toJSON());
