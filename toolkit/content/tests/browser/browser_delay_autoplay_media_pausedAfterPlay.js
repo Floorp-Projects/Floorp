@@ -39,7 +39,11 @@ add_task(async function block_autoplay_media() {
 
   info("- tab1 should not be blocked, and media should not started -");
   await waitForTabBlockEvent(tab1, false);
-  await ContentTask.spawn(tab1.linkedBrowser, true, check_audio_pause_state);
+  await SpecialPowers.spawn(
+    tab1.linkedBrowser,
+    [true],
+    check_audio_pause_state
+  );
 
   info("- select tab2 as foreground tab -");
   await BrowserTestUtils.switchTab(window.gBrowser, tab2);
@@ -47,7 +51,11 @@ add_task(async function block_autoplay_media() {
   info("- tab2 should not be blocked and media should be playing -");
   await waitForTabBlockEvent(tab2, false);
   await waitForTabPlayingEvent(tab2, true);
-  await ContentTask.spawn(tab2.linkedBrowser, false, check_audio_pause_state);
+  await SpecialPowers.spawn(
+    tab2.linkedBrowser,
+    [false],
+    check_audio_pause_state
+  );
 
   info("- remove tabs -");
   BrowserTestUtils.removeTab(tab1);

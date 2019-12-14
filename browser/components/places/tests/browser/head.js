@@ -292,7 +292,7 @@ var openContextMenuForContentSelector = async function(browser, selector) {
     document.getElementById("contentAreaContextMenu"),
     "popupshown"
   );
-  await ContentTask.spawn(browser, { selector }, async function(args) {
+  await SpecialPowers.spawn(browser, [{ selector }], async function(args) {
     let doc = content.document;
     let elt = doc.querySelector(args.selector);
     dump(`openContextMenuForContentSelector: found ${elt}\n`);

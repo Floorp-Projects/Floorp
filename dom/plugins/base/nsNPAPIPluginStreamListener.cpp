@@ -761,7 +761,7 @@ void nsNPAPIPluginStreamListener::URLRedirectResponse(NPBool allow) {
   if (mHTTPRedirectCallback) {
     mHTTPRedirectCallback->OnRedirectVerifyCallback(allow ? NS_OK
                                                           : NS_ERROR_FAILURE);
-    mRedirectDenied = allow ? false : true;
+    mRedirectDenied = !allow;
     mHTTPRedirectCallback = nullptr;
   }
 }

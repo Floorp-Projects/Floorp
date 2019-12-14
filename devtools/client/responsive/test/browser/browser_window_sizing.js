@@ -30,9 +30,9 @@ add_task(async function() {
 });
 
 async function checkWindowOuterSize(ui, zoom_level) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     ui.getViewportBrowser(),
-    { width: WIDTH, height: HEIGHT, zoom: zoom_level },
+    [{ width: WIDTH, height: HEIGHT, zoom: zoom_level }],
     async function({ width, height, zoom }) {
       // Approximate the outer size value returned on the window content with the expected
       // value. We should expect, at the very most, a 2px difference between the two due
@@ -56,9 +56,9 @@ async function checkWindowOuterSize(ui, zoom_level) {
 }
 
 async function checkWindowScreenSize(ui, zoom_level) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     ui.getViewportBrowser(),
-    { width: WIDTH, height: HEIGHT, zoom: zoom_level },
+    [{ width: WIDTH, height: HEIGHT, zoom: zoom_level }],
     async function({ width, height, zoom }) {
       const { screen } = content;
 

@@ -100,7 +100,7 @@ async function setupEMEKey(browser) {
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
 
   // Setup the EME key.
-  let result = await ContentTask.spawn(browser, keyInfo, async function(
+  let result = await SpecialPowers.spawn(browser, [keyInfo], async function(
     aKeyInfo
   ) {
     let access = await content.navigator.requestMediaKeySystemAccess(
@@ -166,7 +166,7 @@ async function checkEMEKey(browser, emeSessionId) {
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
   keyInfo.sessionId = emeSessionId;
 
-  await ContentTask.spawn(browser, keyInfo, async function(aKeyInfo) {
+  await SpecialPowers.spawn(browser, [keyInfo], async function(aKeyInfo) {
     let access = await content.navigator.requestMediaKeySystemAccess(
       "org.w3.clearkey",
       [

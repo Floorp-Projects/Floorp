@@ -15,7 +15,7 @@ using mozilla::NativeEndian;
 
 template <typename T>
 void TestSingleSwap(T aValue, T aSwappedValue) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   MOZ_RELEASE_ASSERT(NativeEndian::swapToBigEndian(aValue) == aSwappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapFromBigEndian(aValue) == aSwappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapToNetworkOrder(aValue) == aSwappedValue);
@@ -30,7 +30,7 @@ void TestSingleSwap(T aValue, T aSwappedValue) {
 
 template <typename T>
 void TestSingleNoSwap(T aValue, T aUnswappedValue) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   MOZ_RELEASE_ASSERT(NativeEndian::swapToLittleEndian(aValue) ==
                      aUnswappedValue);
   MOZ_RELEASE_ASSERT(NativeEndian::swapFromLittleEndian(aValue) ==
@@ -218,7 +218,7 @@ SPECIALIZE_READER(int64_t, readInt64)
 
 template <typename T, size_t Count>
 void TestBulkSwap(const T (&aBytes)[Count]) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   TestBulkSwapToSub(Swap, aBytes, copyAndSwapToBigEndian<T>, Reader<T>::readBE);
   TestBulkSwapFromSub(Swap, aBytes, copyAndSwapFromBigEndian<T>,
                       Reader<T>::readBE);
@@ -236,7 +236,7 @@ void TestBulkSwap(const T (&aBytes)[Count]) {
 
 template <typename T, size_t Count>
 void TestBulkNoSwap(const T (&aBytes)[Count]) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   TestBulkSwapToSub(NoSwap, aBytes, copyAndSwapToLittleEndian<T>,
                     Reader<T>::readLE);
   TestBulkSwapFromSub(NoSwap, aBytes, copyAndSwapFromLittleEndian<T>,
@@ -255,7 +255,7 @@ void TestBulkNoSwap(const T (&aBytes)[Count]) {
 
 template <typename T, size_t Count>
 void TestBulkInPlaceSwap(const T (&aBytes)[Count]) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   TestBulkInPlaceSub(Swap, aBytes, swapToBigEndianInPlace<T>,
                      Reader<T>::readBE);
   TestBulkInPlaceSub(Swap, aBytes, swapFromBigEndianInPlace<T>,
@@ -274,7 +274,7 @@ void TestBulkInPlaceSwap(const T (&aBytes)[Count]) {
 
 template <typename T, size_t Count>
 void TestBulkInPlaceNoSwap(const T (&aBytes)[Count]) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   TestBulkInPlaceSub(NoSwap, aBytes, swapToLittleEndianInPlace<T>,
                      Reader<T>::readLE);
   TestBulkInPlaceSub(NoSwap, aBytes, swapFromLittleEndianInPlace<T>,

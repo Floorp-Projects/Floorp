@@ -17,9 +17,9 @@ const TEST_URL =
 async function isEmePersistentStateSupported(mode) {
   let win = await BrowserTestUtils.openNewBrowserWindow(mode);
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
-  let persistentStateSupported = await ContentTask.spawn(
+  let persistentStateSupported = await SpecialPowers.spawn(
     tab.linkedBrowser,
-    {},
+    [],
     async function() {
       try {
         let config = [

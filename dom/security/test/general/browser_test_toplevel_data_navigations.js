@@ -16,7 +16,11 @@ add_task(async function test_nav_data_uri() {
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
   await BrowserTestUtils.withNewTab(kDataURI, async function(browser) {
-    await ContentTask.spawn(gBrowser.selectedBrowser, {kDataBody}, async function({kDataBody}) { // eslint-disable-line
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [{ kDataBody }],
+      async function({ kDataBody }) {
+        // eslint-disable-line
         is(
           content.document.body.innerHTML,
           kDataBody,
@@ -37,7 +41,7 @@ add_task(async function test_nav_data_uri_redirect() {
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     is(
       content.document.body.innerHTML,
       "",
@@ -56,7 +60,7 @@ add_task(async function test_nav_data_uri_meta_redirect() {
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     is(
       content.document.body.innerHTML,
       "",

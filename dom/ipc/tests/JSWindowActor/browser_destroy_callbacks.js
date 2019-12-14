@@ -6,7 +6,7 @@ declTest("destroy actor by iframe remove", {
   allFrames: true,
 
   async test(browser) {
-    await ContentTask.spawn(browser, {}, async function() {
+    await SpecialPowers.spawn(browser, [], async function() {
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
       frame.id = "frame";
@@ -57,14 +57,14 @@ declTest("destroy actor by page navigates", {
 
   async test(browser) {
     info("creating an in-process frame");
-    await ContentTask.spawn(browser, URL, async function(url) {
+    await SpecialPowers.spawn(browser, [URL], async function(url) {
       let frame = content.document.createElement("iframe");
       frame.src = url;
       content.document.body.appendChild(frame);
     });
 
     info("navigating page");
-    await ContentTask.spawn(browser, TEST_URL, async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
       let frame = content.document.querySelector("iframe");
       frame.contentWindow.location = url;
       let child = frame.contentWindow.window.getWindowGlobalChild();

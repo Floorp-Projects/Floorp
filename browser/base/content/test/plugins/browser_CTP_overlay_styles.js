@@ -80,7 +80,9 @@ add_task(async function() {
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
 
-  await ContentTask.spawn(gTestBrowser, gTestcases, async function(testcases) {
+  await SpecialPowers.spawn(gTestBrowser, [gTestcases], async function(
+    testcases
+  ) {
     let doc = content.document;
 
     for (let testcaseId of Object.keys(testcases)) {

@@ -18,7 +18,7 @@ add_task(async function test_toggle_password() {
     async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let doc = content.document;
         doc.getElementById("form-basic-username").setUserInput("username");
         doc.getElementById("form-basic-password").setUserInput("pw");
@@ -74,7 +74,7 @@ add_task(async function test_checkbox_disabled_if_has_master_password() {
       // case. This will cause the doorhanger notification to be displayed.
       LoginTestUtils.masterPassword.enable();
 
-      await ContentTask.spawn(browser, null, async function() {
+      await SpecialPowers.spawn(browser, [], async function() {
         let doc = content.document;
         doc.getElementById("form-basic-username").setUserInput("username");
         doc.getElementById("form-basic-password").setUserInput("pass");

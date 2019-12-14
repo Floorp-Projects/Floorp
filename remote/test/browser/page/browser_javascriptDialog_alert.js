@@ -12,7 +12,7 @@ add_task(async function(client) {
   await Page.enable();
 
   info("Set window.alertIsClosed to false in the content page");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     // This boolean will be flipped after closing the dialog
     content.alertIsClosed = false;
   });
@@ -30,7 +30,7 @@ add_task(async function(client) {
   ok(alertIsClosed, "The content process is no longer blocked on the alert");
 
   info("Reset window.alertIsClosed to false in the content page");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.alertIsClosed = false;
   });
 
@@ -48,7 +48,7 @@ function createAlertDialog(Page) {
   const onDialogOpen = Page.javascriptDialogOpening();
 
   info("Trigger an alert in the test page");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.alert("test-1234");
     // Flip a boolean in the content page to check if the content process resumed
     // after the alert was opened.

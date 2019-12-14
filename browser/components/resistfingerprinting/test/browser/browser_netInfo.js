@@ -14,7 +14,7 @@ async function testWindow() {
     TEST_PATH + "file_dummy.html"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     ok("connection" in content.navigator, "navigator.connection should exist");
 
     is(
@@ -34,7 +34,7 @@ async function testWorker() {
     TEST_PATH + "file_dummy.html"
   );
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await new Promise(resolve => {
       let worker = new content.Worker("file_workerNetInfo.js");
 

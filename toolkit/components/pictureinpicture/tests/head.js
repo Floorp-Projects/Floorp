@@ -98,7 +98,7 @@ async function ensureVideosReady(browser) {
   // event before considering them for the toggle, so we start by making
   // sure each <video> has done this.
   info(`Waiting for videos to be ready`);
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let videos = this.content.document.querySelectorAll("video");
     for (let video of videos) {
       if (video.readyState < content.HTMLMediaElement.HAVE_ENOUGH_DATA) {
@@ -127,7 +127,7 @@ async function toggleOpacityReachesThreshold(
   opacityThreshold
 ) {
   let args = { videoID, TOGGLE_ID, opacityThreshold };
-  await ContentTask.spawn(browser, args, async args => {
+  await SpecialPowers.spawn(browser, [args], async args => {
     let { videoID, TOGGLE_ID, opacityThreshold } = args;
     let video = content.document.getElementById(videoID);
     let shadowRoot = video.openOrClosedShadowRoot;
@@ -179,7 +179,7 @@ async function assertSawMouseEvents(
     MOUSE_BUTTON_EVENTS.push("click");
   }
 
-  let mouseEvents = await ContentTask.spawn(browser, null, async () => {
+  let mouseEvents = await SpecialPowers.spawn(browser, [], async () => {
     return this.content.wrappedJSObject.getRecordedEvents();
   });
 
@@ -219,7 +219,7 @@ async function prepareForToggleClick(browser, videoID) {
   // For each video, make sure it's scrolled into view, and get the rect for
   // the toggle while we're at it.
   let args = { videoID, TOGGLE_ID };
-  return ContentTask.spawn(browser, args, async args => {
+  return SpecialPowers.spawn(browser, [args], async args => {
     let { videoID, TOGGLE_ID } = args;
     let video = content.document.getElementById(videoID);
     video.scrollIntoView({ behaviour: "instant" });
@@ -450,5 +450,5 @@ async function testToggleHelper(browser, videoID, canToggle) {
   // Click on the very top-left pixel of the document and ensure that we
   // see all of the mouse events for it.
   await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
-  assertSawMouseEvents(browser, true);
+  await assertSawMouseEvents(browser, true);
 }

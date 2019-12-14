@@ -16,7 +16,7 @@ function testWithAPI(task) {
 }
 
 function API_uninstallByID(browser, id) {
-  return ContentTask.spawn(browser, id, async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function(id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
 
     let result = await addon.uninstall();

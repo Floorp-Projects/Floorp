@@ -5,13 +5,13 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: TESTROOT + "enabled.html" },
     async function(browser) {
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         content.wrappedJSObject.InstallTrigger.enabled.k = function() {};
       });
 
       BrowserTestUtils.loadURI(browser, TESTROOT2 + "enabled.html");
       await BrowserTestUtils.browserLoaded(browser);
-      await ContentTask.spawn(browser, null, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         is(
           content.wrappedJSObject.InstallTrigger.enabled.k,
           undefined,

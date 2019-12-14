@@ -21,7 +21,7 @@ add_task(async () => {
           window,
           "MozDOMFullscreen:Entered"
         );
-        await ContentTask.spawn(browser, videoID, async videoID => {
+        await SpecialPowers.spawn(browser, [videoID], async videoID => {
           let video = this.content.document.getElementById(videoID);
           video.requestFullscreen();
         });
@@ -44,7 +44,7 @@ add_task(async () => {
           window,
           "MozDOMFullscreen:Exited"
         );
-        await ContentTask.spawn(browser, args, async args => {
+        await SpecialPowers.spawn(browser, [args], async args => {
           let { videoID, TOGGLE_ID } = args;
           let video = this.content.document.getElementById(videoID);
           let toggle = video.openOrClosedShadowRoot.getElementById(TOGGLE_ID);
@@ -80,7 +80,7 @@ add_task(async () => {
         window,
         "MozDOMFullscreen:Entered"
       );
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         this.content.document.body.requestFullscreen();
       });
       await entered;
@@ -99,7 +99,7 @@ add_task(async () => {
         );
 
         let args = { videoID, TOGGLE_ID };
-        await ContentTask.spawn(browser, args, async args => {
+        await SpecialPowers.spawn(browser, [args], async args => {
           let { videoID, TOGGLE_ID } = args;
           let video = this.content.document.getElementById(videoID);
           let toggle = video.openOrClosedShadowRoot.getElementById(TOGGLE_ID);
@@ -114,7 +114,7 @@ add_task(async () => {
         window,
         "MozDOMFullscreen:Exited"
       );
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         this.content.document.exitFullscreen();
       });
       await exited;

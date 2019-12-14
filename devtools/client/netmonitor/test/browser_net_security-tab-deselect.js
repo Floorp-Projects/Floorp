@@ -21,7 +21,7 @@ add_task(async function() {
     "https://example.com" + CORS_SJS_PATH,
     "http://example.com" + CORS_SJS_PATH,
   ];
-  await ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [REQUEST_URLS], async function(
     urls
   ) {
     for (const url of urls) {

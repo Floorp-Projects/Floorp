@@ -23,9 +23,9 @@ add_task(async function() {
       url: "http://mochi.test:8888/",
       element: "body",
       go() {
-        return ContentTask.spawn(
+        return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          { writeDomainURL },
+          [{ writeDomainURL }],
           async function(arg) {
             let contentBody = content.document.body;
             contentBody.style.backgroundImage =
@@ -36,7 +36,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(
@@ -51,9 +51,9 @@ add_task(async function() {
       url: "http://mochi.test:8888/",
       element: "img",
       go() {
-        return ContentTask.spawn(
+        return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          { writeDomainURL },
+          [{ writeDomainURL }],
           async function(arg) {
             let doc = content.document;
             let img = doc.createElement("img");
@@ -67,7 +67,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(
@@ -83,9 +83,9 @@ add_task(async function() {
       element: "html",
       frameIndex: 0,
       go() {
-        return ContentTask.spawn(
+        return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
-          { writeDomainURL },
+          [{ writeDomainURL }],
           async function(arg) {
             let doc = content.document;
             let iframe = doc.createElement("iframe");
@@ -106,7 +106,7 @@ add_task(async function() {
         );
       },
       verify() {
-        return ContentTask.spawn(gBrowser.selectedBrowser, null, async function(
+        return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(
           arg
         ) {
           Assert.ok(

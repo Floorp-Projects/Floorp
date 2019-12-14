@@ -559,16 +559,15 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     // was suspended, popping the stack frame, and later resumed (and we
     // were not stepping, so did not pass through slowPathOnResumeFrame).
     Rooted<AbstractGeneratorObject*> genObj(cx);
-    GeneratorWeakMap::AddPtr gp;
     if (referent.isGeneratorFrame()) {
       {
         AutoRealm ar(cx, referent.callee());
         genObj = GetGeneratorObjectForFrame(cx, referent);
       }
       if (genObj) {
-        gp = generatorFrames.lookupForAdd(genObj);
+        GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
         if (gp) {
-          frame = &gp->value()->as<DebuggerFrame>();
+          frame = gp->value();
           MOZ_ASSERT(&frame->unwrappedGenerator() == genObj);
 
           // We have found an existing Debugger.Frame object. But
@@ -594,19 +593,13 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
           cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
       RootedNativeObject debugger(cx, object);
 
-      frame = DebuggerFrame::create(cx, proto, iter, debugger);
+      frame = DebuggerFrame::create(cx, proto, debugger, &iter, genObj);
       if (!frame) {
         return false;
       }
 
       if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
         return false;
-      }
-
-      if (genObj) {
-        if (!frame->setGenerator(cx, genObj)) {
-          return false;
-        }
       }
     }
 
@@ -618,7 +611,37 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     }
   }
 
-  result.set(&p->value()->as<DebuggerFrame>());
+  result.set(p->value());
+  return true;
+}
+
+bool Debugger::getFrame(JSContext* cx, Handle<AbstractGeneratorObject*> genObj,
+                        MutableHandleDebuggerFrame result) {
+  // To create a Debugger.Frame for a running generator, we'd also need a
+  // FrameIter for its stack frame. We could make this work by searching the
+  // stack for the generator's frame, but for the moment, we only need this
+  // function to handle generators we've found on promises' reaction records,
+  // which should always be suspended.
+  MOZ_ASSERT(!genObj->isRunning());
+
+  // Do we have an existing Debugger.Frame for this generator?
+  GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
+  if (gp) {
+    MOZ_ASSERT(&gp->value()->unwrappedGenerator() == genObj);
+    result.set(gp->value());
+    return true;
+  }
+
+  // Create a new Debugger.Frame.
+  RootedObject proto(
+      cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
+  RootedNativeObject debugger(cx, object);
+
+  result.set(DebuggerFrame::create(cx, proto, debugger, nullptr, genObj));
+  if (!result) {
+    return false;
+  }
+
   return true;
 }
 
@@ -746,7 +769,7 @@ ResumeMode DebugAPI::slowPathOnResumeFrame(JSContext* cx,
     Debugger* dbg = entry.dbg;
     if (Debugger::GeneratorWeakMap::Ptr generatorEntry =
             dbg->generatorFrames.lookup(genObj)) {
-      DebuggerFrame* frameObj = &generatorEntry->value()->as<DebuggerFrame>();
+      DebuggerFrame* frameObj = generatorEntry->value();
       MOZ_ASSERT(&frameObj->unwrappedGenerator() == genObj);
       if (!dbg->frames.putNew(frame, frameObj)) {
         ReportOutOfMemory(cx);
@@ -2523,9 +2546,8 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
       // Also count hooks set on suspended generator frames.
       for (Debugger::GeneratorWeakMap::Range r = dbg->generatorFrames.all();
            !r.empty(); r.popFront()) {
-        AbstractGeneratorObject& genObj =
-            r.front().key()->as<AbstractGeneratorObject>();
-        DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+        AbstractGeneratorObject& genObj = *r.front().key();
+        DebuggerFrame& frameObj = *r.front().value();
         MOZ_ASSERT(&frameObj.unwrappedGenerator() == &genObj);
 
         // Live Debugger.Frames were already counted in dbg->frames loop.
@@ -3823,7 +3845,7 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
     if (dbg->zone()->isGCSweeping()) {
       for (Debugger::GeneratorWeakMap::Enum e(dbg->generatorFrames); !e.empty();
            e.popFront()) {
-        DebuggerFrame* frameObj = &e.front().value()->as<DebuggerFrame>();
+        DebuggerFrame* frameObj = e.front().value();
         if (IsAboutToBeFinalizedUnbarriered(&frameObj)) {
           frameObj->clearGenerator(fop, dbg, &e);
         }
@@ -4717,8 +4739,8 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   // counts.
   if (fromSweep == FromSweep::No) {
     for (GeneratorWeakMap::Enum e(generatorFrames); !e.empty(); e.popFront()) {
-      auto& genObj = e.front().key()->as<AbstractGeneratorObject>();
-      auto& frameObj = e.front().value()->as<DebuggerFrame>();
+      AbstractGeneratorObject& genObj = *e.front().key();
+      DebuggerFrame& frameObj = *e.front().value();
       if (genObj.isClosed() || &genObj.callee().global() == global) {
         frameObj.clearGenerator(fop, this, &e);
       }

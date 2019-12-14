@@ -41,7 +41,7 @@ add_task(async function testAutoplayPolicy() {
       let isAllowedAutoplay = true;
       let isAllowedMuted = true;
       await setupTestPreferences(isAllowedAutoplay, isAllowedMuted);
-      await ContentTask.spawn(browser, "allowed", checkAutoplayPolicy);
+      await SpecialPowers.spawn(browser, ["allowed"], checkAutoplayPolicy);
 
       info(
         `- Allow all kinds of media to autoplay even if changing the pref for muted media -`
@@ -49,27 +49,31 @@ add_task(async function testAutoplayPolicy() {
       isAllowedAutoplay = true;
       isAllowedMuted = false;
       await setupTestPreferences(isAllowedAutoplay, isAllowedMuted);
-      await ContentTask.spawn(browser, "allowed", checkAutoplayPolicy);
+      await SpecialPowers.spawn(browser, ["allowed"], checkAutoplayPolicy);
 
       info(`- Disable autoplay for audible media -`);
       isAllowedAutoplay = false;
       isAllowedMuted = true;
       await setupTestPreferences(isAllowedAutoplay, isAllowedMuted);
-      await ContentTask.spawn(browser, "allowed-muted", checkAutoplayPolicy);
+      await SpecialPowers.spawn(
+        browser,
+        ["allowed-muted"],
+        checkAutoplayPolicy
+      );
 
       info(`- Disable autoplay for all kinds of media -`);
       isAllowedAutoplay = false;
       isAllowedMuted = false;
       await setupTestPreferences(isAllowedAutoplay, isAllowedMuted);
-      await ContentTask.spawn(browser, "disallowed", checkAutoplayPolicy);
+      await SpecialPowers.spawn(browser, ["disallowed"], checkAutoplayPolicy);
 
       info(
         `- Simulate user gesture activation which would allow all kinds of media to autoplay -`
       );
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         content.document.notifyUserGestureActivation();
       });
-      await ContentTask.spawn(browser, "allowed", checkAutoplayPolicy);
+      await SpecialPowers.spawn(browser, ["allowed"], checkAutoplayPolicy);
     }
   );
 });

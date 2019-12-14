@@ -4,9 +4,9 @@ function promiseSetCookie(cookie) {
   info(`Set-Cookie: ${cookie}`);
   return Promise.all([
     waitForCookieChanged(),
-    ContentTask.spawn(
+    SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      cookie,
+      [cookie],
       passedCookie => (content.document.cookie = passedCookie)
     ),
   ]);

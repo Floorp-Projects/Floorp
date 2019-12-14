@@ -21,4 +21,15 @@ cp -rL $SRCDIR/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
 # directory as the built output.
 gzip -c $MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer > $UPLOAD_DIR/llvm-symbolizer.gz || true
 
+# Fuzzing also uses a few fields in target.json file for automated downloads to
+# identify what was built.
+if [ -n "$MOZ_BUILD_DATE" ] && [ -n "$GECKO_HEAD_REV" ]; then
+    cat >$UPLOAD_DIR/target.json <<EOF
+{
+  "buildid": "$MOZ_BUILD_DATE",
+  "moz_source_stamp": "$GECKO_HEAD_REV"
+}
+EOF
+fi
+
 exit $BUILD_STATUS

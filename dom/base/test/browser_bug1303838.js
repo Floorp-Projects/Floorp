@@ -252,9 +252,9 @@ function clickLink(
       : BrowserTestUtils.waitForNewTab(gBrowser)
   );
   promises.push(
-    ContentTask.spawn(
+    SpecialPowers.spawn(
       browser,
-      [isFrame, linkId],
+      [[isFrame, linkId]],
       ([contentIsFrame, contentLinkId]) => {
         let doc = content.document;
         if (contentIsFrame) {

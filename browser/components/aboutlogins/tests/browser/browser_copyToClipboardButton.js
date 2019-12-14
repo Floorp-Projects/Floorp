@@ -16,7 +16,7 @@ add_task(async function test() {
         origin: "https://www.example.com",
       };
 
-      await ContentTask.spawn(browser, TEST_LOGIN, async function(login) {
+      await SpecialPowers.spawn(browser, [TEST_LOGIN], async function(login) {
         let loginItem = Cu.waiveXrays(
           content.document.querySelector("login-item")
         );
@@ -50,7 +50,9 @@ add_task(async function test() {
         await SimpleTest.promiseClipboardChange(
           testObj.expectedValue,
           async () => {
-            await ContentTask.spawn(browser, testObj, async function(aTestObj) {
+            await SpecialPowers.spawn(browser, [testObj], async function(
+              aTestObj
+            ) {
               let loginItem = content.document.querySelector("login-item");
               let copyButton = loginItem.shadowRoot.querySelector(
                 aTestObj.copyButtonSelector
@@ -62,7 +64,7 @@ add_task(async function test() {
         );
         ok(true, testObj.expectedValue + " is on clipboard now");
 
-        await ContentTask.spawn(browser, testObj, async function(aTestObj) {
+        await SpecialPowers.spawn(browser, [testObj], async function(aTestObj) {
           let loginItem = Cu.waiveXrays(
             content.document.querySelector("login-item")
           );
@@ -85,7 +87,7 @@ add_task(async function test() {
       // button, which is the last button that is clicked in the above testcase.
       // Since another Copy button isn't clicked, the state won't get cleared
       // instantly. This test covers the built-in timeout of the visual display.
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         let copyButton = Cu.waiveXrays(
           content.document.querySelector("login-item")
         )._copyPasswordButton;

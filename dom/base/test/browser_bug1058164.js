@@ -203,7 +203,7 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
 
   // Wait for that initial browser to show its pageshow event if it hasn't
   // happened so that we don't confuse it with the other expected events.
-  await ContentTask.spawn(emptyBrowser, {}, async () => {
+  await ContentTask.spawn(emptyBrowser, null, async () => {
     if (content.document.visibilityState === "hidden") {
       info("waiting for hidden emptyBrowser to pageshow");
       await ContentTaskUtils.waitForEvent(content, "pageshow", {});

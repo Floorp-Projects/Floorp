@@ -58,7 +58,7 @@ add_task(async function testPopupSelectPopup() {
 
     // Wait the select element in the popup window to be ready before sending a
     // mouse event to open the select popup.
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       await ContentTaskUtils.waitForCondition(() => {
         return content.document && content.document.querySelector("#select");
       });
@@ -67,7 +67,7 @@ add_task(async function testPopupSelectPopup() {
 
     await popupPromise;
 
-    let elemRect = await ContentTask.spawn(browser, null, async function() {
+    let elemRect = await SpecialPowers.spawn(browser, [], async function() {
       let elem = content.document.getElementById("select");
       let r = elem.getBoundingClientRect();
 

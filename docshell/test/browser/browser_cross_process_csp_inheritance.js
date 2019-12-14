@@ -14,13 +14,13 @@ const DATA_URI =
 const FISSION_ENABLED = SpecialPowers.useRemoteSubframes;
 
 function getCurrentPID(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return SpecialPowers.spawn(aBrowser, [], () => {
     return Services.appinfo.processID;
   });
 }
 
 function getCurrentURI(aBrowser) {
-  return ContentTask.spawn(aBrowser, null, () => {
+  return SpecialPowers.spawn(aBrowser, [], () => {
     let channel = content.docShell.currentDocumentChannel;
     return channel.URI.asciiSpec;
   });
@@ -34,9 +34,9 @@ function verifyResult(
   aSamePID,
   aFissionEnabled
 ) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     aBrowser,
-    { aTestName, aDataURI, aPID, aSamePID, aFissionEnabled },
+    [{ aTestName, aDataURI, aPID, aSamePID, aFissionEnabled }],
     async function({ aTestName, aDataURI, aPID, aSamePID, aFissionEnabled }) {
       // sanity, to make sure the correct URI was loaded
       let channel = content.docShell.currentDocumentChannel;

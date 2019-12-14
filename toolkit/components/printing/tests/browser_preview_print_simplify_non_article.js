@@ -48,7 +48,7 @@ add_task(async function switch_print_preview_browsers() {
   await defaultPPEntered;
 
   // Assert that we are showing the initial content on default print preview browser
-  await ContentTask.spawn(defaultPPBrowser, null, async function() {
+  await SpecialPowers.spawn(defaultPPBrowser, [], async function() {
     is(
       content.document.title,
       "Non article title",
@@ -80,7 +80,7 @@ add_task(async function switch_print_preview_browsers() {
   );
 
   // Assert that we are showing recovery content on simplified print preview browser
-  await ContentTask.spawn(simplifiedPPBrowser, null, async function() {
+  await SpecialPowers.spawn(simplifiedPPBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(
       () => content.document.title === "Failed to load article from page",
       "Simplified document title should be updated with recovery title."

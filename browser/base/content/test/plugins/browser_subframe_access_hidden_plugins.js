@@ -51,9 +51,9 @@ add_task(async function test_plugin_accessible_in_subframe() {
       url: DOMAIN_1,
     },
     async function(browser) {
-      await ContentTask.spawn(
+      await SpecialPowers.spawn(
         browser,
-        [TEST_PLUGIN_NAME, DOMAIN_2],
+        [[TEST_PLUGIN_NAME, DOMAIN_2]],
         async function([pluginName, domain2]) {
           Assert.ok(
             content.navigator.plugins[pluginName],
@@ -69,11 +69,15 @@ add_task(async function test_plugin_accessible_in_subframe() {
 
           // Make sure that the HiddenPlugin event never fires in content.
           let sawEvent = false;
-          addEventListener(
+          docShell.chromeEventHandler.addEventListener(
             "HiddenPlugin",
             function onHiddenPlugin(e) {
               sawEvent = true;
-              removeEventListener("HiddenPlugin", onHiddenPlugin, true);
+              docShell.chromeEventHandler.removeEventListener(
+                "HiddenPlugin",
+                onHiddenPlugin,
+                true
+              );
             },
             true
           );

@@ -59,9 +59,9 @@ add_task(async function() {
    */
   async function performRequests() {
     function executeRequests(count, url) {
-      return ContentTask.spawn(
+      return SpecialPowers.spawn(
         tab.linkedBrowser,
-        { count, url },
+        [{ count, url }],
         async function(args) {
           content.wrappedJSObject.performRequests(args.count, args.url);
         }

@@ -90,7 +90,7 @@ function syncToggleCaretNoDialog(expected) {
 }
 
 function waitForFocusOnInput(browser) {
-  return ContentTask.spawn(browser, null, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     let textEl = content.document.getElementById("in");
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.activeElement == textEl;
@@ -99,7 +99,7 @@ function waitForFocusOnInput(browser) {
 }
 
 function focusInput(browser) {
-  return ContentTask.spawn(browser, null, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     let textEl = content.document.getElementById("in");
     textEl.focus();
   });

@@ -18,18 +18,24 @@ function getLabel(dbg, index) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1", "simple2", "nested-source", "long.js");
+  const dbg = await initDebugger(
+    "doc-sources.html",
+    "simple1",
+    "simple2",
+    "nested-source",
+    "long.js"
+  );
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
 
-  info(`>>> contentTask: evaluate evaled.js\n`)
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  info(`>>> contentTask: evaluate evaled.js\n`);
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });
 
   await waitForSourceCount(dbg, 3);
   // is(getLabel(dbg, 3), "evaled.js", "evaled exists");
-  ok(true)
+  ok(true);
 });

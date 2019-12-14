@@ -60,10 +60,12 @@ add_task(async function() {
   await teardown(monitor);
 
   function performRequests(count, url) {
-    return ContentTask.spawn(tab.linkedBrowser, { count, url }, async function(
-      args
-    ) {
-      content.wrappedJSObject.performRequests(args.count, args.url);
-    });
+    return SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [{ count, url }],
+      async function(args) {
+        content.wrappedJSObject.performRequests(args.count, args.url);
+      }
+    );
   }
 });

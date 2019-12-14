@@ -66,9 +66,9 @@ add_task(async function() {
     });
   }
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { page: TEST_ANOTHER_3RD_PARTY_PAGE, callback: loadSubpage.toString() },
+    [{ page: TEST_ANOTHER_3RD_PARTY_PAGE, callback: loadSubpage.toString() }],
     async function(obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");

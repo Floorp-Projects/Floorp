@@ -26,13 +26,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-const { ContentTask } = ChromeUtils.import(
-  "resource://testing-common/ContentTask.jsm"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ContentTask: "resource://testing-common/ContentTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 });
 
@@ -855,7 +853,7 @@ var BrowserTestUtils = {
 
     // We cannot use the regular BrowserTestUtils helper for waiting here, since that
     // would try to insert the preloaded browser, which would only break things.
-    await ContentTask.spawn(gBrowser.preloadedBrowser, null, async () => {
+    await ContentTask.spawn(gBrowser.preloadedBrowser, [], async () => {
       await ContentTaskUtils.waitForCondition(() => {
         return (
           this.content.document &&

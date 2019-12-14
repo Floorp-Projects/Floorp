@@ -228,7 +228,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
  * each time so we can get the warning message.
  */
 function emitContentBlockingMessage(tab, url) {
-  ContentTask.spawn(tab.linkedBrowser, url, function(innerURL) {
+  SpecialPowers.spawn(tab.linkedBrowser, [url], function(innerURL) {
     content.wrappedJSObject.loadIframe(innerURL);
   });
 }
@@ -239,7 +239,7 @@ function emitContentBlockingMessage(tab, url) {
  * each time so we can get the warning message.
  */
 function emitStorageAccessBlockedMessage(tab, url) {
-  ContentTask.spawn(tab.linkedBrowser, url, async function(innerURL) {
+  SpecialPowers.spawn(tab.linkedBrowser, [url], async function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }

@@ -8,9 +8,9 @@ add_task(async function test_multiple_pushState() {
     async function(browser) {
       const kExpected = "http://example.org/bar/ABC/DEF?key=baz";
 
-      let contentLocation = await ContentTask.spawn(
+      let contentLocation = await SpecialPowers.spawn(
         browser,
-        null,
+        [],
         async function() {
           return content.document.location.href;
         }

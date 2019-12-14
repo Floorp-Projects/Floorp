@@ -39,7 +39,7 @@ add_task(async function() {
   await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
   // Tests that the overlay can be hidden for plugins using the close icon.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
@@ -74,7 +74,7 @@ add_task(async function() {
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");

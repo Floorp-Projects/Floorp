@@ -266,7 +266,7 @@ SharedMem<uint8_t*> DataViewObject::getDataPointer(JSContext* cx,
 }
 
 static inline bool needToSwapBytes(bool littleEndian) {
-#if MOZ_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN()
   return !littleEndian;
 #else
   return littleEndian;

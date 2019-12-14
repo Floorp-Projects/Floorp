@@ -22,7 +22,7 @@ add_task(async function() {
 });
 
 function* addRemove(name) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, name, innerName => {
+  yield SpecialPowers.spawn(gBrowser.selectedBrowser, [name], innerName => {
     content.localStorage.setItem(innerName, "true");
     content.localStorage.removeItem(innerName);
   });

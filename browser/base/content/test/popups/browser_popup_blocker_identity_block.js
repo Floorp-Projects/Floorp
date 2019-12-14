@@ -64,7 +64,7 @@ add_task(async function check_blocked_popup_indicator() {
   );
   Assert.equal(icon.hasAttribute("showing"), false);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     let open = content.document.getElementById("pop");
     open.click();
   });
@@ -98,7 +98,7 @@ add_task(async function check_blocked_popup_indicator() {
 add_task(async function check_popup_showing() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     let open = content.document.getElementById("pop");
     open.click();
   });
@@ -146,7 +146,7 @@ add_task(async function check_permission_state_change() {
     .state;
   Assert.equal(state, SitePermissions.BLOCK);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     let open = content.document.getElementById("pop");
     open.click();
   });
@@ -175,12 +175,13 @@ add_task(async function check_permission_state_change() {
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
 
   // Check if a popup opens.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
-    let open = content.document.getElementById("pop");
-    open.click();
-  });
-
-  await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
+  await Promise.all([
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+      let open = content.document.getElementById("pop");
+      open.click();
+    }),
+    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen"),
+  ]);
   await BrowserTestUtils.waitForCondition(
     () => popup.linkedBrowser.currentURI.spec != "about:blank"
   );

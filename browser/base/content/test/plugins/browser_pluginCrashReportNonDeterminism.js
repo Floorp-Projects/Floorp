@@ -57,7 +57,7 @@ const CRASH_URL =
  *        the crash reporter state.
  */
 function preparePlugin(browser, pluginFallbackState) {
-  return ContentTask.spawn(browser, pluginFallbackState, async function(
+  return SpecialPowers.spawn(browser, [pluginFallbackState], async function(
     contentPluginFallbackState
   ) {
     let plugin = content.document.getElementById("plugin");
@@ -171,7 +171,7 @@ add_task(async function testChromeHearsPluginCrashFirst() {
   // for crash data. in `testContentHearsCrashFirst we will delay the
   // response (simulating what happens if the parent doesn't know about
   // the crash yet).
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // At this point, the content process should have heard the
     // plugin crash message from the parent, and we are OK to emit
     // the PluginCrashed event.
@@ -256,7 +256,7 @@ add_task(async function testContentHearsCrashFirst() {
     });
   });
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // At this point, the content process has not yet heard from the
     // parent about the crash report. Let's ensure that by making sure
     // we're not showing the plugin crash report UI.
@@ -282,7 +282,7 @@ add_task(async function testContentHearsCrashFirst() {
   let receivedData = await parentRequestPromise;
   is(receivedData.runID, runID, "Should get a request for the same crash.");
 
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     let plugin = content.document.getElementById("plugin");
     let statusDiv = plugin.openOrClosedShadowRoot.getElementById(
       "submitStatus"
@@ -297,7 +297,7 @@ add_task(async function testContentHearsCrashFirst() {
   // Now allow the parent to respond to the child with crash info:
   allowParentToRespond.resolve();
 
-  await ContentTask.spawn(browser, null, async function() {
+  await SpecialPowers.spawn(browser, [], async function() {
     // At this point, the content process will have heard the message
     // from the parent and reacted to it. We should be showing the plugin
     // crash report UI now.

@@ -70,7 +70,7 @@ var reloadPageAndWaitForStyleSheets = async function(ui) {
 
   const onReset = ui.once("stylesheets-reset");
   const browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, "() => content.location.reload()");
+  await SpecialPowers.spawn(browser, [], () => content.location.reload());
   await onReset;
 };
 
@@ -116,7 +116,7 @@ var openStyleEditorForURL = async function(url, win) {
  *        name of the property.
  */
 var getComputedStyleProperty = async function(args) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, args, function({
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [args], function({
     selector,
     pseudo,
     name,

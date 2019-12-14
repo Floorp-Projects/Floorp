@@ -8,26 +8,31 @@ const HTML_URI = TEST_PATH + "file_data_load_inherit_csp.html";
 const DATA_URI = "data:text/html;html,<html><body>foo</body></html>";
 
 function setDataHrefOnLink(aBrowser, aDataURI) {
-  return ContentTask.spawn(aBrowser, aDataURI, function(uri) {
+  return SpecialPowers.spawn(aBrowser, [aDataURI], function(uri) {
     let link = content.document.getElementById("testlink");
     link.href = uri;
   });
 }
 
 function verifyCSP(aTestName, aBrowser, aDataURI) {
-  return ContentTask.spawn(aBrowser, { aTestName, aDataURI }, async function({
-    aTestName,
-    aDataURI,
-  }) {
-    let channel = content.docShell.currentDocumentChannel;
-    is(channel.URI.spec, aDataURI, "testing CSP for " + aTestName);
-    let cspJSON = content.document.cspJSON;
-    let cspOBJ = JSON.parse(cspJSON);
-    let policies = cspOBJ["csp-policies"];
-    is(policies.length, 1, "should be one policy");
-    let policy = policies[0];
-    is(policy["script-src"], "'unsafe-inline'", "script-src directive matches");
-  });
+  return SpecialPowers.spawn(
+    aBrowser,
+    [{ aTestName, aDataURI }],
+    async function({ aTestName, aDataURI }) {
+      let channel = content.docShell.currentDocumentChannel;
+      is(channel.URI.spec, aDataURI, "testing CSP for " + aTestName);
+      let cspJSON = content.document.cspJSON;
+      let cspOBJ = JSON.parse(cspJSON);
+      let policies = cspOBJ["csp-policies"];
+      is(policies.length, 1, "should be one policy");
+      let policy = policies[0];
+      is(
+        policy["script-src"],
+        "'unsafe-inline'",
+        "script-src directive matches"
+      );
+    }
+  );
 }
 
 add_task(async function setup() {

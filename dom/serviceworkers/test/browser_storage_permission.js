@@ -24,9 +24,9 @@ add_task(async function setup() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { script: SW_SCRIPT, scope: SCOPE },
+    [{ script: SW_SCRIPT, scope: SCOPE }],
     async function(opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
@@ -61,7 +61,7 @@ add_task(async function test_allow_permission() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
@@ -81,7 +81,7 @@ add_task(async function test_deny_permission() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
@@ -102,7 +102,7 @@ add_task(async function test_session_permission() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
@@ -122,13 +122,13 @@ add_task(async function test_block_storage_before_blank_iframe() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
   ok(!!controller, "page should be controlled with storage allowed");
 
-  let controller2 = await ContentTask.spawn(browser, null, async function() {
+  let controller2 = await SpecialPowers.spawn(browser, [], async function() {
     let f = content.document.createElement("iframe");
     content.document.body.appendChild(f);
     await new Promise(resolve => (f.onload = resolve));
@@ -143,7 +143,7 @@ add_task(async function test_block_storage_before_blank_iframe() {
     ],
   });
 
-  let controller3 = await ContentTask.spawn(browser, null, async function() {
+  let controller3 = await SpecialPowers.spawn(browser, [], async function() {
     let f = content.document.createElement("iframe");
     content.document.body.appendChild(f);
     await new Promise(resolve => (f.onload = resolve));
@@ -166,13 +166,13 @@ add_task(async function test_block_storage_before_blob_iframe() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
   ok(!!controller, "page should be controlled with storage allowed");
 
-  let controller2 = await ContentTask.spawn(browser, null, async function() {
+  let controller2 = await SpecialPowers.spawn(browser, [], async function() {
     let b = new content.Blob(["<!DOCTYPE html><html></html>"], {
       type: "text/html",
     });
@@ -192,7 +192,7 @@ add_task(async function test_block_storage_before_blob_iframe() {
     ],
   });
 
-  let controller3 = await ContentTask.spawn(browser, null, async function() {
+  let controller3 = await SpecialPowers.spawn(browser, [], async function() {
     let b = new content.Blob(["<!DOCTYPE html><html></html>"], {
       type: "text/html",
     });
@@ -222,13 +222,13 @@ add_task(async function test_block_storage_before_blob_worker() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let controller = await ContentTask.spawn(browser, null, async function() {
+  let controller = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.serviceWorker.controller;
   });
 
   ok(!!controller, "page should be controlled with storage allowed");
 
-  let scriptURL = await ContentTask.spawn(browser, null, async function() {
+  let scriptURL = await SpecialPowers.spawn(browser, [], async function() {
     let b = new content.Blob(
       ["self.postMessage(self.location.href);self.close()"],
       { type: "application/javascript" }
@@ -249,7 +249,7 @@ add_task(async function test_block_storage_before_blob_worker() {
     ],
   });
 
-  let scriptURL2 = await ContentTask.spawn(browser, null, async function() {
+  let scriptURL2 = await SpecialPowers.spawn(browser, [], async function() {
     let b = new content.Blob(
       ["self.postMessage(self.location.href);self.close()"],
       { type: "application/javascript" }
@@ -275,7 +275,7 @@ add_task(async function cleanup() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, SCOPE, async function(uri) {
+  await SpecialPowers.spawn(browser, [SCOPE], async function(uri) {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     let worker = reg.active;
     await reg.unregister();

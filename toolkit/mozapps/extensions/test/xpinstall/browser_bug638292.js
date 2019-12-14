@@ -19,9 +19,9 @@ add_task(async function() {
 
     let newtab = await loadedPromise;
 
-    let result = await ContentTask.spawn(
+    let result = await SpecialPowers.spawn(
       newtab.linkedBrowser,
-      {},
+      [],
       async function() {
         return content.document.getElementById("enabled").textContent == "true";
       }

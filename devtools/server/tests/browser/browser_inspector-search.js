@@ -18,9 +18,9 @@ add_task(async function() {
     MAIN_DOMAIN + "inspector-search-data.html"
   );
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    [walker.actorID],
+    [[walker.actorID]],
     async function(actorID) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"

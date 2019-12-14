@@ -20,6 +20,11 @@ ChromeUtils.defineModuleGetter(
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 var { ExtensionError } = ExtensionUtils;
 
@@ -324,6 +329,7 @@ class TabTracker extends TabTrackerBase {
     this._browsers = new WeakMap();
     this._tabIds = new Map();
     this._nextId = 1;
+    this._deferredTabOpenEvents = new WeakMap();
 
     this._handleTabDestroyed = this._handleTabDestroyed.bind(this);
   }
@@ -489,6 +495,23 @@ class TabTracker extends TabTrackerBase {
     tab.openerTab = openerTab;
   }
 
+  deferredForTabOpen(nativeTab) {
+    let deferred = this._deferredTabOpenEvents.get(nativeTab);
+    if (!deferred) {
+      deferred = PromiseUtils.defer();
+      this._deferredTabOpenEvents.set(nativeTab, deferred);
+      deferred.promise.then(() => {
+        this._deferredTabOpenEvents.delete(nativeTab);
+      });
+    }
+    return deferred;
+  }
+
+  async maybeWaitForTabOpen(nativeTab) {
+    let deferred = this._deferredTabOpenEvents.get(nativeTab);
+    return deferred && deferred.promise;
+  }
+
   /**
    * @param {Event} event
    *        The DOM Event to handle.
@@ -526,7 +549,9 @@ class TabTracker extends TabTrackerBase {
           // We need to delay sending this event until the next tick, since the
           // tab can become selected immediately after "TabOpen", then onCreated
           // should be fired with `active: true`.
+          let deferred = this.deferredForTabOpen(event.originalTarget);
           Promise.resolve().then(() => {
+            deferred.resolve();
             if (!event.originalTarget.parentNode) {
               // If the tab is already be destroyed, do nothing.
               return;
@@ -552,7 +577,7 @@ class TabTracker extends TabTrackerBase {
       case "TabSelect":
         // Because we are delaying calling emitCreated above, we also need to
         // delay sending this event because it shouldn't fire before onCreated.
-        Promise.resolve().then(() => {
+        this.maybeWaitForTabOpen(nativeTab).then(() => {
           if (!nativeTab.parentNode) {
             // If the tab is already be destroyed, do nothing.
             return;
@@ -565,6 +590,7 @@ class TabTracker extends TabTrackerBase {
         if (this.has("tabs-highlighted")) {
           // Because we are delaying calling emitCreated above, we also need to
           // delay sending this event because it shouldn't fire before onCreated.
+          // event.target is gBrowser, so we don't use maybeWaitForTabOpen.
           Promise.resolve().then(() => {
             this.emitHighlighted(event.target.ownerGlobal);
           });

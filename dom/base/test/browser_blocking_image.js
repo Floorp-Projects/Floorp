@@ -13,7 +13,7 @@ add_task(async function load_image_from_https_test() {
 
   gBrowser.selectedTab = tab;
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     function imgListener(img) {
       return new Promise((resolve, reject) => {
         img.addEventListener("load", () => resolve());
@@ -47,7 +47,7 @@ add_task(async function load_image_from_http_test() {
 
   gBrowser.selectedTab = tab;
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     function imgListener(img) {
       return new Promise((resolve, reject) => {
         img.addEventListener("load", () => reject());
@@ -92,7 +92,7 @@ add_task(async function load_https_and_http_test() {
 
   gBrowser.selectedTab = tab;
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     function imgListener(img) {
       return new Promise((resolve, reject) => {
         img.addEventListener("load", () => reject());
@@ -136,7 +136,7 @@ add_task(async function block_pending_request_test() {
 
   gBrowser.selectedTab = tab;
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let wrapper = {
       _resolve: null,
       _sizeAvail: false,

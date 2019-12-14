@@ -771,16 +771,20 @@ async function registerActorInContentProcess(url, options) {
   // chrome://mochitests URI is registered only in the parent process, so convert these
   // URLs to file:// one in order to work in the content processes
   url = url.startsWith("chrome://mochitests") ? convertChromeToFile(url) : url;
-  return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
-    // eslint-disable-next-line no-shadow
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
-    );
-    const {
-      ActorRegistry,
-    } = require("devtools/server/actors/utils/actor-registry");
-    ActorRegistry.registerModule(args.url, args.options);
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ url, options }],
+    args => {
+      // eslint-disable-next-line no-shadow
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
+      const {
+        ActorRegistry,
+      } = require("devtools/server/actors/utils/actor-registry");
+      ActorRegistry.registerModule(args.url, args.options);
+    }
+  );
 }
 
 /**

@@ -34,13 +34,15 @@ add_task(async function() {
 
   async function performRequest(method, payload) {
     const waitRequest = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       tab.linkedBrowser,
-      {
-        url: SIMPLE_SJS,
-        method_: method,
-        payload_: payload,
-      },
+      [
+        {
+          url: SIMPLE_SJS,
+          method_: method,
+          payload_: payload,
+        },
+      ],
       async function({ url, method_, payload_ }) {
         content.wrappedJSObject.performRequest(url, method_, payload_);
       }

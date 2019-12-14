@@ -35,9 +35,9 @@ add_task(async function testInnerHTML() {
   const docElement = await walker.documentElement();
   const longstring = await walker.innerHTML(docElement);
   const innerHTML = await longstring.string();
-  const actualInnerHTML = await ContentTask.spawn(
+  const actualInnerHTML = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     function() {
       return content.document.documentElement.innerHTML;
     }
@@ -53,9 +53,9 @@ add_task(async function testOuterHTML() {
   const docElement = await walker.documentElement();
   const longstring = await walker.outerHTML(docElement);
   const outerHTML = await longstring.string();
-  const actualOuterHTML = await ContentTask.spawn(
+  const actualOuterHTML = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     function() {
       return content.document.documentElement.outerHTML;
     }
@@ -268,7 +268,7 @@ add_task(async function testLongValue() {
   );
 
   SimpleTest.registerCleanupFunction(async function() {
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
@@ -279,9 +279,9 @@ add_task(async function testLongValue() {
     });
   });
 
-  const longstringText = await ContentTask.spawn(
+  const longstringText = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     function() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
@@ -313,9 +313,9 @@ add_task(async function testShortValue() {
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
-  const shortstringText = await ContentTask.spawn(
+  const shortstringText = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     function() {
       return content.document.getElementById("shortstring").firstChild
         .nodeValue;

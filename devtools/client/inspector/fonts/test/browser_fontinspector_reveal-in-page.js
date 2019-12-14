@@ -65,7 +65,9 @@ add_task(async function() {
 });
 
 async function waitForNSelectionEvents(tab, numberOfTimes) {
-  await ContentTask.spawn(tab.linkedBrowser, numberOfTimes, async function(n) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [numberOfTimes], async function(
+    n
+  ) {
     const win = content.wrappedJSObject;
 
     await new Promise(resolve => {

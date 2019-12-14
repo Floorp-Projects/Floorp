@@ -154,9 +154,7 @@ function addRDMTask(rdmUrl, rdmTask, includeBrowserEmbeddedUI) {
       const usingBrowserUI = Services.prefs.getBoolPref(
         "devtools.responsive.browserUI.enabled"
       );
-      const browser = usingBrowserUI
-        ? tab.linkedBrowser
-        : ui.getViewportBrowser();
+      const browser = tab.linkedBrowser;
       try {
         await task({ ui, manager, browser, usingBrowserUI });
       } catch (err) {
@@ -274,9 +272,9 @@ var setViewportSize = async function(ui, manager, width, height) {
 // ensures that reflow of the viewport has completed.
 var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
   await setViewportSize(ui, manager, width, height);
-  const reflowed = ContentTask.spawn(
+  const reflowed = SpecialPowers.spawn(
     ui.getViewportBrowser(),
-    {},
+    [],
     async function() {
       return new Promise(resolve => {
         content.requestAnimationFrame(resolve);
@@ -287,7 +285,7 @@ var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
 };
 
 function getViewportDevicePixelRatio(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     return content.devicePixelRatio;
   });
 }
@@ -444,7 +442,7 @@ const selectNetworkThrottling = (ui, value) =>
   ]);
 
 function getSessionHistory(browser) {
-  return ContentTask.spawn(browser, {}, async function() {
+  return ContentTask.spawn(browser, null, function() {
     /* eslint-disable no-undef */
     const { SessionHistory } = ChromeUtils.import(
       "resource://gre/modules/sessionstore/SessionHistory.jsm"
@@ -601,7 +599,7 @@ async function testUserAgent(ui, expected) {
 }
 
 async function testUserAgentFromBrowser(browser, expected) {
-  const ua = await ContentTask.spawn(browser, {}, async function() {
+  const ua = await SpecialPowers.spawn(browser, [], async function() {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);
@@ -814,7 +812,7 @@ async function testViewportZoomWidthAndHeight(
 }
 
 function promiseContentReflow(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     return new Promise(resolve => {
       content.window.requestAnimationFrame(resolve);
     });
@@ -832,14 +830,13 @@ function promiseRDMZoom(ui, browser, zoom) {
       return;
     }
 
+    const zoomComplete = BrowserTestUtils.waitForEvent(
+      browser,
+      "PostFullZoomChange"
+    );
     ZoomManager.setZoomForBrowser(browser, zoom);
 
     // Await the zoom complete event, then reflow.
-    BrowserTestUtils.waitForContentEvent(
-      ui.getViewportBrowser(),
-      "ZoomComplete"
-    )
-      .then(promiseContentReflow(ui))
-      .then(resolve);
+    zoomComplete.then(promiseContentReflow(ui)).then(resolve);
   });
 }

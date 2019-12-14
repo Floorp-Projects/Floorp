@@ -636,6 +636,44 @@ instrumentation is active, and code will run faster when instrumentation is
 inactive. If the referent is not a global object, throw a `TypeError`.
 If the referent has not had instrumentation installed, throw an `Error`.
 
+### `getPromiseReactions`
+
+If the referent is a [`Promise`][promise] or a cross-compartment wrapper of one,
+this returns an array of objects describing the reaction records added to the
+promise. There are several different sorts of reaction records:
+
+-   The array entry for a reaction record added with `then` or `catch` has the
+    form `{ resolve: F, reject: F, result: P }`, where each `F` is a `Debugger.Object`
+    referring to a function object, and `P` is the promise that will be resolved
+    with the result of calling them.
+
+    The `resolve` and `reject` properties may be absent in some cases. A call to
+    `then` can omit the rejection handler, and a call to `catch` omits the
+    resolution handler. Furthermore, various promise facilities create records
+    like this as internal implementation details, creating handlers that are not
+    representable as JavaScript functions.
+
+-   When a promise `P1` is resolved to another promise `P2` (such that resolving
+    `P2` resolves `P1` in the same way) that adds a reaction record to `P2`. The
+    array entry for that reaction record is simply the `Debugger.Object`
+    representing `P1`.
+
+    Note that, if `P1` and `P2` are in different compartments, resolving `P1` to
+    `P2` creates the same sort of reaction record as a call to `then` or
+    `catch`, with `P1` stored only in a private slot of the `resolve` and
+    `reject` functions, and not directly available from the reaction record.
+
+-   An `await` expression calls `PromiseResolve` on its operand to obtain a
+    promise `P`, and then adds a reaction record to `P` that resumes the
+    suspended call appropriately. The array entry for that reaction record is a
+    `Debugger.Frame` representing the suspended call.
+
+    If the `await`'s operand `A` is a native promise with the standard
+    constructor, then `PromiseResolve` simply returns `A` unchanged, and the
+    reaction record for resuming the suspended call is added to `A`'s list. But
+    if `A` is some other sort of 'thenable', then `PromiseResolve` creates a new
+    promise and enqueues a job to call `A`'s `then` method; this may produce
+    more indirect chains from awaitees to awaiters.
 
 [debugger-object]: Debugger.md
 [script]: Debugger.Script.md

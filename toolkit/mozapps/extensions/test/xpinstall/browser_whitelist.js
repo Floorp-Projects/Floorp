@@ -47,9 +47,9 @@ function install_ended(install, addon) {
 const finish_test = async function(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  const results = await ContentTask.spawn(
+  const results = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    null,
+    [],
     () => {
       return {
         return: content.document.getElementById("return").textContent,

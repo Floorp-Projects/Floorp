@@ -45,7 +45,7 @@ function makeChanges() {
 }
 
 function getPageValue(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     return content.document.querySelector("script").textContent.trim();
   });
 }

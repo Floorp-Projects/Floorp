@@ -337,18 +337,17 @@ add_task(async function test_datepicker_clicked() {
     `data:text/html, <input type="date" value="${inputValue}">`
   );
   // Click the first item (top-left corner) of the calendar
+  let promise = BrowserTestUtils.waitForContentEvent(
+    helper.tab.linkedBrowser,
+    "input"
+  );
   helper.click(helper.getElement(DAYS_VIEW).children[0]);
-  await ContentTask.spawn(helper.tab.linkedBrowser, {}, async function() {
-    let inputEl = content.document.querySelector("input");
-    await ContentTaskUtils.waitForEvent(inputEl, "input");
-  });
+  await promise;
 
-  let value = await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    null,
-    async () => {
-      return content.document.querySelector("input").value;
-    }
+  let value = await SpecialPowers.spawn(
+    helper.tab.linkedBrowser,
+    [],
+    () => content.document.querySelector("input").value
   );
   Assert.equal(value, firstDayOnCalendar);
 

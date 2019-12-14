@@ -14,7 +14,7 @@ add_task(async function() {
   );
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
 
   // Expand nodes and make sure more sources appear.
@@ -43,7 +43,7 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "nested-source");
 
   // Make sure new sources appear in the list.
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const script = content.document.createElement("script");
     script.src = "math.min.js";
     content.document.body.appendChild(script);

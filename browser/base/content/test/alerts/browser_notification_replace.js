@@ -12,7 +12,7 @@ add_task(async function test_notificationReplace() {
       url: notificationURL,
     },
     async function dummyTabTask(aBrowser) {
-      await ContentTask.spawn(aBrowser, {}, async function() {
+      await SpecialPowers.spawn(aBrowser, [], async function() {
         let win = content.window.wrappedJSObject;
         let notification = win.showNotification1();
         let promiseCloseEvent = ContentTaskUtils.waitForEvent(

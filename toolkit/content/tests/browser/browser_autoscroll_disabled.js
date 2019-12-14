@@ -19,7 +19,7 @@ add_task(async function() {
     gBrowser.selectedBrowser
   );
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     var iframe = content.document.getElementById("iframe");
 
     if (iframe) {
@@ -45,9 +45,9 @@ add_task(async function() {
   // request and force redraws to get the chance to check for scrolling at all.
   await new Promise(resolve => window.requestAnimationFrame(resolve));
 
-  let msg = await ContentTask.spawn(
+  let msg = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    {},
+    [],
     async function() {
       // Skip the first animation frame callback as it's the same callback that
       // the browser uses to kick off the scrolling.

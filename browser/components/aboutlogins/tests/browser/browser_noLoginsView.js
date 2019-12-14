@@ -13,9 +13,9 @@ add_task(async function setup() {
 
 add_task(async function test_no_logins_class() {
   let { platform } = AppConstants;
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    platform,
+    [platform],
     async aPlatform => {
       let loginList = content.document.querySelector("login-list");
 
@@ -102,7 +102,7 @@ add_task(async function test_no_logins_class() {
 
 add_task(
   async function login_selected_when_login_added_and_in_no_logins_view() {
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
       let loginList = content.document.querySelector("login-list");
       let loginItem = content.document.querySelector("login-item");
       let loginIntro = content.document.querySelector("login-intro");
@@ -131,9 +131,9 @@ add_task(
 
     TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
 
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      TEST_LOGIN1.guid,
+      [TEST_LOGIN1.guid],
       async testLogin1Guid => {
         let loginList = content.document.querySelector("login-list");
         let loginItem = content.document.querySelector("login-item");

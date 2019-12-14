@@ -19,7 +19,7 @@ add_task(async function() {
 });
 
 async function removeChecked(browser, id) {
-  await ContentTask.spawn(browser, id, async function(id) {
+  await SpecialPowers.spawn(browser, [id], async function(id) {
     let item = content.document.getElementById(id);
     if (item.getAttribute("checked") == "false") {
       item.removeAttribute("checked");
@@ -28,7 +28,7 @@ async function removeChecked(browser, id) {
 }
 
 async function hasAttribute(browser, id, attribute) {
-  return ContentTask.spawn(browser, { id, attribute }, async function(arg) {
+  return SpecialPowers.spawn(browser, [{ id, attribute }], async function(arg) {
     let item = content.document.getElementById(arg.id);
     return item.hasAttribute(arg.attribute);
   });
@@ -161,7 +161,7 @@ var exercisePrefs = async function(source, highlightable) {
 // This saves us from opening the menu and trying to click on the item,
 // which doesn't work on Mac OS X.
 async function simulateClick(browser, id) {
-  return ContentTask.spawn(browser, id, async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function(id) {
     let item = content.document.getElementById(id);
     if (item.hasAttribute("checked")) {
       item.removeAttribute("checked");
@@ -174,17 +174,19 @@ async function simulateClick(browser, id) {
 }
 
 var checkStyle = async function(browser, styleProperty, expected) {
-  let value = await ContentTask.spawn(browser, styleProperty, async function(
-    styleProperty
-  ) {
-    let style = content.getComputedStyle(content.document.body);
-    return style.getPropertyValue(styleProperty);
-  });
+  let value = await SpecialPowers.spawn(
+    browser,
+    [styleProperty],
+    async function(styleProperty) {
+      let style = content.getComputedStyle(content.document.body);
+      return style.getPropertyValue(styleProperty);
+    }
+  );
   is(value, expected, "Correct value of " + styleProperty);
 };
 
 var checkHighlight = async function(browser, expected) {
-  let highlighted = await ContentTask.spawn(browser, {}, async function() {
+  let highlighted = await SpecialPowers.spawn(browser, [], async function() {
     let spans = content.document.getElementsByTagName("span");
     return Array.prototype.some.call(spans, span => {
       let style = content.getComputedStyle(span);

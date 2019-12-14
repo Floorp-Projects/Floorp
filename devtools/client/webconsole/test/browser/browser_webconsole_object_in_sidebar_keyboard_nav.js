@@ -67,7 +67,7 @@ add_task(async function() {
 
   info("Select another object in the console output");
   const onArrayMessage = waitForMessage(hud, "Array");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.log([4, 5, 6]);
   });
 

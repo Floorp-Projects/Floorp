@@ -3,9 +3,9 @@ const TEST_URL = "http://mochi.test:8888/browser/dom/html/test/empty.html";
 async function checkOpener(browser, elm, name, rel) {
   let p = BrowserTestUtils.waitForNewTab(gBrowser, null, true, true);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { url: TEST_URL, name, rel, elm },
+    [{ url: TEST_URL, name, rel, elm }],
     async obj => {
       let element;
 
@@ -39,9 +39,9 @@ async function checkOpener(browser, elm, name, rel) {
   let newTab = await p;
   let newBrowser = gBrowser.getBrowserForTab(newTab);
 
-  let hasOpener = await ContentTask.spawn(
+  let hasOpener = await SpecialPowers.spawn(
     newTab.linkedBrowser,
-    null,
+    [],
     _ => !!content.window.opener
   );
 

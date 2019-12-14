@@ -15,7 +15,7 @@ add_task(async function setup() {
 
 add_task(async function test_show_logins() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, TEST_LOGIN1.guid, async loginGuid => {
+  await SpecialPowers.spawn(browser, [TEST_LOGIN1.guid], async loginGuid => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
@@ -29,9 +29,9 @@ add_task(async function test_show_logins() {
 
 add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    LoginHelper.loginToVanillaObject(TEST_LOGIN1),
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
     async login => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")

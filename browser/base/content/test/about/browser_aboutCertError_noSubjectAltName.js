@@ -57,9 +57,9 @@ add_task(async function checkUntrustedCertError() {
   let tab = await openErrorPage(UNKNOWN_ISSUER);
   let browser = tab.linkedBrowser;
   info("Clicking the exceptionDialogButton in advanced panel");
-  let badCertTechnicalInfoText = await ContentTask.spawn(
+  let badCertTechnicalInfoText = await SpecialPowers.spawn(
     browser,
-    null,
+    [],
     checkAdvancedAndGetTechnicalInfoText
   );
   checkCorrectMessages(badCertTechnicalInfoText, browser);

@@ -263,8 +263,8 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   RootedFunction fun(cx_);
   if (pc_) {
     Rooted<FunctionCreationData> fcd(
-        cx_, GenerateFunctionCreationData(atom, syntax, generatorKind,
-                                          functionAsyncKind));
+        cx_,
+        FunctionCreationData(atom, syntax, generatorKind, functionAsyncKind));
     BINJS_TRY_VAR(fun, AllocNewFunction(cx_, fcd));
     MOZ_ASSERT(fun->explicitName() == atom);
   } else {

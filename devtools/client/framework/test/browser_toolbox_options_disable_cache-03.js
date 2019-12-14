@@ -53,7 +53,7 @@ async function getInspectorContent(inspector) {
 }
 
 async function getWebContent() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const doc = content.document;
     return doc.ownerGlobal.getComputedStyle(doc.body, "::before").content;
   });

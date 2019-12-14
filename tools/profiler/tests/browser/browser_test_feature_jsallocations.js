@@ -22,9 +22,9 @@ add_task(async function test_profile_feature_jsallocations() {
 
   const url = BASE_URL + "do_work_500ms.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
-    const contentPid = await ContentTask.spawn(
+    const contentPid = await SpecialPowers.spawn(
       contentBrowser,
-      null,
+      [],
       () => Services.appinfo.processID
     );
 

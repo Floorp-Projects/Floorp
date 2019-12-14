@@ -40,7 +40,7 @@ add_task(async function test_query_parameter_filter() {
     LoginHelper.loginToVanillaObject(TEST_LOGIN1),
     LoginHelper.loginToVanillaObject(TEST_LOGIN2),
   ];
-  await ContentTask.spawn(browser, vanillaLogins, async logins => {
+  await SpecialPowers.spawn(browser, [vanillaLogins], async logins => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
       return loginList._loginGuidsSortedOrder.length == 2;
@@ -125,7 +125,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
   await tabOpenedPromise;
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
       return loginList._loginGuidsSortedOrder.length == 2;
@@ -205,7 +205,7 @@ add_task(async function test_query_parameter_filter_no_login_until_backspace() {
   await tabOpenedPromise;
 
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
       return loginList._loginGuidsSortedOrder.length == 2;

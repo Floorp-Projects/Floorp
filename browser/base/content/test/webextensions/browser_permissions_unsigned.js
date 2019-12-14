@@ -23,9 +23,9 @@ add_task(async function test_unsigned() {
   );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  ContentTask.spawn(
+  SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    `${BASE}/browser_webext_unsigned.xpi`,
+    [`${BASE}/browser_webext_unsigned.xpi`],
     async function(url) {
       content.wrappedJSObject.installTrigger(url);
     }

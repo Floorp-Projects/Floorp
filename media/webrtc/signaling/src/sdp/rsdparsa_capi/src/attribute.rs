@@ -260,7 +260,7 @@ impl<'a> From<&'a SdpAttributeRtpmap> for RustSdpAttributeRtpmap {
             payload_type: other.payload_type as u8,
             codec_name: StringView::from(other.codec_name.as_str()),
             frequency: other.frequency as u32,
-            channels: other.channels.unwrap_or(1)
+            channels: other.channels.unwrap_or(0)
         }
     }
 }

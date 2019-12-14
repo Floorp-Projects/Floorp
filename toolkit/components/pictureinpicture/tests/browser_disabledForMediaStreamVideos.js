@@ -28,7 +28,7 @@ add_task(async function test_disabledForMediaStreamVideos() {
       "no-controls": { canToggle: false },
     },
     async browser => {
-      await ContentTask.spawn(browser, null, async () => {
+      await SpecialPowers.spawn(browser, [], async () => {
         // Construct a new video element, and capture a stream from it
         // to redirect to both testing videos
         let newVideo = content.document.createElement("video");

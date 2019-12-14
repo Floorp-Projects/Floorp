@@ -19,9 +19,9 @@ add_task(async function test_opening_blocked_popups() {
     "data:text/html,Hello"
   );
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     tab.linkedBrowser,
-    baseURL + "popup_blocker.html",
+    [baseURL + "popup_blocker.html"],
     uri => {
       let iframe = content.document.createElement("iframe");
       iframe.id = "popupframe";
@@ -81,9 +81,9 @@ add_task(async function test_opening_blocked_popups() {
   );
 
   // Remove the frame and add another one:
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     tab.linkedBrowser,
-    baseURL + "popup_blocker.html",
+    [baseURL + "popup_blocker.html"],
     uri => {
       content.document.getElementById("popupframe").remove();
       let iframe = content.document.createElement("iframe");
@@ -103,7 +103,7 @@ add_task(async function test_opening_blocked_popups() {
 
   ok(notification, "Should have notification.");
 
-  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("popupframe").remove();
   });
 

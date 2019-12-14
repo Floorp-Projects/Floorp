@@ -7,7 +7,7 @@ async function check(contentTask, options = {}) {
     "https://test1.example.com/",
     async function(browser) {
       let popupShownPromise = waitForNotificationPanel();
-      await ContentTask.spawn(browser, null, contentTask);
+      await SpecialPowers.spawn(browser, [], contentTask);
       let panel = await popupShownPromise;
       let notification = panel.children[0];
       let body = notification.querySelector(".popup-notification-body");
@@ -26,7 +26,7 @@ async function check(contentTask, options = {}) {
 
   await BrowserTestUtils.withNewTab(channel.file.path, async function(browser) {
     let popupShownPromise = waitForNotificationPanel();
-    await ContentTask.spawn(browser, null, contentTask);
+    await SpecialPowers.spawn(browser, [], contentTask);
     let panel = await popupShownPromise;
     let notification = panel.children[0];
     let body = notification.querySelector(".popup-notification-body");
@@ -70,7 +70,7 @@ async function check(contentTask, options = {}) {
 
     await BrowserTestUtils.withNewTab(extensionURI, async function(browser) {
       let popupShownPromise = waitForNotificationPanel();
-      await ContentTask.spawn(browser, null, contentTask);
+      await SpecialPowers.spawn(browser, [], contentTask);
       let panel = await popupShownPromise;
       let notification = panel.children[0];
       let body = notification.querySelector(".popup-notification-body");

@@ -89,16 +89,16 @@ add_task(async function cross_tabs_audio_competing() {
     window.gBrowser,
     "about:blank"
   );
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     tab2.linkedBrowser,
-    null,
+    [],
     audio_should_keep_playing_even_go_to_background
   );
 
   info("- play audio from background tab 1 -");
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     tab1.linkedBrowser,
-    null,
+    [],
     play_audio_from_invisible_tab
   );
 
@@ -118,7 +118,7 @@ add_task(async function within_one_tab_audio_competing() {
   await waitForTabPlayingEvent(tab, true);
 
   info("- play audio2 in the same tab -");
-  await ContentTask.spawn(tab.linkedBrowser, null, play_non_autoplay_audio);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], play_non_autoplay_audio);
 
   info("- remove tab -");
   BrowserTestUtils.removeTab(tab);

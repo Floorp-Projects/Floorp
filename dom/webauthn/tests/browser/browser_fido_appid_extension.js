@@ -30,19 +30,20 @@ function promiseU2FRegister(tab, app_id) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
 
-  return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], function([
-    app_id,
-    challenge,
-  ]) {
-    return new Promise(resolve => {
-      content.u2f.register(
-        app_id,
-        [{ version: "U2F_V2", challenge }],
-        [],
-        resolve
-      );
-    });
-  }).then(res => {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [[app_id, challenge]],
+    function([app_id, challenge]) {
+      return new Promise(resolve => {
+        content.u2f.register(
+          app_id,
+          [{ version: "U2F_V2", challenge }],
+          [],
+          resolve
+        );
+      });
+    }
+  ).then(res => {
     is(res.errorCode, 0, "u2f.register() succeeded");
     let data = base64ToBytesUrlSafe(res.registrationData);
     is(data[0], 0x05, "Reserved byte is correct");
@@ -51,7 +52,7 @@ function promiseU2FRegister(tab, app_id) {
 }
 
 function promiseWebAuthnRegister(tab, appid) {
-  return ContentTask.spawn(tab.linkedBrowser, [appid], ([appid]) => {
+  return ContentTask.spawn(tab.linkedBrowser, appid, appid => {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let challenge = content.crypto.getRandomValues(new Uint8Array(16));

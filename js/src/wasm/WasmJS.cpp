@@ -117,7 +117,7 @@ bool wasm::HasI64BigIntSupport(JSContext* cx) {
 }
 
 bool wasm::HasCompilerSupport(JSContext* cx) {
-#if !MOZ_LITTLE_ENDIAN || defined(JS_CODEGEN_NONE)
+#if !MOZ_LITTLE_ENDIAN() || defined(JS_CODEGEN_NONE)
   return false;
 #endif
 

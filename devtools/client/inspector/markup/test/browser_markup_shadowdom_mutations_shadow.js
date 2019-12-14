@@ -43,7 +43,7 @@ add_task(async function() {
 
   info("Delete a shadow dom element and check the updated markup view");
   let mutated = waitForMutation(inspector, "childList");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const shadowRoot = content.document.querySelector("test-component")
       .shadowRoot;
     const slotContainer = shadowRoot.getElementById("slot1-container");
@@ -60,7 +60,7 @@ add_task(async function() {
   await assertMarkupViewAsTree(treeAfterDelete, "test-component", inspector);
 
   mutated = inspector.once("markupmutation");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const shadowRoot = content.document.querySelector("test-component")
       .shadowRoot;
     const shadowDiv = shadowRoot.getElementById("another-div");

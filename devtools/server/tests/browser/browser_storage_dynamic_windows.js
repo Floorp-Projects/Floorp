@@ -137,9 +137,9 @@ async function testAddIframe(front) {
 
   const update = front.once("stores-update");
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    ALT_DOMAIN_SECURED,
+    [ALT_DOMAIN_SECURED],
     secured => {
       const doc = content.document;
 
@@ -160,7 +160,7 @@ async function testRemoveIframe(front) {
 
   const update = front.once("stores-update");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     for (const iframe of content.document.querySelectorAll("iframe")) {
       if (iframe.src.startsWith("http:")) {
         iframe.remove();

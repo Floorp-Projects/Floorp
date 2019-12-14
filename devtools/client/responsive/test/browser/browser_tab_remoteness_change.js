@@ -5,6 +5,13 @@
 
 // Verify RDM closes synchronously when tabs change remoteness.
 
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Permission denied to access property "document" on cross-origin object/
+);
+
 const TEST_URL = "http://example.com/";
 
 add_task(async function() {

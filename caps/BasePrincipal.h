@@ -110,8 +110,10 @@ class BasePrincipal : public nsJSPrincipals {
                                        bool* _retval) final;
   NS_IMETHOD SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* other,
                                                   bool* _retval) final;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report,
-                          bool allowIfInheritsPrincipal) final;
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool allowIfInheritsPrincipal) final;
+  NS_IMETHOD CheckMayLoadWithReporting(nsIURI* uri,
+                                       bool allowIfInheritsPrincipal,
+                                       uint64_t innerWindowID) final;
   NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsContentPrincipal(bool* aResult) override;
@@ -256,6 +258,10 @@ class BasePrincipal : public nsJSPrincipals {
   // BasePrincipal::CheckMayLoad.
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::ExpandedPrincipal;
+
+  // Helper for implementing CheckMayLoad and CheckMayLoadWithReporting.
+  nsresult CheckMayLoadHelper(nsIURI* aURI, bool aAllowIfInheritsPrincipal,
+                              bool aReport, uint64_t aInnerWindowID);
 
   void SetHasExplicitDomain() { mHasExplicitDomain = true; }
 

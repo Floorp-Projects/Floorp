@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 use std::env;
 use std::error::Error;
 use std::fs::File;
@@ -8,8 +12,8 @@ extern crate webrtc_sdp;
 fn main() {
     let filename = match env::args().nth(1) {
         None => {
-            println!("Missing file name argument!");
-            return;
+            eprintln!("Missing file name argument!");
+            std::process::exit(1);
         }
         Some(x) => x,
     };
@@ -23,9 +27,12 @@ fn main() {
 
     let mut s = String::new();
     match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read {}: {}", display, why.description()),
+        Err(why) => panic!("Couldn't read {}: {}", display, why.description()),
         Ok(s) => s,
     };
 
-    assert!(webrtc_sdp::parse_sdp(&s, true).is_ok());
+    if let Err(why) = webrtc_sdp::parse_sdp(&s, true) {
+        panic!("Failed to parse SDP with error: {}", why);
+    }
+    println!("Successfully parsed SDP");
 }

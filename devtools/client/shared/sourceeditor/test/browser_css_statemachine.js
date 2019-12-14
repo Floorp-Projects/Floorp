@@ -100,7 +100,10 @@ add_task(async function test() {
   let i = 0;
   for (const testcase of tests) {
     ++i;
-    await ContentTask.spawn(browser, [i, tests.length], function([idx, len]) {
+    await SpecialPowers.spawn(browser, [[i, tests.length]], function([
+      idx,
+      len,
+    ]) {
       const progress = content.document.getElementById("progress");
       const progressDiv = content.document.querySelector("#progress > div");
       progress.dataset.progress = idx;
@@ -130,7 +133,7 @@ add_task(async function test() {
           (completer.propertyName || completer.selector) +
           "]."
       );
-      await ContentTask.spawn(browser, null, function() {
+      await SpecialPowers.spawn(browser, [], function() {
         const progress = content.document.getElementById("progress");
         progress.classList.add("failed");
       });

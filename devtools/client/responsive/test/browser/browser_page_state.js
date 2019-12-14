@@ -59,7 +59,7 @@ add_task(async function() {
   await closeRDM(tab);
 
   // Check color back in the browser tab
-  color = await ContentTask.spawn(browser, {}, async function() {
+  color = await SpecialPowers.spawn(browser, [], async function() {
     return content
       .getComputedStyle(content.document.body)
       .getPropertyValue("background-color");

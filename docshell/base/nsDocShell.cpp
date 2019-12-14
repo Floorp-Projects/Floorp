@@ -5468,6 +5468,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
 
 nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
                                                nsIPrincipal* aPrincipal,
+                                               uint64_t aInnerWindowID,
                                                const nsACString& aHeader) {
   // Refresh headers are parsed with the following format in mind
   // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
@@ -5675,7 +5676,8 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
     if (NS_SUCCEEDED(rv)) {
       rv = securityManager->CheckLoadURIWithPrincipal(
           aPrincipal, uri,
-          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
+          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT,
+          aInnerWindowID);
 
       if (NS_SUCCEEDED(rv)) {
         bool isjs = true;
@@ -5722,7 +5724,9 @@ nsDocShell::SetupRefreshURI(nsIChannel* aChannel) {
       NS_ENSURE_SUCCESS(rv, rv);
 
       SetupReferrerInfoFromChannel(aChannel);
-      rv = SetupRefreshURIFromHeader(mCurrentURI, principal, refreshHeader);
+      // We have no idea what window id to use for error reporting
+      // here, so just pass 0.
+      rv = SetupRefreshURIFromHeader(mCurrentURI, principal, 0, refreshHeader);
       if (NS_SUCCEEDED(rv)) {
         return NS_REFRESHURI_HEADER_FOUND;
       }
@@ -10886,8 +10890,8 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       // It's a file:// URI
       nsCOMPtr<nsIPrincipal> principal = document->GetPrincipal();
 
-      if (!principal ||
-          NS_FAILED(principal->CheckMayLoad(newURI, true, false))) {
+      if (!principal || NS_FAILED(principal->CheckMayLoadWithReporting(
+                            newURI, false, document->InnerWindowID()))) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     }

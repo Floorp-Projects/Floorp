@@ -1,7 +1,3 @@
-# The base image is a last known working snapshot of this image. We do this
-# to work around problems rebuilding desktop1604-test. See bug 1503756 for
-# the ugly details. Bug 1511527 tracks undoing this hack and building from
-# a fresh ubuntu image.
 FROM          debian:buster
 MAINTAINER    Edwin Takahashi <egao@mozilla.com>
 

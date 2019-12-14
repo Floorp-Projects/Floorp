@@ -40,7 +40,7 @@ add_task(async function(client) {
   const { context } = await Runtime.executionContextCreated();
 
   info("Focus the input on the page");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const input = content.document.querySelector("input");
     input.focus();
     is(input, content.document.activeElement, "Input should be focused");
