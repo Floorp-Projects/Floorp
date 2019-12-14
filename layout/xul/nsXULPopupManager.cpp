@@ -2089,7 +2089,7 @@ bool nsXULPopupManager::HandleKeyboardNavigationInPopup(
       // Cursor navigation does not wrap on Mac or for menulists on Windows.
       bool wrap =
 #ifdef XP_WIN
-          aFrame->IsMenuList() ? false : true;
+          !aFrame->IsMenuList();
 #elif defined XP_MACOSX
           false;
 #else

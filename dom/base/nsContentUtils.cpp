@@ -3185,7 +3185,7 @@ bool nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
                                  EmptyCString(),  // mime guess
                                  &decision, GetContentPolicy());
 
-  return NS_FAILED(rv) ? false : NS_CP_ACCEPTED(decision);
+  return NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(decision);
 }
 
 // static

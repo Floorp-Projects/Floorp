@@ -1902,7 +1902,7 @@ bool nsStyleImage::StartDecoding() const {
   }
   // null image types always return false from IsComplete, so we do the same
   // here.
-  return mType != eStyleImageType_Null ? true : false;
+  return mType != eStyleImageType_Null;
 }
 
 bool nsStyleImage::IsOpaque() const {
