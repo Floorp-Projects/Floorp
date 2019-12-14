@@ -3373,6 +3373,11 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(
 
 float AsyncPanZoomController::ComputePLPPI(ParentLayerPoint aPoint,
                                            ParentLayerPoint aDirection) const {
+  // Avoid division-by-zero.
+  if (aDirection == ParentLayerPoint()) {
+    return GetDPI();
+  }
+
   // Convert |aDirection| into a unit vector.
   aDirection = aDirection / aDirection.Length();
 
