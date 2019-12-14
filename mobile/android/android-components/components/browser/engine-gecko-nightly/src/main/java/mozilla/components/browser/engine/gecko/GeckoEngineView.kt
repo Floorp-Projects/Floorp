@@ -13,12 +13,14 @@ import androidx.core.view.ViewCompat
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.permission.PermissionRequest
+import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
 import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineView implementation.
  */
+@Suppress("TooManyFunctions")
 class GeckoEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -70,6 +72,9 @@ class GeckoEngineView @JvmOverloads constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentSession: GeckoEngineSession? = null
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var currentSelection: BasicSelectionActionDelegate? = null
+
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
         // implementation should handle at least two GeckoView so that we can switch between
@@ -94,16 +99,20 @@ class GeckoEngineView @JvmOverloads constructor(
                 // Release a previously assigned session. Otherwise GeckoView will close it
                 // automatically.
                 currentGeckoView.releaseSession()
+                currentSelection = null
             }
 
             try {
                 currentGeckoView.setSession(internalSession.geckoSession)
+                currentSelection =
+                    internalSession.geckoSession.selectionActionDelegate as? BasicSelectionActionDelegate
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
                     internalSession.geckoSession.accessibility.view?.context?.javaClass?.simpleName
                 val activityClassName = context.javaClass.simpleName
-                val msg = "SET SESSION: Current activity: $activityClassName Other activity: $otherActivityClassName"
+                val msg =
+                    "SET SESSION: Current activity: $activityClassName Other activity: $otherActivityClassName"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -122,6 +131,7 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun release() {
         currentSession?.apply { unregister(observer) }
 
+        currentSelection = null
         currentSession = null
 
         currentGeckoView.releaseSession()
@@ -132,6 +142,8 @@ class GeckoEngineView @JvmOverloads constructor(
 
         release()
     }
+
+    override fun canClearSelection() = currentSelection?.selection != null
 
     override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false
 
@@ -158,5 +170,9 @@ class GeckoEngineView @JvmOverloads constructor(
                 GeckoResult<Void>()
             })
         }
+    }
+
+    override fun clearSelection() {
+        currentSelection?.clearSelection()
     }
 }

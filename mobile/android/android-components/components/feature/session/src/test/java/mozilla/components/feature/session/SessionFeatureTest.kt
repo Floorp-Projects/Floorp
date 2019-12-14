@@ -70,6 +70,25 @@ class SessionFeatureTest {
     }
 
     @Test
+    fun `handleBackPressed clears selection when a selection is found`() {
+        val session = Session("https://www.mozilla.org")
+        whenever(sessionManager.selectedSession).thenReturn(session)
+        whenever(sessionManager.selectedSessionOrThrow).thenReturn(session)
+
+        val engineSession = mock<EngineSession>()
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
+
+        whenever(engineView.canClearSelection()).thenReturn(true)
+
+        val result = feature.onBackPressed()
+
+        verify(engineView).clearSelection()
+        assertTrue(result)
+    }
+
+    @Test
     fun `handleBackPressed does nothing when sessionId provided but no session found`() {
         val engineSession = mock<EngineSession>()
         val sessionId = "123"

@@ -71,6 +71,12 @@ interface EngineView {
     fun onDestroy() = Unit
 
     /**
+     * Check if [EngineView] can clear the selection.
+     * true if can and false otherwise.
+     */
+    fun canClearSelection(): Boolean = false
+
+    /**
      * Check if [EngineView] can be scrolled vertically up.
      * true if can and false otherwise.
      */
@@ -87,6 +93,11 @@ interface EngineView {
      * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
      */
     fun captureThumbnail(onFinish: (Bitmap?) -> Unit)
+
+    /**
+     * Clears the current selection if possible.
+     */
+    fun clearSelection() = Unit
 
     /**
      * Updates the amount of vertical space that is clipped or visibly obscured in the bottom portion of the view.
