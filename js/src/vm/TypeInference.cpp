@@ -337,7 +337,7 @@ TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, Type type) {
     return;
   }
   if (type.isPrimitive()) {
-    flags = PrimitiveTypeFlag(type.primitive());
+    flags = PrimitiveTypeFlag(type);
     if (flags == TYPE_FLAG_DOUBLE) {
       flags |= TYPE_FLAG_INT32;
     }
@@ -396,18 +396,6 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
       return baseFlags() & TYPE_FLAG_BIGINT;
     case jit::MIRType::MagicOptimizedArguments:
       return baseFlags() & TYPE_FLAG_LAZYARGS;
-    case jit::MIRType::MagicHole:
-    case jit::MIRType::MagicIsConstructing:
-      // These magic constants do not escape to script and are not observed
-      // in the type sets.
-      //
-      // The reason we can return false here is subtle: if Ion is asking the
-      // type set if it has seen such a magic constant, then the MIR in
-      // question is the most generic type, MIRType::Value. A magic constant
-      // could only be emitted by a MIR of MIRType::Value if that MIR is a
-      // phi, and we check that different magic constants do not flow to the
-      // same join point in GuessPhiType.
-      return false;
     default:
       MOZ_CRASH("Bad MIR type");
   }
@@ -485,7 +473,7 @@ bool TypeSet::enumerateTypes(TypeListT* list) const {
   /* Enqueue type set members stored as bits. */
   for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
     if (flags & flag) {
-      Type type = PrimitiveType(TypeFlagPrimitive(flag));
+      Type type = PrimitiveTypeFromTypeFlag(flag);
       if (!list->append(type)) {
         return false;
       }
@@ -607,7 +595,7 @@ void TypeSet::addType(Type type, LifoAlloc* alloc) {
   }
 
   if (type.isPrimitive()) {
-    TypeFlags flag = PrimitiveTypeFlag(type.primitive());
+    TypeFlags flag = PrimitiveTypeFlag(type);
     if (flags & flag) {
       return;
     }
@@ -2230,7 +2218,7 @@ bool TemporaryTypeSet::filtersType(const TemporaryTypeSet* other,
   }
 
   for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-    Type type = PrimitiveType(TypeFlagPrimitive(flag));
+    Type type = PrimitiveTypeFromTypeFlag(flag);
     if (type != filteredType && other->hasType(type) && !hasType(type)) {
       return false;
     }
@@ -3417,11 +3405,40 @@ void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
 }
 
 /* static */
+void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
+                                              jsbytecode* pc,
+                                              const js::Value& rval) {
+  MOZ_ASSERT(rval.isMagic());
+
+  // It's possible that we arrived here from bailing out of Ion, and that
+  // Ion proved that the value is dead and optimized out. In such cases,
+  // do nothing.
+  if (rval.whyMagic() == JS_OPTIMIZED_OUT) {
+    return;
+  }
+
+  // In derived class constructors (including nested arrows/eval)
+  // GETALIASEDVAR can return the magic TDZ value.
+  MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+  MOZ_ASSERT(script->function() || script->isForEval());
+  MOZ_ASSERT(*GetNextPc(pc) == JSOP_CHECKTHIS ||
+             *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
+             *GetNextPc(pc) == JSOP_CHECKRETURN);
+
+  MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
+}
+
+/* static */
 void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, const js::Value& rval) {
   MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
 
   if (!script->hasJitScript()) {
+    return;
+  }
+
+  if (MOZ_UNLIKELY(rval.isMagic())) {
+    MonitorMagicValueBytecodeType(cx, script, pc, rval);
     return;
   }
 

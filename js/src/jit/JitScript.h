@@ -366,6 +366,10 @@ class alignas(uintptr_t) JitScript final {
                                       jsbytecode* pc, StackTypeSet* types,
                                       TypeSet::Type type);
 
+  static void MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
+                                            jsbytecode* pc,
+                                            const js::Value& rval);
+
  public:
   /* Monitor an assignment at a SETELEM on a non-integer identifier. */
   static inline void MonitorAssign(JSContext* cx, HandleObject obj, jsid id);
