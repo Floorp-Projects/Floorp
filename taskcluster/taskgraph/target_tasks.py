@@ -855,7 +855,7 @@ def target_tasks_condprof(full_task_graph, parameters, graph_config):
             yield name
 
 
-@_target_task('system-symbols')
+@_target_task('system_symbols')
 def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
     """
     Select tasks for uploading system-symbols.
