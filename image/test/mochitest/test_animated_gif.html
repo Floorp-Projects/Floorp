@@ -35,11 +35,11 @@
       iframe.src = "http://example.org/tests/image/test/mochitest/child.html";
     });
 
-    const start = document.timeline.currentTime;
+    const start = Date.now();
 
     // Waits a second;
     await SimpleTest.promiseWaitForCondition(() => {
-      return 1000 < (document.timeline.currentTime - start);
+      return 1000 < (Date.now() - start);
     });
 
     ok(true, "decodeComplete didn't receive within a second");
