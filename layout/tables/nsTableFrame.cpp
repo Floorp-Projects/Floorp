@@ -4619,9 +4619,9 @@ static const BCCellBorder& CompareBorders(
   bool firstDominates = true;
 
   if (StyleBorderStyle::Hidden == aBorder1.style) {
-    firstDominates = (aIsCorner) ? false : true;
+    firstDominates = !aIsCorner;
   } else if (StyleBorderStyle::Hidden == aBorder2.style) {
-    firstDominates = (aIsCorner) ? true : false;
+    firstDominates = aIsCorner;
   } else if (aBorder1.width < aBorder2.width) {
     firstDominates = false;
   } else if (aBorder1.width == aBorder2.width) {

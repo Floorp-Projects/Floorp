@@ -95,7 +95,7 @@ bool PresentationParent::Init(ContentParentId aContentParentId) {
   MOZ_ASSERT(!mService);
   mService = do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   mChildId = aContentParentId;
-  return NS_WARN_IF(!mService) ? false : true;
+  return !NS_WARN_IF(!mService);
 }
 
 void PresentationParent::ActorDestroy(ActorDestroyReason aWhy) {
