@@ -757,12 +757,18 @@ Document* ExternalResourceMap::RequestResource(
   return nullptr;
 }
 
-void ExternalResourceMap::EnumerateResources(Document::SubDocEnumFunc aCallback,
+void ExternalResourceMap::EnumerateResources(SubDocEnumFunc aCallback,
                                              void* aData) {
-  for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
-    ExternalResourceMap::ExternalResource* resource = iter.UserData();
-    if (resource->mDocument && !aCallback(resource->mDocument, aData)) {
-      break;
+  nsTArray<RefPtr<Document>> docs(mMap.Count());
+  for (const auto& entry : mMap) {
+    if (Document* doc = entry.GetData()->mDocument) {
+      docs.AppendElement(doc);
+    }
+  }
+
+  for (auto& doc : docs) {
+    if (!aCallback(*doc, aData)) {
+      return;
     }
   }
 }
@@ -9802,12 +9808,6 @@ void Document::FlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   }
 }
 
-static bool Copy(Document* aDocument, void* aData) {
-  auto* resources = static_cast<nsTArray<nsCOMPtr<Document>>*>(aData);
-  resources->AppendElement(aDocument);
-  return true;
-}
-
 void Document::FlushExternalResources(FlushType aType) {
   NS_ASSERTION(
       aType >= FlushType::Style,
@@ -9816,12 +9816,12 @@ void Document::FlushExternalResources(FlushType aType) {
     return;
   }
 
-  nsTArray<nsCOMPtr<Document>> resources;
-  EnumerateExternalResources(Copy, &resources);
-
-  for (uint32_t i = 0; i < resources.Length(); i++) {
-    resources[i]->FlushPendingNotifications(aType);
-  }
+  EnumerateExternalResources(
+      [](Document& aDoc, void* aData) -> bool {
+        aDoc.FlushPendingNotifications(*static_cast<FlushType*>(aData));
+        return true;
+      },
+      &aType);
 }
 
 void Document::SetXMLDeclaration(const char16_t* aVersion,
@@ -10053,16 +10053,15 @@ void Document::EnumerateSubDocuments(SubDocEnumFunc aCallback, void* aData) {
 
   // PLDHashTable::Iterator can't handle modifications while iterating so we
   // copy all entries to an array first before calling any callbacks.
-  AutoTArray<nsCOMPtr<Document>, 8> subdocs;
+  AutoTArray<RefPtr<Document>, 8> subdocs;
   for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<SubDocMapEntry*>(iter.Get());
-    Document* subdoc = entry->mSubDocument;
-    if (subdoc) {
+    if (Document* subdoc = entry->mSubDocument) {
       subdocs.AppendElement(subdoc);
     }
   }
-  for (auto subdoc : subdocs) {
-    if (!aCallback(subdoc, aData)) {
+  for (auto& subdoc : subdocs) {
+    if (!aCallback(*subdoc, aData)) {
       break;
     }
   }
@@ -10542,9 +10541,9 @@ void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
                                     nullptr);
 }
 
-static bool NotifyPageShow(Document* aDocument, void* aData) {
+static bool NotifyPageShow(Document& aDocument, void* aData) {
   const bool* aPersistedPtr = static_cast<const bool*>(aData);
-  aDocument->OnPageShow(*aPersistedPtr, nullptr);
+  aDocument.OnPageShow(*aPersistedPtr, nullptr);
   return true;
 }
 
@@ -10609,16 +10608,16 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
   }
 }
 
-static bool NotifyPageHide(Document* aDocument, void* aData) {
+static bool NotifyPageHide(Document& aDocument, void* aData) {
   const bool* aPersistedPtr = static_cast<const bool*>(aData);
-  aDocument->OnPageHide(*aPersistedPtr, nullptr);
+  aDocument.OnPageHide(*aPersistedPtr, nullptr);
   return true;
 }
 
-static void DispatchFullscreenChange(Document* aDocument, nsINode* aTarget) {
-  if (nsPresContext* presContext = aDocument->GetPresContext()) {
+static void DispatchFullscreenChange(Document& aDocument, nsINode* aTarget) {
+  if (nsPresContext* presContext = aDocument.GetPresContext()) {
     auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
-        FullscreenEventType::Change, aDocument, aTarget);
+        FullscreenEventType::Change, &aDocument, aTarget);
     presContext->RefreshDriver()->ScheduleFullscreenEvent(
         std::move(pendingEvent));
   }
@@ -11033,9 +11032,8 @@ void Document::GetReadyState(nsAString& aReadyState) const {
   }
 }
 
-static bool SuppressEventHandlingInDocument(Document* aDocument, void* aData) {
-  aDocument->SuppressEventHandling(*static_cast<uint32_t*>(aData));
-
+static bool SuppressEventHandlingInDocument(Document& aDocument, void* aData) {
+  aDocument.SuppressEventHandling(*static_cast<uint32_t*>(aData));
   return true;
 }
 
@@ -11372,22 +11370,22 @@ class nsDelayedEventDispatcher : public Runnable {
   nsTArray<nsCOMPtr<Document>> mDocuments;
 };
 
-static bool GetAndUnsuppressSubDocuments(Document* aDocument, void* aData) {
-  if (aDocument->EventHandlingSuppressed() > 0) {
-    aDocument->DecreaseEventSuppression();
-    aDocument->ScriptLoader()->RemoveExecuteBlocker();
+static bool GetAndUnsuppressSubDocuments(Document& aDocument, void* aData) {
+  if (aDocument.EventHandlingSuppressed() > 0) {
+    aDocument.DecreaseEventSuppression();
+    aDocument.ScriptLoader()->RemoveExecuteBlocker();
   }
 
   auto* docs = static_cast<nsTArray<nsCOMPtr<Document>>*>(aData);
 
-  docs->AppendElement(aDocument);
-  aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, aData);
+  docs->AppendElement(&aDocument);
+  aDocument.EnumerateSubDocuments(GetAndUnsuppressSubDocuments, aData);
   return true;
 }
 
 void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
   nsTArray<nsCOMPtr<Document>> documents;
-  GetAndUnsuppressSubDocuments(this, &documents);
+  GetAndUnsuppressSubDocuments(*this, &documents);
 
   if (aFireEvents) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -11446,15 +11444,15 @@ void Document::FireOrClearPostMessageEvents(bool aFireEvents) {
   }
 }
 
-static bool SetSuppressedEventListenerInSubDocument(Document* aDocument,
-                                                    void* aData) {
-  aDocument->SetSuppressedEventListener(static_cast<EventListener*>(aData));
-  return true;
-}
-
 void Document::SetSuppressedEventListener(EventListener* aListener) {
   mSuppressedEventListener = aListener;
-  EnumerateSubDocuments(SetSuppressedEventListenerInSubDocument, aListener);
+  EnumerateSubDocuments(
+      [](Document& aDocument, void* aData) {
+        aDocument.SetSuppressedEventListener(
+            static_cast<EventListener*>(aData));
+        return true;
+      },
+      aListener);
 }
 
 nsISupports* Document::GetCurrentContentSink() {
@@ -11714,10 +11712,17 @@ bool Document::UnregisterActivityObserver(nsISupports* aSupports) {
 
 void Document::EnumerateActivityObservers(
     ActivityObserverEnumerator aEnumerator, void* aData) {
-  if (!mActivityObservers) return;
+  if (!mActivityObservers) {
+    return;
+  }
 
+  nsTArray<nsCOMPtr<nsISupports>> observers(mActivityObservers->Count());
   for (auto iter = mActivityObservers->ConstIter(); !iter.Done(); iter.Next()) {
-    aEnumerator(iter.Get()->GetKey(), aData);
+    observers.AppendElement(iter.Get()->GetKey());
+  }
+
+  for (auto& observer : observers) {
+    aEnumerator(observer.get(), aData);
   }
 }
 
@@ -11997,11 +12002,11 @@ mozilla::dom::ImageTracker* Document::ImageTracker() {
   return mImageTracker;
 }
 
-static bool AllSubDocumentPluginEnum(Document* aDocument, void* userArg) {
+static bool AllSubDocumentPluginEnum(Document& aDocument, void* userArg) {
   nsTArray<nsIObjectLoadingContent*>* plugins =
       reinterpret_cast<nsTArray<nsIObjectLoadingContent*>*>(userArg);
   MOZ_ASSERT(plugins);
-  aDocument->GetPlugins(*plugins);
+  aDocument.GetPlugins(*plugins);
   return true;
 }
 
@@ -12800,17 +12805,17 @@ void Document::AsyncExitFullscreen(Document* aDoc) {
   }
 }
 
-static bool CountFullscreenSubDocuments(Document* aDoc, void* aData) {
-  if (aDoc->FullscreenStackTop()) {
+static bool CountFullscreenSubDocuments(Document& aDoc, void* aData) {
+  if (aDoc.FullscreenStackTop()) {
     uint32_t* count = static_cast<uint32_t*>(aData);
     (*count)++;
   }
   return true;
 }
 
-static uint32_t CountFullscreenSubDocuments(Document* aDoc) {
+static uint32_t CountFullscreenSubDocuments(Document& aDoc) {
   uint32_t count = 0;
-  aDoc->EnumerateSubDocuments(CountFullscreenSubDocuments, &count);
+  aDoc.EnumerateSubDocuments(CountFullscreenSubDocuments, &count);
   return count;
 }
 
@@ -12820,24 +12825,24 @@ bool Document::IsFullscreenLeaf() {
   if (!FullscreenStackTop()) {
     return false;
   }
-  return CountFullscreenSubDocuments(this) == 0;
+  return CountFullscreenSubDocuments(*this) == 0;
 }
 
-bool GetFullscreenLeaf(Document* aDoc, void* aData) {
-  if (aDoc->IsFullscreenLeaf()) {
+bool GetFullscreenLeaf(Document& aDoc, void* aData) {
+  if (aDoc.IsFullscreenLeaf()) {
     Document** result = static_cast<Document**>(aData);
-    *result = aDoc;
+    *result = &aDoc;
     return false;
   }
-  if (aDoc->FullscreenStackTop()) {
-    aDoc->EnumerateSubDocuments(GetFullscreenLeaf, aData);
+  if (aDoc.FullscreenStackTop()) {
+    aDoc.EnumerateSubDocuments(GetFullscreenLeaf, aData);
   }
   return true;
 }
 
 static Document* GetFullscreenLeaf(Document* aDoc) {
   Document* leaf = nullptr;
-  GetFullscreenLeaf(aDoc, &leaf);
+  GetFullscreenLeaf(*aDoc, &leaf);
   if (leaf) {
     return leaf;
   }
@@ -12849,18 +12854,18 @@ static Document* GetFullscreenLeaf(Document* aDoc) {
   if (!root->FullscreenStackTop()) {
     return nullptr;
   }
-  GetFullscreenLeaf(root, &leaf);
+  GetFullscreenLeaf(*root, &leaf);
   return leaf;
 }
 
-static bool ResetFullscreen(Document* aDocument, void* aData) {
-  if (Element* fsElement = aDocument->FullscreenStackTop()) {
+static bool ResetFullscreen(Document& aDocument, void* aData) {
+  if (Element* fsElement = aDocument.FullscreenStackTop()) {
     NS_ASSERTION(CountFullscreenSubDocuments(aDocument) <= 1,
                  "Should have at most 1 fullscreen subdocument.");
-    aDocument->CleanupFullscreenState();
-    NS_ASSERTION(!aDocument->FullscreenStackTop(), "Should reset fullscreen");
+    aDocument.CleanupFullscreenState();
+    NS_ASSERTION(!aDocument.FullscreenStackTop(), "Should reset fullscreen");
     DispatchFullscreenChange(aDocument, fsElement);
-    aDocument->EnumerateSubDocuments(ResetFullscreen, nullptr);
+    aDocument.EnumerateSubDocuments(ResetFullscreen, nullptr);
   }
   return true;
 }
@@ -12930,7 +12935,7 @@ void Document::ExitFullscreenInDocTree(Document* aMaybeNotARootDoc) {
   Document* fullscreenLeaf = GetFullscreenLeaf(root);
 
   // Walk the tree of fullscreen documents, and reset their fullscreen state.
-  ResetFullscreen(root, nullptr);
+  ResetFullscreen(*root, nullptr);
 
   NS_ASSERTION(!root->FullscreenStackTop(),
                "Fullscreen root should no longer be a fullscreen doc...");
@@ -13022,7 +13027,7 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
   // that the loop order is reversed so that events are dispatched in
   // the tree order as indicated in the spec.
   for (Element* e : Reversed(exitElements)) {
-    DispatchFullscreenChange(e->OwnerDoc(), e);
+    DispatchFullscreenChange(*e->OwnerDoc(), e);
   }
   aExit->MayResolvePromise();
 
@@ -13234,7 +13239,7 @@ bool Document::IsUnprefixedFullscreenEnabled(JSContext* aCx,
          StaticPrefs::full_screen_api_unprefix_enabled();
 }
 
-static bool HasFullscreenSubDocument(Document* aDoc) {
+static bool HasFullscreenSubDocument(Document& aDoc) {
   uint32_t count = CountFullscreenSubDocuments(aDoc);
   NS_ASSERTION(count <= 1,
                "Fullscreen docs should have at most 1 fullscreen child!");
@@ -13296,7 +13301,7 @@ bool Document::FullscreenElementReadyCheck(const FullscreenRequest& aRequest) {
     aRequest.Reject(msg);
     return false;
   }
-  if (HasFullscreenSubDocument(this)) {
+  if (HasFullscreenSubDocument(*this)) {
     aRequest.Reject("FullscreenDeniedSubDocFullScreen");
     return false;
   }
@@ -13547,7 +13552,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // reversed so that events are dispatched in the tree order as
   // indicated in the spec.
   for (Document* d : Reversed(changed)) {
-    DispatchFullscreenChange(d, d->FullscreenStackTop());
+    DispatchFullscreenChange(*d, d->FullscreenStackTop());
   }
   aRequest->MayResolvePromise();
   return true;
@@ -14347,8 +14352,8 @@ void Document::ReportUseCounters() {
       doc->ReportUseCounters();
     }
     EnumerateExternalResources(
-        [](Document* aDoc, void*) -> bool {
-          aDoc->ReportUseCounters();
+        [](Document& aDoc, void*) -> bool {
+          aDoc.ReportUseCounters();
           return true;
         },
         nullptr);
@@ -14506,9 +14511,8 @@ void Document::NotifyIntersectionObservers() {
   }
 }
 
-static bool NotifyLayerManagerRecreatedCallback(Document* aDocument,
-                                                void* aData) {
-  aDocument->NotifyLayerManagerRecreated();
+static bool NotifyLayerManagerRecreatedCallback(Document& aDocument, void*) {
+  aDocument.NotifyLayerManagerRecreated();
   return true;
 }
 
@@ -14599,16 +14603,14 @@ already_AddRefed<Element> Document::CreateHTMLElement(nsAtom* aTag) {
   return element.forget();
 }
 
-bool MarkDocumentTreeToBeInSyncOperation(Document* aDoc, void* aData) {
+bool MarkDocumentTreeToBeInSyncOperation(Document& aDoc, void* aData) {
   auto* documents = static_cast<nsTArray<nsCOMPtr<Document>>*>(aData);
-  if (aDoc) {
-    aDoc->SetIsInSyncOperation(true);
-    if (nsCOMPtr<nsPIDOMWindowInner> window = aDoc->GetInnerWindow()) {
-      window->TimeoutManager().BeginSyncOperation();
-    }
-    documents->AppendElement(aDoc);
-    aDoc->EnumerateSubDocuments(MarkDocumentTreeToBeInSyncOperation, aData);
+  aDoc.SetIsInSyncOperation(true);
+  if (nsCOMPtr<nsPIDOMWindowInner> window = aDoc.GetInnerWindow()) {
+    window->TimeoutManager().BeginSyncOperation();
   }
+  documents->AppendElement(&aDoc);
+  aDoc.EnumerateSubDocuments(MarkDocumentTreeToBeInSyncOperation, aData);
   return true;
 }
 
@@ -14622,8 +14624,9 @@ nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc) {
   if (aDoc) {
     if (nsPIDOMWindowOuter* win = aDoc->GetWindow()) {
       if (nsCOMPtr<nsPIDOMWindowOuter> top = win->GetInProcessTop()) {
-        nsCOMPtr<Document> doc = top->GetExtantDoc();
-        MarkDocumentTreeToBeInSyncOperation(doc, &mDocuments);
+        if (RefPtr<Document> doc = top->GetExtantDoc()) {
+          MarkDocumentTreeToBeInSyncOperation(*doc, &mDocuments);
+        }
       }
     }
   }

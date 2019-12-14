@@ -515,7 +515,9 @@ class AutoPrintEventDispatcher {
  private:
   void DispatchEventToWindowTree(const nsAString& aEvent) {
     nsTArray<nsCOMPtr<Document>> targets;
-    CollectDocuments(mTop, &targets);
+    if (mTop) {
+      CollectDocuments(*mTop, &targets);
+    }
     for (nsCOMPtr<Document>& doc : targets) {
       nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
                                            CanBubble::eNo, Cancelable::eNo,
@@ -523,12 +525,10 @@ class AutoPrintEventDispatcher {
     }
   }
 
-  static bool CollectDocuments(Document* aDocument, void* aData) {
-    if (aDocument) {
-      static_cast<nsTArray<nsCOMPtr<Document>>*>(aData)->AppendElement(
-          aDocument);
-      aDocument->EnumerateSubDocuments(CollectDocuments, aData);
-    }
+  static bool CollectDocuments(Document& aDocument, void* aData) {
+    static_cast<nsTArray<nsCOMPtr<Document>>*>(aData)->AppendElement(
+        &aDocument);
+    aDocument.EnumerateSubDocuments(CollectDocuments, aData);
     return true;
   }
 
@@ -2696,9 +2696,9 @@ void nsDocumentViewer::PropagateToPresContextsHelper(CallChildFunc aChildFunc,
 
     if (mDocument) {
       mDocument->EnumerateExternalResources(
-          [](Document* aDoc, void* aClosure) -> bool {
+          [](Document& aDoc, void* aClosure) -> bool {
             auto* closure = static_cast<ResourceDocClosure*>(aClosure);
-            if (nsPresContext* pc = aDoc->GetPresContext()) {
+            if (nsPresContext* pc = aDoc.GetPresContext()) {
               closure->mFunc(pc, closure->mParentClosure);
             }
             return true;
