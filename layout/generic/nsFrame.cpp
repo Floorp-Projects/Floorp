@@ -10651,10 +10651,6 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   }
 #endif
 
-  if (aWidth == NS_UNCONSTRAINEDSIZE) aWidth = aDesiredSize.Width();
-
-  if (aHeight == NS_UNCONSTRAINEDSIZE) aHeight = aDesiredSize.Height();
-
   metrics->mLastSize.width = aDesiredSize.Width();
   metrics->mLastSize.height = aDesiredSize.Height();
 
