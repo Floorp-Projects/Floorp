@@ -3555,7 +3555,11 @@ Toolbox.prototype = {
       return this._destroyer;
     }
 
-    this._destroyer = this._destroyToolbox();
+    // This pattern allows to immediately return the destroyer promise.
+    // See Bug 1602727 for more details.
+    let destroyerResolve;
+    this._destroyer = new Promise(r => (destroyerResolve = r));
+    this._destroyToolbox().then(destroyerResolve);
 
     return this._destroyer;
   },
