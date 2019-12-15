@@ -69,7 +69,6 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     if (rv != NS_OK_PARSE_SHEET) {
       return rv;
     }
-    rv = NS_OK;
 
     // BOM detection generally happens during the write callback, but that won't
     // have happened if fewer than three bytes were received.
