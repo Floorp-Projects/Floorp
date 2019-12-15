@@ -449,7 +449,7 @@ impl<T: Zero> LogicalSize<T> {
     }
 }
 
-impl<T: Copy> LogicalSize<T> {
+impl<T> LogicalSize<T> {
     #[inline]
     pub fn new(mode: WritingMode, inline: T, block: T) -> LogicalSize<T> {
         LogicalSize {
@@ -467,7 +467,9 @@ impl<T: Copy> LogicalSize<T> {
             LogicalSize::new(mode, size.width, size.height)
         }
     }
+}
 
+impl<T: Copy> LogicalSize<T> {
     #[inline]
     pub fn width(&self, mode: WritingMode) -> T {
         self.debug_writing_mode.check(mode);
@@ -841,7 +843,7 @@ impl<T: Zero> LogicalMargin<T> {
     }
 }
 
-impl<T: Copy> LogicalMargin<T> {
+impl<T> LogicalMargin<T> {
     #[inline]
     pub fn new(
         mode: WritingMode,
@@ -857,11 +859,6 @@ impl<T: Copy> LogicalMargin<T> {
             inline_start: inline_start,
             debug_writing_mode: DebugWritingMode::new(mode),
         }
-    }
-
-    #[inline]
-    pub fn new_all_same(mode: WritingMode, value: T) -> LogicalMargin<T> {
-        LogicalMargin::new(mode, value, value, value, value)
     }
 
     #[inline]
@@ -897,6 +894,14 @@ impl<T: Copy> LogicalMargin<T> {
             }
         }
         LogicalMargin::new(mode, block_start, inline_end, block_end, inline_start)
+    }
+}
+
+
+impl<T: Copy> LogicalMargin<T> {
+    #[inline]
+    pub fn new_all_same(mode: WritingMode, value: T) -> LogicalMargin<T> {
+        LogicalMargin::new(mode, value, value, value, value)
     }
 
     #[inline]
