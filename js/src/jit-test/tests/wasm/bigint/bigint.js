@@ -46,8 +46,8 @@ function testId() {
     assertEq(f2(1n, 2n ** 64n + 123n), 123n);
     assertEq(f2(1n, "5"), 5n);
 
-    assertErrorMessage(() => f(5, 1n), TypeError, "not a BigInt");
-    assertErrorMessage(() => f2(1n, 5), TypeError, "not a BigInt");
+    assertErrorMessage(() => f(5, 1n), TypeError, "can't convert 5 to BigInt");
+    assertErrorMessage(() => f2(1n, 5), TypeError, "can't convert 5 to BigInt");
   });
 }
 
@@ -165,7 +165,7 @@ function testImportExport() {
     assertEq(f1(42n), undefined);
     assertEq(f2(42n), 43n);
     assertEq(f3(42n), 43n);
-    assertErrorMessage(() => f4(42), TypeError, "not a BigInt");
+    assertErrorMessage(() => f4(42), TypeError, "can't convert undefined to BigInt");
   });
 }
 
@@ -352,7 +352,7 @@ function testGlobalI64ValueWrongType() {
   assertErrorMessage(
     () => new WebAssembly.Global(argument, 666),
     TypeError,
-    "not a BigInt"
+    "can't convert 666 to BigInt"
   );
   assertErrorMessage(
     () => new WebAssembly.Global(argument, "foo"),
@@ -367,13 +367,13 @@ function testGlobalI64ValueWrongType() {
         },
       }),
     TypeError,
-    "not a BigInt"
+    "can't convert 5 to BigInt"
   );
 }
 
 function testGlobalI64SetWrongType() {
   var global = new WebAssembly.Global({ value: "i64", mutable: true });
-  assertErrorMessage(() => (global.value = 1), TypeError, "not a BigInt");
+  assertErrorMessage(() => (global.value = 1), TypeError, "can't convert 1 to BigInt");
   assertErrorMessage(
     () => (global.value = "foo"),
     SyntaxError,
@@ -387,7 +387,7 @@ function testGlobalI64SetWrongType() {
         },
       }),
     TypeError,
-    "not a BigInt"
+    "can't convert 5 to BigInt"
   );
 }
 
