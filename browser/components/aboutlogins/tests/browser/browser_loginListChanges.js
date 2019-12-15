@@ -19,7 +19,9 @@ add_task(async function test_login_added() {
     origin: "https://www.example.com",
   };
   let browser = gBrowser.selectedBrowser;
-  browser.messageManager.sendAsyncMessage("AboutLogins:LoginAdded", login);
+  browser.browsingContext.currentWindowGlobal
+    .getActor("AboutLogins")
+    .sendAsyncMessage("AboutLogins:LoginAdded", login);
 
   await SpecialPowers.spawn(browser, [login], async addedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
@@ -41,7 +43,9 @@ add_task(async function test_login_modified() {
     origin: "https://www.example.com",
   };
   let browser = gBrowser.selectedBrowser;
-  browser.messageManager.sendAsyncMessage("AboutLogins:LoginModified", login);
+  browser.browsingContext.currentWindowGlobal
+    .getActor("AboutLogins")
+    .sendAsyncMessage("AboutLogins:LoginModified", login);
 
   await SpecialPowers.spawn(browser, [login], async modifiedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
@@ -65,7 +69,9 @@ add_task(async function test_login_removed() {
     origin: "https://www.example.com",
   };
   let browser = gBrowser.selectedBrowser;
-  browser.messageManager.sendAsyncMessage("AboutLogins:LoginRemoved", login);
+  browser.browsingContext.currentWindowGlobal
+    .getActor("AboutLogins")
+    .sendAsyncMessage("AboutLogins:LoginRemoved", login);
 
   await SpecialPowers.spawn(browser, [login], async removedLogin => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
@@ -94,7 +100,9 @@ add_task(async function test_all_logins_removed() {
   ];
 
   let browser = gBrowser.selectedBrowser;
-  browser.messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
+  browser.browsingContext.currentWindowGlobal
+    .getActor("AboutLogins")
+    .sendAsyncMessage("AboutLogins:AllLogins", logins);
 
   await SpecialPowers.spawn(browser, [logins], async addedLogins => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));

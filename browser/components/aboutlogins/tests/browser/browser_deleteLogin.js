@@ -47,18 +47,11 @@ add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
 
   function waitForDelete() {
-    return new Promise(resolve => {
-      browser.messageManager.addMessageListener(
-        "AboutLogins:DeleteLogin",
-        function onMsg() {
-          resolve(true);
-          browser.messageManager.removeMessageListener(
-            "AboutLogins:DeleteLogin",
-            onMsg
-          );
-        }
-      );
-    });
+    let numLogins = Services.logins.countLogins("", "", "");
+    return BrowserTestUtils.waitForCondition(
+      () => Services.logins.countLogins("", "", "") < numLogins,
+      "Error waiting for login deletion"
+    );
   }
 
   function deleteFirstLoginAfterEdit() {
@@ -135,11 +128,8 @@ add_task(async function test_login_item() {
   }
 
   let onDeletePromise = waitForDelete();
-
   await deleteFirstLoginAfterEdit();
   await onDeletePromise;
-
-  onDeletePromise = waitForDelete();
 
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = content.document.querySelector("login-list");
@@ -161,6 +151,7 @@ add_task(async function test_login_item() {
     );
   });
 
+  onDeletePromise = waitForDelete();
   await deleteFirstLogin();
   await onDeletePromise;
 
