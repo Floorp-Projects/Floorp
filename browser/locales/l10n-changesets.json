@@ -575,7 +575,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2f530b1857ed"
+        "revision": "75c0f0226f3c"
     },
     "ga-IE": {
         "platforms": [
@@ -1532,7 +1532,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "64fa428f20ee"
+        "revision": "afae33fdc4d5"
     },
     "uz": {
         "platforms": [
