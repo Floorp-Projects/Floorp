@@ -234,9 +234,7 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<MBasicBlock*> newOsrPreheader(MBasicBlock* header,
                                               jsbytecode* loopHead);
   AbortReasonOr<MBasicBlock*> newPendingLoopHeader(MBasicBlock* predecessor,
-                                                   jsbytecode* pc, bool osr,
-                                                   bool canOsr,
-                                                   unsigned stackPhiCount);
+                                                   jsbytecode* pc, bool osr);
 
   AbortReasonOr<MBasicBlock*> newBlock(MBasicBlock* predecessor,
                                        jsbytecode* pc) {
