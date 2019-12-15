@@ -2913,7 +2913,8 @@ BigInt* js::ToBigInt(JSContext* cx, HandleValue val) {
     return bi;
   }
 
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
+  ReportValueError(cx, JSMSG_CANT_CONVERT_TO, JSDVG_IGNORE_STACK, v, nullptr,
+                   "BigInt");
   return nullptr;
 }
 
