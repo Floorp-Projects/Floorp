@@ -16,7 +16,6 @@
 #include "nsPresContext.h"
 #include "nsView.h"
 #include "nsViewportInfo.h"
-#include "nsIScrollable.h"
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -37,10 +36,12 @@
 #include "nsLayoutUtils.h"
 #include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
+#include "nsDocShell.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -4070,23 +4071,6 @@ bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
       ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }
 
-static void HandleScrollPref(nsIScrollable* aScrollable, int32_t aOrientation,
-                             StyleOverflow& aValue) {
-  int32_t pref;
-  aScrollable->GetDefaultScrollbarPreferences(aOrientation, &pref);
-  switch (pref) {
-    case nsIScrollable::Scrollbar_Auto:
-      // leave |aValue| untouched
-      break;
-    case nsIScrollable::Scrollbar_Never:
-      aValue = StyleOverflow::Hidden;
-      break;
-    case nsIScrollable::Scrollbar_Always:
-      aValue = StyleOverflow::Scroll;
-      break;
-  }
-}
-
 OverscrollBehaviorInfo ScrollFrameHelper::GetOverscrollBehaviorInfo() const {
   nsIFrame* frame = GetFrameForStyle();
   if (!frame) {
@@ -4110,13 +4094,14 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
   }
 
   ScrollStyles result = presContext->GetViewportScrollStylesOverride();
-  nsCOMPtr<nsISupports> container = presContext->GetContainerWeak();
-  nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
-  if (scrollable) {
-    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_X,
-                     result.mHorizontal);
-    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
-                     result.mVertical);
+  if (nsDocShell* ds = presContext->GetDocShell()) {
+    switch (ds->ScrollbarPreference()) {
+      case ScrollbarPreference::Auto:
+        break;
+      case ScrollbarPreference::Never:
+        result.mHorizontal = result.mVertical = StyleOverflow::Hidden;
+        break;
+    }
   }
   return result;
 }

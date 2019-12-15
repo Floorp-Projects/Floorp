@@ -20,7 +20,6 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
-#include "nsIScrollable.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSubDocumentFrame.h"
@@ -251,19 +250,17 @@ void nsGenericHTMLFrameElement::UnbindFromTree(bool aNullParent) {
 }
 
 /* static */
-int32_t nsGenericHTMLFrameElement::MapScrollingAttribute(
+ScrollbarPreference nsGenericHTMLFrameElement::MapScrollingAttribute(
     const nsAttrValue* aValue) {
-  int32_t mappedValue = nsIScrollable::Scrollbar_Auto;
   if (aValue && aValue->Type() == nsAttrValue::eEnum) {
     switch (aValue->GetEnumValue()) {
       case NS_STYLE_FRAME_OFF:
       case NS_STYLE_FRAME_NOSCROLL:
       case NS_STYLE_FRAME_NO:
-        mappedValue = nsIScrollable::Scrollbar_Never;
-        break;
+        return ScrollbarPreference::Never;
     }
   }
-  return mappedValue;
+  return ScrollbarPreference::Auto;
 }
 
 static bool PrincipalAllowsBrowserFrame(nsIPrincipal* aPrincipal) {
@@ -295,27 +292,9 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
     if (aName == nsGkAtoms::scrolling) {
       if (mFrameLoader) {
         // FIXME(bug 1588791): This should work for fission iframes.
-        nsIDocShell* docshell = mFrameLoader->GetExistingDocShell();
-        if (nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(docshell)) {
-          int32_t cur;
-          scrollable->GetDefaultScrollbarPreferences(
-              nsIScrollable::ScrollOrientation_X, &cur);
-          int32_t val = MapScrollingAttribute(aValue);
-          if (cur != val) {
-            scrollable->SetDefaultScrollbarPreferences(
-                nsIScrollable::ScrollOrientation_X, val);
-            scrollable->SetDefaultScrollbarPreferences(
-                nsIScrollable::ScrollOrientation_Y, val);
-            RefPtr<nsPresContext> presContext = docshell->GetPresContext();
-            PresShell* presShell =
-                presContext ? presContext->GetPresShell() : nullptr;
-            nsIFrame* rootScroll =
-                presShell ? presShell->GetRootScrollFrame() : nullptr;
-            if (rootScroll) {
-              presShell->FrameNeedsReflow(
-                  rootScroll, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
-            }
-          }
+        if (nsIDocShell* docshell = mFrameLoader->GetExistingDocShell()) {
+          nsDocShell::Cast(docshell)->SetScrollbarPreference(
+              MapScrollingAttribute(aValue));
         }
       }
     } else if (aName == nsGkAtoms::mozbrowser) {

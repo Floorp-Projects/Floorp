@@ -355,7 +355,7 @@ class nsPresContext : public nsISupports,
 
   nsISupports* GetContainerWeak() const;
 
-  nsIDocShell* GetDocShell() const;
+  nsDocShell* GetDocShell() const;
 
   /**
    * Get the visible area associated with this presentation context.

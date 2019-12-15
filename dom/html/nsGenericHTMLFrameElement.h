@@ -114,14 +114,11 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void CreateRemoteFrameLoader(mozilla::dom::BrowserParent* aBrowserParent);
 
   /**
-   * Helper method to map a HTML 'scrolling' attribute value to a nsIScrollable
-   * enum value.  scrolling="no" (and its synonyms) maps to
-   * nsIScrollable::Scrollbar_Never, and anything else (including nullptr) maps
-   * to nsIScrollable::Scrollbar_Auto.
-   * @param aValue the attribute value to map or nullptr
-   * @return nsIScrollable::Scrollbar_Never or nsIScrollable::Scrollbar_Auto
+   * Helper method to map a HTML 'scrolling' attribute value (which can be null)
+   * to a ScrollbarPreference value value.  scrolling="no" (and its synonyms)
+   * map to Never, and anything else to Auto.
    */
-  static int32_t MapScrollingAttribute(const nsAttrValue* aValue);
+  static mozilla::ScrollbarPreference MapScrollingAttribute(const nsAttrValue*);
 
   nsIPrincipal* GetSrcTriggeringPrincipal() const {
     return mSrcTriggeringPrincipal;
