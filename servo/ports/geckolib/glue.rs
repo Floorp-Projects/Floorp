@@ -952,7 +952,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_NoneOffsetPath() -> Strong<RawServ
 pub unsafe extern "C" fn Servo_AnimationValue_OffsetDistance(
     d: &computed::length::LengthPercentage,
 ) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetDistance(*d)).into_strong()
+    Arc::new(AnimationValue::OffsetDistance(d.clone())).into_strong()
 }
 
 #[no_mangle]
@@ -966,7 +966,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_OffsetRotate(
 pub unsafe extern "C" fn Servo_AnimationValue_OffsetAnchor(
     p: &computed::position::PositionOrAuto,
 ) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetAnchor(*p)).into_strong()
+    Arc::new(AnimationValue::OffsetAnchor(p.clone())).into_strong()
 }
 
 #[no_mangle]
