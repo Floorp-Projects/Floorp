@@ -311,7 +311,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mForcedCharset(nullptr),
       mParentCharset(nullptr),
       mTreeOwner(nullptr),
-      mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
+      mScrollbarPref(ScrollbarPreference::Auto),
       mCharsetReloadState(eCharsetReloadInit),
       mOrientationLock(hal::eScreenOrientation_None),
       mParentCharsetSource(0),
@@ -541,7 +541,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollable)
   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -5242,64 +5241,21 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   return NS_OK;
 }
 
-//*****************************************************************************
-// nsDocShell::nsIScrollable
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsDocShell::GetDefaultScrollbarPreferences(int32_t aScrollOrientation,
-                                           int32_t* aScrollbarPref) {
-  NS_ENSURE_ARG_POINTER(aScrollbarPref);
-  switch (aScrollOrientation) {
-    case ScrollOrientation_X:
-      *aScrollbarPref = mDefaultScrollbarPref.x;
-      return NS_OK;
-
-    case ScrollOrientation_Y:
-      *aScrollbarPref = mDefaultScrollbarPref.y;
-      return NS_OK;
-
-    default:
-      NS_ENSURE_TRUE(false, NS_ERROR_INVALID_ARG);
+void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
+  if (mScrollbarPref == aPref) {
+    return;
   }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetDefaultScrollbarPreferences(int32_t aScrollOrientation,
-                                           int32_t aScrollbarPref) {
-  switch (aScrollOrientation) {
-    case ScrollOrientation_X:
-      mDefaultScrollbarPref.x = aScrollbarPref;
-      return NS_OK;
-
-    case ScrollOrientation_Y:
-      mDefaultScrollbarPref.y = aScrollbarPref;
-      return NS_OK;
-
-    default:
-      NS_ENSURE_TRUE(false, NS_ERROR_INVALID_ARG);
+  mScrollbarPref = aPref;
+  auto* ps = GetPresShell();
+  if (!ps) {
+    return;
   }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetScrollbarVisibility(bool* aVerticalVisible,
-                                   bool* aHorizontalVisible) {
-  nsIScrollableFrame* sf = GetRootScrollFrame();
-  NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
-
-  uint32_t scrollbarVisibility = sf->GetScrollbarVisibility();
-  if (aVerticalVisible) {
-    *aVerticalVisible =
-        (scrollbarVisibility & nsIScrollableFrame::VERTICAL) != 0;
+  nsIFrame* scrollFrame = ps->GetRootScrollFrame();
+  if (!scrollFrame) {
+    return;
   }
-  if (aHorizontalVisible) {
-    *aHorizontalVisible =
-        (scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) != 0;
-  }
-
-  return NS_OK;
+  ps->FrameNeedsReflow(scrollFrame, IntrinsicDirty::StyleChange,
+                       NS_FRAME_IS_DIRTY);
 }
 
 //*****************************************************************************

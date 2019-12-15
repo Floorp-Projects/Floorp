@@ -34,7 +34,6 @@
 #include "nsStyleStruct.h"
 #include "nsStyleStructInlines.h"
 #include "nsFrameSetFrame.h"
-#include "nsIScrollable.h"
 #include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
@@ -193,10 +192,10 @@ void nsSubDocumentFrame::ShowViewer() {
       mCallingShow = true;
       const nsAttrValue* attrValue =
           GetContent()->AsElement()->GetParsedAttr(nsGkAtoms::scrolling);
-      int32_t scrolling =
+      ScrollbarPreference scrolling =
           nsGenericHTMLFrameElement::MapScrollingAttribute(attrValue);
-      bool didCreateDoc = frameloader->Show(margin.width, margin.height,
-                                            scrolling, scrolling, this);
+      bool didCreateDoc =
+          frameloader->Show(margin.width, margin.height, scrolling, this);
       if (!weakThis.IsAlive()) {
         return;
       }

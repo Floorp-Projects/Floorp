@@ -7,8 +7,8 @@
 #include "mozilla/dom/BarProps.h"
 #include "mozilla/dom/BarPropBinding.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsGlobalWindow.h"
-#include "nsIScrollable.h"
 #include "nsIWebBrowserChrome.h"
 
 namespace mozilla {
@@ -192,23 +192,13 @@ bool ScrollbarsProp::GetVisible(CallerType aCallerType, ErrorResult& aRv) {
     return true;
   }
 
-  nsCOMPtr<nsIScrollable> scroller =
-      do_QueryInterface(mDOMWindow->GetDocShell());
-
-  if (!scroller) {
+  nsIDocShell* ds = mDOMWindow->GetDocShell();
+  if (!ds) {
     return true;
   }
 
-  int32_t prefValue;
-  scroller->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                           &prefValue);
-  if (prefValue != nsIScrollable::Scrollbar_Never) {
-    return true;
-  }
-
-  scroller->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                           &prefValue);
-  return prefValue != nsIScrollable::Scrollbar_Never;
+  ScrollbarPreference pref = nsDocShell::Cast(ds)->ScrollbarPreference();
+  return pref != ScrollbarPreference::Never;
 }
 
 void ScrollbarsProp::SetVisible(bool aVisible, CallerType aCallerType,

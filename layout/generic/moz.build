@@ -147,6 +147,7 @@ EXPORTS.mozilla += [
     'CSSOrderAwareFrameIterator.h',
     'ReflowInput.h',
     'ReflowOutput.h',
+    'ScrollbarPreferences.h',
     'ViewportFrame.h',
     'WritingModes.h',
 ]

@@ -15,7 +15,7 @@
 
 #include "nsPresContext.h"
 #include "nsFrameManager.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"

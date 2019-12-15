@@ -1164,10 +1164,12 @@ bool nsPresContext::ElementWouldPropagateScrollStyles(const Element& aElement) {
   return GetPropagatedScrollStylesForViewport(this, &dummy) == &aElement;
 }
 
-nsISupports* nsPresContext::GetContainerWeak() const { return GetDocShell(); }
-
-nsIDocShell* nsPresContext::GetDocShell() const {
+nsISupports* nsPresContext::GetContainerWeak() const {
   return mDocument->GetDocShell();
+}
+
+nsDocShell* nsPresContext::GetDocShell() const {
+  return nsDocShell::Cast(mDocument->GetDocShell());
 }
 
 bool nsPresContext::BidiEnabled() const { return Document()->GetBidiEnabled(); }
