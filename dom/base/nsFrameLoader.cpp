@@ -29,7 +29,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScrollable.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsIFrame.h"
@@ -852,7 +851,7 @@ void nsFrameLoader::MaybeShowFrame() {
 }
 
 bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
-                         int32_t scrollbarPrefX, int32_t scrollbarPrefY,
+                         ScrollbarPreference aScrollbarPref,
                          nsSubDocumentFrame* frame) {
   if (mInShow) {
     return false;
@@ -879,11 +878,7 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
 
   GetDocShell()->SetMarginWidth(marginWidth);
   GetDocShell()->SetMarginHeight(marginHeight);
-
-  GetDocShell()->SetDefaultScrollbarPreferences(
-      nsIScrollable::ScrollOrientation_X, scrollbarPrefX);
-  GetDocShell()->SetDefaultScrollbarPreferences(
-      nsIScrollable::ScrollOrientation_Y, scrollbarPrefY);
+  GetDocShell()->SetScrollbarPreference(aScrollbarPref);
 
   if (PresShell* presShell = GetDocShell()->GetPresShell()) {
     // Ensure root scroll frame is reflowed in case scroll preferences or

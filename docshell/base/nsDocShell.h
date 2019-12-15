@@ -33,7 +33,6 @@
 #include "nsILoadURIDelegate.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIRefreshURI.h"
-#include "nsIScrollable.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -56,6 +55,7 @@
 #include "Units.h"
 
 #include "mozilla/ObservedDocShell.h"
+#include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
 
@@ -116,7 +116,6 @@ class nsDocShell final : public nsDocLoader,
                          public nsIDocShell,
                          public nsIWebNavigation,
                          public nsIBaseWindow,
-                         public nsIScrollable,
                          public nsIRefreshURI,
                          public nsIWebProgressListener,
                          public nsIWebPageDescriptor,
@@ -190,7 +189,6 @@ class nsDocShell final : public nsDocLoader,
   NS_DECL_NSIDOCSHELLTREEITEM
   NS_DECL_NSIWEBNAVIGATION
   NS_DECL_NSIBASEWINDOW
-  NS_DECL_NSISCROLLABLE
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIREFRESHURI
@@ -209,6 +207,11 @@ class nsDocShell final : public nsDocLoader,
     // overrides the docloader's Stop()
     return nsDocLoader::Stop();
   }
+
+  mozilla::ScrollbarPreference ScrollbarPreference() const {
+    return mScrollbarPref;
+  }
+  void SetScrollbarPreference(mozilla::ScrollbarPreference);
 
   /**
    * Process a click on a link.
@@ -1181,7 +1184,7 @@ class nsDocShell final : public nsDocLoader,
 
   RefPtr<mozilla::dom::EventTarget> mChromeEventHandler;
 
-  nsIntPoint mDefaultScrollbarPref;  // persistent across doc loads
+  mozilla::ScrollbarPreference mScrollbarPref;  // persistent across doc loads
 
   eCharsetReloadState mCharsetReloadState;
 

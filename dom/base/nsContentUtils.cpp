@@ -194,7 +194,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScrollable.h"
 #include "nsIStreamConverter.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStringBundle.h"
@@ -8695,22 +8694,11 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
 /* static */
 void nsContentUtils::SetScrollbarsVisibility(nsIDocShell* aDocShell,
                                              bool aVisible) {
-  nsCOMPtr<nsIScrollable> scroller = do_QueryInterface(aDocShell);
-
-  if (scroller) {
-    int32_t prefValue;
-
-    if (aVisible) {
-      prefValue = nsIScrollable::Scrollbar_Auto;
-    } else {
-      prefValue = nsIScrollable::Scrollbar_Never;
-    }
-
-    scroller->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                             prefValue);
-    scroller->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                             prefValue);
+  if (!aDocShell) {
+    return;
   }
+  auto pref = aVisible ? ScrollbarPreference::Auto : ScrollbarPreference::Never;
+  nsDocShell::Cast(aDocShell)->SetScrollbarPreference(pref);
 }
 
 /* static */

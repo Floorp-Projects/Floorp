@@ -24,6 +24,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
 #include "Units.h"
@@ -260,9 +261,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool Show(int32_t marginWidth,
                                         int32_t marginHeight,
-                                        int32_t scrollbarPrefX,
-                                        int32_t scrollbarPrefY,
-                                        nsSubDocumentFrame* frame);
+                                        mozilla::ScrollbarPreference,
+                                        nsSubDocumentFrame*);
 
   void MaybeShowFrame();
 
