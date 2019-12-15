@@ -801,9 +801,8 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     return false;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = piWindow->GetDocShell();
-  const bool chromeShell =
-      docShell && docShell->ItemType() == nsIDocShellTreeItem::typeChrome;
+  BrowsingContext* bc = piWindow->GetBrowsingContext();
+  const bool chromeShell = bc && bc->IsChrome();
 
   // next, fire the cut, copy or paste event
   bool doDefault = true;
