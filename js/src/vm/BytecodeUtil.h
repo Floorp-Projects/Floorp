@@ -254,19 +254,12 @@ static inline void SET_ICINDEX(jsbytecode* pc, uint32_t icIndex) {
 
 static inline unsigned LoopHeadDepthHint(jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
-  return GET_UINT8(pc + 4) & 0x7f;
+  return GET_UINT8(pc + 4);
 }
 
-static inline bool LoopHeadCanIonOsr(jsbytecode* pc) {
+static inline void SetLoopHeadDepthHint(jsbytecode* pc, unsigned loopDepth) {
   MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
-  return GET_UINT8(pc + 4) & 0x80;
-}
-
-static inline void SetLoopHeadDepthHintAndFlags(jsbytecode* pc,
-                                                unsigned loopDepth,
-                                                bool canIonOsr) {
-  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
-  uint8_t data = std::min(loopDepth, unsigned(0x7f)) | (canIonOsr ? 0x80 : 0);
+  uint8_t data = std::min(loopDepth, unsigned(UINT8_MAX));
   SET_UINT8(pc + 4, data);
 }
 

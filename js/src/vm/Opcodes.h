@@ -1112,17 +1112,14 @@
     /*
      * This opcode is the target of the backwards jump for some loop.
      *
-     * The uint8 argument is a bitfield. The lower 7 bits of the argument
-     * indicate the loop depth. This value starts at 1 and is just a hint:
-     * deeply nested loops all have the same value. The upper bit is set if Ion
-     * should be able to OSR at this point, which is true unless there is
-     * non-loop state on the stack.
+     * The depthHint value is a loop depth hint for Ion. It starts at 1 and
+     * deeply nested loops all have the same value.
      *
      * See JSOP_JUMPTARGET for the icIndex operand.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: uint32_t icIndex, uint8_t BITFIELD
+     *   Operands: uint32_t icIndex, uint8_t depthHint
      *   Stack: =>
      */ \
     MACRO(JSOP_LOOPHEAD, 109, "loophead", NULL, 6, 0, 0, JOF_LOOPHEAD) \

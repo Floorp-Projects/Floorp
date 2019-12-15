@@ -1315,11 +1315,6 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     if (handler.analysis().info(pc).loopHeadInCatchOrFinally) {
       return true;
     }
-
-    if (!LoopHeadCanIonOsr(pc)) {
-      // OSR into Ion not possible at this loop.
-      return true;
-    }
   }
 
   Label done;

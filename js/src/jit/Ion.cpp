@@ -2072,7 +2072,7 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
                             jsbytecode* osrPc, bool forceRecompile = false) {
   MOZ_ASSERT(jit::IsIonEnabled());
   MOZ_ASSERT(jit::IsBaselineJitEnabled());
-  MOZ_ASSERT_IF(osrPc != nullptr, LoopHeadCanIonOsr(osrPc));
+
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Ion script compilation",
       JS::ProfilingCategoryPair::JS_IonCompilation);
@@ -2278,7 +2278,6 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
                                              jsbytecode* pc) {
   MOZ_ASSERT(jit::IsIonEnabled());
   MOZ_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
-  MOZ_ASSERT(LoopHeadCanIonOsr(pc));
 
   // Skip if the script has been disabled.
   if (!script->canIonCompile()) {
@@ -2356,8 +2355,6 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   bool isLoopHead = JSOp(*pc) == JSOP_LOOPHEAD;
 
-  MOZ_ASSERT(!isLoopHead || LoopHeadCanIonOsr(pc));
-
   // The Baseline JIT code checks for Ion disabled or compiling off-thread.
   MOZ_ASSERT(script->canIonCompile());
   MOZ_ASSERT(!script->isIonCompilingOffThread());
@@ -2382,7 +2379,6 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
 
   MethodStatus stat;
   if (isLoopHead) {
-    MOZ_ASSERT(LoopHeadCanIonOsr(pc));
     JitSpew(JitSpew_BaselineOSR, "  Compile at loop head!");
     stat = BaselineCanEnterAtBranch(cx, script, frame, frameSize, pc);
   } else if (frame->isFunctionFrame()) {
