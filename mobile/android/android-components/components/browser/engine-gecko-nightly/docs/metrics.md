@@ -4,7 +4,6 @@
 This document enumerates the metrics collected by this project.
 This project may depend on other projects which also collect metrics.
 This means you might have to go searching through the dependency tree to get a full picture of everything collected by this project.
-Sorry about that.
 
 # Pings
 
