@@ -304,8 +304,7 @@ MBasicBlock* MBasicBlock::NewWithResumePoint(MIRGraph& graph,
 MBasicBlock* MBasicBlock::NewPendingLoopHeader(MIRGraph& graph,
                                                const CompileInfo& info,
                                                MBasicBlock* pred,
-                                               BytecodeSite* site,
-                                               unsigned stackPhiCount) {
+                                               BytecodeSite* site) {
   MOZ_ASSERT(site->pc() != nullptr);
 
   MBasicBlock* block =
@@ -314,8 +313,7 @@ MBasicBlock* MBasicBlock::NewPendingLoopHeader(MIRGraph& graph,
     return nullptr;
   }
 
-  if (!block->inherit(graph.alloc(), pred->stackDepth(), pred, 0,
-                      stackPhiCount)) {
+  if (!block->inherit(graph.alloc(), pred->stackDepth(), pred, 0)) {
     return nullptr;
   }
 
@@ -523,8 +521,7 @@ void MBasicBlock::copySlots(MBasicBlock* from) {
 }
 
 bool MBasicBlock::inherit(TempAllocator& alloc, size_t stackDepth,
-                          MBasicBlock* maybePred, uint32_t popped,
-                          unsigned stackPhiCount) {
+                          MBasicBlock* maybePred, uint32_t popped) {
   MOZ_ASSERT_IF(maybePred, maybePred->stackDepth() == stackDepth);
 
   MOZ_ASSERT(stackDepth >= popped);
@@ -554,31 +551,7 @@ bool MBasicBlock::inherit(TempAllocator& alloc, size_t stackDepth,
     }
 
     if (kind_ == PENDING_LOOP_HEADER) {
-      size_t i = 0;
-      for (i = 0; i < info().firstStackSlot(); i++) {
-        MPhi* phi = MPhi::New(alloc.fallible());
-        if (!phi) {
-          return false;
-        }
-        phi->addInlineInput(maybePred->getSlot(i));
-        addPhi(phi);
-        setSlot(i, phi);
-        entryResumePoint()->initOperand(i, phi);
-      }
-
-      MOZ_ASSERT(stackPhiCount <= stackDepth);
-      MOZ_ASSERT(info().firstStackSlot() <= stackDepth - stackPhiCount);
-
-      // Avoid creating new phis for stack values that aren't part of the
-      // loop.  Note that for loop headers that can OSR, all values on the
-      // stack are part of the loop.
-      for (; i < stackDepth - stackPhiCount; i++) {
-        MDefinition* val = maybePred->getSlot(i);
-        setSlot(i, val);
-        entryResumePoint()->initOperand(i, val);
-      }
-
-      for (; i < stackDepth; i++) {
+      for (size_t i = 0; i < stackDepth; i++) {
         MPhi* phi = MPhi::New(alloc.fallible());
         if (!phi) {
           return false;

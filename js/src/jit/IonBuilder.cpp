@@ -1802,7 +1802,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
   //
   //    LOOPHEAD
   //    ...
-  //    IFNE/IFEQ/GOTO to LOOPHEAD
+  //    IFNE/GOTO to LOOPHEAD
 
   MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
 
@@ -1811,28 +1811,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
     return Ok();
   }
 
-  jssrcnote* sn = GetSrcNote(gsn, script(), pc);
-  MOZ_ASSERT(sn);
-
-  uint32_t stackPhiCount;
-  switch (SN_TYPE(sn)) {
-    case SRC_FOR_OF:
-      stackPhiCount = 3;
-      break;
-    case SRC_FOR_IN:
-    case SRC_FOR:
-    case SRC_WHILE:
-    case SRC_DO_WHILE:
-      stackPhiCount = 0;
-      break;
-    default:
-      MOZ_CRASH("Unexpected source note");
-  }
-
-  bool canOsr = LoopHeadCanIonOsr(pc);
   bool osr = pc == info().osrPc();
   if (osr) {
-    MOZ_ASSERT(canOsr);
+    MOZ_ASSERT(LoopHeadCanIonOsr(pc));
 
     MBasicBlock* preheader;
     MOZ_TRY_VAR(preheader, newOsrPreheader(current, pc));
@@ -1842,8 +1823,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
 
   loopDepth_++;
   MBasicBlock* header;
-  MOZ_TRY_VAR(header,
-              newPendingLoopHeader(current, pc, osr, canOsr, stackPhiCount));
+  MOZ_TRY_VAR(header, newPendingLoopHeader(current, pc, osr));
   current->end(MGoto::New(alloc(), header));
 
   if (!loopStack_.emplaceBack(header)) {
@@ -7820,16 +7800,9 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newOsrPreheader(
 }
 
 AbortReasonOr<MBasicBlock*> IonBuilder::newPendingLoopHeader(
-    MBasicBlock* predecessor, jsbytecode* pc, bool osr, bool canOsr,
-    unsigned stackPhiCount) {
-  // If this site can OSR, all values on the expression stack are part of the
-  // loop.
-  if (canOsr) {
-    stackPhiCount = predecessor->stackDepth() - info().firstStackSlot();
-  }
-
+    MBasicBlock* predecessor, jsbytecode* pc, bool osr) {
   MBasicBlock* block = MBasicBlock::NewPendingLoopHeader(
-      graph(), info(), predecessor, bytecodeSite(pc), stackPhiCount);
+      graph(), info(), predecessor, bytecodeSite(pc));
   if (!block) {
     return abort(AbortReason::Alloc);
   }
