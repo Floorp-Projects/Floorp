@@ -1875,8 +1875,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHD520),
         nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_EQUAL, V(24, 20, 100, 6293),
-        "FEATURE_FAILURE_BUG_1602511");
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_LESS_THAN_OR_EQUAL,
+        V(25, 20, 100, 6472), "FEATURE_FAILURE_BUG_1602511");
   }
   return *sDriverInfo;
 }
