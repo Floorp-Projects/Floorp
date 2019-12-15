@@ -43,7 +43,7 @@ bool ForInEmitter::emitInitialize() {
 
   loopInfo_.emplace(bce_, StatementKind::ForInLoop);
 
-  if (!loopInfo_->emitLoopHead(bce_, Nothing(), SRC_FOR_IN)) {
+  if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
     //              [stack] ITER
     return false;
   }

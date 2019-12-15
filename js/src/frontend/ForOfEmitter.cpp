@@ -70,7 +70,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 
   loopInfo_.emplace(bce_, iterDepth, allowSelfHostedIter_, iterKind_);
 
-  if (!loopInfo_->emitLoopHead(bce_, Nothing(), SRC_FOR_OF)) {
+  if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
     //              [stack] NEXT ITER UNDEF
     return false;
   }
