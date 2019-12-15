@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["AboutLoginsChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { LoginHelper } = ChromeUtils.import(
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -37,20 +34,20 @@ let lastOpenManagementOuterWindowID = null;
 let lastOpenManagementEventTime = Number.NEGATIVE_INFINITY;
 let masterPasswordPromise;
 
-class AboutLoginsChild extends ActorChild {
+class AboutLoginsChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsInit": {
-        let messageManager = this.mm;
-        messageManager.sendAsyncMessage("AboutLogins:Subscribe");
+        this.sendAsyncMessage("AboutLogins:Subscribe");
 
-        let documentElement = this.content.document.documentElement;
+        let documentElement = this.document.documentElement;
         documentElement.classList.toggle(
           "official-branding",
           AppConstants.MOZILLA_OFFICIAL
         );
 
-        let waivedContent = Cu.waiveXrays(this.content);
+        let waivedContent = Cu.waiveXrays(this.browsingContext.window);
+        let that = this;
         let AboutLoginsUtils = {
           doLoginsMatch(loginA, loginB) {
             return LoginHelper.doLoginsMatch(loginA, loginB, {});
@@ -63,9 +60,7 @@ class AboutLoginsChild extends ActorChild {
               resolve,
             };
 
-            messageManager.sendAsyncMessage(
-              "AboutLogins:MasterPasswordRequest"
-            );
+            that.sendAsyncMessage("AboutLogins:MasterPasswordRequest");
           },
           // Default to enabled just in case a search is attempted before we get a response.
           masterPasswordEnabled: true,
@@ -83,7 +78,7 @@ class AboutLoginsChild extends ActorChild {
           Services.urlFormatter.formatURLPref("app.support.baseURL") +
           "firefox-lockwise";
         let loginIntro = Cu.waiveXrays(
-          this.content.document.querySelector("login-intro")
+          this.document.querySelector("login-intro")
         );
         loginIntro.supportURL = SUPPORT_URL;
         break;
@@ -93,53 +88,53 @@ class AboutLoginsChild extends ActorChild {
         break;
       }
       case "AboutLoginsCreateLogin": {
-        this.mm.sendAsyncMessage("AboutLogins:CreateLogin", {
+        this.sendAsyncMessage("AboutLogins:CreateLogin", {
           login: event.detail,
         });
         break;
       }
       case "AboutLoginsDeleteLogin": {
-        this.mm.sendAsyncMessage("AboutLogins:DeleteLogin", {
+        this.sendAsyncMessage("AboutLogins:DeleteLogin", {
           login: event.detail,
         });
         break;
       }
       case "AboutLoginsDismissBreachAlert": {
-        this.mm.sendAsyncMessage("AboutLogins:DismissBreachAlert", {
+        this.sendAsyncMessage("AboutLogins:DismissBreachAlert", {
           login: event.detail,
         });
         break;
       }
       case "AboutLoginsGetHelp": {
-        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
+        this.sendAsyncMessage("AboutLogins:GetHelp");
         break;
       }
       case "AboutLoginsHideFooter": {
-        this.mm.sendAsyncMessage("AboutLogins:HideFooter");
+        this.sendAsyncMessage("AboutLogins:HideFooter");
         break;
       }
       case "AboutLoginsImport": {
-        this.mm.sendAsyncMessage("AboutLogins:Import");
+        this.sendAsyncMessage("AboutLogins:Import");
         break;
       }
       case "AboutLoginsOpenMobileAndroid": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenMobileAndroid", {
+        this.sendAsyncMessage("AboutLogins:OpenMobileAndroid", {
           source: event.detail,
         });
         break;
       }
       case "AboutLoginsOpenMobileIos": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos", {
+        this.sendAsyncMessage("AboutLogins:OpenMobileIos", {
           source: event.detail,
         });
         break;
       }
       case "AboutLoginsOpenPreferences": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenPreferences");
+        this.sendAsyncMessage("AboutLogins:OpenPreferences");
         break;
       }
       case "AboutLoginsOpenSite": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenSite", {
+        this.sendAsyncMessage("AboutLogins:OpenSite", {
           login: event.detail,
         });
         break;
@@ -148,7 +143,7 @@ class AboutLoginsChild extends ActorChild {
         let { method, object, extra = {} } = event.detail;
 
         if (method == "open_management") {
-          let { docShell } = event.target.ownerGlobal;
+          let { docShell } = this.browsingContext;
           // Compare to the last time open_management was recorded for the same
           // outerWindowID to not double-count them due to a redirect to remove
           // the entryPoint query param (since replaceState isn't allowed for
@@ -182,19 +177,19 @@ class AboutLoginsChild extends ActorChild {
         break;
       }
       case "AboutLoginsSortChanged": {
-        this.mm.sendAsyncMessage("AboutLogins:SortChanged", event.detail);
+        this.sendAsyncMessage("AboutLogins:SortChanged", event.detail);
         break;
       }
       case "AboutLoginsSyncEnable": {
-        this.mm.sendAsyncMessage("AboutLogins:SyncEnable");
+        this.sendAsyncMessage("AboutLogins:SyncEnable");
         break;
       }
       case "AboutLoginsSyncOptions": {
-        this.mm.sendAsyncMessage("AboutLogins:SyncOptions");
+        this.sendAsyncMessage("AboutLogins:SyncOptions");
         break;
       }
       case "AboutLoginsUpdateLogin": {
-        this.mm.sendAsyncMessage("AboutLogins:UpdateLogin", {
+        this.sendAsyncMessage("AboutLogins:UpdateLogin", {
           login: event.detail,
         });
         break;
@@ -231,7 +226,7 @@ class AboutLoginsChild extends ActorChild {
         this.sendToContent("SetBreaches", message.data);
         break;
       case "AboutLogins:Setup":
-        let waivedContent = Cu.waiveXrays(this.content);
+        let waivedContent = Cu.waiveXrays(this.browsingContext.window);
         waivedContent.AboutLoginsUtils.masterPasswordEnabled =
           message.data.masterPasswordEnabled;
         waivedContent.AboutLoginsUtils.passwordRevealVisible =
@@ -253,10 +248,11 @@ class AboutLoginsChild extends ActorChild {
   }
 
   sendToContent(messageType, detail) {
+    let win = this.document.defaultView;
     let message = Object.assign({ messageType }, { value: detail });
-    let event = new this.content.CustomEvent("AboutLoginsChromeToContent", {
-      detail: Cu.cloneInto(message, this.content),
+    let event = new win.CustomEvent("AboutLoginsChromeToContent", {
+      detail: Cu.cloneInto(message, win),
     });
-    this.content.dispatchEvent(event);
+    win.dispatchEvent(event);
   }
 }
