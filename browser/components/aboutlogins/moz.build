@@ -10,12 +10,12 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox', 'about:logins')
 
 EXTRA_JS_MODULES += [
-    'AboutLoginsParent.jsm',
     'LoginBreaches.jsm',
 ]
 
 FINAL_TARGET_FILES.actors += [
     'AboutLoginsChild.jsm',
+    'AboutLoginsParent.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
