@@ -118,10 +118,6 @@ class LoopControl : public BreakableControl {
   // The loop nesting depth. Used as a hint to Ion.
   uint32_t loopDepth_;
 
-  // Can we OSR into Ion from here? True unless there is non-loop state on the
-  // stack.
-  bool canIonOsr_;
-
  public:
   // Offset of the last continue in the loop.
   JumpList continues;

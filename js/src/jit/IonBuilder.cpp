@@ -1813,8 +1813,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
 
   bool osr = pc == info().osrPc();
   if (osr) {
-    MOZ_ASSERT(LoopHeadCanIonOsr(pc));
-
     MBasicBlock* preheader;
     MOZ_TRY_VAR(preheader, newOsrPreheader(current, pc));
     current->end(MGoto::New(alloc(), preheader));
