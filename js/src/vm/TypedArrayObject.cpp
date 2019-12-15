@@ -1357,7 +1357,10 @@ template <typename T>
   // BigInt proposal 7.24, step 19.c.
   if (Scalar::isBigIntType(ArrayTypeID()) !=
       Scalar::isBigIntType(srcArray->type())) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_NOT_COMPATIBLE,
+                              srcArray->getClass()->name,
+                              TypedArrayObject::classes[ArrayTypeID()].name);
     return nullptr;
   }
 
@@ -1770,7 +1773,9 @@ bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
 
     if (Scalar::isBigIntType(target->type()) !=
         Scalar::isBigIntType(srcTypedArray->type())) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_NOT_COMPATIBLE,
+          srcTypedArray->getClass()->name, target->getClass()->name);
       return false;
     }
 
