@@ -173,7 +173,6 @@ void nsGridRowGroupLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
       if (monument) {
         monument->CountRowsColumns(deepChild, aRowCount, aComputedColumnCount);
         child = nsBox::GetNextXULBox(child);
-        deepChild = child;
         continue;
       }
 
@@ -205,7 +204,6 @@ int32_t nsGridRowGroupLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows) {
       if (monument) {
         rowCount += monument->BuildRows(deepChild, &aRows[rowCount]);
         child = nsBox::GetNextXULBox(child);
-        deepChild = child;
         continue;
       }
 
