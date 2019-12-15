@@ -17,7 +17,7 @@ from mozpack.manifests import InstallManifest
 
 import frontmatter
 import sphinx
-import sphinx.apidoc
+import sphinx.ext.apidoc
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
