@@ -36,7 +36,7 @@ bool DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos,
 
   loopInfo_.emplace(bce_, StatementKind::DoLoop);
 
-  if (!loopInfo_->emitLoopHead(bce_, bodyPos, SRC_DO_WHILE)) {
+  if (!loopInfo_->emitLoopHead(bce_, bodyPos)) {
     return false;
   }
 

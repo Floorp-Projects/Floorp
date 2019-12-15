@@ -66,8 +66,7 @@ bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
 }
 
 bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
-                               const Maybe<uint32_t>& nextPos,
-                               SrcNoteType type) {
+                               const Maybe<uint32_t>& nextPos) {
   // Insert a NOP if needed to ensure the script does not start with a
   // JSOP_LOOPHEAD. This avoids JIT issues with prologue code + try notes
   // or OSR. See bug 1602390 and bug 1602681.
@@ -88,9 +87,6 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
   head_ = {bce->bytecodeSection().offset()};
 
   BytecodeOffset off;
-  if (!bce->newSrcNote(type)) {
-    return false;
-  }
   if (!bce->emitJumpTargetOp(JSOP_LOOPHEAD, &off)) {
     return false;
   }

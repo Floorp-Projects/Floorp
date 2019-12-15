@@ -72,11 +72,6 @@ class SrcNote {
 // clang-format off
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
-    M(SRC_FOR,          "for",         0)  /* JSOP_LOOPHEAD is for C-style for-loop. */            \
-    M(SRC_WHILE,        "while",       0)  /* JSOP_LOOPHEAD is for while loop. */                  \
-    M(SRC_DO_WHILE,     "do-while",    0)  /* JSOP_LOOPHEAD is for do-while loop. */               \
-    M(SRC_FOR_IN,       "for-in",      0)  /* JSOP_LOOPHEAD is for for-in loop. */                 \
-    M(SRC_FOR_OF,       "for-of",      0)  /* JSOP_LOOPHEAD is for for-of loop. */                 \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \
@@ -87,6 +82,11 @@ class SrcNote {
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
+    M(SRC_UNUSED9,      "unused",      0) \
+    M(SRC_UNUSED10,     "unused",      0) \
+    M(SRC_UNUSED11,     "unused",      0) \
+    M(SRC_UNUSED12,     "unused",      0) \
+    M(SRC_UNUSED13,     "unused",      0) \
     M(SRC_UNUSED14,     "unused",      0) \
     M(SRC_UNUSED15,     "unused",      0) \
     M(SRC_UNUSED16,     "unused",      0) \

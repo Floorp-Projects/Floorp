@@ -3052,11 +3052,6 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
       case SRC_BREAKPOINT:
       case SRC_STEP_SEP:
       case SRC_XDELTA:
-      case SRC_FOR:
-      case SRC_DO_WHILE:
-      case SRC_WHILE:
-      case SRC_FOR_IN:
-      case SRC_FOR_OF:
         break;
 
       case SRC_COLSPAN:
