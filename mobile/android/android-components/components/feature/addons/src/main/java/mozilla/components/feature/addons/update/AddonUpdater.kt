@@ -3,19 +3,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package mozilla.components.feature.addons.update
 
+import android.app.IntentService
+import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.AddonUpdater.Frequency
+import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.notification.ChannelData
+import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -35,6 +51,30 @@ interface AddonUpdater {
      * @param addonId The unique id of the addon.
      */
     fun unregisterForFutureUpdates(addonId: String)
+
+    /**
+     * Try to perform an update on the given [addonId].
+     * @param addonId The unique id of the addon.
+     */
+    fun update(addonId: String)
+
+    /**
+     * Invoked when a web extension has changed its permissions while trying to update to a
+     * new version. This requires user interaction as the updated extension will not be installed,
+     * until the user grants the new permissions.
+     *
+     * @param current The current [WebExtension].
+     * @param updated The updated [WebExtension] that requires extra permissions.
+     * @param newPermissions Contains a list of all the new permissions.
+     * @param onPermissionsGranted A callback to indicate if the new permissions from the [updated] extension
+     * are granted or not.
+     */
+    fun onUpdatePermissionRequest(
+        current: WebExtension,
+        updated: WebExtension,
+        newPermissions: List<String>,
+        onPermissionsGranted: ((Boolean) -> Unit)
+    )
 
     /**
      * Indicates the status of a request for updating an addon.
@@ -77,10 +117,15 @@ interface AddonUpdater {
  * @param frequency (Optional) indicates how often updates should be performed, defaults
  * to one day.
  */
+@Suppress("TooManyFunctions", "LargeClass")
 class DefaultAddonUpdater(
     private val applicationContext: Context,
     private val frequency: Frequency = Frequency(1, TimeUnit.DAYS)
 ) : AddonUpdater {
+
+    @VisibleForTesting
+    internal val updateStatusStorage = UpdateStatusStorage()
+
     /**
      * See [AddonUpdater.registerForFutureUpdates]
      */
@@ -98,6 +143,49 @@ class DefaultAddonUpdater(
     override fun unregisterForFutureUpdates(addonId: String) {
         WorkManager.getInstance(applicationContext)
             .cancelUniqueWork(getUniquePeriodicWorkName(addonId))
+    }
+
+    /**
+     * See [AddonUpdater.update]
+     */
+    override fun update(addonId: String) {
+        WorkManager.getInstance(applicationContext).beginUniqueWork(
+            getUniqueImmediateWorkName(addonId),
+            ExistingWorkPolicy.KEEP,
+            createImmediateWorkerRequest(addonId)
+        ).enqueue()
+    }
+
+    /**
+     * See [AddonUpdater.onUpdatePermissionRequest]
+     */
+    override fun onUpdatePermissionRequest(
+        current: WebExtension,
+        updated: WebExtension,
+        newPermissions: List<String>,
+        onPermissionsGranted: (Boolean) -> Unit
+    ) {
+        val wasPreviouslyAllowed =
+            updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id)
+
+        onPermissionsGranted(wasPreviouslyAllowed)
+
+        if (!wasPreviouslyAllowed) {
+            createNotification(updated, newPermissions)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun createImmediateWorkerRequest(addonId: String): OneTimeWorkRequest {
+        val data = AddonUpdaterWorker.createWorkerData(addonId)
+        val constraints = getWorkerConstrains()
+
+        return OneTimeWorkRequestBuilder<AddonUpdaterWorker>()
+            .setConstraints(constraints)
+            .setInputData(data)
+            .addTag(getUniqueImmediateWorkName(addonId))
+            .addTag(WORK_TAG_IMMEDIATE)
+            .build()
     }
 
     @VisibleForTesting
@@ -127,7 +215,126 @@ class DefaultAddonUpdater(
     internal fun getUniquePeriodicWorkName(addonId: String) =
         "$IDENTIFIER_PREFIX$addonId.periodicWork"
 
+    @VisibleForTesting
+    internal fun getUniqueImmediateWorkName(extensionId: String) =
+        "$IDENTIFIER_PREFIX$extensionId.immediateWork"
+
+    @VisibleForTesting
+    internal fun createNotification(
+        extension: WebExtension,
+        newPermissions: List<String>
+    ): Notification {
+        val notificationId = SharedIdsHelper.getIdForTag(applicationContext, NOTIFICATION_TAG)
+
+        val channel = ChannelData(
+            NOTIFICATION_CHANNEL_ID,
+            R.string.mozac_feature_addons_updater_notification_channel,
+            NotificationManagerCompat.IMPORTANCE_LOW
+        )
+        val channelId = ensureNotificationChannelExists(applicationContext, channel)
+        val text = createContentText(newPermissions)
+
+        return NotificationCompat.Builder(applicationContext, channelId)
+            .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
+            .setContentTitle(getNotificationTitle(extension))
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(text)
+            )
+            .setContentIntent(createContentIntent())
+            .addAction(createAllowAction(extension))
+            .addAction(createDenyAction())
+            .setAutoCancel(true)
+            .build().also {
+                NotificationManagerCompat.from(applicationContext).notify(notificationId, it)
+            }
+    }
+
+    private fun getNotificationTitle(extension: WebExtension): String {
+        return applicationContext.getString(
+            R.string.mozac_feature_addons_updater_notification_title,
+            extension.getMetadata()?.name
+        )
+    }
+
+    private fun createContentText(newPermissions: List<String>): String {
+        val contentText = applicationContext.getString(
+            R.string.mozac_feature_addons_updater_notification_content, newPermissions.size
+        )
+        var permissionIndex = 1
+        val permissionsText =
+            Addon.localizePermissions(newPermissions).joinToString(separator = "\n") {
+                "${permissionIndex++}-${applicationContext.getString(it)}"
+            }
+        return "$contentText:\n $permissionsText"
+    }
+
+    private fun createContentIntent(): PendingIntent {
+        val intent =
+            applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            } ?: throw IllegalStateException("Package has no launcher intent")
+
+        return PendingIntent.getActivity(
+            applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
+        )
+    }
+
+    private fun createAllowAction(ext: WebExtension): NotificationCompat.Action {
+        val allowIntent = Intent(applicationContext, NotificationHandlerService::class.java).apply {
+            action = NOTIFICATION_ACTION_ALLOW
+            putExtra(NOTIFICATION_EXTRA_ADDON_ID, ext.id)
+        }
+
+        val allowPendingIntent = PendingIntent.getService(applicationContext, 0, allowIntent, 0)
+
+        val allowText =
+            applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
+
+        return NotificationCompat.Action.Builder(
+            mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
+            allowText,
+            allowPendingIntent
+        ).build()
+    }
+
+    private fun createDenyAction(): NotificationCompat.Action {
+        val allowIntent = Intent(applicationContext, NotificationHandlerService::class.java).apply {
+            action = NOTIFICATION_ACTION_DENY
+        }
+
+        val denyPendingIntent = PendingIntent.getService(applicationContext, 0, allowIntent, 0)
+
+        val denyText =
+            applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
+
+        return NotificationCompat.Action.Builder(
+            mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
+            denyText,
+            denyPendingIntent
+        ).build()
+    }
+
     companion object {
+        private const val NOTIFICATION_CHANNEL_ID =
+            "mozilla.components.feature.addons.update.generic.channel"
+
+        @VisibleForTesting
+        internal const val NOTIFICATION_EXTRA_ADDON_ID =
+            "mozilla.components.feature.addons.update.extra.extensionId"
+
+        @VisibleForTesting
+        internal const val NOTIFICATION_TAG = "mozilla.components.feature.addons.update.addonUpdater"
+
+        @VisibleForTesting
+        internal const val NOTIFICATION_ACTION_DENY =
+            "mozilla.components.feature.addons.update.NOTIFICATION_ACTION_DENY"
+
+        @VisibleForTesting
+        internal const val NOTIFICATION_ACTION_ALLOW =
+            "mozilla.components.feature.addons.update.NOTIFICATION_ACTION_ALLOW"
         private const val IDENTIFIER_PREFIX = "mozilla.components.feature.addons.update."
 
         /**
@@ -136,6 +343,98 @@ class DefaultAddonUpdater(
         @VisibleForTesting
         internal const val WORK_TAG_PERIODIC =
             "mozilla.components.feature.addons.update.addonUpdater.periodicWork"
+
+        /**
+         * Identifies all the workers that immediately check for new updates.
+         */
+        @VisibleForTesting
+        internal const val WORK_TAG_IMMEDIATE =
+            "mozilla.components.feature.addons.update.addonUpdater.immediateWork"
+    }
+
+    /**
+     * Handles notification actions related to addons that require additional permissions
+     * to be updated.
+     */
+    /** @suppress */
+    class NotificationHandlerService : IntentService("NotificationHandlerService") {
+
+        private val logger = Logger("NotificationHandlerService")
+
+        @VisibleForTesting
+        internal var context: Context = this
+
+        public override fun onHandleIntent(intent: Intent?) {
+            if (intent == null) return
+
+            when (intent.action) {
+                NOTIFICATION_ACTION_ALLOW -> {
+                    handleAllowAction(intent)
+                }
+                NOTIFICATION_ACTION_DENY -> {
+                    removeNotification()
+                }
+            }
+        }
+
+        @VisibleForTesting
+        internal fun removeNotification() {
+            val notificationId =
+                SharedIdsHelper.getIdForTag(context, NOTIFICATION_TAG)
+            NotificationManagerCompat.from(context).cancel(notificationId)
+        }
+
+        @VisibleForTesting
+        internal fun handleAllowAction(intent: Intent) {
+            val addonId = intent.getStringExtra(NOTIFICATION_EXTRA_ADDON_ID)!!
+            val storage = UpdateStatusStorage()
+            logger.info("Addon $addonId permissions were granted")
+            storage.markAsAllowed(context, addonId)
+            GlobalAddonDependencyProvider.requireAddonUpdater().update(addonId)
+            removeNotification()
+        }
+    }
+
+    /**
+     * Stores the status of an addon update.
+     */
+    internal class UpdateStatusStorage {
+
+        fun isPreviouslyAllowed(context: Context, addonId: String) =
+            getData(context).contains(addonId)
+
+        @Synchronized
+        fun markAsAllowed(context: Context, addonId: String) {
+            val allowSet = getData(context)
+            allowSet.add(addonId)
+            getSettings(context)
+                .edit()
+                .putStringSet(KEY_ALLOWED_SET, allowSet)
+                .apply()
+        }
+
+        fun clear(context: Context) {
+            val settings = getSharedPreferences(context)
+            settings.edit().clear().apply()
+        }
+
+        private fun getSettings(context: Context) = getSharedPreferences(context)
+
+        private fun getData(context: Context): MutableSet<String> {
+            val settings = getSharedPreferences(context)
+            return requireNotNull(settings.getStringSet(KEY_ALLOWED_SET, mutableSetOf()))
+        }
+
+        private fun getSharedPreferences(context: Context): SharedPreferences {
+            return context.getSharedPreferences(PREFERENCE_FILE, Context.MODE_PRIVATE)
+        }
+
+        companion object {
+            private const val PREFERENCE_FILE =
+                "mozilla.components.feature.addons.update.addons_updates_status_preference"
+            private const val KEY_ALLOWED_SET =
+                "mozilla.components.feature.addons.update.KEY_ALLOWED_SET"
+        }
     }
 }
 
@@ -153,7 +452,7 @@ internal class AddonUpdaterWorker(
         logger.info("Trying to update extension $extensionId")
 
         return suspendCoroutine { continuation ->
-            val manager = GlobalAddonManagerProvider.requireAddonManager()
+            val manager = GlobalAddonDependencyProvider.requireAddonManager()
 
             manager.updateAddon(extensionId) { status ->
                 val result = when (status) {

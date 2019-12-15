@@ -36,6 +36,12 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")
+    private var onUpdatePermissionRequest: ((
+        current: WebExtension,
+        updated: WebExtension,
+        newPermissions: List<String>,
+        onPermissionsGranted: (Boolean) -> Unit
+    ) -> Unit)? = null
 
     val installedExtensions = ConcurrentHashMap<String, WebExtension>()
 
@@ -81,14 +87,21 @@ object WebExtensionSupport {
      * be triggered when a tab is selected to display a web extension popup.
      * This is a lambda accepting the [WebExtension] and the session/tab ID to
      * select.
+     * @param onUpdatePermissionRequest (optional) Invoked when a web extension has changed its
+     * permissions while trying to update to a new version. This requires user interaction as
+     * the updated extension will not be installed, until the user grants the new permissions.
      */
+    @Suppress("MaxLineLength", "LongParameterList")
     fun initialize(
         engine: Engine,
         store: BrowserStore,
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> String)? = null,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
-        onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null
+        onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
+        onUpdatePermissionRequest: ((current: WebExtension, updated: WebExtension, newPermissions: List<String>, onPermissionsGranted: ((Boolean) -> Unit)) -> Unit)? = { _, _, _, _ -> }
     ) {
+        this.onUpdatePermissionRequest = onUpdatePermissionRequest
+
         // Queries the engine for installed extensions and adds them to the store
         registerInstalledExtensions(store, engine)
 
@@ -159,6 +172,20 @@ object WebExtensionSupport {
                 // install on the engine. Therefore we can just approve the permission request
                 // here during installation.
                 return true
+            }
+
+            override fun onUpdatePermissionRequest(
+                current: WebExtension,
+                updated: WebExtension,
+                newPermissions: List<String>,
+                onPermissionsGranted: ((Boolean) -> Unit)
+            ) {
+                this@WebExtensionSupport.onUpdatePermissionRequest?.invoke(
+                    current,
+                    updated,
+                    newPermissions,
+                    onPermissionsGranted
+                )
             }
         })
     }

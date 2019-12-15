@@ -9,7 +9,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
-import mozilla.components.feature.addons.update.GlobalAddonManagerProvider
 import mozilla.components.support.webextensions.WebExtensionSupport
 import mozilla.components.support.webextensions.WebExtensionSupport.installedExtensions
 import java.lang.IllegalStateException
@@ -29,10 +28,6 @@ class AddonManager(
     private val addonsProvider: AddonsProvider,
     private val addonUpdater: AddonUpdater
 ) {
-
-    init {
-        GlobalAddonManagerProvider.initialize(this)
-    }
 
     /**
      * Returns the list of all installed and recommended add-ons.

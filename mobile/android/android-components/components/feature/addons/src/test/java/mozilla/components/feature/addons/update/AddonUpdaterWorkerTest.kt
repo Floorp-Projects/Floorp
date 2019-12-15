@@ -14,7 +14,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdaterWorker
-import mozilla.components.feature.addons.update.GlobalAddonManagerProvider
+import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -36,12 +36,12 @@ class AddonUpdaterWorkerTest {
 
     @Before
     fun setUp() {
-        GlobalAddonManagerProvider.addonManager = null
+        GlobalAddonDependencyProvider.addonManager = null
     }
 
     @After
     fun after() {
-        GlobalAddonManagerProvider.addonManager = null
+        GlobalAddonDependencyProvider.addonManager = null
     }
 
     @Test
@@ -53,7 +53,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
 
-        GlobalAddonManagerProvider.initialize(addonManager)
+        GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
             onFinishCaptor.value.invoke(AddonUpdater.Status.SuccessfullyUpdated)
@@ -75,7 +75,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
 
-        GlobalAddonManagerProvider.initialize(addonManager)
+        GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
             onFinishCaptor.value.invoke(AddonUpdater.Status.NoUpdateAvailable)
@@ -97,7 +97,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
 
-        GlobalAddonManagerProvider.initialize(addonManager)
+        GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
             onFinishCaptor.value.invoke(AddonUpdater.Status.NotInstalled)
@@ -119,7 +119,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
 
-        GlobalAddonManagerProvider.initialize(addonManager)
+        GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
         whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
             onFinishCaptor.value.invoke(AddonUpdater.Status.Error("error", Exception()))
