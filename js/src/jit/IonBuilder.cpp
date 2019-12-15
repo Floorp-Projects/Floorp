@@ -8568,9 +8568,12 @@ AbortReasonOr<Ok> IonBuilder::setStaticName(JSObject* staticObject,
 
   current->pop();
 
-  // Pop the bound object on the stack.
+  // Pop the bound object on the stack. This is usually a constant but it can
+  // be a phi if loops are involved, for example: x = [...arr];
   MDefinition* obj = current->pop();
-  MOZ_ASSERT(&obj->toConstant()->toObject() == staticObject);
+  MOZ_ASSERT(obj->isConstant() || obj->isPhi());
+  MOZ_ASSERT_IF(obj->isConstant(),
+                &obj->toConstant()->toObject() == staticObject);
 
   if (needsPostBarrier(value)) {
     current->add(MPostWriteBarrier::New(alloc(), obj, value));
