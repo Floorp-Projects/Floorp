@@ -1581,8 +1581,8 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       break;
 
     case JOF_LOOPHEAD:
-      if (!sp->jsprintf(" (ic: %u, data: %u,%u)", GET_ICINDEX(pc),
-                        LoopHeadCanIonOsr(pc), LoopHeadDepthHint(pc))) {
+      if (!sp->jsprintf(" (ic: %u, depthHint: %u)", GET_ICINDEX(pc),
+                        LoopHeadDepthHint(pc))) {
         return 0;
       }
       break;
