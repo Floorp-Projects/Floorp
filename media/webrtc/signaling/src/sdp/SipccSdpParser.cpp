@@ -14,8 +14,6 @@ extern "C" {
 
 namespace mozilla {
 
-static const std::string SIPCC_NAME = "SIPCC";
-
 extern "C" {
 
 void sipcc_sdp_parser_results_handler(void* context, uint32_t line,
@@ -27,7 +25,10 @@ void sipcc_sdp_parser_results_handler(void* context, uint32_t line,
 
 }  // extern "C"
 
-const std::string& SipccSdpParser::Name() const { return SIPCC_NAME; }
+const std::string& SipccSdpParser::ParserName() {
+  static const std::string SIPCC_NAME = "SIPCC";
+  return SIPCC_NAME;
+}
 
 UniquePtr<SdpParser::Results> SipccSdpParser::Parse(const std::string& aText) {
   UniquePtr<InternalResults> results(new InternalResults(Name()));
@@ -81,7 +82,7 @@ UniquePtr<SdpParser::Results> SipccSdpParser::Parse(const std::string& aText) {
 }
 
 bool SipccSdpParser::IsNamed(const std::string& aName) {
-  return aName == SIPCC_NAME;
+  return aName == ParserName();
 }
 
 }  // namespace mozilla
