@@ -68,6 +68,10 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   ma_sra(dest.high, dest.low, Imm32(31));
 }
 
+void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
+  move32(src, dest);
+}
+
 // ===============================================================
 // Load instructions
 
