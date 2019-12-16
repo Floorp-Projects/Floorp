@@ -56,6 +56,10 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   ma_sll(dest.reg, src, Imm32(0));
 }
 
+void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
+  ma_dext(dest, src, Imm32(0), Imm32(32));
+}
+
 // ===============================================================
 // Load instructions
 
