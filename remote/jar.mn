@@ -12,6 +12,7 @@ remote.jar:
   content/Log.jsm (Log.jsm)
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
+  content/StreamRegistry.jsm (StreamRegistry.jsm)
   content/Sync.jsm (Sync.jsm)
   content/TabManager.jsm (TabManager.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
