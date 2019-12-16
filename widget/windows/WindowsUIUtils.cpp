@@ -21,6 +21,7 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
+#include "nsWindowGfx.h"
 
 /* mingw currently doesn't support windows.ui.viewmanagement.h, so we disable it
  * until it's fixed. */
@@ -119,6 +120,61 @@ WindowsUIUtils::~WindowsUIUtils() {}
  * Implement the nsISupports methods...
  */
 NS_IMPL_ISUPPORTS(WindowsUIUtils, nsIWindowsUIUtils)
+
+NS_IMETHODIMP
+WindowsUIUtils::GetSystemSmallIconSize(int32_t* aSize) {
+  NS_ENSURE_ARG(aSize);
+
+  LayoutDeviceIntSize size =
+      nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon);
+  *aSize = std::max(size.width, size.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WindowsUIUtils::GetSystemLargeIconSize(int32_t* aSize) {
+  NS_ENSURE_ARG(aSize);
+
+  LayoutDeviceIntSize size =
+      nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon);
+  *aSize = std::max(size.width, size.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WindowsUIUtils::SetWindowIcon(mozIDOMWindowProxy* aWindow,
+                              imgIContainer* aSmallIcon,
+                              imgIContainer* aBigIcon) {
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIWidget> widget =
+      nsGlobalWindowOuter::Cast(aWindow)->GetMainWidget();
+  nsWindow* window = static_cast<nsWindow*>(widget.get());
+
+  nsresult rv;
+
+  if (aSmallIcon) {
+    HICON hIcon = nullptr;
+    rv = nsWindowGfx::CreateIcon(
+        aSmallIcon, false, LayoutDeviceIntPoint(),
+        nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon), &hIcon);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    window->SetSmallIcon(hIcon);
+  }
+
+  if (aBigIcon) {
+    HICON hIcon = nullptr;
+    rv = nsWindowGfx::CreateIcon(
+        aBigIcon, false, LayoutDeviceIntPoint(),
+        nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon), &hIcon);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    window->SetBigIcon(hIcon);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 WindowsUIUtils::GetInTabletMode(bool* aResult) {
