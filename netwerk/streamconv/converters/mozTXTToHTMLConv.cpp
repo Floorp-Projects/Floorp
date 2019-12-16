@@ -1218,6 +1218,12 @@ mozTXTToHTMLConv::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
+mozTXTToHTMLConv::GetConvertedType(const nsACString& aFromType,
+                                   nsACString& aToType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                   uint64_t sourceOffset, uint32_t count) {
   return NS_ERROR_NOT_IMPLEMENTED;
