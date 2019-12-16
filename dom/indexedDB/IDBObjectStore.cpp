@@ -1698,7 +1698,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
+  IDBKeyRange::FromJSVal(aCx, aKey, &keyRange, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2019,7 +2019,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetInternal(bool aKeyOnly, JSContext* aCx,
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
+  IDBKeyRange::FromJSVal(aCx, aKey, &keyRange, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -2082,7 +2082,7 @@ RefPtr<IDBRequest> IDBObjectStore::DeleteInternal(JSContext* aCx,
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
+  IDBKeyRange::FromJSVal(aCx, aKey, &keyRange, aRv);
   if (NS_WARN_IF((aRv.Failed()))) {
     return nullptr;
   }
@@ -2308,7 +2308,7 @@ RefPtr<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
+  IDBKeyRange::FromJSVal(aCx, aKey, &keyRange, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -2360,7 +2360,7 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  IDBKeyRange::FromJSVal(aCx, aRange, getter_AddRefs(keyRange), aRv);
+  IDBKeyRange::FromJSVal(aCx, aRange, &keyRange, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
