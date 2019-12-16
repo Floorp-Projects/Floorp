@@ -136,8 +136,9 @@ LoadContextInfo* GetLoadContextInfo(nsILoadContext* aLoadContext,
   aLoadContext->GetOriginAttributes(oa);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIDocShellTreeItem> docShell = do_QueryInterface(aLoadContext);
-  if (!docShell || docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aLoadContext);
+  if (!docShell ||
+      nsDocShell::Cast(docShell)->GetBrowsingContext()->IsContent()) {
     MOZ_ASSERT(aLoadContext->UsePrivateBrowsing() ==
                (oa.mPrivateBrowsingId > 0));
   }
