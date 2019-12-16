@@ -2166,9 +2166,11 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
   }
 
   // We need to clone the script if we're not already marked as having a
-  // non-syntactic scope.
-  return fun->hasScript() ? fun->nonLazyScript()->hasNonSyntacticScope()
-                          : fun->lazyScript()->hasNonSyntacticScope();
+  // non-syntactic scope. The HasNonSyntacticScope flag is not computed for lazy
+  // scripts so fallback to checking the scope chain.
+  BaseScript* script = fun->baseScript();
+  return script->hasNonSyntacticScope() ||
+         script->enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
 }
 
 static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
