@@ -50,6 +50,7 @@ remote.jar:
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
   content/domains/parent/Emulation.jsm (domains/parent/Emulation.jsm)
   content/domains/parent/Input.jsm (domains/parent/Input.jsm)
+  content/domains/parent/IO.jsm (domains/parent/IO.jsm)
   content/domains/parent/Network.jsm (domains/parent/Network.jsm)
   content/domains/parent/network/ChannelEventSink.jsm (domains/parent/network/ChannelEventSink.jsm)
   content/domains/parent/network/NetworkObserver.jsm (domains/parent/network/NetworkObserver.jsm)
