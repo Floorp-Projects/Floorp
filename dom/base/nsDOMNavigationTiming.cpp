@@ -11,7 +11,6 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsHttp.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIScriptSecurityManager.h"
 #include "prtime.h"
 #include "nsIURI.h"
@@ -533,11 +532,5 @@ bool nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const {
   if (!XRE_IsContentProcess()) {
     return false;
   }
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  Unused << mDocShell->GetInProcessSameTypeRootTreeItem(
-      getter_AddRefs(rootItem));
-  if (rootItem.get() != static_cast<nsIDocShellTreeItem*>(mDocShell.get())) {
-    return false;
-  }
-  return rootItem->ItemType() == nsIDocShellTreeItem::typeContent;
+  return mDocShell->GetBrowsingContext()->IsTopContent();
 }
