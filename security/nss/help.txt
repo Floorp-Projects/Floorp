@@ -7,7 +7,7 @@ Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
                 [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
                 [--system-sqlite] [--enable-fips] [--enable-libpkix]
                 [--mozpkix-only] [-D<gyp-option>]
-                [--rebuild]
+                [--rebuild] [--enable-legacy-db]
 
 This script builds NSS with gyp and ninja.
 
@@ -53,6 +53,7 @@ NSS build tool options:
     --system-sqlite  use system sqlite
     --enable-fips    enable FIPS checks
     --enable-libpkix make libpkix part of the build
+    --enable-legacy-db enable the legacy db (libnssdbm)
     --mozpkix-only   build only static mozpkix and mozpkix-test libraries
                      support for this build option is limited
     --disable-keylog disable support for logging key data to a file specified

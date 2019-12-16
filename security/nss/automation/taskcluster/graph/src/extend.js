@@ -110,6 +110,11 @@ queue.filter(task => {
     return false;
   }
 
+  // Don't run DBM builds on aarch64.
+  if (task.group == "DBM" && task.platform == "aarch64") {
+    return false;
+  }
+
   return true;
 });
 
@@ -500,7 +505,7 @@ async function scheduleLinux(name, overrides, args = "") {
   }
 
   // The task that generates certificates.
-  let task_cert = queue.scheduleTask(merge(build_base, {
+  let cert_base = merge(build_base, {
     name: "Certificates",
     command: [
       "/bin/bash",
@@ -509,7 +514,8 @@ async function scheduleLinux(name, overrides, args = "") {
     ],
     parent: task_build,
     symbol: "Certs"
-  }));
+  });
+  let task_cert = queue.scheduleTask(cert_base);
 
   // Schedule tests.
   scheduleTests(task_build, task_cert, merge(base, {
@@ -591,6 +597,25 @@ async function scheduleLinux(name, overrides, args = "") {
     ],
     symbol: "modular"
   }));
+
+  if (base.collection != "make") {
+    let task_build_dbm = queue.scheduleTask(merge(extra_base, {
+      name: `${name} w/ legacy-db`,
+      command: [
+        "/bin/bash",
+        "-c",
+        checkout_and_gyp + "--enable-legacy-db"
+      ],
+      symbol: "B",
+      group: "DBM",
+    }));
+
+    let task_cert_dbm = queue.scheduleTask(merge(cert_base, {
+      parent: task_build_dbm,
+      group: "DBM",
+      symbol: "Certs"
+    }));
+  }
 
   return queue.submit();
 }
@@ -830,11 +855,11 @@ async function scheduleWindows(name, base, build_script) {
     workerType: "win2012r2",
     env: {
       PATH: "c:\\mozilla-build\\bin;c:\\mozilla-build\\python;" +
-	    "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
-	    "c:\\mozilla-build\\info-zip;c:\\mozilla-build\\python\\Scripts;" +
-	    "c:\\mozilla-build\\yasm;c:\\mozilla-build\\msys\\bin;" +
-	    "c:\\Windows\\system32;c:\\mozilla-build\\upx391w;" +
-	    "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
+           "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
+           "c:\\mozilla-build\\info-zip;c:\\mozilla-build\\python\\Scripts;" +
+           "c:\\mozilla-build\\yasm;c:\\mozilla-build\\msys\\bin;" +
+           "c:\\Windows\\system32;c:\\mozilla-build\\upx391w;" +
+           "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
       DOMSUF: "localdomain",
       HOST: "localhost",
     },
@@ -1040,12 +1065,6 @@ function scheduleTests(task_build, task_cert, test_base) {
     name: "SSL tests (pkix)", symbol: "pkix", cycle: "pkix"
   }));
   queue.scheduleTask(merge(ssl_base, {
-    name: "SSL tests (sharedb)", symbol: "sharedb", cycle: "sharedb"
-  }));
-  queue.scheduleTask(merge(ssl_base, {
-    name: "SSL tests (upgradedb)", symbol: "upgradedb", cycle: "upgradedb"
-  }));
-  queue.scheduleTask(merge(ssl_base, {
     name: "SSL tests (stress)", symbol: "stress", cycle: "sharedb",
     env: {NSS_SSL_RUN: "stress"}
   }));
@@ -1211,7 +1230,15 @@ async function scheduleTools() {
     symbol: "Coverage",
     name: "Coverage",
     image: FUZZ_IMAGE,
+    type: "other",
     features: ["allowPtrace"],
+    artifacts: {
+      public: {
+        expires: 24 * 7,
+        type: "directory",
+        path: "/home/worker/artifacts"
+      }
+    },
     command: [
       "/bin/bash",
       "-c",

@@ -124,6 +124,7 @@ ifeq ($(CPU_ARCH),aarch64)
     EXTRA_SRCS += aes-armv8.c gcm-aarch64.c
 endif
 ifeq ($(CPU_ARCH),arm)
+    EXTRA_SRCS += gcm-arm32-neon.c
     ifdef CC_IS_CLANG
         DEFINES += -DUSE_HW_AES
         EXTRA_SRCS += aes-armv8.c
@@ -781,6 +782,7 @@ endif
 
 ifeq ($(CPU_ARCH),arm)
 $(OBJDIR)/$(PROG_PREFIX)aes-armv8$(OBJ_SUFFIX): CFLAGS += -march=armv8-a -mfpu=crypto-neon-fp-armv8
+$(OBJDIR)/$(PROG_PREFIX)gcm-arm32-neon$(OBJ_SUFFIX): CFLAGS += -mfpu=neon
 endif
 ifeq ($(CPU_ARCH),aarch64)
 $(OBJDIR)/$(PROG_PREFIX)aes-armv8$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
