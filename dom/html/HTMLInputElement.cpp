@@ -2959,7 +2959,7 @@ void HTMLInputElement::Blur(ErrorResult& aError) {
 }
 
 void HTMLInputElement::Focus(const FocusOptions& aOptions,
-                             ErrorResult& aError) {
+                             CallerType aCallerType, ErrorResult& aError) {
   if (mType == NS_FORM_INPUT_NUMBER) {
     // Focus our anonymous text control, if we have one.
     nsNumberControlFrame* numberControlFrame = do_QueryFrame(GetPrimaryFrame());
@@ -2967,7 +2967,7 @@ void HTMLInputElement::Focus(const FocusOptions& aOptions,
       RefPtr<HTMLInputElement> textControl =
           numberControlFrame->GetAnonTextControl();
       if (textControl) {
-        textControl->Focus(aOptions, aError);
+        textControl->Focus(aOptions, aCallerType, aError);
         return;
       }
     }
@@ -2984,7 +2984,7 @@ void HTMLInputElement::Focus(const FocusOptions& aOptions,
     }
   }
 
-  nsGenericHTMLElement::Focus(aOptions, aError);
+  nsGenericHTMLElement::Focus(aOptions, aCallerType, aError);
 }
 
 #if !defined(ANDROID) && !defined(XP_MACOSX)
@@ -3925,7 +3925,8 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                     FocusOptions options;
                     ErrorResult error;
 
-                    selectedRadioButton->Focus(options, error);
+                    selectedRadioButton->Focus(options, CallerType::System,
+                                               error);
                     rv = error.StealNSResult();
                     if (NS_SUCCEEDED(rv)) {
                       rv = DispatchSimulatedClick(selectedRadioButton,

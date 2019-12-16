@@ -2231,10 +2231,11 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnWindowedPluginKeyEvent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
+mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(
+    const bool& aCanRaise, const CallerType aCallerType) {
   LOGBROWSERFOCUS(("RecvRequestFocus %p, aCanRaise: %d", this, aCanRaise));
   if (BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent()) {
-    mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise);
+    mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise, aCallerType);
     return IPC_OK();
   }
 
@@ -2242,7 +2243,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
     return IPC_OK();
   }
 
-  nsContentUtils::RequestFrameFocus(*mFrameElement, aCanRaise);
+  nsContentUtils::RequestFrameFocus(*mFrameElement, aCanRaise, aCallerType);
   return IPC_OK();
 }
 
@@ -3116,7 +3117,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetNativeChildOfShareableWindow(
 
 mozilla::ipc::IPCResult BrowserParent::RecvDispatchFocusToTopLevelWindow() {
   if (nsCOMPtr<nsIWidget> widget = GetTopLevelWidget()) {
-    widget->SetFocus(nsIWidget::Raise::No);
+    widget->SetFocus(nsIWidget::Raise::No, CallerType::System);
   }
   return IPC_OK();
 }

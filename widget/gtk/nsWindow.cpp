@@ -1592,7 +1592,7 @@ guint32 nsWindow::GetLastUserInputTime() {
   return timestamp;
 }
 
-void nsWindow::SetFocus(Raise aRaise) {
+void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   // Make sure that our owning widget has focus.  If it doesn't try to
   // grab it.  Note that we don't set our focus flag in this case.
 

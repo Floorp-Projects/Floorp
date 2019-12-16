@@ -4221,7 +4221,8 @@ nsresult nsContentUtils::DispatchChromeEvent(
   return err.StealNSResult();
 }
 
-void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
+void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
+                                       CallerType aCallerType) {
   RefPtr<Element> target = &aFrameElement;
   bool defaultAction = true;
   if (aCanRaise) {
@@ -4241,6 +4242,10 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
   uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
   if (aCanRaise) {
     flags |= nsIFocusManager::FLAG_RAISE;
+  }
+
+  if (aCallerType == CallerType::NonSystem) {
+    flags |= nsIFocusManager::FLAG_NONSYSTEMCALLER;
   }
 
   fm->SetFocus(target, flags);

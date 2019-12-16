@@ -97,6 +97,7 @@ using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct InputFormData from "mozilla/dom/SessionStoreMessageUtils.h";
 using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
 using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+using CallerType from "mozilla/dom/BindingDeclarations.h";
 
 namespace mozilla {
 namespace dom {
@@ -422,7 +423,7 @@ parent:
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */
-    async RequestFocus(bool canRaise);
+    async RequestFocus(bool canRaise, CallerType aCallerType);
 
     /**
      * Indicate, based on the current state, that some commands are enabled and

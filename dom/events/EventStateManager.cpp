@@ -1068,7 +1068,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           nsCOMPtr<nsIBrowserChild> child =
               docShell ? docShell->GetBrowserChild() : nullptr;
           if (child) {
-            child->SendRequestFocus(false);
+            child->SendRequestFocus(false, CallerType::System);
           }
         }
 
