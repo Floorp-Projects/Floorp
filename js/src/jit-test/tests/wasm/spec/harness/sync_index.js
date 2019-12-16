@@ -270,7 +270,7 @@ function assert_uninstantiable(bytes) {
         assert_true(result.isError(), 'expected error result');
         if (result.isError()) {
             let e = result.value;
-            assert_true(e instanceof WebAssembly.RuntimeError, `expected runtime error, observed ${e}:`);
+            assert_true(e instanceof WebAssembly.LinkError || e instanceof WebAssembly.RuntimeError, `expected link or runtime error, observed ${e}:`);
         }
     }, "A wast module that is uninstantiable.");
 }
