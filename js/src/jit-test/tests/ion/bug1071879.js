@@ -25,7 +25,7 @@ var arr = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, -0]);
 for (var i = 0; i < 10; i++)
 {
     var el = +arr[i];
-    print(uneval(el ? +0 : el));
+    print(String(el ? +0 : el));
 }
 
 // Test 4.

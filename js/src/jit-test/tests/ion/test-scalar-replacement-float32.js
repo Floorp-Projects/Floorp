@@ -20,7 +20,7 @@ var check_object_argument_func = function (i, res) {
     return res;
 };
 
-var test_object_ref_check = eval(uneval(check_object_argument_func).replace("funname", "test_object_ref"));
+var test_object_ref_check = eval(`(${check_object_argument_func})`.replace("funname", "test_object_ref"));
 function test_object_ref(x, tmp) {
     tmp = {
         a: Math.fround(Math.pow(2 * x / max, 0)),
@@ -35,7 +35,7 @@ function test_object_ref(x, tmp) {
     return test_object_ref_check(x, Math.fround(tmp.c + Math.fround(tmp.d)));
 }
 
-var test_object_check = eval(uneval(check_object_argument_func).replace("funname", "test_object"));
+var test_object_check = eval(`(${check_object_argument_func})`.replace("funname", "test_object"));
 function test_object(x, tmp) {
     tmp = {
         a: Math.fround(Math.pow(2 * x / max, 0)),
@@ -64,7 +64,7 @@ var check_array_argument_func = function (i, res) {
     return res;
 };
 
-var test_array_ref_check = eval(uneval(check_array_argument_func).replace("funname", "test_array_ref"));
+var test_array_ref_check = eval(`(${check_array_argument_func})`.replace("funname", "test_array_ref"));
 function test_array_ref(x, tmp) {
     tmp = [
         Math.fround(Math.pow(2 * x / max, 0)),
@@ -78,7 +78,7 @@ function test_array_ref(x, tmp) {
     return test_array_ref_check(x, Math.fround(tmp[2] + Math.fround(tmp[3])));
 }
 
-var test_array_check = eval(uneval(check_array_argument_func).replace("funname", "test_array"));
+var test_array_check = eval(`(${check_array_argument_func})`.replace("funname", "test_array"));
 function test_array(x, tmp) {
     tmp = [
         Math.fround(Math.pow(2 * x / max, 0)),
