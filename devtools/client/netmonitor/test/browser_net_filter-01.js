@@ -195,7 +195,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: WS_CONTENT_TYPE_SJS + "?fmt=ws",
+    url: WS_WS_CONTENT_TYPE_SJS + "?fmt=ws",
     data: {
       fuzzyUrl: true,
       status: 101,
