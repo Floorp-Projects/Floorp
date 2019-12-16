@@ -504,10 +504,7 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                         nsINode& aFocusNode, uint32_t aFocusOffset,
-                        ErrorResult& aRv) {
-    SetBaseAndExtent(RawRangeBoundary(&aAnchorNode, aAnchorOffset),
-                     RawRangeBoundary(&aFocusNode, aFocusOffset), aRv);
-  }
+                        ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtent(const RawRangeBoundary& aAnchorRef,
                         const RawRangeBoundary& aFocusRef, ErrorResult& aRv) {
