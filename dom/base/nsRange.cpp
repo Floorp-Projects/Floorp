@@ -916,9 +916,11 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                          const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
                          nsINode* aRootNode,
                          bool aNotInsertedYet /* = false */) {
-  MOZ_ASSERT((aStartBoundary.IsSet() && aEndBoundary.IsSet() && aRootNode) ||
-                 (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()),
-             "Set all or none");
+  mIsPositioned = aStartBoundary.IsSetAndValid() &&
+                  aEndBoundary.IsSetAndValid() && aRootNode;
+  MOZ_ASSERT(
+      mIsPositioned || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()),
+      "Set all or none");
 
   MOZ_ASSERT(
       !aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
@@ -963,7 +965,6 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   mStart = aStartBoundary;
   mEnd = aEndBoundary;
 
-  mIsPositioned = !!mStart.Container();
   if (checkCommonAncestor) {
     nsINode* oldCommonAncestor = mRegisteredCommonAncestor;
     nsINode* newCommonAncestor = GetCommonAncestor();
