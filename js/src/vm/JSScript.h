@@ -1610,6 +1610,375 @@ class alignas(uintptr_t) PrivateScriptData final {
   PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
+// [SMDOC] JSScript data layout (immutable)
+//
+// ImmutableScriptData stores variable-length script data that may be shared
+// between scripts with the same bytecode, even across different GC Zones.
+// Abstractly this structure consists of multiple (optional) arrays that are
+// exposed as mozilla::Span<T>. These arrays exist in a single heap allocation.
+//
+// Under the hood, ImmutableScriptData is a fixed-size header class followed
+// the various array bodies interleaved with metadata to compactly encode the
+// bounds. These arrays have varying requirements for alignment, performance,
+// and jit-friendliness which leads to the complex indexing system below.
+//
+// Note: The '----' separators are for readability only.
+//
+// ----
+//   <ImmutableScriptData itself>
+// ----
+//   (REQUIRED) Flags structure
+//   (REQUIRED) Array of jsbytecode constituting code()
+//   (REQUIRED) Array of jssrcnote constituting notes()
+// ----
+//   (OPTIONAL) Array of uint32_t optional-offsets
+//  optArrayOffset:
+// ----
+//  L0:
+//   (OPTIONAL) Array of uint32_t constituting resumeOffsets()
+//  L1:
+//   (OPTIONAL) Array of ScopeNote constituting scopeNotes()
+//  L2:
+//   (OPTIONAL) Array of JSTryNote constituting tryNotes()
+//  L3:
+// ----
+//
+// NOTE: The notes() array must have been null-padded such that
+//       flags/code/notes together have uint32_t alignment.
+//
+// The labels shown are recorded as byte-offsets relative to 'this'. This is to
+// reduce memory as well as make ImmutableScriptData easier to share across
+// processes.
+//
+// The L0/L1/L2/L3 labels indicate the start and end of the optional arrays.
+// Some of these labels may refer to the same location if the array between
+// them is empty. Each unique label position has an offset stored in the
+// optional-offsets table. Note that we also avoid entries for labels that
+// match 'optArrayOffset'. This saves memory when arrays are empty.
+//
+// The flags() data indicates (for each optional array) which entry from the
+// optional-offsets table marks the *end* of array. The array starts where the
+// previous array ends (with the first array beginning at 'optArrayOffset').
+// The optional-offset table is addressed at negative indices from
+// 'optArrayOffset'.
+//
+// In general, the length of each array is computed from subtracting the start
+// offset of the array from the start offset of the subsequent array. The
+// notable exception is that bytecode length is stored explicitly.
+class alignas(uint32_t) ImmutableScriptData final {
+  // Offsets are measured in bytes relative to 'this'.
+  using Offset = uint32_t;
+
+  Offset optArrayOffset_ = 0;
+
+  // Length of bytecode
+  uint32_t codeLength_ = 0;
+
+  // Offset of main entry point from code, after predef'ing prologue.
+  uint32_t mainOffset = 0;
+
+  // Fixed frame slots.
+  uint32_t nfixed = 0;
+
+  // Slots plus maximum stack depth.
+  uint32_t nslots = 0;
+
+  // Index into the gcthings array of the body scope.
+  uint32_t bodyScopeIndex = 0;
+
+  // Number of IC entries to allocate in JitScript for Baseline ICs.
+  uint32_t numICEntries = 0;
+
+  // ES6 function length.
+  uint16_t funLength = 0;
+
+  // Number of type sets used in this script for dynamic type monitoring.
+  uint16_t numBytecodeTypeSets = 0;
+
+  // NOTE: The raw bytes of this structure are used for hashing so use explicit
+  // padding values as needed for predicatable results across compilers.
+
+  struct Flags {
+    uint8_t resumeOffsetsEndIndex : 2;
+    uint8_t scopeNotesEndIndex : 2;
+    uint8_t tryNotesEndIndex : 2;
+    uint8_t _unused : 2;
+  };
+  static_assert(sizeof(Flags) == sizeof(uint8_t),
+                "Structure packing is broken");
+
+  friend class ::JSScript;
+
+ private:
+  // Offsets (in bytes) from 'this' to each component array. The delta between
+  // each offset and the next offset is the size of each array and is defined
+  // even if an array is empty.
+  size_t flagOffset() const { return offsetOfCode() - sizeof(Flags); }
+  size_t codeOffset() const { return offsetOfCode(); }
+  size_t noteOffset() const { return offsetOfCode() + codeLength_; }
+  size_t optionalOffsetsOffset() const {
+    // Determine the location to beginning of optional-offsets array by looking
+    // at index for try-notes.
+    //
+    //   optionalOffsetsOffset():
+    //     (OPTIONAL) tryNotesEndOffset
+    //     (OPTIONAL) scopeNotesEndOffset
+    //     (OPTIONAL) resumeOffsetsEndOffset
+    //   optArrayOffset_:
+    //     ....
+    unsigned numOffsets = flags().tryNotesEndIndex;
+    MOZ_ASSERT(numOffsets >= flags().scopeNotesEndIndex);
+    MOZ_ASSERT(numOffsets >= flags().resumeOffsetsEndIndex);
+
+    return optArrayOffset_ - (numOffsets * sizeof(Offset));
+  }
+  size_t resumeOffsetsOffset() const { return optArrayOffset_; }
+  size_t scopeNotesOffset() const {
+    return getOptionalOffset(flags().resumeOffsetsEndIndex);
+  }
+  size_t tryNotesOffset() const {
+    return getOptionalOffset(flags().scopeNotesEndIndex);
+  }
+  size_t endOffset() const {
+    return getOptionalOffset(flags().tryNotesEndIndex);
+  }
+
+  // Size to allocate
+  static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
+                               uint32_t numResumeOffsets,
+                               uint32_t numScopeNotes, uint32_t numTryNotes);
+
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<T*>(base + offset);
+  }
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  void initOptionalArrays(size_t* cursor, Flags* flags,
+                          uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                          uint32_t numTryNotes);
+
+  // Initialize to GC-safe state
+  ImmutableScriptData(uint32_t codeLength, uint32_t noteLength,
+                      uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                      uint32_t numTryNotes);
+
+  void setOptionalOffset(int index, Offset offset) {
+    MOZ_ASSERT(index > 0);
+    MOZ_ASSERT(offset != optArrayOffset_, "Do not store implicit offset");
+    offsetToPointer<Offset>(optArrayOffset_)[-index] = offset;
+  }
+  Offset getOptionalOffset(int index) const {
+    // The index 0 represents (implicitly) the offset 'optArrayOffset_'.
+    if (index == 0) {
+      return optArrayOffset_;
+    }
+
+    ImmutableScriptData* this_ = const_cast<ImmutableScriptData*>(this);
+    return this_->offsetToPointer<Offset>(optArrayOffset_)[-index];
+  }
+
+ public:
+  static ImmutableScriptData* new_(JSContext* cx, uint32_t codeLength,
+                                   uint32_t noteLength,
+                                   uint32_t numResumeOffsets,
+                                   uint32_t numScopeNotes,
+                                   uint32_t numTryNotes);
+
+  // The code() and note() arrays together maintain an target alignment by
+  // padding the source notes with null. This allows arrays with stricter
+  // alignment requirements to follow them.
+  static constexpr size_t CodeNoteAlign = sizeof(uint32_t);
+
+  // Compute number of null notes to pad out source notes with.
+  static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
+    uint32_t flagLength = sizeof(Flags);
+    uint32_t nullLength =
+        CodeNoteAlign - (flagLength + codeLength + noteLength) % CodeNoteAlign;
+
+    // The source notes must have at least one null-terminator.
+    MOZ_ASSERT(nullLength >= 1);
+
+    return nullLength;
+  }
+
+  // Span over all raw bytes in this struct and its trailing arrays.
+  mozilla::Span<const uint8_t> immutableData() const {
+    size_t allocSize = endOffset();
+    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
+  }
+
+  Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
+  const Flags& flags() const {
+    return const_cast<ImmutableScriptData*>(this)->flagsRef();
+  }
+
+  uint32_t codeLength() const { return codeLength_; }
+  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
+
+  uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
+  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
+
+  mozilla::Span<uint32_t> resumeOffsets() {
+    return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
+                             offsetToPointer<uint32_t>(scopeNotesOffset()));
+  }
+  mozilla::Span<ScopeNote> scopeNotes() {
+    return mozilla::MakeSpan(offsetToPointer<ScopeNote>(scopeNotesOffset()),
+                             offsetToPointer<ScopeNote>(tryNotesOffset()));
+  }
+  mozilla::Span<JSTryNote> tryNotes() {
+    return mozilla::MakeSpan(offsetToPointer<JSTryNote>(tryNotesOffset()),
+                             offsetToPointer<JSTryNote>(endOffset()));
+  }
+
+  static constexpr size_t offsetOfCode() {
+    return sizeof(ImmutableScriptData) + sizeof(Flags);
+  }
+  static constexpr size_t offsetOfResumeOffsetsOffset() {
+    // Resume-offsets are the first optional array if they exist. Locate the
+    // array with the 'optArrayOffset_' field.
+    return offsetof(ImmutableScriptData, optArrayOffset_);
+  }
+  static constexpr size_t offsetOfNfixed() {
+    return offsetof(ImmutableScriptData, nfixed);
+  }
+  static constexpr size_t offsetOfNslots() {
+    return offsetof(ImmutableScriptData, nslots);
+  }
+  static constexpr size_t offsetOfFunLength() {
+    return offsetof(ImmutableScriptData, funLength);
+  }
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
+
+  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
+                              js::frontend::BytecodeEmitter* bce,
+                              uint32_t nslots);
+
+  // ImmutableScriptData has trailing data so isn't copyable or movable.
+  ImmutableScriptData(const ImmutableScriptData&) = delete;
+  ImmutableScriptData& operator=(const ImmutableScriptData&) = delete;
+};
+
+// Script data that is shareable across a JSRuntime.
+class RuntimeScriptData final {
+  // This class is reference counted as follows: each pointer from a JSScript
+  // counts as one reference plus there may be one reference from the shared
+  // script data table.
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      refCount_ = {};
+
+  uint32_t natoms_ = 0;
+
+  js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
+
+  // NOTE: The raw bytes of this structure are used for hashing so use explicit
+  // padding values as needed for predicatable results across compilers.
+
+  friend class ::JSScript;
+
+ private:
+  // Layout of trailing arrays.
+  size_t atomOffset() const { return offsetOfAtoms(); }
+
+  // Size to allocate.
+  static size_t AllocationSize(uint32_t natoms);
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  // Initialize to GC-safe state.
+  explicit RuntimeScriptData(uint32_t natoms);
+
+ public:
+  // Hash over the contents of RuntimeScriptData and its ImmutableScriptData.
+  struct Hasher;
+
+  static RuntimeScriptData* new_(JSContext* cx, uint32_t natoms);
+
+  uint32_t refCount() const { return refCount_; }
+  void AddRef() { refCount_++; }
+  void Release() {
+    MOZ_ASSERT(refCount_ != 0);
+    uint32_t remain = --refCount_;
+    if (remain == 0) {
+      isd_ = nullptr;
+      js_free(this);
+    }
+  }
+
+  uint32_t natoms() const { return natoms_; }
+  GCPtrAtom* atoms() {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
+  }
+
+  mozilla::Span<const GCPtrAtom> atomsSpan() const {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    const GCPtrAtom* p =
+        reinterpret_cast<const GCPtrAtom*>(base + atomOffset());
+    return mozilla::MakeSpan(p, natoms_);
+  }
+
+  static constexpr size_t offsetOfAtoms() { return sizeof(RuntimeScriptData); }
+
+  static constexpr size_t offsetOfISD() {
+    return offsetof(RuntimeScriptData, isd_);
+  }
+
+  void traceChildren(JSTracer* trc);
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
+
+  // Mark this RuntimeScriptData for use in a new zone.
+  void markForCrossZone(JSContext* cx);
+
+  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
+                              js::frontend::BytecodeEmitter* bce,
+                              uint32_t nslots);
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(this) + mallocSizeOf(isd_.get());
+  }
+
+  // RuntimeScriptData has trailing data so isn't copyable or movable.
+  RuntimeScriptData(const RuntimeScriptData&) = delete;
+  RuntimeScriptData& operator=(const RuntimeScriptData&) = delete;
+};
+
+// Matches RuntimeScriptData objects that have the same atoms as well as
+// contain the same bytes in their ImmutableScriptData.
+struct RuntimeScriptData::Hasher {
+  using Lookup = RefPtr<RuntimeScriptData>;
+
+  static HashNumber hash(const Lookup& l) {
+    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
+
+    HashNumber h =
+        mozilla::HashBytes(immutableData.data(), immutableData.size());
+    return mozilla::AddToHash(
+        h, mozilla::HashBytes(l->atoms(), l->natoms() * sizeof(GCPtrAtom)));
+  }
+
+  static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
+    return (entry->atomsSpan() == lookup->atomsSpan()) &&
+           (entry->isd_->immutableData() == lookup->isd_->immutableData());
+  }
+};
+
+using RuntimeScriptDataTable =
+    HashSet<RuntimeScriptData*, RuntimeScriptData::Hasher, SystemAllocPolicy>;
+
 // This class contains fields and accessors that are common to both lazy and
 // non-lazy interpreted scripts. This must be located at offset +0 of any
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
@@ -2181,375 +2550,6 @@ XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
  */
 template <XDRMode mode>
 XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
-
-// [SMDOC] JSScript data layout (immutable)
-//
-// ImmutableScriptData stores variable-length script data that may be shared
-// between scripts with the same bytecode, even across different GC Zones.
-// Abstractly this structure consists of multiple (optional) arrays that are
-// exposed as mozilla::Span<T>. These arrays exist in a single heap allocation.
-//
-// Under the hood, ImmutableScriptData is a fixed-size header class followed
-// the various array bodies interleaved with metadata to compactly encode the
-// bounds. These arrays have varying requirements for alignment, performance,
-// and jit-friendliness which leads to the complex indexing system below.
-//
-// Note: The '----' separators are for readability only.
-//
-// ----
-//   <ImmutableScriptData itself>
-// ----
-//   (REQUIRED) Flags structure
-//   (REQUIRED) Array of jsbytecode constituting code()
-//   (REQUIRED) Array of jssrcnote constituting notes()
-// ----
-//   (OPTIONAL) Array of uint32_t optional-offsets
-//  optArrayOffset:
-// ----
-//  L0:
-//   (OPTIONAL) Array of uint32_t constituting resumeOffsets()
-//  L1:
-//   (OPTIONAL) Array of ScopeNote constituting scopeNotes()
-//  L2:
-//   (OPTIONAL) Array of JSTryNote constituting tryNotes()
-//  L3:
-// ----
-//
-// NOTE: The notes() array must have been null-padded such that
-//       flags/code/notes together have uint32_t alignment.
-//
-// The labels shown are recorded as byte-offsets relative to 'this'. This is to
-// reduce memory as well as make ImmutableScriptData easier to share across
-// processes.
-//
-// The L0/L1/L2/L3 labels indicate the start and end of the optional arrays.
-// Some of these labels may refer to the same location if the array between
-// them is empty. Each unique label position has an offset stored in the
-// optional-offsets table. Note that we also avoid entries for labels that
-// match 'optArrayOffset'. This saves memory when arrays are empty.
-//
-// The flags() data indicates (for each optional array) which entry from the
-// optional-offsets table marks the *end* of array. The array starts where the
-// previous array ends (with the first array beginning at 'optArrayOffset').
-// The optional-offset table is addressed at negative indices from
-// 'optArrayOffset'.
-//
-// In general, the length of each array is computed from subtracting the start
-// offset of the array from the start offset of the subsequent array. The
-// notable exception is that bytecode length is stored explicitly.
-class alignas(uint32_t) ImmutableScriptData final {
-  // Offsets are measured in bytes relative to 'this'.
-  using Offset = uint32_t;
-
-  Offset optArrayOffset_ = 0;
-
-  // Length of bytecode
-  uint32_t codeLength_ = 0;
-
-  // Offset of main entry point from code, after predef'ing prologue.
-  uint32_t mainOffset = 0;
-
-  // Fixed frame slots.
-  uint32_t nfixed = 0;
-
-  // Slots plus maximum stack depth.
-  uint32_t nslots = 0;
-
-  // Index into the gcthings array of the body scope.
-  uint32_t bodyScopeIndex = 0;
-
-  // Number of IC entries to allocate in JitScript for Baseline ICs.
-  uint32_t numICEntries = 0;
-
-  // ES6 function length.
-  uint16_t funLength = 0;
-
-  // Number of type sets used in this script for dynamic type monitoring.
-  uint16_t numBytecodeTypeSets = 0;
-
-  // NOTE: The raw bytes of this structure are used for hashing so use explicit
-  // padding values as needed for predicatable results across compilers.
-
-  struct Flags {
-    uint8_t resumeOffsetsEndIndex : 2;
-    uint8_t scopeNotesEndIndex : 2;
-    uint8_t tryNotesEndIndex : 2;
-    uint8_t _unused : 2;
-  };
-  static_assert(sizeof(Flags) == sizeof(uint8_t),
-                "Structure packing is broken");
-
-  friend class ::JSScript;
-
- private:
-  // Offsets (in bytes) from 'this' to each component array. The delta between
-  // each offset and the next offset is the size of each array and is defined
-  // even if an array is empty.
-  size_t flagOffset() const { return offsetOfCode() - sizeof(Flags); }
-  size_t codeOffset() const { return offsetOfCode(); }
-  size_t noteOffset() const { return offsetOfCode() + codeLength_; }
-  size_t optionalOffsetsOffset() const {
-    // Determine the location to beginning of optional-offsets array by looking
-    // at index for try-notes.
-    //
-    //   optionalOffsetsOffset():
-    //     (OPTIONAL) tryNotesEndOffset
-    //     (OPTIONAL) scopeNotesEndOffset
-    //     (OPTIONAL) resumeOffsetsEndOffset
-    //   optArrayOffset_:
-    //     ....
-    unsigned numOffsets = flags().tryNotesEndIndex;
-    MOZ_ASSERT(numOffsets >= flags().scopeNotesEndIndex);
-    MOZ_ASSERT(numOffsets >= flags().resumeOffsetsEndIndex);
-
-    return optArrayOffset_ - (numOffsets * sizeof(Offset));
-  }
-  size_t resumeOffsetsOffset() const { return optArrayOffset_; }
-  size_t scopeNotesOffset() const {
-    return getOptionalOffset(flags().resumeOffsetsEndIndex);
-  }
-  size_t tryNotesOffset() const {
-    return getOptionalOffset(flags().scopeNotesEndIndex);
-  }
-  size_t endOffset() const {
-    return getOptionalOffset(flags().tryNotesEndIndex);
-  }
-
-  // Size to allocate
-  static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
-                               uint32_t numResumeOffsets,
-                               uint32_t numScopeNotes, uint32_t numTryNotes);
-
-  // Translate an offset into a concrete pointer.
-  template <typename T>
-  T* offsetToPointer(size_t offset) {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<T*>(base + offset);
-  }
-
-  template <typename T>
-  void initElements(size_t offset, size_t length);
-
-  void initOptionalArrays(size_t* cursor, Flags* flags,
-                          uint32_t numResumeOffsets, uint32_t numScopeNotes,
-                          uint32_t numTryNotes);
-
-  // Initialize to GC-safe state
-  ImmutableScriptData(uint32_t codeLength, uint32_t noteLength,
-                      uint32_t numResumeOffsets, uint32_t numScopeNotes,
-                      uint32_t numTryNotes);
-
-  void setOptionalOffset(int index, Offset offset) {
-    MOZ_ASSERT(index > 0);
-    MOZ_ASSERT(offset != optArrayOffset_, "Do not store implicit offset");
-    offsetToPointer<Offset>(optArrayOffset_)[-index] = offset;
-  }
-  Offset getOptionalOffset(int index) const {
-    // The index 0 represents (implicitly) the offset 'optArrayOffset_'.
-    if (index == 0) {
-      return optArrayOffset_;
-    }
-
-    ImmutableScriptData* this_ = const_cast<ImmutableScriptData*>(this);
-    return this_->offsetToPointer<Offset>(optArrayOffset_)[-index];
-  }
-
- public:
-  static ImmutableScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                   uint32_t noteLength,
-                                   uint32_t numResumeOffsets,
-                                   uint32_t numScopeNotes,
-                                   uint32_t numTryNotes);
-
-  // The code() and note() arrays together maintain an target alignment by
-  // padding the source notes with null. This allows arrays with stricter
-  // alignment requirements to follow them.
-  static constexpr size_t CodeNoteAlign = sizeof(uint32_t);
-
-  // Compute number of null notes to pad out source notes with.
-  static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
-    uint32_t flagLength = sizeof(Flags);
-    uint32_t nullLength =
-        CodeNoteAlign - (flagLength + codeLength + noteLength) % CodeNoteAlign;
-
-    // The source notes must have at least one null-terminator.
-    MOZ_ASSERT(nullLength >= 1);
-
-    return nullLength;
-  }
-
-  // Span over all raw bytes in this struct and its trailing arrays.
-  mozilla::Span<const uint8_t> immutableData() const {
-    size_t allocSize = endOffset();
-    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
-  }
-
-  Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
-  const Flags& flags() const {
-    return const_cast<ImmutableScriptData*>(this)->flagsRef();
-  }
-
-  uint32_t codeLength() const { return codeLength_; }
-  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
-
-  uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
-  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
-
-  mozilla::Span<uint32_t> resumeOffsets() {
-    return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
-                             offsetToPointer<uint32_t>(scopeNotesOffset()));
-  }
-  mozilla::Span<ScopeNote> scopeNotes() {
-    return mozilla::MakeSpan(offsetToPointer<ScopeNote>(scopeNotesOffset()),
-                             offsetToPointer<ScopeNote>(tryNotesOffset()));
-  }
-  mozilla::Span<JSTryNote> tryNotes() {
-    return mozilla::MakeSpan(offsetToPointer<JSTryNote>(tryNotesOffset()),
-                             offsetToPointer<JSTryNote>(endOffset()));
-  }
-
-  static constexpr size_t offsetOfCode() {
-    return sizeof(ImmutableScriptData) + sizeof(Flags);
-  }
-  static constexpr size_t offsetOfResumeOffsetsOffset() {
-    // Resume-offsets are the first optional array if they exist. Locate the
-    // array with the 'optArrayOffset_' field.
-    return offsetof(ImmutableScriptData, optArrayOffset_);
-  }
-  static constexpr size_t offsetOfNfixed() {
-    return offsetof(ImmutableScriptData, nfixed);
-  }
-  static constexpr size_t offsetOfNslots() {
-    return offsetof(ImmutableScriptData, nslots);
-  }
-  static constexpr size_t offsetOfFunLength() {
-    return offsetof(ImmutableScriptData, funLength);
-  }
-
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script);
-
-  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
-                              js::frontend::BytecodeEmitter* bce,
-                              uint32_t nslots);
-
-  // ImmutableScriptData has trailing data so isn't copyable or movable.
-  ImmutableScriptData(const ImmutableScriptData&) = delete;
-  ImmutableScriptData& operator=(const ImmutableScriptData&) = delete;
-};
-
-// Script data that is shareable across a JSRuntime.
-class RuntimeScriptData final {
-  // This class is reference counted as follows: each pointer from a JSScript
-  // counts as one reference plus there may be one reference from the shared
-  // script data table.
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      refCount_ = {};
-
-  uint32_t natoms_ = 0;
-
-  js::UniquePtr<ImmutableScriptData> isd_ = nullptr;
-
-  // NOTE: The raw bytes of this structure are used for hashing so use explicit
-  // padding values as needed for predicatable results across compilers.
-
-  friend class ::JSScript;
-
- private:
-  // Layout of trailing arrays.
-  size_t atomOffset() const { return offsetOfAtoms(); }
-
-  // Size to allocate.
-  static size_t AllocationSize(uint32_t natoms);
-
-  template <typename T>
-  void initElements(size_t offset, size_t length);
-
-  // Initialize to GC-safe state.
-  explicit RuntimeScriptData(uint32_t natoms);
-
- public:
-  // Hash over the contents of RuntimeScriptData and its ImmutableScriptData.
-  struct Hasher;
-
-  static RuntimeScriptData* new_(JSContext* cx, uint32_t natoms);
-
-  uint32_t refCount() const { return refCount_; }
-  void AddRef() { refCount_++; }
-  void Release() {
-    MOZ_ASSERT(refCount_ != 0);
-    uint32_t remain = --refCount_;
-    if (remain == 0) {
-      isd_ = nullptr;
-      js_free(this);
-    }
-  }
-
-  uint32_t natoms() const { return natoms_; }
-  GCPtrAtom* atoms() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
-  }
-
-  mozilla::Span<const GCPtrAtom> atomsSpan() const {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    const GCPtrAtom* p =
-        reinterpret_cast<const GCPtrAtom*>(base + atomOffset());
-    return mozilla::MakeSpan(p, natoms_);
-  }
-
-  static constexpr size_t offsetOfAtoms() { return sizeof(RuntimeScriptData); }
-
-  static constexpr size_t offsetOfISD() {
-    return offsetof(RuntimeScriptData, isd_);
-  }
-
-  void traceChildren(JSTracer* trc);
-
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script);
-
-  // Mark this RuntimeScriptData for use in a new zone.
-  void markForCrossZone(JSContext* cx);
-
-  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
-                              js::frontend::BytecodeEmitter* bce,
-                              uint32_t nslots);
-
-  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(this) + mallocSizeOf(isd_.get());
-  }
-
-  // RuntimeScriptData has trailing data so isn't copyable or movable.
-  RuntimeScriptData(const RuntimeScriptData&) = delete;
-  RuntimeScriptData& operator=(const RuntimeScriptData&) = delete;
-};
-
-// Matches RuntimeScriptData objects that have the same atoms as well as
-// contain the same bytes in their ImmutableScriptData.
-struct RuntimeScriptData::Hasher {
-  using Lookup = RefPtr<RuntimeScriptData>;
-
-  static HashNumber hash(const Lookup& l) {
-    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
-
-    HashNumber h =
-        mozilla::HashBytes(immutableData.data(), immutableData.size());
-    return mozilla::AddToHash(
-        h, mozilla::HashBytes(l->atoms(), l->natoms() * sizeof(GCPtrAtom)));
-  }
-
-  static bool match(RuntimeScriptData* entry, const Lookup& lookup) {
-    return (entry->atomsSpan() == lookup->atomsSpan()) &&
-           (entry->isd_->immutableData() == lookup->isd_->immutableData());
-  }
-};
-
-using RuntimeScriptDataTable =
-    HashSet<RuntimeScriptData*, RuntimeScriptData::Hasher, SystemAllocPolicy>;
 
 extern void SweepScriptData(JSRuntime* rt);
 
