@@ -190,6 +190,34 @@ bool wasm::HasCachingSupport(JSContext* cx) {
   return HasStreamingSupport(cx) && HasOptimizedCompilerTier(cx);
 }
 
+bool wasm::CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
+                        HandleValue v, MutableHandleFunction fnval,
+                        MutableHandleAnyRef refval) {
+  switch (targetTypeKind) {
+    case RefType::Func:
+      if (!CheckFuncRefValue(cx, v, fnval)) {
+        return false;
+      }
+      break;
+    case RefType::Null:
+      if (!v.isNull()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_NULL_REQUIRED);
+        return false;
+      }
+      refval.set(AnyRef::null());
+      break;
+    case RefType::Any:
+      if (!BoxAnyRef(cx, v, refval)) {
+        return false;
+      }
+      break;
+    case RefType::TypeIndex:
+      MOZ_CRASH("temporarily unsupported Ref type");
+  }
+  return true;
+}
+
 static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
                                MutableHandleVal val) {
   switch (targetType.kind()) {
@@ -231,35 +259,21 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       break;
     }
     case ValType::Ref: {
+      RootedFunction fun(cx);
+      RootedAnyRef any(cx, AnyRef::null());
+      if (!CheckRefType(cx, targetType.refTypeKind(), v, &fun, &any)) {
+        return false;
+      }
       switch (targetType.refTypeKind()) {
-        case RefType::Func: {
-          RootedFunction fun(cx);
-          if (!CheckFuncRefValue(cx, v, &fun)) {
-            return false;
-          }
+        case RefType::Func:
           val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
           return true;
-        }
-        case RefType::Null: {
-          if (!v.isNull()) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_NULL_REQUIRED);
-            return false;
-          }
-          val.set(Val(RefType::null(), AnyRef::null()));
+        case RefType::Any:
+        case RefType::Null:
+          val.set(Val(targetType.refType(), any));
           return true;
-        }
-        case RefType::Any: {
-          RootedAnyRef tmp(cx, AnyRef::null());
-          if (!BoxAnyRef(cx, v, &tmp)) {
-            return false;
-          }
-          val.set(Val(RefType::any(), tmp));
-          return true;
-        }
-        case RefType::TypeIndex: {
+        case RefType::TypeIndex:
           break;
-        }
       }
       break;
     }
@@ -2378,39 +2392,26 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
+  MOZ_ASSERT(index < MaxTableLength);
+  static_assert(MaxTableLength < UINT32_MAX, "Invariant");
+
   RootedValue fillValue(cx, args[1]);
+  RootedFunction fun(cx);
+  RootedAnyRef any(cx, AnyRef::null());
+  if (!CheckRefType(cx, ToElemValType(table.kind()).refTypeKind(), fillValue,
+                    &fun, &any)) {
+    return false;
+  }
   switch (table.kind()) {
-    case TableKind::AsmJS: {
+    case TableKind::AsmJS:
       MOZ_CRASH("Should not happen");
-    }
-    case TableKind::FuncRef: {
-      RootedFunction fun(cx);
-      if (!CheckFuncRefValue(cx, fillValue, &fun)) {
-        return false;
-      }
-      MOZ_ASSERT(index < MaxTableLength);
-      static_assert(MaxTableLength < UINT32_MAX, "Invariant");
+    case TableKind::FuncRef:
       table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
       break;
-    }
-    case TableKind::NullRef: {
-      if (!fillValue.isNull()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_NULL_REQUIRED);
-        return false;
-      }
-      RootedAnyRef tmp(cx, AnyRef::null());
-      table.fillAnyRef(index, 1, tmp);
+    case TableKind::NullRef:
+    case TableKind::AnyRef:
+      table.fillAnyRef(index, 1, any);
       break;
-    }
-    case TableKind::AnyRef: {
-      RootedAnyRef tmp(cx, AnyRef::null());
-      if (!BoxAnyRef(cx, fillValue, &tmp)) {
-        return false;
-      }
-      table.fillAnyRef(index, 1, tmp);
-      break;
-    }
   }
 
   args.rval().setUndefined();
@@ -2457,57 +2458,40 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
 
   static_assert(MaxTableLength < UINT32_MAX, "Invariant");
 
-  switch (table.kind()) {
-    case TableKind::AsmJS: {
-      MOZ_CRASH("asm.js not supported");
+  if (!fillValue.isNull()) {
+    RootedFunction fun(cx);
+    RootedAnyRef any(cx, AnyRef::null());
+    if (!CheckRefType(cx, ToElemValType(table.kind()).refTypeKind(), fillValue,
+                      &fun, &any)) {
+      return false;
     }
-    case TableKind::FuncRef: {
-      if (fillValue.isNull()) {
+    switch (table.repr()) {
+      case TableRepr::Func:
+        MOZ_ASSERT(table.kind() == TableKind::FuncRef);
+        table.fillFuncRef(oldLength, delta, FuncRef::fromJSFunction(fun), cx);
+        break;
+      case TableRepr::Ref:
+        table.fillAnyRef(oldLength, delta, any);
+        break;
+    }
+  }
+
 #ifdef DEBUG
+  if (fillValue.isNull()) {
+    switch (table.repr()) {
+      case TableRepr::Func:
         for (uint32_t index = oldLength; index < oldLength + delta; index++) {
           MOZ_ASSERT(table.getFuncRef(index).code == nullptr);
         }
-#endif
-      } else {
-        RootedFunction fun(cx);
-        if (!CheckFuncRefValue(cx, fillValue, &fun)) {
-          return false;
-        }
-        table.fillFuncRef(oldLength, delta, FuncRef::fromJSFunction(fun), cx);
-      }
-      break;
-    }
-    case TableKind::AnyRef: {
-      RootedAnyRef tmp(cx, AnyRef::null());
-      if (!BoxAnyRef(cx, fillValue, &tmp)) {
-        return false;
-      }
-      if (!tmp.get().isNull()) {
-        table.fillAnyRef(oldLength, delta, tmp);
-      } else {
-#ifdef DEBUG
+        break;
+      case TableRepr::Ref:
         for (uint32_t index = oldLength; index < oldLength + delta; index++) {
           MOZ_ASSERT(table.getAnyRef(index).isNull());
         }
-#endif
-      }
-      break;
-    }
-    case TableKind::NullRef: {
-      if (fillValue.isNull()) {
-#ifdef DEBUG
-        for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table.getAnyRef(index).isNull());
-        }
-#endif
-      } else {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_NULL_REQUIRED);
-        return false;
-      }
-      break;
+        break;
     }
   }
+#endif
 
   args.rval().setInt32(oldLength);
   return true;

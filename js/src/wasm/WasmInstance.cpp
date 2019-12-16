@@ -1749,54 +1749,30 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
                      *(double*)&exportArgs[i]);
         break;
       case ValType::Ref:
+        RootedFunction fun(cx);
+        RootedAnyRef any(cx, AnyRef::null());
+        if (!CheckRefType(cx, funcType->arg(i).refTypeKind(), v, &fun, &any)) {
+          return false;
+        }
+        ASSERT_ANYREF_IS_JSOBJECT;
+        // Store in rooted array until no more GC is possible.
         switch (funcType->arg(i).refTypeKind()) {
-          case RefType::Func: {
-            RootedFunction fun(cx);
-            if (!CheckFuncRefValue(cx, v, &fun)) {
-              return false;
-            }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
+          case RefType::Func:
             if (!refs.emplaceBack(fun)) {
               return false;
             }
-            DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
-                         int(refs.length() - 1));
             break;
-          }
-          case RefType::Null: {
-            if (!v.isNull()) {
-              JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                       JSMSG_WASM_NULL_REQUIRED);
+          case RefType::Null:
+          case RefType::Any:
+            if (!refs.emplaceBack(any.get().asJSObject())) {
               return false;
             }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
-            if (!refs.emplaceBack(AnyRef::null().asJSObject())) {
-              return false;
-            }
-            DebugCodegen(DebugChannel::Function, "nullptr(#%d) ",
-                         int(refs.length() - 1));
             break;
-          }
-          case RefType::Any: {
-            RootedAnyRef ar(cx, AnyRef::null());
-            if (!BoxAnyRef(cx, v, &ar)) {
-              return false;
-            }
-            // Store in rooted array until no more GC is possible.
-            ASSERT_ANYREF_IS_JSOBJECT;
-            if (!refs.emplaceBack(ar.get().asJSObject())) {
-              return false;
-            }
-            DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
-                         int(refs.length() - 1));
-            break;
-          }
-          case RefType::TypeIndex: {
+          case RefType::TypeIndex:
             MOZ_CRASH("temporarily unsupported Ref type in callExport");
-          }
         }
+        DebugCodegen(DebugChannel::Function, "ref(#%d) ",
+                     int(refs.length() - 1));
         break;
     }
   }
