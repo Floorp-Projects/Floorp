@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsIExternalHelperAppService.h"
 
 #include "mozilla/Logging.h"
 
@@ -62,13 +63,14 @@ class nsURILoader final : public nsIURILoader {
  * Each instance remains alive until its target URL has been loaded
  * (or aborted).
  */
-class nsDocumentOpenInfo final : public nsIStreamListener,
-                                 public nsIThreadRetargetableStreamListener {
+class nsDocumentOpenInfo : public nsIStreamListener,
+                           public nsIThreadRetargetableStreamListener {
  public:
   // Real constructor
   // aFlags is a combination of the flags on nsIURILoader
   nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext, uint32_t aFlags,
                      nsURILoader* aURILoader);
+  nsDocumentOpenInfo(uint32_t aFlags, bool aAllowListenerConversions);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -99,6 +101,44 @@ class nsDocumentOpenInfo final : public nsIStreamListener,
   bool TryContentListener(nsIURIContentListener* aListener,
                           nsIChannel* aChannel);
 
+  /**
+   * Virtual helper functions for content that we expect to be
+   * overriden when running in the parent process on behalf of
+   * a content process docshell.
+   * We also expect nsIStreamListener functions to be overriden
+   * to add functionality.
+   */
+
+  /**
+   * Attempt to create a steam converter converting from the
+   * current mContentType into something else.
+   * Sets m_targetStreamListener if it succeeds.
+   */
+  virtual bool TryStreamConversion(nsIChannel* aChannel);
+
+  /**
+   * Attempt to use the default content listener as our stream
+   * listener.
+   * Sets m_targetStreamListener if it succeeds.
+   */
+  virtual bool TryDefaultContentListener(nsIChannel* aChannel);
+
+  /**
+   * Attempt to pass aChannel onto the external helper app service.
+   * Sets m_targetStreamListener if it succeeds.
+   */
+  virtual bool TryExternalHelperApp(
+      nsIExternalHelperAppService* aHelperAppService, nsIChannel* aChannel);
+
+  /**
+   * Create another nsDocumentOpenInfo like this one, so that we can chain
+   * them together when we use a stream converter and don't know what the
+   * converted content type is until the converter outputs OnStartRequest.
+   */
+  virtual nsDocumentOpenInfo* Clone() {
+    return new nsDocumentOpenInfo(m_originalContext, mFlags, mURILoader);
+  }
+
   // nsIRequestObserver methods:
   NS_DECL_NSIREQUESTOBSERVER
 
@@ -107,13 +147,16 @@ class nsDocumentOpenInfo final : public nsIStreamListener,
 
   // nsIThreadRetargetableStreamListener
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+
  protected:
-  ~nsDocumentOpenInfo();
+  virtual ~nsDocumentOpenInfo();
 
  protected:
   /**
    * The first content listener to try dispatching data to.  Typically
    * the listener associated with the entity that originated the load.
+   * This can be nullptr when running in the parent process for a content
+   * process docshell.
    */
   nsCOMPtr<nsIURIContentListener> m_contentListener;
 
@@ -126,6 +169,8 @@ class nsDocumentOpenInfo final : public nsIStreamListener,
   /**
    * A pointer to the entity that originated the load. We depend on getting
    * things like nsIURIContentListeners, nsIDOMWindows, etc off of it.
+   * This can be nullptr when running in the parent process for a content
+   * process docshell.
    */
   nsCOMPtr<nsIInterfaceRequestor> m_originalContext;
 
@@ -145,6 +190,8 @@ class nsDocumentOpenInfo final : public nsIStreamListener,
   /**
    * Reference to the URILoader service so we can access its list of
    * nsIURIContentListeners.
+   * This can be nullptr when running in the parent process for a content
+   * process docshell.
    */
   RefPtr<nsURILoader> mURILoader;
 
@@ -152,6 +199,21 @@ class nsDocumentOpenInfo final : public nsIStreamListener,
    * Limit of data conversion depth to prevent infinite conversion loops
    */
   uint32_t mDataConversionDepthLimit;
+
+  /**
+   * Set to true if OnStartRequest handles the content using an
+   * nsIContentHandler, and the content is consumed despite
+   * m_targetStreamListener being nullptr.
+   */
+  bool mUsedContentHandler = false;
+
+  /**
+   * True if we allow nsIURIContentListeners to return a requested
+   * input typeToUse, and attempt to create a matching stream converter.
+   * This is false when running in the parent process for a content process
+   * docshell
+   */
+  bool mAllowListenerConversions = true;
 };
 
 #endif /* nsURILoader_h__ */
