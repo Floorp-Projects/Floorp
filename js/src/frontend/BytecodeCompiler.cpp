@@ -1048,9 +1048,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     return false;
   }
 
-  if (lazy->isLikelyConstructorWrapper()) {
-    script->setIsLikelyConstructorWrapper();
-  }
   if (lazy->hasBeenCloned()) {
     script->setHasBeenCloned();
   }

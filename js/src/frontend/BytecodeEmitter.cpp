@@ -5727,10 +5727,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     // fieldInitializers are copied to the JSScript inside BytecodeEmitter
 
-    if (funbox->isLikelyConstructorWrapper()) {
-      innerScript->setIsLikelyConstructorWrapper();
-    }
-
     if (!fe.emitNonLazyEnd()) {
       //            [stack] FUN?
       return false;
