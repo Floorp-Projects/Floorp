@@ -26,7 +26,13 @@ class ADocumentChannelBridge {
   // process).
   // This should remove the nsIChannel from the loadgroup, and
   // fire OnStart/StopRequest with aStatus.
-  virtual void DisconnectChildListeners(nsresult aStatus) = 0;
+  // aLoadGroupStatus is used as mStatus when we remove the child channel
+  // from the loadgroup (but aStatus is passed as the parameter to
+  // RemoveRequest).
+  // We do this so we can remove using NS_BINDING_RETARGETED, but still have
+  // the channel not be in an error state.
+  virtual void DisconnectChildListeners(nsresult aStatus,
+                                        nsresult aLoadGroupStatus) = 0;
 
   // Delete the bridge, and drop any refs to the DocumentLoadListener
   virtual void Delete() = 0;
