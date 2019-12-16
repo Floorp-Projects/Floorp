@@ -403,7 +403,7 @@ void GCRuntime::checkIncrementalZoneState(JSContext* cx, T* t) {
 }
 
 TenuredCell* js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind) {
-  void* cell = zone->arenas.allocateFromFreeList(thingKind);
+  TenuredCell* cell = zone->arenas.allocateFromFreeList(thingKind);
   if (!cell) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     cell = GCRuntime::refillFreeListInGC(zone, thingKind);
@@ -411,7 +411,7 @@ TenuredCell* js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind) {
       oomUnsafe.crash(ChunkSize, "Failed not allocate new chunk during GC");
     }
   }
-  return TenuredCell::fromPointer(cell);
+  return cell;
 }
 
 // ///////////  Arena -> Thing Allocator  //////////////////////////////////////
