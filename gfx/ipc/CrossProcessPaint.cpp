@@ -182,6 +182,10 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
                                (float)aRect->Width(), (float)aRect->Height()));
   }
 
+  if (rect && rect->IsEmpty()) {
+    return false;
+  }
+
   RefPtr<CrossProcessPaint> resolver =
       new CrossProcessPaint(aPromise, aScale, aRoot);
 
@@ -235,7 +239,6 @@ void CrossProcessPaint::ReceiveFragment(dom::WindowGlobalParent* aWGP,
 
   MOZ_ASSERT(mPendingFragments > 0);
   MOZ_ASSERT(!mReceivedFragments.GetValue(surfaceId));
-  MOZ_ASSERT(!aFragment.IsEmpty());
 
   // Double check our invariants to protect against a compromised content
   // process
