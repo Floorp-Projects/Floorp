@@ -171,14 +171,13 @@ class FileBlockCache : public MediaBlockCacheBase {
   // cached in memory waiting to be written, or this block is the target of a
   // block move.
   nsTArray<RefPtr<BlockChange> > mBlockChanges;
-  // Thread upon which block writes and block moves are performed. This is
-  // created upon open, and shutdown (asynchronously) upon close (on the
-  // main thread).
-  nsCOMPtr<nsIThread> mThread;
+  // Event target upon which block writes and block moves are performed. This is
+  // created upon open, and dropped on close.
+  nsCOMPtr<nsISerialEventTarget> mBackgroundET;
   // Queue of pending block indexes that need to be written or moved.
   std::deque<int32_t> mChangeIndexList;
   // True if we've dispatched an event to commit all pending block changes
-  // to file on mThread.
+  // to file on mBackgroundET.
   bool mIsWriteScheduled;
   // True when a read is happening. Pending writes may be postponed, to give
   // higher priority to reads (which may be blocking the caller).
