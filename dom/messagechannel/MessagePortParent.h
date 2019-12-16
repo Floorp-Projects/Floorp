@@ -8,13 +8,16 @@
 #define mozilla_dom_MessagePortParent_h
 
 #include "mozilla/dom/PMessagePortParent.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 
 namespace mozilla {
 namespace dom {
 
 class MessagePortService;
 
-class MessagePortParent final : public PMessagePortParent {
+class MessagePortParent final
+    : public PMessagePortParent,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   friend class PMessagePortParent;
 
  public:
