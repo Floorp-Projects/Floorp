@@ -70,6 +70,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.LoginStorage;
 import org.mozilla.geckoview.MediaElement;
 import org.mozilla.geckoview.OverscrollEdgeEffect;
 import org.mozilla.geckoview.PanZoomController;
@@ -447,6 +448,7 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public ContentBlockingController getContentBlockingController();
     method @UiThread @NonNull public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
+    method @UiThread @Nullable public LoginStorage.Delegate getLoginStorageDelegate();
     method @UiThread @Nullable public File getProfileDir();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @UiThread @NonNull public StorageController getStorageController();
@@ -459,6 +461,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
+    method @UiThread public void setLoginStorageDelegate(@Nullable LoginStorage.Delegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
@@ -1180,6 +1183,35 @@ package org.mozilla.geckoview {
     field public static final int FETCH_FLAGS_NONE = 0;
     field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
     field public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1024;
+  }
+
+  public class LoginStorage {
+    ctor public LoginStorage();
+  }
+
+  public static interface LoginStorage.Delegate {
+    method @UiThread @Nullable default public GeckoResult<LoginStorage.LoginEntry[]> onLoginFetch(@NonNull String);
+  }
+
+  public static class LoginStorage.LoginEntry {
+    ctor @AnyThread protected LoginEntry();
+    field @Nullable public final String formActionOrigin;
+    field @Nullable public final String guid;
+    field @Nullable public final String httpRealm;
+    field @NonNull public final String origin;
+    field @NonNull public final String password;
+    field @NonNull public final String username;
+  }
+
+  public static class LoginStorage.LoginEntry.Builder {
+    ctor @AnyThread public Builder();
+    method @AnyThread @NonNull public LoginStorage.LoginEntry build();
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder formActionOrigin(@Nullable String);
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder guid(@Nullable String);
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder httpRealm(@Nullable String);
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder origin(@NonNull String);
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder password(@NonNull String);
+    method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder username(@NonNull String);
   }
 
   @AnyThread public class MediaElement {
