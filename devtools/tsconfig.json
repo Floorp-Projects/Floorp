@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    // Set the baseUrl to the root of the project.
+    "baseUrl": "..",
+    // Make the type checking as strict as possible.
+    "strict": true,
+    // TypeScript will check JS files only if they have a @ts-check comment in them.
+    "allowJs": true,
+    // Only type check, don't emit files.
+    "noEmit": true,
+    // Allow esnext syntax. Otherwise the default is ES5 only.
+    "target": "esnext",
+    "lib": ["esnext", "dom"]
+  },
+  // Add a @ts-check comment to a JS file to start type checking it.
+  "include": ["./**/*.js", "./**/*.jsx"],
+  "exclude": [
+    "./client/debugger",
+    "./client/shared/vendor",
+    "./**/node_modules",
+    "./**/test"
+  ]
+}
