@@ -40,7 +40,7 @@
 // Note: some tests manipulate this value.
 unsigned int _gdb_sleep_duration = 300;
 
-#  if defined(LINUX) && defined(DEBUG) && \
+#  if defined(LINUX) && !defined(ANDROID) && defined(DEBUG) && \
       (defined(__i386) || defined(__x86_64) || defined(PPC))
 #    define CRAWL_STACK_ON_SIGSEGV
 #  endif

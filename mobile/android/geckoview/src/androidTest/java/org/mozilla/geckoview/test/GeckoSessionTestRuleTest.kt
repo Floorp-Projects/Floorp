@@ -1638,10 +1638,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @IgnoreCrash
     @Test fun contentCrashIgnored() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
-        // that waits for debugger to attach during a SIGSEGV.
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
-                   equalTo(false))
 
         mainSession.loadUri(CONTENT_CRASH_URL)
         mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
@@ -1654,10 +1650,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     fun contentCrashFails() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false))
-        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
-        // that waits for debugger to attach during a SIGSEGV.
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
-                   equalTo(false))
 
         sessionRule.session.loadUri(CONTENT_CRASH_URL)
         sessionRule.waitForPageStop()
