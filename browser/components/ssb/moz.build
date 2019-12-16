@@ -16,6 +16,10 @@ EXTRA_JS_MODULES += [
     'SiteSpecificBrowserService.jsm',
 ]
 
+EXTRA_JS_MODULES.ssb += [
+    'ImageTools.jsm',
+]
+
 FINAL_TARGET_FILES.actors += [
     'SiteSpecificBrowserChild.jsm',
     'SiteSpecificBrowserParent.jsm',
