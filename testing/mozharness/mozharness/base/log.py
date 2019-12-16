@@ -33,7 +33,7 @@ import time
 import traceback
 from datetime import datetime
 
-from six import string_types
+from six import binary_type
 
 # Define our own FATAL_LEVEL
 FATAL_LEVEL = logging.CRITICAL + 10
@@ -351,13 +351,17 @@ class OutputParser(LogMixin):
         Args:
             output (str | list): string or list of string to parse
         """
-
-        if isinstance(output, string_types):
+        if not isinstance(output, list):
             output = [output]
+
         for line in output:
             if not line or line.isspace():
                 continue
-            line = line.decode("utf-8", 'replace').rstrip()
+
+            if isinstance(line, binary_type):
+                line = line.decode("utf-8", 'replace')
+
+            line = line.rstrip()
             self.parse_single_line(line)
 
 
