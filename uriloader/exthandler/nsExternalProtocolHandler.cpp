@@ -166,7 +166,7 @@ nsresult nsExtProtocolChannel::OpenURL() {
     rv = extProtService->LoadURI(mUrl, aggCallbacks);
 
     if (NS_SUCCEEDED(rv) && mListener) {
-      Cancel(NS_ERROR_NO_CONTENT);
+      mStatus = NS_ERROR_NO_CONTENT;
 
       RefPtr<nsExtProtocolChannel> self = this;
       nsCOMPtr<nsIStreamListener> listener = mListener;
@@ -331,7 +331,9 @@ NS_IMETHODIMP nsExtProtocolChannel::GetStatus(nsresult* status) {
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::Cancel(nsresult status) {
-  mStatus = status;
+  if (NS_SUCCEEDED(mStatus)) {
+    mStatus = status;
+  }
   return NS_OK;
 }
 
