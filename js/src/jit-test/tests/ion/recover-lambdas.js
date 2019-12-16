@@ -41,7 +41,7 @@ var uceFault = function (i) {
     return false;
 };
 
-var uceFault_lambdaCall = eval(uneval(uceFault).replace('uceFault', 'uceFault_lambdaCall'));
+var uceFault_lambdaCall = eval(`(${uceFault})`.replace('uceFault', 'uceFault_lambdaCall'));
 function lambdaCall(i) {
     function g() {
         return i;

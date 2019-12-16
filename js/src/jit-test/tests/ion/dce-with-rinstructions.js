@@ -19,7 +19,7 @@ var uceFault = function (i) {
     return false;
 }
 
-var uceFault_bitnot_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitnot_number'));
+var uceFault_bitnot_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitnot_number'));
 function rbitnot_number(i) {
     var x = ~i;
     if (uceFault_bitnot_number(i) || uceFault_bitnot_number(i))
@@ -28,7 +28,7 @@ function rbitnot_number(i) {
     return i;
 }
 
-var uceFault_bitnot_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitnot_object'));
+var uceFault_bitnot_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitnot_object'));
 function rbitnot_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -40,7 +40,7 @@ function rbitnot_object(i) {
     return i;
 }
 
-var uceFault_bitand_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitand_number'));
+var uceFault_bitand_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitand_number'));
 function rbitand_number(i) {
     var x = 1 & i;
     if (uceFault_bitand_number(i) || uceFault_bitand_number(i))
@@ -49,7 +49,7 @@ function rbitand_number(i) {
     return i;
 }
 
-var uceFault_bitand_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitand_object'));
+var uceFault_bitand_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitand_object'));
 function rbitand_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -61,7 +61,7 @@ function rbitand_object(i) {
     return i;
 }
 
-var uceFault_bitor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitor_number'));
+var uceFault_bitor_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitor_number'));
 function rbitor_number(i) {
     var x = i | -100; /* -100 == ~99 */
     if (uceFault_bitor_number(i) || uceFault_bitor_number(i))
@@ -70,7 +70,7 @@ function rbitor_number(i) {
     return i;
 }
 
-var uceFault_bitor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitor_object'));
+var uceFault_bitor_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitor_object'));
 function rbitor_object(i) {
     var t = i;
     var o = { valueOf: function() { return t; } };
@@ -82,7 +82,7 @@ function rbitor_object(i) {
     return i;
 }
 
-var uceFault_bitxor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitxor_number'));
+var uceFault_bitxor_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitxor_number'));
 function rbitxor_number(i) {
     var x = 1 ^ i;
     if (uceFault_bitxor_number(i) || uceFault_bitxor_number(i))
@@ -91,7 +91,7 @@ function rbitxor_number(i) {
     return i;
 }
 
-var uceFault_bitxor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitxor_object'));
+var uceFault_bitxor_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitxor_object'));
 function rbitxor_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -103,7 +103,7 @@ function rbitxor_object(i) {
     return i;
 }
 
-var uceFault_lsh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_lsh_number'));
+var uceFault_lsh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_lsh_number'));
 function rlsh_number(i) {
     var x = i << 1;
     if (uceFault_lsh_number(i) || uceFault_lsh_number(i))
@@ -112,7 +112,7 @@ function rlsh_number(i) {
     return i;
 }
 
-var uceFault_lsh_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_lsh_object'));
+var uceFault_lsh_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_lsh_object'));
 function rlsh_object(i) {
     var t = i;
     var o = { valueOf: function() { return t; } };
@@ -124,7 +124,7 @@ function rlsh_object(i) {
     return i;
 }
 
-var uceFault_rsh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_rsh_number'));
+var uceFault_rsh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_rsh_number'));
 function rrsh_number(i) {
     var x = i >> 1;
     if (uceFault_rsh_number(i) || uceFault_rsh_number(i))
@@ -133,7 +133,7 @@ function rrsh_number(i) {
     return i;
 }
 
-var uceFault_rsh_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_rsh_object'));
+var uceFault_rsh_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_rsh_object'));
 function rrsh_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -145,7 +145,7 @@ function rrsh_object(i) {
     return i;
 }
 
-var uceFault_ursh_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ursh_number'));
+var uceFault_ursh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_ursh_number'));
 function rursh_number(i) {
     var x = i >>> 1;
     if (uceFault_ursh_number(i) || uceFault_ursh_number(i))
@@ -154,7 +154,7 @@ function rursh_number(i) {
     return i;
 }
 
-var uceFault_ursh_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_ursh_object'));
+var uceFault_ursh_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_ursh_object'));
 function rursh_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -166,7 +166,7 @@ function rursh_object(i) {
     return i;
 }
 
-var uceFault_signextend8_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_signextend8_1'));
+var uceFault_signextend8_1 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_signextend8_1'));
 function rsignextend8_1(i) {
     var x = (i << 24) >> 24;
     if (uceFault_signextend8_1(i) || uceFault_signextend8_1(i))
@@ -175,7 +175,7 @@ function rsignextend8_1(i) {
     return i;
 }
 
-var uceFault_signextend8_2 = eval(uneval(uceFault).replace('uceFault', 'uceFault_signextend8_2'));
+var uceFault_signextend8_2 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_signextend8_2'));
 function rsignextend8_2(i) {
     var x = ((-1 * i) << 24) >> 24;
     if (uceFault_signextend8_2(i) || uceFault_signextend8_2(i))
@@ -184,7 +184,7 @@ function rsignextend8_2(i) {
     return i;
 }
 
-var uceFault_signextend16_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_signextend16_1'));
+var uceFault_signextend16_1 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_signextend16_1'));
 function rsignextend16_1(i) {
     var x = (i << 16) >> 16;
     if (uceFault_signextend16_1(i) || uceFault_signextend16_1(i))
@@ -193,7 +193,7 @@ function rsignextend16_1(i) {
     return i;
 }
 
-var uceFault_signextend16_2 = eval(uneval(uceFault).replace('uceFault', 'uceFault_signextend16_2'));
+var uceFault_signextend16_2 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_signextend16_2'));
 function rsignextend16_2(i) {
     var x = ((-1 * i) << 16) >> 16;
     if (uceFault_signextend16_2(i) || uceFault_signextend16_2(i))
@@ -202,7 +202,7 @@ function rsignextend16_2(i) {
     return i;
 }
 
-var uceFault_add_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_number'));
+var uceFault_add_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_add_number'));
 function radd_number(i) {
     var x = 1 + i;
     if (uceFault_add_number(i) || uceFault_add_number(i))
@@ -211,7 +211,7 @@ function radd_number(i) {
     return i;
 }
 
-var uceFault_add_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_float'));
+var uceFault_add_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_add_float'));
 function radd_float(i) {
     var t = Math.fround(1/3);
     var fi = Math.fround(i);
@@ -222,7 +222,7 @@ function radd_float(i) {
     return i;
 }
 
-var uceFault_add_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_object'));
+var uceFault_add_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_add_object'));
 function radd_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -234,7 +234,7 @@ function radd_object(i) {
     return i;
 }
 
-var uceFault_sub_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_number'));
+var uceFault_sub_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sub_number'));
 function rsub_number(i) {
     var x = 1 - i;
     if (uceFault_sub_number(i) || uceFault_sub_number(i))
@@ -243,7 +243,7 @@ function rsub_number(i) {
     return i;
 }
 
-var uceFault_sub_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_float'));
+var uceFault_sub_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sub_float'));
 function rsub_float(i) {
     var t = Math.fround(1/3);
     var fi = Math.fround(i);
@@ -254,7 +254,7 @@ function rsub_float(i) {
     return i;
 }
 
-var uceFault_sub_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_sub_object'));
+var uceFault_sub_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sub_object'));
 function rsub_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -266,7 +266,7 @@ function rsub_object(i) {
     return i;
 }
 
-var uceFault_mul_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_number'));
+var uceFault_mul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_number'));
 function rmul_number(i) {
     var x = 2 * i;
     if (uceFault_mul_number(i) || uceFault_mul_number(i))
@@ -275,7 +275,7 @@ function rmul_number(i) {
     return i;
 }
 
-var uceFault_mul_overflow = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_overflow'));
+var uceFault_mul_overflow = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_overflow'));
 function rmul_overflow(i) {
     var x = Math.pow(2, i * 16 / 99) | 0;
     x = x * x;
@@ -285,7 +285,7 @@ function rmul_overflow(i) {
     return i;
 }
 
-var uceFault_mul_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_float'));
+var uceFault_mul_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_float'));
 function rmul_float(i) {
     var t = Math.fround(1/3);
     var fi = Math.fround(i);
@@ -296,7 +296,7 @@ function rmul_float(i) {
     return i;
 }
 
-var uceFault_mul_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_object'));
+var uceFault_mul_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_object'));
 function rmul_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -308,7 +308,7 @@ function rmul_object(i) {
     return i;
 }
 
-var uceFault_imul_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_number'));
+var uceFault_imul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_imul_number'));
 function rimul_number(i) {
     var x = Math.imul(2, i);
     if (uceFault_imul_number(i) || uceFault_imul_number(i))
@@ -317,7 +317,7 @@ function rimul_number(i) {
     return i;
 }
 
-var uceFault_imul_overflow = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_overflow'));
+var uceFault_imul_overflow = eval(`(${uceFault})`.replace('uceFault', 'uceFault_imul_overflow'));
 function rimul_overflow(i) {
     var x = Math.pow(2, i * 16 / 99) | 0;
     x = Math.imul(x, x);
@@ -327,7 +327,7 @@ function rimul_overflow(i) {
     return i;
 }
 
-var uceFault_imul_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_object'));
+var uceFault_imul_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_imul_object'));
 function rimul_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -339,7 +339,7 @@ function rimul_object(i) {
     return i;
 }
 
-var uceFault_div_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_div_number'));
+var uceFault_div_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_div_number'));
 function rdiv_number(i) {
     var x = 1 / i;
     if (uceFault_div_number(i) || uceFault_div_number(i))
@@ -348,7 +348,7 @@ function rdiv_number(i) {
     return i;
 }
 
-var uceFault_div_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_div_float'));
+var uceFault_div_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_div_float'));
 function rdiv_float(i) {
     var t = Math.fround(1/3);
     var fi = Math.fround(i);
@@ -359,7 +359,7 @@ function rdiv_float(i) {
     return i;
 }
 
-var uceFault_div_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_div_object'));
+var uceFault_div_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_div_object'));
 function rdiv_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -371,7 +371,7 @@ function rdiv_object(i) {
     return i;
 }
 
-var uceFault_mod_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_mod_number'));
+var uceFault_mod_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mod_number'));
 function rmod_number(i) {
     var x = i % 98;
     if (uceFault_mod_number(i) || uceFault_mod_number(i))
@@ -380,7 +380,7 @@ function rmod_number(i) {
     return i;
 }
 
-var uceFault_mod_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_mod_object'));
+var uceFault_mod_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mod_object'));
 function rmod_object(i) {
     var t = i;
     var o = { valueOf: function() { return t; } };
@@ -392,7 +392,7 @@ function rmod_object(i) {
     return i;
 }
 
-var uceFault_not_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_not_number'));
+var uceFault_not_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_not_number'));
 function rnot_number(i) {
     var x = !i;
     if (uceFault_not_number(i) || uceFault_not_number(i))
@@ -401,7 +401,7 @@ function rnot_number(i) {
     return i;
 }
 
-var uceFault_not_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_not_object'));
+var uceFault_not_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_not_object'));
 function rnot_object(i) {
     var o = createIsHTMLDDA();
     var x = !o;
@@ -411,7 +411,7 @@ function rnot_object(i) {
     return i;
 }
 
-var uceFault_concat_string = eval(uneval(uceFault).replace('uceFault', 'uceFault_concat_string'));
+var uceFault_concat_string = eval(`(${uceFault})`.replace('uceFault', 'uceFault_concat_string'));
 function rconcat_string(i) {
     var x = "s" + i.toString();
     if (uceFault_concat_string(i) || uceFault_concat_string(i))
@@ -420,7 +420,7 @@ function rconcat_string(i) {
     return i;
 }
 
-var uceFault_concat_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_concat_number'));
+var uceFault_concat_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_concat_number'));
 function rconcat_number(i) {
     var x = "s" + i;
     if (uceFault_concat_number(i) || uceFault_concat_number(i))
@@ -429,7 +429,7 @@ function rconcat_number(i) {
     return i;
 }
 
-var uceFault_string_length = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_length'));
+var uceFault_string_length = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_length'));
 function rstring_length(i) {
     var x = i.toString().length;
     if (uceFault_string_length(i) || uceFault_string_length(i))
@@ -438,7 +438,7 @@ function rstring_length(i) {
     return i;
 }
 
-var uceFault_arguments_length_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arguments_length_1'));
+var uceFault_arguments_length_1 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arguments_length_1'));
 function rarguments_length_1(i) {
     var x = arguments.length;
     if (uceFault_arguments_length_1(i) || uceFault_arguments_length_1(i))
@@ -447,7 +447,7 @@ function rarguments_length_1(i) {
     return i;
 }
 
-var uceFault_arguments_length_3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arguments_length_3'));
+var uceFault_arguments_length_3 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arguments_length_3'));
 function rarguments_length_3(i) {
     var x = arguments.length;
     if (uceFault_arguments_length_3(i) || uceFault_arguments_length_3(i))
@@ -458,7 +458,7 @@ function rarguments_length_3(i) {
 
 function ret_argumentsLength() { return arguments.length; }
 
-var uceFault_inline_arguments_length_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_inline_arguments_length_1'));
+var uceFault_inline_arguments_length_1 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_inline_arguments_length_1'));
 function rinline_arguments_length_1(i) {
     var x = ret_argumentsLength.apply(this, arguments);
     if (uceFault_inline_arguments_length_1(i) || uceFault_inline_arguments_length_1(i))
@@ -468,7 +468,7 @@ function rinline_arguments_length_1(i) {
     return i;
 }
 
-var uceFault_inline_arguments_length_3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_inline_arguments_length_3'));
+var uceFault_inline_arguments_length_3 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_inline_arguments_length_3'));
 function rinline_arguments_length_3(i) {
     var x = ret_argumentsLength.apply(this, arguments);
     if (uceFault_inline_arguments_length_3(i) || uceFault_inline_arguments_length_3(i))
@@ -478,7 +478,7 @@ function rinline_arguments_length_3(i) {
     return i;
 }
 
-var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
+var uceFault_floor_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_floor_number'));
 function rfloor_number(i) {
     var x = Math.floor(i + 0.1111);
     if (uceFault_floor_number(i) || uceFault_floor_number(i))
@@ -487,7 +487,7 @@ function rfloor_number(i) {
     return i;
 }
 
-var uceFault_floor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_object'));
+var uceFault_floor_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_floor_object'));
 function rfloor_object(i) {
     var t = i + 0.1111;
     var o = { valueOf: function () { return t; } };
@@ -499,7 +499,7 @@ function rfloor_object(i) {
     return i;
 }
 
-let uceFault_floor_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_double'));
+let uceFault_floor_double = eval(`(${uceFault})`.replace('uceFault', 'uceFault_floor_double'));
 function rfloor_double(i) {
     const x = Math.floor(i + (-1 >>> 0));
     if (uceFault_floor_double(i) || uceFault_floor_double(i))
@@ -508,7 +508,7 @@ function rfloor_double(i) {
     return i;
 }
 
-var uceFault_ceil_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_number'));
+var uceFault_ceil_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_ceil_number'));
 function rceil_number(i) {
     var x = Math.ceil(-i - 0.12010799100);
     if (uceFault_ceil_number(i) || uceFault_ceil_number(i))
@@ -517,7 +517,7 @@ function rceil_number(i) {
     return i;
 }
 
-let uceFault_ceil_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_double'));
+let uceFault_ceil_double = eval(`(${uceFault})`.replace('uceFault', 'uceFault_ceil_double'));
 function rceil_double(i) {
     const x = Math.ceil(i + (-1 >>> 0));
     if (uceFault_ceil_double(i) || uceFault_ceil_double(i))
@@ -526,7 +526,7 @@ function rceil_double(i) {
     return i;
 }
 
-var uceFault_round_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
+var uceFault_round_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_round'));
 function rround_number(i) {
     var x = Math.round(i + 1.4);
     if (uceFault_round_number(i) || uceFault_round_number(i))
@@ -535,7 +535,7 @@ function rround_number(i) {
     return i;
 }
 
-var uceFault_round_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_round_double'));
+var uceFault_round_double = eval(`(${uceFault})`.replace('uceFault', 'uceFault_round_double'));
 function rround_double(i) {
     var x = Math.round(i + (-1 >>> 0));
     if (uceFault_round_double(i) || uceFault_round_double(i))
@@ -544,7 +544,7 @@ function rround_double(i) {
     return i;
 }
 
-var uceFault_trunc_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_number'));
+var uceFault_trunc_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_trunc_number'));
 function rtrunc_number(i) {
     var x = Math.trunc(-i - 0.12010799100);
     if (uceFault_trunc_number(i) || uceFault_trunc_number(i))
@@ -553,7 +553,7 @@ function rtrunc_number(i) {
     return i;
 }
 
-let uceFault_trunc_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_double'));
+let uceFault_trunc_double = eval(`(${uceFault})`.replace('uceFault', 'uceFault_trunc_double'));
 function rtrunc_double(i) {
     const x = Math.trunc(i + (-1 >>> 0));
     if (uceFault_trunc_double(i) || uceFault_trunc_double(i))
@@ -562,7 +562,7 @@ function rtrunc_double(i) {
     return i;
 }
 
-var uceFault_Char_Code_At = eval(uneval(uceFault).replace('uceFault', 'uceFault_Char_Code_At'));
+var uceFault_Char_Code_At = eval(`(${uceFault})`.replace('uceFault', 'uceFault_Char_Code_At'));
 function rcharCodeAt(i) {
     var s = "aaaaa";
     var x = s.charCodeAt(i % 4);
@@ -572,7 +572,7 @@ function rcharCodeAt(i) {
     return i;
 }
 
-var uceFault_from_char_code = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code'));
+var uceFault_from_char_code = eval(`(${uceFault})`.replace('uceFault', 'uceFault_from_char_code'));
 function rfrom_char_code(i) {
     var x = String.fromCharCode(i);
     if (uceFault_from_char_code(i) || uceFault_from_char_code(i))
@@ -581,7 +581,7 @@ function rfrom_char_code(i) {
     return i;
 }
 
-var uceFault_from_char_code_non_ascii = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code_non_ascii'));
+var uceFault_from_char_code_non_ascii = eval(`(${uceFault})`.replace('uceFault', 'uceFault_from_char_code_non_ascii'));
 function rfrom_char_code_non_ascii(i) {
     var x = String.fromCharCode(i * 100);
     if (uceFault_from_char_code_non_ascii(i) || uceFault_from_char_code_non_ascii(i))
@@ -590,7 +590,7 @@ function rfrom_char_code_non_ascii(i) {
     return i;
 }
 
-var uceFault_pow_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_pow_number'));
+var uceFault_pow_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_pow_number'));
 function rpow_number(i) {
     var x = Math.pow(i, 3.14159);
     if (uceFault_pow_number(i) || uceFault_pow_number(i))
@@ -599,7 +599,7 @@ function rpow_number(i) {
     return i;
 }
 
-var uceFault_pow_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_pow_object'));
+var uceFault_pow_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_pow_object'));
 function rpow_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -611,7 +611,7 @@ function rpow_object(i) {
     return i;
 }
 
-var uceFault_powhalf_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_powhalf_number'));
+var uceFault_powhalf_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_powhalf_number'));
 function rpowhalf_number(i) {
     var x = Math.pow(i, 0.5);
     if (uceFault_powhalf_number(i) || uceFault_powhalf_number(i))
@@ -620,7 +620,7 @@ function rpowhalf_number(i) {
     return i;
 }
 
-var uceFault_powhalf_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_powhalf_object'));
+var uceFault_powhalf_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_powhalf_object'));
 function rpowhalf_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -632,7 +632,7 @@ function rpowhalf_object(i) {
     return i;
 }
 
-var uceFault_min_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_number'));
+var uceFault_min_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_min_number'));
 function rmin_number(i) {
     var x = Math.min(i, i-1, i-2.1);
     if (uceFault_min_number(i) || uceFault_min_number(i))
@@ -641,7 +641,7 @@ function rmin_number(i) {
     return i;
 }
 
-var uceFault_min_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_float'));
+var uceFault_min_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_min_float'));
 function rmin_float(i) {
     var x = Math.fround(Math.min(Math.fround(i), Math.fround(13.37)));
     if (uceFault_min_number(i) || uceFault_min_number(i))
@@ -650,7 +650,7 @@ function rmin_float(i) {
     return i;
 }
 
-var uceFault_min_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_object'));
+var uceFault_min_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_min_object'));
 function rmin_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -662,7 +662,7 @@ function rmin_object(i) {
     return i;
 }
 
-var uceFault_max_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_number'));
+var uceFault_max_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_max_number'));
 function rmax_number(i) {
     var x = Math.max(i, i-1, i-2.1);
     if (uceFault_max_number(i) || uceFault_max_number(i))
@@ -671,7 +671,7 @@ function rmax_number(i) {
     return i;
 }
 
-var uceFault_max_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_float'));
+var uceFault_max_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_max_float'));
 function rmax_float(i) {
     var x = Math.fround(Math.max(Math.fround(-i), Math.fround(13.37)));
     if (uceFault_max_number(i) || uceFault_max_number(i))
@@ -680,7 +680,7 @@ function rmax_float(i) {
     return i;
 }
 
-var uceFault_max_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_object'));
+var uceFault_max_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_max_object'));
 function rmax_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -692,7 +692,7 @@ function rmax_object(i) {
     return i;
 }
 
-var uceFault_abs = eval(uneval(uceFault).replace('uceFault', 'uceFault_abs'));
+var uceFault_abs = eval(`(${uceFault})`.replace('uceFault', 'uceFault_abs'));
 function rabs_number(i) {
     var x = Math.abs(i-42);
     if (uceFault_abs(i) || uceFault_abs(i))
@@ -701,7 +701,7 @@ function rabs_number(i) {
     return i;
 }
 
-var uceFault_abs_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_abs_object'));
+var uceFault_abs_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_abs_object'));
 function rabs_object(i) {
     var t = -i;
     var o = { valueOf: function() { return t; } };
@@ -713,7 +713,7 @@ function rabs_object(i) {
     return i;
 }
 
-var uceFault_sqrt_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sqrt_number'));
+var uceFault_sqrt_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sqrt_number'));
 function rsqrt_number(i) {
     var x = Math.sqrt(i);
     if (uceFault_sqrt_number(i) || uceFault_sqrt_number(i))
@@ -722,7 +722,7 @@ function rsqrt_number(i) {
     return i;
 }
 
-var uceFault_sqrt_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_sqrt_float'));
+var uceFault_sqrt_float = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sqrt_float'));
 function rsqrt_float(i) {
     var x = Math.fround(Math.sqrt(Math.fround(i)));
     if (uceFault_sqrt_float(i) || uceFault_sqrt_float(i))
@@ -731,7 +731,7 @@ function rsqrt_float(i) {
     return i;
 }
 
-var uceFault_sqrt_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_sqrt_object'));
+var uceFault_sqrt_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sqrt_object'));
 function rsqrt_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -743,7 +743,7 @@ function rsqrt_object(i) {
     return i;
 }
 
-var uceFault_atan2_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_atan2_number'));
+var uceFault_atan2_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_atan2_number'));
 function ratan2_number(i) {
     var x = Math.atan2(i, i+1);
     if (uceFault_atan2_number(i) || uceFault_atan2_number(i))
@@ -752,7 +752,7 @@ function ratan2_number(i) {
     return i;
 }
 
-var uceFault_atan2_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_atan2_object'));
+var uceFault_atan2_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_atan2_object'));
 function ratan2_object(i) {
     var t = i;
     var o = { valueOf: function () { return t; } };
@@ -764,7 +764,7 @@ function ratan2_object(i) {
     return i;
 }
 
-var uceFault_str_split = eval(uneval(uceFault).replace('uceFault', 'uceFault_str_split'))
+var uceFault_str_split = eval(`(${uceFault})`.replace('uceFault', 'uceFault_str_split'))
 function rstr_split(i) {
     var x = "str01234567899876543210rts".split("" + i);
     if (uceFault_str_split(i) || uceFault_str_split(i))
@@ -773,7 +773,7 @@ function rstr_split(i) {
     return i;
 }
 
-var uceFault_regexp_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_exec'))
+var uceFault_regexp_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_exec'))
 function rregexp_exec(i) {
     var re = new RegExp("(str)\\d+" + i + "\\d+rts");
     var res = re.exec("str01234567899876543210rts");
@@ -782,7 +782,7 @@ function rregexp_exec(i) {
     assertRecoveredOnBailout(res, false);
     return i;
 }
-var uceFault_regexp_y_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_exec'))
+var uceFault_regexp_y_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_exec'))
 function rregexp_y_exec(i) {
     var re = new RegExp("(str)\\d+" + (i % 10), "y");
     var res = re.exec("str00123456789");
@@ -793,7 +793,7 @@ function rregexp_y_exec(i) {
     return i;
 }
 
-var uceFault_regexp_y_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_exec'))
+var uceFault_regexp_y_literal_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_literal_exec'))
 function rregexp_y_literal_exec(i) {
     var re = /(str)\d*0/y;
     var res = re.exec("str00123456789");
@@ -804,7 +804,7 @@ function rregexp_y_literal_exec(i) {
     return i;
 }
 
-var uceFault_regexp_g_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_exec'))
+var uceFault_regexp_g_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_exec'))
 function rregexp_g_exec(i) {
     var re = new RegExp("(str)\\d+" + (i % 10), "g");
     var res = re.exec("str00123456789str00123456789");
@@ -815,7 +815,7 @@ function rregexp_g_exec(i) {
     return i;
 }
 
-var uceFault_regexp_g_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_exec'))
+var uceFault_regexp_g_literal_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_literal_exec'))
 function rregexp_g_literal_exec(i) {
     var re = /(str)\d*0/g;
     var res = re.exec("str00123456789str00123456789");
@@ -826,7 +826,7 @@ function rregexp_g_literal_exec(i) {
     return i;
 }
 
-var uceFault_regexp_i_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_exec'))
+var uceFault_regexp_i_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_exec'))
 function rregexp_i_exec(i) {
     var re = new RegExp("(str)\\d+" + (i % 10), "i");
     var res = re.exec("STR00123456789");
@@ -837,7 +837,7 @@ function rregexp_i_exec(i) {
     return i;
 }
 
-var uceFault_regexp_i_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_exec'))
+var uceFault_regexp_i_literal_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_literal_exec'))
 function rregexp_i_literal_exec(i) {
     var re = /(str)\d*0/i;
     var res = re.exec("STR00123456789");
@@ -849,7 +849,7 @@ function rregexp_i_literal_exec(i) {
 }
 
 
-var uceFault_regexp_m_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_exec'))
+var uceFault_regexp_m_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_exec'))
 function rregexp_m_exec(i) {
     var re = new RegExp("^(str)\\d+" + (i % 10), "m");
     var res = re.exec("abc\nstr00123456789");
@@ -860,7 +860,7 @@ function rregexp_m_exec(i) {
     return i;
 }
 
-var uceFault_regexp_m_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_exec'))
+var uceFault_regexp_m_literal_exec = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_literal_exec'))
 function rregexp_m_literal_exec(i) {
     var re = /^(str)\d*0/m;
     var res = re.exec("abc\nstr00123456789");
@@ -871,7 +871,7 @@ function rregexp_m_literal_exec(i) {
     return i;
 }
 
-var uceFault_regexp_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_test'))
+var uceFault_regexp_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_test'))
 function rregexp_test(i) {
     var re = new RegExp("str\\d+" + i + "\\d+rts");
     var res = re.test("str01234567899876543210rts");
@@ -881,7 +881,7 @@ function rregexp_test(i) {
     return i;
 }
 
-var uceFault_regexp_y_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_test'))
+var uceFault_regexp_y_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_test'))
 function rregexp_y_test(i) {
     var re = new RegExp("str\\d+" + (i % 10), "y");
     var res = re.test("str00123456789");
@@ -892,7 +892,7 @@ function rregexp_y_test(i) {
     return i;
 }
 
-var uceFault_regexp_y_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_test'))
+var uceFault_regexp_y_literal_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_literal_test'))
 function rregexp_y_literal_test(i) {
     var re = /str\d*0/y;
     var res = re.test("str00123456789");
@@ -903,7 +903,7 @@ function rregexp_y_literal_test(i) {
     return i;
 }
 
-var uceFault_regexp_g_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_test'))
+var uceFault_regexp_g_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_test'))
 function rregexp_g_test(i) {
     var re = new RegExp("str\\d+" + (i % 10), "g");
     var res = re.test("str00123456789str00123456789");
@@ -914,7 +914,7 @@ function rregexp_g_test(i) {
     return i;
 }
 
-var uceFault_regexp_g_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_test'))
+var uceFault_regexp_g_literal_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_literal_test'))
 function rregexp_g_literal_test(i) {
     var re = /str\d*0/g;
     var res = re.test("str00123456789str00123456789");
@@ -925,7 +925,7 @@ function rregexp_g_literal_test(i) {
     return i;
 }
 
-var uceFault_regexp_i_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_test'))
+var uceFault_regexp_i_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_test'))
 function rregexp_i_test(i) {
     var re = new RegExp("str\\d+" + (i % 10), "i");
     var res = re.test("STR00123456789");
@@ -936,7 +936,7 @@ function rregexp_i_test(i) {
     return i;
 }
 
-var uceFault_regexp_i_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_test'))
+var uceFault_regexp_i_literal_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_literal_test'))
 function rregexp_i_literal_test(i) {
     var re = /str\d*0/i;
     var res = re.test("STR00123456789");
@@ -947,7 +947,7 @@ function rregexp_i_literal_test(i) {
     return i;
 }
 
-var uceFault_regexp_m_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_test'))
+var uceFault_regexp_m_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_test'))
 function rregexp_m_test(i) {
     var re = new RegExp("^str\\d+" + (i % 10), "m");
     var res = re.test("abc\nstr00123456789");
@@ -958,7 +958,7 @@ function rregexp_m_test(i) {
     return i;
 }
 
-var uceFault_regexp_m_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_test'))
+var uceFault_regexp_m_literal_test = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_literal_test'))
 function rregexp_m_literal_test(i) {
     var re = /^str\d*0/m;
     var res = re.test("abc\nstr00123456789");
@@ -969,7 +969,7 @@ function rregexp_m_literal_test(i) {
     return i;
 }
 
-var uceFault_regexp_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_replace'))
+var uceFault_regexp_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_replace'))
 function rregexp_replace(i) {
     var re = new RegExp("str\\d+" + (i % 10));
     var res = "str00123456789".replace(re, "abc");
@@ -979,7 +979,7 @@ function rregexp_replace(i) {
     return i;
 }
 
-var uceFault_regexp_y_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_replace'))
+var uceFault_regexp_y_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_replace'))
 function rregexp_y_replace(i) {
     var re = new RegExp("str\\d+" + (i % 10), "y");
     re.test("str00123456789");
@@ -1000,7 +1000,7 @@ function rregexp_y_replace(i) {
     return i;
 }
 
-var uceFault_regexp_y_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_replace'))
+var uceFault_regexp_y_literal_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_y_literal_replace'))
 function rregexp_y_literal_replace(i) {
     var re = /str\d+9/y;
     re.test("str00123456789");
@@ -1021,7 +1021,7 @@ function rregexp_y_literal_replace(i) {
     return i;
 }
 
-var uceFault_regexp_g_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_replace'))
+var uceFault_regexp_g_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_replace'))
 function rregexp_g_replace(i) {
     var re = new RegExp("str\\d+" + (i % 10), "g");
     re.test("str00123456789");
@@ -1038,7 +1038,7 @@ function rregexp_g_replace(i) {
     return i;
 }
 
-var uceFault_regexp_g_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_replace'))
+var uceFault_regexp_g_literal_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_g_literal_replace'))
 function rregexp_g_literal_replace(i) {
     var re = /str\d+9/g;
     re.test("str00123456789");
@@ -1055,7 +1055,7 @@ function rregexp_g_literal_replace(i) {
     return i;
 }
 
-var uceFault_regexp_i_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_replace'))
+var uceFault_regexp_i_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_replace'))
 function rregexp_i_replace(i) {
     var re = new RegExp("str\\d+" + (i % 10), "i");
     re.test("STR00123456789");
@@ -1071,7 +1071,7 @@ function rregexp_i_replace(i) {
     return i;
 }
 
-var uceFault_regexp_i_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_replace'))
+var uceFault_regexp_i_literal_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_i_literal_replace'))
 function rregexp_i_literal_replace(i) {
     var re = /str\d+9/i;
     re.test("STR00123456789");
@@ -1087,7 +1087,7 @@ function rregexp_i_literal_replace(i) {
     return i;
 }
 
-var uceFault_regexp_m_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_replace'))
+var uceFault_regexp_m_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_replace'))
 function rregexp_m_replace(i) {
     var re = new RegExp("^str\\d+" + (i % 10), "m");
     re.test("abc\nstr00123456789");
@@ -1103,7 +1103,7 @@ function rregexp_m_replace(i) {
     return i;
 }
 
-var uceFault_regexp_m_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_replace'))
+var uceFault_regexp_m_literal_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_regexp_m_literal_replace'))
 function rregexp_m_literal_replace(i) {
     var re = /^str\d+9/m;
     re.test("abc\nstr00123456789");
@@ -1119,7 +1119,7 @@ function rregexp_m_literal_replace(i) {
     return i;
 }
 
-var uceFault_string_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace'))
+var uceFault_string_replace = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_replace'))
 function rstring_replace(i) {
     var re = /str\d+9/;
 
@@ -1132,7 +1132,7 @@ function rstring_replace(i) {
     return i;
 }
 
-var uceFault_string_replace_y = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace_y'))
+var uceFault_string_replace_y = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_replace_y'))
 function rstring_replace_y(i) {
     var re = /str\d+9/y;
 
@@ -1145,7 +1145,7 @@ function rstring_replace_y(i) {
     return i;
 }
 
-var uceFault_string_replace_g = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace_g'))
+var uceFault_string_replace_g = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_replace_g'))
 function rstring_replace_g(i) {
     var re = /str\d+9/g;
 
@@ -1158,7 +1158,7 @@ function rstring_replace_g(i) {
     return i;
 }
 
-var uceFault_typeof = eval(uneval(uceFault).replace('uceFault', 'uceFault_typeof'))
+var uceFault_typeof = eval(`(${uceFault})`.replace('uceFault', 'uceFault_typeof'))
 function rtypeof(i) {
     var inputs = [ {}, [], 1, true, undefined, function(){}, null ];
     var types = [ "object", "object", "number", "boolean", "undefined", "function", "object"];
@@ -1175,7 +1175,7 @@ function rtypeof(i) {
     return i;
 }
 
-var uceFault_todouble_value = eval(uneval(uceFault).replace('uceFault', 'uceFault_todouble_value'))
+var uceFault_todouble_value = eval(`(${uceFault})`.replace('uceFault', 'uceFault_todouble_value'))
 function rtodouble_value(i) {
     var a = 1;
     if (i == 1000) a = "1";
@@ -1188,7 +1188,7 @@ function rtodouble_value(i) {
     return i;
 }
 
-var uceFault_todouble_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_todouble_number'));
+var uceFault_todouble_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_todouble_number'));
 function rtodouble_number(i) {
     var x = Math.fround(Math.fround(i) + Math.fround(i)) + 1;
     if (uceFault_todouble_number(i) || uceFault_todouble_number(i))
@@ -1197,7 +1197,7 @@ function rtodouble_number(i) {
     return i;
 }
 
-var uceFault_tofloat32_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_tofloat32_number'));
+var uceFault_tofloat32_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_tofloat32_number'));
 function rtofloat32_number(i) {
     var x = Math.fround(i + 0.1111111111);
     if (uceFault_tofloat32_number(i) || uceFault_tofloat32_number(i))
@@ -1206,7 +1206,7 @@ function rtofloat32_number(i) {
     return i;
 }
 
-var uceFault_tofloat32_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_tofloat32_object'));
+var uceFault_tofloat32_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_tofloat32_object'));
 function rtofloat32_object(i) {
     var t = i + 0.1111111111;
     var o = { valueOf: function () { return t; } };
@@ -1218,7 +1218,7 @@ function rtofloat32_object(i) {
     return i;
 }
 
-var uceFault_trunc_to_int32_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_number'));
+var uceFault_trunc_to_int32_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_trunc_to_int32_number'));
 function rtrunc_to_int32_number(i) {
     var x = (i + 0.12) | 0;
     if (uceFault_trunc_to_int32_number(i) || uceFault_trunc_to_int32_number(i))
@@ -1227,7 +1227,7 @@ function rtrunc_to_int32_number(i) {
     return i;
 }
 
-var uceFault_trunc_to_int32_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_object'));
+var uceFault_trunc_to_int32_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_trunc_to_int32_object'));
 function rtrunc_to_int32_object(i) {
     var t1 = i + 0.12;
     var o1 = { valueOf: function() { return t1; } };
@@ -1238,7 +1238,7 @@ function rtrunc_to_int32_object(i) {
     assertRecoveredOnBailout(x, false);
 }
 
-var uceFault_trunc_to_int32_string = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_string'));
+var uceFault_trunc_to_int32_string = eval(`(${uceFault})`.replace('uceFault', 'uceFault_trunc_to_int32_string'));
 function rtrunc_to_int32_string(i) {
     var x = (i + "0") | 0;
     if (uceFault_trunc_to_int32_string(i) || uceFault_trunc_to_int32_string(i))
@@ -1247,7 +1247,7 @@ function rtrunc_to_int32_string(i) {
     return i;
 }
 
-var uceFault_hypot_number_2args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_2args'));
+var uceFault_hypot_number_2args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_number_2args'));
 function rhypot_number_2args(i) {
     var x = Math.hypot(i, i + 1);
     if (uceFault_hypot_number_2args(i) || uceFault_hypot_number_2args(i))
@@ -1256,7 +1256,7 @@ function rhypot_number_2args(i) {
     return i;
 }
 
-var uceFault_hypot_number_3args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_3args'));
+var uceFault_hypot_number_3args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_number_3args'));
 function rhypot_number_3args(i) {
     var x = Math.hypot(i, i + 1, i + 2);
     if (uceFault_hypot_number_3args(i) || uceFault_hypot_number_3args(i))
@@ -1265,7 +1265,7 @@ function rhypot_number_3args(i) {
     return i;
 }
 
-var uceFault_hypot_number_4args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_4args'));
+var uceFault_hypot_number_4args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_number_4args'));
 function rhypot_number_4args(i) {
     var x = Math.hypot(i, i + 1, i + 2, i + 3);
     if (uceFault_hypot_number_4args(i) || uceFault_hypot_number_4args(i))
@@ -1274,7 +1274,7 @@ function rhypot_number_4args(i) {
     return i;
 }
 
-var uceFault_hypot_object_2args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_2args'));
+var uceFault_hypot_object_2args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_object_2args'));
 function rhypot_object_2args(i) {
     var t0 = i;
     var t1 = i + 1;
@@ -1289,7 +1289,7 @@ function rhypot_object_2args(i) {
     return i;
 }
 
-var uceFault_hypot_object_3args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_3args'));
+var uceFault_hypot_object_3args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_object_3args'));
 function rhypot_object_3args(i) {
     var t0 = i;
     var t1 = i + 1;
@@ -1307,7 +1307,7 @@ function rhypot_object_3args(i) {
     return i;
 }
 
-var uceFault_hypot_object_4args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_4args'));
+var uceFault_hypot_object_4args = eval(`(${uceFault})`.replace('uceFault', 'uceFault_hypot_object_4args'));
 function rhypot_object_4args(i) {
     var t0 = i;
     var t1 = i + 1;
@@ -1328,7 +1328,7 @@ function rhypot_object_4args(i) {
     return i;
 }
 
-var uceFault_random = eval(uneval(uceFault).replace('uceFault', 'uceFault_random'));
+var uceFault_random = eval(`(${uceFault})`.replace('uceFault', 'uceFault_random'));
 function rrandom(i) {
     // setRNGState() exists only in debug builds
     if(config.debug) setRNGState(2, 1+i);
@@ -1340,7 +1340,7 @@ function rrandom(i) {
     return i;
 }
 
-var uceFault_sin_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sin_number'));
+var uceFault_sin_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sin_number'));
 function rsin_number(i) {
     var x = Math.sin(i);
     if (uceFault_sin_number(i) || uceFault_sin_number(i))
@@ -1349,7 +1349,7 @@ function rsin_number(i) {
     return i;
 }
 
-var uceFault_sin_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_sin_object'));
+var uceFault_sin_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sin_object'));
 function rsin_object(i) {
     var t = i;
     var o = { valueOf: function() { return t; } };
@@ -1361,7 +1361,7 @@ function rsin_object(i) {
     return i;
 }
 
-var uceFault_log_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_log_number'));
+var uceFault_log_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_log_number'));
 function rlog_number(i) {
     var x = Math.log(i);
     if (uceFault_log_number(i) || uceFault_log_number(i))
@@ -1370,7 +1370,7 @@ function rlog_number(i) {
     return i;
 }
 
-var uceFault_log_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_log_object'));
+var uceFault_log_object = eval(`(${uceFault})`.replace('uceFault', 'uceFault_log_object'));
 function rlog_object(i) {
     var t = i;
     var o = { valueOf: function() { return t; } };
@@ -1382,7 +1382,7 @@ function rlog_object(i) {
     return i;
 }
 
-var uceFault_sign_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_number'));
+var uceFault_sign_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sign_number'));
 function rsign_number(i) {
     var x = Math.sign(-i - 0.12010799100);
     if (uceFault_sign_number(i) || uceFault_sign_number(i))
@@ -1391,7 +1391,7 @@ function rsign_number(i) {
     return i;
 }
 
-let uceFault_sign_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_double'));
+let uceFault_sign_double = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sign_double'));
 function rsign_double(i) {
     const x = Math.sign(i + (-1 >>> 0));
     if (uceFault_sign_double(i) || uceFault_sign_double(i))

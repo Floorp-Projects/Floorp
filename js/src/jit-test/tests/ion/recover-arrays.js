@@ -231,7 +231,7 @@ function arrayHole1(i) {
 }
 
 // Check that we correctly allocate the array after taking the recover path.
-var uceFault_arrayAlloc0 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc0'));
+var uceFault_arrayAlloc0 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arrayAlloc0'));
 function arrayAlloc0(i) {
     var a = new Array(10);
     if (uceFault_arrayAlloc0(i) || uceFault_arrayAlloc0(i)) {
@@ -241,7 +241,7 @@ function arrayAlloc0(i) {
     return 0;
 }
 
-var uceFault_arrayAlloc1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc1'));
+var uceFault_arrayAlloc1 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arrayAlloc1'));
 function arrayAlloc1(i) {
     var a = new Array(10);
     if (uceFault_arrayAlloc1(i) || uceFault_arrayAlloc1(i)) {
@@ -256,7 +256,7 @@ function arrayAlloc1(i) {
     return 0;
 }
 
-var uceFault_arrayAlloc2 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc2'));
+var uceFault_arrayAlloc2 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arrayAlloc2'));
 function arrayAlloc2(i) {
     var a = new Array(10);
     if (uceFault_arrayAlloc2(i) || uceFault_arrayAlloc2(i)) {
@@ -270,7 +270,7 @@ function arrayAlloc2(i) {
 }
 
 function build(l) { var arr = []; for (var i = 0; i < l; i++) arr.push(i); return arr }
-var uceFault_arrayAlloc3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc3'));
+var uceFault_arrayAlloc3 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arrayAlloc3'));
 function arrayAlloc3(i) {
     var a = [0,1,2,3,4,5,6,7,8];
     if (uceFault_arrayAlloc3(i) || uceFault_arrayAlloc3(i)) {
@@ -283,7 +283,7 @@ function arrayAlloc3(i) {
 };
 
 // Prevent compilation of the top-level
-eval(uneval(resumeHere));
+eval(`(${resumeHere})`);
 
 for (var i = 0; i < 100; i++) {
     array0Length(i);
