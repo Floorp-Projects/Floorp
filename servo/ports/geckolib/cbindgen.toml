@@ -55,6 +55,7 @@ derive_helper_methods = true
 derive_const_casts = true
 derive_tagged_enum_destructor = true
 derive_tagged_enum_copy_constructor = true
+derive_tagged_enum_copy_assignment = true
 private_default_tagged_enum_constructor = true
 cast_assert_name = "MOZ_ASSERT"
 
