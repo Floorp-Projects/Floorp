@@ -61,6 +61,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1310,8 +1311,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   // If a website opens a popup exit DOM fullscreen
-  if (aCalledFromJS && !nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
-      parentWindow && parentWindow->GetFullScreen()) {
+  if (StaticPrefs::full_screen_api_exit_on_windowOpen() && aCalledFromJS &&
+      !nsContentUtils::LegacyIsCallerChromeOrNativeCode() && parentWindow &&
+      parentWindow->GetFullScreen()) {
     nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
         parentWindow->GetBrowsingContext()->Top()->GetDOMWindow();
     if (Document* doc = parentTopWindow ? parentTopWindow->GetDoc() : nullptr) {
