@@ -37,15 +37,12 @@ IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle,
 IDBFileRequest::~IDBFileRequest() { AssertIsOnOwningThread(); }
 
 // static
-already_AddRefed<IDBFileRequest> IDBFileRequest::Create(
-    IDBFileHandle* aFileHandle, bool aWrapAsDOMRequest) {
+RefPtr<IDBFileRequest> IDBFileRequest::Create(IDBFileHandle* aFileHandle,
+                                              bool aWrapAsDOMRequest) {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
-  RefPtr<IDBFileRequest> request =
-      new IDBFileRequest(aFileHandle, aWrapAsDOMRequest);
-
-  return request.forget();
+  return new IDBFileRequest(aFileHandle, aWrapAsDOMRequest);
 }
 
 void IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal) {
