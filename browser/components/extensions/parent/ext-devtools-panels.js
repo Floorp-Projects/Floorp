@@ -657,11 +657,12 @@ this.devtools_panels = class extends ExtensionAPI {
                 }
 
                 const front = await waitForInspectedWindowFront;
+                const toolboxEvalOptions = await getToolboxEvalOptions(context);
                 const evalOptions = Object.assign(
                   {
                     evalResultAsGrip: true,
                   },
-                  getToolboxEvalOptions(context)
+                  toolboxEvalOptions
                 );
                 const evalResult = await front.eval(
                   callerInfo,

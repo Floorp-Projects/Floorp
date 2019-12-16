@@ -104,7 +104,7 @@ global.getInspectedWindowFront = async function(context) {
 
 // Get the WebExtensionInspectedWindowActor eval options (needed to provide the $0 and inspect
 // binding provided to the evaluated js code).
-global.getToolboxEvalOptions = function(context) {
+global.getToolboxEvalOptions = async function(context) {
   const options = {};
   const toolbox = context.devToolsToolbox;
   const selectedNode = toolbox.selection;
@@ -116,7 +116,8 @@ global.getToolboxEvalOptions = function(context) {
   }
 
   // Provide the console actor ID to implement the "inspect" binding.
-  options.toolboxConsoleActorID = toolbox.target.activeConsole.actor;
+  const consoleFront = await toolbox.target.getFront("console");
+  options.toolboxConsoleActorID = consoleFront.actor;
 
   return options;
 };
