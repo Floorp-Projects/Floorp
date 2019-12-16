@@ -2,7 +2,7 @@ Getting in Touch
 ================
 
 For any questions regarding the Address Bar, the team is available through
-the #fx-search channel on irc.mozilla.org and the fx-search@mozilla.com mailing
+the #search channel on Slack and the fx-search@mozilla.com mailing
 list.
 
 Issues can be `filed in Bugzilla <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox&component=Address%20Bar>`_
