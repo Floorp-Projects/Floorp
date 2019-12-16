@@ -27,13 +27,14 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActor)
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSWindowActor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSWindowActor)
-  tmp->RejectPendingQueries();  // Clear out & reject mPendingQueries
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWrappedJS)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingQueries)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSWindowActor)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingQueries)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWrappedJS)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
@@ -46,6 +47,8 @@ void JSWindowActor::StartDestroy() {
 
 void JSWindowActor::AfterDestroy() {
   InvokeCallback(CallbackFunction::DidDestroy);
+  // Clear out & reject mPendingQueries
+  RejectPendingQueries();
 }
 
 void JSWindowActor::InvokeCallback(CallbackFunction callback) {
