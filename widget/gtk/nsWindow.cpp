@@ -4436,23 +4436,25 @@ void nsWindow::HideWaylandWindow() {
           g_list_delete_link(gVisibleWaylandPopupWindows, foundWindow);
     }
   }
-  if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
-    // Because wl_egl_window is destroyed on moz_container_unmap(),
-    // the current compositor cannot use it anymore. To avoid crash,
-    // pause the compositor and destroy EGLSurface & resume the compositor
-    // and re-create EGLSurface on next expose event.
-    MOZ_ASSERT(GetRemoteRenderer());
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      // XXX slow sync IPC
-      remoteRenderer->SendPause();
-      // Re-request initial draw callback
-      RefPtr<nsWindow> self(this);
-      moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
-        self->mNeedsCompositorResume = true;
-        self->MaybeResumeCompositor();
-      });
-    } else {
-      DestroyLayerManager();
+  if (!mIsDestroyed) {
+    if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
+      // Because wl_egl_window is destroyed on moz_container_unmap(),
+      // the current compositor cannot use it anymore. To avoid crash,
+      // pause the compositor and destroy EGLSurface & resume the compositor
+      // and re-create EGLSurface on next expose event.
+      MOZ_ASSERT(GetRemoteRenderer());
+      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+        // XXX slow sync IPC
+        remoteRenderer->SendPause();
+        // Re-request initial draw callback
+        RefPtr<nsWindow> self(this);
+        moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
+          self->mNeedsCompositorResume = true;
+          self->MaybeResumeCompositor();
+        });
+      } else {
+        DestroyLayerManager();
+      }
     }
   }
 #endif
