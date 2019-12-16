@@ -35,6 +35,7 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptError.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsIURI.h"
@@ -1319,7 +1320,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (Document* doc = parentTopWindow ? parentTopWindow->GetDoc() : nullptr) {
       if (doc->GetFullscreenElement()) {
         Document::AsyncExitFullscreen(doc);
-        // TODO: nsContentUtils::ReportToConsole
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
+            nsContentUtils::eDOM_PROPERTIES, "FullscreenExitWindowOpen");
       }
     }
   }
