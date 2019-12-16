@@ -7194,8 +7194,7 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
 
   bool isSpace = false, isNBSP = false;
   nsIContent* newContent = aPoint.Container()->AsContent();
-  int32_t newOffset = *aPoint.Offset(
-      RangeBoundaryBase<PT, RT>::OffsetFilter::kValidOrInvalidOffsets);
+  int32_t newOffset = aPoint.Offset();
   while (newContent) {
     int32_t offset = -1;
     nsCOMPtr<nsIContent> content;

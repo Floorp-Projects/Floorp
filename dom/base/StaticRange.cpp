@@ -82,8 +82,7 @@ void StaticRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                              nsINode* aRootNode) {
   mStart = aStartBoundary;
   mEnd = aEndBoundary;
-  MOZ_ASSERT(mStart.IsSet() == mEnd.IsSet());
-  mIsPositioned = mStart.IsSet() && mEnd.IsSet();
+  mIsPositioned = mStart.IsSet();
 }
 
 /* static */

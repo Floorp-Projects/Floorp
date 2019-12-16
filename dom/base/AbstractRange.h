@@ -50,21 +50,17 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
 
   nsINode* GetStartContainer() const { return mStart.Container(); }
   nsINode* GetEndContainer() const { return mEnd.Container(); }
-
-  // FYI: Returns 0 if it's not positioned.
   uint32_t StartOffset() const {
-    return static_cast<uint32_t>(
-        *mStart.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
+    // FYI: Returns 0 if it's not positioned.
+    return static_cast<uint32_t>(mStart.Offset());
   }
-
-  // FYI: Returns 0 if it's not positioned.
   uint32_t EndOffset() const {
-    return static_cast<uint32_t>(
-        *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
+    // FYI: Returns 0 if it's not positioned.
+    return static_cast<uint32_t>(mEnd.Offset());
   }
   bool Collapsed() const {
     return !mIsPositioned || (mStart.Container() == mEnd.Container() &&
-                              StartOffset() == EndOffset());
+                              mStart.Offset() == mEnd.Offset());
   }
 
   nsINode* GetParentObject() const { return mOwner; }
@@ -81,8 +77,8 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   RefPtr<Document> mOwner;
   RangeBoundary mStart;
   RangeBoundary mEnd;
-  // `true` if `mStart` and `mEnd` are set for StaticRange or set and valid
-  // for nsRange.
+  // `true` if `mStart` has a container and potentially other conditions are
+  // fulfilled.
   bool mIsPositioned;
 
   // Used by nsRange, but this should have this for minimizing the size.
