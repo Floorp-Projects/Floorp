@@ -100,10 +100,12 @@ class RangeBoundaryBase {
       return nullptr;
     }
     if (!mRef) {
-      MOZ_ASSERT(Offset() == 0, "invalid RangeBoundary");
+      MOZ_ASSERT(*Offset(OffsetFilter::kValidOrInvalidOffsets) == 0,
+                 "invalid RangeBoundary");
       return mParent->GetFirstChild();
     }
-    MOZ_ASSERT(mParent->GetChildAt_Deprecated(Offset()) ==
+    MOZ_ASSERT(mParent->GetChildAt_Deprecated(
+                   *Offset(OffsetFilter::kValidOrInvalidOffsets)) ==
                mRef->GetNextSibling());
     return mRef->GetNextSibling();
   }
@@ -204,7 +206,8 @@ class RangeBoundaryBase {
     if (Ref()) {
       return Ref()->GetParentNode() == Container();
     }
-    return Offset() <= Container()->Length();
+    return *Offset(OffsetFilter::kValidOrInvalidOffsets) <=
+           Container()->Length();
   }
 
   bool IsStartOfContainer() const {
