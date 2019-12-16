@@ -144,6 +144,22 @@ mozharness:
         files-changed:
             - 'testing/mozharness/**'
 
+mozharness-py3:
+    description: mozharness integration tests
+    treeherder:
+        tier: 3
+        symbol: py3(mh)
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}/testing/mozharness'
+        command: >
+            /usr/local/bin/tox -e py35-hg4.3
+    run-on-projects: ['mozilla-central', 'try']
+    when:
+        files-changed:
+            - 'testing/mozharness/**'
+
 mozlint:
     description: python/mozlint unit tests
     platform:

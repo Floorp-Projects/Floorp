@@ -43,9 +43,10 @@ TASK_DURATION_TAG_FILE = os.path.join(get_state_dir(
 TARGET_TASK_FILTERS = (
     '.*-ccov\/.*',
     'windows10-aarch64/opt.*',
+    '.*win64-aarch64-laptop.*',
     'android-hw.*',
     '.*android-geckoview-docs.*',
-    '.*win64-aarch64-laptop.*',
+    'source-test-python-mozharness-py3'
 )
 
 
