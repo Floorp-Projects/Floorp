@@ -6566,9 +6566,9 @@ class MutableFile : public BackgroundMutableFileParentBase {
   RefPtr<FileInfo> mFileInfo;
 
  public:
-  static already_AddRefed<MutableFile> Create(nsIFile* aFile,
-                                              Database* aDatabase,
-                                              FileInfo* aFileInfo);
+  static MOZ_MUST_USE RefPtr<MutableFile> Create(nsIFile* aFile,
+                                                 Database* aDatabase,
+                                                 FileInfo* aFileInfo);
 
   Database* GetDatabase() const {
     AssertIsOnBackgroundThread();
@@ -19472,9 +19472,8 @@ MutableFile::MutableFile(nsIFile* aFile, Database* aDatabase,
 
 MutableFile::~MutableFile() { mDatabase->UnregisterMutableFile(this); }
 
-already_AddRefed<MutableFile> MutableFile::Create(nsIFile* aFile,
-                                                  Database* aDatabase,
-                                                  FileInfo* aFileInfo) {
+RefPtr<MutableFile> MutableFile::Create(nsIFile* aFile, Database* aDatabase,
+                                        FileInfo* aFileInfo) {
   AssertIsOnBackgroundThread();
 
   RefPtr<MutableFile> newMutableFile =
@@ -19484,7 +19483,7 @@ already_AddRefed<MutableFile> MutableFile::Create(nsIFile* aFile,
     return nullptr;
   }
 
-  return newMutableFile.forget();
+  return newMutableFile;
 }
 
 void MutableFile::NoteActiveState() {
@@ -19509,7 +19508,7 @@ PBackgroundParent* MutableFile::GetBackgroundParent() const {
 already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
   AssertIsOnBackgroundThread();
 
-  PersistenceType persistenceType = mDatabase->Type();
+  const PersistenceType persistenceType = mDatabase->Type();
   const nsACString& group = mDatabase->Group();
   const nsACString& origin = mDatabase->Origin();
 
@@ -19536,7 +19535,7 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
 already_AddRefed<BlobImpl> MutableFile::CreateBlobImpl() {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FileBlobImpl> blobImpl = new FileBlobImpl(mFile);
+  auto blobImpl = MakeRefPtr<FileBlobImpl>(mFile);
   blobImpl->SetFileId(mFileInfo->Id());
 
   return blobImpl.forget();
