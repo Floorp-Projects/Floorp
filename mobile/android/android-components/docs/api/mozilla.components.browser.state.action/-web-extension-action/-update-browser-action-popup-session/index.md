@@ -2,7 +2,7 @@
 
 # UpdateBrowserActionPopupSession
 
-`data class UpdateBrowserActionPopupSession : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L296)
+`data class UpdateBrowserActionPopupSession : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L301)
 
 Keeps track of the last session used to display the [BrowserAction](../../-browser-action.md) popup.
 

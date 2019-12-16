@@ -143,8 +143,10 @@ mozilla.components.concept.sync
 mozilla.components.concept.tabstray
 mozilla.components.concept.toolbar
 mozilla.components.feature.accounts
+mozilla.components.feature.accounts.push
 mozilla.components.feature.addons
 mozilla.components.feature.addons.amo
+mozilla.components.feature.addons.update
 mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
@@ -181,7 +183,6 @@ mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
 mozilla.components.feature.remotetabs
 mozilla.components.feature.search
-mozilla.components.feature.sendtab
 mozilla.components.feature.session
 mozilla.components.feature.session.behavior
 mozilla.components.feature.sitepermissions
@@ -276,6 +277,7 @@ mozilla.components.support.sync.telemetry
 mozilla.components.support.test
 mozilla.components.support.test.ext
 mozilla.components.support.test.file
+mozilla.components.support.test.libstate.ext
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.test.rule
