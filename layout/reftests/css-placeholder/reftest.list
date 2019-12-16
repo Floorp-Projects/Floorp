@@ -2,6 +2,6 @@ include input/reftest.list
 include textarea/reftest.list
 
 fuzzy-if(skiaContent,0-1,0-4) == css-restrictions.html css-restrictions-ref.html
-== css-simple-styling.html css-simple-styling-ref.html
+fuzzy-if(gtkWidget,0-255,0-1496) == css-simple-styling.html css-simple-styling-ref.html # gtkWidget permissive due to Bug 1600749
 != css-background.html css-background-ref.html
 fuzzy-if(skiaContent,0-1,0-180) == ignore-pseudo-class.html ignore-pseudo-class-ref.html
