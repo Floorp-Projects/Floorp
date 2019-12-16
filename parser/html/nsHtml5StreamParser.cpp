@@ -186,8 +186,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex"),
       mFlushTimerArmed(false),
       mFlushTimerEverFired(false),
-      mMode(aMode),
-      mSkipContentSniffing(false) {
+      mMode(aMode) {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifdef DEBUG
   mAtomTable.SetPermittedLookupEventTarget(mEventTarget);
@@ -599,7 +598,7 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
   }
 
   // meta scan failed.
-  if (!mSkipContentSniffing && mCharsetSource < kCharsetFromMetaPrescan) {
+  if (mCharsetSource < kCharsetFromMetaPrescan) {
     // Check for BOMless UTF-16 with Basic
     // Latin content for compat with IE. See bug 631751.
     SniffBOMlessUTF16BasicLatin(aFromSegment.To(aCountToSniffingLimit));
@@ -985,13 +984,6 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
     mObserver->OnStartRequest(aRequest);
   }
   mRequest = aRequest;
-  nsCOMPtr<nsIChannel> myChannel(do_QueryInterface(aRequest));
-  nsCOMPtr<nsILoadInfo> loadInfo = myChannel->LoadInfo();
-  mSkipContentSniffing = loadInfo->GetSkipContentSniffing();
-
-  if (mSkipContentSniffing) {
-    DontGuessEncoding();
-  }
 
   mStreamState = STREAM_BEING_READ;
 
