@@ -243,11 +243,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(ComputedStyle* aStyle,
                                 nsPresContext* aPresContext)
-      : nsContainerFrame(aStyle, aPresContext, kClassID),
-        mCachedMinISize(NS_INTRINSIC_ISIZE_UNKNOWN),
-        mCachedPrefISize(NS_INTRINSIC_ISIZE_UNKNOWN),
-        mBaselineFromLastReflow(NS_INTRINSIC_ISIZE_UNKNOWN),
-        mLastBaselineFromLastReflow(NS_INTRINSIC_ISIZE_UNKNOWN) {}
+      : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
   virtual ~nsFlexContainerFrame();
 
@@ -460,12 +456,12 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.
    */
-  nscoord mCachedMinISize;
-  nscoord mCachedPrefISize;
+  nscoord mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  nscoord mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
 
-  nscoord mBaselineFromLastReflow;
+  nscoord mBaselineFromLastReflow = NS_INTRINSIC_ISIZE_UNKNOWN;
   // Note: the last baseline is a distance from our border-box end edge.
-  nscoord mLastBaselineFromLastReflow;
+  nscoord mLastBaselineFromLastReflow = NS_INTRINSIC_ISIZE_UNKNOWN;
 };
 
 #endif /* nsFlexContainerFrame_h___ */
