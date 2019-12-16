@@ -154,18 +154,22 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // is RANGE(start) <= NODE(start) ?
   bool disconnected = false;
   *aNodeIsBeforeRange =
-      nsContentUtils::ComparePoints(aAbstractRange->StartRef().Container(),
-                                    aAbstractRange->StartRef().Offset(), parent,
-                                    nodeStart, &disconnected) > 0;
+      nsContentUtils::ComparePoints(
+          aAbstractRange->StartRef().Container(),
+          *aAbstractRange->StartRef().Offset(
+              RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
+          parent, nodeStart, &disconnected) > 0;
   if (NS_WARN_IF(disconnected)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
 
   // is RANGE(end) >= NODE(end) ?
   *aNodeIsAfterRange =
-      nsContentUtils::ComparePoints(aAbstractRange->EndRef().Container(),
-                                    aAbstractRange->EndRef().Offset(), parent,
-                                    nodeEnd, &disconnected) < 0;
+      nsContentUtils::ComparePoints(
+          aAbstractRange->EndRef().Container(),
+          *aAbstractRange->EndRef().Offset(
+              RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
+          parent, nodeEnd, &disconnected) < 0;
   if (NS_WARN_IF(disconnected)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
