@@ -21,6 +21,10 @@
 <script>
 const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
 SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popup to show");
+
+const EXAMPLE_COM = "https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
+const PREFILLED_FORM_URL = EXAMPLE_COM + "subtst_prefilled_form.html"
+
 let iframe = document.getElementById("loginFrame");
 
 function waitForLoad() {
@@ -36,7 +40,7 @@ function waitForLoad() {
 async function setup(pageUrl) {
   let loadPromise = waitForLoad();
   let processedFormPromise = promiseFormsProcessed();
-  iframe.src = pageUrl || "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/formless_basic.html";
+  iframe.src = pageUrl;
 
   await processedFormPromise;
   info("initial form processed");
@@ -49,13 +53,22 @@ async function setup(pageUrl) {
   });
 }
 
-async function setFieldValues() {
-  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-    // assign to .value directly, we deliberately don't emulate user input
-    let doc = this.content.document;
-    doc.getElementById("form-basic-username").value = "user";
-    doc.getElementById("form-basic-password").value = "pass";
+async function checkIframedUnmodifiedForm(formSelector = "form") {
+  let wasModified = await SpecialPowers.spawn(getIframeBrowsingContext(window), [formSelector], function(sel) {
+    let form = content.document.querySelector(sel);
+    let inputs = Array.from(form.elements || form.querySelectorAll("input"));
+    for (let ele of inputs) {
+      // No point in checking form submit/reset buttons.
+      if (ele.type == "submit" || ele.type == "reset") {
+        continue;
+      }
+      if (ele.value !== ele.defaultValue) {
+        return true;
+      }
+    }
+    return false;
   });
+  ok(!wasModified, "Expected form to have no modified values");
 }
 
 async function clickLink() {
@@ -82,8 +95,8 @@ add_task(async function test_init() {
 add_task(async function test_no_message_on_navigation() {
   // If login field values were set by the website, we don't message to save the
   // login values if the user did not interact with the fields before submiting.
-  await setup();
-  await setFieldValues();
+  await setup(PREFILLED_FORM_URL);
+  await checkIframedUnmodifiedForm();
 
   let submitMessageSent = false;
   getSubmitMessage().then(value => {
@@ -101,8 +114,8 @@ add_task(async function test_prefd_off_message_on_navigation() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["signon.userInputRequiredToCapture.enabled", false],
   ]});
-  await setup();
-  await setFieldValues();
+  await setup(PREFILLED_FORM_URL);
+  await checkIframedUnmodifiedForm();
 
   let promiseSubmitMessage = getSubmitMessage();
   await clickLink();
@@ -113,8 +126,8 @@ add_task(async function test_prefd_off_message_on_navigation() {
 });
 
 add_task(async function test_message_with_user_interaction_on_navigation() {
-  await setup();
-  await setFieldValues();
+  await setup(PREFILLED_FORM_URL);
+  await checkIframedUnmodifiedForm();
   await userInput("#form-basic-username", "foo");
 
   let promiseSubmitMessage = getSubmitMessage();
@@ -124,7 +137,8 @@ add_task(async function test_message_with_user_interaction_on_navigation() {
 });
 
 add_task(async function test_empty_form_with_input_handler() {
-  await setup();
+  await setup(EXAMPLE_COM + "formless_basic.html");
+  await checkIframedUnmodifiedForm("body");
   await userInput("#form-basic-username", "user");
   await userInput("#form-basic-password", "pass");
 
@@ -139,13 +153,13 @@ add_task(async function test_message_on_autofill_without_user_interaction() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
                         .createInstance(Ci.nsILoginInfo);
-    login.init("https://example.org", "https://example.org", null,
+    login.init("https://example.com", "https://example.com", null,
                "user1", "pass1", "", "");
 
     Services.logins.addLogin(login);
   });
 
-  await setup();
+  await setup(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
   await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
@@ -163,13 +177,13 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
                         .createInstance(Ci.nsILoginInfo);
-    login.init("https://example.org", "https://example.org", null,
+    login.init("https://example.com", "https://example.com", null,
                "user1", "pass1", "", "");
 
     Services.logins.addLogin(login);
   });
 
-  await setup();
+  await setup(EXAMPLE_COM + "form_basic.html");
   // Check for autofilled values.
   await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
                                    "form-basic-username", "user1",
@@ -187,7 +201,8 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
 
 add_task(async function test_no_message_on_user_input_from_other_form() {
   // ensure input into unrelated fields on the page don't change login form modified-ness
-  await setup("http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html");
+  await setup(PREFILLED_FORM_URL);
+  await checkIframedUnmodifiedForm();
 
   // Add a form which will not be submitted and an input associated with that form
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
