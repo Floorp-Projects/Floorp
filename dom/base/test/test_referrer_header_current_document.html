@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test referrer header not affecting document.referrer for current document for Bug 1601743</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!--
+  Testing that navigating to a document with Referrer-Policy:same-origin doesn't affect
+  the value of document.referrer for that document.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1601743
+  -->
+
+  <script type="application/javascript">
+    const IFRAME_URL = "http://mochi.test:8888/tests/dom/base/test/referrer_header_current_document_iframe.html";
+    SimpleTest.waitForExplicitFinish();
+    window.addEventListener("message", (event) => {
+      SimpleTest.is(event.data, IFRAME_URL, "Must have the original iframe as the referrer!"); 
+      SimpleTest.finish();
+    }, { once: true });
+  </script>
+</head>
+
+<body>
+<iframe src="referrer_header_current_document_iframe.html"></iframe>
+</body>
