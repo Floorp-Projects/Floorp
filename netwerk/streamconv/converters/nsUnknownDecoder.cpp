@@ -143,6 +143,12 @@ nsUnknownDecoder::AsyncConvertData(const char* aFromType, const char* aToType,
   return (aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsUnknownDecoder::GetConvertedType(const nsACString& aFromType,
+                                   nsACString& aToType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // ----
 //
 // nsIStreamListener methods...
