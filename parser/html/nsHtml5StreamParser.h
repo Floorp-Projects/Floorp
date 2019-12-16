@@ -623,11 +623,6 @@ class nsHtml5StreamParser final : public nsISupports {
   eParserMode mMode;
 
   /**
-   * Whether the parser should not sniff the content type.
-   */
-  bool mSkipContentSniffing;
-
-  /**
    * If the associated docshell is being watched by the devtools, this is
    * set to the URI associated with the parse. All parse data is sent to the
    * devtools, along with this URI. This URI is cleared out after the parse has
