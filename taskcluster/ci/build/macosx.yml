@@ -50,6 +50,7 @@ macosx64/opt:
         product: firefox
         job-name: macosx64-opt
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/opt

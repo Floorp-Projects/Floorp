@@ -25,6 +25,8 @@ job-defaults:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
             PKG_SRCPACK_BASENAME: source
+    attributes:
+        shippable: true
     run:
         using: mozharness
         actions: [package-source]

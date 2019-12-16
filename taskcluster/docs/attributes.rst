@@ -332,6 +332,10 @@ disable-build-signing
 Some GeckoView-only tasks produce APKs, but not APKs that should be
 signed.  Set this to ``true`` to disable APK signing.
 
+enable-build-signing
+====================
+We enable build-signing for ``shippable``, ``nightly``, and ``enable-build-signing`` tasks.
+
 run-visual-metrics
 ==================
 If set to true, will run the visual metrics task on the provided
