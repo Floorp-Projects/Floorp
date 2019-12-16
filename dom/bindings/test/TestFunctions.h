@@ -58,6 +58,11 @@ class TestFunctions : public NonRefcountedDOMObject {
   int32_t One() const;
   int32_t Two() const;
 
+  void SetClampedNullableOctet(const Nullable<uint8_t>& aOctet);
+  Nullable<uint8_t> GetClampedNullableOctet() const;
+  void SetEnforcedNullableOctet(const Nullable<uint8_t>& aOctet);
+  Nullable<uint8_t> GetEnforcedNullableOctet() const;
+
   static bool ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj);
 
   WrapperCachedNonISupportsTestInterface* WrapperCachedNonISupportsObject();
@@ -69,6 +74,9 @@ class TestFunctions : public NonRefcountedDOMObject {
   nsString mStringData;
   RefPtr<WrapperCachedNonISupportsTestInterface>
       mWrapperCachedNonISupportsTestInterface;
+
+  Nullable<uint8_t> mClampedNullableOctet;
+  Nullable<uint8_t> mEnforcedNullableOctet;
 };
 
 }  // namespace dom
