@@ -918,6 +918,8 @@ void Zone::finishRoots() {
 
   // Finalization callbacks are not called if we're shutting down.
   finalizationRecordMap().clear();
+
+  clearKeptObjects();
 }
 
 void Zone::traceKeptObjects(JSTracer* trc) { keptObjects.ref().trace(trc); }
