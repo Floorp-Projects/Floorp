@@ -12,6 +12,30 @@
 
 namespace rlbox {
 
+class rlbox_noop_sandbox;
+
+struct rlbox_noop_sandbox_thread_data
+{
+  rlbox_noop_sandbox* sandbox;
+  uint32_t last_callback_invoked;
+};
+
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+
+rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
+#  define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                \
+    thread_local rlbox::rlbox_noop_sandbox_thread_data                         \
+      rlbox_noop_sandbox_thread_info{ 0, 0 };                                  \
+    namespace rlbox {                                                          \
+      rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data()     \
+      {                                                                        \
+        return &rlbox_noop_sandbox_thread_info;                                \
+      }                                                                        \
+    }                                                                          \
+    static_assert(true, "Enforce semi-colon")
+
+#endif
+
 /**
  * @brief Class that implements the null sandbox. This sandbox doesn't actually
  * provide any isolation and only serves as a stepping stone towards migrating
@@ -33,18 +57,16 @@ private:
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
-  struct rlbox_noop_sandbox_thread_local
-  {
-    rlbox_noop_sandbox* sandbox;
-    uint32_t last_callback_invoked;
-  };
-
-  thread_local static inline rlbox_noop_sandbox_thread_local thread_data{ 0,
-                                                                          0 };
+#ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+  thread_local static inline rlbox_noop_sandbox_thread_data thread_data{ 0, 0 };
+#endif
 
   template<uint32_t N, typename T_Ret, typename... T_Args>
   static T_Ret callback_trampoline(T_Args... params)
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+#endif
     thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
@@ -151,6 +173,9 @@ protected:
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+#endif
     thread_data.sandbox = this;
     return (*func_ptr)(params...);
   }
@@ -179,6 +204,9 @@ protected:
   static inline std::pair<rlbox_noop_sandbox*, void*>
   impl_get_executed_callback_sandbox_and_key()
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+#endif
     auto sandbox = thread_data.sandbox;
     auto callback_num = thread_data.last_callback_invoked;
     void* key = sandbox->callback_unique_keys[callback_num];
