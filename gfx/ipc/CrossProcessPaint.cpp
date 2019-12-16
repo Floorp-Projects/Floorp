@@ -134,6 +134,10 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
                                         thebes);
   }
 
+  if (!recorder->mOutputStream.mValid) {
+    return PaintFragment{};
+  }
+
   ByteBuf recording = ByteBuf((uint8_t*)recorder->mOutputStream.mData,
                               recorder->mOutputStream.mLength,
                               recorder->mOutputStream.mCapacity);
