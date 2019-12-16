@@ -30,10 +30,6 @@ var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
 exports.StyleEditorPanel = StyleEditorPanel;
 
 StyleEditorPanel.prototype = {
-  get currentTarget() {
-    return this._toolbox.targetList.targetFront;
-  },
-
   get panelWindow() {
     return this._panelWin;
   },
@@ -42,20 +38,11 @@ StyleEditorPanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   async open() {
-    this.currentTarget.on("close", this.destroy);
-
-    this._debuggee = await this.currentTarget.getFront("stylesheets");
-
     // Initialize the CSS properties database.
     const { cssProperties } = await initCssProperties(this._toolbox);
 
     // Initialize the UI
-    this.UI = new StyleEditorUI(
-      this._toolbox,
-      this._debuggee,
-      this._panelDoc,
-      cssProperties
-    );
+    this.UI = new StyleEditorUI(this._toolbox, this._panelDoc, cssProperties);
     this.UI.on("error", this._showError);
     await this.UI.initialize();
 
@@ -118,7 +105,7 @@ StyleEditorPanel.prototype = {
    *         to be used.
    */
   selectStyleSheet: function(href, line, col) {
-    if (!this._debuggee || !this.UI) {
+    if (!this.UI) {
       return null;
     }
     return this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
@@ -133,12 +120,9 @@ StyleEditorPanel.prototype = {
     }
     this._destroyed = true;
 
-    this.currentTarget.off("close", this.destroy);
     this._toolbox = null;
     this._panelWin = null;
     this._panelDoc = null;
-    this._debuggee.destroy();
-    this._debuggee = null;
 
     this.UI.destroy();
     this.UI = null;
