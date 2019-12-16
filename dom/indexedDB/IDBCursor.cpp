@@ -76,9 +76,9 @@ IDBCursor::~IDBCursor() {
 }
 
 // static
-already_AddRefed<IDBCursor> IDBCursor::Create(
-    BackgroundCursorChild* aBackgroundActor, Key aKey,
-    StructuredCloneReadInfo&& aCloneInfo) {
+RefPtr<IDBCursor> IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
+                                    Key aKey,
+                                    StructuredCloneReadInfo&& aCloneInfo) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor->GetObjectStore());
@@ -90,12 +90,12 @@ already_AddRefed<IDBCursor> IDBCursor::Create(
 
   cursor->mCloneInfo = std::move(aCloneInfo);
 
-  return cursor.forget();
+  return cursor;
 }
 
 // static
-already_AddRefed<IDBCursor> IDBCursor::Create(
-    BackgroundCursorChild* aBackgroundActor, Key aKey) {
+RefPtr<IDBCursor> IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
+                                    Key aKey) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor->GetObjectStore());
@@ -105,13 +105,13 @@ already_AddRefed<IDBCursor> IDBCursor::Create(
   RefPtr<IDBCursor> cursor =
       new IDBCursor(Type_ObjectStoreKey, aBackgroundActor, std::move(aKey));
 
-  return cursor.forget();
+  return cursor;
 }
 
 // static
-already_AddRefed<IDBCursor> IDBCursor::Create(
-    BackgroundCursorChild* aBackgroundActor, Key aKey, Key aSortKey,
-    Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo) {
+RefPtr<IDBCursor> IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
+                                    Key aKey, Key aSortKey, Key aPrimaryKey,
+                                    StructuredCloneReadInfo&& aCloneInfo) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor->GetIndex());
@@ -126,13 +126,12 @@ already_AddRefed<IDBCursor> IDBCursor::Create(
   cursor->mPrimaryKey = std::move(aPrimaryKey);
   cursor->mCloneInfo = std::move(aCloneInfo);
 
-  return cursor.forget();
+  return cursor;
 }
 
 // static
-already_AddRefed<IDBCursor> IDBCursor::Create(
-    BackgroundCursorChild* aBackgroundActor, Key aKey, Key aSortKey,
-    Key aPrimaryKey) {
+RefPtr<IDBCursor> IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
+                                    Key aKey, Key aSortKey, Key aPrimaryKey) {
   MOZ_ASSERT(aBackgroundActor);
   aBackgroundActor->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor->GetIndex());
@@ -146,7 +145,7 @@ already_AddRefed<IDBCursor> IDBCursor::Create(
   cursor->mSortKey = std::move(aSortKey);
   cursor->mPrimaryKey = std::move(aPrimaryKey);
 
-  return cursor.forget();
+  return cursor;
 }
 
 // static
@@ -613,9 +612,9 @@ void IDBCursor::Advance(uint32_t aCount, ErrorResult& aRv) {
   mContinueCalled = true;
 }
 
-already_AddRefed<IDBRequest> IDBCursor::Update(JSContext* aCx,
-                                               JS::Handle<JS::Value> aValue,
-                                               ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBCursor::Update(JSContext* aCx,
+                                     JS::Handle<JS::Value> aValue,
+                                     ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (!mTransaction->CanAcceptRequests()) {
@@ -722,11 +721,10 @@ already_AddRefed<IDBRequest> IDBCursor::Update(JSContext* aCx,
         IDB_LOG_STRINGIFY(objectStore, primaryKey));
   }
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBRequest> IDBCursor::Delete(JSContext* aCx,
-                                               ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (!mTransaction->CanAcceptRequests()) {
@@ -794,7 +792,7 @@ already_AddRefed<IDBRequest> IDBCursor::Delete(JSContext* aCx,
         IDB_LOG_STRINGIFY(objectStore, primaryKey));
   }
 
-  return request.forget();
+  return request;
 }
 
 void IDBCursor::Reset(Key&& aKey, StructuredCloneReadInfo&& aValue) {

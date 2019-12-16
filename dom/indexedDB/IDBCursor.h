@@ -92,18 +92,18 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   bool mHaveValue : 1;
 
  public:
-  static already_AddRefed<IDBCursor> Create(
+  static MOZ_MUST_USE RefPtr<IDBCursor> Create(
       indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
       StructuredCloneReadInfo&& aCloneInfo);
 
-  static already_AddRefed<IDBCursor> Create(
+  static MOZ_MUST_USE RefPtr<IDBCursor> Create(
       indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey);
 
-  static already_AddRefed<IDBCursor> Create(
+  static MOZ_MUST_USE RefPtr<IDBCursor> Create(
       indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
       Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo);
 
-  static already_AddRefed<IDBCursor> Create(
+  static MOZ_MUST_USE RefPtr<IDBCursor> Create(
       indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
       Key aSortKey, Key aPrimaryKey);
 
@@ -141,11 +141,11 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
   void Advance(uint32_t aCount, ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Update(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue,
-                                      ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> Update(JSContext* aCx,
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Delete(JSContext* aCx, ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> Delete(JSContext* aCx, ErrorResult& aRv);
 
   void Reset();
 
