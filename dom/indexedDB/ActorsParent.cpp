@@ -4604,7 +4604,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
   return NS_OK;
 }
 
-already_AddRefed<nsIFile> GetFileForPath(const nsAString& aPath) {
+nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
   MOZ_ASSERT(!aPath.IsEmpty());
 
   nsCOMPtr<nsIFile> file;
@@ -4613,7 +4613,7 @@ already_AddRefed<nsIFile> GetFileForPath(const nsAString& aPath) {
     return nullptr;
   }
 
-  return file.forget();
+  return file;
 }
 
 nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
@@ -8577,9 +8577,9 @@ class MOZ_STACK_CLASS FileHelper final {
 
   nsresult Init();
 
-  already_AddRefed<nsIFile> GetFile(FileInfo* aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetFile(FileInfo* aFileInfo);
 
-  already_AddRefed<nsIFile> GetJournalFile(FileInfo* aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(FileInfo* aFileInfo);
 
   nsresult CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
                                 nsIInputStream* aInputStream, bool aCompress);
@@ -15799,12 +15799,12 @@ nsresult FileManager::Invalidate() {
   return NS_OK;
 }
 
-already_AddRefed<nsIFile> FileManager::GetDirectory() {
+nsCOMPtr<nsIFile> FileManager::GetDirectory() {
   return GetFileForPath(mDirectoryPath);
 }
 
-already_AddRefed<nsIFile> FileManager::GetCheckedDirectory() {
-  nsCOMPtr<nsIFile> directory = GetDirectory();
+nsCOMPtr<nsIFile> FileManager::GetCheckedDirectory() {
+  auto directory = GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return nullptr;
   }
@@ -15817,18 +15817,18 @@ already_AddRefed<nsIFile> FileManager::GetCheckedDirectory() {
   MOZ_ASSERT(NS_SUCCEEDED(directory->IsDirectory(&isDirectory)));
   MOZ_ASSERT(isDirectory);
 
-  return directory.forget();
+  return directory;
 }
 
-already_AddRefed<nsIFile> FileManager::GetJournalDirectory() {
+nsCOMPtr<nsIFile> FileManager::GetJournalDirectory() {
   return GetFileForPath(mJournalDirectoryPath);
 }
 
-already_AddRefed<nsIFile> FileManager::EnsureJournalDirectory() {
+nsCOMPtr<nsIFile> FileManager::EnsureJournalDirectory() {
   // This can happen on the IO or on a transaction thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
-  nsCOMPtr<nsIFile> journalDirectory = GetFileForPath(mJournalDirectoryPath);
+  auto journalDirectory = GetFileForPath(mJournalDirectoryPath);
   if (NS_WARN_IF(!journalDirectory)) {
     return nullptr;
   }
@@ -15856,28 +15856,33 @@ already_AddRefed<nsIFile> FileManager::EnsureJournalDirectory() {
     }
   }
 
-  return journalDirectory.forget();
+  return journalDirectory;
 }
 
-already_AddRefed<FileInfo> FileManager::GetFileInfo(int64_t aId) const {
+RefPtr<FileInfo> FileManager::GetFileInfo(int64_t aId) const {
   if (IndexedDatabaseManager::IsClosed()) {
     MOZ_ASSERT(false, "Shouldn't be called after shutdown!");
     return nullptr;
   }
 
+  // TODO: We cannot simply change this to RefPtr<FileInfo>, because
+  // FileInfo::AddRef also acquires the IndexedDatabaseManager::FileMutex. This
+  // looks quirky at least.
   FileInfo* fileInfo;
   {
     MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
     fileInfo = mFileInfos.Get(aId);
   }
 
-  RefPtr<FileInfo> result = fileInfo;
-  return result.forget();
+  return fileInfo;
 }
 
-already_AddRefed<FileInfo> FileManager::GetNewFileInfo() {
+RefPtr<FileInfo> FileManager::GetNewFileInfo() {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
 
+  // TODO: We cannot simply change this to RefPtr<FileInfo>, because
+  // FileInfo::AddRef also acquires the IndexedDatabaseManager::FileMutex. This
+  // looks quirky at least.
   FileInfo* fileInfo;
   {
     MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
@@ -15891,13 +15896,11 @@ already_AddRefed<FileInfo> FileManager::GetNewFileInfo() {
     mLastFileId = id;
   }
 
-  RefPtr<FileInfo> result = fileInfo;
-  return result.forget();
+  return fileInfo;
 }
 
 // static
-already_AddRefed<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory,
-                                                    int64_t aId) {
+nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aId > 0);
 
@@ -15915,13 +15918,13 @@ already_AddRefed<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory,
     return nullptr;
   }
 
-  return file.forget();
+  return file;
 }
 
 // static
-already_AddRefed<nsIFile> FileManager::GetCheckedFileForId(nsIFile* aDirectory,
-                                                           int64_t aId) {
-  nsCOMPtr<nsIFile> file = GetFileForId(aDirectory, aId);
+nsCOMPtr<nsIFile> FileManager::GetCheckedFileForId(nsIFile* aDirectory,
+                                                   int64_t aId) {
+  auto file = GetFileForId(aDirectory, aId);
   if (NS_WARN_IF(!file)) {
     return nullptr;
   }
@@ -15934,7 +15937,7 @@ already_AddRefed<nsIFile> FileManager::GetCheckedFileForId(nsIFile* aDirectory,
   MOZ_ASSERT(NS_SUCCEEDED(file->IsFile(&isFile)));
   MOZ_ASSERT(isFile);
 
-  return file.forget();
+  return file;
 }
 
 // static
@@ -22798,14 +22801,13 @@ nsresult CreateFileOp::DoDatabaseWork() {
 
   const int64_t fileId = mFileInfo->Id();
 
-  nsCOMPtr<nsIFile> journalDirectory = fileManager->EnsureJournalDirectory();
+  const auto journalDirectory = fileManager->EnsureJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsCOMPtr<nsIFile> journalFile =
-      fileManager->GetFileForId(journalDirectory, fileId);
+  const auto journalFile = fileManager->GetFileForId(journalDirectory, fileId);
   if (NS_WARN_IF(!journalFile)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -22816,13 +22818,13 @@ nsresult CreateFileOp::DoDatabaseWork() {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> fileDirectory = fileManager->GetDirectory();
+  const auto fileDirectory = fileManager->GetDirectory();
   if (NS_WARN_IF(!fileDirectory)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(fileDirectory, fileId);
+  const auto file = fileManager->GetFileForId(fileDirectory, fileId);
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -24759,13 +24761,13 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
         const RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;
 
-        nsCOMPtr<nsIFile> file = fileHelper->GetFile(fileInfo);
+        const auto file = fileHelper->GetFile(fileInfo);
         if (NS_WARN_IF(!file)) {
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
-        nsCOMPtr<nsIFile> journalFile = fileHelper->GetJournalFile(fileInfo);
+        const auto journalFile = fileHelper->GetJournalFile(fileInfo);
         if (NS_WARN_IF(!journalFile)) {
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -27032,12 +27034,12 @@ nsresult FileHelper::Init() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mFileManager);
 
-  nsCOMPtr<nsIFile> fileDirectory = mFileManager->GetCheckedDirectory();
+  auto fileDirectory = mFileManager->GetCheckedDirectory();
   if (NS_WARN_IF(!fileDirectory)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIFile> journalDirectory = mFileManager->EnsureJournalDirectory();
+  auto journalDirectory = mFileManager->EnsureJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
     return NS_ERROR_FAILURE;
   }
@@ -27056,7 +27058,7 @@ nsresult FileHelper::Init() {
   return NS_OK;
 }
 
-already_AddRefed<nsIFile> FileHelper::GetFile(FileInfo* aFileInfo) {
+nsCOMPtr<nsIFile> FileHelper::GetFile(FileInfo* aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aFileInfo);
   MOZ_ASSERT(mFileManager);
@@ -27068,7 +27070,7 @@ already_AddRefed<nsIFile> FileHelper::GetFile(FileInfo* aFileInfo) {
   return mFileManager->GetFileForId(mFileDirectory, fileId);
 }
 
-already_AddRefed<nsIFile> FileHelper::GetJournalFile(FileInfo* aFileInfo) {
+nsCOMPtr<nsIFile> FileHelper::GetJournalFile(FileInfo* aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aFileInfo);
   MOZ_ASSERT(mFileManager);
