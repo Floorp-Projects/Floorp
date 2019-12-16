@@ -61,6 +61,7 @@
   grid-row-end: inherit;
   order: inherit;
   outline: inherit;
+  outline-offset: inherit;
   column-span: inherit; /* needed if <table> has "column-span:all" */
   contain: inherit; /* needed if table has 'contain:layout' or 'paint' */
 }
