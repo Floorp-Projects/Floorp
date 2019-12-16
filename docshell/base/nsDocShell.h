@@ -539,11 +539,8 @@ class nsDocShell final : public nsDocLoader,
   nsDocShell(mozilla::dom::BrowsingContext* aBrowsingContext,
              uint64_t aContentWindowID);
 
-  // Security checks to prevent frameset spoofing. See comments at
-  // implementation sites.
-  static bool CanAccessItem(nsIDocShellTreeItem* aTargetItem,
-                            nsIDocShellTreeItem* aAccessingItem,
-                            bool aConsiderOpener = true);
+  // Security check to prevent frameset spoofing. See comments at
+  // implementation site.
   static bool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                              nsIDocShellTreeItem* aTargetTreeItem);
 
