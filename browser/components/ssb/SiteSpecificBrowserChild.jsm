@@ -14,6 +14,30 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
+/**
+ * Loads an icon URL into a data URI.
+ *
+ * @param {Window} window the DOM window providing the icon.
+ * @param {string} uri the href for the icon, may be relative to the source page.
+ * @return {Promise<string>} the data URI.
+ */
+async function loadIcon(window, uri) {
+  let iconURL = new window.URL(uri, window.location);
+
+  let request = new window.Request(iconURL, { mode: "cors" });
+  request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_IMAGE);
+
+  let response = await window.fetch(request);
+  let blob = await response.blob();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 class SiteSpecificBrowserChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
@@ -26,7 +50,11 @@ class SiteSpecificBrowserChild extends JSWindowActorChild {
           message.data
         );
         break;
+      case "LoadIcon":
+        return loadIcon(this.contentWindow, message.data);
     }
+
+    return null;
   }
 }
 
