@@ -171,6 +171,22 @@ int32_t TestFunctions::One() const { return 1; }
 
 int32_t TestFunctions::Two() const { return 2; }
 
+void TestFunctions::SetClampedNullableOctet(const Nullable<uint8_t>& aOctet) {
+  mClampedNullableOctet = aOctet;
+}
+
+Nullable<uint8_t> TestFunctions::GetClampedNullableOctet() const {
+  return mClampedNullableOctet;
+}
+
+void TestFunctions::SetEnforcedNullableOctet(const Nullable<uint8_t>& aOctet) {
+  mEnforcedNullableOctet = aOctet;
+}
+
+Nullable<uint8_t> TestFunctions::GetEnforcedNullableOctet() const {
+  return mEnforcedNullableOctet;
+}
+
 bool TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj) {
   // We purposefully don't use WindowOrNull here, because we want to
   // demonstrate the incorrect behavior we get, not just fail some asserts.
