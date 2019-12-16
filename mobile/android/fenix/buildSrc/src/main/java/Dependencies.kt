@@ -11,7 +11,7 @@ object Versions {
     const val rxBindings = "3.0.0-alpha2"
     const val anko = "0.10.8"
     const val sentry = "1.7.10"
-    const val leakcanary = "2.0-beta-3"
+    const val leakcanary = "2.0"
     const val leanplum = "5.2.3"
     const val osslicenses_plugin = "0.9.5"
     const val osslicenses_library = "17.0.0"
