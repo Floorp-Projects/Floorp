@@ -231,7 +231,9 @@ class Selection final : public nsSupportsWeakReference,
   }
   uint32_t AnchorOffset() const {
     const RangeBoundary& anchor = AnchorRef();
-    return anchor.IsSet() ? anchor.Offset() : 0;
+    const Maybe<uint32_t> offset =
+        anchor.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
+    return offset ? *offset : 0;
   }
   nsINode* GetFocusNode() const {
     const RangeBoundary& focus = FocusRef();
@@ -239,7 +241,9 @@ class Selection final : public nsSupportsWeakReference,
   }
   uint32_t FocusOffset() const {
     const RangeBoundary& focus = FocusRef();
-    return focus.IsSet() ? focus.Offset() : 0;
+    const Maybe<uint32_t> offset =
+        focus.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
+    return offset ? *offset : 0;
   }
 
   nsIContent* GetChildAtAnchorOffset() {
