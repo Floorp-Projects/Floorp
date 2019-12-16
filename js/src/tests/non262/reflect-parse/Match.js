@@ -74,7 +74,7 @@ var Match =
       return new ObjectWithExactly(template);
     }
 
-    var quote = uneval;
+    var quote = JSON.stringify;
 
     class MatchError extends Error {
         toString() {

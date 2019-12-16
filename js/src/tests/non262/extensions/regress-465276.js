@@ -19,13 +19,11 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-
-  expect = '[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]';
   empty = [];
   out = [];
   for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
-  print(actual = uneval(out));
 
+  assertEqArray(out, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   reportCompare(expect, actual, summary);
 }

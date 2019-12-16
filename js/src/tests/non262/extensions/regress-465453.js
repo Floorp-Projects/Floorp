@@ -19,8 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = '[(new Boolean(true)), (void 0), (new Boolean(true)), ' +
-    '(new Boolean(true)), (void 0), (void 0), "", "", (void 0)]';
+  expect = "true,,true,true,,,,,";
 
   var out = [];
   for (var e of [(new Boolean(true)),
@@ -33,7 +32,7 @@ function test()
                  "",
                  (void 0)])
              out.push(e);
-  print(actual = uneval(out));
+  print(actual = out.toString());
 
   reportCompare(expect, actual, summary);
 }
