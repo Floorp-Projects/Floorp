@@ -423,6 +423,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   }
 
   bool hadDisplayPort = false;
+  bool wasPainted = false;
   nsRect oldDisplayPort;
   {
     DisplayPortPropertyData* currentData =
@@ -434,6 +435,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
       }
       hadDisplayPort = true;
       oldDisplayPort = currentData->mRect;
+      wasPainted = currentData->mPainted;
     }
   }
 
@@ -442,9 +444,10 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                      nsPresContext::CSSPixelsToAppUnits(aWidthPx),
                      nsPresContext::CSSPixelsToAppUnits(aHeightPx));
 
-  aElement->SetProperty(nsGkAtoms::DisplayPort,
-                        new DisplayPortPropertyData(displayport, aPriority),
-                        nsINode::DeleteProperty<DisplayPortPropertyData>);
+  aElement->SetProperty(
+      nsGkAtoms::DisplayPort,
+      new DisplayPortPropertyData(displayport, aPriority, wasPainted),
+      nsINode::DeleteProperty<DisplayPortPropertyData>);
 
   nsLayoutUtils::InvalidateForDisplayPortChange(aElement, hadDisplayPort,
                                                 oldDisplayPort, displayport);

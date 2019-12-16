@@ -102,18 +102,21 @@ class Layer;
 namespace mozilla {
 
 struct DisplayPortPropertyData {
-  DisplayPortPropertyData(const nsRect& aRect, uint32_t aPriority)
-      : mRect(aRect), mPriority(aPriority) {}
+  DisplayPortPropertyData(const nsRect& aRect, uint32_t aPriority,
+                          bool aPainted)
+      : mRect(aRect), mPriority(aPriority), mPainted(aPainted) {}
   nsRect mRect;
   uint32_t mPriority;
+  bool mPainted;
 };
 
 struct DisplayPortMarginsPropertyData {
   DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
-                                 uint32_t aPriority)
-      : mMargins(aMargins), mPriority(aPriority) {}
+                                 uint32_t aPriority, bool aPainted)
+      : mMargins(aMargins), mPriority(aPriority), mPainted(aPainted) {}
   ScreenMargin mMargins;
   uint32_t mPriority;
+  bool mPainted;
 };
 
 }  // namespace mozilla
@@ -212,12 +215,25 @@ class nsLayoutUtils {
    * defaulting to the scrollport.
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect* aResult,
-                             RelativeTo aRelativeTo = RelativeTo::ScrollPort);
+                             RelativeTo aRelativeTo = RelativeTo::ScrollPort,
+                             bool* aOutPainted = nullptr);
 
   /**
    * Check whether the given element has a displayport.
    */
   static bool HasDisplayPort(nsIContent* aContent);
+
+  /**
+   * Check whether the given element has a displayport that has already
+   * been sent to the compositor via a layers or WR transaction.
+   */
+  static bool HasPaintedDisplayPort(nsIContent* aContent);
+
+  /**
+   * Mark the displayport of a given element as having been sent to
+   * the compositor via a layers or WR transaction.
+   */
+  static void MarkDisplayPortAsPainted(nsIContent* aContent);
 
   /**
    * Check whether the given frame has a displayport. It returns false
@@ -296,7 +312,8 @@ class nsLayoutUtils {
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult,
+                                     bool* aOutPainted = nullptr);
 
   /**
    * Check whether the given element has a critical display port.
@@ -308,7 +325,8 @@ class nsLayoutUtils {
    * GetCriticalDisplayPort. Otherwise, delegates to GetDisplayPort.
    */
   static bool GetHighResolutionDisplayPort(nsIContent* aContent,
-                                           nsRect* aResult);
+                                           nsRect* aResult,
+                                           bool* aOutPainted = nullptr);
 
   /**
    * Remove the displayport for the given element.

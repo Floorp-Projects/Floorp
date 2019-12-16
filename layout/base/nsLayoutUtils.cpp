@@ -1060,12 +1060,17 @@ enum class MaxSizeExceededBehaviour {
 
 static bool GetDisplayPortImpl(
     nsIContent* aContent, nsRect* aResult, float aMultiplier,
-    MaxSizeExceededBehaviour aBehaviour = MaxSizeExceededBehaviour::Assert) {
+    MaxSizeExceededBehaviour aBehaviour = MaxSizeExceededBehaviour::Assert,
+    bool* aOutPainted = nullptr) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
 
   if (!GetDisplayPortData(aContent, &rectData, &marginsData)) {
     return false;
+  }
+
+  if (aOutPainted) {
+    *aOutPainted = rectData ? rectData->mPainted : marginsData->mPainted;
   }
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
@@ -1094,7 +1099,7 @@ static bool GetDisplayPortImpl(
     result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
   } else if (isDisplayportSuppressed ||
              nsLayoutUtils::ShouldDisableApzForElement(aContent)) {
-    DisplayPortMarginsPropertyData noMargins(ScreenMargin(), 1);
+    DisplayPortMarginsPropertyData noMargins(ScreenMargin(), 1, /*painted=*/false);
     result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier);
   } else {
     result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier);
@@ -1130,12 +1135,16 @@ static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
 
 bool nsLayoutUtils::GetDisplayPort(
     nsIContent* aContent, nsRect* aResult,
-    RelativeTo aRelativeTo /* = RelativeTo::ScrollPort */) {
+    RelativeTo aRelativeTo /* = RelativeTo::ScrollPort */,
+    bool* aOutPainted /* = nullptr */) {
   float multiplier = StaticPrefs::layers_low_precision_buffer()
                          ? 1.0f / StaticPrefs::layers_low_precision_resolution()
                          : 1.0f;
-  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier);
-  if (aResult && usingDisplayPort && aRelativeTo == RelativeTo::ScrollFrame) {
+  bool usingDisplayPort =
+      GetDisplayPortImpl(aContent, aResult, multiplier,
+                         MaxSizeExceededBehaviour::Assert, aOutPainted);
+  if (aResult && usingDisplayPort &&
+      aRelativeTo == RelativeTo::ScrollFrame) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
@@ -1143,6 +1152,34 @@ bool nsLayoutUtils::GetDisplayPort(
 
 bool nsLayoutUtils::HasDisplayPort(nsIContent* aContent) {
   return GetDisplayPort(aContent, nullptr);
+}
+
+bool nsLayoutUtils::HasPaintedDisplayPort(nsIContent* aContent) {
+  DisplayPortPropertyData* rectData = nullptr;
+  DisplayPortMarginsPropertyData* marginsData = nullptr;
+  GetDisplayPortData(aContent, &rectData, &marginsData);
+  if (rectData) {
+    return rectData->mPainted;
+  }
+  if (marginsData) {
+    return marginsData->mPainted;
+  }
+  return false;
+}
+
+void nsLayoutUtils::MarkDisplayPortAsPainted(nsIContent* aContent) {
+  DisplayPortPropertyData* rectData = nullptr;
+  DisplayPortMarginsPropertyData* marginsData = nullptr;
+  GetDisplayPortData(aContent, &rectData, &marginsData);
+  MOZ_ASSERT(rectData || marginsData,
+             "MarkDisplayPortAsPainted should only be called for an element "
+             "with a displayport");
+  if (rectData) {
+    rectData->mPainted = true;
+  }
+  if (marginsData) {
+    marginsData->mPainted = true;
+  }
 }
 
 /* static */
@@ -1239,18 +1276,20 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
 
   nsRect oldDisplayPort;
   bool hadDisplayPort = false;
+  bool wasPainted = false;
   if (scrollFrame) {
     // We only use the two return values from this function to call
     // InvalidateForDisplayPortChange. InvalidateForDisplayPortChange does
     // nothing if aContent does not have a frame. So getting the displayport is
     // useless if the content has no frame, so we avoid calling this to avoid
     // triggering a warning about not having a frame.
-    hadDisplayPort = GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
+    hadDisplayPort =
+        GetHighResolutionDisplayPort(aContent, &oldDisplayPort, &wasPainted);
   }
 
   aContent->SetProperty(
       nsGkAtoms::DisplayPortMargins,
-      new DisplayPortMarginsPropertyData(aMargins, aPriority),
+      new DisplayPortMarginsPropertyData(aMargins, aPriority, wasPainted),
       nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
   nsRect newDisplayPort;
@@ -1321,9 +1360,10 @@ void nsLayoutUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
 }
 
 bool nsLayoutUtils::GetCriticalDisplayPort(nsIContent* aContent,
-                                           nsRect* aResult) {
+                                           nsRect* aResult, bool* aOutPainted) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetDisplayPortImpl(aContent, aResult, 1.0f);
+    return GetDisplayPortImpl(aContent, aResult, 1.0f,
+                              MaxSizeExceededBehaviour::Assert, aOutPainted);
   }
   return false;
 }
@@ -1333,11 +1373,12 @@ bool nsLayoutUtils::HasCriticalDisplayPort(nsIContent* aContent) {
 }
 
 bool nsLayoutUtils::GetHighResolutionDisplayPort(nsIContent* aContent,
-                                                 nsRect* aResult) {
+                                                 nsRect* aResult,
+                                                 bool* aOutPainted) {
   if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetCriticalDisplayPort(aContent, aResult);
+    return GetCriticalDisplayPort(aContent, aResult, aOutPainted);
   }
-  return GetDisplayPort(aContent, aResult);
+  return GetDisplayPort(aContent, aResult, RelativeTo::ScrollPort, aOutPainted);
 }
 
 void nsLayoutUtils::RemoveDisplayPort(nsIContent* aContent) {
@@ -8994,6 +9035,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     nsRect dp;
     if (nsLayoutUtils::GetDisplayPort(aContent, &dp)) {
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
+      MarkDisplayPortAsPainted(aContent);
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(aContent, &dp)) {
       metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
