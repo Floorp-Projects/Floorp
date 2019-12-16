@@ -31,11 +31,8 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
 
             const front = await waitForInspectedWindowFront;
 
-            const evalOptions = Object.assign(
-              {},
-              options,
-              getToolboxEvalOptions(context)
-            );
+            const toolboxEvalOptions = await getToolboxEvalOptions(context);
+            const evalOptions = Object.assign({}, options, toolboxEvalOptions);
 
             const evalResult = await front.eval(
               callerInfo,
