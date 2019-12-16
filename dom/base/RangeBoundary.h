@@ -9,7 +9,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
+
+class nsRange;
 
 namespace mozilla {
 
@@ -47,6 +50,8 @@ class RangeBoundaryBase {
   friend class RangeBoundaryBase;
   template <typename T, typename U>
   friend class EditorDOMPointBase;
+
+  friend nsRange;
 
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
                                           RangeBoundary&, const char*,
@@ -154,33 +159,43 @@ class RangeBoundaryBase {
   Maybe<uint32_t> Offset(const OffsetFilter aOffsetFilter) const {
     switch (aOffsetFilter) {
       case OffsetFilter::kValidOffsets: {
-        return IsSetAndValid() ? Some(Offset()) : Nothing();
+        if (IsSetAndValid()) {
+          if (!mOffset) {
+            DetermineOffsetFromReference();
+          }
+        }
+        return mOffset;
       }
       case OffsetFilter::kValidOrInvalidOffsets: {
-        return Some(Offset());
+        if (mOffset.isSome()) {
+          return mOffset;
+        }
+
+        if (mParent) {
+          DetermineOffsetFromReference();
+          return mOffset;
+        }
+
+        return Some(kFallbackOffset);
       }
     }
+
+    // Needed to calm the compiler. There was deliberately no default case added
+    // to the above switch-statement, because it would prevent build-errors when
+    // not all enumerators are handled.
+    MOZ_ASSERT_UNREACHABLE();
+    return Some(kFallbackOffset);
   }
 
-  // TODO(mbrodesser): merge into the other Offset() method once all callers are
-  // switched to it.
-  uint32_t Offset() const {
-    if (mOffset.isSome()) {
-      return mOffset.value();
-    }
-
-    if (!mParent) {
-      return kFallbackOffset;
-    }
-
+ private:
+  void DetermineOffsetFromReference() const {
+    MOZ_ASSERT(mParent);
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
 
     const int32_t index = mParent->ComputeIndexOf(mRef);
     MOZ_ASSERT(index >= 0);
     mOffset.emplace(static_cast<uint32_t>(index + 1));
-
-    return mOffset.value();
   }
 
   void InvalidateOffset() {
@@ -196,6 +211,7 @@ class RangeBoundaryBase {
     mOffset.reset();
   }
 
+ public:
   bool IsSet() const { return mParent && (mRef || mOffset.isSome()); }
 
   bool IsSetAndValid() const {
@@ -206,8 +222,9 @@ class RangeBoundaryBase {
     if (Ref()) {
       return Ref()->GetParentNode() == Container();
     }
-    return *Offset(OffsetFilter::kValidOrInvalidOffsets) <=
-           Container()->Length();
+
+    MOZ_ASSERT(mOffset.isSome());
+    return *mOffset <= Container()->Length();
   }
 
   bool IsStartOfContainer() const {
