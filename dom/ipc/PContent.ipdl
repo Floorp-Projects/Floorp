@@ -1575,7 +1575,7 @@ both:
                                          BrowsingContext[] aChildren);
 
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
-    async WindowFocus(BrowsingContext aContext, CallerType aCallerType);
+    async WindowFocus(BrowsingContext aContext);
     async WindowBlur(BrowsingContext aContext);
     async WindowPostMessage(BrowsingContext aContext, ClonedMessageData aMessage,
                             PostMessageData aData);

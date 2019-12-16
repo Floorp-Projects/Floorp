@@ -24,7 +24,6 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
 
   using nsGenericHTMLElement::Focus;
   virtual void Focus(const FocusOptions& aOptions,
-                     const mozilla::dom::CallerType aCallerType,
                      ErrorResult& aError) override;
 
   virtual bool PerformAccesskey(bool aKeyCausesActivation,

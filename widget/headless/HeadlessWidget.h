@@ -89,7 +89,7 @@ class HeadlessWidget : public nsBaseWidget {
                                   nsIScreen* aTargetScreen = nullptr) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
-  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
+  virtual void SetFocus(Raise) override;
   virtual nsresult ConfigureChildren(
       const nsTArray<Configuration>& aConfigurations) override {
     MOZ_ASSERT_UNREACHABLE(

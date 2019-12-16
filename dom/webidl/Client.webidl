@@ -37,7 +37,7 @@ interface WindowClient : Client {
   // Implement ancestorOrigins in bug 1264180
   // [SameObject] readonly attribute FrozenArray<USVString> ancestorOrigins;
 
-  [Throws, NewObject, NeedsCallerType]
+  [Throws, NewObject]
   Promise<WindowClient> focus();
 
   [Throws, NewObject]

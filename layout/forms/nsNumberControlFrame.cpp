@@ -294,8 +294,7 @@ class FocusTextField : public Runnable {
       // This job shouldn't be triggered by a WebIDL interface, hence the
       // default options can be used.
       FocusOptions options;
-      HTMLInputElement::FromNode(mTextField)
-          ->Focus(options, CallerType::System, IgnoreErrors());
+      HTMLInputElement::FromNode(mTextField)->Focus(options, IgnoreErrors());
     }
 
     return NS_OK;
@@ -542,7 +541,7 @@ void nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent) {
     // Use default FocusOptions, because this method isn't supposed to be called
     // from a WebIDL interface.
     FocusOptions options;
-    textField->Focus(options, CallerType::System, IgnoreErrors());
+    textField->Focus(options, IgnoreErrors());
   }
 }
 

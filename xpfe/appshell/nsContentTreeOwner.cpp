@@ -824,7 +824,7 @@ nsSiteWindow::Blur(void) {
     }
 
     nsCOMPtr<nsPIDOMWindowOuter> domWindow = docshell->GetWindow();
-    if (domWindow) domWindow->Focus(mozilla::dom::CallerType::System);
+    if (domWindow) domWindow->Focus();
   }
   return NS_OK;
 }

@@ -3461,13 +3461,13 @@ void nsGlobalWindowInner::Prompt(const nsAString& aMessage,
       aError, );
 }
 
-void nsGlobalWindowInner::Focus(CallerType aCallerType, ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(FocusOuter, (aCallerType), aError, );
+void nsGlobalWindowInner::Focus(ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(FocusOuter, (), aError, );
 }
 
-nsresult nsGlobalWindowInner::Focus(CallerType aCallerType) {
+nsresult nsGlobalWindowInner::Focus() {
   ErrorResult rv;
-  Focus(aCallerType, rv);
+  Focus(rv);
 
   return rv.StealNSResult();
 }

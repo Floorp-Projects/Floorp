@@ -122,12 +122,12 @@ RefPtr<GenericPromise> ClientHandle::Control(
   return outerPromise.forget();
 }
 
-RefPtr<ClientStatePromise> ClientHandle::Focus(CallerType aCallerType) {
+RefPtr<ClientStatePromise> ClientHandle::Focus() {
   RefPtr<ClientStatePromise::Private> outerPromise =
       new ClientStatePromise::Private(__func__);
 
   StartOp(
-      ClientFocusArgs(aCallerType),
+      ClientFocusArgs(),
       [outerPromise](const ClientOpResult& aResult) {
         outerPromise->Resolve(
             ClientState::FromIPC(aResult.get_IPCClientState()), __func__);
