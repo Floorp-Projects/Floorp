@@ -59,11 +59,14 @@ async function testVal(aExpected, overflowSide = "") {
     "Check the textoverflow attribute"
   );
   if (overflowSide) {
-    let side = gURLBar.inputField.scrollLeft == 0 ? "end" : "start";
+    let side =
+      gURLBar.inputField.scrollLeft == 0 && !gURLBar.hasAttribute("rtltext")
+        ? "right"
+        : "left";
     Assert.equal(side, overflowSide, "Check the overflow side");
     Assert.equal(
       getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
-      scheme && isOverflowed && overflowSide == "start" ? "visible" : "hidden",
+      scheme && isOverflowed && overflowSide == "left" ? "visible" : "hidden",
       "Check the scheme box visibility"
     );
   }
@@ -87,17 +90,17 @@ add_task(async function() {
 
   // Mix the direction of the tests to cover more cases, and to ensure the
   // textoverflow attribute changes every time, because tewtVal waits for that.
-  await testVal(`https://mozilla.org/${lotsOfSpaces}/test/`, "end");
+  await testVal(`https://mozilla.org/${lotsOfSpaces}/test/`, "right");
   await testVal(`https://mozilla.org/`);
-  await testVal(`https://${rtlDomain}/${lotsOfSpaces}/test/`, "start");
+  await testVal(`https://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
 
-  await testVal(`ftp://mozilla.org/${lotsOfSpaces}/test/`, "end");
-  await testVal(`ftp://${rtlDomain}/${lotsOfSpaces}/test/`, "start");
+  await testVal(`ftp://mozilla.org/${lotsOfSpaces}/test/`, "right");
+  await testVal(`ftp://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
   await testVal(`ftp://mozilla.org/`);
-  await testVal(`http://${rtlDomain}/${lotsOfSpaces}/test/`, "start");
+  await testVal(`http://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
   await testVal(`http://mozilla.org/`);
-  await testVal(`http://mozilla.org/${lotsOfSpaces}/test/`, "end");
-  await testVal(`https://${rtlDomain}:80/${lotsOfSpaces}/test/`, "start");
+  await testVal(`http://mozilla.org/${lotsOfSpaces}/test/`, "right");
+  await testVal(`https://${rtlDomain}:80/${lotsOfSpaces}/test/`, "left");
 
   info("Test with formatting disabled");
   await SpecialPowers.pushPrefEnv({
@@ -108,9 +111,9 @@ add_task(async function() {
   });
 
   await testVal(`https://mozilla.org/`);
-  await testVal(`https://${rtlDomain}/${lotsOfSpaces}/test/`, "start");
-  await testVal(`https://mozilla.org/${lotsOfSpaces}/test/`, "end");
+  await testVal(`https://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
+  await testVal(`https://mozilla.org/${lotsOfSpaces}/test/`, "right");
 
   info("Test with trimURLs disabled");
-  await testVal(`http://${rtlDomain}/${lotsOfSpaces}/test/`, "start");
+  await testVal(`http://${rtlDomain}/${lotsOfSpaces}/test/`, "left");
 });
