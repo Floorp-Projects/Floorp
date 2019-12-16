@@ -58,7 +58,6 @@ typedef enum FT_LcdFilter_
 
 static bool gFontHintingEnabled = true;
 static FT_Error (*gSetLcdFilter)(FT_Library, FT_LcdFilter) = nullptr;
-static void (*gGlyphSlotEmbolden)(FT_GlyphSlot) = nullptr;
 
 extern "C"
 {
@@ -70,6 +69,7 @@ extern "C"
     int mozilla_LockSharedFTFace(void* aContext, void* aOwner);
     void mozilla_UnlockSharedFTFace(void* aContext);
     FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
+    void mozilla_GlyphSlot_Embolden_Less(FT_GlyphSlot slot);
 }
 
 void SkInitCairoFT(bool fontHintingEnabled)
@@ -77,10 +77,8 @@ void SkInitCairoFT(bool fontHintingEnabled)
     gFontHintingEnabled = fontHintingEnabled;
 #if SK_CAN_USE_DLOPEN
     gSetLcdFilter = (FT_Error (*)(FT_Library, FT_LcdFilter))dlsym(RTLD_DEFAULT, "FT_Library_SetLcdFilter");
-    gGlyphSlotEmbolden = (void (*)(FT_GlyphSlot))dlsym(RTLD_DEFAULT, "FT_GlyphSlot_Embolden");
 #else
     gSetLcdFilter = &FT_Library_SetLcdFilter;
-    gGlyphSlotEmbolden = &FT_GlyphSlot_Embolden;
 #endif
     // FT_Library_SetLcdFilter may be provided but have no effect if FreeType
     // is built without FT_CONFIG_OPTION_SUBPIXEL_RENDERING.
@@ -486,9 +484,9 @@ bool SkScalerContext_CairoFT::generateAdvance(SkGlyph* glyph)
 
 void SkScalerContext_CairoFT::prepareGlyph(FT_GlyphSlot glyph)
 {
-    if (fRec.fFlags & SkScalerContext::kEmbolden_Flag &&
-        gGlyphSlotEmbolden) {
-        gGlyphSlotEmbolden(glyph);
+    if (fRec.fFlags & SkScalerContext::kEmbolden_Flag) {
+        // Not FT_GlyphSlot_Embolden because we want a less extreme effect.
+        mozilla_GlyphSlot_Embolden_Less(glyph);
     }
 }
 
