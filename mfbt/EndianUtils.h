@@ -144,7 +144,7 @@
 #  define MOZ_BIG_ENDIAN() 0
 #  undef MOZ_TMP_LITTLE_ENDIAN
 #elif defined(MOZ_TMP_BIG_ENDIAN)
-#  define MOZ_LITTLE_ENDIAN 0
+#  define MOZ_LITTLE_ENDIAN() 0
 #  define MOZ_BIG_ENDIAN() 1
 #  undef MOZ_TMP_BIG_ENDIAN
 #else
