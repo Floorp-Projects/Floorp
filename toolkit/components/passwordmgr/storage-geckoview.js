@@ -120,16 +120,18 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       throw new Error("searchLoginsAsync: An `origin` is required");
     }
 
+    let originURI = Services.io.newURI(realMatchData.origin);
+
     let baseHostname;
     try {
-      baseHostname = Services.eTLD.getBaseDomain(
-        Services.io.newURI(realMatchData.origin)
-      );
+      baseHostname = Services.eTLD.getBaseDomain(originURI);
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
         // `getBaseDomain` cannot handle IP addresses and `nsIURI` cannot return
         // IPv6 hostnames with the square brackets so use `URL.hostname`.
         baseHostname = new URL(realMatchData.origin).hostname;
+      } else if (ex.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        baseHostname = originURI.asciiHost;
       } else {
         throw ex;
       }
@@ -139,13 +141,22 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
     // so that we can handle the logic for scheme upgrades, subdomains, etc.
     // Convert from the new shape to one which supports the legacy getters used
     // by _searchLogins.
-    let candidateLogins = (await GeckoViewLoginStorage.fetchLogins(
+    let candidateLogins = await GeckoViewLoginStorage.fetchLogins(
       baseHostname
-    )).map(this._vanillaLoginToStorageLogin);
-    let [logins, ids] = this._searchLogins(
+    ).catch(_ => {
+      // No GV delegate is attached.
+    });
+
+    if (!candidateLogins) {
+      // May be undefined if there is no delegate attached to handle the request.
+      // Ignore the request.
+      return [];
+    }
+
+    const [logins, ids] = this._searchLogins(
       realMatchData,
       options,
-      candidateLogins
+      candidateLogins.map(this._vanillaLoginToStorageLogin)
     );
     return logins;
   }
