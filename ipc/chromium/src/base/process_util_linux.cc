@@ -24,6 +24,9 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ipc/ForkServiceChild.h"
 
+#include "mozilla/Unused.h"
+#include "mozilla/ScopeExit.h"
+
 using namespace mozilla::ipc;
 #endif
 
@@ -78,6 +81,13 @@ ReplaceEnviroment(const LaunchOptions& options) {
 bool
 AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
                                const LaunchOptions& options, ProcessHandle* process_handle) {
+  auto cleanFDs = mozilla::MakeScopeExit([&] {
+    for (auto& elt : options.fds_to_remap) {
+      auto fd = std::get<0>(elt);
+      close(fd);
+    }
+  });
+
   argv_ = argv;
   if (!shuffle_.Init(options.fds_to_remap)) {
     return false;
@@ -104,6 +114,7 @@ AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
   }
 
   if (pid == 0) {
+    cleanFDs.release();
     ReplaceEnviroment(options);
   } else {
     gProcessLog.print("==> process %d launched child process %d\n",
@@ -178,7 +189,7 @@ ReserveFileDescriptors() {
   // out any confliction with mapping passing from the parent process.
   int fd = open("/dev/null", O_RDONLY);
   for (int i = 1; i < 10; i++) {
-    dup(fd);
+    mozilla::Unused << dup(fd);
   }
 }
 
