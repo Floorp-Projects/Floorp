@@ -54,7 +54,6 @@ RUN apt-get update && \
       file \
       gawk \
       gcc-multilib \
-      gdb \
       gnupg \
       jq \
       libucl1 \

@@ -178,13 +178,3 @@ sm-fuzzing-linux64/opt:
         symbol: SM(f)
     run:
         spidermonkey-variant: fuzzing
-
-sm-gdb-linux64/debug:
-    description: "Spidermonkey GDB Pretty-printers"
-    index:
-        job-name: sm-gdb-linux64
-    treeherder:
-        platform: linux64/debug
-        symbol: SM(gdb)
-    run:
-        spidermonkey-variant: gdb

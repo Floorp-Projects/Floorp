@@ -78,7 +78,3 @@ def HandleJSID(value, cache):
 @pretty_printer('JS::MutableHandle<long>')
 def MutableHandleJSID(value, cache):
     return mozilla.Root.MutableHandle(value, cache, jsid)
-
-@pretty_printer('JS::PropertyKey')
-def PropertyKey(value, cache):
-    return mozilla.jsid.jsid(value, cache)
