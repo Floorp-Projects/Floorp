@@ -113,4 +113,6 @@ uint32_t nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType) {
         return nsIWebNavigationInfo::OTHER;
       }
   }
+
+  return nsIWebNavigationInfo::UNSUPPORTED;
 }
