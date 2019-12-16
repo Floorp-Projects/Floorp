@@ -1007,7 +1007,7 @@ XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   RuntimeScriptData* rsd = nullptr;
 
   if (mode == XDR_ENCODE) {
-    rsd = script->scriptData();
+    rsd = script->sharedData();
 
     natoms = rsd->natoms();
   }
@@ -1019,7 +1019,7 @@ XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
-    rsd = script->scriptData();
+    rsd = script->sharedData();
   }
 
   {
@@ -4116,14 +4116,14 @@ RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
 }
 
 bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
-  MOZ_ASSERT(!scriptData_);
+  MOZ_ASSERT(!sharedData_);
 
   RefPtr<RuntimeScriptData> rsd(RuntimeScriptData::new_(cx, natoms));
   if (!rsd) {
     return false;
   }
 
-  scriptData_ = std::move(rsd);
+  sharedData_ = std::move(rsd);
   return true;
 }
 
@@ -4141,7 +4141,7 @@ bool JSScript::createImmutableScriptData(JSContext* cx, uint32_t codeLength,
              "Source notes should have been padded already");
 #endif
 
-  MOZ_ASSERT(!scriptData_->isd_);
+  MOZ_ASSERT(!sharedData_->isd_);
 
   js::UniquePtr<ImmutableScriptData> isd(
       ImmutableScriptData::new_(cx, codeLength, noteLength, numResumeOffsets,
@@ -4150,17 +4150,17 @@ bool JSScript::createImmutableScriptData(JSContext* cx, uint32_t codeLength,
     return false;
   }
 
-  scriptData_->isd_ = std::move(isd);
+  sharedData_->isd_ = std::move(isd);
   return true;
 }
 
-void JSScript::freeScriptData() { scriptData_ = nullptr; }
+void JSScript::freeScriptData() { sharedData_ = nullptr; }
 
-// Takes owndership of the script's scriptData_ and either adds it into the
+// Takes owndership of the script's sharedData_ and either adds it into the
 // runtime's RuntimeScriptDataTable or frees it if a matching entry already
 // exists.
 bool JSScript::shareScriptData(JSContext* cx) {
-  RuntimeScriptData* rsd = scriptData();
+  RuntimeScriptData* rsd = sharedData();
   MOZ_ASSERT(rsd);
   MOZ_ASSERT(rsd->refCount() == 1);
 
@@ -4174,7 +4174,7 @@ bool JSScript::shareScriptData(JSContext* cx) {
       cx->scriptDataTable(lock).lookupForAdd(lookup);
   if (p) {
     MOZ_ASSERT(rsd != *p);
-    scriptData_ = *p;
+    sharedData_ = *p;
   } else {
     if (!cx->scriptDataTable(lock).add(p, rsd)) {
       ReportOutOfMemory(cx);
@@ -4186,7 +4186,7 @@ bool JSScript::shareScriptData(JSContext* cx) {
   }
 
   // Refs: JSScript, RuntimeScriptDataTable
-  MOZ_ASSERT(scriptData()->refCount() >= 2);
+  MOZ_ASSERT(sharedData()->refCount() >= 2);
 
   return true;
 }
@@ -4199,9 +4199,9 @@ void js::SweepScriptData(JSRuntime* rt) {
   RuntimeScriptDataTable& table = rt->scriptDataTable(lock);
 
   for (RuntimeScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
-    RuntimeScriptData* scriptData = e.front();
-    if (scriptData->refCount() == 1) {
-      scriptData->Release();
+    RuntimeScriptData* sharedData = e.front();
+    if (sharedData->refCount() == 1) {
+      sharedData->Release();
       e.removeFront();
     }
   }
@@ -5130,9 +5130,9 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   // The RuntimeScriptData can be reused by any zone in the Runtime as long as
   // we make sure to mark first (to sync Atom pointers).
   if (cx->zone() != src->zoneFromAnyThread()) {
-    src->scriptData()->markForCrossZone(cx);
+    src->sharedData()->markForCrossZone(cx);
   }
-  dst->scriptData_ = src->scriptData();
+  dst->sharedData_ = src->sharedData();
 
   return dst;
 }
@@ -5296,7 +5296,7 @@ JSScript* js::CloneScriptIntoFunction(
   if (!script->createScriptData(cx, natoms)) {
     return false;
   }
-  js::RuntimeScriptData* data = script->scriptData();
+  js::RuntimeScriptData* data = script->sharedData();
 
   // Initialize trailing arrays
   InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
@@ -5356,8 +5356,8 @@ void JSScript::traceChildren(JSTracer* trc) {
   // Trace base class fields.
   BaseScript::traceChildren(trc);
 
-  if (scriptData()) {
-    scriptData()->traceChildren(trc);
+  if (sharedData()) {
+    sharedData()->traceChildren(trc);
   }
 
   if (maybeLazyScript()) {

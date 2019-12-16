@@ -431,7 +431,7 @@ template <>
 void BaselineInterpreterCodeGen::loadScriptAtom(Register index, Register dest) {
   MOZ_ASSERT(index != dest);
   loadScript(dest);
-  masm.loadPtr(Address(dest, JSScript::offsetOfScriptData()), dest);
+  masm.loadPtr(Address(dest, JSScript::offsetOfSharedData()), dest);
   masm.loadPtr(
       BaseIndex(dest, index, ScalePointer, RuntimeScriptData::offsetOfAtoms()),
       dest);
@@ -483,7 +483,7 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
 
   Register scratch = R0.scratchReg();
   loadScript(scratch);
-  masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.loadPtr(Address(scratch, JSScript::offsetOfSharedData()), scratch);
   masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
   masm.load32(Address(scratch, ImmutableScriptData::offsetOfNfixed()), scratch);
 
@@ -826,7 +826,7 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
   // reg = reg - script->nslots() * sizeof(Value)
   MOZ_ASSERT(reg != scratch);
   loadScript(scratch);
-  masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.loadPtr(Address(scratch, JSScript::offsetOfSharedData()), scratch);
   masm.loadPtr(Address(scratch, RuntimeScriptData::offsetOfISD()), scratch);
   masm.load32(Address(scratch, ImmutableScriptData::offsetOfNslots()), scratch);
   static_assert(sizeof(Value) == 8,
@@ -949,7 +949,7 @@ void BaselineInterpreterCodeGen::loadScriptGCThing(ScriptGCThingType type,
 
   // Load the GCCellPtr.
   loadScript(dest);
-  masm.loadPtr(Address(dest, JSScript::offsetOfPrivateScriptData()), dest);
+  masm.loadPtr(Address(dest, JSScript::offsetOfPrivateData()), dest);
   masm.loadPtr(BaseIndex(dest, scratch, ScalePointer,
                          PrivateScriptData::offsetOfGCThings()),
                dest);
@@ -1143,7 +1143,7 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
 
   // Initialize interpreter pc.
-  masm.loadPtr(Address(scratch1, JSScript::offsetOfScriptData()), scratch1);
+  masm.loadPtr(Address(scratch1, JSScript::offsetOfSharedData()), scratch1);
   masm.loadPtr(Address(scratch1, RuntimeScriptData::offsetOfISD()), scratch1);
   masm.addPtr(Imm32(ImmutableScriptData::offsetOfCode()), scratch1);
 
@@ -4848,7 +4848,7 @@ void BaselineCodeGen<Handler>::emitInterpJumpToResumeEntry(Register script,
                                                            Register resumeIndex,
                                                            Register scratch) {
   // Load JSScript::immutableScriptData() into |script|.
-  masm.loadPtr(Address(script, JSScript::offsetOfScriptData()), script);
+  masm.loadPtr(Address(script, JSScript::offsetOfSharedData()), script);
   masm.loadPtr(Address(script, RuntimeScriptData::offsetOfISD()), script);
 
   // Load the resume pcOffset in |resumeIndex|.

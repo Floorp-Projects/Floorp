@@ -2004,6 +2004,11 @@ class BaseScript : public gc::TenuredCell {
   // inner-functions, but other kinds of entries have different interpretations.
   PrivateScriptData* data_ = nullptr;
 
+  // Shareable script data. This includes runtime-wide atom pointers, bytecode,
+  // and various script note structures. If the script is currently lazy, this
+  // will not point to anything.
+  RefPtr<js::RuntimeScriptData> sharedData_ = {};
+
   // Range of characters in scriptSource which contains this script's source,
   // that is, the range used by the Parser to produce this script.
   //
@@ -2506,6 +2511,8 @@ setterLevel:                                                                  \
     return data_->getFieldInitializers();
   }
 
+  RuntimeScriptData* sharedData() { return sharedData_; }
+
  protected:
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
@@ -2518,6 +2525,12 @@ setterLevel:                                                                  \
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
+  }
+  static constexpr size_t offsetOfPrivateData() {
+    return offsetof(BaseScript, data_);
+  }
+  static constexpr size_t offsetOfSharedData() {
+    return offsetof(BaseScript, sharedData_);
   }
   static size_t offsetOfImmutableFlags() {
     return offsetof(BaseScript, immutableFlags_);
@@ -2566,10 +2579,6 @@ struct DeletePolicy<js::PrivateScriptData>
 } /* namespace JS */
 
 class JSScript : public js::BaseScript {
- private:
-  // Shareable script data
-  RefPtr<js::RuntimeScriptData> scriptData_ = {};
-
  private:
   /* Information used to re-lazify a lazily-parsed interpreted function. */
   js::LazyScript* lazyScript = nullptr;
@@ -2662,14 +2671,13 @@ class JSScript : public js::BaseScript {
 #endif
 
  public:
-  js::RuntimeScriptData* scriptData() { return scriptData_; }
   js::ImmutableScriptData* immutableScriptData() const {
-    return scriptData_->isd_.get();
+    return sharedData_->isd_.get();
   }
 
   // Script bytecode is immutable after creation.
   jsbytecode* code() const {
-    if (!scriptData_) {
+    if (!sharedData_) {
       return nullptr;
     }
     return immutableScriptData()->code();
@@ -2694,7 +2702,7 @@ class JSScript : public js::BaseScript {
   }
 
   size_t length() const {
-    MOZ_ASSERT(scriptData_);
+    MOZ_ASSERT(sharedData_);
     return immutableScriptData()->codeLength();
   }
 
@@ -2827,13 +2835,6 @@ class JSScript : public js::BaseScript {
    */
   bool argsObjAliasesFormals() const {
     return needsArgsObj() && hasMappedArgsObj();
-  }
-
-  static constexpr size_t offsetOfScriptData() {
-    return offsetof(JSScript, scriptData_);
-  }
-  static constexpr size_t offsetOfPrivateScriptData() {
-    return offsetof(JSScript, data_);
   }
 
   void updateJitCodeRaw(JSRuntime* rt);
@@ -3097,21 +3098,21 @@ class JSScript : public js::BaseScript {
   bool hasLoops();
 
   uint32_t numNotes() const {
-    MOZ_ASSERT(scriptData_);
+    MOZ_ASSERT(sharedData_);
     return immutableScriptData()->noteLength();
   }
   jssrcnote* notes() const {
-    MOZ_ASSERT(scriptData_);
+    MOZ_ASSERT(sharedData_);
     return immutableScriptData()->notes();
   }
 
   size_t natoms() const {
-    MOZ_ASSERT(scriptData_);
-    return scriptData_->natoms();
+    MOZ_ASSERT(sharedData_);
+    return sharedData_->natoms();
   }
   js::GCPtrAtom* atoms() const {
-    MOZ_ASSERT(scriptData_);
-    return scriptData_->atoms();
+    MOZ_ASSERT(sharedData_);
+    return sharedData_->atoms();
   }
 
   js::GCPtrAtom& getAtom(size_t index) const {
