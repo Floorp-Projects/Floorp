@@ -225,7 +225,7 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, CrossOriginCallable, NeedsCallerType] void close();
   [Throws, CrossOriginReadable] readonly attribute boolean closed;
   [Throws] void stop();
-  [Throws, CrossOriginCallable] void focus();
+  [Throws, CrossOriginCallable, NeedsCallerType] void focus();
   [Throws, CrossOriginCallable] void blur();
   [Replaceable, Pref="dom.window.event.enabled"] readonly attribute any event;
 

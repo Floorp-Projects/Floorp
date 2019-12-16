@@ -60,7 +60,8 @@ class nsFocusManager final : public nsIFocusManager,
   // Simple helper to call SetFocusedWindow on the instance.
   //
   // This raises the window and switches to the tab as needed.
-  static void FocusWindow(nsPIDOMWindowOuter* aWindow);
+  static void FocusWindow(nsPIDOMWindowOuter* aWindow,
+                          mozilla::dom::CallerType aCallerType);
 
   static void PrefChanged(const char* aPref, void* aSelf);
   void PrefChanged(const char* aPref);
@@ -212,7 +213,7 @@ class nsFocusManager final : public nsIFocusManager,
    * Ensure that the widget associated with the currently focused window is
    * focused at the widget level.
    */
-  void EnsureCurrentWidgetFocused();
+  void EnsureCurrentWidgetFocused(mozilla::dom::CallerType aCallerType);
 
   /**
    * Activate or deactivate the window and send the activate/deactivate events.
@@ -360,7 +361,6 @@ class nsFocusManager final : public nsIFocusManager,
       Document* aDocument, nsISupports* aTarget, uint32_t aFocusMethod,
       bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
-
   /**
    * Fire a focus or blur event at aTarget.
    *
@@ -407,7 +407,8 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Raises the top-level window aWindow at the widget level.
    */
-  void RaiseWindow(nsPIDOMWindowOuter* aWindow);
+  void RaiseWindow(nsPIDOMWindowOuter* aWindow,
+                   mozilla::dom::CallerType aCallerType);
 
   /**
    * Updates the caret positon and visibility to match the focus.

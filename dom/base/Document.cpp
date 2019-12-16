@@ -11563,7 +11563,7 @@ class nsAutoFocusEvent : public Runnable {
 
     FocusOptions options;
     ErrorResult rv;
-    mElement->Focus(options, rv);
+    mElement->Focus(options, CallerType::System, rv);
     return rv.StealNSResult();
   }
 
