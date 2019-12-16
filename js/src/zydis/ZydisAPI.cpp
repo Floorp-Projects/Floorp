@@ -70,11 +70,7 @@ void zydisDisassemble(const uint8_t* code, size_t codeLen,
 
     // Pad out to the limit if necessary
     if (strlen(buffer) < LIMIT) {
-      // gcc with -O0 will incorrectly warn here.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-overflow"
       sprintf(buffer+strlen(buffer), "%*s", int(LIMIT-strlen(buffer)), "");
-#pragma GCC diagnostic pop
     }
 
     // If too long then flush and provide an appropriate indent
@@ -96,3 +92,4 @@ void zydisDisassemble(const uint8_t* code, size_t codeLen,
 #  undef LIMSTR
   }
 }
+
