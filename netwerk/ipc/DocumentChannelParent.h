@@ -23,11 +23,12 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
  public:
   NS_INLINE_DECL_REFCOUNTING(DocumentChannelParent, override);
 
-  explicit DocumentChannelParent(const dom::PBrowserOrId& aIframeEmbedding,
+  explicit DocumentChannelParent(dom::BrowserParent* aBrowser,
                                  nsILoadContext* aLoadContext,
                                  PBOverrideStatus aOverrideStatus);
 
-  bool Init(const DocumentChannelCreationArgs& aArgs);
+  bool Init(dom::BrowserParent* aBrowser,
+            const DocumentChannelCreationArgs& aArgs);
 
   // PDocumentChannelParent
   bool RecvCancel(const nsresult& aStatus) {
@@ -41,9 +42,10 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
  private:
   // DocumentChannelListener
-  void DisconnectChildListeners(nsresult aStatus) override {
+  void DisconnectChildListeners(nsresult aStatus,
+                                nsresult aLoadGroupStatus) override {
     if (CanSend()) {
-      Unused << SendDisconnectChildListeners(aStatus);
+      Unused << SendDisconnectChildListeners(aStatus, aLoadGroupStatus);
     }
   }
 
