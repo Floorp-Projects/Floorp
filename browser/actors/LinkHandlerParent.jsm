@@ -39,12 +39,13 @@ class LinkHandlerParent extends JSWindowActorParent {
     let win = browser.ownerGlobal;
 
     let gBrowser = win.gBrowser;
-    if (!gBrowser) {
-      return;
-    }
 
     switch (aMsg.name) {
       case "Link:LoadingIcon":
+        if (!gBrowser) {
+          return;
+        }
+
         if (aMsg.data.canUseForTab) {
           let tab = gBrowser.getTabForBrowser(browser);
           if (tab.hasAttribute("busy")) {
@@ -56,12 +57,27 @@ class LinkHandlerParent extends JSWindowActorParent {
         break;
 
       case "Link:SetIcon":
+        // Cache the most recent icon and rich icon locally.
+        if (aMsg.data.canUseForTab) {
+          this.icon = aMsg.data;
+        } else {
+          this.richIcon = aMsg.data;
+        }
+
+        if (!gBrowser) {
+          return;
+        }
+
         this.setIconFromLink(gBrowser, browser, aMsg.data);
 
         this.notifyTestListeners("SetIcon", aMsg.data);
         break;
 
       case "Link:SetFailedIcon":
+        if (!gBrowser) {
+          return;
+        }
+
         if (aMsg.data.canUseForTab) {
           this.clearPendingIcon(gBrowser, browser);
         }
@@ -70,6 +86,10 @@ class LinkHandlerParent extends JSWindowActorParent {
         break;
 
       case "Link:AddSearch":
+        if (!gBrowser) {
+          return;
+        }
+
         let tab = gBrowser.getTabForBrowser(browser);
         if (!tab) {
           break;

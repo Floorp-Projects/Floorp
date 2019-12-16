@@ -38,6 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ManifestProcessor: "resource://gre/modules/ManifestProcessor.jsm",
   KeyValueService: "resource://gre/modules/kvstore.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  ImageTools: "resource:///modules/ssb/ImageTools.jsm",
 });
 
 /**
@@ -107,6 +108,36 @@ function manifestForURI(uri) {
 }
 
 /**
+ * Creates an IconResource from the LinkHandler data.
+ *
+ * @param {object} iconData the data from the LinkHandler actor.
+ * @return {Promise<IconResource>} an icon resource.
+ */
+async function getIconResource(iconData) {
+  // This should be a data url so no network traffic.
+  let imageData = await ImageTools.loadImage(
+    Services.io.newURI(iconData.iconURL)
+  );
+  if (imageData.container.type == Ci.imgIContainer.TYPE_VECTOR) {
+    return {
+      src: iconData.iconURL,
+      purpose: ["any"],
+      type: imageData.type,
+      sizes: ["any"],
+    };
+  }
+
+  // TODO: For ico files we should find all the available sizes: Bug 1604285.
+
+  return {
+    src: iconData.iconURL,
+    purpose: ["any"],
+    type: imageData.type,
+    sizes: [`${imageData.container.width}x${imageData.container.height}`],
+  };
+}
+
+/**
  * Generates an app manifest for a site loaded in a browser element.
  *
  * @param {Element} browser the browser element the site is loaded in.
@@ -150,6 +181,25 @@ async function buildManifestForBrowser(browser) {
       return icon;
     })
   )).filter(icon => icon);
+
+  // If the site provided no icons then try to use the normal page icons.
+  if (!manifest.icons.length) {
+    let linkHandler = browser.browsingContext.currentWindowGlobal.getActor(
+      "LinkHandler"
+    );
+
+    for (let icon of [linkHandler.icon, linkHandler.richIcon]) {
+      if (!icon) {
+        continue;
+      }
+
+      try {
+        manifest.icons.push(await getIconResource(icon));
+      } catch (e) {
+        console.warn(`Failed to load icon resource ${icon.originalURL}`, e);
+      }
+    }
+  }
 
   return manifest;
 }
