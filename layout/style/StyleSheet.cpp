@@ -946,7 +946,9 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
         Servo_StyleSheet_FromUTF8Bytes(
             &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
             aLoadData.mLineNumber, aLoader.GetCompatibilityMode(),
-            /* reusable_sheets = */ nullptr, useCounters)
+            /* reusable_sheets = */ nullptr, useCounters,
+            StyleSanitizationKind::None,
+            /* sanitized_output = */ nullptr)
             .Consume();
     FinishAsyncParse(contents.forget());
   } else {
@@ -983,9 +985,11 @@ void StyleSheet::ParseSheetSync(
 
   SetURLExtraData();
   Inner().mContents =
-      Servo_StyleSheet_FromUTF8Bytes(
-          aLoader, this, aLoadData, &aBytes, mParsingMode, Inner().mURLData,
-          aLineNumber, compatMode, aReusableSheets, useCounters)
+      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, aLoadData, &aBytes,
+                                     mParsingMode, Inner().mURLData,
+                                     aLineNumber, compatMode, aReusableSheets,
+                                     useCounters, StyleSanitizationKind::None,
+                                     /* sanitized_output = */ nullptr)
           .Consume();
 
   FinishParse();

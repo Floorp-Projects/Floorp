@@ -1062,67 +1062,33 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
   return false;
 }
 
-bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
+void nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                          nsAString& aSanitized,
                                          Document* aDocument,
                                          nsIURI* aBaseURI) {
-  nsresult rv = NS_OK;
   aSanitized.Truncate();
-  // aSanitized will hold the permitted CSS text.
-  // -moz-binding is blacklisted.
-  bool didSanitize = false;
-  // Create a sheet to hold the parsed CSS
-  RefPtr<StyleSheet> sheet = new StyleSheet(mozilla::css::eAuthorSheetFeatures,
-                                            CORS_NONE, SRIMetadata());
-  sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
-  sheet->SetPrincipal(aDocument->NodePrincipal());
-  sheet->ParseSheetSync(aDocument->CSSLoader(),
-                        NS_ConvertUTF16toUTF8(aOriginal),
-                        /* aLoadData = */ nullptr,
-                        /* aLineNumber = */ 0);
-  NS_ENSURE_SUCCESS(rv, true);
-  // Mark the sheet as complete.
-  MOZ_ASSERT(!sheet->HasForcedUniqueInner(),
-             "should not get a forced unique inner during parsing");
 
-  // This should be an inline stylesheet
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+  NS_ConvertUTF16toUTF8 style(aOriginal);
+  RefPtr<nsIReferrerInfo> referrer =
       ReferrerInfo::CreateForInternalCSSResources(aDocument);
-  sheet->SetReferrerInfo(referrerInfo);
-  sheet->SetComplete();
-  // Loop through all the rules found in the CSS text
-  ErrorResult err;
-  RefPtr<dom::CSSRuleList> rules =
-      sheet->GetCssRules(*nsContentUtils::GetSystemPrincipal(), err);
-  err.SuppressException();
-  if (!rules) {
-    return true;
-  }
-  uint32_t ruleCount = rules->Length();
-  for (uint32_t i = 0; i < ruleCount; ++i) {
-    mozilla::css::Rule* rule = rules->Item(i);
-    if (!rule) continue;
-    switch (rule->Type()) {
-      default:
-        didSanitize = true;
-        // Ignore these rule types.
-        break;
-      case CSSRule_Binding::STYLE_RULE:
-      case CSSRule_Binding::NAMESPACE_RULE:
-      case CSSRule_Binding::FONT_FACE_RULE: {
-        // Append style, @namespace and @font-face rules verbatim.
-        nsAutoString cssText;
-        rule->GetCssText(cssText);
-        aSanitized.Append(cssText);
-        break;
-      }
-    }
-  }
-  if (didSanitize && mLogRemovals) {
+  auto extraData =
+      MakeRefPtr<URLExtraData>(aBaseURI, referrer, aDocument->NodePrincipal());
+  auto sanitizationKind = StyleSanitizationKind::Standard;
+  RefPtr<RawServoStyleSheetContents> contents =
+      Servo_StyleSheet_FromUTF8Bytes(
+          /* loader = */ nullptr,
+          /* stylesheet = */ nullptr,
+          /* load_data = */ nullptr, &style,
+          css::SheetParsingMode::eAuthorSheetFeatures, extraData.get(),
+          /* line_number_offset = */ 0, aDocument->GetCompatibilityMode(),
+          /* reusable_sheets = */ nullptr,
+          /* use_counters = */ nullptr, sanitizationKind, &aSanitized)
+          .Consume();
+
+  if (mLogRemovals && aSanitized.Length() != aOriginal.Length()) {
     LogMessage("Removed some rules and/or properties from stylesheet.",
                aDocument);
   }
-  return didSanitize;
 }
 
 template <size_t Len>
@@ -1351,17 +1317,10 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         nsContentUtils::GetNodeTextContent(node, false, styleText);
 
         nsAutoString sanitizedStyle;
-        if (SanitizeStyleSheet(styleText, sanitizedStyle, aRoot->OwnerDoc(),
-                               node->GetBaseURI())) {
-          nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
-        } else {
-          // If the node had non-text child nodes, this operation zaps those.
-          // XXXgijs: if we're logging, we should theoretically report about
-          // this, but this way of removing those items doesn't allow for that
-          // to happen. Seems less likely to be a problem for actual chrome
-          // consumers though.
-          nsContentUtils::SetNodeTextContent(node, styleText, true);
-        }
+        SanitizeStyleSheet(styleText, sanitizedStyle, aRoot->OwnerDoc(),
+                           node->GetBaseURI());
+        nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
+
         AllowedAttributes allowed;
         allowed.mStyle = mAllowStyles;
         if (ns == kNameSpaceID_XHTML) {
