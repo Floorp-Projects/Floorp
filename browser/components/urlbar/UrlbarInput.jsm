@@ -1159,11 +1159,22 @@ class UrlbarInput {
     return allowAutofill;
   }
 
+  _checkForRtlText(value) {
+    let directionality = this.window.windowUtils.getDirectionFromText(value);
+    if (directionality == this.window.windowUtils.DIRECTION_RTL) {
+      this.setAttribute("rtltext", "true");
+    } else {
+      this.removeAttribute("rtltext");
+    }
+  }
+
   _updateTextOverflow() {
     if (!this._overflowing) {
       this.removeAttribute("textoverflow");
       return;
     }
+
+    this._checkForRtlText(this.value);
 
     this.window.promiseDocumentFlushed(() => {
       // Check overflow again to ensure it didn't change in the meantime.
@@ -1866,6 +1877,7 @@ class UrlbarInput {
 
     if (value) {
       this.setAttribute("usertyping", "true");
+      this._checkForRtlText(value);
     } else {
       this.removeAttribute("usertyping");
     }
