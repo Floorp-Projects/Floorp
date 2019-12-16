@@ -129,6 +129,28 @@ async function buildManifestForBrowser(browser) {
     manifest = manifestForURI(browser.currentURI);
   }
 
+  // Cache all the icons as data URIs since we can need access to them when
+  // the website is not loaded.
+  manifest.icons = (await Promise.all(
+    manifest.icons.map(async icon => {
+      if (icon.src.startsWith("data:")) {
+        return icon;
+      }
+
+      let actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "SiteSpecificBrowser"
+      );
+      try {
+        icon.src = await actor.sendQuery("LoadIcon", icon.src);
+      } catch (e) {
+        // Bad icon, drop it from the list.
+        return null;
+      }
+
+      return icon;
+    })
+  )).filter(icon => icon);
+
   return manifest;
 }
 
