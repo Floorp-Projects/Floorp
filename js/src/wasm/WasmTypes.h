@@ -204,7 +204,8 @@ typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
 // for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.  The TypeCode
-// spans the full range of type codes including the specialized AnyRef, FuncRef.
+// spans the full range of type codes including the specialized AnyRef, FuncRef,
+// NullRef.
 //
 // PackedTypeCode is an enum class, as opposed to the more natural
 // struct-with-bitfields, because bitfields would make it non-POD.
@@ -750,7 +751,7 @@ class FuncRef {
   }
 
  public:
-  // Given a void* that comes from compiled wasm code, turn it into AnyRef.
+  // Given a void* that comes from compiled wasm code, turn it into FuncRef.
   static FuncRef fromCompiledCode(void* p) { return FuncRef((JSFunction*)p); }
 
   // Given a JSFunction* that comes from JS, turn it into FuncRef.
@@ -1016,7 +1017,7 @@ class FuncType {
     return false;
   }
   // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
-  // as are FuncRef and nullref returns.
+  // as are all reference types apart from TypeIndex.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg != RefType::any()) {
@@ -1024,15 +1025,14 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result != RefType::any() &&
-          result != RefType::func() && result != RefType::null()) {
+      if (result.isRef()) {
         return true;
       }
     }
     return false;
   }
   // For inlined JS->wasm jit entries, AnyRef parameters and returns are
-  // allowed, as are FuncRef and nullref returns.
+  // allowed, as are all reference types apart from TypeIndex.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg != RefType::any()) {
@@ -1040,19 +1040,17 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result != RefType::any() &&
-          result != RefType::func() && result != RefType::null()) {
+      if (result.isRef()) {
         return true;
       }
     }
     return false;
   }
   // For wasm->JS jit exits, AnyRef parameters and returns are allowed, as are
-  // FuncRef and nullref parameters.
+  // reference type parameters of all types except TypeIndex.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg != RefType::any() &&
-          arg != RefType::func() && arg != RefType::null()) {
+      if (arg.isRef()) {
         return true;
       }
     }
@@ -2231,11 +2229,12 @@ struct Limits {
 // TableDesc describes a table as well as the offset of the table's base pointer
 // in global memory. The TableKind determines the representation:
 //  - AnyRef: a wasm anyref word (wasm::AnyRef)
+//  - NullRef: as AnyRef
 //  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
 //  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
 // Eventually there should be a single unified AnyRef representation.
 
-enum class TableKind { AnyRef, FuncRef, NullRef, AsmJS };
+enum class TableKind { AnyRef, NullRef, FuncRef, AsmJS };
 
 static inline ValType ToElemValType(TableKind tk) {
   switch (tk) {

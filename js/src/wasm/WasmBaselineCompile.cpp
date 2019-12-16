@@ -11487,9 +11487,14 @@ bool BaseCompiler::emitStructNarrow() {
     return true;
   }
 
-  // Currently not supported by struct.narrow validation.
-  MOZ_ASSERT(inputType != RefType::func());
-  MOZ_ASSERT(outputType != RefType::func());
+  // struct.narrow validation ensures that these hold.
+
+  MOZ_ASSERT(inputType.refTypeKind() == RefType::Any ||
+             inputType.refTypeKind() == RefType::TypeIndex);
+  MOZ_ASSERT(outputType.refTypeKind() == RefType::Any ||
+             outputType.refTypeKind() == RefType::TypeIndex);
+  MOZ_ASSERT_IF(outputType.refTypeKind() == RefType::Any,
+                inputType.refTypeKind() == RefType::Any);
 
   // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
 
