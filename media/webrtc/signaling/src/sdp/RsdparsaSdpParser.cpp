@@ -17,9 +17,10 @@
 
 namespace mozilla {
 
-static const std::string& WEBRTC_SDP_NAME = "WEBRTCSDP";
-
-const std::string& RsdparsaSdpParser::Name() const { return WEBRTC_SDP_NAME; }
+const std::string& RsdparsaSdpParser::ParserName() {
+  static const std::string& WEBRTC_SDP_NAME = "WEBRTCSDP";
+  return WEBRTC_SDP_NAME;
+}
 
 UniquePtr<SdpParser::Results> RsdparsaSdpParser::Parse(
     const std::string& aText) {
@@ -67,7 +68,7 @@ UniquePtr<SdpParser::Results> RsdparsaSdpParser::Parse(
 }
 
 bool RsdparsaSdpParser::IsNamed(const std::string& aName) {
-  return aName == WEBRTC_SDP_NAME;
+  return aName == ParserName();
 }
 
 }  // namespace mozilla
