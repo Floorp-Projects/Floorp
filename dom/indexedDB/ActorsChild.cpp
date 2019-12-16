@@ -2966,7 +2966,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Init(
   // We use a TaskQueue here in order to be sure that the events are dispatched
   // in the correct order. This is not guaranteed in case we use the I/O thread
   // directly.
-  mTaskQueue = new TaskQueue(target.forget());
+  mTaskQueue = MakeRefPtr<TaskQueue>(target.forget());
   mTaskQueueEventTarget = mTaskQueue->WrapAsEventTarget();
 
   ErrorResult errorResult;
