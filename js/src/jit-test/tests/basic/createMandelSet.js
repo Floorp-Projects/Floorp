@@ -3,6 +3,7 @@
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
 // the jit.
+load(libdir + "asserts.js");
 load(libdir + "mandelbrot-results.js");
 //function testMandelbrotAll() {
   // Configuration options that affect which codepaths we follow.
@@ -202,7 +203,7 @@ load(libdir + "mandelbrot-results.js");
     } else {
       result = mandelbrotNoImageDataResult;
     }
-    return points.toSource() == result;
+    assertDeepEq(points, result);
   }
 
   const escapeTests = [ escapeAbsDiff ];
@@ -220,7 +221,7 @@ load(libdir + "mandelbrot-results.js");
       colorMap = colorMaps[colorMapIdx];
       for (var escapeComputationIdx in escapeComputations) {
         computeEscapeSpeed = escapeComputations[escapeComputationIdx];
-	assertEq(createMandelSet(), true);
+        createMandelSet();
       }
     }
   }
@@ -233,10 +234,10 @@ load(libdir + "mandelbrot-results.js");
 
   doImageData = true;
   avoidSparseArray = false;
-  assertEq(createMandelSet(), true);
+  createMandelSet();
 
   escape = escapeNorm2;
   doImageData = false;  // avoidSparseArray doesn't matter here
-  assertEq(createMandelSet(), true);
+  createMandelSet();
 //}
 //testMandelbrotAll();
