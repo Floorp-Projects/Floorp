@@ -926,15 +926,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
  */
 class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
  public:
-  explicit FlexLine(nscoord aMainGapSize)
-      : mNumItems(0),
-        mNumFrozenItems(0),
-        mTotalItemMBP(0),
-        mTotalOuterHypotheticalMainSize(0),
-        mLineCrossSize(0),
-        mFirstBaselineOffset(nscoord_MIN),
-        mLastBaselineOffset(nscoord_MIN),
-        mMainGapSize(aMainGapSize) {}
+  explicit FlexLine(nscoord aMainGapSize) : mMainGapSize(aMainGapSize) {}
 
   nscoord GetSumOfGaps() const {
     return mNumItems > 0 ? (mNumItems - 1) * mMainGapSize : 0;
@@ -1101,32 +1093,32 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
 
   AutoCleanLinkedList<FlexItem> mItems;  // Linked list of this line's items.
 
-  uint32_t mNumItems;  // Number of FlexItems in this line (in |mItems|).
-                       // (Shouldn't change after GenerateFlexLines finishes
-                       // with this line -- at least, not until we add support
-                       // for splitting lines across continuations. Then we can
-                       // update this count carefully.)
+  // Number of FlexItems in this line (in |mItems|). (Shouldn't change after
+  // GenerateFlexLines finishes with this line -- at least, not until we add
+  // support for splitting lines across continuations. Then we can update this
+  // count carefully.)
+  uint32_t mNumItems = 0;
 
   // Number of *frozen* FlexItems in this line, based on FlexItem::IsFrozen().
   // Mostly used for optimization purposes, e.g. to bail out early from loops
   // when we can tell they have nothing left to do.
-  uint32_t mNumFrozenItems;
+  uint32_t mNumFrozenItems = 0;
 
   // Sum of margin/border/padding for the FlexItems in this FlexLine.
-  nscoord mTotalItemMBP;
+  nscoord mTotalItemMBP = 0;
 
   // Sum of FlexItems' outer hypothetical main sizes and all main-axis
   // {row,columnm}-gaps between items.
   // (i.e. their flex base sizes, clamped via their min/max-size properties,
   // plus their main-axis margin/border/padding, plus the sum of the gaps.)
-  nscoord mTotalOuterHypotheticalMainSize;
+  nscoord mTotalOuterHypotheticalMainSize = 0;
 
-  nscoord mLineCrossSize;
-  nscoord mFirstBaselineOffset;
-  nscoord mLastBaselineOffset;
+  nscoord mLineCrossSize = 0;
+  nscoord mFirstBaselineOffset = nscoord_MIN;
+  nscoord mLastBaselineOffset = nscoord_MIN;
 
   // Maintain size of each {row,column}-gap in the main axis
-  nscoord mMainGapSize;
+  nscoord mMainGapSize = 0;
 };
 
 // Information about a strut left behind by a FlexItem that's been collapsed
