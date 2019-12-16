@@ -264,12 +264,12 @@ wine-3.0.3:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
 
-cbindgen-0.11.1:
+cbindgen-0.12.0:
     description: cbindgen source code
     fetch:
         type: git
         repo: https://github.com/eqrion/cbindgen
-        revision: e050442d057e0d0a4f309672ec2863d51f1ec0b0
+        revision: 38fda6b7785a09721d45ed723b14b118b46ae711
 
 cctools-port:
     description: cctools-port source code
