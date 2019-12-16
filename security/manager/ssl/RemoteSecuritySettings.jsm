@@ -71,19 +71,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
 
-XPCOMUtils.defineLazyGetter(this, "baseAttachmentsURL", async () => {
-  const server = Services.prefs.getCharPref("services.settings.server");
-  const serverInfo = await (await fetch(`${server}/`, {
-    credentials: "omit",
-  })).json();
-  const {
-    capabilities: {
-      attachments: { base_url },
-    },
-  } = serverInfo;
-  return base_url;
-});
-
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
@@ -94,32 +81,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
     maxLogLevelPref: LOGLEVEL_PREF,
   });
 });
-
-function hexify(data) {
-  return Array.from(data, (c, i) =>
-    data
-      .charCodeAt(i)
-      .toString(16)
-      .padStart(2, "0")
-  ).join("");
-}
-
-// Hash a UTF-8 string into a hex string with SHA256
-function getHash(str) {
-  // return the two-digit hexadecimal code for a byte
-  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
-    Ci.nsICryptoHash
-  );
-  hasher.init(Ci.nsICryptoHash.SHA256);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
-    Ci.nsIStringInputStream
-  );
-  stringStream.data = str;
-  hasher.updateFromStream(stringStream, -1);
-
-  // convert the binary hash data to a hex string.
-  return hexify(hasher.finish(false));
-}
 
 // Converts a JS string to an array of bytes consisting of the char code at each
 // index in the string.
@@ -616,40 +577,6 @@ class IntermediatePreloads {
   }
 
   /**
-   * Downloads the attachment data of the given record. Does not retry,
-   * leaving that to the caller.
-   * @param  {AttachmentRecord} record The data to obtain
-   * @return {Promise}          resolves to a Uint8Array on success
-   */
-  async _downloadAttachmentBytes(record) {
-    const {
-      attachment: { location },
-    } = record;
-    const remoteFilePath = (await baseAttachmentsURL) + location;
-    const headers = new Headers();
-    headers.set("Accept-Encoding", "gzip");
-
-    return fetch(remoteFilePath, {
-      headers,
-      credentials: "omit",
-    })
-      .then(resp => {
-        log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
-        if (!resp.ok) {
-          Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
-
-          Services.telemetry
-            .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-            .add("failedToFetch");
-
-          return Promise.reject();
-        }
-        return resp.arrayBuffer();
-      })
-      .then(buffer => new Uint8Array(buffer));
-  }
-
-  /**
    * Attempts to download the attachment, assuming it's not been processed
    * already. Does not retry, and always resolves (e.g., does not reject upon
    * failure.) Errors are reported via Cu.reportError.
@@ -662,63 +589,29 @@ class IntermediatePreloads {
    *                            name of the same.
    */
   async maybeDownloadAttachment(record) {
-    const {
-      attachment: { hash, size },
-    } = record;
     let result = { record, cert: null, subject: null };
 
-    let attachmentData;
+    let dataAsString = null;
     try {
-      attachmentData = await this._downloadAttachmentBytes(record);
+      let buffer = await this.client.attachments.downloadAsBytes(record, {
+        retries: 0,
+      });
+      dataAsString = gTextDecoder.decode(new Uint8Array(buffer));
     } catch (err) {
-      Cu.reportError(`Failed to download attachment: ${err}`);
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToDownloadMisc");
-      return result;
-    }
-
-    if (!attachmentData || attachmentData.length == 0) {
       // Bug 1519273 - Log telemetry for these rejections
-      log.debug(`Empty attachment. Hash=${hash}`);
-
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("emptyAttachment");
-
+      if (err.name == "BadContentError") {
+        log.debug(`Bad attachment content.`);
+        Services.telemetry
+          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("unexpectedHash");
+      } else {
+        Cu.reportError(`Failed to download attachment: ${err}`);
+        Services.telemetry
+          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("failedToDownloadMisc");
+      }
       return result;
     }
-
-    // check the length
-    if (attachmentData.length !== size) {
-      log.debug(
-        `Unexpected attachment length. Hash=${hash} Lengths ${
-          attachmentData.length
-        } != ${size}`
-      );
-
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("unexpectedLength");
-
-      return result;
-    }
-
-    // check the hash
-    let dataAsString = gTextDecoder.decode(attachmentData);
-    let calculatedHash = getHash(dataAsString);
-    if (calculatedHash !== hash) {
-      log.warn(
-        `Invalid hash. CalculatedHash=${calculatedHash}, Hash=${hash}, data=${dataAsString}`
-      );
-
-      Services.telemetry
-        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("unexpectedHash");
-
-      return result;
-    }
-    log.debug(`downloaded cert with hash=${hash}, size=${size}`);
 
     let certBase64;
     let subjectBase64;
