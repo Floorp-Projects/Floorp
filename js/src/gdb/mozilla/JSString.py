@@ -84,7 +84,7 @@ class JSStringPtr(Common):
                 yield chars[i]
 
     def to_string(self, maxlen=200):
-        s = ''
+        s = u''
         invalid_chars_allowed = 2
         for c in self.chars():
             if len(s) >= maxlen:

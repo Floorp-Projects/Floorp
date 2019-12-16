@@ -4,4 +4,4 @@
 
 run_fragment('JSString.subclasses')
 
-assert_pretty('linear', '"Hi!"')
+assert_pretty('flat', '"Hi!"')

@@ -238,18 +238,7 @@ def build_test_exec(builddir):
 
 
 def run_tests(tests, summary):
-    jobs = OPTIONS.workercount
-    # python 3.3 fixed a bug with concurrently writing .pyc files.
-    # https://bugs.python.org/issue13146
-    embedded_version = subprocess.check_output([
-        OPTIONS.gdb_executable,
-        '--batch',
-        '--ex', 'python import sys; print(sys.hexversion)'
-    ]).decode('ascii').strip()
-    if hex(int(embedded_version)) < '0x3030000':
-        jobs = 1
-
-    pool = TaskPool(tests, job_limit=jobs, timeout=OPTIONS.timeout)
+    pool = TaskPool(tests, job_limit=OPTIONS.workercount, timeout=OPTIONS.timeout)
     pool.run_all()
 
 
