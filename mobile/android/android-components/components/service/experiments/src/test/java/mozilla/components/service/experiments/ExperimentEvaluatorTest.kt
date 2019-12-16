@@ -12,7 +12,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.experiments.util.VersionString
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -24,8 +23,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import kotlin.reflect.full.functions
-import kotlin.reflect.jvm.isAccessible
 
 @RunWith(AndroidJUnit4::class)
 class ExperimentEvaluatorTest {
@@ -732,53 +729,6 @@ class ExperimentEvaluatorTest {
         })
 
         assertEquals(355, evaluator2.getUserBucket(testContext))
-    }
-
-    @Test
-    fun `test even distribution`() {
-        testReset()
-
-        val sharedPrefs: SharedPreferences = mock()
-        val prefsEditor: SharedPreferences.Editor = mock()
-        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(prefsEditor.putBoolean(anyString(), anyBoolean())).thenReturn(prefsEditor)
-        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
-        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
-
-        val distribution = (1..1000).map {
-            val experimentEvaluator = ExperimentEvaluator()
-            val f = experimentEvaluator::class.functions.find { it.name == "getUserBucket" }
-            f!!.isAccessible = true
-            f.call(experimentEvaluator, context) as Int
-        }
-
-        distribution
-            .groupingBy { it }
-            .eachCount()
-            .forEach {
-                Assert.assertTrue(it.value in 0..9)
-            }
-
-        distribution
-            .groupingBy { it / 10 }
-            .eachCount()
-            .forEach {
-                Assert.assertTrue(it.value in 0..29)
-            }
-
-        distribution
-            .groupingBy { it / 100 }
-            .eachCount()
-            .forEach {
-                Assert.assertTrue(it.value in 50..150)
-            }
-
-        distribution
-            .groupingBy { it / 500 }
-            .eachCount()
-            .forEach {
-                Assert.assertTrue(it.value in 350..650)
-            }
     }
 
     @Test
