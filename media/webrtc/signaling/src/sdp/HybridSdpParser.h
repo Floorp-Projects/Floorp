@@ -16,11 +16,13 @@ namespace mozilla {
 // preference flags. Additionally it handles collecting telemetry and fallback
 // behavior between the parsers.
 class HybridSdpParser : public SdpParser {
+  static const std::string& ParserName();
+
  public:
   HybridSdpParser();
   virtual ~HybridSdpParser() = default;
 
-  auto Name() const -> const std::string& override { return PARSER_NAME; }
+  auto Name() const -> const std::string& override { return ParserName(); }
   auto Parse(const std::string& aText)
       -> UniquePtr<SdpParser::Results> override;
 
@@ -29,7 +31,6 @@ class HybridSdpParser : public SdpParser {
   const UniquePtr<SdpParser> mPrimary;
   const Maybe<UniquePtr<SdpParser>> mSecondary;
   const Maybe<UniquePtr<SdpParser>> mFailover;
-  static const std::string PARSER_NAME;
 };
 
 }  // namespace mozilla

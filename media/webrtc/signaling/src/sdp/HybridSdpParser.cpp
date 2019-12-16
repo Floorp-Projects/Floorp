@@ -21,6 +21,11 @@ namespace mozilla {
 
 using mozilla::LogLevel;
 
+const std::string& HybridSdpParser::ParserName() {
+  const static std::string PARSER_NAME = "hybrid";
+  return PARSER_NAME;
+}
+
 HybridSdpParser::HybridSdpParser()
     : mStrictSuccess(SdpPref::StrictSuccess()),
       mPrimary(SdpPref::Primary()),
@@ -79,7 +84,5 @@ auto HybridSdpParser::Parse(const std::string& aText)
   SdpTelemetry::RecordParse(results, mode, Role::Primary);
   return results;
 }
-
-const std::string HybridSdpParser::PARSER_NAME = "hybrid";
 
 }  // namespace mozilla
