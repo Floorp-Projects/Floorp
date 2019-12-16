@@ -13,6 +13,7 @@
 #include "DocAccessibleWrap.h"
 #include "IDSet.h"
 #include "SessionAccessibility.h"
+#include "TextLeafAccessible.h"
 #include "TraversalRule.h"
 #include "Pivot.h"
 #include "nsAccessibilityService.h"
@@ -266,6 +267,8 @@ void AccessibleWrap::GetTextContents(nsAString& aText) {
   // In the future this may be smarter and retrieve a flattened string.
   if (IsHyperText()) {
     AsHyperText()->TextSubstring(0, -1, aText);
+  } else if (IsTextLeaf()) {
+    aText = AsTextLeaf()->Text();
   }
 }
 
@@ -348,6 +351,28 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
+    if (IsTextLeaf() && newAnchor == Parent()) {
+      // For paragraphs, divs, spans, etc., we put a11y focus on the text leaf
+      // node instead of the HyperTextAccessible. However, Pivot will always
+      // return a HyperTextAccessible. Android doesn't support text navigation
+      // landing on an accessible which is different to the originating
+      // accessible. Therefore, if we're still within the same text leaf,
+      // translate the offsets to the text leaf.
+      int32_t thisChild = IndexInParent();
+      HyperTextAccessible* newHyper = newAnchor->AsHyperText();
+      MOZ_ASSERT(newHyper);
+      int32_t startChild = newHyper->GetChildIndexAtOffset(start);
+      // We use end - 1 because the end offset is exclusive, so end itself
+      // might be associated with the next child.
+      int32_t endChild = newHyper->GetChildIndexAtOffset(end - 1);
+      if (startChild == thisChild && endChild == thisChild) {
+        // We've landed within the same text leaf.
+        newAnchor = this;
+        int32_t thisOffset = newHyper->GetChildOffset(thisChild);
+        start -= thisOffset;
+        end -= thisOffset;
+      }
+    }
     RefPtr<AccEvent> event = new AccVCChangeEvent(
         newAnchor->Document(), this, aStartOffset, aEndOffset, newAnchor, start,
         end, nsIAccessiblePivot::REASON_NONE, pivotGranularity, eFromUserInput);

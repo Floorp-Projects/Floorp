@@ -225,8 +225,23 @@ Accessible* Pivot::Last(PivotRule& aRule) {
 Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
-
   Accessible* tempPosition = aAnchor;
+
+  // if we're starting on a text leaf, translate the offsets to the
+  // HyperTextAccessible parent and start from there.
+  if (aAnchor->IsTextLeaf() && aAnchor->Parent() &&
+      aAnchor->Parent()->IsHyperText()) {
+    HyperTextAccessible* text = aAnchor->Parent()->AsHyperText();
+    tempPosition = text;
+    int32_t childOffset = text->GetChildOffset(aAnchor);
+    if (tempEnd == -1) {
+      tempStart = 0;
+      tempEnd = 0;
+    }
+    tempStart += childOffset;
+    tempEnd += childOffset;
+  }
+
   while (true) {
     MOZ_ASSERT(tempPosition);
     Accessible* curPosition = tempPosition;
@@ -344,8 +359,23 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
 Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
-
   Accessible* tempPosition = aAnchor;
+
+  // if we're starting on a text leaf, translate the offsets to the
+  // HyperTextAccessible parent and start from there.
+  if (aAnchor->IsTextLeaf() && aAnchor->Parent() &&
+      aAnchor->Parent()->IsHyperText()) {
+    HyperTextAccessible* text = aAnchor->Parent()->AsHyperText();
+    tempPosition = text;
+    int32_t childOffset = text->GetChildOffset(aAnchor);
+    if (tempStart == -1) {
+      tempStart = nsAccUtils::TextLength(aAnchor);
+      tempEnd = tempStart;
+    }
+    tempStart += childOffset;
+    tempEnd += childOffset;
+  }
+
   while (true) {
     MOZ_ASSERT(tempPosition);
 
