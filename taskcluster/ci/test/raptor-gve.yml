@@ -141,8 +141,8 @@ raptor-speedometer-geckoview:
             android-hw-.*-api-16/opt: []
             android-hw-.*-aarch64/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['mozilla-central']
-            android-hw-p2-.*aarch64.*/pgo: ['mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-beta']
+            android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
+            android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
             default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     mozharness:
@@ -300,7 +300,7 @@ raptor-unity-webgl-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-.*-api-16/opt: []
-            android-hw-.*/pgo: ['mozilla-beta']
+            android-hw-.*/pgo: ['trunk', 'mozilla-beta']
             default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     mozharness:
