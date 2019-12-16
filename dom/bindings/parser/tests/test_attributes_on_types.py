@@ -25,12 +25,6 @@ def WebIDLTest(parser, harness):
                 void method2(optional [EnforceRange] long foo, optional [Clamp] long bar,
                              optional [TreatNullAs=EmptyString] DOMString baz);
             };
-            interface C {
-                attribute [EnforceRange] long? foo;
-                attribute [Clamp] long? bar;
-                void method([EnforceRange] long? foo, [Clamp] long? bar);
-                void method2(optional [EnforceRange] long? foo, optional [Clamp] long? bar);
-            };
             interface Setlike {
                 setlike<[Clamp] long>;
             };
@@ -47,42 +41,27 @@ def WebIDLTest(parser, harness):
 
     harness.ok(not threw, "Should not have thrown on parsing normal")
     if not threw:
-        harness.check(results[0].innerType.hasEnforceRange(), True, "Foo is [EnforceRange]")
-        harness.check(results[1].innerType.hasClamp(), True, "Bar is [Clamp]")
+        harness.check(results[0].innerType.enforceRange, True, "Foo is [EnforceRange]")
+        harness.check(results[1].innerType.clamp, True, "Bar is [Clamp]")
         harness.check(results[2].innerType.treatNullAsEmpty, True, "Baz is [TreatNullAs=EmptyString]")
         A = results[3]
-        harness.check(A.members[0].type.hasEnforceRange(), True, "A.a is [EnforceRange]")
-        harness.check(A.members[1].type.hasClamp(), True, "A.b is [Clamp]")
-        harness.check(A.members[2].type.hasEnforceRange(), True, "A.c is [EnforceRange]")
-        harness.check(A.members[3].type.hasEnforceRange(), True, "A.d is [EnforceRange]")
+        harness.check(A.members[0].type.enforceRange, True, "A.a is [EnforceRange]")
+        harness.check(A.members[1].type.clamp, True, "A.b is [Clamp]")
+        harness.check(A.members[2].type.enforceRange, True, "A.c is [EnforceRange]")
+        harness.check(A.members[3].type.enforceRange, True, "A.d is [EnforceRange]")
         B = results[4]
-        harness.check(B.members[0].type.hasEnforceRange(), True, "B.typedefFoo is [EnforceRange]")
-        harness.check(B.members[1].type.hasEnforceRange(), True, "B.foo is [EnforceRange]")
-        harness.check(B.members[2].type.hasClamp(), True, "B.bar is [Clamp]")
+        harness.check(B.members[0].type.enforceRange, True, "B.typedefFoo is [EnforceRange]")
+        harness.check(B.members[1].type.enforceRange, True, "B.foo is [EnforceRange]")
+        harness.check(B.members[2].type.clamp, True, "B.bar is [Clamp]")
         harness.check(B.members[3].type.treatNullAsEmpty, True, "B.baz is [TreatNullAs=EmptyString]")
         method = B.members[4].signatures()[0][1]
-        harness.check(method[0].type.hasEnforceRange(), True, "foo argument of method is [EnforceRange]")
-        harness.check(method[1].type.hasClamp(), True, "bar argument of method is [Clamp]")
+        harness.check(method[0].type.enforceRange, True, "foo argument of method is [EnforceRange]")
+        harness.check(method[1].type.clamp, True, "bar argument of method is [Clamp]")
         harness.check(method[2].type.treatNullAsEmpty, True, "baz argument of method is [TreatNullAs=EmptyString]")
         method2 = B.members[5].signatures()[0][1]
-        harness.check(method[0].type.hasEnforceRange(), True, "foo argument of method2 is [EnforceRange]")
-        harness.check(method[1].type.hasClamp(), True, "bar argument of method2 is [Clamp]")
+        harness.check(method[0].type.enforceRange, True, "foo argument of method2 is [EnforceRange]")
+        harness.check(method[1].type.clamp, True, "bar argument of method2 is [Clamp]")
         harness.check(method[2].type.treatNullAsEmpty, True, "baz argument of method2 is [TreatNullAs=EmptyString]")
-        C = results[5]
-        harness.ok(C.members[0].type.nullable(), "C.foo is nullable")
-        harness.ok(C.members[0].type.hasEnforceRange(), "C.foo has [EnforceRange]")
-        harness.ok(C.members[1].type.nullable(), "C.bar is nullable")
-        harness.ok(C.members[1].type.hasClamp(), "C.bar has [Clamp]")
-        method = C.members[2].signatures()[0][1]
-        harness.ok(method[0].type.nullable(), "foo argument of method is nullable")
-        harness.ok(method[0].type.hasEnforceRange(), "foo argument of method has [EnforceRange]")
-        harness.ok(method[1].type.nullable(), "bar argument of method is nullable")
-        harness.ok(method[1].type.hasClamp(), "bar argument of method has [Clamp]")
-        method2 = C.members[3].signatures()[0][1]
-        harness.ok(method2[0].type.nullable(), "foo argument of method2 is nullable")
-        harness.ok(method2[0].type.hasEnforceRange(), "foo argument of method2 has [EnforceRange]")
-        harness.ok(method2[1].type.nullable(), "bar argument of method2 is nullable")
-        harness.ok(method2[1].type.hasClamp(), "bar argument of method2 has [Clamp]")
 
     ATTRIBUTES = [("[Clamp]", "long"), ("[EnforceRange]", "long"), ("[TreatNullAs=EmptyString]", "DOMString")]
     TEMPLATES = [
@@ -244,18 +223,6 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            typedef [TreatNullAs=EmptyString] DOMString? Foo;
-        """)
-        parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should not allow [TreatNullAs] on nullable DOMString")
-
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
             interface Foo {
                void foo([Clamp] Bar arg);
             };
@@ -265,7 +232,7 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
     harness.ok(not threw, "Should allow type attributes on unresolved types")
-    harness.check(results[0].members[0].signatures()[0][1][0].type.hasClamp(), True,
+    harness.check(results[0].members[0].signatures()[0][1][0].type.clamp, True,
                   "Unresolved types with type attributes should correctly resolve with attributes")
 
     parser = parser.reset()
@@ -281,5 +248,5 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
     harness.ok(not threw, "Should allow type attributes on typedefs")
-    harness.check(results[0].members[0].signatures()[0][1][0].type.hasClamp(), True,
+    harness.check(results[0].members[0].signatures()[0][1][0].type.clamp, True,
                   "Unresolved types that resolve to typedefs with attributes should correctly resolve with attributes")
