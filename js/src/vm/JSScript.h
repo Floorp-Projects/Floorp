@@ -1986,12 +1986,8 @@ setterLevel:                                                                  \
 
 #define IMMUTABLE_FLAG_GETTER(lowerName, name) \
   FLAG_GETTER(ImmutableFlags, name, lowerName)
-#define IMMUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER_SETTER(ImmutableFlags, name, protected, lowerName, name)
 #define IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(lowerName, name) \
   FLAG_GETTER_SETTER(ImmutableFlags, name, public, lowerName, name)
-#define IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(enumName, lowerName, name) \
-  FLAG_GETTER_SETTER(ImmutableFlags, enumName, public, lowerName, name)
 #define MUTABLE_FLAG_GETTER(lowerName, name) \
   FLAG_GETTER(MutableFlags, name, lowerName)
 #define MUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
@@ -2006,25 +2002,19 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
   IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
   IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
-  IMMUTABLE_FLAG_GETTER_SETTER(functionHasThisBinding, FunctionHasThisBinding)
-  // Alternate shorter name used throughout the codebase
-  IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(FunctionHasThisBinding,
-                                             hasThisBinding, HasThisBinding)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(functionHasThisBinding,
+                                      FunctionHasThisBinding)
   // FunctionHasExtraBodyVarScope: custom logic below.
   IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
-  IMMUTABLE_FLAG_GETTER_SETTER(hasInnerFunctions, HasInnerFunctions)
+  IMMUTABLE_FLAG_GETTER(hasInnerFunctions, HasInnerFunctions)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(needsHomeObject, NeedsHomeObject)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDerivedClassConstructor,
                                       IsDerivedClassConstructor)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDefaultClassConstructor,
                                       IsDefaultClassConstructor)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
-  IMMUTABLE_FLAG_GETTER_SETTER(isLikelyConstructorWrapper,
-                               IsLikelyConstructorWrapper)
-  // alternate name used throughout the codebase
-  IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(IsLikelyConstructorWrapper,
-                                             likelyConstructorWrapper,
-                                             LikelyConstructorWrapper)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isLikelyConstructorWrapper,
+                                      IsLikelyConstructorWrapper)
   IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
   IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasRest, HasRest)
@@ -2033,8 +2023,8 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
   // IsForEval: custom logic below.
   // IsModule: custom logic below.
-  IMMUTABLE_FLAG_GETTER_SETTER(needsFunctionEnvironmentObjects,
-                               NeedsFunctionEnvironmentObjects)
+  IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
+                        NeedsFunctionEnvironmentObjects)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(shouldDeclareArguments,
                                       ShouldDeclareArguments)
   IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
@@ -2066,9 +2056,7 @@ setterLevel:                                                                  \
   MUTABLE_FLAG_GETTER_SETTER(isWrappedByDebugger, WrappedByDebugger);
 
 #undef IMMUTABLE_FLAG_GETTER
-#undef IMMUTABLE_FLAG_GETTER_SETTER
 #undef IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC
-#undef IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC
 #undef MUTABLE_FLAG_GETTER
 #undef MUTABLE_FLAG_GETTER_SETTER
 #undef FLAG_GETTER
