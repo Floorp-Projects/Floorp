@@ -2227,7 +2227,7 @@ class MOZ_STACK_CLASS PositionTracker {
  protected:
   // Protected constructor, to be sure we're only instantiated via a subclass.
   PositionTracker(AxisOrientationType aAxis, bool aIsAxisReversed)
-      : mPosition(0), mAxis(aAxis), mIsAxisReversed(aIsAxisReversed) {}
+      : mAxis(aAxis), mIsAxisReversed(aIsAxisReversed) {}
 
   // Delete copy-constructor & reassignment operator, to prevent accidental
   // (unnecessary) copying.
@@ -2235,13 +2235,16 @@ class MOZ_STACK_CLASS PositionTracker {
   PositionTracker& operator=(const PositionTracker&) = delete;
 
   // Member data:
-  nscoord mPosition;  // The position we're tracking
+  // The position we're tracking.
+  nscoord mPosition = 0;
   // XXXdholbert [BEGIN DEPRECATED]
-  const AxisOrientationType mAxis;  // The axis along which we're moving.
+  // The axis along which we're moving.
+  const AxisOrientationType mAxis = eAxis_LR;
   // XXXdholbert [END DEPRECATED]
-  const bool mIsAxisReversed;  // Is the axis along which we're moving reversed
-                               // (e.g. LTR vs RTL) with respect to the
-                               // corresponding axis on the flex container's WM?
+
+  // Is the axis along which we're moving reversed (e.g. LTR vs RTL) with
+  // respect to the corresponding axis on the flex container's WM?
+  const bool mIsAxisReversed = false;
 };
 
 // Tracks our position in the main axis, when we're laying out flex items.
@@ -2271,11 +2274,11 @@ class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
   void ResolveAutoMarginsInMainAxis(FlexItem& aItem);
 
  private:
-  nscoord mPackingSpaceRemaining;
-  uint32_t mNumAutoMarginsInMainAxis;
-  uint32_t mNumPackingSpacesRemaining;
+  nscoord mPackingSpaceRemaining = 0;
+  uint32_t mNumAutoMarginsInMainAxis = 0;
+  uint32_t mNumPackingSpacesRemaining = 0;
   // XXX this should be uint16_t when we add explicit fallback handling
-  uint8_t mJustifyContent;
+  uint8_t mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
 };
 
 // Utility class for managing our position along the cross axis along
@@ -2312,10 +2315,10 @@ class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
   void EnterChildFrame(nscoord aChildFrameSize) = delete;
   void ExitChildFrame(nscoord aChildFrameSize) = delete;
 
-  nscoord mPackingSpaceRemaining;
-  uint32_t mNumPackingSpacesRemaining;
+  nscoord mPackingSpaceRemaining = 0;
+  uint32_t mNumPackingSpacesRemaining = 0;
   // XXX this should be uint16_t when we add explicit fallback handling
-  uint8_t mAlignContent;
+  uint8_t mAlignContent = NS_STYLE_ALIGN_AUTO;
 
   nscoord mCrossGapSize = 0;
 };
@@ -2922,8 +2925,6 @@ MainAxisPositionTracker::MainAxisPositionTracker(
                       aAxisTracker.IsMainAxisReversed()),
       // we chip away at this below
       mPackingSpaceRemaining(aContentBoxMainSize),
-      mNumAutoMarginsInMainAxis(0),
-      mNumPackingSpacesRemaining(0),
       mJustifyContent(aJustifyContent) {
   // Extract the flag portion of mJustifyContent and strip off the flag bits
   // NOTE: This must happen before any assignment to mJustifyContent to
@@ -3104,8 +3105,6 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
     const FlexboxAxisTracker& aAxisTracker, const nscoord aCrossGapSize)
     : PositionTracker(aAxisTracker.GetCrossAxis(),
                       aAxisTracker.IsCrossAxisReversed()),
-      mPackingSpaceRemaining(0),
-      mNumPackingSpacesRemaining(0),
       mAlignContent(aReflowInput.mStylePosition->mAlignContent),
       mCrossGapSize(aCrossGapSize) {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
