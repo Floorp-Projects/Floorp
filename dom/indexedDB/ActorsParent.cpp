@@ -407,7 +407,7 @@ struct FullDatabaseMetadata {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullDatabaseMetadata)
 
-  already_AddRefed<FullDatabaseMetadata> Duplicate() const;
+  MOZ_MUST_USE RefPtr<FullDatabaseMetadata> Duplicate() const;
 
  private:
   ~FullDatabaseMetadata() = default;
@@ -12503,13 +12503,12 @@ bool FullObjectStoreMetadata::HasLiveIndexes() const {
   });
 }
 
-already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
+RefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
   AssertIsOnBackgroundThread();
 
   // FullDatabaseMetadata contains two hash tables of pointers that we need to
   // duplicate so we can't just use the copy constructor.
-  RefPtr<FullDatabaseMetadata> newMetadata =
-      new FullDatabaseMetadata(mCommonMetadata);
+  auto newMetadata = MakeRefPtr<FullDatabaseMetadata>(mCommonMetadata);
 
   newMetadata->mDatabaseId = mDatabaseId;
   newMetadata->mFilePath = mFilePath;
@@ -12519,8 +12518,7 @@ already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
   for (const auto& objectStoreEntry : mObjectStores) {
     const auto& objectStoreValue = objectStoreEntry.GetData();
 
-    RefPtr<FullObjectStoreMetadata> newOSMetadata =
-        new FullObjectStoreMetadata();
+    auto newOSMetadata = MakeRefPtr<FullObjectStoreMetadata>();
 
     newOSMetadata->mCommonMetadata = objectStoreValue->mCommonMetadata;
     newOSMetadata->mNextAutoIncrementId =
@@ -12531,12 +12529,12 @@ already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
     for (const auto& indexEntry : objectStoreValue->mIndexes) {
       const auto& value = indexEntry.GetData();
 
-      RefPtr<FullIndexMetadata> newIndexMetadata = new FullIndexMetadata();
+      auto newIndexMetadata = MakeRefPtr<FullIndexMetadata>();
 
       newIndexMetadata->mCommonMetadata = value->mCommonMetadata;
 
       if (NS_WARN_IF(!newOSMetadata->mIndexes.Put(
-              indexEntry.GetKey(), newIndexMetadata, fallible))) {
+              indexEntry.GetKey(), newIndexMetadata.forget(), fallible))) {
         return nullptr;
       }
     }
@@ -12544,15 +12542,15 @@ already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
     MOZ_ASSERT(objectStoreValue->mIndexes.Count() ==
                newOSMetadata->mIndexes.Count());
 
-    if (NS_WARN_IF(!newMetadata->mObjectStores.Put(objectStoreEntry.GetKey(),
-                                                   newOSMetadata, fallible))) {
+    if (NS_WARN_IF(!newMetadata->mObjectStores.Put(
+            objectStoreEntry.GetKey(), newOSMetadata.forget(), fallible))) {
       return nullptr;
     }
   }
 
   MOZ_ASSERT(mObjectStores.Count() == newMetadata->mObjectStores.Count());
 
-  return newMetadata.forget();
+  return newMetadata;
 }
 
 DatabaseLoggingInfo::~DatabaseLoggingInfo() {
