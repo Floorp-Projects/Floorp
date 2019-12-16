@@ -4166,7 +4166,7 @@ bool JSScript::shareScriptData(JSContext* cx) {
 
   // Calculate the hash before taking the lock. Because the data is reference
   // counted, it also will be freed after releasing the lock if necessary.
-  RuntimeScriptDataHasher::Lookup lookup(rsd);
+  RuntimeScriptData::Hasher::Lookup lookup(rsd);
 
   AutoLockScriptData lock(cx->runtime());
 
