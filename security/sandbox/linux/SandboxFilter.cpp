@@ -94,19 +94,29 @@ namespace mozilla {
 // denied if no broker client is provided by the concrete class.
 class SandboxPolicyCommon : public SandboxPolicyBase {
  protected:
-  enum class ShmemUsage {
+  enum class ShmemUsage : uint8_t {
     MAY_CREATE,
     ONLY_USE,
   };
 
-  SandboxBrokerClient* mBroker;
-  ShmemUsage mShmemUsage;
+  enum class AllowUnsafeSocketPair : uint8_t {
+    NO,
+    YES,
+  };
+
+  SandboxBrokerClient* mBroker = nullptr;
+  bool mMayCreateShmem = false;
+  bool mAllowUnsafeSocketPair = false;
 
   explicit SandboxPolicyCommon(SandboxBrokerClient* aBroker,
-                               ShmemUsage aShmemUsage = ShmemUsage::MAY_CREATE)
-      : mBroker(aBroker), mShmemUsage(aShmemUsage) {}
+                               ShmemUsage aShmemUsage,
+                               AllowUnsafeSocketPair aAllowUnsafeSocketPair)
+      : mBroker(aBroker),
+        mMayCreateShmem(aShmemUsage == ShmemUsage::MAY_CREATE),
+        mAllowUnsafeSocketPair(aAllowUnsafeSocketPair ==
+                               AllowUnsafeSocketPair::YES) {}
 
-  SandboxPolicyCommon() : SandboxPolicyCommon(nullptr, ShmemUsage::ONLY_USE) {}
+  SandboxPolicyCommon() = default;
 
   typedef const sandbox::arch_seccomp_data& ArgsRef;
 
@@ -368,9 +378,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Some(Allow());
 
       case SYS_SOCKETPAIR: {
-        // Allow "safe" (always connected) socketpairs when using the
-        // file broker.
-        if (mBroker == nullptr) {
+        // We try to allow "safe" (always connected) socketpairs when using the
+        // file broker, or for content processes, but we may need to fall back
+        // and allow all socketpairs in some cases, see bug 1066750.
+        if (!mBroker && !mAllowUnsafeSocketPair) {
           return Nothing();
         }
         // See bug 1066750.
@@ -513,14 +524,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Allow();
 
       CASES_FOR_ftruncate:
-        switch (mShmemUsage) {
-          case ShmemUsage::MAY_CREATE:
-            return Allow();
-          case ShmemUsage::ONLY_USE:
-            return InvalidSyscall();
-          default:
-            MOZ_CRASH("unreachable");
-        }
+        return mMayCreateShmem ? Allow() : InvalidSyscall();
 
         // Used by our fd/shm classes
       case __NR_dup:
@@ -863,7 +867,8 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
  public:
   ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                        ContentProcessSandboxParams&& aParams)
-      : SandboxPolicyCommon(aBroker),
+      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
+                            AllowUnsafeSocketPair::YES),
         mParams(std::move(aParams)),
         mAllowSysV(PR_GetEnv("MOZ_SANDBOX_ALLOW_SYSV") != nullptr),
         mUsingRenderDoc(PR_GetEnv("RENDERDOC_CAPTUREOPTS") != nullptr) {}
@@ -890,12 +895,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         const auto trapFn = aHasArgs ? ConnectTrap : ConnectTrapLegacy;
         return Some(AllowBelowLevel(4, Trap(trapFn, mBroker)));
       }
-      case SYS_ACCEPT:
-      case SYS_ACCEPT4:
-        if (mUsingRenderDoc) {
-          return Some(Allow());
-        }
-        return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
       case SYS_RECV:
       case SYS_SEND:
       case SYS_GETSOCKOPT:
@@ -904,6 +903,12 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case SYS_GETPEERNAME:
       case SYS_SHUTDOWN:
         return Some(Allow());
+      case SYS_ACCEPT:
+      case SYS_ACCEPT4:
+        if (mUsingRenderDoc) {
+          return Some(Allow());
+        }
+        MOZ_FALLTHROUGH;
 #endif
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
@@ -1434,7 +1439,8 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
 class RDDSandboxPolicy final : public SandboxPolicyCommon {
  public:
   explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker)
-      : SandboxPolicyCommon(aBroker) {}
+      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
+                            AllowUnsafeSocketPair::NO) {}
 
   static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
                             void* aux) {
