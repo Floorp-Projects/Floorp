@@ -67,6 +67,9 @@ with Files('moz.*'):
 with Files('toolkit.mozbuild'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('nss.configure'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
+
 with Files('library/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 

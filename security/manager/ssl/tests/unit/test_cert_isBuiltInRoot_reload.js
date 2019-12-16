@@ -17,7 +17,9 @@
 // `certutil -d . -A -n "Let's Encrypt Authority X1" -t ,, -a \
 //   -i LetsEncrypt.pem`
 //
-// This should create the cert9.db and key4.db files.
+// This should create cert8.db and key3.db files for use on non-Android
+// platforms. Perform the same steps with "sql:." as the argument to the "-d"
+// flag to create cert9.db and key4.db for use with Android.
 //
 // (The crucial property of the first certificate is that it is a built-in trust
 // anchor, so any replacement must also have this property. The second
@@ -75,8 +77,9 @@
 "use strict";
 
 function run_test() {
-  const certDBName = "cert9.db";
-  const keyDBName = "key4.db";
+  const isAndroid = AppConstants.platform == "android";
+  const certDBName = isAndroid ? "cert9.db" : "cert8.db";
+  const keyDBName = isAndroid ? "key4.db" : "key3.db";
   let profile = do_get_profile();
   let certDBFile = do_get_file(`test_cert_isBuiltInRoot_reload/${certDBName}`);
   certDBFile.copyTo(profile, certDBName);

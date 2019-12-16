@@ -1,5 +1,0 @@
-library=
-name=NSS Internal FIPS PKCS #11 Module
-parameters=configdir='.' certPrefix='' keyPrefix='' secmod='' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription='' 
-NSS=slotParams={0x00000003=[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,SHA256,SHA512,Camellia,SEED,RANDOM ] }  Flags=internal,FIPS,critical
-
