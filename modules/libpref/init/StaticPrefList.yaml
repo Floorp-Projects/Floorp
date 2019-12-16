@@ -4103,6 +4103,12 @@
 #endif
   mirror: always
 
+# Defer allocation of GC objects as late as possible in a parse
+- name: javascript.options.parser_defer_allocation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: javascript.options.experimental.fields
   type: RelaxedAtomicBool
   value: true
