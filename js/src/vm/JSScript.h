@@ -3405,10 +3405,6 @@ class LazyScript : public BaseScript {
   }
   bool hasScript() const { return bool(script_); }
 
-  bool hasNonSyntacticScope() const {
-    return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
-  }
-
   frontend::ParseGoal parseGoal() const {
     if (hasFlag(ImmutableFlags::IsModule)) {
       return frontend::ParseGoal::Module;
