@@ -106,7 +106,7 @@ ft_dyn_fn!(FT_Done_MM_Var(library: FT_Library, desc: *mut FT_MM_Var) -> FT_Error
 ft_dyn_fn!(FT_Set_Var_Design_Coordinates(face: FT_Face, num_vals: FT_UInt, vals: *mut FT_Fixed) -> FT_Error);
 
 extern "C" {
-    fn mozilla_GlyphSlot_Embolden_Less(slot: FT_GlyphSlot);
+    fn FT_GlyphSlot_Embolden(slot: FT_GlyphSlot);
 }
 
 enum FontFile {
@@ -495,7 +495,7 @@ impl FontContext {
         assert!(slot != ptr::null_mut());
 
         if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
-            unsafe { mozilla_GlyphSlot_Embolden_Less(slot) };
+            unsafe { FT_GlyphSlot_Embolden(slot) };
         }
 
         let format = unsafe { (*slot).format };
