@@ -99,7 +99,7 @@
     'disable_arm_hw_aes%': 0,
     'disable_tests%': 0,
     'disable_chachapoly%': 0,
-    'disable_dbm%': 0,
+    'disable_dbm%': 1,
     'disable_libpkix%': 1,
     'disable_werror%': 0,
     'mozilla_client%': 0,
@@ -124,6 +124,7 @@
     'only_dev_random%': 1,
     'disable_fips%': 1,
     'mozpkix_only%': 0,
+    'coverage%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.

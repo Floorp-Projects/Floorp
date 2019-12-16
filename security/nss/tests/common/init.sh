@@ -651,9 +651,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     RELOAD_CRL=1
 
-    # if test mode isn't set, test scripts default to expecting dbm
+    # if test mode isn't set, test scripts default to expecting sql
     if [ "${TEST_MODE}" = "" ]; then
-        NSS_DEFAULT_DB_TYPE="dbm"
+        NSS_DEFAULT_DB_TYPE=${NSS_DEFAULT_DB_TYPE:-"sql"}
         export NSS_DEFAULT_DB_TYPE
     fi
 

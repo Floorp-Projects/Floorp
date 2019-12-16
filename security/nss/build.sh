@@ -113,8 +113,8 @@ while [ $# -gt 0 ]; do
         --fuzz) fuzz=1 ;;
         --fuzz=oss) fuzz=1; fuzz_oss=1 ;;
         --fuzz=tls) fuzz=1; fuzz_tls=1 ;;
-        --sancov) enable_sancov ;;
-        --sancov=?*) enable_sancov "${1#*=}" ;;
+        --sancov) enable_sancov; gyp_params+=(-Dcoverage=1) ;;
+        --sancov=?*) enable_sancov "${1#*=}"; gyp_params+=(-Dcoverage=1) ;;
         --emit-llvm) gyp_params+=(-Demit_llvm=1 -Dsign_libs=0) ;;
         --no-zdefs) gyp_params+=(-Dno_zdefs=1) ;;
         --static) gyp_params+=(-Dstatic_libs=1) ;;
@@ -130,6 +130,7 @@ while [ $# -gt 0 ]; do
         --enable-libpkix) gyp_params+=(-Ddisable_libpkix=0) ;;
         --mozpkix-only) gyp_params+=(-Dmozpkix_only=1 -Ddisable_tests=1 -Dsign_libs=0) ;;
         --disable-keylog) sslkeylogfile=0 ;;
+        --enable-legacy-db) gyp_params+=(-Ddisable_dbm=0) ;;
         -D*) gyp_params+=("$1") ;;
         *) show_help; exit 2 ;;
     esac

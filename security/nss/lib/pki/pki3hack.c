@@ -921,14 +921,28 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
     }
     if (!cc->nssCertificate || forceUpdate) {
         fill_CERTCertificateFields(c, cc, forceUpdate);
-    } else if (CERT_GetCertTrust(cc, &certTrust) != SECSuccess &&
-               !c->object.cryptoContext) {
-        /* if it's a perm cert, it might have been stored before the
-         * trust, so look for the trust again.  But a temp cert can be
-         * ignored.
-         */
-        CERTCertTrust *trust = NULL;
-        trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+    } else if (CERT_GetCertTrust(cc, &certTrust) != SECSuccess) {
+        CERTCertTrust *trust;
+        if (!c->object.cryptoContext) {
+            /* If it's a perm cert, it might have been stored before the
+             * trust, so look for the trust again.
+             */
+            trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+        } else {
+            /* If it's a temp cert, it might have been stored before the
+             * builtin trust module is loaded, so look for the trust
+             * again, but don't set the empty trust if it is not found.
+             */
+            NSSTrust *t = nssTrustDomain_FindTrustForCertificate(c->object.cryptoContext->td, c);
+            if (!t) {
+                goto loser;
+            }
+            trust = cert_trust_from_stan_trust(t, cc->arena);
+            nssTrust_Destroy(t);
+            if (!trust) {
+                goto loser;
+            }
+        }
 
         CERT_LockCertTrust(cc);
         cc->trust = trust;

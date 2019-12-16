@@ -444,7 +444,8 @@ class covAction(argparse.Action):
     def runSslGtests(self, outdir):
         env = {
             "GTESTFILTER": "*", # Prevent parallel test runs.
-            "ASAN_OPTIONS": "coverage=1:coverage_dir=" + outdir
+            "ASAN_OPTIONS": "coverage=1:coverage_dir=" + outdir,
+            "NSS_DEFAULT_DB_TYPE": "dbm"
         }
 
         run_tests("ssl_gtests", env=env, silent=True)
@@ -463,7 +464,7 @@ class covAction(argparse.Action):
         print("\nBuild with coverage sanitizers...\n")
         sancov_args = "edge,no-prune,trace-pc-guard,trace-cmp"
         subprocess.check_call([
-            os.path.join(cwd, "build.sh"), "-c", "--clang", "--asan",
+            os.path.join(cwd, "build.sh"), "-c", "--clang", "--asan", "--enable-legacy-db",
             "--sancov=" + sancov_args
         ])
 
@@ -478,7 +479,8 @@ class covAction(argparse.Action):
 
         symcov_file = os.path.join(outdir, "ssl_gtest.symcov")
         out = open(symcov_file, 'wb')
-        subprocess.check_call([
+        # Don't exit immediately on error
+        symbol_retcode = subprocess.call([
             "sancov",
             "-blacklist=" + os.path.join(cwd, ".sancov-blacklist"),
             "-symbolize", sancov_file,
@@ -486,8 +488,14 @@ class covAction(argparse.Action):
         ], stdout=out)
         out.close()
 
-        print("\nCoverage report: " + symcov_file)
+        print("\nCopying ssl_gtests to artifacts...")
+        shutil.copyfile(os.path.join(cwd, "../dist/Debug/bin/ssl_gtest"),
+                        os.path.join(outdir, "ssl_gtest"))
 
+        print("\nCoverage report: " + symcov_file)
+        if symbol_retcode > 0:
+            print("sancov failed to symbolize with return code {}".format(symbol_retcode))
+        sys.exit(symbol_retcode)
 
 class commandsAction(argparse.Action):
     commands = []
