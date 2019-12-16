@@ -22,7 +22,7 @@ async function testVal(win, url) {
       "The urlbar input field is completely scrolled to the end"
     );
     await TestUtils.waitForCondition(
-      () => urlbar.getAttribute("textoverflow") == "start",
+      () => urlbar.getAttribute("textoverflow") == "left",
       "Wait for the textoverflow attribute"
     );
   }
