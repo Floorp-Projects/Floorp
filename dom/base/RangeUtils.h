@@ -40,7 +40,8 @@ class RangeUtils final {
     // If aNode isn't in the child nodes of its parent node, we hit this case.
     // This may occur when we're called by a mutation observer while aNode is
     // removed from the parent node.
-    if (NS_WARN_IF(afterNode.Offset() == 0)) {
+    if (NS_WARN_IF(
+            !afterNode.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets))) {
       return RawRangeBoundary();
     }
     return afterNode;
