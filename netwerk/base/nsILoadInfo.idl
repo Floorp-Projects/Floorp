@@ -1186,6 +1186,8 @@ interface nsILoadInfo : nsISupports
   const uint32_t BLOCKING_REASON_CONTENT_POLICY_DATA_DOCUMENT = 4004;
   const uint32_t BLOCKING_REASON_CONTENT_POLICY_WEB_BROWSER = 4005;
   const uint32_t BLOCKING_REASON_CONTENT_POLICY_PRELOAD = 4006;
+  // The reason used when SEC_REQUIRE_SAME_ORIGIN_* is set and not satisifed.
+  const uint32_t BLOCKING_REASON_NOT_SAME_ORIGIN = 5000;
 
   /**
    * If the request associated with this load info was blocked by some of

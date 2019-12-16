@@ -505,6 +505,7 @@ const BLOCKED_REASON_MESSAGES = {
   4004: "CSP Data Document",
   4005: "CSP Web Browser",
   4006: "CSP Preload",
+  5000: "Not same-origin",
 };
 
 const general = {
