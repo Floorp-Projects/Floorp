@@ -17,11 +17,13 @@
 namespace mozilla {
 
 class RsdparsaSdpParser final : public SdpParser {
+  static const std::string& ParserName();
+
  public:
   RsdparsaSdpParser() = default;
   virtual ~RsdparsaSdpParser() = default;
 
-  const std::string& Name() const override;
+  const std::string& Name() const override { return ParserName(); }
 
   UniquePtr<SdpParser::Results> Parse(const std::string& text) override;
 
