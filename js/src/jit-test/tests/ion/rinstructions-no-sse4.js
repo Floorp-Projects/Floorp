@@ -22,7 +22,7 @@ let uceFault = function (i) {
 };
 
 let uceFault_ceil_double = eval(
-    uneval(uceFault)
+    `(${uceFault})`
         .replace('uceFault', 'uceFault_ceil_double')
 );
 function rceil_double(i) {
@@ -34,7 +34,7 @@ function rceil_double(i) {
 }
 
 let uceFault_floor_double = eval(
-    uneval(uceFault)
+    `(${uceFault})`
         .replace('uceFault', 'uceFault_floor_double')
 );
 function rfloor_double(i) {

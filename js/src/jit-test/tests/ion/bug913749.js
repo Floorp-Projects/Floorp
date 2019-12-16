@@ -25,7 +25,7 @@ for (var i = 0; i < 3; i++) {
     } catch (e) {
         assertEq(e.constructor.name, 'TypeError');
         if (!variations.includes(e.message))
-            throw new Error(`expected one of ${uneval(variations)}; got ${uneval(e.message)}`);
+            throw new Error(`expected one of ${JSON.stringify(variations)}; got ${String(e.message)}`);
         hits++;
     }
 }

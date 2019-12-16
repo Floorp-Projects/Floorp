@@ -182,7 +182,7 @@ function arrayHole1(i) {
 }
 
 function build(l) { var arr = []; for (var i = 0; i < l; i++) arr.push(i); return arr }
-var uceFault_arrayAlloc3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc3'));
+var uceFault_arrayAlloc3 = eval(`(${uceFault})`.replace('uceFault', 'uceFault_arrayAlloc3'));
 function arrayAlloc(i) {
     var a = [0,1,2,3,4,5,6];
     if (uceFault_arrayAlloc3(i) || uceFault_arrayAlloc3(i)) {
@@ -195,7 +195,7 @@ function arrayAlloc(i) {
 };
 
 // Prevent compilation of the top-level
-eval(uneval(resumeHere));
+eval(`(${resumeHere})`);
 
 for (var i = 0; i < 100; i++) {
     arrayLength(i);
