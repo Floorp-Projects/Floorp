@@ -202,7 +202,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 pref(mathml.nonzero_unitless_lengths.disabled,false) == number-size-1.xhtml number-size-1-ref.xhtml
-fuzzy-if(skiaContent,0-1,0-80) fuzzy-if(Android,0-255,0-105) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254
+fuzzy-if(skiaContent,0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,0-255,0-96) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254; Linux: bug 1599638
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
