@@ -131,11 +131,17 @@ open class FenixApplication : Application() {
 
         components.core.sessionManager.register(NotificationSessionObserver(this))
 
-        if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
-            runStorageMaintenance()
-        }
+        // Storage maintenance disabled, for now, as it was interfering with background migrations.
+        // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
+        // if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
+        //    runStorageMaintenance()
+        // }
     }
 
+    // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
+    // To re-enable this, we need to do so in a way that won't interfere with any startup operations
+    // which acquire reserved+ sqlite lock. Currently, Fennec migrations need to write to storage
+    // on startup, and since they run in a background service we can't simply order these operations.
     private fun runStorageMaintenance() {
         GlobalScope.launch(Dispatchers.IO) {
             // Bookmarks and history storage sit on top of the same db file so we only need to
