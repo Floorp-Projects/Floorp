@@ -3489,6 +3489,26 @@ nsresult nsWindow::SetTitle(const nsAString& aTitle) {
  *
  **************************************************************/
 
+void nsWindow::SetBigIcon(HICON aIcon) {
+  HICON icon =
+      (HICON)::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)aIcon);
+  if (icon) {
+    ::DestroyIcon(icon);
+  }
+
+  mIconBig = aIcon;
+}
+
+void nsWindow::SetSmallIcon(HICON aIcon) {
+  HICON icon = (HICON)::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_SMALL,
+                                     (LPARAM)aIcon);
+  if (icon) {
+    ::DestroyIcon(icon);
+  }
+
+  mIconSmall = aIcon;
+}
+
 void nsWindow::SetIcon(const nsAString& aIconSpec) {
   // Assume the given string is a local identifier for an icon file.
 
@@ -3514,10 +3534,7 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
                           ::GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE);
 
   if (bigIcon) {
-    HICON icon = (HICON)::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_BIG,
-                                       (LPARAM)bigIcon);
-    if (icon) ::DestroyIcon(icon);
-    mIconBig = bigIcon;
+    SetBigIcon(bigIcon);
   }
 #ifdef DEBUG_SetIcon
   else {
@@ -3528,10 +3545,7 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
   }
 #endif
   if (smallIcon) {
-    HICON icon = (HICON)::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_SMALL,
-                                       (LPARAM)smallIcon);
-    if (icon) ::DestroyIcon(icon);
-    mIconSmall = smallIcon;
+    SetSmallIcon(smallIcon);
   }
 #ifdef DEBUG_SetIcon
   else {
