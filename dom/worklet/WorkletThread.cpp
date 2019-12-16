@@ -22,9 +22,6 @@ namespace {
 // The size of the worklet runtime heaps in bytes.
 #define WORKLET_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
 
-// The size of the generational GC nursery for worklet, in bytes.
-#define WORKLET_DEFAULT_NURSERY_SIZE 1 * 1024 * 1024
-
 // The C stack size. We use the same stack size on all platforms for
 // consistency.
 const uint32_t kWorkletStackSize = 256 * sizeof(size_t) * 1024;
@@ -125,7 +122,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
 
     nsresult rv = CycleCollectedJSContext::Initialize(
         aParentRuntime, WORKLET_DEFAULT_RUNTIME_HEAPSIZE,
-        WORKLET_DEFAULT_NURSERY_SIZE);
+        JS::DefaultNurseryMaxBytes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
