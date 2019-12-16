@@ -330,7 +330,7 @@
       }
     }
 
-    var banner = "while testing clone of " + (desc || uneval(b));
+    var banner = "while testing clone of " + (desc || JSON.stringify(b));
     var a = deserialize(serialize(b));
     var queue = [[a, b, banner]];
     while (queue.length) {

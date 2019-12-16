@@ -9,7 +9,7 @@ function check(v) {
     } catch (exc) {
         return;
     }
-    throw new Error("serializing " + uneval(v) + " should have failed with an exception");
+    throw new Error("serializing " + JSON.stringify(v) + " should have failed with an exception");
 }
 
 // Unsupported object types.

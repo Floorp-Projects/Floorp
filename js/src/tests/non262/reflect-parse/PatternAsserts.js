@@ -91,5 +91,5 @@ function assertError(src, errorType) {
             throw expected;
         return;
     }
-    throw new Error("expected " + errorType.name + " for " + uneval(src));
+    throw new Error("expected " + errorType.name + " for " + JSON.stringify(src));
 }
