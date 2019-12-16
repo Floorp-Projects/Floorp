@@ -67,7 +67,6 @@ void HTMLLegendElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLLegendElement::Focus(const FocusOptions& aOptions,
-                              const mozilla::dom::CallerType aCallerType,
                               ErrorResult& aError) {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
@@ -76,7 +75,7 @@ void HTMLLegendElement::Focus(const FocusOptions& aOptions,
 
   int32_t tabIndex;
   if (frame->IsFocusable(&tabIndex, false)) {
-    nsGenericHTMLElement::Focus(aOptions, aCallerType, aError);
+    nsGenericHTMLElement::Focus(aOptions, aError);
     return;
   }
 
@@ -101,7 +100,7 @@ bool HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
   FocusOptions options;
   ErrorResult rv;
 
-  Focus(options, CallerType::System, rv);
+  Focus(options, rv);
   return NS_SUCCEEDED(rv.StealNSResult());
 }
 

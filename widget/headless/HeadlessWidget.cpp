@@ -200,8 +200,7 @@ void HeadlessWidget::Show(bool aState) {
 
 bool HeadlessWidget::IsVisible() const { return mVisible; }
 
-void HeadlessWidget::SetFocus(Raise aRaise,
-                              mozilla::dom::CallerType aCallerType) {
+void HeadlessWidget::SetFocus(Raise aRaise) {
   LOGFOCUS(("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this));
 
   // This means we request activation of our toplevel window.

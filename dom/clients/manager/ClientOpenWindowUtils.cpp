@@ -262,7 +262,7 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
 
   RefPtr<ClientOpPromise::Private> promise = aPromise;
 
-  nsFocusManager::FocusWindow(aOuterWindow, CallerType::NonSystem);
+  nsFocusManager::FocusWindow(aOuterWindow);
 
   nsCOMPtr<nsIURI> baseURI;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());

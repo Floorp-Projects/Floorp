@@ -555,7 +555,7 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   }
 
   MOZ_ASSERT(NS_IsMainThread());
-  nsFocusManager::FocusWindow(outer, aArgs.callerType());
+  nsFocusManager::FocusWindow(outer);
 
   ClientState state;
   nsresult rv = SnapshotState(&state);

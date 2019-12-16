@@ -2641,7 +2641,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNavigateByKey(
                     nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));
     }
 
-    SendRequestFocus(false, CallerType::System);
+    SendRequestFocus(false);
   }
 
   return IPC_OK();
@@ -2970,8 +2970,8 @@ BrowserChild::SetWebBrowserChrome(nsIWebBrowserChrome3* aWebBrowserChrome) {
   return NS_OK;
 }
 
-void BrowserChild::SendRequestFocus(bool aCanFocus, CallerType aCallerType) {
-  PBrowserChild::SendRequestFocus(aCanFocus, aCallerType);
+void BrowserChild::SendRequestFocus(bool aCanFocus) {
+  PBrowserChild::SendRequestFocus(aCanFocus);
 }
 
 void BrowserChild::EnableDisableCommands(

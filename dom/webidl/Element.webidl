@@ -173,7 +173,7 @@ interface mixin HTMLOrForeignElement {
   // See bug 1575154
   // [CEReactions] attribute boolean autofocus;
   [CEReactions, SetterThrows, Pure] attribute long tabIndex;
-  [Throws, NeedsCallerType] void focus(optional FocusOptions options = {});
+  [Throws] void focus(optional FocusOptions options = {});
   [Throws] void blur();
 };
 

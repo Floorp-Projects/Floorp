@@ -336,8 +336,7 @@ int32_t Element::TabIndex() {
   return TabIndexDefault();
 }
 
-void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
-                    ErrorResult& aError) {
+void Element::Focus(const FocusOptions& aOptions, ErrorResult& aError) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   // Also other browsers seem to have the hack to not re-focus (and flush) when
   // the element is already focused.
@@ -349,13 +348,9 @@ void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
     if (fm->CanSkipFocus(this)) {
       fm->NeedsFlushBeforeEventHandling(this);
     } else {
-      uint32_t fmFlags =
-          nsIFocusManager::FLAG_BYELEMENTFOCUS |
-          nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions);
-      if (aCallerType == CallerType::NonSystem) {
-        fmFlags = nsIFocusManager::FLAG_NONSYSTEMCALLER | fmFlags;
-      }
-      aError = fm->SetFocus(this, fmFlags);
+      aError = fm->SetFocus(
+          this, nsIFocusManager::FLAG_BYELEMENTFOCUS |
+                    nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions));
     }
   }
 }

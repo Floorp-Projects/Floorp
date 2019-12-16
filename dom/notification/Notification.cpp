@@ -290,7 +290,7 @@ class FocusWindowRunnable final : public Runnable {
       return NS_OK;
     }
 
-    nsFocusManager::FocusWindow(mWindow->GetOuterWindow(), CallerType::System);
+    nsFocusManager::FocusWindow(mWindow->GetOuterWindow());
     return NS_OK;
   }
 };
@@ -1116,7 +1116,7 @@ MainThreadNotificationObserver::Observe(nsISupports* aSubject,
 
     bool doDefaultAction = notification->DispatchClickEvent();
     if (doDefaultAction) {
-      nsFocusManager::FocusWindow(window->GetOuterWindow(), CallerType::System);
+      nsFocusManager::FocusWindow(window->GetOuterWindow());
     }
   } else if (!strcmp("alertfinished", aTopic)) {
     notification->UnpersistNotification();

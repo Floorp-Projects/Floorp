@@ -542,8 +542,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool GetClosedOuter();
   bool Closed() override;
   void StopOuter(mozilla::ErrorResult& aError);
-  void FocusOuter(mozilla::dom::CallerType aCallerType);
-  nsresult Focus(mozilla::dom::CallerType aCallerType) override;
+  void FocusOuter();
+  nsresult Focus() override;
   void BlurOuter();
   mozilla::dom::WindowProxyHolder GetFramesOuter();
   uint32_t Length();

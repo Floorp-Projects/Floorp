@@ -10,8 +10,6 @@ interface nsIWebBrowserChrome3;
 
 webidl ContentFrameMessageManager;
 
-
-native CallerType(mozilla::dom::CallerType);
 native CommandsArray(nsTArray<nsCString>);
 [ref] native CommandsArrayRef(nsTArray<nsCString>);
 
@@ -22,7 +20,7 @@ interface nsIBrowserChild : nsISupports
 
   attribute nsIWebBrowserChrome3 webBrowserChrome;
 
-  [notxpcom] void sendRequestFocus(in boolean canFocus, in CallerType aCallerType);
+  [notxpcom] void sendRequestFocus(in boolean canFocus);
 
   [noscript, notxpcom] void enableDisableCommands(in AString action,
                                                   in CommandsArrayRef enabledCommands,

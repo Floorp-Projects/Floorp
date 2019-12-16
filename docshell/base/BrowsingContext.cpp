@@ -948,7 +948,7 @@ nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
     // the same as how the tab first opened.
     nsCOMPtr<nsPIDOMWindowOuter> domWin = GetDOMWindow();
     if (isActive && domWin) {
-      nsFocusManager::FocusWindow(domWin, CallerType::System);
+      nsFocusManager::FocusWindow(domWin);
     }
 
     // Else we ran out of memory, or were a popup and got blocked,
@@ -1022,11 +1022,11 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   }
 }
 
-void BrowsingContext::Focus(CallerType aCallerType, ErrorResult& aError) {
+void BrowsingContext::Focus(ErrorResult& aError) {
   if (ContentChild* cc = ContentChild::GetSingleton()) {
-    cc->SendWindowFocus(this, aCallerType);
+    cc->SendWindowFocus(this);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    Unused << cp->SendWindowFocus(this, aCallerType);
+    Unused << cp->SendWindowFocus(this);
   }
 }
 

@@ -4037,8 +4037,8 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowClose(BrowsingContext* aContext,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(BrowsingContext* aContext,
-                                                      CallerType aCallerType) {
+mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(
+    BrowsingContext* aContext) {
   if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
@@ -4052,7 +4052,7 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(BrowsingContext* aContext,
         ("ChildIPC: Trying to send a message to a context without a window"));
     return IPC_OK();
   }
-  nsGlobalWindowOuter::Cast(window)->FocusOuter(aCallerType);
+  nsGlobalWindowOuter::Cast(window)->FocusOuter();
   return IPC_OK();
 }
 
@@ -4202,7 +4202,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
 
   if (aTakeFocus) {
     if (nsCOMPtr<nsPIDOMWindowOuter> domWin = aContext->GetDOMWindow()) {
-      nsFocusManager::FocusWindow(domWin, CallerType::System);
+      nsFocusManager::FocusWindow(domWin);
     }
   }
 
