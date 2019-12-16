@@ -153,8 +153,7 @@ LayoutDeviceIntSize RenderCompositorOGL::GetBufferSize() {
 }
 
 bool RenderCompositorOGL::ShouldUseNativeCompositor() {
-  return mNativeLayerRoot && gfx::gfxVars::UseWebRenderCompositor() &&
-         StaticPrefs::gfx_webrender_picture_caching();
+  return mNativeLayerRoot && gfx::gfxVars::UseWebRenderCompositor();
 }
 
 uint32_t RenderCompositorOGL::GetMaxUpdateRects() {
