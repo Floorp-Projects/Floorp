@@ -1727,7 +1727,9 @@ class BaseScript : public gc::TenuredCell {
     // (We don't relazify functions with template strings, due to observability)
     HasCallSiteObj = 1 << 7,
 
-    // (1 << 8) is unused.
+    // Script is parsed with a top-level goal of Module. This may be a top-level
+    // or an inner-function script.
+    HasModuleGoal = 1 << 8,
 
     FunctionHasThisBinding = 1 << 9,
     FunctionHasExtraBodyVarScope = 1 << 10,
@@ -2003,6 +2005,7 @@ setterLevel:                                                                  \
                                       BindingsAccessedDynamically)
   IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
   IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
+  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
   IMMUTABLE_FLAG_GETTER_SETTER(functionHasThisBinding, FunctionHasThisBinding)
   // Alternate shorter name used throughout the codebase
   IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(FunctionHasThisBinding,
@@ -3406,7 +3409,7 @@ class LazyScript : public BaseScript {
   bool hasScript() const { return bool(script_); }
 
   frontend::ParseGoal parseGoal() const {
-    if (hasFlag(ImmutableFlags::IsModule)) {
+    if (hasFlag(ImmutableFlags::HasModuleGoal)) {
       return frontend::ParseGoal::Module;
     }
     return frontend::ParseGoal::Script;
