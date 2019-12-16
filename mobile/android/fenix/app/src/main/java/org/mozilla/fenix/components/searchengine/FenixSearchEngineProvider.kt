@@ -156,7 +156,7 @@ open class FenixSearchEngineProvider(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     companion object {
-        val BUNDLED_SEARCH_ENGINES = listOf("ecosia", "reddit", "startpage", "yahoo", "youtube")
+        val BUNDLED_SEARCH_ENGINES = listOf("reddit", "youtube")
         const val PREF_FILE = "fenix-search-engine-provider"
         const val INSTALLED_ENGINES_KEY = "fenix-installed-search-engines"
     }
