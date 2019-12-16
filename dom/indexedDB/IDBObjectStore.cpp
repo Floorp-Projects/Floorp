@@ -180,18 +180,15 @@ struct MOZ_STACK_CLASS GetAddInfoClosure final {
   ~GetAddInfoClosure() { MOZ_COUNT_DTOR(GetAddInfoClosure); }
 };
 
-already_AddRefed<IDBRequest> GenerateRequest(JSContext* aCx,
-                                             IDBObjectStore* aObjectStore) {
+RefPtr<IDBRequest> GenerateRequest(JSContext* aCx,
+                                   IDBObjectStore* aObjectStore) {
   MOZ_ASSERT(aObjectStore);
   aObjectStore->AssertIsOnOwningThread();
 
   IDBTransaction* const transaction = aObjectStore->Transaction();
 
-  RefPtr<IDBRequest> request = IDBRequest::Create(
-      aCx, aObjectStore, transaction->Database(), transaction);
-  MOZ_ASSERT(request);
-
-  return request.forget();
+  return IDBRequest::Create(aCx, aObjectStore, transaction->Database(),
+                            transaction);
 }
 
 bool StructuredCloneWriteCallback(JSContext* aCx,
@@ -921,14 +918,12 @@ IDBObjectStore::~IDBObjectStore() {
 }
 
 // static
-already_AddRefed<IDBObjectStore> IDBObjectStore::Create(
-    IDBTransaction* aTransaction, const ObjectStoreSpec& aSpec) {
+RefPtr<IDBObjectStore> IDBObjectStore::Create(IDBTransaction* aTransaction,
+                                              const ObjectStoreSpec& aSpec) {
   MOZ_ASSERT(aTransaction);
   aTransaction->AssertIsOnOwningThread();
 
-  RefPtr<IDBObjectStore> objectStore = new IDBObjectStore(aTransaction, &aSpec);
-
-  return objectStore.forget();
+  return new IDBObjectStore(aTransaction, &aSpec);
 }
 
 // static
@@ -1488,9 +1483,11 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
   }
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
-    JSContext* aCx, ValueWrapper& aValueWrapper, JS::Handle<JS::Value> aKey,
-    bool aOverwrite, bool aFromCursor, ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
+                                            ValueWrapper& aValueWrapper,
+                                            JS::Handle<JS::Value> aKey,
+                                            bool aOverwrite, bool aFromCursor,
+                                            ErrorResult& aRv) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCx);
   MOZ_ASSERT_IF(aFromCursor, aOverwrite);
@@ -1655,7 +1652,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
                            ? RequestParams{ObjectStorePutParams(commonParams)}
                            : RequestParams{ObjectStoreAddParams(commonParams)};
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (!aFromCursor) {
@@ -1682,10 +1679,10 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
 
   mTransaction->InvalidateCursorCaches();
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
+RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
     bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aKey,
     const Optional<uint32_t>& aLimit, ErrorResult& aRv) {
   AssertIsOnOwningThread();
@@ -1724,7 +1721,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
     params = ObjectStoreGetAllParams(id, optionalKeyRange, limit);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -1754,11 +1751,56 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
 
   mTransaction->StartRequest(request, params);
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::Clear(JSContext* aCx,
-                                                   ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBObjectStore::Add(JSContext* aCx,
+                                       JS::Handle<JS::Value> aValue,
+                                       JS::Handle<JS::Value> aKey,
+                                       ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  ValueWrapper valueWrapper(aCx, aValue);
+
+  return AddOrPut(aCx, valueWrapper, aKey, false, /* aFromCursor */ false, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::Put(JSContext* aCx,
+                                       JS::Handle<JS::Value> aValue,
+                                       JS::Handle<JS::Value> aKey,
+                                       ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  ValueWrapper valueWrapper(aCx, aValue);
+
+  return AddOrPut(aCx, valueWrapper, aKey, true, /* aFromCursor */ false, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::Delete(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return DeleteInternal(aCx, aKey, /* aFromCursor */ false, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::Get(JSContext* aCx,
+                                       JS::Handle<JS::Value> aKey,
+                                       ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::GetKey(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::Clear(JSContext* aCx, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (mDeletedSpec) {
@@ -1778,7 +1820,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::Clear(JSContext* aCx,
 
   const ObjectStoreClearParams params = {Id()};
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -1792,11 +1834,57 @@ already_AddRefed<IDBRequest> IDBObjectStore::Clear(JSContext* aCx,
 
   mTransaction->StartRequest(request, params);
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBIndex> IDBObjectStore::Index(const nsAString& aName,
+RefPtr<IDBRequest> IDBObjectStore::GetAll(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          const Optional<uint32_t>& aLimit,
+                                          ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::GetAllKeys(JSContext* aCx,
+                                              JS::Handle<JS::Value> aKey,
+                                              const Optional<uint32_t>& aLimit,
+                                              ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::OpenCursor(JSContext* aCx,
+                                              JS::Handle<JS::Value> aRange,
+                                              IDBCursorDirection aDirection,
+                                              ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
+                            aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::OpenCursor(JSContext* aCx,
+                                              IDBCursorDirection aDirection,
+                                              ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return OpenCursorInternal(/* aKeysOnly */ false, aCx,
+                            JS::UndefinedHandleValue, aDirection, aRv);
+}
+
+RefPtr<IDBRequest> IDBObjectStore::OpenKeyCursor(JSContext* aCx,
+                                                 JS::Handle<JS::Value> aRange,
+                                                 IDBCursorDirection aDirection,
                                                  ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection, aRv);
+}
+
+RefPtr<IDBIndex> IDBObjectStore::Index(const nsAString& aName,
+                                       ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (mTransaction->IsCommittingOrFinished() || mDeletedSpec) {
@@ -1838,7 +1926,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::Index(const nsAString& aName,
     index = *foundIndex;
   }
 
-  return index.forget();
+  return index;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
@@ -1908,16 +1996,16 @@ void IDBObjectStore::GetKeyPath(JSContext* aCx,
   aResult.set(mCachedKeyPath);
 }
 
-already_AddRefed<DOMStringList> IDBObjectStore::IndexNames() {
+RefPtr<DOMStringList> IDBObjectStore::IndexNames() {
   AssertIsOnOwningThread();
 
   return CreateSortedDOMStringList(
       mSpec->indexes(), [](const auto& index) { return index.name(); });
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
-    bool aKeyOnly, JSContext* aCx, JS::Handle<JS::Value> aKey,
-    ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBObjectStore::GetInternal(bool aKeyOnly, JSContext* aCx,
+                                               JS::Handle<JS::Value> aKey,
+                                               ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (mDeletedSpec) {
@@ -1951,7 +2039,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
       aKeyOnly ? RequestParams{ObjectStoreGetKeyParams(id, serializedKeyRange)}
                : RequestParams{ObjectStoreGetParams(id, serializedKeyRange)};
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -1969,12 +2057,13 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
 
   mTransaction->StartRequest(request, params);
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
-    JSContext* aCx, JS::Handle<JS::Value> aKey, bool aFromCursor,
-    ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBObjectStore::DeleteInternal(JSContext* aCx,
+                                                  JS::Handle<JS::Value> aKey,
+                                                  bool aFromCursor,
+                                                  ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (mDeletedSpec) {
@@ -2008,7 +2097,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
   params.objectStoreId() = Id();
   keyRange->ToSerialized(params.keyRange());
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (!aFromCursor) {
@@ -2025,10 +2114,10 @@ already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
 
   mTransaction->InvalidateCursorCaches();
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
+RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     const nsAString& aName, const StringOrStringSequence& aKeyPath,
     const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv) {
   AssertIsOnOwningThread();
@@ -2118,8 +2207,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
 
   transaction->CreateIndex(this, *metadata);
 
-  RefPtr<IDBIndex> index = IDBIndex::Create(this, *metadata);
-  MOZ_ASSERT(index);
+  auto index = IDBIndex::Create(this, *metadata);
 
   mIndexes.AppendElement(index);
 
@@ -2134,7 +2222,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
       IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(index));
 
-  return index.forget();
+  return index;
 }
 
 void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
@@ -2204,9 +2292,9 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
   transaction->DeleteIndex(this, foundId);
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
-                                                   JS::Handle<JS::Value> aKey,
-                                                   ErrorResult& aRv) {
+RefPtr<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (mDeletedSpec) {
@@ -2234,7 +2322,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
     params.optionalKeyRange().emplace(serializedKeyRange);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -2252,10 +2340,10 @@ already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
 
   mTransaction->StartRequest(request, params);
 
-  return request.forget();
+  return request;
 }
 
-already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
+RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
     bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aRange,
     IDBCursorDirection aDirection, ErrorResult& aRv) {
   AssertIsOnOwningThread();
@@ -2300,7 +2388,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
       aKeysOnly ? OpenCursorParams{ObjectStoreOpenKeyCursorParams{commonParams}}
                 : OpenCursorParams{ObjectStoreOpenCursorParams{commonParams}};
 
-  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
+  auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -2333,7 +2421,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
 
   mTransaction->OpenCursor(actor, params);
 
-  return request.forget();
+  return request;
 }
 
 void IDBObjectStore::RefreshSpec(bool aMayDelete) {
