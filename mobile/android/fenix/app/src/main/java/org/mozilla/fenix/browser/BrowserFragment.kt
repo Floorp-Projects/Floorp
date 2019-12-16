@@ -249,7 +249,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         view,
         FenixSnackbarDelegate(
             view,
-            browserToolbarView.view
+            browserToolbarView.getSnackbarAnchor()
         )
     )
 
