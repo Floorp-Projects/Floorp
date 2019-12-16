@@ -3293,6 +3293,19 @@ void Selection::SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
   SetBaseAndExtent(aAnchorNode, aAnchorOffset, aFocusNode, aFocusOffset, aRv);
 }
 
+void Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
+                                 nsINode& aFocusNode, uint32_t aFocusOffset,
+                                 ErrorResult& aRv) {
+  if ((aAnchorOffset > aAnchorNode.Length()) ||
+      (aFocusOffset > aFocusNode.Length())) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  SetBaseAndExtent(RawRangeBoundary{&aAnchorNode, aAnchorOffset},
+                   RawRangeBoundary{&aFocusNode, aFocusOffset}, aRv);
+}
+
 void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
                                          const RawRangeBoundary& aAnchorRef,
                                          const RawRangeBoundary& aFocusRef,
