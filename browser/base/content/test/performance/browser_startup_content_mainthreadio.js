@@ -143,12 +143,6 @@ const processes = {
       condition: !WIN,
       stat: 1,
     },
-    {
-      // bug 1357205
-      path: "XREAppFeat:screenshots@mozilla.org.xpi",
-      condition: !WIN,
-      close: 1,
-    },
   ],
 };
 
