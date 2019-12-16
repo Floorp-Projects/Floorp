@@ -22,8 +22,7 @@ import org.mozilla.gecko.util.GeckoBundle;
  * complete range of heuristics for login forms, autofill and autocomplete
  * scenarios.
  */
-// TODO: make public in bug 1602881.
-/* package */ class LoginStorage {
+public class LoginStorage {
     private static final String LOGTAG = "LoginStorage";
     private static final boolean DEBUG = false;
 
@@ -224,6 +223,8 @@ import org.mozilla.gecko.util.GeckoBundle;
      * Implement this interface to handle runtime login storage requests.
      * Login storage events include login entry requests for autofill and
      * autocompletion of login input fields.
+     * This delegate is attached to the runtime via
+     * {@link GeckoRuntime#setLoginStorageDelegate}.
      */
     public interface Delegate {
         /**
@@ -250,22 +251,38 @@ import org.mozilla.gecko.util.GeckoBundle;
 
         private static final String FETCH_EVENT = "GeckoView:LoginStorage:Fetch";
 
-        private final @Nullable Delegate mDelegate;
+        private @Nullable Delegate mDelegate;
 
-        public Proxy(final @Nullable Delegate delegate) {
-            mDelegate = delegate;
+        public Proxy() {}
 
+        private void registerListener() {
             EventDispatcher.getInstance().registerUiThreadListener(
                     this,
                     FETCH_EVENT);
         }
 
-        public @Nullable Delegate getDelegate() {
+        private void unregisterListener() {
+            EventDispatcher.getInstance().unregisterUiThreadListener(
+                    this,
+                    FETCH_EVENT);
+        }
+
+        public synchronized void setDelegate(final @Nullable Delegate delegate) {
+            if (mDelegate == null && delegate != null) {
+                registerListener();
+            } else if (mDelegate != null && delegate == null) {
+                unregisterListener();
+            }
+
+            mDelegate = delegate;
+        }
+
+        public synchronized @Nullable Delegate getDelegate() {
             return mDelegate;
         }
 
         @Override // BundleEventListener
-        public void handleMessage(
+        public synchronized void handleMessage(
                 final String event,
                 final GeckoBundle message,
                 final EventCallback callback) {
@@ -284,14 +301,14 @@ import org.mozilla.gecko.util.GeckoBundle;
                     mDelegate.onLoginFetch(domain);
 
                 if (result == null) {
-                    callback.sendSuccess(null);
+                    callback.sendSuccess(new GeckoBundle[0]);
                     return;
                 }
 
                 result.accept(
                     logins -> {
                         if (logins == null) {
-                            callback.sendSuccess(null);
+                            callback.sendSuccess(new GeckoBundle[0]);
                         }
 
                         // This is a one-liner with streams (API level 24).
