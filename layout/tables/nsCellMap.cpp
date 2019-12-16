@@ -1868,7 +1868,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap& aMap,
 
   // get the rowspan and colspan from the cell map since the content may have
   // changed
-  uint32_t numCols = aMap.GetColCount();
   int32_t rowSpan = GetRowSpan(aRowIndex, aColIndex, true);
   uint32_t colSpan = GetEffectiveColSpan(aMap, aRowIndex, aColIndex);
   uint32_t endRowIndex = aRowIndex + rowSpan - 1;
@@ -1902,7 +1901,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap& aMap,
     }
   }
 
-  numCols = aMap.GetColCount();
+  uint32_t numCols = aMap.GetColCount();
 
   // update the row and col info due to shifting
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
