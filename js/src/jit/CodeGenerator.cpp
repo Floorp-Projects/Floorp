@@ -10438,7 +10438,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 // MacroAssembler::wasmReserveStackChecked, in the case where the frame is
 // "small", as determined by that function.
 static bool CreateStackMapForFunctionEntryTrap(
-    const wasm::ArgTypeVector& argTypes, const MachineState& trapExitLayout,
+    const wasm::ValTypeVector& argTypes, const MachineState& trapExitLayout,
     size_t trapExitLayoutWords, size_t nBytesReservedBeforeTrap,
     size_t nInboundStackArgBytes, wasm::StackMap** result) {
   // Ensure this is defined on all return paths.
@@ -10500,16 +10500,18 @@ static bool CreateStackMapForFunctionEntryTrap(
     return false;
   }
 
-  for (ABIArgIter i(argTypes); !i.done(); i++) {
+  for (ABIArgIter<const wasm::ValTypeVector> i(argTypes); !i.done(); i++) {
     ABIArg argLoc = *i;
-    if (argLoc.kind() == ABIArg::Stack &&
-        argTypes[i.index()] == MIRType::RefOrNull) {
-      uint32_t offset = argLoc.offsetFromArgBase();
-      MOZ_ASSERT(offset < nInboundStackArgBytes);
-      MOZ_ASSERT(offset % sizeof(void*) == 0);
-      vec[wordsSoFar + offset / sizeof(void*)] = true;
-      hasRefs = true;
+    const wasm::ValType& ty = argTypes[i.index()];
+    MOZ_ASSERT(ToMIRType(ty) != MIRType::Pointer);
+    if (argLoc.kind() != ABIArg::Stack || !ty.isReference()) {
+      continue;
     }
+    uint32_t offset = argLoc.offsetFromArgBase();
+    MOZ_ASSERT(offset < nInboundStackArgBytes);
+    MOZ_ASSERT(offset % sizeof(void*) == 0);
+    vec[wordsSoFar + offset / sizeof(void*)] = true;
+    hasRefs = true;
   }
 
 #ifndef DEBUG
@@ -10543,7 +10545,7 @@ static bool CreateStackMapForFunctionEntryTrap(
 
 bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
                                  wasm::BytecodeOffset trapOffset,
-                                 const wasm::ArgTypeVector& argTypes,
+                                 const wasm::ValTypeVector& argTypes,
                                  const MachineState& trapExitLayout,
                                  size_t trapExitLayoutNumWords,
                                  wasm::FuncOffsets* offsets,
