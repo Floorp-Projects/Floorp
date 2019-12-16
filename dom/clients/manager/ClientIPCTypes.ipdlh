@@ -12,6 +12,7 @@ using ClientType from "mozilla/dom/ClientIPCUtils.h";
 using FrameType from "mozilla/dom/ClientIPCUtils.h";
 using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
 using VisibilityState from "mozilla/dom/ClientIPCUtils.h";
+using CallerType from "mozilla/dom/BindingIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -75,6 +76,7 @@ struct ClientControlledArgs
 
 struct ClientFocusArgs
 {
+  CallerType callerType;
 };
 
 struct ClientNavigateArgs

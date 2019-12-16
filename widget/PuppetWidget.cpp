@@ -252,9 +252,9 @@ nsresult PuppetWidget::ConfigureChildren(
   return NS_OK;
 }
 
-void PuppetWidget::SetFocus(Raise aRaise) {
+void PuppetWidget::SetFocus(Raise aRaise, CallerType aCallerType) {
   if (aRaise == Raise::Yes && mBrowserChild) {
-    mBrowserChild->SendRequestFocus(true);
+    mBrowserChild->SendRequestFocus(true, aCallerType);
   }
 }
 
