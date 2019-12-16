@@ -142,7 +142,7 @@ class HTMLInputElement final : public TextControlElement,
   virtual int32_t TabIndexDefault() override;
   using nsGenericHTMLElement::Focus;
   virtual void Blur(ErrorResult& aError) override;
-  virtual void Focus(const FocusOptions& aOptions, const CallerType aCallerType,
+  virtual void Focus(const FocusOptions& aOptions,
                      ErrorResult& aError) override;
 
   // nsINode

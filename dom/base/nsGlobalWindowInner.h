@@ -599,9 +599,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsresult Close() override;
   bool GetClosed(mozilla::ErrorResult& aError);
   void Stop(mozilla::ErrorResult& aError);
-  void Focus(mozilla::dom::CallerType aCallerType,
-             mozilla::ErrorResult& aError);
-  nsresult Focus(mozilla::dom::CallerType aCallerType) override;
+  void Focus(mozilla::ErrorResult& aError);
+  nsresult Focus() override;
   void Blur(mozilla::ErrorResult& aError);
   mozilla::dom::WindowProxyHolder GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();

@@ -234,8 +234,7 @@ class Element : public FragmentOrElement {
   /**
    * Make focus on this element.
    */
-  virtual void Focus(const FocusOptions& aOptions, const CallerType aCallerType,
-                     ErrorResult& aError);
+  virtual void Focus(const FocusOptions& aOptions, ErrorResult& aError);
 
   /**
    * Show blur and clear focus.

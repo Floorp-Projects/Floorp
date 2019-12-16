@@ -32,7 +32,6 @@
 #include "nsIObserver.h"
 #include "nsIWidgetListener.h"
 #include "Units.h"
-#include "mozilla/dom/BindingDeclarations.h"
 
 // forward declarations
 class nsIBidiKeyboard;
@@ -878,7 +877,7 @@ class nsIWidget : public nsISupports {
   /**
    * Request activation of this window or give focus to this widget.
    */
-  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) = 0;
+  virtual void SetFocus(Raise) = 0;
 
   /**
    * Get this widget's outside dimensions relative to its parent widget. For

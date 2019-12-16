@@ -142,7 +142,7 @@ class nsWindow final : public nsBaseWidget {
   void SetZIndex(int32_t aZIndex) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual void Enable(bool aState) override;
-  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
+  virtual void SetFocus(Raise) override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntSize GetClientSize() override;

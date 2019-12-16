@@ -421,8 +421,7 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvOnWindowedPluginKeyEvent(
       const NativeEventData& aKeyEventData);
 
-  mozilla::ipc::IPCResult RecvRequestFocus(const bool& aCanRaise,
-                                           const CallerType aCallerType);
+  mozilla::ipc::IPCResult RecvRequestFocus(const bool& aCanRaise);
 
   mozilla::ipc::IPCResult RecvLookUpDictionary(
       const nsString& aText, nsTArray<mozilla::FontRange>&& aFontRangeArray,

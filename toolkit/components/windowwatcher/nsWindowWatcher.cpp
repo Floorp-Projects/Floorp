@@ -35,7 +35,6 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptError.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsIURI.h"
@@ -62,7 +61,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1308,22 +1306,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       AutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused);
 
       newChrome->ShowAsModal();
-    }
-  }
-
-  // If a website opens a popup exit DOM fullscreen
-  if (StaticPrefs::full_screen_api_exit_on_windowOpen() && aCalledFromJS &&
-      !nsContentUtils::LegacyIsCallerChromeOrNativeCode() && parentWindow &&
-      parentWindow->GetFullScreen()) {
-    nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
-        parentWindow->GetBrowsingContext()->Top()->GetDOMWindow();
-    if (Document* doc = parentTopWindow ? parentTopWindow->GetDoc() : nullptr) {
-      if (doc->GetFullscreenElement()) {
-        Document::AsyncExitFullscreen(doc);
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
-            nsContentUtils::eDOM_PROPERTIES, "FullscreenExitWindowOpen");
-      }
     }
   }
 
