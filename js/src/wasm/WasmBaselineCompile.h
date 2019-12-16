@@ -40,13 +40,13 @@ class BaseLocalIter {
   using ConstValTypeRange = mozilla::Range<const ValType>;
 
   const ValTypeVector& locals_;
-  const ArgTypeVector& args_;
-  jit::ABIArgIter<ArgTypeVector> argsIter_;
+  size_t argsLength_;
+  ConstValTypeRange argsRange_;  // range struct cache for ABIArgIter
+  jit::ABIArgIter<ConstValTypeRange> argsIter_;
   size_t index_;
   int32_t localSize_;
   int32_t reservedSize_;
   int32_t frameOffset_;
-  int32_t stackResultPointerOffset_;
   jit::MIRType mirType_;
   bool done_;
 
@@ -54,7 +54,7 @@ class BaseLocalIter {
   int32_t pushLocal(size_t nbytes);
 
  public:
-  BaseLocalIter(const ValTypeVector& locals, const ArgTypeVector& args,
+  BaseLocalIter(const ValTypeVector& locals, size_t argsLength,
                 bool debugEnabled);
   void operator++(int);
   bool done() const { return done_; }
@@ -65,7 +65,6 @@ class BaseLocalIter {
   }
   int32_t frameOffset() const {
     MOZ_ASSERT(!done_);
-    MOZ_ASSERT(frameOffset_ != INT32_MAX);
     return frameOffset_;
   }
   size_t index() const {
@@ -74,12 +73,6 @@ class BaseLocalIter {
   }
   int32_t currentLocalSize() const { return localSize_; }
   int32_t reservedSize() const { return reservedSize_; }
-
-  int32_t stackResultPointerOffset() const {
-    MOZ_ASSERT(args_.hasSyntheticStackResultPointerArg());
-    MOZ_ASSERT(stackResultPointerOffset_ != INT32_MAX);
-    return stackResultPointerOffset_;
-  }
 
 #ifdef DEBUG
   bool isArg() const {
