@@ -55,7 +55,7 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
-  static already_AddRefed<IDBIndex> Create(
+  static MOZ_MUST_USE RefPtr<IDBIndex> Create(
       IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
 
   int64_t Id() const {
@@ -94,61 +94,37 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   void GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                   ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> OpenCursor(JSContext* aCx,
-                                          JS::Handle<JS::Value> aRange,
-                                          IDBCursorDirection aDirection,
-                                          ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  already_AddRefed<IDBRequest> OpenKeyCursor(JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursor(JSContext* aCx,
                                              JS::Handle<JS::Value> aRange,
                                              IDBCursorDirection aDirection,
-                                             ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+                                             ErrorResult& aRv);
 
-    return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection,
-                              aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenKeyCursor(JSContext* aCx,
+                                                JS::Handle<JS::Value> aRange,
+                                                IDBCursorDirection aDirection,
+                                                ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Get(JSContext* aCx, JS::Handle<JS::Value> aKey,
-                                   ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
-  }
-
-  already_AddRefed<IDBRequest> GetKey(JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> Get(JSContext* aCx,
                                       JS::Handle<JS::Value> aKey,
-                                      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+                                      ErrorResult& aRv);
 
-    return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> GetKey(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
-                                     ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> Count(JSContext* aCx,
+                                        JS::Handle<JS::Value> aKey,
+                                        ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> GetAll(JSContext* aCx,
-                                      JS::Handle<JS::Value> aKey,
-                                      const Optional<uint32_t>& aLimit,
-                                      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAll(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         const Optional<uint32_t>& aLimit,
+                                         ErrorResult& aRv);
 
-    return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
-  }
-
-  already_AddRefed<IDBRequest> GetAllKeys(JSContext* aCx,
-                                          JS::Handle<JS::Value> aKey,
-                                          const Optional<uint32_t>& aLimit,
-                                          ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAllKeys(JSContext* aCx,
+                                             JS::Handle<JS::Value> aKey,
+                                             const Optional<uint32_t>& aLimit,
+                                             ErrorResult& aRv);
 
   void RefreshMetadata(bool aMayDelete);
 
@@ -178,20 +154,17 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
 
   ~IDBIndex();
 
-  already_AddRefed<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
-                                           JS::Handle<JS::Value> aKey,
-                                           ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest> GetAllInternal(bool aKeysOnly, JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
                                               JS::Handle<JS::Value> aKey,
-                                              const Optional<uint32_t>& aLimit,
                                               ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> OpenCursorInternal(bool aKeysOnly,
-                                                  JSContext* aCx,
-                                                  JS::Handle<JS::Value> aRange,
-                                                  IDBCursorDirection aDirection,
-                                                  ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAllInternal(
+      bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aKey,
+      const Optional<uint32_t>& aLimit, ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursorInternal(
+      bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aRange,
+      IDBCursorDirection aDirection, ErrorResult& aRv);
 };
 
 }  // namespace dom
