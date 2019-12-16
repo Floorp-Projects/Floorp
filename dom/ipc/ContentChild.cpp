@@ -3753,7 +3753,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     HttpBaseChannel::ReplacementChannelConfig config(std::move(*aArgs.init()));
     HttpBaseChannel::ConfigureReplacementChannel(
         newChannel, config,
-        HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
+        HttpBaseChannel::ReplacementReason::DocumentChannel);
   }
 
   // connect parent.
