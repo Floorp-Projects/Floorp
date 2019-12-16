@@ -56,7 +56,7 @@ ifeq ($(OS_TARGET),Android)
 TEST_SHELL?=$$HOME/bin/sh
 ANDROID_PORT?="2222"
 #Define the subset of tests that is known to work on Android
-NSS_CYCLES?="standard pkix upgradedb sharedb"
+NSS_CYCLES?="standard pkix sharedb"
 NSS_TESTS?="cipher lowhash libpkix cert dbtests tools sdr crmf smime ssl ocsp merge pkits chains"
 NSS_SSL_TESTS?="crl normal_normal iopr"
 NSS_SSL_RUN?="cov auth stress"

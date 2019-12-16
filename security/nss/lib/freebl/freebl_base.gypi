@@ -73,7 +73,7 @@
             'mpi/mp_comba.c',
           ],
           'conditions': [
-            [ 'cc_is_clang==1 and fuzz!=1', {
+            [ 'cc_is_clang==1 and fuzz!=1 and coverage!=1', {
               'cflags': [
                 '-no-integrated-as',
               ],

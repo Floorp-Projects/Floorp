@@ -51,10 +51,10 @@
 #   pkix         - run test suites with PKIX enabled
 #   upgradedb    - upgrade existing certificate databases to shareable
 #                  format (creates them if doesn't exist yet) and run
-#                  test suites with those databases
+#                  test suites with those databases. Requires to enable libdm.
 #   sharedb      - run test suites with shareable database format
 #                  enabled (databases are created directly to this
-#                  format)
+#                  format). This is the default and doesn't need to be run separately.
 #
 # Mandatory environment variables (to be set before testing):
 # -----------------------------------------------------------
@@ -135,7 +135,7 @@ run_tests()
 }
 
 ########################## run_cycle_standard ##########################
-# run test suites with dbm database (no PKIX, no sharedb)
+# run test suites with sql database (no PKIX)
 ########################################################################
 run_cycle_standard()
 {
@@ -144,7 +144,7 @@ run_cycle_standard()
     TESTS="${ALL_TESTS}"
     TESTS_SKIP="cipher libpkix sdr ocsp pkits"
 
-    NSS_DEFAULT_DB_TYPE="dbm"
+    NSS_DEFAULT_DB_TYPE=${NSS_DEFAULT_DB_TYPE:-"sql"}
     export NSS_DEFAULT_DB_TYPE
 
     run_tests
@@ -288,7 +288,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     . ./init.sh
 fi
 
-cycles="standard pkix upgradedb sharedb"
+cycles="standard pkix"
 CYCLES=${NSS_CYCLES:-$cycles}
 
 NO_INIT_SUPPORT=`certutil --build-flags |grep -cw NSS_NO_INIT_SUPPORT`

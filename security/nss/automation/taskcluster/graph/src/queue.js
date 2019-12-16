@@ -220,6 +220,9 @@ export async function submit() {
     maps.forEach(map => { task = map(merge({}, task)) });
 
     let log_id = `${task.name} @ ${task.platform}[${task.collection || "opt"}]`;
+    if (task.group) {
+      log_id = `${task.group}::${log_id}`;
+    }
     console.log(`+ Submitting ${log_id}.`);
 
     // Index that task for each tag specified

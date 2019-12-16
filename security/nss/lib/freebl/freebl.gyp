@@ -117,6 +117,22 @@
       ]
     },
     {
+      'target_name': 'gcm-aes-arm32-neon_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'gcm-arm32-neon.c'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-mfpu=neon'
+      ],
+      'cflags_mozilla': [
+        '-mfpu=neon'
+      ]
+    },
+    {
       'target_name': 'gcm-aes-aarch64_c_lib',
       'type': 'static_library',
       'sources': [
@@ -212,6 +228,11 @@
             'armv8_c_lib'
           ],
         }],
+        [ 'target_arch=="arm"', {
+          'dependencies': [
+            'gcm-aes-arm32-neon_c_lib',
+          ],
+        }],
         [ 'target_arch=="arm64" or target_arch=="aarch64"', {
           'dependencies': [
             'gcm-aes-aarch64_c_lib',
@@ -261,6 +282,11 @@
         }, 'target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64"', {
           'dependencies': [
             'armv8_c_lib',
+          ],
+        }],
+        [ 'target_arch=="arm"', {
+          'dependencies': [
+            'gcm-aes-arm32-neon_c_lib',
           ],
         }],
         [ 'target_arch=="arm64" or target_arch=="aarch64"', {
