@@ -1,0 +1,41 @@
+<!-- https://github.com/mozilla/dummytracker -->
+<!-- https://github.com/englehardt/englehardt.github.io/tree/master/test/trackingprotection/test_pages -->
+<html>
+<head>
+</head>
+<body>
+<p>Test for each list will say "Blocked" if Firefox is blocking resources from that list.</p>
+<p>Fingerprinting (base-fingerprinting-track-digest256):</p>
+<img
+        src="https://base-fingerprinting-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<br/>
+<p>Cryptomining (base-cryptomining-track-digest256):</p>
+<img
+        src="https://base-cryptomining-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<br/>
+<p>Basic Tracking Protection List (base-track-digest256):</p>
+<img
+        src="https://base-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<p>STP Tracker blocking (social-tracking-protection-digest256)</p>
+<img
+        src="https://social-tracking-protection-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<p>social-track-digest256:</p>
+<img
+        src="https://social-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<br/>
+<p>ads-track-digest256:</p>
+<img
+        src="https://ads-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+<br/>
+<p>analytics-track-digest256:</p>
+<img
+        src="https://analytics-track-digest256.dummytracker.org/test_not_blocked.png"
+        onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+</body>
+</html>

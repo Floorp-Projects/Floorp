@@ -6,15 +6,18 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.preference.R
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
@@ -41,7 +44,9 @@ class SettingsRobot {
 
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
     fun verifyLoginsButton() = assertLoginsButton()
-    fun verifyEnhancedTrackingProtectionValue() = assertEnhancedTrackingProtectionValue()
+    fun verifyEnhancedTrackingProtectionValue(state: String) =
+        assertEnhancedTrackingProtectionValue(state)
+
     fun verifyAddPrivateBrowsingShortcutButton() = assertAddPrivateBrowsingShortcutButton()
     fun verifySitePermissionsButton() = assertSitePermissionsButton()
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
@@ -108,6 +113,15 @@ class SettingsRobot {
             SettingsSubMenuDefaultBrowserRobot().interact()
             return SettingsSubMenuDefaultBrowserRobot.Transition()
         }
+
+        fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
+            mDevice.waitForIdle()
+            fun enhancedTrackingProtectionButton() = onView(ViewMatchers.withText("Enhanced Tracking Protection"))
+            enhancedTrackingProtectionButton().click()
+
+            SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
+            return SettingsSubMenuEnhancedTrackingProtectionRobot.Transition()
+        }
     }
 }
 
@@ -148,12 +162,16 @@ private fun assertPrivacyHeading() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertEnhancedTrackingProtectionButton() =
-    onView(ViewMatchers.withText("Enhanced Tracking Protection"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertEnhancedTrackingProtectionButton() {
+    onView(ViewMatchers.withId(R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            ViewMatchers.hasDescendant(ViewMatchers.withText("Enhanced Tracking Protection"))
+        )
+    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
-private fun assertEnhancedTrackingProtectionValue() = onView(ViewMatchers.withText("On"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertEnhancedTrackingProtectionValue(state: String) =
+    onView(ViewMatchers.withText(state)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertLoginsButton() {
     TestHelper.scrollToElementByText("Logins and passwords")

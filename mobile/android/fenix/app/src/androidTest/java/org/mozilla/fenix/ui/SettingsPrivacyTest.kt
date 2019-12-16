@@ -93,7 +93,7 @@ class SettingsPrivacyTest {
             // PRIVACY
             verifyPrivacyHeading()
             verifyEnhancedTrackingProtectionButton()
-            verifyEnhancedTrackingProtectionValue()
+            verifyEnhancedTrackingProtectionValue("On")
             // Logins
             verifyLoginsButton()
             // drill down to submenu

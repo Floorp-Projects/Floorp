@@ -17,6 +17,8 @@ import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.mDevice
+import android.preference.PreferenceManager
+import android.content.Context
 
 object TestHelper {
     fun scrollToElementByText(text: String): UiScrollable {
@@ -36,5 +38,12 @@ object TestHelper {
                 withText(url.toString())
             )
         ).perform(longClick())
+    }
+
+    fun setPreference(context: Context, pref: String, value: Int) {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val editor = preferences.edit()
+        editor.putInt(pref, value)
+        editor.apply()
     }
 }

@@ -17,6 +17,7 @@ object TestAssetHelper {
     @Suppress("MagicNumber")
     val waitingTime: Long = TimeUnit.SECONDS.toMillis(15)
     val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(1)
+
     data class TestAsset(val url: Uri, val content: String)
 
     /**
@@ -69,5 +70,11 @@ object TestAssetHelper {
         val content = "Page content: Globe.svg"
 
         return TestAsset(url, content)
+    }
+
+    fun getEnhancedTrackingProtectionAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/etp.html").toString().toUri()!!
+
+        return TestAsset(url, "")
     }
 }
