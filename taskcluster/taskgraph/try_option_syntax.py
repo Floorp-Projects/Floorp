@@ -568,7 +568,7 @@ class TryOptionSyntax(object):
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
         # Don't schedule code coverage when try option syntax is used
-        if 'ccov' in (attr('build_platform') or []):
+        if 'ccov' in attr('build_platform', []):
             return False
 
         # Don't schedule tasks for windows10-aarch64 unless try fuzzy is used
