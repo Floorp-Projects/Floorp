@@ -277,6 +277,9 @@ class nsWindow final : public nsWindowBase {
   bool TouchEventShouldStartDrag(mozilla::EventMessage aEventMessage,
                                  LayoutDeviceIntPoint aEventPoint);
 
+  void SetSmallIcon(HICON aIcon);
+  void SetBigIcon(HICON aIcon);
+
   /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for
    * the window.
