@@ -1163,9 +1163,10 @@ class UrlbarInput {
     let directionality = this.window.windowUtils.getDirectionFromText(value);
     if (directionality == this.window.windowUtils.DIRECTION_RTL) {
       this.setAttribute("rtltext", "true");
-    } else {
-      this.removeAttribute("rtltext");
+      return true;
     }
+    this.removeAttribute("rtltext");
+    return false;
   }
 
   _updateTextOverflow() {
@@ -1174,16 +1175,17 @@ class UrlbarInput {
       return;
     }
 
-    this._checkForRtlText(this.value);
+    let isRTL = this._checkForRtlText(this.value);
 
     this.window.promiseDocumentFlushed(() => {
       // Check overflow again to ensure it didn't change in the meantime.
       let input = this.inputField;
       if (input && this._overflowing) {
-        let side =
-          input.scrollLeft && input.scrollLeft == input.scrollLeftMax
-            ? "start"
-            : "end";
+        let side = isRTL ? "left" : "right";
+        if (input.scrollLeft == input.scrollLeftMax) {
+          side = isRTL == !input.scrollLeft ? "left" : "right";
+        }
+
         this.window.requestAnimationFrame(() => {
           // And check once again, since we might have stopped overflowing
           // since the promiseDocumentFlushed callback fired.
