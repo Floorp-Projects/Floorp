@@ -1832,7 +1832,7 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
     lazy->setHasRest();
   }
   if (funbox->isLikelyConstructorWrapper()) {
-    lazy->setLikelyConstructorWrapper();
+    lazy->setIsLikelyConstructorWrapper();
   }
   if (funbox->isDerivedClassConstructor()) {
     lazy->setIsDerivedClassConstructor();
@@ -1844,7 +1844,7 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
     lazy->setShouldDeclareArguments();
   }
   if (funbox->hasThisBinding()) {
-    lazy->setHasThisBinding();
+    lazy->setFunctionHasThisBinding();
   }
 
   // Flags that need to copied back into the parser when we do the full
@@ -7184,7 +7184,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
       ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
 
       if (numFields > 0) {
-        ctorbox->function()->baseScript()->setHasThisBinding();
+        ctorbox->function()->baseScript()->setFunctionHasThisBinding();
       }
     } else {
       // There should not be any non-lazy script yet.
