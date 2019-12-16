@@ -682,8 +682,12 @@ var Impl = {
         ) {
           payloadLoc = payloadObj;
         }
-        // The Dynamic process only collects scalars.
-        if (processType == "dynamic" && key !== "scalars") {
+        // The Dynamic process only collects scalars and keyed scalars.
+        if (
+          processType == "dynamic" &&
+          key !== "scalars" &&
+          key !== "keyedScalars"
+        ) {
           continue;
         }
 
