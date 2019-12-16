@@ -327,10 +327,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void prepareForCompacting();
 
 #ifdef DEBUG
-  // If this returns true, all object tracing must be done with a GC marking
-  // tracer.
-  bool requireGCTracer() const;
-
   // For testing purposes, return the index of the sweep group which this zone
   // was swept in in the last GC.
   unsigned lastSweepGroupIndex() { return gcSweepGroupIndex; }
