@@ -470,6 +470,7 @@ class MacArtifactJob(ArtifactJob):
         'libmozglue.dylib',
         'libnss3.dylib',
         'libnssckbi.dylib',
+        'libnssdbm3.dylib',
         'libplugin_child_interpose.dylib',
         # 'libreplace_jemalloc.dylib',
         # 'libreplace_malloc.dylib',
