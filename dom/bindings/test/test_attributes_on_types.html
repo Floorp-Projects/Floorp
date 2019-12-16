@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1295322
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for WebIDL attributes on types</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1295322">Mozilla Bug 1295322</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+    add_task(async function push_permission() {
+      await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+    });
+
+    add_task(function testClampedNullableOctet() {
+      let test = new TestFunctions();
+      test.clampedNullableOctet = null;
+      is(test.clampedNullableOctet, null, "clampedNullableOctet should be null");
+      test.clampedNullableOctet = -1;
+      is(test.clampedNullableOctet, 0, "clampedNullableOctet should be clamped to 0");
+      test.clampedNullableOctet = 256;
+      is(test.clampedNullableOctet, 255, "clampedNullableOctet should be clamped 255");
+      test.clampedNullableOctet = 200;
+      is(test.clampedNullableOctet, 200, "clampedNullableOctet should be 200");
+      test.clampedNullableOctet = null;
+      is(test.clampedNullableOctet, null, "clampedNullableOctet should be null");
+    });
+
+    add_task(function testEnforcedNullableOctet() {
+      let test = new TestFunctions();
+      test.enforcedNullableOctet = null;
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should be null");
+      try {
+        test.enforcedNullableOctet = -1;
+        ok(false, "Setting -1 to enforcedNullableOctet should throw exception");
+      } catch(e) {}
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should still be null");
+      try {
+        test.enforcedNullableOctet = 256;
+        ok(false, "Setting 256 to enforcedNullableOctet should throw exception");
+      } catch(e) {}
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should still be null");
+      test.enforcedNullableOctet = 200;
+      is(test.enforcedNullableOctet, 200, "enforcedNullableOctet should be 200");
+      test.enforcedNullableOctet = null;
+      is(test.enforcedNullableOctet, null, "enforcedNullableOctet should be null");
+    });
+  </script>
+</body>
+</html>
