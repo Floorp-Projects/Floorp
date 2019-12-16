@@ -689,7 +689,7 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
     return;
   }
 
-  Zone* zone = gc::TenuredCell::fromPointer(markedThing)->zone();
+  Zone* zone = markedThing->asTenured().zone();
   MOZ_ASSERT(zone->isGCMarking());
   MOZ_ASSERT(!zone->isGCSweeping());
 
@@ -976,11 +976,12 @@ static bool TraceKindCanBeMarkedGray(JS::TraceKind kind) {
 
 template <typename T>
 bool js::GCMarker::mark(T* thing) {
-  if (IsInsideNursery(thing)) {
+  if (!thing->isTenured()) {
     return false;
   }
+
   AssertShouldMarkInZone(thing);
-  TenuredCell* cell = TenuredCell::fromPointer(thing);
+  TenuredCell* cell = &thing->asTenured();
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;

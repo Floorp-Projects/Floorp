@@ -209,10 +209,6 @@ struct alignas(gc::CellAlignBytes) Cell {
 // heap, such as access to the arena and mark bits.
 class TenuredCell : public Cell {
  public:
-  // Construct a TenuredCell from a void*, making various sanity assertions.
-  static MOZ_ALWAYS_INLINE TenuredCell* fromPointer(void* ptr);
-  static MOZ_ALWAYS_INLINE const TenuredCell* fromPointer(const void* ptr);
-
   MOZ_ALWAYS_INLINE bool isTenured() const {
     MOZ_ASSERT(!IsInsideNursery(this));
     return true;
@@ -358,18 +354,6 @@ inline JS::TraceKind Cell::getTraceKind() const {
 
 /* static */ MOZ_ALWAYS_INLINE bool Cell::needWriteBarrierPre(JS::Zone* zone) {
   return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
-}
-
-/* static */ MOZ_ALWAYS_INLINE TenuredCell* TenuredCell::fromPointer(
-    void* ptr) {
-  MOZ_ASSERT(static_cast<TenuredCell*>(ptr)->isTenured());
-  return static_cast<TenuredCell*>(ptr);
-}
-
-/* static */ MOZ_ALWAYS_INLINE const TenuredCell* TenuredCell::fromPointer(
-    const void* ptr) {
-  MOZ_ASSERT(static_cast<const TenuredCell*>(ptr)->isTenured());
-  return static_cast<const TenuredCell*>(ptr);
 }
 
 bool TenuredCell::isMarkedAny() const {

@@ -59,19 +59,17 @@ using mozilla::DebugOnly;
  */
 
 struct EdgeValue {
-  void* thing;
-  JS::TraceKind kind;
+  JS::GCCellPtr thing;
   const char* label;
 };
 
 struct VerifyNode {
-  void* thing;
-  JS::TraceKind kind;
+  JS::GCCellPtr thing;
   uint32_t count;
   EdgeValue edges[1];
 };
 
-typedef HashMap<void*, VerifyNode*, DefaultHasher<void*>, SystemAllocPolicy>
+typedef HashMap<Cell*, VerifyNode*, DefaultHasher<Cell*>, SystemAllocPolicy>
     NodeMap;
 
 /*
@@ -140,16 +138,14 @@ bool VerifyPreTracer::onChild(const JS::GCCellPtr& thing) {
   VerifyNode* node = curnode;
   uint32_t i = node->count;
 
-  node->edges[i].thing = thing.asCell();
-  node->edges[i].kind = thing.kind();
+  node->edges[i].thing = thing;
   node->edges[i].label = contextName();
   node->count++;
   return true;
 }
 
-static VerifyNode* MakeNode(VerifyPreTracer* trc, void* thing,
-                            JS::TraceKind kind) {
-  NodeMap::AddPtr p = trc->nodemap.lookupForAdd(thing);
+static VerifyNode* MakeNode(VerifyPreTracer* trc, JS::GCCellPtr thing) {
+  NodeMap::AddPtr p = trc->nodemap.lookupForAdd(thing.asCell());
   if (!p) {
     VerifyNode* node = (VerifyNode*)trc->edgeptr;
     trc->edgeptr += sizeof(VerifyNode) - sizeof(EdgeValue);
@@ -160,8 +156,7 @@ static VerifyNode* MakeNode(VerifyPreTracer* trc, void* thing,
 
     node->thing = thing;
     node->count = 0;
-    node->kind = kind;
-    if (!trc->nodemap.add(p, thing, node)) {
+    if (!trc->nodemap.add(p, thing.asCell(), node)) {
       trc->edgeptr = trc->term;
       return nullptr;
     }
@@ -219,7 +214,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   trc->term = trc->edgeptr + size;
 
   /* Create the root node. */
-  trc->curnode = MakeNode(trc, nullptr, JS::TraceKind(0));
+  trc->curnode = MakeNode(trc, JS::GCCellPtr());
 
   MOZ_ASSERT(incrementalState == State::NotActive);
   incrementalState = State::MarkRoots;
@@ -237,10 +232,10 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   while ((char*)node < trc->edgeptr) {
     for (uint32_t i = 0; i < node->count; i++) {
       EdgeValue& e = node->edges[i];
-      VerifyNode* child = MakeNode(trc, e.thing, e.kind);
+      VerifyNode* child = MakeNode(trc, e.thing);
       if (child) {
         trc->curnode = child;
-        js::TraceChildren(trc, e.thing, e.kind);
+        JS::TraceChildren(trc, e.thing);
       }
       if (trc->edgeptr == trc->term) {
         goto oom;
@@ -300,9 +295,8 @@ bool CheckEdgeTracer::onChild(const JS::GCCellPtr& thing) {
   }
 
   for (uint32_t i = 0; i < node->count; i++) {
-    if (node->edges[i].thing == thing.asCell()) {
-      MOZ_ASSERT(node->edges[i].kind == thing.kind());
-      node->edges[i].thing = nullptr;
+    if (node->edges[i].thing == thing) {
+      node->edges[i].thing = JS::GCCellPtr();
       return true;
     }
   }
@@ -315,19 +309,18 @@ void js::gc::AssertSafeToSkipBarrier(TenuredCell* thing) {
 }
 
 static bool IsMarkedOrAllocated(const EdgeValue& edge) {
-  if (!edge.thing ||
-      IsMarkedOrAllocated(TenuredCell::fromPointer(edge.thing))) {
+  if (!edge.thing || IsMarkedOrAllocated(&edge.thing.asCell()->asTenured())) {
     return true;
   }
 
   // Permanent atoms and well-known symbols aren't marked during graph
   // traversal.
-  if (edge.kind == JS::TraceKind::String &&
-      static_cast<JSString*>(edge.thing)->isPermanentAtom()) {
+  if (edge.thing.is<JSString>() &&
+      edge.thing.as<JSString>().isPermanentAtom()) {
     return true;
   }
-  if (edge.kind == JS::TraceKind::Symbol &&
-      static_cast<JS::Symbol*>(edge.thing)->isWellKnownSymbol()) {
+  if (edge.thing.is<JS::Symbol>() &&
+      edge.thing.as<JS::Symbol>().isWellKnownSymbol()) {
     return true;
   }
 
@@ -375,7 +368,7 @@ void gc::GCRuntime::endVerifyPreBarriers() {
     VerifyNode* node = NextNode(trc->root);
     while ((char*)node < trc->edgeptr) {
       cetrc.node = node;
-      js::TraceChildren(&cetrc, node->thing, node->kind);
+      JS::TraceChildren(&cetrc, node->thing);
 
       if (node->count <= MAX_VERIFIER_EDGES) {
         for (uint32_t i = 0; i < node->count; i++) {
@@ -385,8 +378,9 @@ void gc::GCRuntime::endVerifyPreBarriers() {
             SprintfLiteral(
                 msgbuf,
                 "[barrier verifier] Unmarked edge: %s %p '%s' edge to %s %p",
-                JS::GCTraceKindToAscii(node->kind), node->thing, edge.label,
-                JS::GCTraceKindToAscii(edge.kind), edge.thing);
+                JS::GCTraceKindToAscii(node->thing.kind()),
+                node->thing.asCell(), edge.label,
+                JS::GCTraceKindToAscii(edge.thing.kind()), edge.thing.asCell());
             MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
             MOZ_CRASH();
           }
@@ -649,7 +643,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty();
        r.popFront()) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    Zone* zone = gc::TenuredCell::fromPointer(r.front().key)->zone();
+    Zone* zone = r.front().key->asTenured().zone();
     if (!zone->gcWeakKeys().put(r.front().key, std::move(r.front().value))) {
       oomUnsafe.crash("restoring weak keys table for validator");
     }
