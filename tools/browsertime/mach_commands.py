@@ -35,6 +35,7 @@ import logging
 import os
 import stat
 import sys
+import re
 
 from mach.decorators import CommandArgument, CommandProvider, Command
 from mozbuild.base import MachCommandBase
@@ -398,6 +399,15 @@ class MachBrowsertime(MachCommandBase):
         # loose about arguments; repeat arguments are generally accepted but then produce
         # difficult to interpret type errors.
 
+        def extract_browser_name(args):
+            'Extracts the browser name if any'
+            # These are BT arguments, it's BT job to check them
+            # here we just want to extract the browser name
+            res = re.findall("(--browser|-b)[= ]([\w]+)", ' '.join(args))
+            if res == []:
+                return None
+            return res[0][-1]
+
         def matches(args, *flags):
             'Return True if any argument matches any of the given flags (maybe with an argument).'
             for flag in flags:
@@ -416,6 +426,24 @@ class MachBrowsertime(MachCommandBase):
         specifies_har = matches(args, '--har', '--skipHar', '--gzipHar')
         if not specifies_har:
             extra_args.append('--skipHar')
+
+        # If --firefox.binaryPath is not specified, default to the objdir binary
+        # Note: --firefox.release is not a real browsertime option, but it will
+        #       silently ignore it instead and default to a release installation.
+        specifies_binaryPath = matches(args, '--firefox.binaryPath',
+                                       '--firefox.release', '--firefox.nightly',
+                                       '--firefox.beta', '--firefox.developer')
+
+        if not specifies_binaryPath:
+            specifies_binaryPath = extract_browser_name(args) == 'chrome'
+
+        if not specifies_binaryPath:
+            try:
+                extra_args.extend(('--firefox.binaryPath', self.get_binary_path()))
+            except Exception:
+                print('Please run |./mach build| '
+                      'or specify a Firefox binary with --firefox.binaryPath.')
+                return 1
 
         if extra_args:
             self.log(
@@ -450,8 +478,10 @@ class MachBrowsertime(MachCommandBase):
             return self.check()
 
         self._activate_virtualenv()
-
-        return self.node([browsertime_path()] + self.extra_default_args(args) + args)
+        default_args = self.extra_default_args(args)
+        if default_args == 1:
+            return 1
+        return self.node([browsertime_path()] + default_args + args)
 
     @Command('visualmetrics', category='testing',
              description='Run visualmetrics.py')
