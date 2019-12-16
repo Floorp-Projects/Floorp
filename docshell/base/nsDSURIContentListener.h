@@ -67,8 +67,6 @@ class nsDSURIContentListener final : public nsIURIContentListener,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURICONTENTLISTENER
 
-  nsresult Init();
-
  protected:
   explicit nsDSURIContentListener(nsDocShell* aDocShell);
   virtual ~nsDSURIContentListener();
@@ -90,8 +88,6 @@ class nsDSURIContentListener final : public nsIURIContentListener,
   // preferred and encouraged!
   nsWeakPtr mWeakParentContentListener;
   nsIURIContentListener* mParentContentListener;
-
-  nsCOMPtr<nsIWebNavigationInfo> mNavInfo;
 };
 
 #endif /* nsDSURIContentListener_h__ */
