@@ -1078,6 +1078,14 @@ nsresult nsDNSService::ResolveInternal(
 
   uint16_t af = GetAFForLookup(hostname, flags);
 
+  // TRR uses the main thread for the HTTPS channel to the DoH server.
+  // If this were to block the main thread while waiting for TRR it would
+  // likely cause a deadlock. Instead we intentionally choose to not use TRR
+  // for this.
+  if (NS_IsMainThread()) {
+    flags |= RESOLVE_DISABLE_TRR;
+  }
+
   rv = res->ResolveHost(hostname, RESOLVE_TYPE_DEFAULT, aOriginAttributes,
                         flags, af, syncReq);
   if (NS_SUCCEEDED(rv)) {
