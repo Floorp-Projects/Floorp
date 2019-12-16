@@ -500,6 +500,16 @@ FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {
   if (!mEmbolden) {
     return strength;
   }
+
+  // If it's an outline glyph, we'll be using GlyphSlot_Embolden_Less,
+  // so we need to match its strength here.
+  if (aFace->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+    strength.x =
+        FT_MulFix(aFace->units_per_EM, aFace->size->metrics.y_scale) / 48;
+    strength.y = strength.x;
+    return strength;
+  }
+
   // This is the embolden "strength" used by FT_GlyphSlot_Embolden.
   strength.x =
       FT_MulFix(aFace->units_per_EM, aFace->size->metrics.y_scale) / 24;

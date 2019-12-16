@@ -65,6 +65,8 @@
 #ifdef MOZ_ENABLE_FREETYPE
 #  include "ft2build.h"
 #  include FT_FREETYPE_H
+#  include FT_OUTLINE_H
+#  include FT_SYNTHESIS_H
 #endif
 #include "MainThreadUtils.h"
 #include "mozilla/Preferences.h"
@@ -194,6 +196,40 @@ void mozilla_LockFTLibrary(FT_Library aFTLibrary) {
 
 void mozilla_UnlockFTLibrary(FT_Library aFTLibrary) {
   mozilla::gfx::Factory::UnlockFTLibrary(aFTLibrary);
+}
+
+// Custom version of FT_GlyphSlot_Embolden to be less aggressive with outline
+// fonts than the default implementation in FreeType.
+void mozilla_GlyphSlot_Embolden_Less(FT_GlyphSlot slot) {
+  if (!slot) {
+    return;
+  }
+  if (slot->format != FT_GLYPH_FORMAT_OUTLINE) {
+    // For non-outline glyphs, just fall back to FreeType's function.
+    FT_GlyphSlot_Embolden(slot);
+    return;
+  }
+
+  FT_Face face = slot->face;
+
+  // FT_GlyphSlot_Embolden uses a divisor of 24 here; we'll be only half as
+  // bold.
+  FT_Pos strength =
+      FT_MulFix(face->units_per_EM, face->size->metrics.y_scale) / 48;
+  FT_Outline_Embolden(&slot->outline, strength);
+
+  // Adjust metrics to suit the fattened glyph.
+  if (slot->advance.x) {
+    slot->advance.x += strength;
+  }
+  if (slot->advance.y) {
+    slot->advance.y += strength;
+  }
+  slot->metrics.width += strength;
+  slot->metrics.height += strength;
+  slot->metrics.horiAdvance += strength;
+  slot->metrics.vertAdvance += strength;
+  slot->metrics.horiBearingY += strength;
 }
 }
 #endif
