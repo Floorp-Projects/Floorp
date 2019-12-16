@@ -10920,8 +10920,8 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   return NS_OK;
 }
 
-static bool SetLoadingInSubDocument(Document* aDocument, void* aData) {
-  aDocument->SetAncestorLoading(*(static_cast<bool*>(aData)));
+static bool SetLoadingInSubDocument(Document& aDocument, void* aData) {
+  aDocument.SetAncestorLoading(*(static_cast<bool*>(aData)));
   return true;
 }
 
