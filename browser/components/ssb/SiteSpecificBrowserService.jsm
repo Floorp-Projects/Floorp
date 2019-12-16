@@ -36,7 +36,26 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
   ManifestProcessor: "resource://gre/modules/ManifestProcessor.jsm",
+  KeyValueService: "resource://gre/modules/kvstore.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
+
+/**
+ * A schema version for the SSB data stored in the kvstore.
+ *
+ * Version 1 has the `manifest` and `config` properties.
+ */
+const DATA_VERSION = 1;
+
+/**
+ * The prefix used for SSB ids in the store.
+ */
+const SSB_STORE_PREFIX = "ssb:";
+
+/**
+ * A prefix that will sort immediately after any SSB ids in the store.
+ */
+const SSB_STORE_LAST = "ssb;";
 
 function uuid() {
   return Cc["@mozilla.org/uuid-generator;1"]
@@ -46,6 +65,7 @@ function uuid() {
 }
 
 const sharedDataKey = id => `SiteSpecificBrowserBase:${id}`;
+const storeKey = id => SSB_STORE_PREFIX + id;
 
 const IS_MAIN_PROCESS =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
@@ -223,6 +243,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     this._config = Object.assign(
       {
         needsUpdate: true,
+        persisted: false,
       },
       config
     );
@@ -231,6 +252,44 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     SSBMap.set(id, this);
 
     this._updateSharedData();
+  }
+
+  /**
+   * Loads the SiteSpecificBrowser for the given ID.
+   *
+   * @param {string} id the SSB's unique ID.
+   * @param {object?} data the data to deserialize from. Do not use externally.
+   * @return {Promise<SiteSpecificBrowser?>} the instance if it exists.
+   */
+  static async load(id, data = null) {
+    if (!IS_MAIN_PROCESS) {
+      throw new Error(
+        "SiteSpecificBrowser instances are only available in the main process."
+      );
+    }
+
+    if (SSBMap.has(id)) {
+      return SSBMap.get(id);
+    }
+
+    if (!data) {
+      let kvstore = await SiteSpecificBrowserService.getKVStore();
+      data = await kvstore.get(storeKey(id), null);
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    try {
+      let parsed = JSON.parse(data);
+      parsed.config.persisted = true;
+      return new SiteSpecificBrowser(id, parsed.manifest, parsed.config);
+    } catch (e) {
+      console.error(e);
+    }
+
+    return null;
   }
 
   /**
@@ -321,6 +380,50 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   }
 
   /**
+   * Persists the data to the store if needed. When a change in configuration
+   * has occured call this.
+   */
+  async _maybeSave() {
+    // If this SSB is persisted then update it in the data store.
+    if (this._config.persisted) {
+      let data = {
+        manifest: this._manifest,
+        config: this._config,
+      };
+
+      let kvstore = await SiteSpecificBrowserService.getKVStore();
+      await kvstore.put(storeKey(this.id), JSON.stringify(data));
+    }
+  }
+
+  /**
+   * Installs this SiteSpecificBrowser such that it exists for future instances
+   * of the application and will appear in lists of installed SSBs.
+   */
+  async install() {
+    if (this._config.persisted) {
+      return;
+    }
+
+    this._config.persisted = true;
+    await this._maybeSave();
+  }
+
+  /**
+   * Uninstalls this SiteSpecificBrowser. Undoes eveerything above. The SSB is
+   * still usable afterwards.
+   */
+  async uninstall() {
+    if (!this._config.persisted) {
+      return;
+    }
+
+    this._config.persisted = false;
+    let kvstore = await SiteSpecificBrowserService.getKVStore();
+    await kvstore.delete(storeKey(this.id));
+  }
+
+  /**
    * The SSB's ID.
    */
   get id() {
@@ -352,6 +455,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     this._config.needsUpdate = false;
 
     this._updateSharedData();
+    await this._maybeSave();
   }
 
   /**
@@ -396,7 +500,105 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   }
 }
 
-const SiteSpecificBrowserService = {};
+/**
+ * Loads the KV store for SSBs. Should always resolve with a store even if that
+ * means wiping whatever is currently on disk because it was unreadable.
+ */
+async function loadKVStore() {
+  let dir = OS.Path.join(OS.Constants.Path.profileDir, "ssb");
+
+  /**
+   * Creates an empty store. Called when we know there is an empty directory.
+   */
+  async function createStore() {
+    await OS.File.makeDir(dir);
+    let kvstore = await KeyValueService.getOrCreate(dir, "ssb");
+    await kvstore.put(
+      "_meta",
+      JSON.stringify({
+        version: DATA_VERSION,
+      })
+    );
+
+    return kvstore;
+  }
+
+  // First see if anything exists.
+  try {
+    let info = await OS.File.stat(dir);
+
+    if (!info.isDir) {
+      await OS.File.remove(dir, { ignoreAbsent: true });
+      return createStore();
+    }
+  } catch (e) {
+    if (e.becauseNoSuchFile) {
+      return createStore();
+    }
+    throw e;
+  }
+
+  // Something exists, try to load it.
+  try {
+    let kvstore = await KeyValueService.getOrCreate(dir, "ssb");
+
+    let meta = await kvstore.get("_meta", null);
+    if (meta) {
+      let data = JSON.parse(meta);
+      if (data.version == DATA_VERSION) {
+        return kvstore;
+      }
+      console.error(`SSB store is an unexpected version ${data.version}`);
+    } else {
+      console.error("SSB store was missing meta data.");
+    }
+
+    // We don't know how to handle this database, re-initialize it.
+    await kvstore.clear();
+    await kvstore.put(
+      "_meta",
+      JSON.stringify({
+        version: DATA_VERSION,
+      })
+    );
+
+    return kvstore;
+  } catch (e) {
+    console.error(e);
+
+    // Something is very wrong. Wipe all our data and start again.
+    await OS.File.removeDir(dir);
+    return createStore();
+  }
+}
+
+const SiteSpecificBrowserService = {
+  kvstore: null,
+
+  /**
+   * Returns a promise that resolves to the KV store for SSBs.
+   */
+  getKVStore() {
+    if (!this.kvstore) {
+      this.kvstore = loadKVStore();
+    }
+
+    return this.kvstore;
+  },
+
+  /**
+   * Returns a promise that resolves to an array of all of the installed SSBs.
+   */
+  async list() {
+    let kvstore = await this.getKVStore();
+    let list = await kvstore.enumerate(SSB_STORE_PREFIX, SSB_STORE_LAST);
+    return Promise.all(
+      Array.from(list).map(({ key: id, value: data }) =>
+        SiteSpecificBrowser.load(id.substring(SSB_STORE_PREFIX.length), data)
+      )
+    );
+  },
+};
 
 XPCOMUtils.defineLazyPreferenceGetter(
   SiteSpecificBrowserService,
@@ -404,6 +606,25 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.ssb.enabled",
   false
 );
+
+async function startSSB(id) {
+  // Loading the SSB is async. Until that completes and launches we will
+  // be without an open window and the platform will not continue startup
+  // in that case. Flag that a window is coming.
+  Services.startup.enterLastWindowClosingSurvivalArea();
+
+  // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
+  try {
+    let ssb = await SiteSpecificBrowser.load(id);
+    if (ssb) {
+      ssb.launch();
+    } else {
+      dump(`No SSB installed as ID ${id}\n`);
+    }
+  } finally {
+    Services.startup.exitLastWindowClosingSurvivalArea();
+  }
+}
 
 class SSBCommandLineHandler {
   /* nsICommandLineHandler */
@@ -439,6 +660,15 @@ class SSBCommandLineHandler {
       } catch (e) {
         dump(`Unable to parse '${site}' as a URI: ${e}\n`);
       }
+
+      return;
+    }
+
+    let id = cmdLine.handleFlagWithParam("start-ssb", false);
+    if (id) {
+      cmdLine.preventDefault = true;
+
+      startSSB(id);
     }
   }
 

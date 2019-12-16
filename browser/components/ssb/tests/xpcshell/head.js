@@ -11,11 +11,25 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ManifestProcessor: "resource://gre/modules/ManifestProcessor.jsm",
+  KeyValueService: "resource://gre/modules/kvstore.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
+const SSB_STORE_PREFIX = "ssb:";
+
 const uri = spec => Services.io.newURI(spec);
+const storeKey = id => SSB_STORE_PREFIX + id;
+
+let gProfD = do_get_profile();
+let gSSBData = gProfD.clone();
+gSSBData.append("ssb");
 
 Services.prefs.setBoolPref("browser.ssb.enabled", true);
+
+async function getKVStore() {
+  await OS.File.makeDir(gSSBData.path);
+  return KeyValueService.getOrCreate(gSSBData.path, "ssb");
+}
 
 function parseManifest(doc, manifest = {}) {
   return ManifestProcessor.process({
@@ -23,4 +37,14 @@ function parseManifest(doc, manifest = {}) {
     manifestURL: new URL("/manifest.json", doc),
     docURL: doc,
   });
+}
+
+async function storeSSB(store, id, manifest, config = {}) {
+  return store.put(
+    storeKey(id),
+    JSON.stringify({
+      manifest,
+      config,
+    })
+  );
 }
