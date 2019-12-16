@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ManifestProcessor: "resource://gre/modules/ManifestProcessor.jsm",
   KeyValueService: "resource://gre/modules/kvstore.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 const SSB_STORE_PREFIX = "ssb:";
@@ -25,6 +26,7 @@ let gSSBData = gProfD.clone();
 gSSBData.append("ssb");
 
 Services.prefs.setBoolPref("browser.ssb.enabled", true);
+Services.prefs.setBoolPref("browser.ssb.osintegration", false);
 
 async function getKVStore() {
   await OS.File.makeDir(gSSBData.path);

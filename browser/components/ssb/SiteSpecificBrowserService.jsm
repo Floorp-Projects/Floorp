@@ -39,7 +39,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   KeyValueService: "resource://gre/modules/kvstore.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   ImageTools: "resource:///modules/ssb/ImageTools.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
+
+if (AppConstants.platform == "win") {
+  ChromeUtils.defineModuleGetter(
+    this,
+    "WindowsSupport",
+    "resource:///modules/ssb/WindowsSupport.jsm"
+  );
+}
 
 /**
  * A schema version for the SSB data stored in the kvstore.
@@ -418,9 +427,13 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
       );
     }
 
-    return SiteSpecificBrowser.createFromManifest(
-      await buildManifestForBrowser(browser)
-    );
+    let manifest = await buildManifestForBrowser(browser);
+    let ssb = SiteSpecificBrowser.createFromManifest(manifest);
+
+    if (!manifest.name) {
+      ssb.name = browser.contentTitle;
+    }
+    return ssb;
   }
 
   /**
@@ -479,6 +492,10 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
 
     this._config.persisted = true;
     await this._maybeSave();
+
+    if (AppConstants.platform == "win") {
+      await WindowsSupport.install(this);
+    }
   }
 
   /**
@@ -488,6 +505,10 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
   async uninstall() {
     if (!this._config.persisted) {
       return;
+    }
+
+    if (AppConstants.platform == "win") {
+      await WindowsSupport.uninstall(this);
     }
 
     this._config.persisted = false;
@@ -500,6 +521,23 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    */
   get id() {
     return this._id;
+  }
+
+  get name() {
+    if (this._config.name) {
+      return this._config.name;
+    }
+
+    if (this._manifest.name) {
+      return this._manifest.name;
+    }
+
+    return this.startURI.host;
+  }
+
+  set name(val) {
+    this._config.name = val;
+    this._maybeSave();
   }
 
   /**
@@ -656,6 +694,19 @@ const SiteSpecificBrowserService = {
     }
 
     return this.kvstore;
+  },
+
+  /**
+   * Checks if OS integration is enabled. This will affect whether installs and
+   * uninstalls have effects on the OS itself amongst other things. Generally
+   * only disabled for testing.
+   */
+  get useOSIntegration() {
+    if (Services.appinfo.OS != "WINNT") {
+      return false;
+    }
+
+    return Services.prefs.getBoolPref("browser.ssb.osintegration", true);
   },
 
   /**
