@@ -4854,7 +4854,7 @@ class DatabaseConnection::CachedStatement final {
  private:
   // Only called by DatabaseConnection.
   void Assign(DatabaseConnection* aConnection,
-              already_AddRefed<mozIStorageStatement> aStatement);
+              nsCOMPtr<mozIStorageStatement> aStatement);
 
   // No funny business allowed.
   CachedStatement(const CachedStatement&) = delete;
@@ -5713,7 +5713,7 @@ class Factory final : public PBackgroundIDBFactoryParent {
 #endif
 
  public:
-  static already_AddRefed<Factory> Create(const LoggingInfo& aLoggingInfo);
+  static MOZ_MUST_USE RefPtr<Factory> Create(const LoggingInfo& aLoggingInfo);
 
   DatabaseLoggingInfo* GetLoggingInfo() const {
     AssertIsOnBackgroundThread();
@@ -5726,7 +5726,7 @@ class Factory final : public PBackgroundIDBFactoryParent {
 
  private:
   // Only constructed in Create().
-  explicit Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo);
+  explicit Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo);
 
   // Reference counted.
   ~Factory() override;
@@ -9855,7 +9855,7 @@ nsresult DatabaseConnection::GetCachedStatement(
     mCachedStatements.Put(aQuery, stmt);
   }
 
-  aCachedStatement->Assign(this, stmt.forget());
+  aCachedStatement->Assign(this, std::move(stmt));
   return NS_OK;
 }
 
@@ -10514,7 +10514,7 @@ void DatabaseConnection::CachedStatement::Reset() {
 
 void DatabaseConnection::CachedStatement::Assign(
     DatabaseConnection* aConnection,
-    already_AddRefed<mozIStorageStatement> aStatement) {
+    nsCOMPtr<mozIStorageStatement> aStatement) {
 #ifdef DEBUG
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
@@ -10526,7 +10526,7 @@ void DatabaseConnection::CachedStatement::Assign(
 
   mScoper.reset();
 
-  mStatement = aStatement;
+  mStatement = std::move(aStatement);
 
   if (mStatement) {
     mScoper.emplace(mStatement);
@@ -12568,7 +12568,7 @@ DatabaseLoggingInfo::~DatabaseLoggingInfo() {
  * Factory
  ******************************************************************************/
 
-Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
+Factory::Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo)
     : mLoggingInfo(std::move(aLoggingInfo))
 #ifdef DEBUG
       ,
@@ -12582,7 +12582,7 @@ Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
 Factory::~Factory() { MOZ_ASSERT(mActorDestroyed); }
 
 // static
-already_AddRefed<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
+RefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
@@ -12615,7 +12615,7 @@ already_AddRefed<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
                                loggingInfo);
   }
 
-  return RefPtr<Factory>(new Factory(loggingInfo.forget())).forget();
+  return new Factory(std::move(loggingInfo));
 }
 
 void Factory::ActorDestroy(ActorDestroyReason aWhy) {
