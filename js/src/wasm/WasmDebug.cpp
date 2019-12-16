@@ -25,7 +25,6 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
 #include "wasm/WasmInstance.h"
-#include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
 #include "gc/FreeOp-inl.h"
@@ -343,15 +342,9 @@ void DebugState::ensureEnterFrameTrapsState(JSContext* cx, bool enabled) {
 }
 
 bool DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals,
-                                    size_t* argsLength,
-                                    StackResults* stackResults) {
+                                    size_t* argsLength) {
   const ValTypeVector& args = metadata().debugFuncArgTypes[funcIndex];
-  const ValTypeVector& results = metadata().debugFuncReturnTypes[funcIndex];
-  ResultType resultType(ResultType::Vector(results));
   *argsLength = args.length();
-  *stackResults = ABIResultIter::HasStackResults(resultType)
-                      ? StackResults::HasStackResults
-                      : StackResults::NoStackResults;
   if (!locals->appendAll(args)) {
     return false;
   }

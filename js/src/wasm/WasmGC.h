@@ -282,7 +282,12 @@ static inline size_t StackArgAreaSizeUnaligned(
   MOZ_ASSERT(saSig.argTypes[saSig.numArgs] == MIRType::None /*the end marker*/);
 
   ItemsAndLength itemsAndLength(saSig.argTypes, saSig.numArgs);
-  return StackArgAreaSizeUnaligned(itemsAndLength);
+
+  ABIArgIter<ItemsAndLength> i(itemsAndLength);
+  while (!i.done()) {
+    i++;
+  }
+  return i.stackBytesConsumedSoFar();
 }
 
 static inline size_t AlignStackArgAreaSize(size_t unalignedSize) {
@@ -300,7 +305,7 @@ static inline size_t StackArgAreaSizeAligned(const T& argTypes) {
 // |args[0]| corresponds to the low addressed end of the described section of
 // the save area.
 MOZ_MUST_USE bool GenerateStackmapEntriesForTrapExit(
-    const ArgTypeVector& args, const MachineState& trapExitLayout,
+    const ValTypeVector& args, const MachineState& trapExitLayout,
     const size_t trapExitLayoutNumWords, ExitStubMapVector* extras);
 
 // Shared write barrier code.
