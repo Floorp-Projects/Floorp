@@ -281,7 +281,7 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-verticalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
-fails-if(winWidget) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482
+fails-if(winWidget) fuzzy-if(gtkWidget,0-255,0-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
 fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
 fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
 fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
