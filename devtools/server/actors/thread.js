@@ -297,7 +297,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     for (const global of this.dbg.getDebuggees()) {
       try {
-        this._debuggerNotificationObserver.disconnect(global);
+        this._debuggerNotificationObserver.disconnect(
+          global.unsafeDereference()
+        );
       } catch (e) {}
     }
 
@@ -583,7 +585,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _onNewDebuggee(global) {
     try {
-      this._debuggerNotificationObserver.connect(global);
+      this._debuggerNotificationObserver.connect(global.unsafeDereference());
     } catch (e) {}
   },
 
