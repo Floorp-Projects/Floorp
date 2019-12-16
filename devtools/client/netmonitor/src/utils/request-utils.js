@@ -51,7 +51,7 @@ async function getFormDataSections(
 
   const contentType = await getLongString(contentTypeLongString);
 
-  if (contentType && contentType.includes("x-www-form-urlencoded")) {
+  if (contentType.includes("x-www-form-urlencoded")) {
     const postDataLongString = postData.postData.text;
     const text = await getLongString(postDataLongString);
 

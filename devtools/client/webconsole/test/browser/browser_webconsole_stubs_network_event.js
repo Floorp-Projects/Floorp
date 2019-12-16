@@ -77,7 +77,7 @@ async function generateNetworkEventStubs() {
       packets.set(key, getCleanedPacket(key, packet));
     });
 
-    const onNetworkUpdate = ui.once("network-message-updated", ([res]) => {
+    const onNetworkUpdate = ui.once("network-message-updated", res => {
       const updateKey = `${key} update`;
       // We cannot ensure the form of the network update packet, some properties
       // might be in another order than in the original packet.

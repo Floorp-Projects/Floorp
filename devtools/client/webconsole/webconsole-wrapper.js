@@ -384,11 +384,8 @@ class WebConsoleWrapper {
             await store.dispatch(
               actions.networkMessageUpdate(message, null, res)
             );
+            this.webConsoleUI.emit("network-message-updated", res);
           }
-          this.webConsoleUI.emit(
-            "network-message-updated",
-            this.queuedMessageUpdates.map(({ res }) => res)
-          );
           this.queuedMessageUpdates = [];
         }
         if (this.queuedRequestUpdates.length > 0) {
