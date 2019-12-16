@@ -18,10 +18,15 @@ exclude: true
   manage installed extensions
 - ⚠️ Renamed `ScreenLength.VIEWPORT_WIDTH`, `ScreenLength.VIEWPORT_HEIGHT`,
   `ScreenLength.fromViewportWidth` and `ScreenLength.fromViewportHeight` to
-  [`ScreenLength.VISUAL_VIEWPORT_WIDTH`][72.24],
-  [`ScreenLength.VISUAL_VIEWPORT_HEIGHT`][72.25],
-  [`ScreenLength.fromVisualViewportWidth`][72.26] and
-  [`ScreenLength.fromVisualViewportHeight`][72.27] respectively.
+  [`ScreenLength.VISUAL_VIEWPORT_WIDTH`][73.3],
+  [`ScreenLength.VISUAL_VIEWPORT_HEIGHT`][73.4],
+  [`ScreenLength.fromVisualViewportWidth`][73.5] and
+  [`ScreenLength.fromVisualViewportHeight`][73.6] respectively.
+- Added the [`LoginStorage`][73.7] API. Apps may handle login fetch requests now by
+  attaching a [`LoginStorage.Delegate`][73.8] via
+  [`GeckoRuntime#setLoginStorageDelegate`][73.9]
+  ([bug 1602881]({{bugzilla}}1602881))
+
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
 [73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
@@ -29,6 +34,9 @@ exclude: true
 [73.4]: {{javadoc_uri}}/ScreenLength.html#VISUAL_VIEWPORT_HEIGHT
 [73.5]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportWidth-double-
 [73.6]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportHeight-double-
+[73.7]: {{javadoc_uri}}/LoginStorage.html
+[73.8]: {{javadoc_uri}}/LoginStorage.Delegate.html
+[73.9]: {{javadoc_uri}}/GeckoRuntime.html#setLoginStorageDelegate-org.mozilla.geckoview.LoginStorage.Delegate-
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -496,4 +504,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4e403762a0587e6127f69d51f3ad2dedf6557dba
+[api-version]: 07ee732ba2eaafada09739c61c0196e427a2f0ed
