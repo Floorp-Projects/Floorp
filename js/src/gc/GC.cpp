@@ -3730,7 +3730,7 @@ bool CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
         (srcKind == JS::TraceKind::Object &&
          InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), thing)));
   } else {
-    TenuredCell* tenured = TenuredCell::fromPointer(thing.asCell());
+    TenuredCell* tenured = &thing.asCell()->asTenured();
     Zone* thingZone = tenured->zoneFromAnyThread();
     MOZ_ASSERT(thingZone == zone || thingZone->isAtomsZone());
   }

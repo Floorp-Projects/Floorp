@@ -1069,8 +1069,8 @@ struct DumpHeapTracer final : public JS::CallbackTracer, public WeakMapTracer {
   bool onChild(const JS::GCCellPtr& thing) override;
 };
 
-static char MarkDescriptor(void* thing) {
-  gc::TenuredCell* cell = gc::TenuredCell::fromPointer(thing);
+static char MarkDescriptor(gc::Cell* thing) {
+  gc::TenuredCell* cell = &thing->asTenured();
   if (cell->isMarkedBlack()) {
     return 'B';
   }
