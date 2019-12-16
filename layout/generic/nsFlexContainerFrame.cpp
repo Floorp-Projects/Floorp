@@ -849,64 +849,75 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
                            const FlexboxAxisTracker& aAxisTracker);
 
   // Values that we already know in constructor (and are hence mostly 'const'):
-  nsIFrame* const mFrame;  // The flex item's frame.
-  const float mFlexGrow;
-  const float mFlexShrink;
+  // The flex item's frame.
+  nsIFrame* const mFrame = nullptr;
+  const float mFlexGrow = 0.0f;
+  const float mFlexShrink = 0.0f;
   const AspectRatio mIntrinsicRatio;
   const nsMargin mBorderPadding;
-  nsMargin mMargin;  // non-const because we need to resolve auto margins
+  // Non-const because we need to resolve auto margins.
+  nsMargin mMargin;
 
   // These are non-const so that we can lazily update them with the item's
   // intrinsic size (obtained via a "measuring" reflow), when necessary.
   // (e.g. for "flex-basis:auto;height:auto" & "min-height:auto")
-  nscoord mFlexBaseSize;
-  nscoord mMainMinSize;
-  nscoord mMainMaxSize;
+  nscoord mFlexBaseSize = 0;
+  nscoord mMainMinSize = 0;
+  nscoord mMainMaxSize = 0;
 
-  const nscoord mCrossMinSize;
-  const nscoord mCrossMaxSize;
+  const nscoord mCrossMinSize = 0;
+  const nscoord mCrossMaxSize = 0;
 
   // Values that we compute after constructor:
-  nscoord mMainSize;
-  nscoord mMainPosn;
-  nscoord mCrossSize;
-  nscoord mCrossPosn;
-  mutable nscoord mAscent;  // Mutable b/c it's set & resolved lazily, sometimes
-                            // via const pointer. See comment above SetAscent().
+  nscoord mMainSize = 0;
+  nscoord mMainPosn = 0;
+  nscoord mCrossSize = 0;
+  nscoord mCrossPosn = 0;
+
+  // Mutable b/c it's set & resolved lazily, sometimes via const pointer. See
+  // comment above SetAscent().
+  mutable nscoord mAscent = 0;
 
   // Temporary state, while we're resolving flexible widths (for our main size)
   // XXXdholbert To save space, we could use a union to make these variables
   // overlay the same memory as some other member vars that aren't touched
   // until after main-size has been resolved. In particular, these could share
   // memory with mMainPosn through mAscent, and mIsStretched.
-  float mShareOfWeightSoFar;
+  float mShareOfWeightSoFar = 0.0f;
 
-  const WritingMode mWM;  // The flex item's writing mode.
-  bool mIsFrozen;
-  bool mHadMinViolation;
-  bool mHadMaxViolation;
+  // The flex item's writing mode.
+  const WritingMode mWM;
+  bool mIsFrozen = false;
+  bool mHadMinViolation = false;
+  bool mHadMaxViolation = false;
 
-  // Misc:
-  bool mHadMeasuringReflow;  // Did this item get a preliminary reflow,
-                             // to measure its desired height?
-  bool mIsStretched;         // See IsStretched() documentation
-  bool mIsStrut;             // Is this item a "strut" left behind by an element
-                             // with visibility:collapse?
-  const bool mIsInlineAxisMainAxis;  // See IsInlineAxisMainAxis() documentation
+  // Did this item get a preliminary reflow, to measure its desired height?
+  bool mHadMeasuringReflow = false;
+
+  // See IsStretched() documentation.
+  bool mIsStretched = false;
+
+  // Is this item a "strut" left behind by an element with visibility:collapse?
+  bool mIsStrut = false;
+
+  // See IsInlineAxisMainAxis() documentation.
+  const bool mIsInlineAxisMainAxis = true;
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
-  bool mNeedsMinSizeAutoResolution;
+  bool mNeedsMinSizeAutoResolution = false;
 
   // Should we take care to treat this item's resolved BSize as indefinite?
-  bool mTreatBSizeAsIndefinite;
+  bool mTreatBSizeAsIndefinite = false;
 
   // Does this item have an auto margin in either main or cross axis?
-  bool mHasAnyAutoMargin;
+  bool mHasAnyAutoMargin = false;
 
-  uint8_t mAlignSelf;       // My "align-self" computed value (with "auto"
-                            // swapped out for parent"s "align-items" value,
-                            // in our constructor).
-  uint8_t mAlignSelfFlags;  // Flags for 'align-self' (safe/unsafe/legacy)
+  // My "align-self" computed value (with "auto" swapped out for parent"s
+  // "align-items" value, in our constructor).
+  uint8_t mAlignSelf = NS_STYLE_ALIGN_AUTO;
+
+  // Flags for 'align-self' (safe/unsafe/legacy).
+  uint8_t mAlignSelfFlags = 0;
 };
 
 /**
@@ -1899,18 +1910,8 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mMainMaxSize(aMainMaxSize),
       mCrossMinSize(aCrossMinSize),
       mCrossMaxSize(aCrossMaxSize),
-      mMainPosn(0),
       mCrossSize(aTentativeCrossSize),
-      mCrossPosn(0),
-      mAscent(0),
-      mShareOfWeightSoFar(0.0f),
       mWM(aFlexItemReflowInput.GetWritingMode()),
-      mIsFrozen(false),
-      mHadMinViolation(false),
-      mHadMaxViolation(false),
-      mHadMeasuringReflow(false),
-      mIsStretched(false),
-      mIsStrut(false),
       mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
                             aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
 // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
@@ -2043,36 +2044,14 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
 FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
                    WritingMode aContainerWM)
     : mFrame(aChildFrame),
-      mFlexGrow(0.0f),
-      mFlexShrink(0.0f),
-      // mBorderPadding uses default constructor,
-      // mMargin uses default constructor,
-      mFlexBaseSize(0),
-      mMainMinSize(0),
-      mMainMaxSize(0),
-      mCrossMinSize(0),
-      mCrossMaxSize(0),
-      mMainSize(0),
-      mMainPosn(0),
       mCrossSize(aCrossSize),
-      mCrossPosn(0),
-      mAscent(0),
-      mShareOfWeightSoFar(0.0f),
       // Struts don't do layout, so its WM doesn't matter at this point. So, we
       // just share container's WM for simplicity:
       mWM(aContainerWM),
       mIsFrozen(true),
-      mHadMinViolation(false),
-      mHadMaxViolation(false),
-      mHadMeasuringReflow(false),
-      mIsStretched(false),
       mIsStrut(true),  // (this is the constructor for making struts, after all)
       mIsInlineAxisMainAxis(true),  // (doesn't matter, we're not doing layout)
-      mNeedsMinSizeAutoResolution(false),
-      mTreatBSizeAsIndefinite(false),
-      mHasAnyAutoMargin(false),
-      mAlignSelf(NS_STYLE_ALIGN_FLEX_START),
-      mAlignSelfFlags(0) {
+      mAlignSelf(NS_STYLE_ALIGN_FLEX_START) {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(StyleVisibility::Collapse == mFrame->StyleVisibility()->mVisible,
              "Should only make struts for children with 'visibility:collapse'");
