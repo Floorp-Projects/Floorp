@@ -67,6 +67,23 @@ add_task(async function readBySize({ IO }) {
   }
 });
 
+add_task(async function readAfterClose({ IO }) {
+  const contents = "Lorem ipsum";
+  const { handle } = await registerFileStream(contents);
+
+  await IO.close({ handle });
+
+  try {
+    await IO.read({ handle });
+    ok(false, "Read shouldn't pass");
+  } catch (e) {
+    ok(
+      e.message.startsWith(`Invalid stream handle`),
+      "Error contains expected message"
+    );
+  }
+});
+
 add_task(async function unknownHandle({ IO }) {
   const handle = "1000000";
 
