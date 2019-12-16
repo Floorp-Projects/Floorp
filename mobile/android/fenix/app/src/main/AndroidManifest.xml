@@ -176,7 +176,7 @@
 
         <service android:name=".downloads.DownloadService" />
         <receiver
-            android:name=".widget.SearchWidgetProvider">
+            android:name="org.mozilla.gecko.search.SearchWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

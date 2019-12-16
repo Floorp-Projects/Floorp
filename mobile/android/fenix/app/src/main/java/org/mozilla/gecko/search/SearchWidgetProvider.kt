@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.widget
+package org.mozilla.gecko.search
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -23,10 +23,15 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.widget.VoiceSearchActivity
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 @Suppress("TooManyFunctions")
 class SearchWidgetProvider : AppWidgetProvider() {
+    // Implementation note:
+    // This class name (SearchWidgetProvider) and package name (org.mozilla.gecko.search) should
+    // not be changed because otherwise this widget will disappear from the home screen of the user.
+    // The existing name replicates the name and package we used in Fennec.
 
     override fun onEnabled(context: Context) {
         context.settings().addSearchWidgetInstalled(1)
@@ -117,7 +122,8 @@ class SearchWidgetProvider : AppWidgetProvider() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
         return intentSpeech.resolveActivity(context.packageManager)?.let {
-            PendingIntent.getActivity(context, REQUEST_CODE_VOICE, voiceIntent, 0)
+            PendingIntent.getActivity(context,
+                REQUEST_CODE_VOICE, voiceIntent, 0)
         }
     }
 
