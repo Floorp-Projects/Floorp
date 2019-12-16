@@ -363,7 +363,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     HttpBaseChannel::ReplacementChannelConfig config(*aArgs.init());
     HttpBaseChannel::ConfigureReplacementChannel(
         newChannel, config,
-        HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
+        HttpBaseChannel::ReplacementReason::DocumentChannel);
   }
 
   if (aArgs.contentDisposition()) {

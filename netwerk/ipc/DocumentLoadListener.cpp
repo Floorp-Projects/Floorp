@@ -499,7 +499,9 @@ void DocumentLoadListener::SerializeRedirectData(
 
     aArgs.init() = Some(
         baseChannel
-            ->CloneReplacementChannelConfig(true, aRedirectFlags, loadFlags)
+            ->CloneReplacementChannelConfig(
+                true, aRedirectFlags,
+                HttpBaseChannel::ReplacementReason::DocumentChannel, loadFlags)
             .Serialize());
   }
 
