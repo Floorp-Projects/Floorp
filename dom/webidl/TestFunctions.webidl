@@ -98,7 +98,4 @@ interface TestFunctions {
   // bindings. This is needed to test wrapper preservation for weak map keys.
   // See bug 1351501.
   readonly attribute WrapperCachedNonISupportsTestInterface wrapperCachedNonISupportsObject;
-
-  attribute [Clamp] octet? clampedNullableOctet;
-  attribute [EnforceRange] octet? enforcedNullableOctet;
 };

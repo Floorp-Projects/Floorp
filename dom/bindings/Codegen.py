@@ -4733,8 +4733,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     # And we can't both be an object and be null or undefined
     assert not isDefinitelyObject or not isNullOrUndefined
 
-    isClamp = type.hasClamp()
-    isEnforceRange = type.hasEnforceRange()
+    isClamp = type.clamp
+    isEnforceRange = type.enforceRange
 
     # If exceptionCode is not set, we'll just rethrow the exception we got.
     # Note that we can't just set failureCode to exceptionCode, because setting
