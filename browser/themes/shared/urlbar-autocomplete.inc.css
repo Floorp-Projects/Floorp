@@ -110,11 +110,15 @@
 }
 
 .urlbarView:not(.megabar) .urlbarView-row[type=tip] {
-  padding-block: 24px;
+  padding-block-start: 24px;
+  /* Compensating for the 16px bottom margin on the tip elements. */
+  padding-block-end: calc(24px - 16px);
 }
 
 .urlbarView.megabar .urlbarView-row[type=tip] {
-  padding-block: 18px;
+  padding-block-start: 18px;
+  /* Compensating for the 16px bottom margin on the tip elements. */
+  padding-block-end: calc(18px - 16px);
   /* Compensating for the 4px focus ring on tip buttons. */
   padding-inline-end: calc(@urlbarViewItemInlinePadding@ + 4px);
 }
@@ -159,12 +163,12 @@
   }
 }
 
-.urlbarView-title[overflow],
+.urlbarView-row:not([type=tip]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
+.urlbarView-row:not([type=tip]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -212,6 +216,9 @@
   min-width: 24px;
   height: 24px;
   margin-inline-end: 12px;
+  flex-basis: 24px;
+  flex-grow:  0;
+  flex-shrink: 0;
 }
 
 .urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
@@ -300,6 +307,24 @@
   width: 100%;
 }
 
+/* For non-megabar tips in narrow windows, wrap the buttons below the text. */
+@media screen and (max-width: 800px) {
+  .urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner {
+    flex-wrap: wrap;
+  }
+}
+
+/* For tips, give the title some bottom margin so that when the window is narrow
+   and the buttons wrap below it, there's space between it and the buttons.  We
+   then need to give the same bottom margin to the other tip elements so that
+   they all remain vertically aligned. */
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
+.urlbarView-tip-button,
+.urlbarView-tip-help {
+  margin-block-end: 16px;
+}
+
 /* The tip button is a Photon default button when unfocused and a
    primary button in all other states. */
 .urlbarView-tip-button {
@@ -312,6 +337,7 @@
   background-color: var(--in-content-button-background);
   min-width: 8.75em;
   text-align: center;
+  flex-basis: initial;
   flex-shrink: 0;
 }
 
@@ -331,8 +357,9 @@
 }
 
 .urlbarView-tip-button-spacer {
-  flex: 1;
-  min-width: 75px;
+  flex-basis: 48px;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .urlbarView-title {
@@ -341,8 +368,18 @@
 }
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
-   white-space: normal;
-   flex: auto;
+  white-space: normal;
+  /* Give the tip title appropriate flex so that when the window is narrow, the
+     tip buttons wrap around under it.  We want the icon and title to remain on
+     one line.  So make the title's flex-basis the width of the parent minus the
+     width of the icon. */
+  flex-basis: calc(100% - /* .urlbarView-row-inner padding-inline-start */ 6px - /* .urlbarView-favicon width */ 24px - /* .urlbarView-favicon margin-inline-end */ 12px);
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
+  flex-basis: calc(100% - /* .urlbarView-favicon margin-inline-start */ (12px + @urlbarViewIconMarginEnd@) - /* .urlbarView-favicon width */ 24px - /* .urlbarView-favicon margin-inline-end */ 12px);
 }
 
 .urlbarView-title-separator::before {
