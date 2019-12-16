@@ -257,14 +257,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
       MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind ==
       thing->getTraceKind());
 
-  MOZ_ASSERT_IF(
-      zone->requireGCTracer(),
-      isGcMarkingTracer ||
-          IsTracerKind(trc, JS::CallbackTracer::TracerKind::GrayBuffering) ||
-          IsTracerKind(trc, JS::CallbackTracer::TracerKind::UnmarkGray) ||
-          IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) ||
-          IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping));
-
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
     MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
