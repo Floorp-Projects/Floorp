@@ -1209,7 +1209,7 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
   }
 };
 
-already_AddRefed<File> ConvertActorToFile(
+MOZ_MUST_USE RefPtr<File> ConvertActorToFile(
     IDBFileHandle* aFileHandle, const FileRequestGetFileResponse& aResponse) {
   auto* const actor = static_cast<PendingIPCBlobChild*>(aResponse.fileChild());
 
@@ -1232,9 +1232,7 @@ already_AddRefed<File> ConvertActorToFile(
   const RefPtr<BlobImpl> blobImplSnapshot =
       new BlobImplSnapshot(blobImpl, static_cast<IDBFileHandle*>(aFileHandle));
 
-  RefPtr<File> file =
-      File::Create(mutableFile->GetOwnerGlobal(), blobImplSnapshot);
-  return file.forget();
+  return File::Create(mutableFile->GetOwnerGlobal(), blobImplSnapshot);
 }
 
 void DispatchFileHandleErrorEvent(IDBFileRequest* aFileRequest,
