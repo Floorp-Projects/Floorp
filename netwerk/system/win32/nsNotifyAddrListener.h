@@ -70,7 +70,7 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   HANDLE mCheckEvent;
 
   // set true when mCheckEvent means shutdown
-  bool mShutdown;
+  mozilla::Atomic<bool> mShutdown;
 
   // Contains a set of flags that codify the reasons for which
   // the platform indicates DNS should be used instead of TRR.

@@ -397,6 +397,11 @@ nsresult nsNotifyAddrListener::NotifyObservers(const char* aTopic,
                                                const char* aData) {
   LOG(("NotifyObservers: %s=%s\n", aTopic, aData));
 
+  if (mShutdown) {
+    LOG(("NotifyObservers call failed when called during shutdown"));
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   auto runnable = [self = RefPtr<nsNotifyAddrListener>(this), aTopic, aData] {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
