@@ -333,6 +333,9 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
   }
   for (size_t i = 0; i < mGamepads.size(); i++) {
     if (mGamepads[i] == device) {
+      IOHIDDeviceRegisterInputReportCallback(
+          device, mGamepads[i].mInputReport.data(), 0, NULL, &mGamepads[i]);
+
       service->RemoveGamepad(mGamepads[i].mSuperIndex);
       mGamepads[i].clear();
       return;
@@ -344,7 +347,7 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
 void DarwinGamepadService::ReportChangedCallback(
     void* context, IOReturn result, void* sender, IOHIDReportType report_type,
     uint32_t report_id, uint8_t* report, CFIndex report_length) {
-  if (context && report_type == kIOHIDReportTypeInput) {
+  if (context && report_type == kIOHIDReportTypeInput && report_length) {
     reinterpret_cast<Gamepad*>(context)->ReportChanged(report, report_length);
   }
 }
