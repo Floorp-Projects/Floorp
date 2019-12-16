@@ -37,7 +37,7 @@ skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 fuzzy-if(skiaContent,0-2,0-5) needs-focus == focus-handling.html focus-handling-ref.html
 
 # select
-fuzzy-if(skiaContent,0-1,0-1) == number-selected.html number-selected-ref.html
+fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(gtkWidget,0-181,0-722) == number-selected.html number-selected-ref.html
 
 # pseudo-elements not usable from content:
 == number-pseudo-elements.html number-pseudo-elements-ref.html
