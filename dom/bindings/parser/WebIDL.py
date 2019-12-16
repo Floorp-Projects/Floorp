@@ -2104,14 +2104,14 @@ class IDLType(IDLObject):
         IDLObject.__init__(self, location)
         self.name = name
         self.builtin = False
+        self.clamp = False
         self.treatNullAsEmpty = False
-        self._clamp = False
-        self._enforceRange = False
+        self.enforceRange = False
         self._extendedAttrDict = {}
 
     def __eq__(self, other):
         return (other and self.builtin == other.builtin and self.name == other.name and
-                          self._clamp == other.hasClamp() and self._enforceRange == other.hasEnforceRange() and
+                          self.clamp == other.clamp and self.enforceRange == other.enforceRange and
                           self.treatNullAsEmpty == other.treatNullAsEmpty)
 
     def __ne__(self, other):
@@ -2230,12 +2230,6 @@ class IDLType(IDLObject):
     def isJSONType(self):
         return False
 
-    def hasClamp(self):
-        return self._clamp
-
-    def hasEnforceRange(self):
-        return self._enforceRange
-
     def tag(self):
         assert False  # Override me!
 
@@ -2343,7 +2337,10 @@ class IDLNullableType(IDLParametrizedType):
         assert not innerType.isVoid()
         assert not innerType == BuiltinTypes[IDLBuiltinType.Types.any]
 
-        IDLParametrizedType.__init__(self, location, None, innerType)
+        name = innerType.name
+        if innerType.isComplete():
+            name += "OrNull"
+        IDLParametrizedType.__init__(self, location, name, innerType)
 
     def __eq__(self, other):
         return isinstance(other, IDLNullableType) and self.inner == other.inner
@@ -2440,23 +2437,11 @@ class IDLNullableType(IDLParametrizedType):
     def isJSONType(self):
         return self.inner.isJSONType()
 
-    def hasClamp(self):
-        return self.inner.hasClamp()
-
-    def hasEnforceRange(self):
-        return self.inner.hasEnforceRange()
-
-    def isComplete(self):
-        return self.name is not None
-
     def tag(self):
         return self.inner.tag()
 
     def complete(self, scope):
-        if not self.inner.isComplete():
-            self.inner = self.inner.complete(scope)
-        assert self.inner.isComplete()
-
+        self.inner = self.inner.complete(scope)
         if self.inner.nullable():
             raise WebIDLError("The inner type of a nullable type must not be "
                               "a nullable type",
@@ -2466,10 +2451,6 @@ class IDLNullableType(IDLParametrizedType):
                 raise WebIDLError("The inner type of a nullable type must not "
                                   "be a union type that itself has a nullable "
                                   "type as a member type", [self.location])
-        if self.inner.isDOMString():
-            if self.inner.treatNullAsEmpty:
-                raise WebIDLError("[TreatNullAs] not allowed on a nullable DOMString",
-                                  [self.location, self.inner.location])
 
         self.name = self.inner.name + "OrNull"
         return self
@@ -2482,13 +2463,6 @@ class IDLNullableType(IDLParametrizedType):
             # Can't tell which type null should become
             return False
         return self.inner.isDistinguishableFrom(other)
-
-    def withExtendedAttributes(self, attrs):
-        # See https://github.com/heycam/webidl/issues/827#issuecomment-565131350
-        # Allowing extended attributes to apply to a nullable type is an intermediate solution.
-        # A potential longer term solution is to introduce a null type and get rid of nullables.
-        # For example, we could do `([Clamp] long or null) foo` in the future.
-        return IDLNullableType(self.location, self.inner.withExtendedAttributes(attrs))
 
 
 class IDLSequenceType(IDLParametrizedType):
@@ -3190,11 +3164,11 @@ class IDLBuiltinType(IDLType):
         self._withTreatNullAs = None
         if self.isInteger():
             if clamp:
-                self._clamp = True
+                self.clamp = True
                 self.name = "Clamped" + self.name
                 self._extendedAttrDict["Clamp"] = True
             elif enforceRange:
-                self._enforceRange = True
+                self.enforceRange = True
                 self.name = "RangeEnforced" + self.name
                 self._extendedAttrDict["EnforceRange"] = True
         elif clamp or enforceRange:
@@ -3374,7 +3348,7 @@ class IDLBuiltinType(IDLType):
                 if not attribute.noArguments():
                     raise WebIDLError("[Clamp] must take no arguments",
                                       [attribute.location])
-                if ret.hasEnforceRange() or self._enforceRange:
+                if ret.enforceRange or self.enforceRange:
                     raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
                                       [self.location, attribute.location])
                 ret = self.clamped([self.location, attribute.location])
@@ -3382,7 +3356,7 @@ class IDLBuiltinType(IDLType):
                 if not attribute.noArguments():
                     raise WebIDLError("[EnforceRange] must take no arguments",
                                       [attribute.location])
-                if ret.hasClamp() or self._clamp:
+                if ret.clamp or self.clamp:
                     raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
                                       [self.location, attribute.location])
                 ret = self.rangeEnforced([self.location, attribute.location])
@@ -4320,7 +4294,7 @@ class IDLAttribute(IDLInterfaceMember):
             assert not isinstance(t.name, IDLUnresolvedIdentifier)
             self.type = t
 
-        if self.readonly and (self.type.hasClamp() or self.type.hasEnforceRange() or self.type.treatNullAsEmpty):
+        if self.readonly and (self.type.clamp or self.type.enforceRange or self.type.treatNullAsEmpty):
             raise WebIDLError("A readonly attribute cannot be [Clamp] or [EnforceRange]",
                               [self.location])
         if self.type.isDictionary() and not self.getExtendedAttribute("Cached"):
