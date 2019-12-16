@@ -952,8 +952,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
 
   nsresult Initialize(JSRuntime* aParentRuntime) {
     nsresult rv = CycleCollectedJSContext::Initialize(
-        aParentRuntime, WORKER_DEFAULT_RUNTIME_HEAPSIZE,
-        JS::DefaultNurseryMaxBytes);
+        aParentRuntime, WORKER_DEFAULT_RUNTIME_HEAPSIZE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

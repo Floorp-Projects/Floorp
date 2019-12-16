@@ -121,8 +121,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
     MOZ_ASSERT(!NS_IsMainThread());
 
     nsresult rv = CycleCollectedJSContext::Initialize(
-        aParentRuntime, WORKLET_DEFAULT_RUNTIME_HEAPSIZE,
-        JS::DefaultNurseryMaxBytes);
+        aParentRuntime, WORKLET_DEFAULT_RUNTIME_HEAPSIZE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

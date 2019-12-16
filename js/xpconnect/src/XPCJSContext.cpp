@@ -1102,7 +1102,7 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
 
 nsresult XPCJSContext::Initialize() {
   nsresult rv = CycleCollectedJSContext::Initialize(
-      nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryMaxBytes);
+      nullptr, JS::DefaultHeapMaxBytes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -95,8 +95,7 @@ class CycleCollectedJSContext
   virtual ~CycleCollectedJSContext();
 
   MOZ_IS_CLASS_INIT
-  nsresult Initialize(JSRuntime* aParentRuntime, uint32_t aMaxBytes,
-                      uint32_t aMaxNurseryBytes);
+  nsresult Initialize(JSRuntime* aParentRuntime, uint32_t aMaxBytes);
 
   virtual CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) = 0;
 
