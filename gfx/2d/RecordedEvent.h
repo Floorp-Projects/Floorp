@@ -239,7 +239,11 @@ struct MemStream {
   char* mData;
   size_t mLength;
   size_t mCapacity;
-  void Resize(size_t aSize) {
+  bool mValid = true;
+  bool Resize(size_t aSize) {
+    if (!mValid) {
+      return false;
+    }
     mLength = aSize;
     if (mLength > mCapacity) {
       mCapacity = mCapacity * 2;
@@ -250,11 +254,19 @@ struct MemStream {
       }
       mData = (char*)realloc(mData, mCapacity);
     }
+    if (mData) {
+      return true;
+    }
+    NS_ERROR("Failed to allocate MemStream!");
+    mValid = false;
+    mLength = 0;
+    return false;
   }
 
   void write(const char* aData, size_t aSize) {
-    Resize(mLength + aSize);
-    memcpy(mData + mLength - aSize, aData, aSize);
+    if (Resize(mLength + aSize)) {
+      memcpy(mData + mLength - aSize, aData, aSize);
+    }
   }
 
   MemStream() : mData(nullptr), mLength(0), mCapacity(0) {}
@@ -416,7 +428,9 @@ class RecordedEventDerived : public RecordedEvent {
     WriteElement(size, this->mType);
     static_cast<const Derived*>(this)->Record(size);
 
-    aStream.Resize(aStream.mLength + size.mTotalSize);
+    if (!aStream.Resize(aStream.mLength + size.mTotalSize)) {
+      return;
+    }
 
     MemWriter writer(aStream.mData + aStream.mLength - size.mTotalSize);
     WriteElement(writer, this->mType);
