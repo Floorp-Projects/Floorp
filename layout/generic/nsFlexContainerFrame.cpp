@@ -417,24 +417,27 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer);
 
   // XXXdholbert [BEGIN DEPRECATED]
-  AxisOrientationType mMainAxis;
-  AxisOrientationType mCrossAxis;
+  AxisOrientationType mMainAxis = eAxis_LR;
+  AxisOrientationType mCrossAxis = eAxis_TB;
   // XXXdholbert [END DEPRECATED]
 
   const WritingMode mWM;  // The flex container's writing mode.
 
-  bool mIsRowOriented;  // Is our main axis the inline axis?
-                        // (Are we 'flex-direction:row[-reverse]'?)
+  // Is our main axis the inline axis? (Are we 'flex-direction:row[-reverse]'?)
+  bool mIsRowOriented = true;
 
-  bool mIsMainAxisReversed;   // Is our main axis in the opposite direction
-                              // as mWM's corresponding axis? (e.g. RTL vs LTR)
-  bool mIsCrossAxisReversed;  // Is our cross axis in the opposite direction
-                              // as mWM's corresponding axis? (e.g. BTT vs TTB)
+  // Is our main axis in the opposite direction as mWM's corresponding axis?
+  // (e.g. RTL vs LTR)
+  bool mIsMainAxisReversed = false;
+
+  // Is our cross axis in the opposite direction as mWM's corresponding axis?
+  // (e.g. BTT vs TTB)
+  bool mIsCrossAxisReversed = false;
 
   // Implementation detail -- this indicates whether we've decided to
   // transparently reverse our axes & our child ordering, to avoid having
   // frames flow from bottom to top in either axis (& to make pagination saner).
-  bool mAreAxesInternallyReversed;
+  bool mAreAxesInternallyReversed = false;
 };
 
 /**
@@ -3621,11 +3624,7 @@ static inline AxisOrientationType BlockDirToAxisOrientation(
 FlexboxAxisTracker::FlexboxAxisTracker(
     const nsFlexContainerFrame* aFlexContainer, const WritingMode& aWM,
     AxisTrackerFlags aFlags)
-    : mMainAxis(eAxis_LR),
-      mWM(aWM),
-      mIsRowOriented(true),
-      mIsMainAxisReversed(false),
-      mAreAxesInternallyReversed(false) {
+    : mWM(aWM) {
   if (IsLegacyBox(aFlexContainer)) {
     InitAxesFromLegacyProps(aFlexContainer);
   } else {
