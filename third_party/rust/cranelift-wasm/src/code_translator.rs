@@ -1093,15 +1093,16 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             // the v128.const is typed in CLIF as a I8x16 but raw_bitcast to a different type before use
             state.push1(value)
         }
-        Operator::I8x16Splat
-        | Operator::I16x8Splat
-        | Operator::I32x4Splat
+        Operator::I8x16Splat | Operator::I16x8Splat => {
+            let reduced = builder.ins().ireduce(type_of(op).lane_type(), state.pop1());
+            let splatted = builder.ins().splat(type_of(op), reduced);
+            state.push1(splatted)
+        }
+        Operator::I32x4Splat
         | Operator::I64x2Splat
         | Operator::F32x4Splat
         | Operator::F64x2Splat => {
-            let value_to_splat = state.pop1();
-            let ty = type_of(op);
-            let splatted = builder.ins().splat(ty, value_to_splat);
+            let splatted = builder.ins().splat(type_of(op), state.pop1());
             state.push1(splatted)
         }
         Operator::I8x16ExtractLaneS { lane } | Operator::I16x8ExtractLaneS { lane } => {
@@ -1226,14 +1227,16 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I16x8AnyTrue
         | Operator::I32x4AnyTrue
         | Operator::I64x2AnyTrue => {
-            let bool_result = builder.ins().vany_true(state.pop1());
+            let a = pop1_with_bitcast(state, type_of(op), builder);
+            let bool_result = builder.ins().vany_true(a);
             state.push1(builder.ins().bint(I32, bool_result))
         }
         Operator::I8x16AllTrue
         | Operator::I16x8AllTrue
         | Operator::I32x4AllTrue
         | Operator::I64x2AllTrue => {
-            let bool_result = builder.ins().vall_true(state.pop1());
+            let a = pop1_with_bitcast(state, type_of(op), builder);
+            let bool_result = builder.ins().vall_true(a);
             state.push1(builder.ins().bint(I32, bool_result))
         }
         Operator::I8x16Eq | Operator::I16x8Eq | Operator::I32x4Eq => {

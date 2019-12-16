@@ -40,7 +40,7 @@ rev = "8069f8f4189982e0b38fa6dc8993dd4fab41f728"
 [source."https://github.com/bytecodealliance/cranelift"]
 git = "https://github.com/bytecodealliance/cranelift"
 replace-with = "vendored-sources"
-rev = "4727b70b67abfa4f3ae1c276454a0da7a76e1d49"
+rev = "ec787eb281bb2e18e191508c17abe694e91f0677"
 
 [source."https://github.com/alexcrichton/mio-named-pipes"]
 branch = "master"
