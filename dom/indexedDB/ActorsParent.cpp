@@ -6295,10 +6295,10 @@ class TransactionBase {
     return NS_FAILED(mResultCode);
   }
 
-  already_AddRefed<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
+  MOZ_MUST_USE RefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
       int64_t aObjectStoreId) const;
 
-  already_AddRefed<FullIndexMetadata> GetMetadataForIndexId(
+  MOZ_MUST_USE RefPtr<FullIndexMetadata> GetMetadataForIndexId(
       FullObjectStoreMetadata* const aObjectStoreMetadata,
       int64_t aIndexId) const;
 
@@ -8049,9 +8049,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   nsresult FlushPendingFileDeletions();
 
-  already_AddRefed<Maintenance> GetCurrentMaintenance() const {
-    RefPtr<Maintenance> result = mCurrentMaintenance;
-    return result.forget();
+  RefPtr<Maintenance> GetCurrentMaintenance() const {
+    return mCurrentMaintenance;
   }
 
   void NoteFinishedMaintenance(Maintenance* aMaintenance) {
@@ -13794,8 +13793,8 @@ void TransactionBase::CommitOrAbort() {
   gConnectionPool->Finish(TransactionId(), commitOp);
 }
 
-already_AddRefed<FullObjectStoreMetadata>
-TransactionBase::GetMetadataForObjectStoreId(int64_t aObjectStoreId) const {
+RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
+    int64_t aObjectStoreId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aObjectStoreId);
 
@@ -13812,10 +13811,10 @@ TransactionBase::GetMetadataForObjectStoreId(int64_t aObjectStoreId) const {
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aObjectStoreId);
 
-  return metadata.forget();
+  return metadata;
 }
 
-already_AddRefed<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
+RefPtr<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
     FullObjectStoreMetadata* const aObjectStoreMetadata,
     int64_t aIndexId) const {
   AssertIsOnBackgroundThread();
@@ -13833,7 +13832,7 @@ already_AddRefed<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
 
   MOZ_ASSERT(metadata->mCommonMetadata.id() == aIndexId);
 
-  return metadata.forget();
+  return metadata;
 }
 
 void TransactionBase::NoteModifiedAutoIncrementObjectStore(
