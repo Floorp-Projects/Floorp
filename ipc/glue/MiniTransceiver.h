@@ -37,7 +37,7 @@ public:
      * \param aClearDataBuf is true to clear data buffers after
      *                      receiving a message.
      */
-    MiniTransceiver(int aFd, DataBufferClear aDataBufClear = DataBufferClear::None);
+    explicit MiniTransceiver(int aFd, DataBufferClear aDataBufClear = DataBufferClear::None);
 
     bool Send(IPC::Message& aMsg);
     inline bool SendInfallible(IPC::Message& aMsg, const char* aCrashMessage) {

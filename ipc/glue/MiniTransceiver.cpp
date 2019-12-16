@@ -8,6 +8,8 @@
 #include "base/eintr_wrapper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/ScopeExit.h"
 #include "nsDebug.h"
 
 #include <sys/types.h>
@@ -109,6 +111,10 @@ MiniTransceiver::Send(IPC::Message& aMsg) {
     mState = STATE_SENDING;
 #endif
 
+    auto clean_fdset = MakeScopeExit([&] {
+            aMsg.file_descriptor_set()->CommitAll();
+    });
+
     int num_fds = aMsg.file_descriptor_set()->size();
     msghdr hdr;
     InitMsgHdr(&hdr, kMaxIOVecSize, num_fds);
@@ -122,7 +128,7 @@ MiniTransceiver::Send(IPC::Message& aMsg) {
 
     if (bytes_written < 0) {
         char error[128];
-        snprintf(error, sizeof(error), "sendmsg: %s", strerror(errno));
+        SprintfLiteral(error, "sendmsg: %s", strerror(errno));
         NS_WARNING(error);
         return false;
     }

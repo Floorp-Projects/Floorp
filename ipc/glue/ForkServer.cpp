@@ -262,14 +262,16 @@ ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
     bool sleep_newproc = !!getenv("MOZ_FORKSERVER_WAIT_GDB_NEWPROC");
 #endif
 
+    // Do this before NS_LogInit() to avoid log files taking lower
+    // FDs.
+    ForkServer forkserver;
+    forkserver.InitProcess(aArgc, aArgv);
+
     XRE_SetProcessType("forkserver");
     NS_LogInit();
     mozilla::LogModule::Init(0, nullptr);
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose, ("Start a fork server"));
-    ForkServer forkserver;
     {
-        forkserver.InitProcess(aArgc, aArgv);
-
         DebugOnly<base::ProcessHandle> forkserver_pid = base::GetCurrentProcId();
         if (forkserver.HandleMessages()) {
             // In the fork server process
