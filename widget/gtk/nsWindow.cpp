@@ -2537,6 +2537,9 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
     }
   }
 
+  // This event indicates that the window position may have changed.
+  // mBounds.Size() is updated in OnSizeAllocate().
+
   NS_ASSERTION(GTK_IS_WINDOW(aWidget),
                "Configure event on widget that is not a GtkWindow");
   if (gtk_window_get_window_type(GTK_WINDOW(aWidget)) == GTK_WINDOW_POPUP) {
@@ -2561,24 +2564,6 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   // complete.  wtf?
   NotifyWindowMoved(mBounds.x, mBounds.y);
 
-  // A GTK app would usually update its client area size in response to
-  // a "size-allocate" signal.
-  // However, we need to set mBounds in advance at Resize()
-  // as JS code expects immediate window size change.
-  // If Gecko requests a resize from GTK, but subsequently,
-  // before a corresponding "size-allocate" signal is emitted, the window is
-  // resized to its former size via other means, such as maximizing,
-  // then there is no "size-allocate" signal from which to update
-  // the value of mBounds. Similarly, if Gecko's resize request is refused
-  // by the window manager, then there will be no "size-allocate" signal.
-  // In the refused request case, the window manager is required to dispatch
-  // a ConfigureNotify event. mBounds can then be updated here.
-  // This seems to also be sufficient to update mBounds when Gecko resizes
-  // the window from maximized size and then immediately maximizes again.
-  GtkAllocation allocation = {-1, -1, 0, 0};
-  gtk_window_get_size(GTK_WINDOW(mShell), &allocation.width,
-                      &allocation.height);
-  OnSizeAllocate(&allocation);
   return FALSE;
 }
 
@@ -2601,10 +2586,8 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
        aAllocation->height));
 
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
-  if (mBounds.Size() == size) {
-    // We were already resized at nsWindow::OnConfigureEvent() so skip it.
-    return;
-  }
+
+  if (mBounds.Size() == size) return;
 
   // Invalidate the new part of the window now for the pending paint to
   // minimize background flashes (GDK does not do this for external resizes
