@@ -641,12 +641,69 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvRemoveAsyncPluginSurface(
   return IPC_OK();
 }
 
+#if defined(OS_WIN)
+RefPtr<TextureHost> GetNullPluginTextureHost() {
+  class NullPluginTextureHost : public TextureHost {
+   public:
+    NullPluginTextureHost() : TextureHost(TextureFlags::NO_FLAGS) {}
+
+    ~NullPluginTextureHost() {}
+
+    gfx::SurfaceFormat GetFormat() const override {
+      return gfx::SurfaceFormat::UNKNOWN;
+    }
+
+    already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+      return nullptr;
+    }
+
+    gfx::IntSize GetSize() const override { return gfx::IntSize(); }
+
+    bool BindTextureSource(CompositableTextureSourceRef& aTexture) override {
+      return false;
+    }
+
+    const char* Name() override { return "NullPluginTextureHost"; }
+
+    virtual bool Lock() { return false; }
+
+    void CreateRenderTexture(
+        const wr::ExternalImageId& aExternalImageId) override {}
+
+    uint32_t NumSubTextures() override { return 0; }
+
+    void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                             ResourceUpdateOp aOp,
+                             const Range<wr::ImageKey>& aImageKeys,
+                             const wr::ExternalImageId& aExtID,
+                             const bool aPreferCompositorSurface) override {}
+
+    void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                          const wr::LayoutRect& aBounds,
+                          const wr::LayoutRect& aClip,
+                          wr::ImageRendering aFilter,
+                          const Range<wr::ImageKey>& aImageKeys) override {}
+  };
+
+  static StaticRefPtr<TextureHost> sNullPluginTextureHost;
+  if (!sNullPluginTextureHost) {
+    sNullPluginTextureHost = new NullPluginTextureHost();
+    ClearOnShutdown(&sNullPluginTextureHost);
+  };
+
+  MOZ_ASSERT(sNullPluginTextureHost);
+  return sNullPluginTextureHost.get();
+}
+#endif  // defined(OS_WIN)
+
 RefPtr<TextureHost> ImageBridgeParent::LookupTextureHost(
     const SurfaceDescriptorPlugin& aDescriptor) {
 #if defined(OS_WIN)
   auto it = mGPUVideoTextureHosts.lookup(aDescriptor.id());
-  return it ? it->value() : nullptr;
+  RefPtr<TextureHost> ret = it ? it->value() : nullptr;
+  return ret ? ret : GetNullPluginTextureHost();
 #else
+  MOZ_ASSERT_UNREACHABLE("Unsupported architecture.");
   return nullptr;
 #endif  // defined(OS_WIN)
 }
