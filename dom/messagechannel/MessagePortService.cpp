@@ -7,7 +7,6 @@
 #include "MessagePortService.h"
 #include "MessagePortParent.h"
 #include "SharedMessagePortMessage.h"
-#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -26,24 +25,7 @@ void AssertIsInMainProcess() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 }
 
-struct NextParent {
-  uint32_t mSequenceID;
-  // MessagePortParent keeps the service alive, and we don't want a cycle.
-  CheckedUnsafePtr<MessagePortParent> mParent;
-};
-
 }  // namespace
-
-}  // namespace dom
-}  // namespace mozilla
-
-// Need to call CheckedUnsafePtr's copy constructor and destructor when
-// resizing dynamic arrays containing NextParent (by calling NextParent's
-// implicit copy constructor/destructor rather than memmove-ing NextParents).
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::NextParent);
-
-namespace mozilla {
-namespace dom {
 
 class MessagePortService::MessagePortServiceData final {
  public:
@@ -66,7 +48,13 @@ class MessagePortService::MessagePortServiceData final {
   nsID mDestinationUUID;
 
   uint32_t mSequenceID;
-  CheckedUnsafePtr<MessagePortParent> mParent;
+  MessagePortParent* mParent;
+
+  struct NextParent {
+    uint32_t mSequenceID;
+    // MessagePortParent keeps the service alive, and we don't want a cycle.
+    MessagePortParent* mParent;
+  };
 
   FallibleTArray<NextParent> mNextParents;
   FallibleTArray<RefPtr<SharedMessagePortMessage>> mMessages;
@@ -172,7 +160,8 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
 
   // This new parent will be the next one when a Disentangle request is
   // received from the current parent.
-  NextParent* nextParent = data->mNextParents.AppendElement(mozilla::fallible);
+  MessagePortServiceData::NextParent* nextParent =
+      data->mNextParents.AppendElement(mozilla::fallible);
   if (!nextParent) {
     CloseAll(aParent->ID());
     return false;
@@ -276,10 +265,9 @@ void MessagePortService::CloseAll(const nsID& aUUID, bool aForced) {
 
   if (data->mParent) {
     data->mParent->Close();
-    data->mParent = nullptr;
   }
 
-  for (const NextParent& parent : data->mNextParents) {
+  for (const MessagePortServiceData::NextParent& parent : data->mNextParents) {
     parent.mParent->CloseAndDelete();
   }
 
