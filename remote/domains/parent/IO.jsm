@@ -30,6 +30,23 @@ class IO extends Domain {
   // commands
 
   /**
+   * Close the stream, discard any temporary backing storage.
+   *
+   * @param {Object} options
+   * @param {string} options.handle
+   *     Handle of the stream to close.
+   */
+  async close(options) {
+    const { handle } = options;
+
+    if (typeof handle != "string") {
+      throw new TypeError(`handle: string value expected`);
+    }
+
+    await streamRegistry.remove(handle);
+  }
+
+  /**
    * Read a chunk of the stream.
    *
    * @param {Object} options
