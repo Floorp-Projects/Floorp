@@ -3937,8 +3937,6 @@ static void WorkerMain(WorkerInput* input) {
     return;
   }
 
-  JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, 2L * 1024L * 1024L);
-
   ShellContext* sc = js_new<ShellContext>(cx);
   if (!sc) {
     return;
