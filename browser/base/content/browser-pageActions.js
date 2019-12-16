@@ -1103,6 +1103,9 @@ BrowserPageActions.launchSSB = {
       gBrowser.selectedBrowser
     );
 
+    // Launching through the UI implies installing.
+    await ssb.install();
+
     // The site's manifest may point to a different start page so explicitly
     // open the SSB to the current page.
     ssb.launch(gBrowser.selectedBrowser.currentURI);
