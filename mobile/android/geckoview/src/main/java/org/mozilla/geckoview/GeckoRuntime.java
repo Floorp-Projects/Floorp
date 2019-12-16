@@ -168,10 +168,13 @@ public final class GeckoRuntime implements Parcelable {
     private final WebExtensionController mWebExtensionController;
     private WebPushController mPushController;
     private final ContentBlockingController mContentBlockingController;
+    private final LoginStorage.Proxy mLoginStorageProxy;
 
     private GeckoRuntime() {
         mWebExtensionController = new WebExtensionController(this);
         mContentBlockingController = new ContentBlockingController();
+        mLoginStorageProxy = new LoginStorage.Proxy();
+
         if (sRuntime != null) {
             throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
         }
@@ -561,6 +564,31 @@ public final class GeckoRuntime implements Parcelable {
     @UiThread
     public @Nullable Delegate getDelegate() {
         return mDelegate;
+    }
+
+    /**
+     * Set the {@link LoginStorage.Delegate} instance on this runtime.
+     * This delegate is required for handling login storage requests.
+     *
+     * @param delegate The {@link LoginStorage.Delegate} handling login storage
+     *                 requests.
+     */
+    @UiThread
+    public void setLoginStorageDelegate(
+            final @Nullable LoginStorage.Delegate delegate) {
+        ThreadUtils.assertOnUiThread();
+        mLoginStorageProxy.setDelegate(delegate);
+    }
+
+    /**
+     * Get the {@link LoginStorage.Delegate} instance set on this runtime.
+     *
+     * @return The {@link LoginStorage.Delegate} set on this runtime.
+     */
+    @UiThread
+    public @Nullable LoginStorage.Delegate getLoginStorageDelegate() {
+        ThreadUtils.assertOnUiThread();
+        return mLoginStorageProxy.getDelegate();
     }
 
     @UiThread
