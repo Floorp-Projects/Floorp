@@ -13,14 +13,9 @@ class StoragePanel {
     EventEmitter.decorate(this);
 
     this._toolbox = toolbox;
-    this._target = toolbox.target;
     this._panelWin = panelWin;
 
     this.destroy = this.destroy.bind(this);
-  }
-
-  get target() {
-    return this._toolbox.target;
   }
 
   get panelWindow() {
@@ -31,15 +26,10 @@ class StoragePanel {
    * open is effectively an asynchronous constructor
    */
   async open() {
-    this.target.on("close", this.destroy);
-    this._front = await this.target.getFront("storage");
+    this.UI = new StorageUI(this._panelWin, this._toolbox);
 
-    this.UI = new StorageUI(
-      this._front,
-      this._target,
-      this._panelWin,
-      this._toolbox
-    );
+    await this.UI.init();
+
     this.isReady = true;
     this.emit("ready");
 
@@ -58,12 +48,6 @@ class StoragePanel {
     this.UI.destroy();
     this.UI = null;
 
-    // Destroy front to ensure packet handler is removed from client
-    this._front.destroy();
-    this._front = null;
-
-    this._target.off("close", this.destroy);
-    this._target = null;
     this._toolbox = null;
     this._panelWin = null;
   }
