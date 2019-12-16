@@ -942,7 +942,6 @@ nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter* aParent,
     // This blocks until nsFlatpakPrintPortal::FinishPrintDialog is called
     GtkPrintOperationResult printDialogResult = fpPrintPortal->GetResult();
 
-    rv = NS_OK;
     switch (printDialogResult) {
       case GTK_PRINT_OPERATION_RESULT_APPLY: {
         nsCOMPtr<nsIObserverService> os =
