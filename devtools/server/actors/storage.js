@@ -2513,7 +2513,7 @@ StorageActors.createActor(
     async preListStores() {
       this.hostVsStores = new Map();
 
-      for (const host of await this.hosts) {
+      for (const host of this.hosts) {
         await this.populateStoresForHost(host);
       }
     },

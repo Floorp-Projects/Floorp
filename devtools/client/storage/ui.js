@@ -240,7 +240,24 @@ class StorageUI {
   }
 
   async init() {
-    this.front = await this.currentTarget.getFront("storage");
+    const { targetList } = this._toolbox;
+    this._onTargetAvailable = this._onTargetAvailable.bind(this);
+    this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+    await targetList.watchTargets(
+      [targetList.TYPES.FRAME],
+      this._onTargetAvailable,
+      this._onTargetDestroyed
+    );
+  }
+
+  async _onTargetAvailable({ type, targetFront, isTopLevel }) {
+    // Only support top level target and navigation to new processes.
+    // i.e. ignore additional targets created for remote <iframes>
+    if (!isTopLevel) {
+      return;
+    }
+
+    this.front = await targetFront.getFront("storage");
     this.front.on("stores-update", this.onEdit);
     this.front.on("stores-cleared", this.onCleared);
     try {
@@ -252,7 +269,7 @@ class StorageUI {
       //
       // If we are not inside the browser toolbox we need to delete these
       // hostnames.
-      if (!this.currentTarget.chrome && storageTypes.indexedDB) {
+      if (!targetFront.chrome && storageTypes.indexedDB) {
         const hosts = storageTypes.indexedDB.hosts;
         const newHosts = {};
 
@@ -278,6 +295,21 @@ class StorageUI {
     }
   }
 
+  _onTargetDestroyed({ type, targetFront, isTopLevel }) {
+    // Only support top level target and navigation to new processes.
+    // i.e. ignore additional targets created for remote <iframes>
+    if (!isTopLevel) {
+      return;
+    }
+
+    this.table.clear();
+    this.hideSidebar();
+    this.tree.clear();
+
+    this.front.off("stores-update", this.onEdit);
+    this.front.off("stores-cleared", this.onCleared);
+  }
+
   set animationsEnabled(value) {
     this._panelDoc.documentElement.classList.toggle("no-animate", !value);
   }
@@ -288,8 +320,6 @@ class StorageUI {
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
     this.table.destroy();
 
-    this.front.off("stores-update", this.onEdit);
-    this.front.off("stores-cleared", this.onCleared);
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
     this.searchBox.removeEventListener("input", this.filterItems);
     this.searchBox = null;
