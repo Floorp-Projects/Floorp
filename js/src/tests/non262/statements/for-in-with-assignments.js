@@ -53,7 +53,12 @@ function SetLangHead(l){
   }
 }
 x=[0,1,2,3];
-p={getElementById: function (id){parseInt(uneval(this), id); return undefined;}};
+p={getElementById: function (id){
+  if (typeof dis === "function") {
+    dis(SetLangHead);
+  }
+  return undefined;
+}};
 SetLangHead(1);
 
 /******************************************************************************/

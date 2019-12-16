@@ -33,7 +33,7 @@ function test()
       x = x - i;
       maxerr = x * maxerr / i;
     }
-    print(uneval(a));
+    print(a);
     a.push([1, 0]);
     a.reverse();
     return a.reduce(function (x, y) {return [x[0] * y + x[1], x[0]];});
@@ -52,7 +52,7 @@ function test()
         let frac = contfrac(num, eps);
         let est = frac[0] / frac[1];
         let err = num - est;
-        print(uneval(frac), est, err);
+        print(frac, est, err);
       }
       print();
     }

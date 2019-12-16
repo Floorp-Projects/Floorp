@@ -28,12 +28,6 @@ function test()
          "  enumerable: true, configurable: true," +
          "  get: function(){}" +
          "});");
-    var a = uneval;
-    delete uneval;
-    uneval = a;
-    var b = toSource;
-    delete toSource;
-    toSource = b;
     var c = toString;
     delete toString;
     toString = c;
