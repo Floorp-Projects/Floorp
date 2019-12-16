@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 const { RemoteAgentError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
 );
@@ -189,4 +191,53 @@ function timeoutPromise(ms) {
 /** Fail a test. */
 function fail(message) {
   ok(false, message);
+}
+
+/**
+ * Create a file with the specified contents.
+ *
+ * @param {string} contents
+ *     Contents of the file.
+ * @param {Object} options
+ * @param {string=} options.path
+ *     Path of the file. Defaults to the temporary directory.
+ * @param {boolean=} options.remove
+ *     If true, automatically remove the file after the test. Defaults to true.
+ *
+ * @return {Promise}
+ * @resolves {string}
+ *     Returns the final path of the created file.
+ */
+async function createFile(contents, options = {}) {
+  let { path = null, remove = true } = options;
+
+  if (!path) {
+    const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "remote-agent.txt");
+    const { file, path: tmpPath } = await OS.File.openUnique(basePath, {
+      humanReadable: true,
+    });
+    await file.close();
+    path = tmpPath;
+  }
+
+  let encoder = new TextEncoder();
+  let array = encoder.encode(contents);
+
+  const count = await OS.File.writeAtomic(path, array, {
+    encoding: "utf-8",
+    tmpPath: path + ".tmp",
+  });
+  is(count, contents.length, "All data has been written to file");
+
+  const file = await OS.File.open(path);
+
+  // Automatically remove the file once the test has finished
+  if (remove) {
+    registerCleanupFunction(async () => {
+      await file.close();
+      await OS.File.remove(path, { ignoreAbsent: true });
+    });
+  }
+
+  return { file, path };
 }
