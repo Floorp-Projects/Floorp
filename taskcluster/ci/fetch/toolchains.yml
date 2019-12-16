@@ -455,4 +455,4 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        revision: f325cff44c945af981c08367bdab12f8e0e2064b
+        revision: fe924d894ae079a3fe3f2e0f83434e89204af155
