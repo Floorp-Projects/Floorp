@@ -298,9 +298,9 @@ add_task(
       "There should be only one error report"
     );
     equal(
-      errors_histogram.values[8],
+      errors_histogram.values[7],
       1,
-      "There should be one invalid length error"
+      "There should be one invalid content hash error"
     );
 
     equal(
