@@ -452,6 +452,15 @@ const CustomizableWidgets = [
       } catch (e) {}
 
       this._updateElements(detectorContainer.children, currentDetector);
+      let hideDetector = Services.prefs.getBoolPref(
+        "intl.charset.detector.ng.enabled"
+      );
+      aDocument.getElementById(
+        "PanelUI-characterEncodingView-autodetect-container"
+      ).hidden = hideDetector;
+      aDocument.getElementById(
+        "PanelUI-characterEncodingView-autodetect-separator"
+      ).hidden = hideDetector;
     },
     _updateElements(aElements, aCurrentItem) {
       if (!aElements.length) {
