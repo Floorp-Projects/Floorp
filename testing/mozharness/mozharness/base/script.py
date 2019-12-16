@@ -36,6 +36,8 @@ import zlib
 from contextlib import contextmanager
 from io import BytesIO
 
+from six import binary_type
+
 from mozprocess import ProcessHandler
 
 import mozinfo
@@ -1655,7 +1657,8 @@ class ScriptMixin(PlatformMixin):
                     for line in output_lines:
                         if not line or line.isspace():
                             continue
-                        line = line.decode("utf-8")
+                        if isinstance(line, binary_type):
+                            line = line.decode("utf-8")
                         self.log(' %s' % line, level=log_level)
                     output = '\n'.join(output_lines)
         if os.path.exists(tmp_stderr_filename) and os.path.getsize(tmp_stderr_filename):
@@ -1667,7 +1670,8 @@ class ScriptMixin(PlatformMixin):
             for line in errors.rstrip().splitlines():
                 if not line or line.isspace():
                     continue
-                line = line.decode("utf-8")
+                if isinstance(line, binary_type):
+                    line = line.decode("utf-8")
                 self.log(' %s' % line, level=return_level)
         elif p.returncode not in success_codes and not ignore_errors:
             return_level = ERROR
