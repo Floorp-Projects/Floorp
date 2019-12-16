@@ -593,7 +593,10 @@ function messages(
         ...state,
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
-          [action.message.id]: action.message,
+          [action.message.id]: {
+            ...(networkMessagesUpdateById[action.message.id] || {}),
+            ...action.message,
+          },
         },
       };
 
