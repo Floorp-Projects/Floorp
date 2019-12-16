@@ -66,6 +66,10 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   Sxtw(ARMRegister(dest.reg, 64), ARMRegister(src, 32));
 }
 
+void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
+  Mov(ARMRegister(dest, 32), ARMRegister(src, 32));
+}
+
 // ===============================================================
 // Load instructions
 
