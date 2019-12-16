@@ -6,7 +6,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.preference.R
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
