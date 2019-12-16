@@ -93,8 +93,8 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
     bool Clone(JSContext* aCx);
   };
 
-  static already_AddRefed<IDBObjectStore> Create(IDBTransaction* aTransaction,
-                                                 const ObjectStoreSpec& aSpec);
+  static MOZ_MUST_USE RefPtr<IDBObjectStore> Create(
+      IDBTransaction* aTransaction, const ObjectStoreSpec& aSpec);
 
   static void AppendIndexUpdateInfo(int64_t aIndexID, const KeyPath& aKeyPath,
                                     bool aMultiEntry, const nsCString& aLocale,
@@ -153,7 +153,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   void GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                   ErrorResult& aRv);
 
-  already_AddRefed<DOMStringList> IndexNames();
+  MOZ_MUST_USE RefPtr<DOMStringList> IndexNames();
 
   IDBTransaction* Transaction() const {
     AssertIsOnOwningThread();
@@ -161,110 +161,65 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
     return mTransaction;
   }
 
-  already_AddRefed<IDBRequest> Add(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                   JS::Handle<JS::Value> aKey,
-                                   ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    ValueWrapper valueWrapper(aCx, aValue);
-
-    return AddOrPut(aCx, valueWrapper, aKey, false, /* aFromCursor */ false,
-                    aRv);
-  }
-
-  already_AddRefed<IDBRequest> Put(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                   JS::Handle<JS::Value> aKey,
-                                   ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    ValueWrapper valueWrapper(aCx, aValue);
-
-    return AddOrPut(aCx, valueWrapper, aKey, true, /* aFromCursor */ false,
-                    aRv);
-  }
-
-  already_AddRefed<IDBRequest> Delete(JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> Add(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue,
                                       JS::Handle<JS::Value> aKey,
-                                      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+                                      ErrorResult& aRv);
 
-    return DeleteInternal(aCx, aKey, /* aFromCursor */ false, aRv);
-  }
-
-  already_AddRefed<IDBRequest> Get(JSContext* aCx, JS::Handle<JS::Value> aKey,
-                                   ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
-  }
-
-  already_AddRefed<IDBRequest> GetKey(JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> Put(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue,
                                       JS::Handle<JS::Value> aKey,
-                                      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+                                      ErrorResult& aRv);
 
-    return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> Delete(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Clear(JSContext* aCx, ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> Get(JSContext* aCx,
+                                      JS::Handle<JS::Value> aKey,
+                                      ErrorResult& aRv);
 
-  already_AddRefed<IDBIndex> CreateIndex(
+  MOZ_MUST_USE RefPtr<IDBRequest> GetKey(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBRequest> Clear(JSContext* aCx, ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBIndex> CreateIndex(
       const nsAString& aName, const StringOrStringSequence& aKeyPath,
       const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 
-  already_AddRefed<IDBIndex> Index(const nsAString& aName, ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBIndex> Index(const nsAString& aName, ErrorResult& aRv);
 
   void DeleteIndex(const nsAString& aName, ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
-                                     ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> Count(JSContext* aCx,
+                                        JS::Handle<JS::Value> aKey,
+                                        ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> GetAll(JSContext* aCx,
-                                      JS::Handle<JS::Value> aKey,
-                                      const Optional<uint32_t>& aLimit,
-                                      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAll(JSContext* aCx,
+                                         JS::Handle<JS::Value> aKey,
+                                         const Optional<uint32_t>& aLimit,
+                                         ErrorResult& aRv);
 
-    return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAllKeys(JSContext* aCx,
+                                             JS::Handle<JS::Value> aKey,
+                                             const Optional<uint32_t>& aLimit,
+                                             ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> GetAllKeys(JSContext* aCx,
-                                          JS::Handle<JS::Value> aKey,
-                                          const Optional<uint32_t>& aLimit,
-                                          ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
-  }
-
-  already_AddRefed<IDBRequest> OpenCursor(JSContext* aCx,
-                                          JS::Handle<JS::Value> aRange,
-                                          IDBCursorDirection aDirection,
-                                          ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  already_AddRefed<IDBRequest> OpenCursor(JSContext* aCx,
-                                          IDBCursorDirection aDirection,
-                                          ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ false, aCx,
-                              JS::UndefinedHandleValue, aDirection, aRv);
-  }
-
-  already_AddRefed<IDBRequest> OpenKeyCursor(JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursor(JSContext* aCx,
                                              JS::Handle<JS::Value> aRange,
                                              IDBCursorDirection aDirection,
-                                             ErrorResult& aRv) {
-    AssertIsOnOwningThread();
+                                             ErrorResult& aRv);
 
-    return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection,
-                              aRv);
-  }
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursor(JSContext* aCx,
+                                             IDBCursorDirection aDirection,
+                                             ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenKeyCursor(JSContext* aCx,
+                                                JS::Handle<JS::Value> aRange,
+                                                IDBCursorDirection aDirection,
+                                                ErrorResult& aRv);
 
   void RefreshSpec(bool aMayDelete);
 
@@ -296,31 +251,28 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
                   nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
                   ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> AddOrPut(JSContext* aCx,
-                                        ValueWrapper& aValueWrapper,
-                                        JS::Handle<JS::Value> aKey,
-                                        bool aOverwrite, bool aFromCursor,
-                                        ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest> DeleteInternal(JSContext* aCx,
-                                              JS::Handle<JS::Value> aKey,
-                                              bool aFromCursor,
-                                              ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> AddOrPut(JSContext* aCx,
+                                           ValueWrapper& aValueWrapper,
                                            JS::Handle<JS::Value> aKey,
+                                           bool aOverwrite, bool aFromCursor,
                                            ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> GetAllInternal(bool aKeysOnly, JSContext* aCx,
+  MOZ_MUST_USE RefPtr<IDBRequest> DeleteInternal(JSContext* aCx,
+                                                 JS::Handle<JS::Value> aKey,
+                                                 bool aFromCursor,
+                                                 ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
                                               JS::Handle<JS::Value> aKey,
-                                              const Optional<uint32_t>& aLimit,
                                               ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest> OpenCursorInternal(bool aKeysOnly,
-                                                  JSContext* aCx,
-                                                  JS::Handle<JS::Value> aRange,
-                                                  IDBCursorDirection aDirection,
-                                                  ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBRequest> GetAllInternal(
+      bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aKey,
+      const Optional<uint32_t>& aLimit, ErrorResult& aRv);
+
+  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursorInternal(
+      bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aRange,
+      IDBCursorDirection aDirection, ErrorResult& aRv);
 };
 
 }  // namespace dom
