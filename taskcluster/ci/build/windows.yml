@@ -17,6 +17,7 @@ win32/debug:
         product: firefox
         job-name: win32-debug
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-32/debug
@@ -53,6 +54,7 @@ win32/opt:
         product: firefox
         job-name: win32-opt
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-32/opt
@@ -90,6 +92,7 @@ win64/debug:
         product: firefox
         job-name: win64-debug
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-64/debug
@@ -200,6 +203,7 @@ win64/opt:
         product: firefox
         job-name: win64-opt
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-64/opt
@@ -657,6 +661,8 @@ win64-ccov/debug:
     index:
         product: firefox
         job-name: win64-ccov-debug
+    attributes:
+        enable-build-signing: true
     treeherder:
         platform: windows2012-64/ccov
         symbol: B
@@ -986,6 +992,7 @@ win64-aarch64/opt:
         product: firefox
         job-name: win64-aarch64-opt
     attributes:
+        enable-build-signing: true
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-aarch64/opt
