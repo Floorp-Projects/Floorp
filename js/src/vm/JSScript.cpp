@@ -4466,8 +4466,6 @@ void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
   setFlag(ImmutableFlags::HasInnerFunctions, funbox->hasInnerFunctions());
   setFlag(ImmutableFlags::HasDirectEval, funbox->hasDirectEval());
   setFlag(ImmutableFlags::ShouldDeclareArguments, funbox->declaredArguments);
-  setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-          funbox->isLikelyConstructorWrapper());
 
   if (funbox->argumentsHasLocalBinding()) {
     setArgumentsHasVarBinding();
