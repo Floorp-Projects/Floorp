@@ -166,6 +166,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Không có kết nối mạng</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kiểm tra kết nối mạng của bạn hoặc thử tải lại trang trong giây lát.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tải lại</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Địa chỉ không hợp lệ</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Địa chỉ được cung cấp không ở định dạng được công nhận. Vui lòng kiểm tra thanh vị trí cho các lỗi và thử lại.</p>
