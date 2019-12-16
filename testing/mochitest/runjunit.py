@@ -162,7 +162,6 @@ class JUnitTestRunner(MochitestDesktop):
         # environment
         env = {}
         env["MOZ_CRASHREPORTER"] = "1"
-        env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
         env["XPCOM_DEBUG_BREAK"] = "stack"
         env["DISABLE_UNSAFE_CPOW_WARNINGS"] = "1"
