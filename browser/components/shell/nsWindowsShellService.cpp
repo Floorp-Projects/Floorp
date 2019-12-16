@@ -701,7 +701,7 @@ NS_IMETHODIMP
 nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
                                       const nsTArray<nsString>& aArguments,
                                       const nsAString& aDescription,
-                                      nsIFile* aTarget) {
+                                      nsIFile* aIconFile, nsIFile* aTarget) {
   NS_ENSURE_ARG(aBinary);
   NS_ENSURE_ARG(aTarget);
 
@@ -724,6 +724,11 @@ nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
   }
 
   link->SetArguments(arguments.get());
+
+  if (aIconFile) {
+    nsString icon(aIconFile->NativePath());
+    link->SetIconLocation(icon.get(), 0);
+  }
 
   RefPtr<IPersistFile> persist;
   hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(persist));
