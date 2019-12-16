@@ -100,6 +100,7 @@ const SIMPLE_UNSORTED_COOKIES_SJS =
   EXAMPLE_URL + "sjs_simple-unsorted-cookies-test-server.sjs";
 const CONTENT_TYPE_SJS = EXAMPLE_URL + "sjs_content-type-test-server.sjs";
 const WS_CONTENT_TYPE_SJS = WS_HTTP_URL + "sjs_content-type-test-server.sjs";
+const WS_WS_CONTENT_TYPE_SJS = WS_URL + "sjs_content-type-test-server.sjs";
 const HTTPS_CONTENT_TYPE_SJS =
   HTTPS_EXAMPLE_URL + "sjs_content-type-test-server.sjs";
 const SERVER_TIMINGS_TYPE_SJS =

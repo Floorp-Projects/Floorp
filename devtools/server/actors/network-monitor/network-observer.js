@@ -685,6 +685,21 @@ NetworkObserver.prototype = {
       }
     }
 
+    // Show the right WebSocket URL in case of WS channel.
+    if (channel.notificationCallbacks) {
+      let wsChannel = null;
+      try {
+        wsChannel = channel.notificationCallbacks.QueryInterface(
+          Ci.nsIWebSocketChannel
+        );
+      } catch (e) {
+        // Not all channels implement nsIWebSocketChannel.
+      }
+      if (wsChannel) {
+        event.url = wsChannel.URI.spec;
+      }
+    }
+
     event.cause = {
       type: causeTypeToString(causeType),
       loadingDocumentUri: causeUri,
