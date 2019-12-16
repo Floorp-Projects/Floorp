@@ -21,7 +21,7 @@ libc = "=0.2.59"
 libloading = "0.5"
 memoffset = "0.5.1"
 nix = "0.13"
-num-derive = "0.2"
+num-derive = "0.3"
 num-traits = "0.2"
 xfailure = "0.1"
 

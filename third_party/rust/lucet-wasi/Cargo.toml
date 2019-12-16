@@ -31,7 +31,7 @@ lucet-runtime = { path = "../lucet-runtime", version = "0.1.1" }
 lucet-runtime-internals = { path = "../lucet-runtime/lucet-runtime-internals", version = "0.1.1" }
 lucet-module = { path = "../lucet-module", version = "0.1.1" }
 nix = "0.13"
-rand = "0.6"
+rand = "0.7"
 
 [dev-dependencies]
 lucet-wasi-sdk = { path = "../lucet-wasi-sdk", version = "0.1.1" }
