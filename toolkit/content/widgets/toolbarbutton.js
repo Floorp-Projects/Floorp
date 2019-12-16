@@ -59,10 +59,10 @@
     static get badgedFragment() {
       let frag = document.importNode(
         MozXULElement.parseXULToFragment(`
-        <stack class="toolbarbutton-badge-stack">
+        <legacy-stack class="toolbarbutton-badge-stack">
           <image class="toolbarbutton-icon"/>
-          <label class="toolbarbutton-badge" crop="none"/>
-        </stack>
+          <label class="toolbarbutton-badge" top="0" end="0" crop="none"/>
+        </legacy-stack>
         <label class="toolbarbutton-text" crop="right" flex="1"/>
         <label class="toolbarbutton-multiline-text" flex="1"/>
         <dropmarker anonid="dropmarker" type="menu"
