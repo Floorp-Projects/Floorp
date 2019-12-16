@@ -1585,7 +1585,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     let docState = this.stateForDocument(doc);
-    let fieldsModified = this._formHasModifiedFields(formLikeRoot);
+    let fieldsModified = this._formHasModifiedFields(form);
     if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
       // we know no fields in this form had user modifications, so don't prompt
       log(
@@ -2182,11 +2182,18 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
   }
 
-  _formHasModifiedFields(formLikeRoot) {
-    let state = this.stateForDocument(formLikeRoot.ownerDocument);
+  _formHasModifiedFields(form) {
+    let state = this.stateForDocument(form.rootElement.ownerDocument);
+    // check for user inputs to the form fields
     let fieldsModified = state.fieldModificationsByRootElement.get(
-      formLikeRoot
+      form.rootElement
     );
+    // also consider a form modified if there's a difference between fields' .value and .defaultValue
+    if (!fieldsModified) {
+      fieldsModified = Array.from(form.elements).some(
+        field => field.value !== field.defaultValue
+      );
+    }
     return fieldsModified;
   }
 
