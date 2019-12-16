@@ -535,6 +535,7 @@ pub enum TextAlignKeyword {
     Left,
     Right,
     Center,
+    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     Justify,
     #[cfg(feature = "gecko")]
     MozCenter,
@@ -542,11 +543,11 @@ pub enum TextAlignKeyword {
     MozLeft,
     #[cfg(feature = "gecko")]
     MozRight,
-    #[cfg(feature = "servo")]
+    #[cfg(feature = "servo-layout-2013")]
     ServoCenter,
-    #[cfg(feature = "servo")]
+    #[cfg(feature = "servo-layout-2013")]
     ServoLeft,
-    #[cfg(feature = "servo")]
+    #[cfg(feature = "servo-layout-2013")]
     ServoRight,
     #[css(skip)]
     #[cfg(feature = "gecko")]
