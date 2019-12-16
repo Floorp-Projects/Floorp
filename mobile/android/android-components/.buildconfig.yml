@@ -92,6 +92,10 @@ projects:
     path: components/feature/toolbar
     description: 'Feature implementation connecting a toolbar implementation with the session module.'
     publish: true
+  feature-top-sites:
+    path: components/feature/top-sites
+    description: 'Feature implementation for saving and removing top sites.'
+    publish: true
   feature-downloads:
     path: components/feature/downloads
     description: 'Feature implementation for apps that want to use Android downloads manager.'

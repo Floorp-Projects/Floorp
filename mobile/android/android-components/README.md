@@ -150,6 +150,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
+* 🔴 [**Top Sites**](components/feature/top-sites/README.md) - Feature implementation for saving and removing top sites.
+
 * ⚪ [**Prompts**](components/feature/prompts/README.md) - A component that will handle all the common prompt dialogs from web content.
 
 * ⚪ [**Push**](components/feature/push/README.md) - A component that provides Autopush messages with help from a supported push service.
@@ -268,7 +270,7 @@ _Sample apps using various components._
 
 * [**Nearby Chat**](samples/nearby-chat) - An app demoing how to use the [**Nearby**](components/lib/nearby/README.md) library for peer-to-peer communication between devices.
 
-* [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component. 
+* [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component.
 
 # Building #
 
@@ -282,11 +284,11 @@ $ ./gradlew assemble
 
 ## Android Studio ##
 
-If the environment variable `JAVA_HOME` is not defined, you will need to set it. If you would like to use the JDK installed by Android Studio, here's how to find it: 
+If the environment variable `JAVA_HOME` is not defined, you will need to set it. If you would like to use the JDK installed by Android Studio, here's how to find it:
 
 1. Open Android Studio.
 2. Select "Configure".
-3. Select "Default Project Structure". You should now see the Android JDK location. 
+3. Select "Default Project Structure". You should now see the Android JDK location.
 4. Set the environment variable `JAVA_HOME` to the location. (How you set an environment variable depends on your OS.)
 5. Restart Android Studio.
 
