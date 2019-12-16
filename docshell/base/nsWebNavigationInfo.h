@@ -21,17 +21,17 @@ class nsWebNavigationInfo final : public nsIWebNavigationInfo {
 
   NS_DECL_NSIWEBNAVIGATIONINFO
 
-  nsresult Init();
+  static uint32_t IsTypeSupported(const nsACString& aType,
+                                  nsIWebNavigation* aWebNav);
+  static uint32_t IsTypeSupported(const nsACString& aType,
+                                  bool aPluginsAllowed);
 
  private:
   ~nsWebNavigationInfo() {}
 
-  // Check whether aType is supported.  If this method throws, the
-  // value of aIsSupported is not changed.
-  nsresult IsTypeSupportedInternal(const nsCString& aType,
-                                   uint32_t* aIsSupported);
-
-  nsCOMPtr<nsICategoryManager> mCategoryManager;
+  // Check whether aType is supported, and returns an nsIWebNavigationInfo
+  // constant.
+  static uint32_t IsTypeSupportedInternal(const nsCString& aType);
 };
 
 #endif  // nsWebNavigationInfo_h__
