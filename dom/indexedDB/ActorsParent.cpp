@@ -6143,7 +6143,7 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
    * been written to disk), then return an input stream. Otherwise, if mBlobImpl
    * is null (because the contents have been written to disk), returns null.
    */
-  already_AddRefed<nsIInputStream> GetInputStream(ErrorResult& rv) const;
+  MOZ_MUST_USE nsCOMPtr<nsIInputStream> GetInputStream(ErrorResult& rv) const;
 
   /**
    * To be called upon successful copying of the stream GetInputStream()
@@ -6180,8 +6180,7 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   }
 };
 
-already_AddRefed<nsIInputStream> DatabaseFile::GetInputStream(
-    ErrorResult& rv) const {
+nsCOMPtr<nsIInputStream> DatabaseFile::GetInputStream(ErrorResult& rv) const {
   // We should only be called from our DB connection thread, not the background
   // thread.
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -6196,7 +6195,7 @@ already_AddRefed<nsIInputStream> DatabaseFile::GetInputStream(
     return nullptr;
   }
 
-  return inputStream.forget();
+  return inputStream;
 }
 
 class TransactionBase {
