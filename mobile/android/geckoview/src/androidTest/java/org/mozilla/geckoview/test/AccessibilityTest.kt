@@ -318,12 +318,16 @@ class ZZAccessibilityTest : BaseSessionTest() {
         } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
     }
 
-    private fun waitUntilTextTraversed(fromIndex: Int, toIndex: Int): Int {
+    private fun waitUntilTextTraversed(fromIndex: Int, toIndex: Int,
+            expectedNode: Int? = null): Int {
         var nodeId: Int = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onTextTraversal(event: AccessibilityEvent) {
               nodeId = getSourceId(event)
+              if (expectedNode != null) {
+                assertThat("Node matches", nodeId, equalTo(expectedNode))
+              }
               assertThat("fromIndex matches", event.fromIndex, equalTo(fromIndex))
               assertThat("toIndex matches", event.toIndex, equalTo(toIndex))
             }
@@ -445,24 +449,24 @@ class ZZAccessibilityTest : BaseSessionTest() {
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 val node = createNodeInfo(nodeId)
-                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+                assertThat("Accessibility focus on first text leaf", node.text as String, startsWith("Lorem ipsum"))
             }
         })
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(0, 1) // "L"
+        waitUntilTextTraversed(0, 1, nodeId) // "L"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(1, 2) // "o"
+        waitUntilTextTraversed(1, 2, nodeId) // "o"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
-        nodeId = waitUntilTextTraversed(0, 1) // "L"
+        waitUntilTextTraversed(0, 1, nodeId) // "L"
     }
 
     @Test fun testMoveByWord() {
@@ -475,24 +479,24 @@ class ZZAccessibilityTest : BaseSessionTest() {
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 val node = createNodeInfo(nodeId)
-                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+                assertThat("Accessibility focus on first text leaf", node.text as String, startsWith("Lorem ipsum"))
             }
         })
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
-        nodeId = waitUntilTextTraversed(0, 5) // "Lorem"
+        waitUntilTextTraversed(0, 5, nodeId) // "Lorem"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
-        nodeId = waitUntilTextTraversed(6, 11) // "ipsum"
+        waitUntilTextTraversed(6, 11, nodeId) // "ipsum"
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
-        waitUntilTextTraversed(0, 5) // "Lorem"
+        waitUntilTextTraversed(0, 5, nodeId) // "Lorem"
     }
 
     @Test fun testMoveByLine() {
@@ -500,32 +504,29 @@ class ZZAccessibilityTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus(true)
 
-        provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
-                AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
-
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 val node = createNodeInfo(nodeId)
-                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+                assertThat("Accessibility focus on first text leaf", node.text as String, startsWith("Lorem ipsum"))
             }
         })
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+        waitUntilTextTraversed(0, 18, nodeId) // "Lorem ipsum dolor "
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(18, 28) // "sit amet, "
+        waitUntilTextTraversed(18, 28, nodeId) // "sit amet, "
 
         provider.performAction(nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
-        nodeId = waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+        waitUntilTextTraversed(0, 18, nodeId) // "Lorem ipsum dolor "
     }
 
     @Test fun testHeadings() {
