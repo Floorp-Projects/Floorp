@@ -322,8 +322,8 @@ function assert_uninstantiable(bytes) {
       result => {
         uniqueTest(_ => {
           assert_true(
-            result instanceof WebAssembly.RuntimeError,
-            `expected link error, observed ${result} ${loc}`
+            result instanceof WebAssembly.LinkError || result instanceof WebAssembly.RuntimeError,
+            `expected link or runtime error, observed ${result} ${loc}`
           );
         }, test);
       },
