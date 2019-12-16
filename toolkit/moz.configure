@@ -815,6 +815,8 @@ option('--enable-ipdl-tests', help='Enable expensive IPDL tests')
 set_config('MOZ_IPDL_TESTS',
            depends_if('--enable-ipdl-tests')(lambda _: True))
 
+include('nss.configure')
+
 # Graphics
 # ==============================================================
 option('--disable-skia', help='Disable use of Skia')
