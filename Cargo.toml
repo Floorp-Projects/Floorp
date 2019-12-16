@@ -68,8 +68,8 @@ spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu" }
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/bytecodealliance/cranelift"
-rev = "4727b70b67abfa4f3ae1c276454a0da7a76e1d49"
+rev = "ec787eb281bb2e18e191508c17abe694e91f0677"
 
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/bytecodealliance/cranelift"
-rev = "4727b70b67abfa4f3ae1c276454a0da7a76e1d49"
+rev = "ec787eb281bb2e18e191508c17abe694e91f0677"
