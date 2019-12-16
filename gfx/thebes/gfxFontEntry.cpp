@@ -637,8 +637,11 @@ tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
   tainted_gr<const void*> ret = nullptr;
 
   if (fontEntry) {
-    hb_blob_t* blob =
-        fontEntry->GetFontTable(rlbox::from_opaque(aName).UNSAFE_unverified());
+    unsigned int fontTableKey =
+        rlbox::from_opaque(aName).unverified_safe_because(
+            "This is only being used to index into a hashmap, which is robust "
+            "for any value. No checks needed.");
+    hb_blob_t* blob = fontEntry->GetFontTable(fontTableKey);
 
     if (blob) {
       unsigned int blobLength;
@@ -716,8 +719,14 @@ tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
 }
 
 void gfxFontEntry::ReleaseGrFace(tainted_opaque_gr<gr_face*> aFace) {
-  MOZ_ASSERT(rlbox::from_opaque(aFace).UNSAFE_unverified() ==
-             rlbox::from_opaque(mGrFace).UNSAFE_unverified());  // sanity-check
+  MOZ_ASSERT(
+      (rlbox::from_opaque(aFace) == rlbox::from_opaque(mGrFace))
+          .unverified_safe_because(
+              "This is safe as the only thing we are doing is comparing "
+              "addresses of two tainted pointers. Furthermore this is used "
+              "merely as a debugging aid in the debug builds. This function is "
+              "called only from the trusted Firefox code rather than the "
+              "untrusted libGraphite."));  // sanity-check
   MOZ_ASSERT(mGrFaceRefCnt > 0);
   if (--mGrFaceRefCnt == 0) {
     auto t_mGrFace = rlbox::from_opaque(mGrFace);
@@ -752,21 +761,32 @@ void gfxFontEntry::CheckForGraphiteTables() {
   mHasGraphiteTables = HasFontTable(TRUETYPE_TAG('S', 'i', 'l', 'f'));
 }
 
-bool gfxFontEntry::HasGraphiteSpaceContextuals() {
+tainted_boolean_hint gfxFontEntry::HasGraphiteSpaceContextuals() {
   if (!mGraphiteSpaceContextualsInitialized) {
     auto face = GetGrFace();
     auto t_face = rlbox::from_opaque(face);
     if (t_face) {
-      const gr_faceinfo* faceInfo =
-          sandbox_invoke(mSandboxData->sandbox, gr_face_info, t_face, 0)
-              .UNSAFE_unverified();
-      mHasGraphiteSpaceContextuals =
+      tainted_gr<const gr_faceinfo*> faceInfo =
+          sandbox_invoke(mSandboxData->sandbox, gr_face_info, t_face, 0);
+      // Comparison with a value in sandboxed memory returns a
+      // tainted_boolean_hint, i.e. a "hint", since the value could be changed
+      // maliciously at any moment.
+      tainted_boolean_hint is_not_none =
           faceInfo->space_contextuals != gr_faceinfo::gr_space_none;
+      mHasGraphiteSpaceContextuals = is_not_none.unverified_safe_because(
+          "Note ideally mHasGraphiteSpaceContextuals would be "
+          "tainted_boolean_hint, but RLBox does not yet support bitfields, so "
+          "it is not wrapped. However, its value is only ever accessed through "
+          "this function which returns a tainted_boolean_hint, so unwrapping "
+          "temporarily is safe. We remove the wrapper now and re-add it "
+          "below.");
     }
     ReleaseGrFace(face);  // always balance GetGrFace, even if face is null
     mGraphiteSpaceContextualsInitialized = true;
   }
-  return mHasGraphiteSpaceContextuals;
+
+  bool ret = mHasGraphiteSpaceContextuals;
+  return tainted_boolean_hint(ret);
 }
 
 #define FEATURE_SCRIPT_MASK 0x000000ff  // script index replaces low byte of tag

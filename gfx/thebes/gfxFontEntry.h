@@ -356,7 +356,12 @@ class gfxFontEntry {
 
   // Does the font have graphite contextuals that involve the space glyph
   // (and therefore we should bypass the word cache)?
-  bool HasGraphiteSpaceContextuals();
+  // Since this function inspects data from libGraphite stored in sandbox memory
+  // it can only return a "hint" to the correct return value. This is because
+  // a compromised libGraphite could change the sandbox memory maliciously at
+  // any moment. The caller must ensure the calling code performs safe actions
+  // independent of the value returned, to unwrap this return.
+  tainted_boolean_hint HasGraphiteSpaceContextuals();
 
   // Release any SVG-glyphs document this font may have loaded.
   void DisconnectSVG();

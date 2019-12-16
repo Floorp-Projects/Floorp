@@ -27,6 +27,14 @@
 #define FixedToIntRound(f) \
   ((f) > 0 ? ((32768 + (f)) >> 16) : -((32767 - (f)) >> 16))
 
+#define CopyAndVerifyOrFail(t, cond, failed) \
+  (t).copy_and_verify([&](auto val) {        \
+    if (!(cond)) {                           \
+      *(failed) = true;                      \
+    }                                        \
+    return val;                              \
+  })
+
 using namespace mozilla;  // for AutoSwap_* types
 
 /*
@@ -65,7 +73,10 @@ tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
     tainted_gr<float> ret = 0;
     return ret.to_opaque();
   }
-  auto glyphid = rlbox::from_opaque(t_glyphid).UNSAFE_unverified();
+  auto glyphid = rlbox::from_opaque(t_glyphid).unverified_safe_because(
+      "Here the only use of a glyphid is for lookup to get a width. "
+      "Implementations of GetGlyphWidth in this code base use a hashtable "
+      "which is robust to unknown keys. So no validation is required.");
   tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
   return ret.to_opaque();
 }
@@ -263,70 +274,149 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t cIndex = data->cIndex.UNSAFE_unverified();
-  gr_glyph_to_char_cluster* clusters = data->clusters.UNSAFE_unverified();
-  uint16_t* gids = data->gids.UNSAFE_unverified();
-  float* xLocs = data->xLocs.UNSAFE_unverified();
-  float* yLocs = data->yLocs.UNSAFE_unverified();
+  tainted_gr<gr_glyph_to_char_cluster*> clusters = data->clusters;
+  tainted_gr<uint16_t*> gids = data->gids;
+  tainted_gr<float*> xLocs = data->xLocs;
+  tainted_gr<float*> yLocs = data->yLocs;
 
   CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
   bool roundX = bool(aRounding & RoundingFlags::kRoundX);
   bool roundY = bool(aRounding & RoundingFlags::kRoundY);
 
+  bool failedVerify = false;
+
+  // cIndex is primarily used to index into the clusters array which has size
+  // aLength below. As cIndex is not changing anymore, let's just verify it
+  // and remove the tainted wrapper.
+  uint32_t cIndex =
+      CopyAndVerifyOrFail(data->cIndex, val < aLength, &failedVerify);
+  if (failedVerify) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
   // now put glyphs into the textrun, one cluster at a time
   for (uint32_t i = 0; i <= cIndex; ++i) {
-    const gr_glyph_to_char_cluster& c = clusters[i];
+    // We makes a local copy of "clusters[i]" which is of type
+    // tainted_gr<gr_glyph_to_char_cluster> below. We do this intentionally
+    // rather than taking a reference. Taking a reference with the code
+    //
+    // tainted_volatile_gr<gr_glyph_to_char_cluster>& c = clusters[i];
+    //
+    // produces a tainted_volatile which means the value can change at any
+    // moment allowing for possible time-of-check-time-of-use vuln. We thus
+    // make a local copy to simplify the verification.
+    tainted_gr<gr_glyph_to_char_cluster> c = clusters[i];
 
-    float adv;  // total advance of the cluster
+    tainted_gr<float> t_adv;  // total advance of the cluster
     if (rtl) {
       if (i == 0) {
-        adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment)
-                  .UNSAFE_unverified() -
-              xLocs[c.baseGlyph];
+        t_adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment) -
+                xLocs[c.baseGlyph];
       } else {
-        adv = xLocs[clusters[i - 1].baseGlyph] - xLocs[c.baseGlyph];
+        t_adv = xLocs[clusters[i - 1].baseGlyph] - xLocs[c.baseGlyph];
       }
     } else {
       if (i == cIndex) {
-        adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment)
-                  .UNSAFE_unverified() -
-              xLocs[c.baseGlyph];
+        t_adv = sandbox_invoke(*mSandbox, gr_seg_advance_X, aSegment) -
+                xLocs[c.baseGlyph];
       } else {
-        adv = xLocs[clusters[i + 1].baseGlyph] - xLocs[c.baseGlyph];
+        t_adv = xLocs[clusters[i + 1].baseGlyph] - xLocs[c.baseGlyph];
       }
+    }
+
+    float adv = t_adv.unverified_safe_because(
+        "Per Bug 1569464 - this is the advance width of a glyph or cluster of "
+        "glyphs. There are no a-priori limits on what that might be. Incorrect "
+        "values will tend to result in bad layout or missing text, or bad "
+        "nscoord values. But, these will not result in safety issues.");
+
+    // check unexpected offset - offs used to index into aText
+    uint32_t offs =
+        CopyAndVerifyOrFail(c.baseChar, val < aLength, &failedVerify);
+    if (failedVerify) {
+      return NS_ERROR_ILLEGAL_VALUE;
     }
 
     // Check for default-ignorable char that didn't get filtered, combined,
     // etc by the shaping process, and skip it.
-    uint32_t offs = c.baseChar;
-    NS_ASSERTION(offs < aLength, "unexpected offset");
-    if (c.nGlyphs == 1 && c.nChars == 1 &&
-        aShapedText->FilterIfIgnorable(aOffset + offs, aText[offs])) {
-      continue;
+    auto one_glyph = c.nGlyphs == static_cast<uint32_t>(1);
+    auto one_char = c.nChars == static_cast<uint32_t>(1);
+
+    if ((one_glyph && one_char)
+            .unverified_safe_because(
+                "using this boolean check to decide whether to ignore a "
+                "character or not. The worst that can happen is a bad "
+                "rendering.")) {
+      if (aShapedText->FilterIfIgnorable(aOffset + offs, aText[offs])) {
+        continue;
+      }
     }
 
     uint32_t appAdvance = roundX ? NSToIntRound(adv) * dev2appUnits
                                  : NSToIntRound(adv * dev2appUnits);
-    if (c.nGlyphs == 1 && CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
+
+    const char gid_simple_value[] =
+        "Per Bug 1569464 - these are glyph IDs that can range from 0 to the "
+        "maximum glyph ID supported by the font. However, out-of-range values "
+        "here should not lead to safety issues; they would simply result in "
+        "blank rendering, although this depends on the platform back-end.";
+
+    // gids[c.baseGlyph] is checked and used below. Since this is a
+    // tainted_volatile, which can change at any moment, we make a local copy
+    // first to prevent a time-of-check-time-of-use vuln.
+    uint16_t gid_of_base_glyph =
+        gids[c.baseGlyph].unverified_safe_because(gid_simple_value);
+
+    const char fast_path[] =
+        "Even if the number of glyphs set is an incorrect value, the else "
+        "branch is a more general purpose algorithm which can handle other "
+        "values of nGlyphs";
+
+    if (one_glyph.unverified_safe_because(fast_path) &&
+        CompressedGlyph::IsSimpleGlyphID(gid_of_base_glyph) &&
         CompressedGlyph::IsSimpleAdvance(appAdvance) &&
-        charGlyphs[offs].IsClusterStart() && yLocs[c.baseGlyph] == 0) {
-      charGlyphs[offs].SetSimpleGlyph(appAdvance, gids[c.baseGlyph]);
+        charGlyphs[offs].IsClusterStart() &&
+        (yLocs[c.baseGlyph] == 0).unverified_safe_because(fast_path)) {
+      charGlyphs[offs].SetSimpleGlyph(appAdvance, gid_of_base_glyph);
+
     } else {
       // not a one-to-one mapping with simple metrics: use DetailedGlyph
       AutoTArray<gfxShapedText::DetailedGlyph, 8> details;
       float clusterLoc;
-      for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
+
+      uint32_t glyph_end =
+          (c.baseGlyph + c.nGlyphs)
+              .unverified_safe_because(
+                  "This only controls the total number of glyphs set for this "
+                  "particular text. Worst that can happen is a bad rendering");
+
+      // check overflow - ensure loop start is before the end
+      uint32_t glyph_start =
+          CopyAndVerifyOrFail(c.baseGlyph, val <= glyph_end, &failedVerify);
+      if (failedVerify) {
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      for (uint32_t j = glyph_start; j < glyph_end; ++j) {
         gfxShapedText::DetailedGlyph* d = details.AppendElement();
-        d->mGlyphID = gids[j];
-        d->mOffset.y = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits
-                              : -yLocs[j] * dev2appUnits;
-        if (j == c.baseGlyph) {
+        d->mGlyphID = gids[j].unverified_safe_because(gid_simple_value);
+
+        const char safe_coordinates[] =
+            "There are no limits on coordinates. Worst case, bad values would "
+            "force rendering off-screen, but there are no memory safety "
+            "issues.";
+
+        float yLocs_j = yLocs[j].unverified_safe_because(safe_coordinates);
+        float xLocs_j = xLocs[j].unverified_safe_because(safe_coordinates);
+
+        d->mOffset.y = roundY ? NSToIntRound(-yLocs_j) * dev2appUnits
+                              : -yLocs_j * dev2appUnits;
+        if (j == glyph_start) {
           d->mAdvance = appAdvance;
-          clusterLoc = xLocs[j];
+          clusterLoc = xLocs_j;
         } else {
           float dx =
-              rtl ? (xLocs[j] - clusterLoc) : (xLocs[j] - clusterLoc - adv);
+              rtl ? (xLocs_j - clusterLoc) : (xLocs_j - clusterLoc - adv);
           d->mOffset.x =
               roundX ? NSToIntRound(dx) * dev2appUnits : dx * dev2appUnits;
           d->mAdvance = 0;
@@ -339,8 +429,17 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
           details.Elements());
     }
 
-    for (uint32_t j = c.baseChar + 1; j < c.baseChar + c.nChars; ++j) {
-      NS_ASSERTION(j < aLength, "unexpected offset");
+    // check unexpected offset
+    uint32_t char_end = CopyAndVerifyOrFail(c.baseChar + c.nChars,
+                                            val <= aLength, &failedVerify);
+    // check overflow - ensure loop start is before the end
+    uint32_t char_start =
+        CopyAndVerifyOrFail(c.baseChar + 1, val <= char_end, &failedVerify);
+    if (failedVerify) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    for (uint32_t j = char_start; j < char_end; ++j) {
       CompressedGlyph& g = charGlyphs[j];
       NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
       g.SetComplex(g.IsClusterStart(), false, 0);
