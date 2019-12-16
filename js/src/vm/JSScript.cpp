@@ -4515,6 +4515,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
                   bce->outermostScope().hasOnChain(ScopeKind::NonSyntactic));
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
+  script->setFlag(ImmutableFlags::HasModuleGoal,
+                  bce->outermostScope().hasOnChain(ScopeKind::Module));
 
   // Initialize script flags from FunctionBox
   if (bce->sc->isFunctionBox()) {
@@ -5655,7 +5657,7 @@ LazyScript* LazyScript::Create(
     return nullptr;
   }
 
-  lazy->setFlag(ImmutableFlags::IsModule,
+  lazy->setFlag(ImmutableFlags::HasModuleGoal,
                 (parseGoal == frontend::ParseGoal::Module));
   lazy->setFlag(ImmutableFlags::HasInnerFunctions, !innerFunctionBoxes.empty());
 
