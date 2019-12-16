@@ -175,6 +175,17 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked() {
     mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
     mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);
+
+    // SoundTouch v2.1.2 uses automatic time-stretch settings with the following
+    // values:
+    // Tempo 0.5: 90ms sequence, 20ms seekwindow, 8ms overlap
+    // Tempo 2.0: 40ms sequence, 15ms seekwindow, 8ms overlap
+    // We are going to use a smaller 10ms sequence size to improve speech
+    // clarity, giving more resolution at high tempo and less reverb at low
+    // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
+    mTimeStretcher->setSetting(SETTING_SEQUENCE_MS, 10);
+    mTimeStretcher->setSetting(SETTING_SEEKWINDOW_MS, 15);
+    mTimeStretcher->setSetting(SETTING_OVERLAP_MS, 8);
   }
   return NS_OK;
 }
