@@ -91,6 +91,12 @@ nsIndexedToHTML::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
+nsIndexedToHTML::GetConvertedType(const nsACString& aFromType,
+                                  nsACString& aToType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
   nsCString buffer;
   nsresult rv = DoOnStartRequest(request, nullptr, buffer);

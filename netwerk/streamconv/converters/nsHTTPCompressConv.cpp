@@ -116,6 +116,12 @@ nsHTTPCompressConv::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
+nsHTTPCompressConv::GetConvertedType(const nsACString& aFromType,
+                                     nsACString& aToType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsHTTPCompressConv::OnStartRequest(nsIRequest* request) {
   LOG(("nsHttpCompresssConv %p onstart\n", this));
   nsCOMPtr<nsIStreamListener> listener;
