@@ -409,6 +409,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             }, owner = viewLifecycleOwner)
 
+            sessionManager.register(observer = object : SessionManager.Observer {
+                override fun onSessionSelected(session: Session) {
+                    browserToolbarView.expand()
+                }
+            }, owner = viewLifecycleOwner)
+
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
                 val primaryTextColor =
