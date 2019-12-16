@@ -34,17 +34,12 @@
                 android:process=":crash">
         </service>
 
-        <!-- These are needed for CrashTest -->
+        <!-- This is needed for ParentCrashTest -->
         <service
                 android:name=".crash.RemoteGeckoService"
                 android:enabled="true"
                 android:exported="false"
                 android:process=":gecko">
-        </service>
-        <service
-                android:name=".crash.CrashTestHandler"
-                android:enabled="true"
-                android:exported="false">
         </service>
     </application>
 
