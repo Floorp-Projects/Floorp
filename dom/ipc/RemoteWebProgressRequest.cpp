@@ -202,6 +202,10 @@ NS_IMETHODIMP RemoteWebProgressRequest::Cancel(nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP RemoteWebProgressRequest::GetCanceled(bool* aCanceled) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP RemoteWebProgressRequest::Suspend(void) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

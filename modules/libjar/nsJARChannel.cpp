@@ -573,6 +573,14 @@ nsJARChannel::Cancel(nsresult status) {
 }
 
 NS_IMETHODIMP
+nsJARChannel::GetCanceled(bool* aCanceled) {
+  nsresult status = NS_ERROR_FAILURE;
+  GetStatus(&status);
+  *aCanceled = NS_FAILED(status);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARChannel::Suspend() {
   ++mPendingEvent.suspendCount;
 
