@@ -1088,7 +1088,7 @@
         this._callProgressListeners(
           null,
           "onContentBlockingEvent",
-          [webProgress, null, securityUI.contentBlockingEvent, true],
+          [webProgress, null, newBrowser.getContentBlockingEvents(), true],
           true,
           false
         );
@@ -1995,7 +1995,7 @@
         true,
         false
       );
-      let event = securityUI ? securityUI.contentBlockingEvent : 0;
+      let event = aBrowser.getContentBlockingEvents();
       // Include the true final argument to indicate that this event is
       // simulated (instead of being observed by the webProgressListener).
       this._callProgressListeners(

@@ -2089,6 +2089,14 @@
         : Promise.reject("docshell isn't available");
     }
 
+    getContentBlockingEvents() {
+      let windowGlobal = this.browsingContext.currentWindowGlobal;
+      if (!windowGlobal) {
+        return 0;
+      }
+      return windowGlobal.contentBlockingEvents;
+    }
+
     // Send an asynchronous message to the remote child via an actor.
     // Note: use this only for messages through an actor. For old-style
     // messages, use the message manager. If 'all' is true, then send
