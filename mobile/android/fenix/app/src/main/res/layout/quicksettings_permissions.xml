@@ -45,7 +45,7 @@
         app:layout_constraintBottom_toTopOf="@id/notificationStatus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/microphoneLabel"
-        tools:text="Blocked by Android"
+        tools:text="@string/phone_feature_blocked_by_android"
         tools:visibility="visible" />
 
     <TextView
@@ -70,7 +70,7 @@
         app:layout_constraintBottom_toTopOf="@id/locationStatus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/notificationLabel"
-        tools:text="Blocked"
+        tools:text="@string/preference_option_phone_feature_blocked"
         tools:visibility="visible" />
 
     <TextView
@@ -95,7 +95,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/locationLabel"
-        tools:text="Blocked"
+        tools:text="@string/preference_option_phone_feature_blocked"
         tools:visibility="visible" />
 
     <TextView
