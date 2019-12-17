@@ -75,6 +75,9 @@ Converter.prototype = {
   asyncConvertData: function(fromType, toType, listener, ctx) {
     this.listener = listener;
   },
+  getConvertedType: function(fromType) {
+    return "text/html";
+  },
 
   onDataAvailable: function(request, inputStream, offset, count) {
     // Decode and insert data.
