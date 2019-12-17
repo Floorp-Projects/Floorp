@@ -45,7 +45,7 @@ setTimeout(doe,0);
 </script>
 </window>
 -->
-<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%3Cbox%20%20id%3D%22a%22%20observes%3D%22b%22%3E%0A%20%20%3Cbox%20id%3D%22b%22/%3E%0A%3C/box%3E%0A%0A%3Cbox%20%20id%3D%22a%22%20%20src%3D%22javascript%3A%22/%3E%0A%3Cbox%20id%3D%22b%22%20src%3D%22javascript%3A//%22/%3E%0A%3Ceditor%20observes%3D%22a%22/%3E%0A%0A%3Cscript%3E%20%0Afunction%20doe%28%29%20%7B%0Awindow.addEventListener%28%27DOMAttrModified%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0Adocument.documentElement.appendChild%28document.getElementsByTagName%28%27box%27%29%5B0%5D%29%3B%0A%7D%0AsetTimeout%28doe%2C0%29%3B%0A%3C/script%3E%0A%3C/window%3E" style="width:1000px;height: 300px;"></iframe>
+<iframe src="data:application/xhtml+xml;charset=utf-8,%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%3Cbox%20%20id%3D%22a%22%20observes%3D%22b%22%3E%0A%20%20%3Cbox%20id%3D%22b%22/%3E%0A%3C/box%3E%0A%0A%3Cbox%20%20id%3D%22a%22%20%20src%3D%22javascript%3A%22/%3E%0A%3Cbox%20id%3D%22b%22%20src%3D%22javascript%3A//%22/%3E%0A%3Ceditor%20observes%3D%22a%22/%3E%0A%0A%3Cscript%3E%20%0Afunction%20doe%28%29%20%7B%0Awindow.addEventListener%28%27DOMAttrModified%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0Adocument.documentElement.appendChild%28document.getElementsByTagName%28%27box%27%29%5B0%5D%29%3B%0A%7D%0AsetTimeout%28doe%2C0%29%3B%0A%3C/script%3E%0A%3C/window%3E" style="width:1000px;height: 300px;"></iframe>
 </body>
 </html>
 

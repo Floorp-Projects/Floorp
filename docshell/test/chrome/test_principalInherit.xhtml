@@ -59,7 +59,7 @@ var tests = [
     // same-type parent.
     // Load a javascript: URI in it to ensure that GetInheritedPrincipal will
     // force creation of a content viewer.
-    let xulWinURL = 'data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?>' +
+    let xulWinURL = 'data:application/xhtml+xml,<?xml version="1.0"?>' +
                     '<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
     let newWin = docShell.rootTreeItem.domWindow.openDialog(xulWinURL, "chrome_window", "chrome");
     loadListener(newWin, function () {

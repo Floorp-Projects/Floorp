@@ -60,12 +60,12 @@ function test() {
   var win = docShell.contentViewer.DOMDocument.defaultView;
 
   progressListener.add(docShell, function(){
-    is(win.document.documentURI, "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>");
+    is(win.document.documentURI, "data:application/xhtml+xml;charset=utf-8,<window/>");
     webNav.close();
     SimpleTest.finish();
   });
 
-  win.location = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>";
+  win.location = "data:application/xhtml+xml;charset=utf-8,<window/>";
 }
 
 addLoadEvent(function onLoad() {

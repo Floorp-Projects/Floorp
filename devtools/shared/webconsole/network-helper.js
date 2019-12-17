@@ -440,7 +440,6 @@ var NetworkHelper = {
     "application/atom+xml": "xml",
     "application/rss+xml": "xml",
     "application/vnd.mozilla.maybe.feed": "xml",
-    "application/vnd.mozilla.xul+xml": "xml",
     "application/javascript": "js",
     "application/x-javascript": "js",
     "application/x-httpd-php": "txt",
