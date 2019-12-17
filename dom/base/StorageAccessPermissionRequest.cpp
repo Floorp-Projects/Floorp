@@ -126,12 +126,11 @@ unsigned StorageAccessPermissionRequest::CalculateSimulatedDelay() {
     return 0;
   }
 
-  // Generate a random time value that is at least 5 seconds and at most 15
-  // minutes.
+  // Generate a random time value that is at least 0 and and most 3 seconds.
   std::srand(static_cast<unsigned>(PR_Now()));
 
-  const unsigned kMin = 5000;
-  const unsigned kMax = 6000;
+  const unsigned kMin = 0;
+  const unsigned kMax = 3000;
   const unsigned random = std::abs(std::rand());
 
   return kMin + random % (kMax - kMin);
