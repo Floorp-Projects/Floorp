@@ -610,6 +610,7 @@ var gSubDialog = {
   _dialogTemplate: null,
   _nextDialogID: 0,
   _preloadDialog: null,
+  _topLevelPrevActiveElement: null,
   get _topDialog() {
     return this._dialogs.length
       ? this._dialogs[this._dialogs.length - 1]
@@ -632,10 +633,13 @@ var gSubDialog = {
       return;
     }
 
-    if (!this._dialogs.length) {
+    if (this._dialogs.length) {
+      this._topDialog._prevActiveElement = document.activeElement;
+    } else {
       // When opening the first dialog, show the dialog stack to make sure
       // the browser binding can be constructed.
       this._dialogStack.hidden = false;
+      this._topLevelPrevActiveElement = document.activeElement;
     }
 
     this._preloadDialog.open(aURL, aFeatures, aParams, aClosingCallback);
@@ -693,16 +697,11 @@ var gSubDialog = {
     }
 
     if (this._topDialog) {
-      fm.moveFocus(
-        this._topDialog._frame.contentWindow,
-        null,
-        fm.MOVEFOCUS_FIRST,
-        fm.FLAG_BYKEY
-      );
+      this._topDialog._prevActiveElement.focus();
       this._topDialog._overlay.setAttribute("topmost", true);
       this._topDialog._addDialogEventListeners();
     } else {
-      fm.moveFocus(window, null, fm.MOVEFOCUS_ROOT, fm.FLAG_BYKEY);
+      this._topLevelPrevActiveElement.focus();
       this._dialogStack.hidden = true;
       this._removeStackEventListeners();
     }
