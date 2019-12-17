@@ -457,7 +457,7 @@ class FileUniqueId final {
 class MOZ_RAII AutoVirtualProtect final {
  public:
   AutoVirtualProtect(void* aAddress, size_t aLength, DWORD aProtFlags,
-                     HANDLE aTargetProcess = nullptr)
+                     HANDLE aTargetProcess = ::GetCurrentProcess())
       : mAddress(aAddress),
         mLength(aLength),
         mTargetProcess(aTargetProcess),
