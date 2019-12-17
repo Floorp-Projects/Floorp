@@ -234,7 +234,7 @@ class Documentation(MachCommandBase):
         except subprocess.CalledProcessError:
             version = None
 
-        if not version or not version.startswith('3.5'):
+        if not version or not version.startswith(b'3.5'):
             return 1
 
 
