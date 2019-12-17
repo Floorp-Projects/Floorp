@@ -29,8 +29,8 @@ describe("Discovery Stream <DSPrivacyModal>", () => {
     assert.calledOnce(dispatch);
   });
 
-  it("should call dispatch with the correct events", () => {
-    wrapper.instance().onLinkClick();
+  it("should call dispatch with the correct events for onLearnLinkClick", () => {
+    wrapper.instance().onLearnLinkClick();
 
     assert.calledOnce(dispatch);
     assert.calledWith(
@@ -40,5 +40,11 @@ describe("Discovery Stream <DSPrivacyModal>", () => {
         source: "DS_PRIVACY_MODAL",
       })
     );
+  });
+
+  it("should call dispatch with the correct events for onManageLinkClick", () => {
+    wrapper.instance().onManageLinkClick();
+
+    assert.calledOnce(dispatch);
   });
 });
