@@ -627,6 +627,10 @@ class nsWindow final : public nsBaseWidget {
   // Remember the last sizemode so that we can restore it when
   // leaving fullscreen
   nsSizeMode mLastSizeMode;
+  // We can't detect size state changes correctly so set this flag
+  // to force update mBounds after a size state change from a configure
+  // event.
+  bool mBoundsNeedSizeUpdate;
 
   static bool DragInProgress(void);
 
