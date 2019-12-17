@@ -754,10 +754,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                            ResumeMode resumeMode, MutableHandleValue vp);
 
   /*
-   * Report and clear the pending exception on ar.context, if any, and return
-   * ResumeMode::Terminate.
+   * Report and clear the pending exception on ar.context, if any.
    */
-  ResumeMode reportUncaughtException(mozilla::Maybe<AutoRealm>& ar);
+  void reportUncaughtException(mozilla::Maybe<AutoRealm>& ar);
 
   /*
    * Cope with an error or exception in a debugger hook.
