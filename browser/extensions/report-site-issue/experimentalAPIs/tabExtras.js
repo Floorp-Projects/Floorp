@@ -174,11 +174,13 @@ function getInfoFrameScript(messageName) {
       });
   }
 
-  sendAsyncMessage(messageName, {
-    hasMixedActiveContentBlocked: docShell.hasMixedActiveContentBlocked,
-    hasMixedDisplayContentBlocked: docShell.hasMixedDisplayContentBlocked,
-    hasTrackingContentBlocked: docShell.hasTrackingContentBlocked,
-    log: getLoggedMessages(content),
+  docShell.getHasTrackingContentBlocked().then(hasTrackingContentBlocked => {
+    sendAsyncMessage(messageName, {
+      hasMixedActiveContentBlocked: docShell.hasMixedActiveContentBlocked,
+      hasMixedDisplayContentBlocked: docShell.hasMixedDisplayContentBlocked,
+      hasTrackingContentBlocked,
+      log: getLoggedMessages(content),
+    });
   });
 }
 

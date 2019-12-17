@@ -166,6 +166,9 @@ class WindowGlobalParent final : public WindowGlobalActor,
                                          const ClonedMessageData& aData,
                                          const ClonedMessageData& aStack);
 
+  mozilla::ipc::IPCResult RecvGetContentBlockingEvents(
+      GetContentBlockingEventsResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,

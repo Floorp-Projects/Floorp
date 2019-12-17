@@ -80,7 +80,7 @@ function checkForFrameworks(tabId) {
         ${hasFastClickPageScript};
         ${hasMobifyPageScript};
         ${hasMarfeelPageScript};
-        
+
         const result = {
           hasFastClick: hasFastClickPageScript(),
           hasMobify: hasMobifyPageScript(),

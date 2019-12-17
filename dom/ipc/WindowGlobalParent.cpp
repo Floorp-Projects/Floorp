@@ -442,6 +442,14 @@ NS_IMPL_ISUPPORTS0(ShareHandler)
 
 }  // namespace
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvGetContentBlockingEvents(
+    WindowGlobalParent::GetContentBlockingEventsResolver&& aResolver) {
+  uint32_t events = GetContentBlockingLog()->GetContentBlockingEventsInLog();
+  aResolver(events);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
     IPCWebShareData&& aData, WindowGlobalParent::ShareResolver&& aResolver) {
   // Widget Layer handoff...
