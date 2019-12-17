@@ -26,7 +26,10 @@ exclude: true
   attaching a [`LoginStorage.Delegate`][73.8] via
   [`GeckoRuntime#setLoginStorageDelegate`][73.9]
   ([bug 1602881]({{bugzilla}}1602881))
-
+- Added [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_AUDIBLE`][73.10] and
+  [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_INAUDIBLE`][73.11]. These control
+  autoplay permissions for audible and inaudible videos.
+  ([bug 1577596]({{bugzilla}}1577596))
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
 [73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
@@ -37,6 +40,8 @@ exclude: true
 [73.7]: {{javadoc_uri}}/LoginStorage.html
 [73.8]: {{javadoc_uri}}/LoginStorage.Delegate.html
 [73.9]: {{javadoc_uri}}/GeckoRuntime.html#setLoginStorageDelegate-org.mozilla.geckoview.LoginStorage.Delegate-
+[73.10]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE
+[73.11]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -105,9 +110,10 @@ exclude: true
 [72.20]: https://developer.android.com/reference/java/lang/String
 [72.21]: {{javadoc_uri}}/WebExtension.Icon.html
 [72.22]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAGS_STREAM_FAILURE_TEST
-[72.23]: {{javadoc_uri}}/CrashReporter#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
+[72.23]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
 [72.24]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_XR
 
+=
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
   ([bug 1584479]({{bugzilla}}1584479))
@@ -504,4 +510,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 07ee732ba2eaafada09739c61c0196e427a2f0ed
+[api-version]: 53eef399f685d92e66c3af73363522edebd3ea93
