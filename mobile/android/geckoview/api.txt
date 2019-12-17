@@ -409,6 +409,8 @@ package org.mozilla.geckoview {
     ctor public GeckoResult(GeckoResult<T>);
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>);
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
+    method @NonNull public static <V> GeckoResult<List<V>> allOf(@NonNull GeckoResult<V>);
+    method @NonNull public static <V> GeckoResult<List<V>> allOf(@Nullable List<GeckoResult<V>>);
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);

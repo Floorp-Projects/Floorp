@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeoutException;
 
@@ -83,6 +85,82 @@ public class GeckoResultTest {
             done();
         });
 
+        waitUntilDone();
+    }
+
+    @Test
+    @UiThreadTest
+    public void allOfError() throws Throwable {
+        final GeckoResult<List<Integer>> result = GeckoResult.allOf(
+                new GeckoResult<>(GeckoResult.fromValue(12)),
+                new GeckoResult<>(GeckoResult.fromValue(35)),
+                new GeckoResult<>(GeckoResult.fromException(
+                        new RuntimeException("Sorry not sorry"))),
+                new GeckoResult<>(GeckoResult.fromValue(0)));
+
+        UiThreadUtils.waitForResult(result.accept(
+            value -> { throw new AssertionError("result should fail"); },
+            error -> {
+                assertThat("Error should match", error instanceof RuntimeException, is(true));
+                assertThat("Error should match", error.getMessage(), equalTo("Sorry not sorry"));
+            }), mEnv.getDefaultTimeoutMillis());
+    }
+
+    @Test
+    @UiThreadTest
+    public void allOfEmpty() {
+        final GeckoResult<List<Integer>> result = GeckoResult.allOf();
+
+        result.accept(value -> {
+            assertThat("Value should match", value.isEmpty(), is(true));
+            done();
+        });
+
+        waitUntilDone();
+    }
+
+    @Test
+    @UiThreadTest
+    public void allOfNull() {
+        final GeckoResult<List<Integer>> result = GeckoResult.allOf(
+                (List<GeckoResult<Integer>>) null);
+
+        result.accept(value -> {
+            assertThat("Value should match", value, equalTo(null));
+            done();
+        });
+
+        waitUntilDone();
+    }
+
+    @Test
+    @UiThreadTest
+    public void allOfMany() {
+        final GeckoResult<Integer> pending1 = new GeckoResult<>();
+        final GeckoResult<Integer> pending2 = new GeckoResult<>();
+
+        final GeckoResult<List<Integer>> result = GeckoResult.allOf(
+                pending1,
+                new GeckoResult<>(GeckoResult.fromValue(12)),
+                pending2,
+                new GeckoResult<>(GeckoResult.fromValue(35)),
+                new GeckoResult<>(GeckoResult.fromValue(9)),
+                new GeckoResult<>(GeckoResult.fromValue(0)));
+
+        result.accept(value -> {
+            assertThat("Value should match", value, equalTo(
+                    Arrays.asList(123, 12, 321, 35, 9, 0)));
+            done();
+        });
+
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ex) {
+        }
+
+        // Complete the results out of order so that we can verify the input order is preserved
+        pending2.complete(321);
+        pending1.complete(123);
         waitUntilDone();
     }
 
