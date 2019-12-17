@@ -5838,6 +5838,27 @@
   value: false
   mirror: always
 
+- name: media.eme.audio.blank
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: media.eme.video.blank
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: media.eme.chromium-api.video-shmems
+  type: RelaxedAtomicUint32
+  value: 6
+  mirror: always
+
+# Is support for MediaKeys.getStatusForPolicy enabled?
+- name: media.eme.hdcp-policy-check.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: media.clearkey.persistent-license.enabled
   type: bool
   value: false
@@ -6091,20 +6112,6 @@
 - name: media.gmp.decoder.enabled
   type: RelaxedAtomicBool
   value: false
-  mirror: always
-
-- name: media.eme.audio.blank
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-- name: media.eme.video.blank
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: media.eme.chromium-api.video-shmems
-  type: RelaxedAtomicUint32
-  value: 6
   mirror: always
 
 # Whether to suspend decoding of videos in background tabs.
@@ -6469,12 +6476,6 @@
 - name: media.allowed-to-play.enabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Is support for MediaKeys.getStatusForPolicy enabled?
-- name: media.eme.hdcp-policy-check.enabled
-  type: bool
-  value: false
   mirror: always
 
 # Is support for MediaDevices.ondevicechange enabled?
