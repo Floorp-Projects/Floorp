@@ -10286,7 +10286,7 @@ __webpack_require__.r(__webpack_exports__);
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals ContentSearchUIController, ContentSearchHandoffUIController */
+/* globals ContentSearchUIController */
 
 
 
@@ -10301,7 +10301,6 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
-    this.onInputMountHandoff = this.onInputMountHandoff.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
   }
 
@@ -10391,14 +10390,6 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
     }
   }
 
-  onInputMountHandoff(input) {
-    if (input) {
-      // The handoff UI controller helps usset the search icon and reacts to
-      // changes to default engine to keep everything in sync.
-      this._handoffSearchController = new ContentSearchHandoffUIController();
-    }
-  }
-
   onSearchHandoffButtonMount(button) {
     // Keep a reference to the button for use during "paste" event handling.
     this._searchHandoffButton = button;
@@ -10450,11 +10441,16 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
       tabIndex: "-1",
       "aria-hidden": "true",
       onDrop: this.onSearchHandoffDrop,
-      onPaste: this.onSearchHandoffPaste,
-      ref: this.onInputMountHandoff
+      onPaste: this.onSearchHandoffPaste
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "fake-caret"
-    }))));
+    })), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+      type: "search",
+      style: {
+        display: "none"
+      },
+      ref: this.onInputMount
+    })));
   }
 
 }

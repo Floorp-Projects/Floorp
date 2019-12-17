@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals ContentSearchUIController, ContentSearchHandoffUIController */
+/* globals ContentSearchUIController */
 "use strict";
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
@@ -18,7 +18,6 @@ export class _Search extends React.PureComponent {
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
-    this.onInputMountHandoff = this.onInputMountHandoff.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(
       this
     );
@@ -104,14 +103,6 @@ export class _Search extends React.PureComponent {
     }
   }
 
-  onInputMountHandoff(input) {
-    if (input) {
-      // The handoff UI controller helps usset the search icon and reacts to
-      // changes to default engine to keep everything in sync.
-      this._handoffSearchController = new ContentSearchHandoffUIController();
-    }
-  }
-
   onSearchHandoffButtonMount(button) {
     // Keep a reference to the button for use during "paste" event handling.
     this._searchHandoffButton = button;
@@ -176,10 +167,18 @@ export class _Search extends React.PureComponent {
                 aria-hidden="true"
                 onDrop={this.onSearchHandoffDrop}
                 onPaste={this.onSearchHandoffPaste}
-                ref={this.onInputMountHandoff}
               />
               <div className="fake-caret" />
             </button>
+            {/*
+            This dummy and hidden input below is so we can load ContentSearchUIController.
+            Why? It sets --newtab-search-icon for us and it isn't trivial to port over.
+          */}
+            <input
+              type="search"
+              style={{ display: "none" }}
+              ref={this.onInputMount}
+            />
           </div>
         )}
       </div>
