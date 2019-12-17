@@ -200,16 +200,7 @@ NS_IMETHODIMP
 nsIconChannel::GetStatus(nsresult* status) { return mPump->GetStatus(status); }
 
 NS_IMETHODIMP
-nsIconChannel::Cancel(nsresult status) {
-  mCanceled = true;
-  return mPump->Cancel(status);
-}
-
-NS_IMETHODIMP
-nsIconChannel::GetCanceled(bool* result) {
-  *result = mCanceled;
-  return NS_OK;
-}
+nsIconChannel::Cancel(nsresult status) { return mPump->Cancel(status); }
 
 NS_IMETHODIMP
 nsIconChannel::Suspend(void) { return mPump->Suspend(); }

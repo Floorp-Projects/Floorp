@@ -101,9 +101,6 @@
   }                                                                            \
   NS_IMETHOD GetIsDocument(bool* aIsDocument) override {                       \
     return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsDocument(aIsDocument);     \
-  }                                                                            \
-  NS_IMETHOD GetCanceled(bool* aCanceled) override {                           \
-    return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanceled(aCanceled);         \
   };
 
 class nsAboutCache final : public nsIAboutModule {

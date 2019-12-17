@@ -485,14 +485,6 @@ nsJSChannel::Cancel(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetCanceled(bool* aCanceled) {
-  nsresult status = NS_ERROR_FAILURE;
-  GetStatus(&status);
-  *aCanceled = NS_FAILED(status);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJSChannel::Suspend() { return mStreamChannel->Suspend(); }
 
 NS_IMETHODIMP
