@@ -143,12 +143,12 @@ ResumeMode DebugAPI::onNativeCall(JSContext* cx, const CallArgs& args,
 }
 
 /* static */
-ResumeMode DebugAPI::onDebuggerStatement(JSContext* cx,
-                                         AbstractFramePtr frame) {
-  if (!cx->realm()->isDebuggee()) {
-    return ResumeMode::Continue;
+bool DebugAPI::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame) {
+  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+    return slowPathOnDebuggerStatement(cx, frame);
   }
-  return slowPathOnDebuggerStatement(cx, frame);
+
+  return true;
 }
 
 /* static */
