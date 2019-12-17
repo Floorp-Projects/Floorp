@@ -317,7 +317,7 @@ public class WebExtension {
         /* package */ final long id;
         /* package */ PortDelegate delegate;
         /* package */ boolean disconnected = false;
-        /* package */ final WeakReference<DisconnectDelegate> disconnectDelegate;
+        /* package */ final WeakReference<Observer> observer;
 
         /** {@link MessageSender} corresponding to this port. */
         public @NonNull final MessageSender sender;
@@ -325,24 +325,25 @@ public class WebExtension {
         /** The application identifier of the MessageDelegate that opened this port. */
         public @NonNull final String name;
 
-        /* package */ interface DisconnectDelegate {
+        /* package */ interface Observer {
             void onDisconnectFromApp(Port port);
+            void onDelegateAttached(Port port);
         }
 
         /** Override for tests. */
         protected Port() {
             this.id = -1;
             this.delegate = null;
-            this.disconnectDelegate = null;
+            this.observer = null;
             this.sender = null;
             this.name = null;
         }
 
         /* package */ Port(final String name, final long id, final MessageSender sender,
-                           final DisconnectDelegate disconnectDelegate) {
+                           final Observer observer) {
             this.id = id;
-            this.delegate = NULL_PORT_DELEGATE;
-            this.disconnectDelegate = new WeakReference<>(disconnectDelegate);
+            this.delegate = null;
+            this.observer = new WeakReference<>(observer);
             this.sender = sender;
             this.name = name;
         }
@@ -373,9 +374,9 @@ public class WebExtension {
                 return;
             }
 
-            DisconnectDelegate disconnectDelegate = this.disconnectDelegate.get();
-            if (disconnectDelegate != null) {
-                disconnectDelegate.onDisconnectFromApp(this);
+            final Observer observer = this.observer.get();
+            if (observer != null) {
+                observer.onDisconnectFromApp(this);
             }
 
             GeckoBundle args = new GeckoBundle(1);
@@ -392,28 +393,13 @@ public class WebExtension {
          * this {@link Port}.
          */
         public void setDelegate(final @Nullable PortDelegate delegate) {
-            if (delegate != null) {
-                this.delegate = delegate;
-            } else {
-                this.delegate = NULL_PORT_DELEGATE;
+            this.delegate = delegate;
+            final Observer observer = this.observer.get();
+            if (observer != null) {
+                observer.onDelegateAttached(this);
             }
         }
     }
-
-    /* package */ static final WebExtension.PortDelegate NULL_PORT_DELEGATE = new WebExtension.PortDelegate() {
-        @Override
-        public void onPortMessage(final @NonNull Object message,
-                                  final @NonNull Port port) {
-            Log.d(LOGTAG, "Unhandled message from " + port.sender.webExtension.id
-                    + ": " + message.toString());
-        }
-
-        @NonNull
-        @Override
-        public void onDisconnect(final @NonNull Port port) {
-            Log.d(LOGTAG, "Unhandled disconnect from " + port.sender.webExtension.id);
-        }
-    };
 
     private static class Sender {
         public String webExtensionId;
