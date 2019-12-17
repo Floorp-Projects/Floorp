@@ -137,13 +137,6 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
             # something bad happened!
             raise IniParseError(fp, linenum, "Unexpected line '{}'".format(stripped))
 
-    # server-root is a special os path declared relative to the manifest file.
-    # inheritance demands we expand it as absolute
-    if 'server-root' in variables:
-        root = os.path.join(os.path.dirname(fp.name),
-                            variables['server-root'])
-        variables['server-root'] = os.path.abspath(root)
-
     # return the default section only if requested
     if defaults_only:
         return [(default, variables)]
