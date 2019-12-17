@@ -1887,7 +1887,8 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // its reflow method, because that method just resolves "auto" BSize values
     // to one line-height rather than by measuring its contents' BSize.)
     nscoord contentBSize = 0;
-    nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(contentBSize);
+    nscoord autoBSize =
+        aReflowInput.ApplyMinMaxBSize(contentBSize, aState.mConsumedBSize);
     aMetrics.mCarriedOutBEndMargin.Zero();
     autoBSize += borderPadding.BStartEnd(wm);
     finalSize.BSize(wm) = autoBSize;
@@ -1895,14 +1896,23 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     nscoord contentBSize = blockEndEdgeOfChildren - borderPadding.BStart(wm);
     nscoord lineClampedContentBSize =
         ApplyLineClamp(aReflowInput, this, contentBSize);
-    nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(lineClampedContentBSize);
+    nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(lineClampedContentBSize,
+                                                      aState.mConsumedBSize);
     if (autoBSize != contentBSize) {
       // Our min-block-size, max-block-size, or -webkit-line-clamp value made
       // our bsize change.  Don't carry out our kids' block-end margins.
       aMetrics.mCarriedOutBEndMargin.Zero();
     }
-    autoBSize += borderPadding.BStart(wm) + borderPadding.BEnd(wm);
-    finalSize.BSize(wm) = autoBSize;
+    nscoord bSize = autoBSize + borderPadding.BStartEnd(wm);
+    if (MOZ_UNLIKELY(autoBSize > contentBSize &&
+                     bSize > aReflowInput.AvailableBSize() &&
+                     aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
+      // Applying `min-size` made us overflow our available size.
+      // Clamp it and report that we're Incomplete.
+      bSize = aReflowInput.AvailableBSize();
+      aState.mReflowStatus.SetIncomplete();
+    }
+    finalSize.BSize(wm) = bSize;
   } else {
     NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
                  "Shouldn't be incomplete if availableBSize is UNCONSTRAINED.");
@@ -1912,12 +1922,30 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       // returns |nscoord_MAX| when DONT_CLEAR_PUSHED_FLOATS is false.
       blockEndEdgeOfChildren = aState.mBCoord = aReflowInput.AvailableBSize();
     }
-    finalSize.BSize(wm) =
-        std::max(aState.mBCoord, aReflowInput.AvailableBSize());
+    nscoord bSize = std::max(aState.mBCoord, aReflowInput.AvailableBSize());
     if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
       // This should never happen, but it does. See bug 414255
-      finalSize.BSize(wm) = aState.mBCoord;
+      bSize = aState.mBCoord;
     }
+    const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
+    if (maxBSize != NS_UNCONSTRAINEDSIZE &&
+        // FIXME: wallpaper for bug 1603088
+        !(Style()->GetPseudoType() == PseudoStyleType::columnContent ||
+          Style()->GetPseudoType() == PseudoStyleType::columnSet) &&
+        aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
+      nscoord bEnd = std::max(0, maxBSize - aState.mConsumedBSize) +
+                     borderPadding.BStart(wm);
+      // Note that |borderPadding| has GetSkipSides applied, so we ask
+      // aReflowInput for the actual value we'd use on a last fragment here:
+      bEnd += aReflowInput.ComputedLogicalBorderPadding().BEnd(wm);
+      if (bEnd <= aReflowInput.AvailableBSize()) {
+        // We actually fit after applying `max-size` so we should be
+        // Overflow-Incomplete instead.
+        bSize = bEnd;
+        aState.mReflowStatus.SetOverflowIncomplete();
+      }
+    }
+    finalSize.BSize(wm) = bSize;
   }
 
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
