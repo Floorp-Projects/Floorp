@@ -39,6 +39,8 @@ Created on Apr 11, 2012
 
 @author: mrmiller
 """
+from __future__ import absolute_import
+
 import argparse
 import concurrent.futures
 import errno
