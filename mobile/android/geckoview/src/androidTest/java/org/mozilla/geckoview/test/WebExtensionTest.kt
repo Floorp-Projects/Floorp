@@ -45,12 +45,15 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/messaging-content/"
     }
 
+    private val controller
+            get() = sessionRule.runtime.webExtensionController
+
     @Before
     fun setup() {
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtensionController.PromptDelegate::class,
-                sessionRule.runtime.webExtensionController::setPromptDelegate,
-                { sessionRule.runtime.webExtensionController.promptDelegate = null },
+                controller::setPromptDelegate,
+                { controller.promptDelegate = null },
                 object : WebExtensionController.PromptDelegate {}
         )
     }
@@ -123,8 +126,7 @@ class WebExtensionTest : BaseSessionTest() {
         })
 
         val borderify = sessionRule.waitForResult(
-                sessionRule.runtime.webExtensionController.install(
-                    "resource://android/assets/web_extensions/borderify.xpi"))
+                controller.install("resource://android/assets/web_extensions/borderify.xpi"))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -135,7 +137,7 @@ class WebExtensionTest : BaseSessionTest() {
                 color as String, equalTo("red"))
 
         // Unregister WebExtension and check again
-        sessionRule.waitForResult(sessionRule.runtime.webExtensionController.uninstall(borderify))
+        sessionRule.waitForResult(controller.uninstall(borderify))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -155,8 +157,7 @@ class WebExtensionTest : BaseSessionTest() {
         })
 
         sessionRule.waitForResult(
-                sessionRule.runtime.webExtensionController.install(
-                        "resource://android/assets/web_extensions/$name")
+                controller.install("resource://android/assets/web_extensions/$name")
                         .accept({
                             // We should not be able to install unsigned extensions
                             assertTrue(false)
@@ -178,20 +179,18 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        val borderify = sessionRule.waitForResult(
-                sessionRule.runtime.webExtensionController.install(
-                        "resource://android/assets/web_extensions/borderify-unsigned.xpi")
-                        .then { extension ->
-                            assertEquals(extension!!.metaData!!.signedState,
-                                    WebExtension.SignedStateFlags.MISSING)
-                            assertEquals(extension.metaData!!.blocklistState,
-                                    WebExtension.BlocklistStateFlags.NOT_BLOCKED)
-                            assertEquals(extension.metaData!!.name, "Borderify")
-                            GeckoResult.fromValue(extension)
-                        })
+        val borderify = sessionRule.waitForResult(controller.install(
+                "resource://android/assets/web_extensions/borderify-unsigned.xpi")
+                .then { extension ->
+                    assertEquals(extension!!.metaData!!.signedState,
+                            WebExtension.SignedStateFlags.MISSING)
+                    assertEquals(extension.metaData!!.blocklistState,
+                            WebExtension.BlocklistStateFlags.NOT_BLOCKED)
+                    assertEquals(extension.metaData!!.name, "Borderify")
+                    GeckoResult.fromValue(extension)
+                })
 
-        sessionRule.waitForResult(
-                sessionRule.runtime.webExtensionController.uninstall(borderify))
+        sessionRule.waitForResult(controller.uninstall(borderify))
     }
 
     @Test
@@ -280,7 +279,7 @@ class WebExtensionTest : BaseSessionTest() {
                 return GeckoResult.fromValue(GeckoSession(sessionRule.session.settings))
             }
         }
-        sessionRule.runtime.webExtensionController.tabDelegate = tabDelegate
+        controller.tabDelegate = tabDelegate
         tabsExtension = WebExtension(TABS_CREATE_BACKGROUND)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
@@ -305,8 +304,8 @@ class WebExtensionTest : BaseSessionTest() {
 
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtensionController.TabDelegate::class,
-                sessionRule.runtime.webExtensionController::setTabDelegate,
-                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
                 object : WebExtensionController.TabDelegate {
             override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
                 extensionCreatedSession = GeckoSession(sessionRule.session.settings)
@@ -348,8 +347,8 @@ class WebExtensionTest : BaseSessionTest() {
 
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtensionController.TabDelegate::class,
-                sessionRule.runtime.webExtensionController::setTabDelegate,
-                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
                 object : WebExtensionController.TabDelegate {
             override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
                 assertEquals(existingSession, session)
@@ -772,8 +771,8 @@ class WebExtensionTest : BaseSessionTest() {
         // Test that after unregistering an extension, all its pages get closed
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtensionController.TabDelegate::class,
-                sessionRule.runtime.webExtensionController::setTabDelegate,
-                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
                 object : WebExtensionController.TabDelegate {})
 
         val unregister = sessionRule.runtime.unregisterWebExtension(extension)
