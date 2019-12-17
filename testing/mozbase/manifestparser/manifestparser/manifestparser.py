@@ -185,22 +185,10 @@ class ManifestParser(object):
         else:
             self.manifest_defaults[filename] = defaults
 
-        parent_section_found = False
-
         # get the tests
         for section, data in sections:
-            # In case of defaults only, no other section than parent: has to
-            # be processed.
-            if defaults_only and not section.startswith('parent:'):
-                continue
-
-            # read the parent manifest if specified
-            if section.startswith('parent:'):
-                parent_section_found = True
-
-                include_file = read_file('parent:')
-                if include_file:
-                    self._read(root, include_file, {}, True)
+            # In case of defaults only, no section has to be processed.
+            if defaults_only:
                 continue
 
             # a file to include
@@ -256,7 +244,7 @@ class ManifestParser(object):
 
         # if no parent: section was found for defaults-only, only read the
         # defaults section of the manifest without interpreting variables
-        if defaults_only and not parent_section_found:
+        if defaults_only:
             sections = read_ini(fp=fp, variables=defaults, defaults_only=True,
                                 strict=self.strict)
             (section, self._ancestor_defaults) = sections[0]
