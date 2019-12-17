@@ -1253,6 +1253,7 @@ impl Device {
         allow_texture_swizzling: bool,
         dump_shader_source: Option<String>,
         surface_origin_is_top_left: bool,
+        panic_on_gl_error: bool,
     ) -> Device {
         let mut max_texture_size = [0];
         let mut max_texture_layers = [0];
@@ -1279,11 +1280,12 @@ impl Device {
         // this on release builds because the synchronous call can stall the
         // pipeline.
         let supports_khr_debug = supports_extension(&extensions, "GL_KHR_debug");
-        if cfg!(debug_assertions) {
+        if panic_on_gl_error || cfg!(debug_assertions) {
             gl = gl::ErrorReactingGl::wrap(gl, move |gl, name, code| {
                 if supports_khr_debug {
                     Self::log_driver_messages(gl);
                 }
+                println!("Caught GL error {:x} at {}", code, name);
                 panic!("Caught GL error {:x} at {}", code, name);
             });
         }

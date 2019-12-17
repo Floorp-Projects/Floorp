@@ -3725,6 +3725,15 @@
 #ifdef NIGHTLY_BUILD
   # Keep this pref hidden on non-nightly builds to avoid people accidentally
   # turning it on.
+- name: gfx.webrender.panic-on-gl-error
+  type: bool
+  value: false
+  mirror: once
+#endif
+
+#ifdef NIGHTLY_BUILD
+  # Keep this pref hidden on non-nightly builds to avoid people accidentally
+  # turning it on.
 -   name: gfx.webrender.start-debug-server
     type: RelaxedAtomicBool
     value: false

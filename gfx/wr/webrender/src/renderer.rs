@@ -1974,6 +1974,7 @@ impl Renderer {
             options.allow_texture_swizzling,
             options.dump_shader_source.take(),
             options.surface_origin_is_top_left,
+            options.panic_on_gl_error,
         );
 
         let color_cache_formats = device.preferred_color_formats();
@@ -6178,6 +6179,9 @@ pub struct RendererOptions {
     /// The configuration options defining how WR composites the final scene.
     pub compositor_config: CompositorConfig,
     pub enable_gpu_markers: bool,
+    /// If true, panic whenever a GL error occurs. This has a significant
+    /// performance impact, so only use when debugging specific problems!
+    pub panic_on_gl_error: bool,
 }
 
 impl Default for RendererOptions {
@@ -6233,6 +6237,7 @@ impl Default for RendererOptions {
             surface_origin_is_top_left: false,
             compositor_config: CompositorConfig::default(),
             enable_gpu_markers: true,
+            panic_on_gl_error: false,
         }
     }
 }
