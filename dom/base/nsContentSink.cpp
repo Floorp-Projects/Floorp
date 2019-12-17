@@ -248,40 +248,6 @@ nsresult nsContentSink::ProcessHeaderData(nsAtom* aHeader,
 
   mDocument->SetHeaderData(aHeader, aValue);
 
-  if (aHeader == nsGkAtoms::setcookie &&
-      StaticPrefs::dom_metaElement_setCookie_allowed()) {
-    // Note: Necko already handles cookies set via the channel.  We can't just
-    // call SetCookie on the channel because we want to do some security checks
-    // here.
-    nsCOMPtr<nsICookieService> cookieServ =
-        do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Get a URI from the document principal
-
-    // We use the original content URI in case the principal was changed
-    // by SetDomain
-
-    // Note that a non-content principal (eg the system principal) will return
-    // a null URI.
-    nsCOMPtr<nsIURI> contentURI;
-    rv = mDocument->NodePrincipal()->GetURI(getter_AddRefs(contentURI));
-    NS_ENSURE_TRUE(contentURI, rv);
-
-    nsCOMPtr<nsIChannel> channel;
-    if (mParser) {
-      mParser->GetChannel(getter_AddRefs(channel));
-    }
-
-    rv = cookieServ->SetCookieString(contentURI, nullptr,
-                                     NS_ConvertUTF16toUTF8(aValue), channel);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   return rv;
 }
 
@@ -750,13 +716,6 @@ nsresult nsContentSink::ProcessMETATag(nsIContent* aContent) {
     nsContentUtils::ASCIIToLower(header);
     if (nsGkAtoms::refresh->Equals(header) &&
         (mDocument->GetSandboxFlags() & SANDBOXED_AUTOMATIC_FEATURES)) {
-      return NS_OK;
-    }
-
-    // Don't allow setting cookies in <meta http-equiv> in cookie averse
-    // documents.
-    if (nsGkAtoms::setcookie->Equals(header) && mDocument->IsCookieAverse() &&
-        StaticPrefs::dom_metaElement_setCookie_allowed()) {
       return NS_OK;
     }
 

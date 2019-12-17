@@ -1846,11 +1846,6 @@
   value: false
   mirror: always
 
-- name: dom.metaElement.setCookie.allowed
-  type: bool
-  value: false
-  mirror: always
-
 # Timeout clamp in ms for timeouts we clamp.
 - name: dom.min_timeout_value
   type: int32_t
