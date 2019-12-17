@@ -161,7 +161,7 @@ internal fun JSONObject.getAddons(): List<Addon> {
 internal fun JSONObject.toAddons(): Addon {
     return with(getJSONObject("addon")) {
         Addon(
-            id = getSafeString("id"),
+            id = getSafeString("guid"),
             authors = getAuthors(),
             categories = getCategories(),
             createdAt = getSafeString("created"),
