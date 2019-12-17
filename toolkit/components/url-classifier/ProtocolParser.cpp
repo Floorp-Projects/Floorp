@@ -30,7 +30,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 // Updates will fail if fed chunks larger than this
-const uint32_t MAX_CHUNK_SIZE = (4 * 1024 * 1024);
+const uint32_t MAX_CHUNK_SIZE = (1024 * 1024);
 // Updates will fail if the total number of tocuhed chunks is larger than this
 const uint32_t MAX_CHUNK_RANGE = 1000000;
 
