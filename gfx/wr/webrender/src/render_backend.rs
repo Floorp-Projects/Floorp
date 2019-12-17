@@ -1548,7 +1548,8 @@ impl RenderBackend {
             let composite_descriptor = rendered_document
                 .frame
                 .composite_state
-                .create_descriptor();
+                .descriptor
+                .clone();
 
             // If there are no texture cache updates to apply, and if the produced
             // frame is a no-op, and the compositor state is equal, then we can skip

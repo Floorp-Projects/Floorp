@@ -7,7 +7,7 @@ use api::{YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF}
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
-use crate::composite::{CompositeState, CompositeTile, CompositeTileSurface};
+use crate::composite::{CompositeState};
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
@@ -15,7 +15,7 @@ use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, BrushShaderKind
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
-use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, TileSurface};
+use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT, SpaceMapper};
@@ -1222,43 +1222,14 @@ impl BatchBuilder {
                                     .expect("bug: unable to map clip rect");
                                 let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
                                 let z_id = composite_state.z_generator.next();
-                                for key in &tile_cache.tiles_to_draw {
-                                    let tile = &tile_cache.tiles[key];
-                                    if !tile.is_visible {
-                                        // This can occur when a tile is found to be occluded during frame building.
-                                        continue;
-                                    }
-                                    let device_rect = (tile.world_rect * ctx.global_device_pixel_scale).round();
-                                    let dirty_rect = (tile.world_dirty_rect * ctx.global_device_pixel_scale).round();
-                                    let surface = tile.surface.as_ref().expect("no tile surface set!");
 
-                                    let (surface, is_opaque) = match surface {
-                                        TileSurface::Color { color } => {
-                                            (CompositeTileSurface::Color { color: *color }, true)
-                                        }
-                                        TileSurface::Clear => {
-                                            (CompositeTileSurface::Clear, false)
-                                        }
-                                        TileSurface::Texture { descriptor, .. } => {
-                                            let surface = descriptor.resolve(ctx.resource_cache);
-                                            (
-                                                CompositeTileSurface::Texture { surface },
-                                                tile.is_opaque || tile_cache.is_opaque(),
-                                            )
-                                        }
-                                    };
-
-                                    let tile = CompositeTile {
-                                        surface,
-                                        rect: device_rect,
-                                        dirty_rect,
-                                        clip_rect: device_clip_rect,
-                                        z_id,
-                                        tile_id: tile.id,
-                                    };
-
-                                    composite_state.push_tile(tile, is_opaque);
-                                }
+                                composite_state.push_surface(
+                                    tile_cache,
+                                    device_clip_rect,
+                                    z_id,
+                                    ctx.global_device_pixel_scale,
+                                    ctx.resource_cache,
+                                );
                             }
                             PictureCompositeMode::Filter(ref filter) => {
                                 assert!(filter.is_visible());

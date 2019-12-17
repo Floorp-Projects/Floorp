@@ -17,7 +17,7 @@ use crate::capture::ExternalCaptureImage;
 use crate::capture::PlainExternalImage;
 #[cfg(any(feature = "replay", feature = "png"))]
 use crate::capture::CaptureConfig;
-use crate::composite::{NativeSurfaceId, NativeSurfaceOperation, NativeSurfaceOperationDetails};
+use crate::composite::{NativeSurfaceId, NativeSurfaceOperation, NativeTileId, NativeSurfaceOperationDetails};
 use crate::device::TextureFilter;
 use euclid::{point2, size2};
 use crate::glyph_cache::GlyphCache;
@@ -1775,21 +1775,19 @@ impl ResourceCache {
     }
 
     /// Queue up allocation of a new OS native compositor surface with the
-    /// specified id and dimensions.
+    /// specified tile size.
     pub fn create_compositor_surface(
         &mut self,
-        size: DeviceIntSize,
-        is_opaque: bool,
+        tile_size: DeviceIntSize,
     ) -> NativeSurfaceId {
         let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed));
 
         self.pending_native_surface_updates.push(
             NativeSurfaceOperation {
-                id,
                 details: NativeSurfaceOperationDetails::CreateSurface {
-                    size,
-                    is_opaque,
-                }
+                    id,
+                    tile_size,
+                },
             }
         );
 
@@ -1797,15 +1795,46 @@ impl ResourceCache {
     }
 
     /// Queue up destruction of an existing native OS surface. This is used when
-    /// a picture cache tile is dropped or resized.
+    /// a picture cache surface is dropped or resized.
     pub fn destroy_compositor_surface(
         &mut self,
         id: NativeSurfaceId,
     ) {
         self.pending_native_surface_updates.push(
             NativeSurfaceOperation {
-                id,
-                details: NativeSurfaceOperationDetails::DestroySurface,
+                details: NativeSurfaceOperationDetails::DestroySurface {
+                    id,
+                }
+            }
+        );
+    }
+
+    /// Queue construction of a native compositor tile on a given surface.
+    pub fn create_compositor_tile(
+        &mut self,
+        id: NativeTileId,
+        is_opaque: bool,
+    ) {
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                details: NativeSurfaceOperationDetails::CreateTile {
+                    id,
+                    is_opaque,
+                },
+            }
+        );
+    }
+
+    /// Queue destruction of a native compositor tile.
+    pub fn destroy_compositor_tile(
+        &mut self,
+        id: NativeTileId,
+    ) {
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                details: NativeSurfaceOperationDetails::DestroyTile {
+                    id,
+                },
             }
         );
     }

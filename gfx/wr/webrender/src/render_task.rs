@@ -1358,7 +1358,7 @@ impl RenderTask {
             RenderTaskLocation::PictureCache { ref surface, size, .. } => {
                 let layer = match surface {
                     ResolvedSurfaceTexture::TextureCache { layer, .. } => *layer,
-                    ResolvedSurfaceTexture::NativeSurface { .. } => 0,
+                    ResolvedSurfaceTexture::Native { .. } => 0,
                 };
 
                 (

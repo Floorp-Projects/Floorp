@@ -750,7 +750,7 @@ void RenderCompositorANGLE::CompositorEndFrame() {
   mDCLayerTree->CompositorEndFrame();
 }
 
-void RenderCompositorANGLE::Bind(wr::NativeSurfaceId aId,
+void RenderCompositorANGLE::Bind(wr::NativeTileId aId,
                                  wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
                                  wr::DeviceIntRect aDirtyRect) {
   mDCLayerTree->Bind(aId, aOffset, aFboId, aDirtyRect);
@@ -759,13 +759,22 @@ void RenderCompositorANGLE::Bind(wr::NativeSurfaceId aId,
 void RenderCompositorANGLE::Unbind() { mDCLayerTree->Unbind(); }
 
 void RenderCompositorANGLE::CreateSurface(wr::NativeSurfaceId aId,
-                                          wr::DeviceIntSize aSize,
-                                          bool aIsOpaque) {
-  mDCLayerTree->CreateSurface(aId, aSize, aIsOpaque);
+                                          wr::DeviceIntSize aTileSize) {
+  mDCLayerTree->CreateSurface(aId, aTileSize);
 }
 
 void RenderCompositorANGLE::DestroySurface(NativeSurfaceId aId) {
   mDCLayerTree->DestroySurface(aId);
+}
+
+void RenderCompositorANGLE::CreateTile(wr::NativeSurfaceId aId, int aX, int aY,
+                                       bool aIsOpaque) {
+  mDCLayerTree->CreateTile(aId, aX, aY, aIsOpaque);
+}
+
+void RenderCompositorANGLE::DestroyTile(wr::NativeSurfaceId aId, int aX,
+                                        int aY) {
+  mDCLayerTree->DestroyTile(aId, aX, aY);
 }
 
 void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,

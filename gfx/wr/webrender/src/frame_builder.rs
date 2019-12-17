@@ -359,11 +359,10 @@ impl FrameBuilder {
             // the end of each frame. However, if we're in native compositor mode,
             // we need to manually clean up any native compositor surfaces that were
             // allocated by these tiles.
-            for (_, cache_state) in visibility_state.retained_tiles.caches.drain() {
-                visibility_state.composite_state.destroy_native_surfaces(
-                    cache_state.tiles.values(),
-                    visibility_state.resource_cache,
-                );
+            for (_, mut cache_state) in visibility_state.retained_tiles.caches.drain() {
+                if let Some(native_surface_id) = cache_state.native_surface_id.take() {
+                    visibility_state.resource_cache.destroy_compositor_surface(native_surface_id);
+                }
             }
         }
 

@@ -70,12 +70,15 @@ class RenderCompositorANGLE : public RenderCompositor {
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;
   void CompositorEndFrame() override;
-  void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
-            uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) override;
+  void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
+            wr::DeviceIntRect aDirtyRect) override;
   void Unbind() override;
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize,
-                     bool aIsOpaque) override;
+  void CreateSurface(wr::NativeSurfaceId aId,
+                     wr::DeviceIntSize aTileSize) override;
   void DestroySurface(NativeSurfaceId aId) override;
+  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY,
+                  bool aIsOpaque) override;
+  void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;
 

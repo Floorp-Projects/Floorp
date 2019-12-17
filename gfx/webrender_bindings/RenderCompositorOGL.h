@@ -46,14 +46,24 @@ class RenderCompositorOGL : public RenderCompositor {
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;
   void CompositorEndFrame() override;
-  void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
-            uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) override;
+  void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
+            wr::DeviceIntRect aDirtyRect) override;
   void Unbind() override;
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize,
-                     bool aIsOpaque) override;
+  void CreateSurface(wr::NativeSurfaceId aId,
+                     wr::DeviceIntSize aTileSize) override;
   void DestroySurface(NativeSurfaceId aId) override;
+  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY,
+                  bool aIsOpaque) override;
+  void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;
+
+  struct TileKey {
+    TileKey(int32_t aX, int32_t aY) : mX(aX), mY(aY) {}
+
+    int32_t mX;
+    int32_t mY;
+  };
 
  protected:
   void InsertFrameDoneSync();
@@ -64,6 +74,27 @@ class RenderCompositorOGL : public RenderCompositor {
   RefPtr<layers::NativeLayerRoot> mNativeLayerRoot;
   RefPtr<layers::NativeLayer> mNativeLayerForEntireWindow;
 
+  struct TileKeyHashFn {
+    std::size_t operator()(const TileKey& aId) const {
+      return HashGeneric(aId.mX, aId.mY);
+    }
+  };
+
+  class Surface {
+   public:
+    explicit Surface(wr::DeviceIntSize aTileSize) : mTileSize(aTileSize) {}
+
+    wr::DeviceIntSize mTileSize;
+    std::unordered_map<TileKey, RefPtr<layers::NativeLayer>, TileKeyHashFn>
+        mNativeLayers;
+  };
+
+  struct SurfaceIdHashFn {
+    std::size_t operator()(const wr::NativeSurfaceId& aId) const {
+      return HashGeneric(wr::AsUint64(aId));
+    }
+  };
+
   // Used in native compositor mode:
   RefPtr<layers::NativeLayer> mCurrentlyBoundNativeLayer;
   nsTArray<RefPtr<layers::NativeLayer>> mAddedLayers;
@@ -72,13 +103,18 @@ class RenderCompositorOGL : public RenderCompositor {
   uint64_t mAddedClippedPixelCount = 0;
   uint64_t mDrawnPixelCount = 0;
   gfx::IntRect mVisibleBounds;
-  std::unordered_map<uint64_t, RefPtr<layers::NativeLayer>> mNativeLayers;
+  std::unordered_map<wr::NativeSurfaceId, Surface, SurfaceIdHashFn> mSurfaces;
   TimeStamp mBeginFrameTimeStamp;
 
   // Used to apply back-pressure in WaitForGPU().
   GLsync mPreviousFrameDoneSync;
   GLsync mThisFrameDoneSync;
 };
+
+static inline bool operator==(const RenderCompositorOGL::TileKey& a0,
+                              const RenderCompositorOGL::TileKey& a1) {
+  return a0.mX == a1.mX && a0.mY == a1.mY;
+}
 
 }  // namespace wr
 }  // namespace mozilla

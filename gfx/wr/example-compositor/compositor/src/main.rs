@@ -42,15 +42,13 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn create_surface(
         &mut self,
         id: webrender::NativeSurfaceId,
-        size: DeviceIntSize,
-        is_opaque: bool,
+        tile_size: DeviceIntSize,
     ) {
         compositor::create_surface(
             self.window,
             id.0,
-            size.width,
-            size.height,
-            is_opaque,
+            tile_size.width,
+            tile_size.height,
         );
     }
 
@@ -61,14 +59,42 @@ impl webrender::Compositor for DirectCompositeInterface {
         compositor::destroy_surface(self.window, id.0);
     }
 
+    fn create_tile(
+        &mut self,
+        id: webrender::NativeTileId,
+        is_opaque: bool,
+    ) {
+        compositor::create_tile(
+            self.window,
+            id.surface_id.0,
+            id.x,
+            id.y,
+            is_opaque,
+        );
+    }
+
+    fn destroy_tile(
+        &mut self,
+        id: webrender::NativeTileId,
+    ) {
+        compositor::destroy_tile(
+            self.window,
+            id.surface_id.0,
+            id.x,
+            id.y,
+        );
+    }
+
     fn bind(
         &mut self,
-        id: webrender::NativeSurfaceId,
+        id: webrender::NativeTileId,
         dirty_rect: DeviceIntRect,
     ) -> webrender::NativeSurfaceInfo {
         let (fbo_id, x, y) = compositor::bind_surface(
             self.window,
-            id.0,
+            id.surface_id.0,
+            id.x,
+            id.y,
             dirty_rect.origin.x,
             dirty_rect.origin.y,
             dirty_rect.size.width,
