@@ -848,7 +848,6 @@ void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
         AppendFontRange(aFontRanges, baseOffset);
         baseOffset += GetTextLengthInRange(aContent, lastXPEndOffset,
                                            startXPOffset, aLineBreakType);
-        lastXPEndOffset = startXPOffset;
       }
 
       FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
