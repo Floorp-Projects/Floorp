@@ -954,8 +954,7 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
       uint32_t(BaseScript::ImmutableFlags::FunctionHasExtraBodyVarScope) |
       uint32_t(BaseScript::ImmutableFlags::HasMappedArgsObj) |
       uint32_t(BaseScript::ImmutableFlags::ArgumentsHasVarBinding) |
-      uint32_t(BaseScript::ImmutableFlags::NeedsFunctionEnvironmentObjects) |
-      uint32_t(BaseScript::ImmutableFlags::IsFunction);
+      uint32_t(BaseScript::ImmutableFlags::NeedsFunctionEnvironmentObjects);
 
   // These flags are computed for lazy scripts and may have a different
   // definition for non-lazy scripts.
