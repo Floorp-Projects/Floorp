@@ -531,13 +531,12 @@ StaticMutex nsWSAdmissionManager::sLock;
 // CallOnMessageAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnMessageAvailable final : public nsIRunnable {
+class CallOnMessageAvailable final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   CallOnMessageAvailable(WebSocketChannel* aChannel, nsACString& aData,
                          int32_t aLen)
-      : mChannel(aChannel),
+      : Runnable("net::CallOnMessageAvailable"),
+        mChannel(aChannel),
         mListenerMT(aChannel->mListenerMT),
         mData(aData),
         mLen(aLen) {}
@@ -573,18 +572,16 @@ class CallOnMessageAvailable final : public nsIRunnable {
   nsCString mData;
   int32_t mLen;
 };
-NS_IMPL_ISUPPORTS(CallOnMessageAvailable, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // CallOnStop
 //-----------------------------------------------------------------------------
 
-class CallOnStop final : public nsIRunnable {
+class CallOnStop final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   CallOnStop(WebSocketChannel* aChannel, nsresult aReason)
-      : mChannel(aChannel),
+      : Runnable("net::CallOnStop"),
+        mChannel(aChannel),
         mListenerMT(mChannel->mListenerMT),
         mReason(aReason) {}
 
@@ -613,19 +610,17 @@ class CallOnStop final : public nsIRunnable {
   RefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
   nsresult mReason;
 };
-NS_IMPL_ISUPPORTS(CallOnStop, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // CallOnServerClose
 //-----------------------------------------------------------------------------
 
-class CallOnServerClose final : public nsIRunnable {
+class CallOnServerClose final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   CallOnServerClose(WebSocketChannel* aChannel, uint16_t aCode,
                     nsACString& aReason)
-      : mChannel(aChannel),
+      : Runnable("net::CallOnServerClose"),
+        mChannel(aChannel),
         mListenerMT(mChannel->mListenerMT),
         mCode(aCode),
         mReason(aReason) {}
@@ -654,7 +649,6 @@ class CallOnServerClose final : public nsIRunnable {
   uint16_t mCode;
   nsCString mReason;
 };
-NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // CallAcknowledge
@@ -696,15 +690,14 @@ class CallAcknowledge final : public CancelableRunnable {
 // CallOnTransportAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnTransportAvailable final : public nsIRunnable {
+class CallOnTransportAvailable final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   CallOnTransportAvailable(WebSocketChannel* aChannel,
                            nsISocketTransport* aTransport,
                            nsIAsyncInputStream* aSocketIn,
                            nsIAsyncOutputStream* aSocketOut)
-      : mChannel(aChannel),
+      : Runnable("net::CallOnTransportAvailble"),
+        mChannel(aChannel),
         mTransport(aTransport),
         mSocketIn(aSocketIn),
         mSocketOut(aSocketOut) {}
@@ -722,7 +715,6 @@ class CallOnTransportAvailable final : public nsIRunnable {
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 };
-NS_IMPL_ISUPPORTS(CallOnTransportAvailable, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // PMCECompression
@@ -1080,12 +1072,10 @@ class OutboundMessage {
 // OutboundEnqueuer
 //-----------------------------------------------------------------------------
 
-class OutboundEnqueuer final : public nsIRunnable {
+class OutboundEnqueuer final : public Runnable {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   OutboundEnqueuer(WebSocketChannel* aChannel, OutboundMessage* aMsg)
-      : mChannel(aChannel), mMessage(aMsg) {}
+    : Runnable("OutboundEnquerer"), mChannel(aChannel), mMessage(aMsg) {}
 
   NS_IMETHOD Run() override {
     mChannel->EnqueueOutgoingMessage(mChannel->mOutgoingMessages, mMessage);
@@ -1098,7 +1088,6 @@ class OutboundEnqueuer final : public nsIRunnable {
   RefPtr<WebSocketChannel> mChannel;
   OutboundMessage* mMessage;
 };
-NS_IMPL_ISUPPORTS(OutboundEnqueuer, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // WebSocketChannel
