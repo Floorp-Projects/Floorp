@@ -36,7 +36,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -127,7 +126,6 @@
 #include "nsQueryObject.h"
 #include "mozilla/dom/DocGroup.h"
 #include "nsString.h"
-#include "nsStringStream.h"
 #include "mozilla/Telemetry.h"
 #include "nsDocShellLoadState.h"
 #include "nsWebBrowser.h"
@@ -3324,35 +3322,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvSetOriginAttributes(
 mozilla::ipc::IPCResult BrowserChild::RecvSetWidgetNativeData(
     const WindowsHandle& aWidgetNativeData) {
   mWidgetNativeData = aWidgetNativeData;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvGetContentBlockingLog(
-    GetContentBlockingLogResolver&& aResolve) {
-  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-  if (NS_WARN_IF(!contentChild)) {
-    return IPC_OK();
-  }
-
-  bool success = false;
-  nsAutoCString result;
-
-  if (nsCOMPtr<Document> doc = GetTopLevelDocument()) {
-    result = doc->GetContentBlockingLog()->Stringify();
-    success = true;
-  }
-
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    success = false;
-  }
-
-  AutoIPCStream ipcStream;
-  ipcStream.Serialize(stream, contentChild);
-
-  aResolve(
-      Tuple<const IPCStream&, const bool&>(ipcStream.TakeValue(), success));
   return IPC_OK();
 }
 
