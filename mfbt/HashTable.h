@@ -2056,7 +2056,7 @@ class HashTable : private AllocPolicy {
   }
 
   MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& aLookup) const {
-    if (!mTable || !HasHash<HashPolicy>(aLookup)) {
+    if (!mTable || empty() || !HasHash<HashPolicy>(aLookup)) {
       return Ptr();
     }
     HashNumber keyHash = prepareHash(aLookup);
