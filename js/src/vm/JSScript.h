@@ -2373,7 +2373,8 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(bindingsAccessedDynamically,
                                       BindingsAccessedDynamically)
-  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(funHasExtensibleScope,
+                                      FunHasExtensibleScope)
   IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
   IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(functionHasThisBinding,
