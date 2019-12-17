@@ -23,15 +23,15 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 @MediumTest
 @RunWith(Parameterized::class)
 class ExtensionActionTest : BaseSessionTest() {
-    var extension: WebExtension? = null
-    var default: WebExtension.Action? = null
-    var backgroundPort: WebExtension.Port? = null
-    var windowPort: WebExtension.Port? = null
+    private var extension: WebExtension? = null
+    private var default: WebExtension.Action? = null
+    private var backgroundPort: WebExtension.Port? = null
+    private var windowPort: WebExtension.Port? = null
 
     companion object {
         @get:Parameterized.Parameters(name = "{0}")
         @JvmStatic
-        val parameters: List<Array<out Any>> = listOf(
+        val parameters = listOf(
                 arrayOf("#pageAction"),
                 arrayOf("#browserAction"))
     }
@@ -101,7 +101,7 @@ class ExtensionActionTest : BaseSessionTest() {
         }
     }
 
-    private var type: String = ""
+    private val type: String
         get() = when(id) {
             "#pageAction" -> "pageAction"
             "#browserAction" -> "browserAction"
@@ -291,7 +291,7 @@ class ExtensionActionTest : BaseSessionTest() {
             }
 
             val hexColor = String.format("#%08X", result)
-            assertEquals(hexColor, "$expectedHex")
+            assertEquals(hexColor, expectedHex)
         }
     }
 
@@ -449,7 +449,7 @@ class ExtensionActionTest : BaseSessionTest() {
 
     @Test
     @GeckoSessionTestRule.WithDisplay(width=100, height=100)
-    @Ignore // this test fails intermittently on try :(
+    @Ignore("This test fails intermittently on try")
     fun testOpenPopup() {
         // First, let's make sure we have a popup set
         val actionResult = GeckoResult<Void>()
