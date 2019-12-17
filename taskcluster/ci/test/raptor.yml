@@ -11,21 +11,12 @@ job-defaults:
     suite: raptor
     workdir: /home/cltbld
     run-on-projects:
-        by-test-name:
-            raptor-tp6-.*-cold:
-                by-test-platform:
-                    windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-                    windows10-aarch64/opt: ['try']
-                    (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
-                    macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-                    default: ['try', 'trunk', 'mozilla-beta']
-            default:
-                by-test-platform:
-                    windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-                    windows10-aarch64/opt: ['try']
-                    (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
-                    macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-                    default: ['try', 'mozilla-beta']
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
+            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
+            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+            default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
             windows10-aarch64/.*: 2
