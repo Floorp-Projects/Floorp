@@ -32,6 +32,10 @@
   --scrubber-color: var(--magenta-50);
 }
 
+#animationinspector-panel {
+  overflow-x: auto;
+}
+
 /* Root element of animation inspector */
 #animation-container {
   cursor: default;
@@ -39,6 +43,7 @@
   flex-direction: column;
   height: 100%;
   outline: none;
+  min-width: var(--min-container-width);
 }
 
 #animation-container .uncontrolled {

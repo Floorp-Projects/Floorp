@@ -30,7 +30,7 @@
 }
 
 #font-container, #font-editor {
-  min-width: 300px;
+  min-width: var(--min-container-width);
 }
 
 #font-container {
