@@ -127,10 +127,17 @@ struct StyleBox {
     MOZ_DIAGNOSTIC_ASSERT(mRaw);
   }
 
-  StyleBox(const StyleBox& aOther) : StyleBox(MakeUnique<T>(*aOther)) {}
   ~StyleBox() {
     MOZ_DIAGNOSTIC_ASSERT(mRaw);
     delete mRaw;
+  }
+
+  StyleBox(const StyleBox& aOther) : StyleBox(MakeUnique<T>(*aOther)) {}
+
+  StyleBox& operator=(const StyleBox& aOther) const {
+    delete mRaw;
+    mRaw = MakeUnique<T>(*aOther).release();
+    return *this;
   }
 
   const T* operator->() const {
@@ -143,11 +150,19 @@ struct StyleBox {
     return *mRaw;
   }
 
-  bool operator==(const StyleBox<T>& aOther) const {
-    return *(*this) == *aOther;
+  T* operator->() {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+    return mRaw;
   }
 
-  bool operator!=(const StyleBox<T>& aOther) const { return *this != *aOther; }
+  T& operator*() {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+    return *mRaw;
+  }
+
+  bool operator==(const StyleBox& aOther) const { return *(*this) == *aOther; }
+
+  bool operator!=(const StyleBox& aOther) const { return *(*this) != *aOther; }
 
  private:
   T* mRaw;
