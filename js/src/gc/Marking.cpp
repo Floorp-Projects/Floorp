@@ -204,6 +204,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   }
 
   if (IsForwarded(thing)) {
+    MOZ_ASSERT(IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) ||
+               trc->isTenuringTracer());
     thing = Forwarded(thing);
   }
 
@@ -211,10 +213,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   if (IsInsideNursery(thing)) {
     return;
   }
-
-  MOZ_ASSERT_IF(!IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) &&
-                    !trc->isTenuringTracer(),
-                !IsForwarded(thing));
 
   /*
    * Permanent atoms and things in the self-hosting zone are not associated
@@ -226,31 +224,30 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   Zone* zone = thing->zoneFromAnyThread();
   JSRuntime* rt = trc->runtime();
+  MOZ_ASSERT(zone->runtimeFromAnyThread() == rt);
 
   bool isGcMarkingTracer = trc->isMarkingTracer();
-  bool isUnmarkGray =
+  bool isUnmarkGrayTracer =
       IsTracerKind(trc, JS::CallbackTracer::TracerKind::UnmarkGray);
-  if (isUnmarkGray || isGcMarkingTracer) {
-    bool isMainThread = TlsContext.get()->isMainThreadContext();
-    MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessZone(zone));
-    MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(rt));
-    MOZ_ASSERT_IF(!isMainThread, CurrentThreadIsPerformingGC());
-    MOZ_ASSERT_IF(isGcMarkingTracer, zone->shouldMarkInZone());
-  } else if (!IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) &&
-             !IsTracerKind(trc,
-                           JS::CallbackTracer::TracerKind::GrayBuffering) &&
-             !IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) &&
-             !IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping)) {
-    MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  }
+  bool isClearEdgesTracer =
+      IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges);
 
-  MOZ_ASSERT(zone->runtimeFromAnyThread() == trc->runtime());
+  if (TlsContext.get()->isMainThreadContext()) {
+    // If we're on the main thread we must have access to the runtime and zone.
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
+  } else {
+    MOZ_ASSERT(
+        isGcMarkingTracer || isUnmarkGrayTracer || isClearEdgesTracer ||
+        IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) ||
+        IsTracerKind(trc, JS::CallbackTracer::TracerKind::GrayBuffering) ||
+        IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping));
+    MOZ_ASSERT_IF(!isClearEdgesTracer, CurrentThreadIsPerformingGC());
+  }
 
   // It shouldn't be possible to trace into zones used by helper threads, except
   // for use of ClearEdgesTracer by GCManagedDeletePolicy on a helper thread.
-  MOZ_ASSERT_IF(!IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges),
-                !zone->usedByHelperThread());
+  MOZ_ASSERT_IF(!isClearEdgesTracer, !zone->usedByHelperThread());
 
   MOZ_ASSERT(thing->isAligned());
   MOZ_ASSERT(
@@ -259,6 +256,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
+    MOZ_ASSERT(zone->shouldMarkInZone());
+
     MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
                   zone->isCollectingFromAnyThread() || zone->isAtomsZone());
 
@@ -267,6 +266,12 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
     MOZ_ASSERT(!(zone->isGCSweeping() || zone->isGCFinished() ||
                  zone->isGCCompacting()));
+
+    // Check that we don't stray from the current compartment without using
+    // TraceCrossCompartmentEdge.
+    Compartment* comp = thing->maybeCompartment();
+    MOZ_ASSERT_IF(gcMarker->tracingCompartment && comp,
+                  gcMarker->tracingCompartment == comp);
   }
 
   /*
@@ -496,10 +501,70 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_TRACE_FUNCTIONS)
 }  // namespace gc
 }  // namespace js
 
+// In debug builds, makes a note of the current compartment before calling a
+// trace hook or traceChildren() method on a GC thing.
+class MOZ_RAII AutoSetTracingCompartment {
+#ifdef DEBUG
+  GCMarker* marker = nullptr;
+#endif
+
+ public:
+  template <typename T>
+  AutoSetTracingCompartment(JSTracer* trc, T* thing) {
+#ifdef DEBUG
+    if (trc->isMarkingTracer() && thing) {
+      marker = GCMarker::fromTracer(trc);
+      MOZ_ASSERT(!marker->tracingCompartment);
+      marker->tracingCompartment = thing->maybeCompartment();
+    }
+#endif
+  }
+
+  ~AutoSetTracingCompartment() {
+#ifdef DEBUG
+    if (marker) {
+      marker->tracingCompartment = nullptr;
+    }
+#endif
+  }
+};
+
+// In debug builds, clear the trace hook compartment. This happens
+// after the trace hook has called back into one of our trace APIs and we've
+// checked the traced thing.
+class MOZ_RAII AutoClearTracingCompartment {
+#ifdef DEBUG
+  GCMarker* marker = nullptr;
+  Compartment* prev = nullptr;
+#endif
+
+ public:
+  explicit AutoClearTracingCompartment(JSTracer* trc) {
+#ifdef DEBUG
+    if (trc->isMarkingTracer()) {
+      marker = GCMarker::fromTracer(trc);
+      prev = marker->tracingCompartment;
+      marker->tracingCompartment = nullptr;
+    }
+#endif
+  }
+
+  ~AutoClearTracingCompartment() {
+#ifdef DEBUG
+    if (marker) {
+      marker->tracingCompartment = prev;
+    }
+#endif
+  }
+};
+
 template <typename T>
 void js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc,
                                                     JSObject* src, T* dst,
                                                     const char* name) {
+  // Clear expected compartment for cross-compartment edge.
+  AutoClearTracingCompartment actc(trc);
+
   if (ShouldTraceCrossCompartment(trc, src, *dst)) {
     TraceEdgeInternal(trc, dst, name);
   }
@@ -514,6 +579,37 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(
     JSTracer*, JSObject*, LazyScript**, const char*);
 
 template <typename T>
+void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
+                                     T** thingp, const char* name) {
+  // We can't use ShouldTraceCrossCompartment here because that assumes the
+  // source of the edge is a CCW object which could be used to delay gray
+  // marking. Instead, assert that the weak map zone is in the same marking
+  // state as the target thing's zone and therefore we can go ahead and mark it.
+#ifdef DEBUG
+  auto thing = *thingp;
+  if (trc->isMarkingTracer()) {
+    MOZ_ASSERT(weakMapZone->isGCMarking());
+    MOZ_ASSERT(weakMapZone->gcState() == thing->zone()->gcState());
+  }
+#endif
+
+  // Clear expected compartment for cross-compartment edge.
+  AutoClearTracingCompartment actc(trc);
+
+  TraceEdgeInternal(trc, thingp, name);
+}
+
+template void js::TraceWeakMapKeyEdgeInternal<JSObject>(JSTracer*, Zone*,
+                                                        JSObject**,
+                                                        const char*);
+template void js::TraceWeakMapKeyEdgeInternal<JSScript>(JSTracer*, Zone*,
+                                                        JSScript**,
+                                                        const char*);
+template void js::TraceWeakMapKeyEdgeInternal<LazyScript>(JSTracer*, Zone*,
+                                                          LazyScript**,
+                                                          const char*);
+
+template <typename T>
 void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
   AssertRootMarkingPhase(trc);
   MOZ_ASSERT(ThingIsPermanentAtomOrWellKnownSymbol(thing));
@@ -525,6 +621,7 @@ void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
   // be marked directly.  Moreover, well-known symbols can refer only to
   // permanent atoms, so likewise require no subsquent marking.
   CheckTracedThing(trc, *ConvertToBase(&thing));
+  AutoClearTracingCompartment actc(trc);
   if (trc->isMarkingTracer()) {
     thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
   } else {
@@ -761,6 +858,7 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
   }
 
   CheckTracedThing(gcmarker, thing);
+  AutoClearTracingCompartment actc(gcmarker);
   gcmarker->traverse(thing);
 
   // Mark the compartment as live.
@@ -792,6 +890,7 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
   ApplyGCThingTyped(thing, [gcmarker](auto thing) {
     MOZ_ASSERT(ShouldMark(gcmarker, thing));
     CheckTracedThing(gcmarker, thing);
+    AutoClearTracingCompartment actc(gcmarker);
     gcmarker->traverse(thing);
   });
 }
@@ -807,6 +906,7 @@ void js::GCMarker::markAndTraceChildren(T* thing) {
     return;
   }
   if (mark(thing)) {
+    AutoSetTracingCompartment astc(this, thing);
     thing->traceChildren(this);
   }
 }
@@ -1473,6 +1573,7 @@ static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
     return nullptr;
   }
 
+  AutoSetTracingCompartment astc(trc, obj);
   clasp->doTrace(trc, obj);
 
   if (!clasp->isNative()) {
@@ -1786,11 +1887,13 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
 
     case MarkStack::JitCodeTag: {
       auto code = stack.popPtr().as<jit::JitCode>();
+      AutoSetTracingCompartment astc(this, code);
       return code->traceChildren(this);
     }
 
     case MarkStack::ScriptTag: {
       auto script = stack.popPtr().as<JSScript>();
+      AutoSetTracingCompartment astc(this, script);
       return script->traceChildren(this);
     }
 
