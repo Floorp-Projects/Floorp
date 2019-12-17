@@ -2071,12 +2071,11 @@
     }
 
     getContentBlockingLog() {
-      if (this.isRemoteBrowser) {
-        return this.frameLoader.remoteTab.getContentBlockingLog();
+      let windowGlobal = this.browsingContext.currentWindowGlobal;
+      if (!windowGlobal) {
+        return null;
       }
-      return this.docShell
-        ? this.docShell.getContentBlockingLog()
-        : Promise.reject("docshell isn't available");
+      return windowGlobal.contentBlockingLog;
     }
 
     getContentBlockingEvents() {
