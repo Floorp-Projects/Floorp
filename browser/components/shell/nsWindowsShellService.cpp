@@ -57,11 +57,29 @@
 
 #define APP_REG_NAME_BASE L"Firefox-"
 
+#ifdef DEBUG
+#  define NS_ENSURE_HRESULT(hres, ret)                    \
+    do {                                                  \
+      HRESULT result = hres;                              \
+      if (MOZ_UNLIKELY(FAILED(result))) {                 \
+        mozilla::SmprintfPointer msg = mozilla::Smprintf( \
+            "NS_ENSURE_HRESULT(%s, %s) failed with "      \
+            "result 0x%" PRIX32,                          \
+            #hres, #ret, static_cast<uint32_t>(result));  \
+        NS_WARNING(msg.get());                            \
+        return ret;                                       \
+      }                                                   \
+    } while (false)
+#else
+#  define NS_ENSURE_HRESULT(hres, ret) \
+    if (MOZ_UNLIKELY(FAILED(hres))) return ret
+#endif
+
 using mozilla::IsWin8OrLater;
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIToolkitShellService,
-                  nsIShellService)
+                  nsIShellService, nsIWindowsShellService)
 
 static nsresult OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName,
                                   HKEY* aKey) {
@@ -677,6 +695,45 @@ nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return regKey->Close();
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
+                                      const nsTArray<nsString>& aArguments,
+                                      const nsAString& aDescription,
+                                      nsIFile* aTarget) {
+  NS_ENSURE_ARG(aBinary);
+  NS_ENSURE_ARG(aTarget);
+
+  RefPtr<IShellLinkW> link;
+  HRESULT hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IShellLinkW, getter_AddRefs(link));
+  NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
+
+  nsString path(aBinary->NativePath());
+  link->SetPath(path.get());
+
+  if (!aDescription.IsEmpty()) {
+    link->SetDescription(PromiseFlatString(aDescription).get());
+  }
+
+  // TODO: Properly escape quotes in the string, see bug 1604287.
+  nsString arguments;
+  for (auto& arg : aArguments) {
+    arguments.AppendPrintf("\"%S\" ", arg.get());
+  }
+
+  link->SetArguments(arguments.get());
+
+  RefPtr<IPersistFile> persist;
+  hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(persist));
+  NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
+
+  nsString target(aTarget->NativePath());
+  hr = persist->Save(target.get(), TRUE);
+  NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 nsWindowsShellService::nsWindowsShellService() {}
