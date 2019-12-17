@@ -460,7 +460,6 @@ class WebExtensionTest : BaseSessionTest() {
     // When `background == true` the test will be run using background messaging, otherwise the
     // test will use content script messaging.
     private fun testPortMessage(background: Boolean) {
-        var contentPort: WebExtension.Port? = null
         val result = GeckoResult<Void>()
         val prefix = if (background) "testBackground" else "testContent"
 
@@ -473,7 +472,7 @@ class WebExtensionTest : BaseSessionTest() {
                 if (!awaitingResponse) {
                     assertThat("We should receive a message from the WebExtension",
                             message as String, equalTo("${prefix}PortMessage"))
-                    contentPort!!.postMessage(JSONObject("{\"message\": \"${prefix}PortMessageResponse\"}"))
+                    port.postMessage(JSONObject("{\"message\": \"${prefix}PortMessageResponse\"}"))
                     awaitingResponse = true
                 } else {
                     assertThat("The background script should receive our message and respond",
@@ -494,7 +493,6 @@ class WebExtensionTest : BaseSessionTest() {
                 assertEquals(port.name, "browser")
 
                 port.setDelegate(portDelegate)
-                contentPort = port
             }
 
             override fun onMessage(nativeApp: String, message: Any,
