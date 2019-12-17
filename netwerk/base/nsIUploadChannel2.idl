@@ -43,7 +43,7 @@ interface nsIUploadChannel2 : nsISupports
     /**
      * Value of aStreamHasHeaders from the last successful call to
      * explicitSetUploadStream.  TRUE indicates the attached upload stream
-     * contians request headers.
+     * contains request headers.
      */
     readonly attribute boolean uploadStreamHasHeaders;
 
