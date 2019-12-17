@@ -414,7 +414,7 @@ class JSFunction : public js::NativeObject {
     // FunctionBox::needsCallObjectRegardlessOfBindings().
     MOZ_ASSERT_IF(baseScript()->funHasExtensibleScope() ||
                       baseScript()->needsHomeObject() ||
-                      nonLazyScript()->isDerivedClassConstructor() ||
+                      baseScript()->isDerivedClassConstructor() ||
                       isGenerator() || isAsync(),
                   nonLazyScript()->bodyScope()->hasEnvironment());
 
@@ -503,7 +503,7 @@ class JSFunction : public js::NativeObject {
       return false;
     }
 
-    return nonLazyScript()->hasJitScript();
+    return baseScript()->hasJitScript();
   }
   bool hasJitEntry() const {
     return hasScript() || isInterpretedLazy() || isNativeWithJitEntry();

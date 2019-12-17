@@ -2559,8 +2559,8 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
         // it had better be suspended.
         MOZ_ASSERT(genObj.isSuspended());
 
-        if (!genObj.callee().isInterpretedLazy() &&
-            genObj.callee().nonLazyScript() == trappingScript &&
+        if (genObj.callee().hasScript() &&
+            genObj.callee().baseScript() == trappingScript &&
             !frameObj.getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
                  .isUndefined()) {
           suspendedStepperCount++;

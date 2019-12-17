@@ -4997,7 +4997,7 @@ static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
       }
     }
 
-    Scope* enclosing = innerFun->nonLazyScript()->enclosingScope();
+    Scope* enclosing = innerFun->enclosingScope();
     uint32_t scopeIndex = FindScopeIndex(srcData->gcthings(), *enclosing);
     RootedScope enclosingClone(cx, &gcThings[scopeIndex].get().as<Scope>());
     return CloneInnerInterpretedFunction(cx, enclosingClone, innerFun,

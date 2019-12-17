@@ -2176,7 +2176,7 @@ JSFunction* AllocNewFunction(JSContext* cx,
   }
   if (data.isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
-    MOZ_ASSERT(!fun->isInterpretedLazy());
+    MOZ_ASSERT(fun->hasScript());
   }
   return fun;
 }
@@ -2610,7 +2610,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   funbox->initFromLazyFunction(fun);
-  MOZ_ASSERT(fun->lazyScript()->hasEnclosingLazyScript());
+  MOZ_ASSERT(fun->baseScript()->hasEnclosingLazyScript());
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 

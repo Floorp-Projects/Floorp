@@ -3099,8 +3099,7 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
   // make sure there aren't any.
   MOZ_ASSERT(!sourceFun->isGenerator() && !sourceFun->isAsync());
   MOZ_ASSERT(targetFun->isExtended());
-  MOZ_ASSERT(targetFun->isInterpretedLazy());
-  MOZ_ASSERT(targetFun->isSelfHostedBuiltin());
+  MOZ_ASSERT(targetFun->hasSelfHostedLazyScript());
 
   RootedScript sourceScript(cx, JSFunction::getOrCreateScript(cx, sourceFun));
   if (!sourceScript) {
@@ -3125,7 +3124,7 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
                                sourceObject)) {
     return false;
   }
-  MOZ_ASSERT(!targetFun->isInterpretedLazy());
+  MOZ_ASSERT(targetFun->hasScript());
 
   MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
   MOZ_ASSERT(sourceScript->hasRest() == targetFun->baseScript()->hasRest());
