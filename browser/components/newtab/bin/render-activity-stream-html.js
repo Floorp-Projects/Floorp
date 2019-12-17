@@ -28,7 +28,6 @@ function templateHTML(options) {
   const debugString = options.debug ? "-dev" : "";
   const scripts = [
     "chrome://browser/content/contentSearchUI.js",
-    "chrome://browser/content/contentSearchHandoffUI.js",
     "chrome://browser/content/contentTheme.js",
     `${options.baseUrl}vendor/react${debugString}.js`,
     `${options.baseUrl}vendor/react-dom${debugString}.js`,

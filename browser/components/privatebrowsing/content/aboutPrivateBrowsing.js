@@ -118,5 +118,14 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   // Load contentSearchUI so it sets the search engine icon for us.
-  new window.ContentSearchHandoffUIController();
+  // TODO: FIXME. We should eventually refector contentSearchUI to do only what
+  // we need and have it do the common search handoff work for
+  // about:newtab and about:privatebrowsing.
+  let input = document.getElementById("dummy-input");
+  new window.ContentSearchUIController(
+    input,
+    input.parentNode,
+    "aboutprivatebrowsing",
+    "aboutprivatebrowsing"
+  );
 });

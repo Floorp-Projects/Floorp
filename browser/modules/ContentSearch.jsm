@@ -453,17 +453,6 @@ var ContentSearch = {
     });
   },
 
-  _onMessageGetEngine(msg, data) {
-    return this.currentStateObj(msg.target.ownerGlobal).then(state => {
-      this._reply(msg, "Engine", {
-        isPrivateWindow: state.isPrivateWindow,
-        engine: state.isPrivateWindow
-          ? state.currentPrivateEngine
-          : state.currentEngine,
-      });
-    });
-  },
-
   _onMessageGetStrings(msg, data) {
     this._reply(msg, "Strings", this.searchSuggestionUIStrings);
   },
