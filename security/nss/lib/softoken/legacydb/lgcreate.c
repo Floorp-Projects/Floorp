@@ -961,6 +961,22 @@ lg_createKeyObject(SDB *sdb, CK_OBJECT_CLASS objclass,
 }
 
 /*
+ * return the 'next' key handle
+ */
+CK_RV
+lg_GetNewObjectID(SDB *sdb, CK_OBJECT_HANDLE *handle)
+{
+    /* the upper level needs the Object ID early to populate any
+     * signature attributes. The legacy can't really return a new
+     * handle without the full object template (chicken and egg issue).
+     * Fortunately we can just return a bogus handle because the legacy
+     * database doesn't support meta data and can't store any of the signed
+     * attributes anyway */
+    *handle = CK_INVALID_HANDLE;
+    return CKR_OK;
+}
+
+/*
  * Parse the template and create an object stored in the DB that reflects.
  * the object specified in the database.
  */

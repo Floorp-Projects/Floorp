@@ -261,13 +261,16 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateXor) {
   ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
   EXPECT_TRUE(!!key);
 
-  SECItem ctrNonceItem = {siBuffer, toUcharPtr(kCtrNonce),
-                          static_cast<unsigned int>(sizeof(kCtrNonce))};
+  std::vector<uint8_t> iv(16);
+  SECStatus rv = PK11_GenerateRandomOnSlot(slot.get(), iv.data(), iv.size());
+  EXPECT_EQ(SECSuccess, rv);
+
+  SECItem ctrNonceItem = {siBuffer, toUcharPtr(iv.data()),
+                          static_cast<unsigned int>(iv.size())};
   uint8_t encrypted[sizeof(kData)];
   unsigned int encrypted_len = 88;  // This should be overwritten.
-  SECStatus rv =
-      PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
-                   &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
+  rv = PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
+                    &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
   ASSERT_EQ(SECSuccess, rv);
   ASSERT_EQ(sizeof(kData), static_cast<size_t>(encrypted_len));
 }

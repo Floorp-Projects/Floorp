@@ -71,6 +71,17 @@
                    * before we start freeing them */
 #define MAX_KEY_LEN 256 /* maximum symmetric key length in bytes */
 
+/* From ssl3con.c: Constant-time helper macro that copies the MSB of x to all
+ *  * other bits. */
+#define CT_DUPLICATE_MSB_TO_ALL(x) ((unsigned int)((int)(x) >> (sizeof(int) * 8 - 1)))
+
+/* Constant-time helper macro that selects l or r depending on all-1 or all-0
+ *  * mask m */
+#define CT_SEL(m, l, r) (((m) & (l)) | (~(m) & (r)))
+/* Constant-time helper macro that returns all-1s if x is not 0; and all-0s
+ *  * otherwise. */
+#define CT_NOT_ZERO(x) (CT_DUPLICATE_MSB_TO_ALL(((x) | (0 - x))))
+
 /*
  * LOG2_BUCKETS_PER_SESSION_LOCK must be a prime number.
  * With SESSION_HASH_SIZE=1024, LOG2 can be 9, 5, 1, or 0.
@@ -867,6 +878,10 @@ CK_RV sftk_MAC_Finish(sftk_MACCtx *ctx, CK_BYTE_PTR result, unsigned int *result
 CK_RV sftk_MAC_Reset(sftk_MACCtx *ctx);
 void sftk_MAC_Destroy(sftk_MACCtx *ctx, PRBool free_it);
 
+/* constant time helpers */
+unsigned int sftk_CKRVToMask(CK_RV rv);
+CK_RV sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
+                           unsigned int blockSize, unsigned int *outPadSize);
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */

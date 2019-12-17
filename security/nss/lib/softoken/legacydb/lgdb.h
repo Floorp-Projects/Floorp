@@ -150,6 +150,8 @@ CK_RV lg_Abort(SDB *sdb);
 CK_RV lg_GetMetaData(SDB *sdb, const char *id, SECItem *item1, SECItem *item2);
 CK_RV lg_PutMetaData(SDB *sdb, const char *id,
                      const SECItem *item1, const SECItem *item2);
+CK_RV lg_DestroyMetaData(SDB *sdb, const char *id);
+CK_RV lg_GetNewObjectID(SDB *sdb, CK_OBJECT_HANDLE *object_id);
 
 SEC_END_PROTOS
 

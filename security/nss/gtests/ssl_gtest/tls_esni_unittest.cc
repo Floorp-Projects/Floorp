@@ -314,12 +314,20 @@ TEST_P(TlsConnectTls13, ConnectEsniHrr) {
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
   auto filter2 =
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn, true);
+  auto efilter =
+      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_tls13_encrypted_sni_xtn);
+  auto efilter2 = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_sni_xtn, true);
+
   client_->SetFilter(std::make_shared<ChainedPacketFilter>(
-      ChainedPacketFilterInit({filter, filter2})));
+      ChainedPacketFilterInit({filter, filter2, efilter, efilter2})));
   server_->SetSniCallback(SniCallback);
   Connect();
   CheckSniExtension(filter->extension());
   CheckSniExtension(filter2->extension());
+  ASSERT_TRUE(efilter->captured());
+  ASSERT_TRUE(efilter2->captured());
+  ASSERT_NE(efilter->extension(), efilter2->extension());
   EXPECT_NE(0UL, hrr_capture->buffer().len());
 }
 
