@@ -30,7 +30,7 @@ var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two
 if (!navigator.platform.includes("Mac"))
   expected[1] = "_accept";
 
-let extraDialog = "data:application/vnd.mozilla.xul+xml,<window id='root'><dialog " +
+let extraDialog = "data:application/xhtml+xml,<window id='root'><dialog " +
                   "buttons='none' " +
                   "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
                   "<button id='nonbutton' noinitialfocus='true'/></dialog></window>";
