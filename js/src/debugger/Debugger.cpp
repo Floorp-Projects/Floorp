@@ -1606,7 +1606,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
   }
 }
 
-ResumeMode Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
+void Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
   JSContext* cx = ar->context();
 
   // Uncaught exceptions arise from Debugger code, and so we must already be
@@ -1635,7 +1635,6 @@ ResumeMode Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
   }
 
   ar.reset();
-  return ResumeMode::Terminate;
 }
 
 ResumeMode Debugger::handleUncaughtExceptionHelper(
@@ -1662,7 +1661,8 @@ ResumeMode Debugger::handleUncaughtExceptionHelper(
         if (vp) {
           ResumeMode resumeMode = ResumeMode::Continue;
           if (!ParseResumptionValue(cx, rv, resumeMode, *vp)) {
-            return reportUncaughtException(ar);
+            reportUncaughtException(ar);
+            return ResumeMode::Terminate;
           }
           return leaveDebugger(ar, frame, thisVForCheck,
                                CallUncaughtExceptionHook::No, resumeMode, *vp);
@@ -1675,7 +1675,8 @@ ResumeMode Debugger::handleUncaughtExceptionHelper(
       }
     }
 
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   ar.reset();
@@ -1704,7 +1705,8 @@ ResumeMode Debugger::leaveDebugger(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
     if (callHook == CallUncaughtExceptionHook::Yes) {
       return handleUncaughtException(ar, vp, maybeThisv, frame);
     }
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   ar.reset();
@@ -2074,7 +2076,8 @@ ResumeMode Debugger::fireDebuggerStatement(JSContext* cx,
   ScriptFrameIter iter(cx);
   RootedValue scriptFrame(cx);
   if (!getFrame(cx, iter, &scriptFrame)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   RootedValue fval(cx, ObjectValue(*hook));
@@ -2105,7 +2108,8 @@ ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp) {
   FrameIter iter(cx);
   if (!getFrame(cx, iter, &scriptFrame) ||
       !wrapDebuggeeValue(cx, &wrappedExc)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   RootedValue fval(cx, ObjectValue(*hook));
@@ -2140,7 +2144,8 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
   ar.emplace(cx, object);
 
   if (!getFrame(cx, iter, &scriptFrame)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   RootedValue fval(cx, ObjectValue(*hook));
@@ -2163,7 +2168,8 @@ ResumeMode Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
   RootedValue fval(cx, ObjectValue(*hook));
   RootedValue calleeval(cx, args.calleev());
   if (!wrapDebuggeeValue(cx, &calleeval)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   JSAtom* reasonAtom = nullptr;
@@ -2454,7 +2460,8 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
 
         RootedValue scriptFrame(cx);
         if (!dbg->getFrame(cx, iter, &scriptFrame)) {
-          return dbg->reportUncaughtException(ar);
+          dbg->reportUncaughtException(ar);
+          return ResumeMode::Terminate;
         }
 
         // Re-wrap the breakpoint's handler for the Debugger's compartment. When
@@ -2463,7 +2470,8 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         // be in the same compartment, so we can't be sure.
         Rooted<JSObject*> handler(cx, bp->handler);
         if (!cx->compartment()->wrap(cx, &handler)) {
-          return dbg->reportUncaughtException(ar);
+          dbg->reportUncaughtException(ar);
+          return ResumeMode::Terminate;
         }
 
         RootedValue rv(cx);
@@ -2625,7 +2633,8 @@ ResumeMode Debugger::fireNewGlobalObject(JSContext* cx,
 
   RootedValue wrappedGlobal(cx, ObjectValue(*global));
   if (!wrapDebuggeeValue(cx, &wrappedGlobal)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   // onNewGlobalObject is infallible, and thus is only allowed to return
@@ -2856,7 +2865,8 @@ ResumeMode Debugger::firePromiseHook(JSContext* cx, Hook hook,
 
   RootedValue dbgObj(cx, ObjectValue(*promise));
   if (!wrapDebuggeeValue(cx, &dbgObj)) {
-    return reportUncaughtException(ar);
+    reportUncaughtException(ar);
+    return ResumeMode::Terminate;
   }
 
   // Like onNewGlobalObject, the Promise hooks are infallible and the comments
