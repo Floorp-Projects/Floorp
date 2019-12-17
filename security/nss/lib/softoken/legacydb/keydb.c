@@ -2252,6 +2252,12 @@ lg_PutMetaData(SDB *sdb, const char *id,
 }
 
 CK_RV
+lg_DestroyMetaData(SDB *db, const char *id)
+{
+    return CKR_GENERAL_ERROR; /* no extra data stored */
+}
+
+CK_RV
 lg_Reset(SDB *sdb)
 {
     NSSLOWKEYDBHandle *keydb;

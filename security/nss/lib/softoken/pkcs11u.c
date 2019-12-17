@@ -1249,7 +1249,7 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
         SFTKTokenObject *to = sftk_narrowToTokenObject(object);
         PORT_Assert(to);
 #endif
-        crv = sftkdb_DestroyObject(handle, object->handle);
+        crv = sftkdb_DestroyObject(handle, object->handle, object->objclass);
         sftk_freeDB(handle);
     }
     return crv;
@@ -2009,4 +2009,55 @@ SFTKTokenObject *
 sftk_narrowToTokenObject(SFTKObject *obj)
 {
     return sftk_isToken(obj->handle) ? (SFTKTokenObject *)obj : NULL;
+}
+
+/* Constant time helper functions */
+
+/* sftk_CKRVToMask returns, in constant time, a mask value of
+ * all ones if rv == CKR_OK.  Otherwise it returns zero. */
+unsigned int
+sftk_CKRVToMask(CK_RV rv)
+{
+    PR_STATIC_ASSERT(CKR_OK == 0);
+    return ~CT_NOT_ZERO(rv);
+}
+
+/* sftk_CheckCBCPadding checks, in constant time, the padding validity and
+ * accordingly sets the pad length. */
+CK_RV
+sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
+                     unsigned int blockSize, unsigned int *outPadSize)
+{
+    PORT_Assert(outPadSize);
+
+    unsigned int padSize = (unsigned int)pBuf[bufLen - 1];
+
+    /* If padSize <= blockSize, set goodPad to all-1s and all-0s otherwise.*/
+    unsigned int goodPad = CT_DUPLICATE_MSB_TO_ALL(~(blockSize - padSize));
+    /* padSize should not be 0 */
+    goodPad &= CT_NOT_ZERO(padSize);
+
+    unsigned int i;
+    for (i = 0; i < blockSize; i++) {
+        /* If i < padSize, set loopMask to all-1s and all-0s otherwise.*/
+        unsigned int loopMask = CT_DUPLICATE_MSB_TO_ALL(~(padSize - 1 - i));
+        /* Get the padding value (should be padSize) from buffer */
+        unsigned int padVal = pBuf[bufLen - 1 - i];
+        /* Update goodPad only if i < padSize */
+        goodPad &= CT_SEL(loopMask, ~(padVal ^ padSize), goodPad);
+    }
+
+    /* If any of the final padding bytes had the wrong value, one or more
+     * of the lower eight bits of |goodPad| will be cleared. We AND the
+     * bottom 8 bits together and duplicate the result to all the bits. */
+    goodPad &= goodPad >> 4;
+    goodPad &= goodPad >> 2;
+    goodPad &= goodPad >> 1;
+    goodPad <<= sizeof(goodPad) * 8 - 1;
+    goodPad = CT_DUPLICATE_MSB_TO_ALL(goodPad);
+
+    /* Set outPadSize to padSize or 0 */
+    *outPadSize = CT_SEL(goodPad, padSize, 0);
+    /* Return OK if the pad is valid */
+    return CT_SEL(goodPad, CKR_OK, CKR_ENCRYPTED_DATA_INVALID);
 }

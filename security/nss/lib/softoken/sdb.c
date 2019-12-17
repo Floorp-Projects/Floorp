@@ -1161,6 +1161,19 @@ sdb_getObjectId(SDB *sdb)
     return CK_INVALID_HANDLE;
 }
 
+CK_RV
+sdb_GetNewObjectID(SDB *sdb, CK_OBJECT_HANDLE *object)
+{
+    CK_OBJECT_HANDLE id;
+
+    id = sdb_getObjectId(sdb);
+    if (id == CK_INVALID_HANDLE) {
+        return CKR_DEVICE_MEMORY; /* basically we ran out of resources */
+    }
+    *object = id;
+    return CKR_OK;
+}
+
 static const char CREATE_CMD[] = "INSERT INTO %s (id%s) VALUES($ID%s);";
 CK_RV
 sdb_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *object_id,
@@ -1268,10 +1281,13 @@ loser:
     return error;
 }
 
+/*
+ *  Generic destroy that can destroy metadata or objects
+ */
 static const char DESTROY_CMD[] = "DELETE FROM %s WHERE (id=$ID);";
-
 CK_RV
-sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
+sdb_destroyAnyObject(SDB *sdb, const char *table,
+                     CK_OBJECT_HANDLE object_id, const char *string_id)
 {
     SDBPrivate *sdb_p = sdb->private;
     sqlite3 *sqlDB = NULL;
@@ -1290,7 +1306,7 @@ sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
     if (error != CKR_OK) {
         goto loser;
     }
-    newStr = sqlite3_mprintf(DESTROY_CMD, sdb_p->table);
+    newStr = sqlite3_mprintf(DESTROY_CMD, table);
     if (newStr == NULL) {
         error = CKR_HOST_MEMORY;
         goto loser;
@@ -1299,7 +1315,12 @@ sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
     sqlite3_free(newStr);
     if (sqlerr != SQLITE_OK)
         goto loser;
-    sqlerr = sqlite3_bind_int(stmt, 1, object_id);
+    if (string_id == NULL) {
+        sqlerr = sqlite3_bind_int(stmt, 1, object_id);
+    } else {
+        sqlerr = sqlite3_bind_text(stmt, 1, string_id,
+                                   PORT_Strlen(string_id), SQLITE_STATIC);
+    }
     if (sqlerr != SQLITE_OK)
         goto loser;
 
@@ -1326,6 +1347,19 @@ loser:
 
     UNLOCK_SQLITE()
     return error;
+}
+
+CK_RV
+sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
+{
+    SDBPrivate *sdb_p = sdb->private;
+    return sdb_destroyAnyObject(sdb, sdb_p->table, object_id, NULL);
+}
+
+CK_RV
+sdb_DestroyMetaData(SDB *sdb, const char *id)
+{
+    return sdb_destroyAnyObject(sdb, "metaData", 0, id);
 }
 
 static const char BEGIN_CMD[] = "BEGIN IMMEDIATE TRANSACTION;";
@@ -2044,7 +2078,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb_p->sqlXactDB = NULL;
     sdb_p->sqlXactThread = NULL;
     sdb->private = sdb_p;
-    sdb->version = 0;
+    sdb->version = 1;
     sdb->sdb_flags = inFlags | SDB_HAS_META;
     sdb->app_private = NULL;
     sdb->sdb_FindObjectsInit = sdb_FindObjectsInit;
@@ -2056,12 +2090,14 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb->sdb_DestroyObject = sdb_DestroyObject;
     sdb->sdb_GetMetaData = sdb_GetMetaData;
     sdb->sdb_PutMetaData = sdb_PutMetaData;
+    sdb->sdb_DestroyMetaData = sdb_DestroyMetaData;
     sdb->sdb_Begin = sdb_Begin;
     sdb->sdb_Commit = sdb_Commit;
     sdb->sdb_Abort = sdb_Abort;
     sdb->sdb_Reset = sdb_Reset;
     sdb->sdb_Close = sdb_Close;
     sdb->sdb_SetForkState = sdb_SetForkState;
+    sdb->sdb_GetNewObjectID = sdb_GetNewObjectID;
 
     if (inTransaction) {
         sqlerr = sqlite3_exec(sqlDB, COMMIT_CMD, NULL, 0, NULL);
