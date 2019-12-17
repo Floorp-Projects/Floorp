@@ -49,6 +49,11 @@ interface FrameLoader {
   readonly attribute boolean depthTooGreat;
 
   /**
+   * Find out whether the loader's frame is a remote frame.
+   */
+  readonly attribute boolean isRemoteFrame;
+
+  /**
    * Activate remote frame.
    * Throws an exception with non-remote frames.
    */
