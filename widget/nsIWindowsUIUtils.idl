@@ -6,17 +6,10 @@
 
 #include "nsISupports.idl"
 
-interface mozIDOMWindowProxy;
-interface imgIContainer;
 
 [scriptable, uuid(aa8a0ecf-96a1-418c-b80e-f24ae18bbedc)]
 interface nsIWindowsUIUtils : nsISupports
 {
-  readonly attribute long systemSmallIconSize;
-  readonly attribute long systemLargeIconSize;
-
-  void setWindowIcon(in mozIDOMWindowProxy aWindow, in imgIContainer aSmallIcon, in imgIContainer aLargeIcon);
-
   /**
    * Whether the OS is currently in tablet mode. Always false on
    * non-Windows and on versions of Windows before win10
