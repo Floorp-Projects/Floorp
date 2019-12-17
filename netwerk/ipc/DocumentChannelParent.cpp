@@ -13,19 +13,20 @@ extern mozilla::LazyLogModule gDocumentChannelLog;
 namespace mozilla {
 namespace net {
 
-DocumentChannelParent::DocumentChannelParent(
-    const dom::PBrowserOrId& aIframeEmbedding, nsILoadContext* aLoadContext,
-    PBOverrideStatus aOverrideStatus) {
+DocumentChannelParent::DocumentChannelParent(BrowserParent* aBrowser,
+                                             nsILoadContext* aLoadContext,
+                                             PBOverrideStatus aOverrideStatus) {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
-  mParent = new DocumentLoadListener(aIframeEmbedding, aLoadContext,
-                                     aOverrideStatus, this);
+  mParent =
+      new DocumentLoadListener(aBrowser, aLoadContext, aOverrideStatus, this);
 }
 
 DocumentChannelParent::~DocumentChannelParent() {
   LOG(("DocumentChannelParent dtor [this=%p]", this));
 }
 
-bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
+bool DocumentChannelParent::Init(BrowserParent* aBrowser,
+                                 const DocumentChannelCreationArgs& aArgs) {
   RefPtr<nsDocShellLoadState> loadState =
       new nsDocShellLoadState(aArgs.loadState());
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
@@ -37,13 +38,14 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(loadState, loadInfo, aArgs.initiatorType().ptrOr(nullptr),
-                     aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
-                     aArgs.isActive(), aArgs.isTopLevelDoc(),
-                     aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
-                     aArgs.contentBlockingAllowListPrincipal(),
-                     aArgs.customUserAgent(), aArgs.channelId(),
-                     aArgs.asyncOpenTime(), &rv)) {
+  if (!mParent->Open(
+          aBrowser, loadState, loadInfo, aArgs.initiatorType().ptrOr(nullptr),
+          aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
+          aArgs.isActive(), aArgs.isTopLevelDoc(),
+          aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
+          aArgs.contentBlockingAllowListPrincipal(), aArgs.customUserAgent(),
+          aArgs.channelId(), aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
+          aArgs.pluginsAllowed(), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 
