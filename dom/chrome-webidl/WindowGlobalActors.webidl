@@ -47,6 +47,9 @@ interface WindowGlobalParent {
   // the document's content blocking log.
   readonly attribute unsigned long contentBlockingEvents;
 
+  // String containing serialized content blocking log.
+  readonly attribute DOMString contentBlockingLog;
+
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 
   /**
