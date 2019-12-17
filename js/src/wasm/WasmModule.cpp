@@ -1236,7 +1236,8 @@ bool Module::makeStructTypeDescrs(
         // rendering the objects non-constructible from JS.  Wasm
         // however sees properly-typed (ref T) fields with appropriate
         // mutability.
-        if (v.isRef()) {
+        if (v.isTypeIndex()) {
+          // Validation ensures that v references a struct type here.
           sf.isMutable = false;
           allowConstruct = false;
         }
