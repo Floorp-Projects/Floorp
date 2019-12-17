@@ -4029,6 +4029,8 @@ class Document : public nsINode,
   virtual bool UseWidthDeviceWidthFallbackViewport() const;
 
  private:
+  bool IsErrorPage() const;
+
   void InitializeLocalization(nsTArray<nsString>& aResourceIds);
 
   // Takes the bits from mStyleUseCounters if appropriate, and sets them in
@@ -4185,6 +4187,8 @@ class Document : public nsINode,
   static bool HasRecentlyStartedForegroundLoads();
 
   static bool AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal);
+
+  already_AddRefed<Promise> AddCertException(bool aIsTemporary);
 
  protected:
   void DoUpdateSVGUseElementShadowTrees();

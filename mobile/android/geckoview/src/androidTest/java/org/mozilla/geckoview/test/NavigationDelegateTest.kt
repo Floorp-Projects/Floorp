@@ -163,6 +163,16 @@ class NavigationDelegateTest : BaseSessionTest() {
         testLoadExpectError("file:///test.mozilla",
                 WebRequestError.ERROR_CATEGORY_URI,
                 WebRequestError.ERROR_FILE_NOT_FOUND)
+
+        val promise = mainSession.evaluatePromiseJS("document.addCertException(false)")
+        var exceptionCaught = false
+        try {
+            val result = promise.value as Boolean
+            assertThat("Promise should not resolve", result, equalTo(false))
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            exceptionCaught = true;
+        }
+        assertThat("document.addCertException failed with exception", exceptionCaught, equalTo(true))
     }
 
     @Test fun loadUnknownHost() {
@@ -192,6 +202,22 @@ class NavigationDelegateTest : BaseSessionTest() {
         testLoadExpectError(uri,
                 WebRequestError.ERROR_CATEGORY_SECURITY,
                 WebRequestError.ERROR_SECURITY_BAD_CERT)
+
+        mainSession.waitForJS("document.addCertException(false)")
+        mainSession.delegateDuringNextWait(
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
+                    @AssertCalled(count = 1, order = [1])
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + uri, url, equalTo(uri))
+                    }
+
+                    @AssertCalled(count = 1, order = [2])
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should succeed", success, equalTo(true))
+                    }
+                })
+        mainSession.evaluateJS("location.reload()")
+        mainSession.waitForPageStop()
     }
 
     @Test fun loadUnknownProtocol() {
