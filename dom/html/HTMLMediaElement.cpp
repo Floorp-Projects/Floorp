@@ -1904,6 +1904,21 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMediaElement,
                                                nsGenericHTMLElement)
 
+void HTMLMediaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                              size_t* aNodeSize) const {
+  nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+
+  // There are many other fields that might be worth reporting, but as seen in
+  // bug 1595603, mPendingEvents can grow to be very large sometimes, so at
+  // least report that.
+  *aNodeSize +=
+      mPendingEvents.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+  for (const nsString& event : mPendingEvents) {
+    *aNodeSize +=
+        event.SizeOfExcludingThisIfUnshared(aSizes.mState.mMallocSizeOf);
+  }
+}
+
 void HTMLMediaElement::ContentRemoved(nsIContent* aChild,
                                       nsIContent* aPreviousSibling) {
   if (aChild == mSourcePointer) {
