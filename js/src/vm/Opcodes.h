@@ -1771,21 +1771,27 @@
     /*
      * Push a default constructor for a base class literal.
      *
-     *   Category: Literals
-     *   Type: Class
-     *   Operands: atom className
-     *   Stack: => constructor
-     */ \
-    MACRO(JSOP_CLASSCONSTRUCTOR, 167, "classconstructor", NULL, 5, 0, 1, JOF_ATOM) \
-    /*
-     * Push a default constructor for a derived class literal.
+     * The sourceStart/sourceEnd offsets are the start/end offsets of the class
+     * definition in the source buffer and are used for toString().
      *
      *   Category: Literals
      *   Type: Class
-     *   Operands: atom className
+     *   Operands: atom className, uint32_t sourceStart, uint32_t sourceEnd
+     *   Stack: => constructor
+     */ \
+    MACRO(JSOP_CLASSCONSTRUCTOR, 167, "classconstructor", NULL, 13, 0, 1, JOF_CLASS_CTOR) \
+    /*
+     * Push a default constructor for a derived class literal.
+     *
+     * The sourceStart/sourceEnd offsets are the start/end offsets of the class
+     * definition in the source buffer and are used for toString().
+     *
+     *   Category: Literals
+     *   Type: Class
+     *   Operands: atom className, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: proto => constructor
      */ \
-    MACRO(JSOP_DERIVEDCONSTRUCTOR, 168, "derivedconstructor", NULL, 5, 1, 1, JOF_ATOM) \
+    MACRO(JSOP_DERIVEDCONSTRUCTOR, 168, "derivedconstructor", NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
      * Throws a runtime TypeError for invalid assignment to 'const'. The
      * localno is used for better error messages.

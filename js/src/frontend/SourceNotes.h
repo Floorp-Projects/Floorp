@@ -73,8 +73,6 @@ class SrcNote {
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
-    M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
-                                              for toString correctness for default ctors. */       \
     M(SRC_TRY,          "try",         SrcNote::Try::Count) \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     SrcNote::ColSpan::Count) \
@@ -82,6 +80,7 @@ class SrcNote {
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
+    M(SRC_UNUSED8,      "unused",      0) \
     M(SRC_UNUSED9,      "unused",      0) \
     M(SRC_UNUSED10,     "unused",      0) \
     M(SRC_UNUSED11,     "unused",      0) \
