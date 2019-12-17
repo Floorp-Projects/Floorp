@@ -207,7 +207,11 @@ class WebrtcVideoConduit
    */
   void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
+  void AddOrUpdateSinkNotLocked(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+                                const rtc::VideoSinkWants& wants);
+
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
+  void RemoveSinkNotLocked(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink);
 
   void OnSinkWantsChanged(const rtc::VideoSinkWants& wants);
 
@@ -512,6 +516,9 @@ class WebrtcVideoConduit
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
+
+  bool mUpdateResolution = false;
+  int mSinkWantsPixelCount = std::numeric_limits<int>::max();
 
   // Bookkeeping of send stream stats. Sts thread only.
   SendStreamStatistics mSendStreamStats;
