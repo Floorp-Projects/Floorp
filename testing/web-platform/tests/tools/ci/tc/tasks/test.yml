@@ -173,12 +173,37 @@ tasks:
               use:
                 - trigger-weekly
                 - trigger-push
+          do:
+            - ${vars.browser}-${vars.channel}-${vars.suite}:
+                use:
+                  - wpt-base
+                  - run-options
+                  - wpt-run
+                  - browser-${vars.browser}
+                  - wpt-${vars.suite}
+                description: >-
+                  A subset of WPT's "${vars.suite}" tests (chunk number ${chunks.id}
+                  of ${chunks.total}), run in the ${vars.channel} release of
+                  ${vars.browser}.
+
+  # Servo doesn't yet support crashtests
+  - $map:
+      for:
+        - vars:
+            suite: testharness
+        - vars:
+            suite: reftest
+        - vars:
+            suite: wdspec
+      do:
+        $map:
+          for:
             - vars:
                 browser: servo
                 channel: nightly
               use:
+                - trigger-daily
                 - trigger-push
-
           do:
             - ${vars.browser}-${vars.channel}-${vars.suite}:
                 use:
