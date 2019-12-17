@@ -136,9 +136,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return innermostEmitterScope_;
   }
 
-  // Script contains JSOP_CALLSITEOBJ.
-  bool hasCallSiteObj = false;
-
   // Script contains finally block.
   bool hasTryFinally = false;
 
