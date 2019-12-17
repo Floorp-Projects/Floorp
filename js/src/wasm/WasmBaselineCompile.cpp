@@ -11489,16 +11489,13 @@ bool BaseCompiler::emitStructNarrow() {
 
   // struct.narrow validation ensures that these hold.
 
-  MOZ_ASSERT(inputType.refTypeKind() == RefType::Any ||
-             inputType.refTypeKind() == RefType::TypeIndex);
-  MOZ_ASSERT(outputType.refTypeKind() == RefType::Any ||
-             outputType.refTypeKind() == RefType::TypeIndex);
-  MOZ_ASSERT_IF(outputType.refTypeKind() == RefType::Any,
-                inputType.refTypeKind() == RefType::Any);
+  MOZ_ASSERT(inputType.isAnyRef() || env_.isStructType(inputType));
+  MOZ_ASSERT(outputType.isAnyRef() || env_.isStructType(outputType));
+  MOZ_ASSERT_IF(outputType.isAnyRef(), inputType.isAnyRef());
 
   // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
 
-  if (inputType == RefType::any() && outputType == RefType::any()) {
+  if (inputType.isAnyRef() && outputType.isAnyRef()) {
     return true;
   }
 
@@ -11506,7 +11503,7 @@ bool BaseCompiler::emitStructNarrow() {
 
   // AnyRef -> (ref T) must first unbox; leaves rp or null
 
-  bool mustUnboxAnyref = inputType == RefType::any();
+  bool mustUnboxAnyref = inputType.isAnyRef();
 
   // Dynamic downcast (ref T) -> (ref U), leaves rp or null
   const StructType& outputStruct =

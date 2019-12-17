@@ -2068,8 +2068,9 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
   }
 
 #ifdef WASM_PRIVATE_REFTYPES
-  if (env_.tables[*tableIndex].importedOrExported && funcType.exposesRef()) {
-    return fail("cannot expose reference type");
+  if (env_.tables[*tableIndex].importedOrExported &&
+      funcType.exposesTypeIndex()) {
+    return fail("cannot expose indexed reference type");
   }
 #endif
 
@@ -2707,8 +2708,8 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
     return false;
   }
 
-  if (inputType->isRef()) {
-    if (!outputType->isRef()) {
+  if (env_.isStructType(*inputType)) {
+    if (!env_.isStructType(*outputType)) {
       return fail("invalid type combination in struct.narrow");
     }
 
@@ -2720,8 +2721,8 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
     if (!outputStruct.hasPrefix(inputStruct)) {
       return fail("invalid narrowing operation");
     }
-  } else if (*outputType == RefType::any()) {
-    if (*inputType != RefType::any()) {
+  } else if (outputType->isAnyRef()) {
+    if (!inputType->isAnyRef()) {
       return fail("invalid type combination in struct.narrow");
     }
   }

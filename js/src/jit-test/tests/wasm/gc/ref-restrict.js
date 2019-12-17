@@ -55,7 +55,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $x i32)))
       (func (export "f") (param (ref $box)) (unreachable)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -70,7 +70,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $x i32)))
       (func (export "f") (result (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -85,7 +85,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $x i32)))
       (import "m" "f" (param (ref $box))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -100,7 +100,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $x i32)))
       (import "m" "f" (param i32) (result (ref $box))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -115,7 +115,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $val i32)))
       (import "m" "g" (global (mut (ref $box)))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -123,7 +123,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $val i32)))
       (import "m" "g" (global (ref $box))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -143,7 +143,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $val i32)))
       (global $boxg (export "box") (mut (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -151,7 +151,7 @@ assertErrorMessage(() => wasmCompile(
       (type $box (struct (field $val i32)))
       (global $boxg (export "box") (ref $box) (ref.null)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -173,7 +173,7 @@ assertErrorMessage(() => wasmCompile(
       (elem (i32.const 0) $f1)
       (func $f1 (param (ref $box)) (unreachable)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -183,7 +183,7 @@ assertErrorMessage(() => wasmCompile(
       (elem (i32.const 0) $f1)
       (func $f1 (result (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -209,7 +209,7 @@ assertErrorMessage(() => wasmCompile(
       (elem (i32.const 0) $f1)
       (func $f1 (param (ref $box)) (unreachable)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -219,7 +219,7 @@ assertErrorMessage(() => wasmCompile(
       (elem (i32.const 0) $f1)
       (func $f1 (result (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -246,7 +246,7 @@ assertErrorMessage(() => wasmCompile(
       (func (param i32)
        (call_indirect $fn (ref.null) (local.get 0))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -257,7 +257,7 @@ assertErrorMessage(() => wasmCompile(
       (func (param i32) (result (ref $box))
        (call_indirect $fn (local.get 0))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module
@@ -286,7 +286,7 @@ assertErrorMessage(() => wasmCompile(
       (func (param i32)
        (call_indirect $fn (ref.null) (local.get 0))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -297,7 +297,7 @@ assertErrorMessage(() => wasmCompile(
       (func (param i32) (result (ref $box))
        (call_indirect $fn (local.get 0))))`),
                    WebAssembly.CompileError,
-                   /cannot expose reference type/);
+                   /cannot expose indexed reference type/);
 
 assertEq(typeof wasmCompile(
     `(module

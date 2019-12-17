@@ -4715,16 +4715,16 @@ static bool ParseGlobalType(WasmParseContext& c, AstValType* type,
 static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
   WasmToken token;
   if (c.ts.getIf(WasmToken::ValueType, &token)) {
-    if (token.valueType() == RefType::func()) {
+    if (token.valueType().isFuncRef()) {
       *tableKind = TableKind::FuncRef;
       return true;
     }
 #ifdef ENABLE_WASM_REFTYPES
-    if (token.valueType() == RefType::any()) {
+    if (token.valueType().isAnyRef()) {
       *tableKind = TableKind::AnyRef;
       return true;
     }
-    if (token.valueType() == RefType::null()) {
+    if (token.valueType().isNullRef()) {
       *tableKind = TableKind::NullRef;
       return true;
     }
@@ -7406,10 +7406,9 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     }
   }
 
-  ElemSegmentPayload payload =
-      hasRefNull || segment.elemType() != RefType::func()
-          ? ElemSegmentPayload::ElemExpression
-          : ElemSegmentPayload::ExternIndex;
+  ElemSegmentPayload payload = hasRefNull || !segment.elemType().isFuncRef()
+                                   ? ElemSegmentPayload::ElemExpression
+                                   : ElemSegmentPayload::ExternIndex;
 
   ElemSegmentKind kind;
   switch (segment.kind()) {
