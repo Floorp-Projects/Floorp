@@ -62,6 +62,7 @@ enum {
   JOF_ICINDEX = 19,      /* uint32_t IC index */
   JOF_LOOPHEAD = 20,     /* JSOP_LOOPHEAD, combines JOF_ICINDEX and JOF_UINT8 */
   JOF_BIGINT = 21,       /* uint32_t index for BigInt value */
+  JOF_CLASS_CTOR = 22,   /* uint32_t atom index, sourceStart, sourceEnd */
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */
@@ -276,6 +277,26 @@ static inline bool IsBackedgePC(jsbytecode* pc) {
 static inline bool IsBackedgeForLoopHead(jsbytecode* pc, jsbytecode* loopHead) {
   MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
   return IsBackedgePC(pc) && pc + GET_JUMP_OFFSET(pc) == loopHead;
+}
+
+static inline void SetClassConstructorOperands(jsbytecode* pc,
+                                               uint32_t atomIndex,
+                                               uint32_t sourceStart,
+                                               uint32_t sourceEnd) {
+  MOZ_ASSERT(*pc == JSOP_CLASSCONSTRUCTOR || *pc == JSOP_DERIVEDCONSTRUCTOR);
+  SET_UINT32(pc, atomIndex);
+  SET_UINT32(pc + 4, sourceStart);
+  SET_UINT32(pc + 8, sourceEnd);
+}
+
+static inline void GetClassConstructorOperands(jsbytecode* pc,
+                                               uint32_t* atomIndex,
+                                               uint32_t* sourceStart,
+                                               uint32_t* sourceEnd) {
+  MOZ_ASSERT(*pc == JSOP_CLASSCONSTRUCTOR || *pc == JSOP_DERIVEDCONSTRUCTOR);
+  *atomIndex = GET_UINT32(pc);
+  *sourceStart = GET_UINT32(pc + 4);
+  *sourceEnd = GET_UINT32(pc + 8);
 }
 
 /*

@@ -1587,6 +1587,23 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
 
+    case JOF_CLASS_CTOR: {
+      uint32_t atomIndex = 0;
+      uint32_t classStartOffset = 0, classEndOffset = 0;
+      GetClassConstructorOperands(pc, &atomIndex, &classStartOffset,
+                                  &classEndOffset);
+      RootedValue v(cx, StringValue(script->getAtom(atomIndex)));
+      UniqueChars bytes = ToDisassemblySource(cx, v);
+      if (!bytes) {
+        return 0;
+      }
+      if (!sp->jsprintf(" %s (off: %u-%u)", bytes.get(), classStartOffset,
+                        classEndOffset)) {
+        return 0;
+      }
+      break;
+    }
+
     case JOF_ARGC:
     case JOF_UINT16:
       i = (int)GET_UINT16(pc);
