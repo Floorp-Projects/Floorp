@@ -43,7 +43,11 @@ if use_sse1:
     SOURCES['transform-sse1.cpp'].flags += CONFIG['SSE_FLAGS']
 
 if use_sse2:
-    SOURCES += ['transform-sse2.cpp']
+    SOURCES += [
+        'transform-avx.cpp',
+        'transform-sse2.cpp'
+    ]
+    SOURCES['transform-avx.cpp'].flags += ['-mavx']
     SOURCES['transform-sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 if use_neon:
