@@ -150,25 +150,25 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, _ -> }
 
         // Non-final FxA url.
-        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/not/the/right/url"))
+        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/not/the/right/url", false, false))
         verify(manager, never()).finishAuthenticationAsync(any())
 
         // Non-FxA url.
-        assertNull(feature.interceptor.onLoadRequest(mock(), "https://www.wikipedia.org"))
+        assertNull(feature.interceptor.onLoadRequest(mock(), "https://www.wikipedia.org", false, false))
         verify(manager, never()).finishAuthenticationAsync(any())
 
         // Redirect url, without code/state.
-        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/"))
+        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/", false, false))
         verify(manager, never()).finishAuthenticationAsync(any())
 
         // Redirect url, without code/state.
-        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/test"))
+        assertNull(feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/test", false, false))
         verify(manager, never()).finishAuthenticationAsync(any())
 
         // Code+state, no action.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode1&state=testState1")
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode1&state=testState1", false, false)
         )
         verify(manager).finishAuthenticationAsync(
             FxaAuthData(authType = AuthType.OtherExternal(null), code = "testCode1", state = "testState1")
@@ -177,7 +177,7 @@ class FirefoxAccountsAuthFeatureTest {
         // Code+state, action=signin.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode2&state=testState2&action=signin")
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode2&state=testState2&action=signin", false, false)
         )
         verify(manager).finishAuthenticationAsync(
             FxaAuthData(authType = AuthType.Signin, code = "testCode2", state = "testState2")
@@ -186,7 +186,7 @@ class FirefoxAccountsAuthFeatureTest {
         // Code+state, action=signup.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode3&state=testState3&action=signup")
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode3&state=testState3&action=signup", false, false)
         )
         verify(manager).finishAuthenticationAsync(
             FxaAuthData(authType = AuthType.Signup, code = "testCode3", state = "testState3")
@@ -195,7 +195,7 @@ class FirefoxAccountsAuthFeatureTest {
         // Code+state, action=pairing.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode4&state=testState4&action=pairing")
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode4&state=testState4&action=pairing", false, false)
         )
         verify(manager).finishAuthenticationAsync(
             FxaAuthData(authType = AuthType.Pairing, code = "testCode4", state = "testState4")
@@ -204,7 +204,7 @@ class FirefoxAccountsAuthFeatureTest {
         // Code+state, action is an unknown value.
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(redirectUrl),
-            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode5&state=testState5&action=someNewActionType")
+            feature.interceptor.onLoadRequest(mock(), "https://accounts.firefox.com/oauth/success/123/?code=testCode5&state=testState5&action=someNewActionType", false, false)
         )
         verify(manager).finishAuthenticationAsync(
             FxaAuthData(authType = AuthType.OtherExternal("someNewActionType"), code = "testCode5", state = "testState5")

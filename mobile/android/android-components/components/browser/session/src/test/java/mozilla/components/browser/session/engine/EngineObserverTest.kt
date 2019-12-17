@@ -516,21 +516,20 @@ class EngineObserverTest {
     }
 
     @Test
-    fun `onLoadRequest clears search terms for requests triggered by webcontent`() {
+    fun `onLoadRequest clears search terms for requests triggered by web content`() {
         val url = "https://www.mozilla.org"
         val session = Session(url)
         session.searchTerms = "Mozilla Foundation"
 
         val observer = EngineObserver(session)
-        observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true,
-            shouldLoadUri = { _: Boolean, _: String -> })
+        observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true)
 
         assertEquals("", session.searchTerms)
-        val triggeredByRedirect = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.WEB_CONTENT)
+        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
+        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
 
-        assertFalse(triggeredByRedirect!!)
-        assertTrue(triggeredByWebContent!!)
+        assertFalse(triggeredByRedirect)
+        assertTrue(triggeredByWebContent)
     }
 
     @Test
@@ -540,15 +539,14 @@ class EngineObserverTest {
         session.searchTerms = "Mozilla Foundation"
 
         val observer = EngineObserver(session)
-        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false,
-            shouldLoadUri = { _: Boolean, _: String -> })
+        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
 
         assertEquals("", session.searchTerms)
-        val triggeredByRedirect = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.WEB_CONTENT)
+        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
+        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
 
-        assertTrue(triggeredByRedirect!!)
-        assertFalse(triggeredByWebContent!!)
+        assertTrue(triggeredByRedirect)
+        assertFalse(triggeredByWebContent)
     }
 
     @Test
@@ -558,15 +556,14 @@ class EngineObserverTest {
         session.searchTerms = "Mozilla Foundation"
 
         val observer = EngineObserver(session)
-        observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false,
-            shouldLoadUri = { _: Boolean, _: String -> })
+        observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false)
 
         assertEquals("Mozilla Foundation", session.searchTerms)
 
-        val triggeredByRedirect = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.WEB_CONTENT)
+        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
+        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
 
-        assertFalse(triggeredByRedirect!!)
-        assertFalse(triggeredByWebContent!!)
+        assertFalse(triggeredByRedirect)
+        assertFalse(triggeredByWebContent)
     }
 }

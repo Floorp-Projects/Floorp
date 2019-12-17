@@ -4,10 +4,12 @@
 
 package mozilla.components.browser.session.engine
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
@@ -70,24 +72,23 @@ internal class EngineObserver(
     override fun onLoadRequest(
         url: String,
         triggeredByRedirect: Boolean,
-        triggeredByWebContent: Boolean,
-        shouldLoadUri: (Boolean, String) -> Unit
+        triggeredByWebContent: Boolean
     ) {
         if (triggeredByRedirect || triggeredByWebContent) {
             session.searchTerms = ""
         }
 
-        /* Debugging code for Android-components/issues/5127, will remove */
-        val shouldLoadUriWithId = { shouldLoad: Boolean -> shouldLoadUri(shouldLoad, "$this:${session.id}") }
-        session.loadRequestMetadata = Consumable.from(LoadRequestMetadata(
+        session.loadRequestMetadata = LoadRequestMetadata(
             url,
             arrayOf(
                 if (triggeredByRedirect) LoadRequestOption.REDIRECT else LoadRequestOption.NONE,
                 if (triggeredByWebContent) LoadRequestOption.WEB_CONTENT else LoadRequestOption.NONE
-            ),
-            /* Debugging code for Android-components/issues/5127, will remove */
-            shouldLoadUriWithId
-        ))
+            )
+        )
+    }
+
+    override fun onLaunchIntentRequest(url: String, appIntent: Intent?) {
+        session.launchIntentMetadata = LaunchIntentMetadata(url, appIntent)
     }
 
     override fun onTitleChange(title: String) {

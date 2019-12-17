@@ -24,7 +24,6 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
-import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -430,7 +429,12 @@ class SystemEngineSessionTest {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
-            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
             }
@@ -477,8 +481,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
 
-        val allowOrDeny = argumentCaptor<(Boolean, String) -> Unit>()
-        verify(observer).onLoadRequest(anyString(), eq(true), eq(true), allowOrDeny.capture())
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
 
         val redirect: WebResourceRequest = mock()
         doReturn(true).`when`(redirect).isForMainFrame
@@ -487,7 +490,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, redirect)
 
-        verify(observer).onLoadRequest(anyString(), eq(true), eq(true), allowOrDeny.capture())
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
     }
 
     @Test
@@ -498,7 +501,12 @@ class SystemEngineSessionTest {
         doReturn(Uri.parse("sample:about")).`when`(request).url
 
         val interceptor = object : RequestInterceptor {
-            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
             }
         }
@@ -517,8 +525,7 @@ class SystemEngineSessionTest {
             engineSession.webView,
             request)
 
-        val allowOrDeny = argumentCaptor<(Boolean, String) -> Unit>()
-        verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean(), allowOrDeny.capture())
+        verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean())
     }
 
     @Test
@@ -526,7 +533,12 @@ class SystemEngineSessionTest {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
-            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
             }
@@ -575,7 +587,12 @@ class SystemEngineSessionTest {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
-            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return null
             }

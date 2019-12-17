@@ -10,6 +10,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
+import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.toFindResultState
@@ -40,6 +41,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -231,13 +233,29 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.loadRequestMetadata = Consumable.from(LoadRequestMetadata(
-            "https://www.mozilla.org",
-            arrayOf(LoadRequestOption.REDIRECT)
-        ))
+        session.loadRequestMetadata = LoadRequestMetadata(
+            "https://www.mozilla.org", arrayOf(LoadRequestOption.REDIRECT)
+        )
 
-        assertTrue(session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)!!)
-        verify(observer, times(1)).onLoadRequest(eq(session), eq("https://www.mozilla.org"), eq(true), eq(false))
+        assertTrue(session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT))
+        verify(observer, times(1)).onLoadRequest(eq(session), eq("https://www.mozilla.org"),
+            anyBoolean(), anyBoolean())
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when launch intent request is triggered`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.launchIntentMetadata = LaunchIntentMetadata(
+            "https://www.mozilla.org", mock()
+        )
+
+        verify(observer, times(1)).onLaunchIntentRequest(eq(session), eq("https://www.mozilla.org"),
+            any())
         verifyNoMoreInteractions(observer)
     }
 

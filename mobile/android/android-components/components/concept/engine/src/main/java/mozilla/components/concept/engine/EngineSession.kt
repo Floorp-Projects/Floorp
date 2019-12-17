@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.content.Intent
 import android.graphics.Bitmap
 import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.RECOMMENDED
@@ -79,14 +80,27 @@ abstract class EngineSession(
          * @param triggeredByRedirect True if and only if the request was triggered by an HTTP redirect.
          * @param triggeredByWebContent True if and only if the request was triggered from within
          * web content (as opposed to via the browser chrome).
-         * @param shouldLoadUri Function to be called when request is consumed.
+         *
+         * Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects.
+         * The flag is "True if and only if the request was triggered by an HTTP redirect."
+         * See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
          */
         fun onLoadRequest(
             url: String,
             triggeredByRedirect: Boolean,
-            triggeredByWebContent: Boolean,
-            /* Debugging code for Android-components/issues/5127, will remove String as parameter*/
-            shouldLoadUri: (Boolean, String) -> Unit
+            triggeredByWebContent: Boolean
+        ) = Unit
+
+        /**
+         * The engine received a request to launch a app intent.
+         *
+         * @param url The string url that was requested.
+         * @param appIntent The Android Intent that was requested.
+         * web content (as opposed to via the browser chrome).
+         */
+        fun onLaunchIntentRequest(
+            url: String,
+            appIntent: Intent?
         ) = Unit
 
         @Suppress("LongParameterList")
