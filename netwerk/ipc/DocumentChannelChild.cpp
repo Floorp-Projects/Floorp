@@ -190,8 +190,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.hasNonEmptySandboxingFlags() = mHasNonEmptySandboxingFlags;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
-  args.documentOpenFlags() = mDocumentOpenFlags;
-  args.pluginsAllowed() = mPluginsAllowed;
 
   nsDocShell* docshell = GetDocShell();
   if (docshell) {
@@ -203,7 +201,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
                                 NS_GET_TEMPLATE_IID(nsIBrowserChild),
                                 getter_AddRefs(iBrowserChild));
   BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
-  if (MissingRequiredBrowserChild(browserChild, "documentchannel")) {
+  if (MissingRequiredBrowserChild(browserChild, "ftp")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -272,9 +270,8 @@ void DocumentChannelChild::ShutdownListeners(nsresult aStatusCode) {
 }
 
 IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
-    const nsresult& aStatus, const nsresult& aLoadGroupStatus) {
+    const nsresult& aStatus) {
   MOZ_ASSERT(NS_FAILED(aStatus));
-  mStatus = aLoadGroupStatus;
   // Make sure we remove from the load group before
   // setting mStatus, as existing tests expect the
   // status to be successful when we disconnect.

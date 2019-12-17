@@ -406,12 +406,6 @@ nsMultiMixedConv::AsyncConvertData(const char* aFromType, const char* aToType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMultiMixedConv::GetConvertedType(const nsACString& aFromType,
-                                   nsACString& aToType) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // nsIRequestObserver implementation
 NS_IMETHODIMP
 nsMultiMixedConv::OnStartRequest(nsIRequest* request) {
