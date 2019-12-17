@@ -1490,10 +1490,16 @@ fn get_channel_count(devid: AudioObjectID, devtype: DeviceType) -> Result<u32> {
 fn get_range_of_sample_rates(
     devid: AudioObjectID,
     devtype: DeviceType,
-) -> std::result::Result<(f64, f64), OSStatus> {
+) -> std::result::Result<(f64, f64), String> {
+    let result = get_ranges_of_device_sample_rate(devid, devtype);
+    if let Err(e) = result {
+        return Err(format!("status {}", e).to_string());
+    }
+    let rates = result.unwrap();
+    if rates.is_empty() {
+        return Err(String::from("No data"));
+    }
     let (mut min, mut max) = (std::f64::MAX, std::f64::MIN);
-    let rates = get_ranges_of_device_sample_rate(devid, devtype)?;
-    assert!(!rates.is_empty());
     for rate in rates {
         if rate.mMaximum > max {
             max = rate.mMaximum;
@@ -3221,7 +3227,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         )
     }
 
-    fn notify_state_changed(&mut self, state: State) {
+    fn notify_state_changed(&self, state: State) {
         if self.state_callback.is_none() {
             return;
         }
@@ -3275,7 +3281,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     "({:p}) Create input device info failed. This can happen when last media device is unplugged",
                     self.core_stream_data.stm_ptr
                 );
-                self.core_stream_data.close();
                 e
             })?;
         }
@@ -3288,7 +3293,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 "({:p}) Create output device info failed. This can happen when last media device is unplugged",
                 self.core_stream_data.stm_ptr
             );
-            self.core_stream_data.close();
             e
         })?;
 
@@ -3305,7 +3309,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
                         "({:p}) Create input device info failed. This can happen when last media device is unplugged",
                         self.core_stream_data.stm_ptr
                     );
-                    self.core_stream_data.close();
                     e
                 })?;
                 self.core_stream_data.setup().map_err(|e| {
@@ -3313,7 +3316,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
                         "({:p}) Second stream reinit failed.",
                         self.core_stream_data.stm_ptr
                     );
-                    self.core_stream_data.close();
                     e
                 })?;
             }
@@ -3330,7 +3332,6 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     "({:p}) Start audiounit failed.",
                     self.core_stream_data.stm_ptr
                 );
-                self.core_stream_data.close();
                 e
             })?;
         }
@@ -3365,6 +3366,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
 
             if stm_guard.reinit().is_err() {
+                stm_guard.core_stream_data.close();
                 stm_guard.notify_state_changed(State::Error);
                 cubeb_log!(
                     "({:p}) Could not reopen the stream after switching.",
