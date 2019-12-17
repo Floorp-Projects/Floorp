@@ -131,6 +131,12 @@ nsPartChannel::Cancel(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
+nsPartChannel::GetCanceled(bool* aCanceled) {
+  *aCanceled = NS_FAILED(mStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPartChannel::Suspend(void) {
   // Suspending an individual part must not suspend the underlying
   // multipart channel...

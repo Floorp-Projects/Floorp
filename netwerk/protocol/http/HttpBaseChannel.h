@@ -171,6 +171,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD Open(nsIInputStream** aResult) override;
   NS_IMETHOD GetBlockAuthPrompt(bool* aValue) override;
   NS_IMETHOD SetBlockAuthPrompt(bool aValue) override;
+  NS_IMETHOD GetCanceled(bool* aCanceled) override;
 
   // nsIEncodedChannel
   NS_IMETHOD GetApplyConversion(bool* value) override;
@@ -253,7 +254,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetThirdPartyFlags(uint32_t aForce) override;
   NS_IMETHOD GetForceAllowThirdPartyCookie(bool* aForce) override;
   NS_IMETHOD SetForceAllowThirdPartyCookie(bool aForce) override;
-  NS_IMETHOD GetCanceled(bool* aCanceled) override;
   NS_IMETHOD GetChannelIsForDownload(bool* aChannelIsForDownload) override;
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
   NS_IMETHOD SetCacheKeysRedirectChain(nsTArray<nsCString>* cacheKeys) override;

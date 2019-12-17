@@ -188,6 +188,11 @@ interface nsIChannel : nsIRequest
      */
     void asyncOpen(in nsIStreamListener aListener);
 
+    /**
+     * True if the channel has been canceled.
+     */
+    [must_use] readonly attribute boolean canceled;
+
     /**************************************************************************
      * Channel specific load flags:
      *
