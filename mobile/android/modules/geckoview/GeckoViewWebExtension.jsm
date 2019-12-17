@@ -240,7 +240,6 @@ class GeckoViewConnection {
 }
 
 function exportExtension(aAddon, aPermissions, aSourceURI) {
-  const { origins, permissions } = aPermissions;
   const {
     creator,
     description,
@@ -272,8 +271,8 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     isEnabled: isActive,
     isBuiltIn: isBuiltin,
     metaData: {
-      permissions,
-      origins,
+      permissions: aPermissions ? aPermissions.permissions : [],
+      origins: aPermissions ? aPermissions.origins : [],
       description,
       version,
       creatorName,
@@ -642,8 +641,16 @@ var GeckoViewWebExtension = {
       }
 
       case "GeckoView:WebExtension:List": {
-        // TODO
-        aCallback.onError(`Not implemented`);
+        try {
+          const addons = await AddonManager.getAddonsByTypes(["extension"]);
+          const extensions = addons.map(addon =>
+            exportExtension(addon, addon.userPermissions, null)
+          );
+          aCallback.onSuccess({ extensions });
+        } catch (ex) {
+          debug`Failed list ${ex}`;
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
         break;
       }
 

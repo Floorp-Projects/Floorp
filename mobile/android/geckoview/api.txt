@@ -1549,6 +1549,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);

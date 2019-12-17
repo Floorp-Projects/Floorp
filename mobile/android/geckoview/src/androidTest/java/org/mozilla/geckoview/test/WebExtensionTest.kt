@@ -137,8 +137,15 @@ class WebExtensionTest : BaseSessionTest() {
         assertThat("Content script should have been applied",
                 color as String, equalTo("red"))
 
+        var list = sessionRule.waitForResult(controller.list())
+        assertEquals(list.size, 1)
+        assertEquals(list[0].id, borderify.id)
+
         // Unregister WebExtension and check again
         sessionRule.waitForResult(controller.uninstall(borderify))
+
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -147,6 +154,53 @@ class WebExtensionTest : BaseSessionTest() {
         val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat("Content script should have been applied",
                 colorAfter as String, equalTo(""))
+    }
+
+    @Test
+    fun installMultiple() {
+        // dummy.xpi is not signed, but it could be
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false
+        ))
+
+        // First, make sure the list starts empty
+        var list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count=2)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        // Install in parallell borderify and dummy
+        val borderifyResult = controller.install(
+                "resource://android/assets/web_extensions/borderify.xpi")
+        val dummyResult = controller.install(
+                "resource://android/assets/web_extensions/dummy.xpi")
+
+        val (borderify, dummy) = sessionRule.waitForResult(
+                GeckoResult.allOf(borderifyResult, dummyResult))
+
+        // Make sure the list is updated accordingly
+        list = sessionRule.waitForResult(controller.list())
+        assertTrue(list.find { it.id == borderify.id } != null)
+        assertTrue(list.find { it.id == dummy.id } != null)
+        assertEquals(list.size, 2)
+
+        // Uninstall borderify and verify that it's not in the list anymore
+        sessionRule.waitForResult(controller.uninstall(borderify))
+
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list.size, 1)
+        assertEquals(list[0].id, dummy.id)
+
+        // Uninstall dummy and make sure the list is now empty
+        sessionRule.waitForResult(controller.uninstall(dummy))
+
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
     }
 
     private fun testInstallError(name: String, expectedError: Int) {

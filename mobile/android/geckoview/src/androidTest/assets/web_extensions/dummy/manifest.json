@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Dummy",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "dummy@tests.mozilla.org"
+    }
+  },
+  "description": "Doesn't do anything.",
+  "content_scripts": [
+    {
+      "matches": ["*://*.example.com/*"],
+      "js": ["dummy.js"]
+    }
+  ]
+}
