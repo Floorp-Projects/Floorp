@@ -90,6 +90,12 @@ module.exports = {
     // For all server files, prevent requiring devtools/client modules.
     "files": [
       "server/**",
+      // The rule also applies to all `shared` files, with the exception of
+      // shared/fronts.
+      // This first pattern matches files in a shared subfolder other than "fronts".
+      "shared/!(fronts)/**",
+      // This second pattern matches files directly under shared.
+      "shared/*.**",
     ],
     "rules": {
       "mozilla/reject-some-requires": ["error", "^(resource\://)?devtools/client"],
