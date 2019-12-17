@@ -18,16 +18,16 @@ namespace js {
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
- * A source note is a uint8_t with 5 bits of type and 3 of offset from the pc
- * of the previous note. If 3 bits of offset aren't enough, extended delta
- * notes (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset
+ * A source note is a uint8_t with 4 bits of type and 4 of offset from the pc
+ * of the previous note. If 4 bits of offset aren't enough, extended delta
+ * notes (SRC_XDELTA) consisting of 1 set high order bit followed by 7 offset
  * bits are emitted before the next note. Some notes have operand offsets
  * encoded immediately after them, in note bytes or byte-triples.
  *
  *                 Source Note               Extended Delta
- *              +7-6-5-4-3+2-1-0+           +7-6-5+4-3-2-1-0+
- *              |note-type|delta|           |1 1| ext-delta |
- *              +---------+-----+           +---+-----------+
+ *              +7-6-5-4+3-2-1-0+           +7+6-5-4-3-2-1-0+
+ *              | type  | delta |           |1| ext-delta   |
+ *              +-------+-------+           +-+-------------+
  *
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_COLSPAN, SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
@@ -80,23 +80,9 @@ class SrcNote {
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
-    M(SRC_UNUSED8,      "unused",      0) \
-    M(SRC_UNUSED9,      "unused",      0) \
-    M(SRC_UNUSED10,     "unused",      0) \
-    M(SRC_UNUSED11,     "unused",      0) \
-    M(SRC_UNUSED12,     "unused",      0) \
-    M(SRC_UNUSED13,     "unused",      0) \
-    M(SRC_UNUSED14,     "unused",      0) \
-    M(SRC_UNUSED15,     "unused",      0) \
-    M(SRC_UNUSED16,     "unused",      0) \
-    M(SRC_UNUSED17,     "unused",      0) \
-    M(SRC_UNUSED18,     "unused",      0) \
-    M(SRC_UNUSED19,     "unused",      0) \
-    M(SRC_UNUSED20,     "unused",      0) \
-    M(SRC_UNUSED21,     "unused",      0) \
-    M(SRC_UNUSED22,     "unused",      0) \
-    M(SRC_UNUSED23,     "unused",      0) \
-    M(SRC_XDELTA,       "xdelta",      0)  /* 24-31 are for extended delta notes. */
+    M(SRC_XDELTA,       "xdelta",      0)  /* 8-15 (0b1xxx) are for extended delta notes. */
+    // Note: need to add a new source note? Consider bumping SRC_XDELTA to 12-15
+    // and change SN_XDELTA_BITS from 7 to 6.
 // clang-format on
 
 enum SrcNoteType {
@@ -108,7 +94,7 @@ enum SrcNoteType {
   SRC_LAST_GETTABLE = SRC_TRY
 };
 
-static_assert(SRC_XDELTA == 24, "SRC_XDELTA should be 24");
+static_assert(SRC_XDELTA == 8, "SRC_XDELTA should be 8");
 
 /* A source note array is terminated by an all-zero element. */
 inline void SN_MAKE_TERMINATOR(jssrcnote* sn) { *sn = SRC_NULL; }
@@ -117,9 +103,10 @@ inline bool SN_IS_TERMINATOR(jssrcnote* sn) { return *sn == SRC_NULL; }
 
 }  // namespace js
 
-#define SN_TYPE_BITS 5
-#define SN_DELTA_BITS 3
-#define SN_XDELTA_BITS 6
+#define SN_TYPE_BITS 4
+#define SN_DELTA_BITS 4
+#define SN_XDELTA_BITS 7
+
 #define SN_TYPE_MASK (js::BitMask(SN_TYPE_BITS) << SN_DELTA_BITS)
 #define SN_DELTA_MASK ((ptrdiff_t)js::BitMask(SN_DELTA_BITS))
 #define SN_XDELTA_MASK ((ptrdiff_t)js::BitMask(SN_XDELTA_BITS))
