@@ -33,6 +33,7 @@ class GLContext;
 namespace wr {
 
 class DCLayer;
+class DCSurface;
 
 /**
  * DCLayerTree manages direct composition layers.
@@ -54,12 +55,14 @@ class DCLayerTree {
   // Interface for wr::Compositor
   void CompositorBeginFrame();
   void CompositorEndFrame();
-  void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
-            uint32_t* aFboId, wr::DeviceIntRect aDirtyRect);
+  void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
+            wr::DeviceIntRect aDirtyRect);
   void Unbind();
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize,
-                     bool aIsOpaque);
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize);
   void DestroySurface(NativeSurfaceId aId);
+  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY,
+                  bool aIsOpaque);
+  void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY);
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect);
 
@@ -69,6 +72,7 @@ class DCLayerTree {
   IDCompositionDevice2* GetCompositionDevice() const {
     return mCompositionDevice;
   }
+  DCSurface* GetSurface(wr::NativeSurfaceId aId) const;
 
   // Get or create an FBO with depth buffer suitable for specified dimensions
   GLuint GetOrCreateFbo(int aWidth, int aHeight);
@@ -91,15 +95,22 @@ class DCLayerTree {
   bool mDebugCounter;
   bool mDebugVisualRedrawRegions;
 
-  Maybe<wr::NativeSurfaceId> mCurrentId;
+  Maybe<wr::NativeTileId> mCurrentId;
 
-  std::unordered_map<uint64_t, UniquePtr<DCLayer>> mDCLayers;
+  struct SurfaceIdHashFn {
+    std::size_t operator()(const wr::NativeSurfaceId& aId) const {
+      return HashGeneric(wr::AsUint64(aId));
+    }
+  };
+
+  std::unordered_map<wr::NativeSurfaceId, UniquePtr<DCSurface>, SurfaceIdHashFn>
+      mDCSurfaces;
 
   // A list of layer IDs as they are added to the visual tree this frame.
-  std::vector<uint64_t> mCurrentLayers;
+  std::vector<wr::NativeSurfaceId> mCurrentLayers;
 
   // The previous frame's list of layer IDs in visual order.
-  std::vector<uint64_t> mPrevLayers;
+  std::vector<wr::NativeSurfaceId> mPrevLayers;
 
   // Information about a cached FBO that is retained between frames.
   struct CachedFrameBuffer {
@@ -115,11 +126,60 @@ class DCLayerTree {
   std::vector<CachedFrameBuffer> mFrameBuffers;
 };
 
+/**
+ Represents a single picture cache slice. Each surface contains some
+ number of tiles. An implementation may choose to allocate individual
+ tiles to render in to (as the current impl does), or allocate a large
+ single virtual surface to draw into (e.g. the DirectComposition virtual
+ surface API in future).
+ */
+class DCSurface {
+ public:
+  explicit DCSurface(wr::DeviceIntSize aTileSize, DCLayerTree* aDCLayerTree);
+  ~DCSurface();
+
+  bool Initialize();
+  void CreateTile(int32_t aX, int32_t aY, bool aIsOpaque);
+  void DestroyTile(int32_t aX, int32_t aY);
+
+  IDCompositionVisual2* GetVisual() const { return mVisual; }
+  DCLayer* GetLayer(int32_t aX, int32_t aY) const;
+
+  struct TileKey {
+    TileKey(int32_t aX, int32_t aY) : mX(aX), mY(aY) {}
+
+    int32_t mX;
+    int32_t mY;
+  };
+
+ protected:
+  DCLayerTree* mDCLayerTree;
+
+  struct TileKeyHashFn {
+    std::size_t operator()(const TileKey& aId) const {
+      return HashGeneric(aId.mX, aId.mY);
+    }
+  };
+
+  // The visual for this surface. No content is attached to here, but tiles
+  // that belong to this surface are added as children. In this way, we can
+  // set the clip and scroll offset once, on this visual, to affect all
+  // children.
+  RefPtr<IDCompositionVisual2> mVisual;
+
+  wr::DeviceIntSize mTileSize;
+  std::unordered_map<TileKey, UniquePtr<DCLayer>, TileKeyHashFn> mDCLayers;
+};
+
+/**
+ Represents a tile within a surface.
+ TODO(gw): We should probably rename this to DCTile as a follow up.
+ */
 class DCLayer {
  public:
   explicit DCLayer(DCLayerTree* aDCLayerTree);
   ~DCLayer();
-  bool Initialize(wr::DeviceIntSize aSize, bool aIsOpaque);
+  bool Initialize(int aX, int aY, wr::DeviceIntSize aSize, bool aIsOpaque);
   GLuint CreateEGLSurfaceForCompositionSurface(wr::DeviceIntRect aDirtyRect,
                                                wr::DeviceIntPoint* aOffset);
   void EndDraw();
@@ -134,7 +194,6 @@ class DCLayer {
                                                         bool aIsOpaque);
   void DestroyEGLSurface();
 
- protected:
   DCLayerTree* mDCLayerTree;
 
   RefPtr<IDCompositionSurface> mCompositionSurface;
@@ -151,6 +210,11 @@ class DCLayer {
 
   RefPtr<IDCompositionVisual2> mVisual;
 };
+
+static inline bool operator==(const DCSurface::TileKey& a0,
+                              const DCSurface::TileKey& a1) {
+  return a0.mX == a1.mX && a0.mY == a1.mY;
+}
 
 }  // namespace wr
 }  // namespace mozilla
