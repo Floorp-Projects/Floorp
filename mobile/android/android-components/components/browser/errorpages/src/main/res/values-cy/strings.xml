@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Anhawster llwytho tudalen</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Ceisiwch Eto</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Ewch Nôl</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+        <p>Nid oes gwybodaeth ar gael am y gwall neu broblem yma ar hyn o bryd.</p>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Methodd y Cysylltiad Diogel</string>
+
+    </resources>

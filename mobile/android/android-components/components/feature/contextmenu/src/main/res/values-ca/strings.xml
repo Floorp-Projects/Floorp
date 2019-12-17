@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Obre l’enllaç en una pestanya nova</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Obre l’enllaç en una pestanya privada</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Obre la imatge en una pestanya nova</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Comparteix l’enllaç</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">Copia l’enllaç</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">Copia la ubicació de la imatge</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">Desa la imatge</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">S’ha obert una pestanya nova</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">S’ha obert una pestanya privada nova</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">S’ha copiat l’enllaç al porta-retalls</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">Vés-hi</string>
+</resources>
