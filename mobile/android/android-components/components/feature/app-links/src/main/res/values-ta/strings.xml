@@ -2,6 +2,8 @@
 <resources>
     <!-- The tile for the list of external apps to open the link in -->
     <string name="mozac_feature_applinks_open_in">இதில் திற…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">செயலியில் திறக்கவா? உங்கள் செயல்பாடு இனி தனிப்பட்டதாக இருக்காது.</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">திற</string>
     <!-- Cancels the prompt -->
