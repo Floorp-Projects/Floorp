@@ -1357,29 +1357,23 @@ class HashTable : private AllocPolicy {
 
    public:
     bool done() const {
-#ifdef DEBUG
       MOZ_ASSERT(mGeneration == mTable.generation());
       MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
       return mCur == mEnd;
     }
 
     T& get() const {
       MOZ_ASSERT(!done());
-#ifdef DEBUG
       MOZ_ASSERT(mValidEntry);
       MOZ_ASSERT(mGeneration == mTable.generation());
       MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
       return mCur.get();
     }
 
     void next() {
       MOZ_ASSERT(!done());
-#ifdef DEBUG
       MOZ_ASSERT(mGeneration == mTable.generation());
       MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
       moveToNextLiveEntry();
 #ifdef DEBUG
       mValidEntry = true;
@@ -1430,11 +1424,9 @@ class HashTable : private AllocPolicy {
 
     NonConstT& getMutable() {
       MOZ_ASSERT(!this->done());
-#ifdef DEBUG
       MOZ_ASSERT(this->mValidEntry);
       MOZ_ASSERT(this->mGeneration == this->Iterator::mTable.generation());
       MOZ_ASSERT(this->mMutationCount == this->Iterator::mTable.mMutationCount);
-#endif
       return this->mCur.getMutable();
     }
 
@@ -1538,6 +1530,7 @@ class HashTable : private AllocPolicy {
     mEntered = aRhs.mEntered;
 #endif
     aRhs.mTable = nullptr;
+    aRhs.clearAndCompact();
   }
 
   // HashTable is not copyable or assignable
@@ -2056,7 +2049,7 @@ class HashTable : private AllocPolicy {
   }
 
   MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& aLookup) const {
-    if (!mTable || empty() || !HasHash<HashPolicy>(aLookup)) {
+    if (empty() || !HasHash<HashPolicy>(aLookup)) {
       return Ptr();
     }
     HashNumber keyHash = prepareHash(aLookup);
