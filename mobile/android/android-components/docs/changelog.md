@@ -12,6 +12,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **service-glean**
+  * Glean was updated to v22.1.0 ([Full changelog](https://github.com/mozilla/glean/compare/v21.3.0...v22.1.0))
+    * Attempt to re-send the deletion ping on init even if upload is disabled.
+    * Introduce the `InvalidOverflow` error for `TimingDistribution`s.
+
 # 26.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...v26.0.0)
