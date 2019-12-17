@@ -1050,9 +1050,15 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   // Test EnforceRange/Clamp
   void DontEnforceRangeOrClamp(int8_t);
   void DoEnforceRange(int8_t);
+  void DoEnforceRangeNullable(const Nullable<int8_t>&);
   void DoClamp(int8_t);
+  void DoClampNullable(const Nullable<int8_t>&);
   void SetEnforcedByte(int8_t);
   int8_t EnforcedByte();
+  void SetEnforcedNullableByte(const Nullable<int8_t>&);
+  Nullable<int8_t> GetEnforcedNullableByte() const;
+  void SetClampedNullableByte(const Nullable<int8_t>&);
+  Nullable<int8_t> GetClampedNullableByte() const;
   void SetClampedByte(int8_t);
   int8_t ClampedByte();
 
