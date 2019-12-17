@@ -99,8 +99,8 @@ var Fingerprinting = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
-  async updateSubView() {
-    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+  updateSubView() {
+    let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let fragment = document.createDocumentFragment();
@@ -229,8 +229,8 @@ var Cryptomining = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
-  async updateSubView() {
-    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+  updateSubView() {
+    let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let fragment = document.createDocumentFragment();
@@ -426,7 +426,7 @@ var TrackingProtection = {
     let previousURI = gBrowser.currentURI.spec;
     let previousWindow = gBrowser.selectedBrowser.innerWindowID;
 
-    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+    let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let fragment = document.createDocumentFragment();
@@ -698,8 +698,8 @@ var ThirdPartyCookies = {
     return (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED) != 0;
   },
 
-  async updateSubView() {
-    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+  updateSubView() {
+    let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let categories = this._processContentBlockingLog(contentBlockingLog);
@@ -1076,8 +1076,8 @@ var SocialTracking = {
     ));
   },
 
-  async updateSubView() {
-    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+  updateSubView() {
+    let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let fragment = document.createDocumentFragment();
