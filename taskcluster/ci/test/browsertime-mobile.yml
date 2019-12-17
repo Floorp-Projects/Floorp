@@ -54,7 +54,7 @@ browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
     raptor-test: tp6m
     raptor-subtests: ['amazon', 'youtube']
-    apps: ["geckoview"]
+    apps: ["geckoview", "fenix"]
     pageload: cold
     treeherder-symbol: Btime(tp6m)
 
