@@ -276,13 +276,15 @@ static bool SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval,
 JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, HandleObject proto) {
   JSOp op = JSOp(*pc);
-  JSAtom* atom = script->getAtom(pc);
   bool derived = op == JSOP_DERIVEDCONSTRUCTOR;
   MOZ_ASSERT(derived == !!proto);
 
-  jssrcnote* classNote = GetSrcNote(cx, script, pc);
-  MOZ_ASSERT(classNote && SN_TYPE(classNote) == SRC_CLASS_SPAN);
+  uint32_t atomIndex = 0;
+  uint32_t classStartOffset = 0, classEndOffset = 0;
+  GetClassConstructorOperands(pc, &atomIndex, &classStartOffset,
+                              &classEndOffset);
 
+  JSAtom* atom = script->getAtom(atomIndex);
   PropertyName* lookup = derived ? cx->names().DefaultDerivedClassConstructor
                                  : cx->names().DefaultBaseClassConstructor;
 
@@ -314,8 +316,6 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   // Override the source span needs for toString. Calling toString on a class
   // constructor should return the class declaration, not the source for the
   // (self-hosted) constructor function.
-  uint32_t classStartOffset = GetSrcNoteOffset(classNote, 0);
-  uint32_t classEndOffset = GetSrcNoteOffset(classNote, 1);
   unsigned column;
   unsigned line = PCToLineNumber(script, pc, &column);
   ctorScript->setDefaultClassConstructorSpan(
