@@ -5634,7 +5634,7 @@
 # Whether to disable the mfenced element.
 - name: mathml.mfenced_element.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable legacy names "thin", "thick" and "medium" for the
