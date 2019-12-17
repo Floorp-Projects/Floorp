@@ -62,7 +62,10 @@ class AccountSettingsInteractorTest {
         interactor.onSignOut()
 
         verify {
-            navController.navigate(AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment())
+            navController.navigate(
+                AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment(),
+                null
+            )
         }
     }
 }

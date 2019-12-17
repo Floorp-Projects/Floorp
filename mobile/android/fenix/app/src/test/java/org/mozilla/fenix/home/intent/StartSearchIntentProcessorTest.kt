@@ -63,9 +63,8 @@ class StartSearchIntentProcessorTest {
         verify { metrics.track(Event.SearchWidgetNewTabPressed) }
         verify {
             navController.navigate(
-                NavGraphDirections.actionGlobalSearch(
-                    sessionId = null
-                )
+                NavGraphDirections.actionGlobalSearch(sessionId = null),
+                null
             )
         }
         verify { out.removeExtra(HomeActivity.OPEN_TO_SEARCH) }

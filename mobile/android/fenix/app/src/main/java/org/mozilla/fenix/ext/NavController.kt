@@ -13,9 +13,9 @@ import androidx.navigation.Navigator
 import io.sentry.Sentry
 import org.mozilla.fenix.BuildConfig
 
-fun NavController.nav(@IdRes id: Int?, directions: NavDirections) {
+fun NavController.nav(@IdRes id: Int?, directions: NavDirections, navOptions: NavOptions? = null) {
     if (id == null || this.currentDestination?.id == id) {
-        this.navigate(directions)
+        this.navigate(directions, navOptions)
     } else {
         recordIdException(this.currentDestination?.id, id)
     }
@@ -29,13 +29,12 @@ fun NavController.nav(@IdRes id: Int?, directions: NavDirections, extras: Naviga
     }
 }
 
-fun NavController.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions) {
-    if (id == null || this.currentDestination?.id == id) {
-        this.navigate(directions, options)
-    } else {
-        recordIdException(this.currentDestination?.id, id)
-    }
-}
+fun NavController.nav(
+    @IdRes id: Int?,
+    directions: NavDirections,
+    navOptions: NavOptions? = null,
+    extras: Navigator.Extras? = null
+) = nav(id, directions.actionId, directions.arguments, navOptions, extras)
 
 fun NavController.nav(
     @IdRes id: Int?,

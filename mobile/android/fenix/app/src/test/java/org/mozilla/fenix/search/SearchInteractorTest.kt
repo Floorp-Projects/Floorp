@@ -13,8 +13,8 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import io.mockk.mockkObject
+import io.mockk.verify
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -23,9 +23,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
@@ -264,8 +264,9 @@ class SearchInteractorTest {
         verify {
             navController.navigate(
                 SearchFragmentDirections.actionSearchFragmentToBrowserFragment(
-                    null
-                )
+                    activeSessionId = null
+                ),
+                null
             )
         }
     }

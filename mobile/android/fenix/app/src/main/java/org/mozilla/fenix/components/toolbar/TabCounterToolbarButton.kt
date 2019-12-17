@@ -20,8 +20,8 @@ import java.lang.ref.WeakReference
  */
 class TabCounterToolbarButton(
     private val sessionManager: SessionManager,
-    private val showTabs: () -> Unit,
-    private val isPrivate: Boolean
+    private val isPrivate: Boolean,
+    private val showTabs: () -> Unit
 ) : Toolbar.Action {
     private var reference: WeakReference<TabCounter> = WeakReference<TabCounter>(null)
 

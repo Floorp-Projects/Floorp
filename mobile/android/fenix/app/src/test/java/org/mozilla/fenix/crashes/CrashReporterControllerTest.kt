@@ -65,7 +65,12 @@ class CrashReporterControllerTest {
         verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
         verify { components.useCases.tabsUseCases.removeTab(session) }
         verify { components.useCases.sessionUseCases.crashRecovery.invoke() }
-        verify { navContoller.navigate(CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()) }
+        verify {
+            navContoller.navigate(
+                CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment(),
+                null
+            )
+        }
     }
 
     @Test

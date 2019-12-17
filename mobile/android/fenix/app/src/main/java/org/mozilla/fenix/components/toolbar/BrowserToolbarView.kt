@@ -26,6 +26,7 @@ import mozilla.components.support.ktx.android.util.dpToFloat
 import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
@@ -200,17 +201,27 @@ class BrowserToolbarView(
                 )
             }
 
-            toolbarIntegration = ToolbarIntegration(
-                this,
-                view,
-                menuToolbar,
-                ShippedDomainsProvider().also { it.initialize(this) },
-                components.core.historyStorage,
-                components.core.sessionManager,
-                customTabSession?.id,
-                customTabSession?.private ?: sessionManager.selectedSession?.private ?: false,
-                interactor
-            )
+            toolbarIntegration = if (customTabSession != null) {
+                CustomTabToolbarIntegration(
+                    this,
+                    view,
+                    menuToolbar,
+                    customTabSession.id,
+                    isPrivate = customTabSession.private
+                )
+            } else {
+                DefaultToolbarIntegration(
+                    this,
+                    view,
+                    menuToolbar,
+                    ShippedDomainsProvider().also { it.initialize(this) },
+                    components.core.historyStorage,
+                    components.core.sessionManager,
+                    sessionId = null,
+                    isPrivate = sessionManager.selectedSession?.private ?: false,
+                    interactor = interactor
+                )
+            }
         }
     }
 

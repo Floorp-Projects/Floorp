@@ -1,28 +1,27 @@
 package org.mozilla.fenix.ext
 
-import mozilla.components.support.test.robolectric.testContext
-import org.mozilla.fenix.TestApplication
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.mockkStatic
-import io.mockk.verify
-import io.mockk.every
-import io.mockk.Runs
-import io.mockk.just
-import io.mockk.confirmVerified
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
-import androidx.navigation.fragment.NavHostFragment.findNavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.NavDestination
-import androidx.navigation.NavController
 import androidx.navigation.Navigator.Extras
+import androidx.navigation.fragment.NavHostFragment
+import io.mockk.Runs
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.TestApplication
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
@@ -49,11 +48,11 @@ class FragmentTest {
 
     @Test
     fun `Test nav fun with ID and directions`() {
-        every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections)) } just Runs
+        every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, null)) } just Runs
 
         mockFragment.nav(mockId, navDirections)
         verify { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()) }
-        verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections)) }
+        verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, null)) }
         confirmVerified(mockFragment)
     }
 

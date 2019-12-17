@@ -38,7 +38,7 @@ class NavControllerTest {
     fun `Nav with id and directions args`() {
         navController.nav(4, navDirections)
         verify { (navController.currentDestination) }
-        verify { (navController.navigate(navDirections)) }
+        verify { (navController.navigate(navDirections, null)) }
     }
 
     @Test

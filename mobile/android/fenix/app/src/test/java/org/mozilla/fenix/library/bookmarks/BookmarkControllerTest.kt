@@ -112,7 +112,10 @@ class BookmarkControllerTest {
 
         verify {
             invokePendingDeletion.invoke()
-            navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid))
+            navController.navigate(
+                BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid),
+                null
+            )
         }
     }
 
@@ -134,7 +137,8 @@ class BookmarkControllerTest {
             navController.navigate(
                 BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(
                     item.guid
-                )
+                ),
+                null
             )
         }
     }
@@ -168,12 +172,12 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkSharing should navigate to the 'Share' fragment`() {
         val navDirectionsSlot = slot<NavDirections>()
-        every { navController.navigate(capture(navDirectionsSlot)) } just Runs
+        every { navController.navigate(capture(navDirectionsSlot), null) } just Runs
 
         controller.handleBookmarkSharing(item)
 
         verify {
-            navController.navigate(navDirectionsSlot.captured)
+            navController.navigate(navDirectionsSlot.captured, null)
         }
     }
 

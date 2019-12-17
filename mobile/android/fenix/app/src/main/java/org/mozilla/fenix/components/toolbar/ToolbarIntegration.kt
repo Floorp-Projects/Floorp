@@ -10,7 +10,6 @@ import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.storage.HistoryStorage
@@ -25,95 +24,14 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
-class ToolbarIntegration(
+abstract class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
     toolbarMenu: ToolbarMenu,
-    domainAutocompleteProvider: DomainAutocompleteProvider,
-    historyStorage: HistoryStorage,
-    sessionManager: SessionManager,
-    sessionId: String? = null,
+    sessionId: String?,
     isPrivate: Boolean,
-    interactor: BrowserToolbarViewInteractor
+    renderStyle: ToolbarFeature.RenderStyle
 ) : LifecycleAwareFeature {
-
-    private var renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
-
-    init {
-        toolbar.display.menuBuilder = toolbarMenu.menuBuilder
-        toolbar.private = isPrivate
-
-        run {
-            sessionManager.runWithSession(sessionId) {
-                it.isCustomTabSession()
-            }.also { isCustomTab ->
-                if (isCustomTab) {
-                    renderStyle = ToolbarFeature.RenderStyle.RegistrableDomain
-                    return@run
-                }
-
-                val task = LottieCompositionFactory
-                    .fromRawRes(
-                        context,
-                        ThemeManager.resolveAttribute(R.attr.shieldLottieFile, context)
-                    )
-                task.addListener { result ->
-                    val lottieDrawable = LottieDrawable()
-                    lottieDrawable.composition = result
-
-                    toolbar.display.indicators =
-                        if (context.settings().shouldUseTrackingProtection) {
-                            listOf(
-                                DisplayToolbar.Indicators.TRACKING_PROTECTION,
-                                DisplayToolbar.Indicators.SECURITY,
-                                DisplayToolbar.Indicators.EMPTY
-                            )
-                        } else {
-                            listOf(
-                                DisplayToolbar.Indicators.SECURITY,
-                                DisplayToolbar.Indicators.EMPTY
-                            )
-                        }
-
-                    toolbar.display.displayIndicatorSeparator =
-                        context.settings().shouldUseTrackingProtection
-
-                    toolbar.display.icons = toolbar.display.icons.copy(
-                        emptyIcon = AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.ic_bookmark_filled
-                        )!!,
-                        trackingProtectionTrackersBlocked = lottieDrawable,
-                        trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.ic_tracking_protection_enabled
-                        )!!,
-                        trackingProtectionException = AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.ic_tracking_protection_disabled
-                        )!!
-                    )
-                }
-
-                val tabsAction = TabCounterToolbarButton(
-                    sessionManager,
-                    {
-                        toolbar.hideKeyboard()
-                        interactor.onTabCounterClicked()
-                    },
-                    isPrivate
-                )
-                toolbar.addBrowserAction(tabsAction)
-            }
-        }
-
-        ToolbarAutocompleteFeature(toolbar).apply {
-            addDomainProvider(domainAutocompleteProvider)
-            if (context.settings().shouldShowHistorySuggestions) {
-                addHistoryStorageProvider(historyStorage)
-            }
-        }
-    }
 
     private val toolbarPresenter: ToolbarPresenter = ToolbarPresenter(
         toolbar,
@@ -121,12 +39,18 @@ class ToolbarIntegration(
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
             PublicSuffixList(context),
-            ThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
+            ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            renderStyle = renderStyle
         )
     )
 
     private var menuPresenter =
         MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
+
+    init {
+        toolbar.display.menuBuilder = toolbarMenu.menuBuilder
+        toolbar.private = isPrivate
+    }
 
     override fun start() {
         menuPresenter.start()
@@ -136,5 +60,86 @@ class ToolbarIntegration(
     override fun stop() {
         menuPresenter.stop()
         toolbarPresenter.stop()
+    }
+}
+
+class DefaultToolbarIntegration(
+    context: Context,
+    toolbar: BrowserToolbar,
+    toolbarMenu: ToolbarMenu,
+    domainAutocompleteProvider: DomainAutocompleteProvider,
+    historyStorage: HistoryStorage,
+    sessionManager: SessionManager,
+    sessionId: String? = null,
+    isPrivate: Boolean,
+    interactor: BrowserToolbarViewInteractor
+) : ToolbarIntegration(
+    context = context,
+    toolbar = toolbar,
+    toolbarMenu = toolbarMenu,
+    sessionId = sessionId,
+    isPrivate = isPrivate,
+    renderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
+) {
+
+    init {
+        toolbar.display.menuBuilder = toolbarMenu.menuBuilder
+        toolbar.private = isPrivate
+
+        val task = LottieCompositionFactory
+            .fromRawRes(
+                context,
+                ThemeManager.resolveAttribute(R.attr.shieldLottieFile, context)
+            )
+        task.addListener { result ->
+            val lottieDrawable = LottieDrawable()
+            lottieDrawable.composition = result
+
+            toolbar.display.indicators =
+                if (context.settings().shouldUseTrackingProtection) {
+                    listOf(
+                        DisplayToolbar.Indicators.TRACKING_PROTECTION,
+                        DisplayToolbar.Indicators.SECURITY,
+                        DisplayToolbar.Indicators.EMPTY
+                    )
+                } else {
+                    listOf(
+                        DisplayToolbar.Indicators.SECURITY,
+                        DisplayToolbar.Indicators.EMPTY
+                    )
+                }
+
+            toolbar.display.displayIndicatorSeparator =
+                context.settings().shouldUseTrackingProtection
+
+            toolbar.display.icons = toolbar.display.icons.copy(
+                emptyIcon = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_bookmark_filled
+                )!!,
+                trackingProtectionTrackersBlocked = lottieDrawable,
+                trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_tracking_protection_enabled
+                )!!,
+                trackingProtectionException = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_tracking_protection_disabled
+                )!!
+            )
+        }
+
+        val tabsAction = TabCounterToolbarButton(sessionManager, isPrivate) {
+            toolbar.hideKeyboard()
+            interactor.onTabCounterClicked()
+        }
+        toolbar.addBrowserAction(tabsAction)
+
+        ToolbarAutocompleteFeature(toolbar).apply {
+            addDomainProvider(domainAutocompleteProvider)
+            if (context.settings().shouldShowHistorySuggestions) {
+                addHistoryStorageProvider(historyStorage)
+            }
+        }
     }
 }
