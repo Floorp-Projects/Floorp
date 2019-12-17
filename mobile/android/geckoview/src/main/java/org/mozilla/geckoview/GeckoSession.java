@@ -1256,7 +1256,6 @@ public class GeckoSession implements Parcelable {
         mListener.registerListeners();
 
         mWebExtensionListener = new WebExtension.Listener(this);
-        mWebExtensionListener.registerListeners();
 
         if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
             throw new AssertionError("Add new handler to handlers list");

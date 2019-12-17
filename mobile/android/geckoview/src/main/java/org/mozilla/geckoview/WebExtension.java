@@ -465,30 +465,46 @@ public class WebExtension {
         final private HashMap<Sender, WebExtension.MessageDelegate> mMessageDelegates;
         final private HashMap<String, WebExtension.ActionDelegate> mActionDelegates;
         final private GeckoSession mSession;
+        final private EventDispatcher mEventDispatcher;
+
+        private boolean mActionDelegateRegistered = false;
+        private boolean mMessageDelegateRegistered = false;
         public GeckoRuntime runtime;
 
-        public Listener(final GeckoSession session) {
-            mMessageDelegates = new HashMap<>();
-            mActionDelegates = new HashMap<>();
-            mSession = session;
+        public Listener(final GeckoRuntime runtime) {
+            this(null, runtime);
         }
 
-        /* package */ void registerListeners() {
-            mSession.getEventDispatcher().registerUiThreadListener(this,
-                    "GeckoView:WebExtension:Message",
-                    "GeckoView:WebExtension:PortMessage",
-                    "GeckoView:WebExtension:Connect",
-                    "GeckoView:WebExtension:CloseTab",
+        public Listener(final GeckoSession session) {
+            this(session, null);
 
-                    // Browser and Page Actions
-                    "GeckoView:BrowserAction:Update",
-                    "GeckoView:BrowserAction:OpenPopup",
-                    "GeckoView:PageAction:Update",
-                    "GeckoView:PageAction:OpenPopup");
+            // Close tab event is forwarded to the main listener so we need to listen
+            // to it here.
+            mEventDispatcher.registerUiThreadListener(this,
+                    "GeckoView:WebExtension:CloseTab");
+        }
+
+        private Listener(final GeckoSession session, final GeckoRuntime runtime) {
+            mMessageDelegates = new HashMap<>();
+            mActionDelegates = new HashMap<>();
+            mEventDispatcher = session != null
+                    ? session.getEventDispatcher()
+                    : EventDispatcher.getInstance();
+            mSession = session;
+            this.runtime = runtime;
         }
 
         public void setActionDelegate(final WebExtension webExtension,
                                       final WebExtension.ActionDelegate delegate) {
+            if (!mActionDelegateRegistered && delegate != null) {
+                mEventDispatcher.registerUiThreadListener(this,
+                        "GeckoView:BrowserAction:Update",
+                        "GeckoView:BrowserAction:OpenPopup",
+                        "GeckoView:PageAction:Update",
+                        "GeckoView:PageAction:OpenPopup");
+                mActionDelegateRegistered = true;
+            }
+
             mActionDelegates.put(webExtension.id, delegate);
         }
 
@@ -499,6 +515,15 @@ public class WebExtension {
         public void setMessageDelegate(final WebExtension webExtension,
                                        final WebExtension.MessageDelegate delegate,
                                        final String nativeApp) {
+            if (!mMessageDelegateRegistered && delegate != null) {
+                mEventDispatcher.registerUiThreadListener(this,
+                        "GeckoView:WebExtension:Message",
+                        "GeckoView:WebExtension:PortMessage",
+                        "GeckoView:WebExtension:Connect",
+                        "GeckoView:WebExtension:Disconnect");
+                mMessageDelegateRegistered = true;
+            }
+
             mMessageDelegates.put(new Sender(webExtension.id, nativeApp), delegate);
         }
 
@@ -514,18 +539,20 @@ public class WebExtension {
                 return;
             }
 
+            final WebExtensionController controller = runtime.getWebExtensionController();
+
             if ("GeckoView:WebExtension:Message".equals(event)
                     || "GeckoView:WebExtension:PortMessage".equals(event)
                     || "GeckoView:WebExtension:Connect".equals(event)
+                    || "GeckoView:WebExtension:Disconnect".equals(event)
                     || "GeckoView:PageAction:Update".equals(event)
                     || "GeckoView:PageAction:OpenPopup".equals(event)
                     || "GeckoView:BrowserAction:Update".equals(event)
                     || "GeckoView:BrowserAction:OpenPopup".equals(event)) {
-                runtime.getWebExtensionController()
-                        .handleMessage(event, message, callback, mSession);
+                controller.handleMessage(event, message, callback, mSession);
                 return;
             } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
-                runtime.getWebExtensionController().closeTab(message, callback, mSession);
+                controller.closeTab(message, callback, mSession);
                 return;
             }
         }
