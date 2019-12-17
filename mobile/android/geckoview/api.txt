@@ -777,8 +777,6 @@ package org.mozilla.geckoview {
     method @UiThread default public void onAndroidPermissionsRequest(@NonNull GeckoSession, @Nullable String[], @NonNull GeckoSession.PermissionDelegate.Callback);
     method @UiThread default public void onContentPermissionRequest(@NonNull GeckoSession, @Nullable String, int, @NonNull GeckoSession.PermissionDelegate.Callback);
     method @UiThread default public void onMediaPermissionRequest(@NonNull GeckoSession, @NonNull String, @Nullable GeckoSession.PermissionDelegate.MediaSource[], @Nullable GeckoSession.PermissionDelegate.MediaSource[], @NonNull GeckoSession.PermissionDelegate.MediaCallback);
-    field public static final int PERMISSION_AUTOPLAY_AUDIBLE = 4;
-    field public static final int PERMISSION_AUTOPLAY_INAUDIBLE = 3;
     field public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
     field public static final int PERMISSION_GEOLOCATION = 0;
     field public static final int PERMISSION_PERSISTENT_STORAGE = 2;

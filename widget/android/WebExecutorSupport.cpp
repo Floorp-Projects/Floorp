@@ -143,24 +143,14 @@ class StreamSupport final
  public:
   typedef java::GeckoInputStream::Support::Natives<StreamSupport> Base;
   using Base::AttachNative;
+  using Base::DisposeNative;
   using Base::GetNative;
 
-  explicit StreamSupport(java::GeckoInputStream::Support::Param aInstance,
-                         nsIRequest* aRequest)
-      : mInstance(aInstance), mRequest(aRequest) {}
-
-  void Close() {
-    mRequest->Cancel(NS_ERROR_ABORT);
-    mRequest->Resume();
-
-    // This is basically `delete this`, so don't run anything else!
-    Base::DisposeNative(mInstance);
-  }
+  explicit StreamSupport(nsIRequest* aRequest) : mRequest(aRequest) {}
 
   void Resume() { mRequest->Resume(); }
 
  private:
-  java::GeckoInputStream::Support::GlobalRef mInstance;
   nsCOMPtr<nsIRequest> mRequest;
 };
 
@@ -193,8 +183,8 @@ class LoaderListener final : public nsIStreamListener,
 
     // We're expecting data later via OnDataAvailable, so create the stream now.
     mSupport = java::GeckoInputStream::Support::New();
-    StreamSupport::AttachNative(
-        mSupport, mozilla::MakeUnique<StreamSupport>(mSupport, aRequest));
+    StreamSupport::AttachNative(mSupport,
+                                mozilla::MakeUnique<StreamSupport>(aRequest));
 
     mStream = java::GeckoInputStream::New(mSupport);
 

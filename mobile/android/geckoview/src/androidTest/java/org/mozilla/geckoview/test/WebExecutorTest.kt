@@ -13,10 +13,10 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 
 import java.math.BigInteger
+
+import java.net.URI
 
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
@@ -35,10 +35,14 @@ import org.junit.*
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.junit.Ignore
-import org.mozilla.geckoview.*
 
+import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebRequest
+import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebResponse
+
+import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.RuntimeCreator
-import org.mozilla.geckoview.test.util.TestServer
 import java.io.IOException
 import java.net.UnknownHostException
 import java.util.*
@@ -47,12 +51,11 @@ import java.util.*
 @RunWith(AndroidJUnit4::class)
 class WebExecutorTest {
     companion object {
-        const val TEST_PORT: Int = 4242
-        const val TEST_ENDPOINT: String = "http://localhost:${TEST_PORT}"
+        val TEST_ENDPOINT: String = "http://localhost:4242"
     }
 
     lateinit var executor: GeckoWebExecutor
-    lateinit var server: TestServer
+    lateinit var server: HttpBin
 
     @get:Rule val thrown = ExpectedException.none()
 
@@ -62,12 +65,15 @@ class WebExecutorTest {
         // the tests which are not using @UiThreadTest, so we do that
         // ourselves here as GeckoRuntime needs to be initialized
         // on the UI thread.
-        runBlocking(Dispatchers.Main) {
+        val latch = CountDownLatch(1)
+        Handler(Looper.getMainLooper()).post {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
+            server = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+            server.start()
+            latch.countDown()
         }
 
-        server = TestServer(InstrumentationRegistry.getTargetContext())
-        server.start(TEST_PORT)
+        latch.await()
     }
 
     @After
@@ -92,9 +98,7 @@ class WebExecutorTest {
     }
 
     fun WebResponse.getBodyBytes(): ByteBuffer {
-        body!!.use {
-            return ByteBuffer.wrap(it.readBytes())
-        }
+        return ByteBuffer.wrap(body!!.readBytes())
     }
 
     fun WebResponse.getJSONBody(): JSONObject {
@@ -136,7 +140,7 @@ class WebExecutorTest {
 
         assertThat("URI should match", response.uri, equalTo(uri))
         assertThat("Status could should match", response.statusCode, equalTo(200))
-        assertThat("Content type should match", response.headers["Content-Type"], equalTo("application/json; charset=utf-8"))
+        assertThat("Content type should match", response.headers["Content-Type"], equalTo("application/json"))
         assertThat("Redirected should match", response.redirected, equalTo(false))
 
         val body = response.getJSONBody()
@@ -156,9 +160,9 @@ class WebExecutorTest {
     }
 
     @Test
-    fun testStatus() {
-        val response = fetch(WebRequest("$TEST_ENDPOINT/status/500"))
-        assertThat("Status code should match", response.statusCode, equalTo(500))
+    fun test404() {
+        val response = fetch(WebRequest("$TEST_ENDPOINT/status/404"))
+        assertThat("Status code should match", response.statusCode, equalTo(404))
     }
 
     @Test
@@ -318,7 +322,7 @@ class WebExecutorTest {
 
     @Test(expected = IOException::class)
     fun readClosedStream() {
-        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/1024")).pollDefault()!!
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/anything")).pollDefault()!!
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
 
@@ -327,10 +331,11 @@ class WebExecutorTest {
         stream.readBytes()
     }
 
+    @Ignore //bug 1596314 - disable test for frequent failures
     @Test(expected = IOException::class)
     fun readTimeout() {
-        val expectedCount = 10
-        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/trickle/${expectedCount}")).pollDefault()!!
+        val expectedCount = 1 * 1024 * 1024 // 1MB
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/$expectedCount")).pollDefault()!!
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
         assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
