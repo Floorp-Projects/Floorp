@@ -12,11 +12,11 @@
     return meta;
   }
 
-  assert_root_color_scheme("normal");
+  assert_root_color_scheme("normal", "Initial color-scheme");
 
   document.head.appendChild(createMeta("light"));
-  assert_root_color_scheme("light");
+  assert_root_color_scheme("light", "Inserted meta color-scheme applies");
 
   document.head.insertBefore(createMeta("dark"), document.head.lastChild);
-  assert_root_color_scheme("dark");
+  assert_root_color_scheme("dark", "Inserted meta color-scheme before existing in head applies");
 </script>

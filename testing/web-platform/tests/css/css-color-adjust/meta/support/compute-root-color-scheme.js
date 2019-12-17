@@ -1,7 +1,7 @@
 'use strict';
 
-function assert_root_color_scheme(expected) {
+function assert_root_color_scheme(expected, description) {
   test(() => {
-    assert_equals(getComputedStyle(document.documentElement).colorScheme, expected);
-  }, "Computed root color-scheme should be " + expected);
+    assert_equals(getComputedStyle(document.documentElement).colorScheme, expected), "Check root element color scheme";
+  }, description);
 }
