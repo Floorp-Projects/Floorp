@@ -35,6 +35,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
         'nsGNOMEShellService.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'WINNT':
+    XPIDL_SOURCES += [
+        'nsIWindowsShellService.idl',
+    ]
     SOURCES += [
         'nsWindowsShellService.cpp',
     ]
