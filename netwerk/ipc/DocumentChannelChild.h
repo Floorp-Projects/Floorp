@@ -46,7 +46,8 @@ class DocumentChannelChild final : public nsIIdentChannel,
 
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& aStatusCode);
 
-  mozilla::ipc::IPCResult RecvDisconnectChildListeners(const nsresult& aStatus);
+  mozilla::ipc::IPCResult RecvDisconnectChildListeners(
+      const nsresult& aStatus, const nsresult& aLoadGroupStatus);
 
   mozilla::ipc::IPCResult RecvDeleteSelf();
 
@@ -68,6 +69,11 @@ class DocumentChannelChild final : public nsIIdentChannel,
   void GetLastVisit(nsIURI** aURI, uint32_t* aChannelRedirectFlags) const {
     *aURI = do_AddRef(mLastVisitInfo.uri()).take();
     *aChannelRedirectFlags = mLastVisitInfo.previousFlags();
+  }
+
+  void SetDocumentOpenFlags(uint32_t aFlags, bool aPluginsAllowed) {
+    mDocumentOpenFlags = Some(aFlags);
+    mPluginsAllowed = aPluginsAllowed;
   }
 
  private:
@@ -93,6 +99,7 @@ class DocumentChannelChild final : public nsIIdentChannel,
 
   nsresult mStatus = NS_OK;
   bool mCanceled = false;
+  Maybe<uint32_t> mDocumentOpenFlags;
   bool mIsPending = false;
   bool mWasOpened = false;
   uint64_t mChannelId;
@@ -103,6 +110,7 @@ class DocumentChannelChild final : public nsIIdentChannel,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsISupports> mOwner;
+  bool mPluginsAllowed = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelChild, DOCUMENT_CHANNEL_CHILD_IID)

@@ -10244,6 +10244,15 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   // Let the client channel helper know if we are using DocumentChannel,
   // since redirects get handled in the parent process in that case.
   RefPtr<net::DocumentChannelChild> docChannel = do_QueryObject(aChannel);
+  if (docChannel) {
+    bool pluginsAllowed = true;
+    GetAllowPlugins(&pluginsAllowed);
+    docChannel->SetDocumentOpenFlags(aOpenFlags, pluginsAllowed);
+    // Now that we've sent the real flags across to be run on the parent,
+    // tell the content process nsDocumentOpenInfo to not try to do
+    // any sort of targeting.
+    aOpenFlags |= nsIURILoader::DONT_RETARGET;
+  }
 
   // Since we are loading a document we need to make sure the proper reserved
   // and initial client data is stored on the nsILoadInfo.  The
