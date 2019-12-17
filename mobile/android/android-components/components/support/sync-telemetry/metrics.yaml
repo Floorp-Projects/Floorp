@@ -14,7 +14,7 @@ history_sync:
     description: >
       The user's hashed Firefox Account ID.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -29,7 +29,7 @@ history_sync:
     description: >
       Records when the history sync started.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -45,7 +45,7 @@ history_sync:
       Records when the history sync finished. This includes the time to
       download, apply, and upload all records.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -67,7 +67,7 @@ history_sync:
       ignored due to errors. `reconciled` is the number of pages with new visits
       locally and remotely, and had their visits merged.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -87,7 +87,7 @@ history_sync:
       is the number of records that weren't uploaded, and will be retried
       on the next sync.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -104,7 +104,7 @@ history_sync:
       bytes) on the number of records that can fit into a single batch, and
       large syncs may require multiple batches.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -124,7 +124,7 @@ history_sync:
       error, unexpected exception, or other error. The error strings are
       truncated and sanitized to omit PII, like URLs and file system paths.
     send_in_pings:
-    - history_sync
+    - history-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -140,7 +140,7 @@ bookmarks_sync:
     description: >
       The user's hashed Firefox Account ID.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -155,7 +155,7 @@ bookmarks_sync:
     description: >
       Records when the bookmark sync started.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -170,7 +170,7 @@ bookmarks_sync:
     description: >
       Records when the bookmark sync finished.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -188,7 +188,7 @@ bookmarks_sync:
     description: >
       Records incoming bookmark record counts.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -205,7 +205,7 @@ bookmarks_sync:
     description: >
       Records outgoing bookmark record counts.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -219,7 +219,7 @@ bookmarks_sync:
     description: >
       Records the number of batches needed to upload all outgoing records.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -237,7 +237,7 @@ bookmarks_sync:
     description: >
       Records bookmark sync failure reasons.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
@@ -261,7 +261,7 @@ bookmarks_sync:
       bookmarks tree. These are documented in
       https://github.com/mozilla/dogear/blob/fbade15f2a4f11215e30b8f428a0a8df3defeaec/src/tree.rs#L1273-L1294.
     send_in_pings:
-    - bookmarks_sync
+    - bookmarks-sync
     bugs:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:

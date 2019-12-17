@@ -4,15 +4,14 @@
 This document enumerates the metrics collected by this project.
 This project may depend on other projects which also collect metrics.
 This means you might have to go searching through the dependency tree to get a full picture of everything collected by this project.
-Sorry about that.
 
 # Pings
 
- - [bookmarks_sync](#bookmarks_sync)
- - [history_sync](#history_sync)
+ - [bookmarks-sync](#bookmarks-sync)
+ - [history-sync](#history-sync)
 
 
-## bookmarks_sync
+## bookmarks-sync
 A ping sent for every bookmarks sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
 
 The following metrics are added to the ping:
@@ -28,7 +27,7 @@ The following metrics are added to the ping:
 | bookmarks_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the bookmark sync started.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 | bookmarks_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 
-## history_sync
+## history-sync
 A ping sent for every history sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
 
 The following metrics are added to the ping:

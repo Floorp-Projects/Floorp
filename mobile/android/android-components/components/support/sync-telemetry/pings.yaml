@@ -4,7 +4,7 @@
 
 $schema: moz://mozilla.org/schemas/glean/pings/1-0-0
 
-history_sync:
+history-sync:
   description: >
     A ping sent for every history sync. It doesn't include the `client_id`
     because it reports a hashed version of the user's Firefox Account ID.
@@ -15,7 +15,7 @@ history_sync:
   - sync-core@mozilla.com
   data_reviews:
   - https://github.com/mozilla-mobile/android-components/pull/3092
-bookmarks_sync:
+bookmarks-sync:
   description: >
     A ping sent for every bookmarks sync. It doesn't include the `client_id`
     because it reports a hashed version of the user's Firefox Account ID.
