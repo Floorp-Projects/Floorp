@@ -189,9 +189,9 @@ def verify_options(parser, args):
         if not os.path.isfile(args.binary):
             parser.error("{binary} does not exist!".format(**ctx))
 
-    # if geckoProfile specified but not running on Firefox, not supported
-    if args.gecko_profile is True and args.app != "firefox":
-        parser.error("Gecko profiling is only supported when running Raptor on Firefox!")
+    # if geckoProfile specified but running on Chrom[e|ium], not supported
+    if args.gecko_profile and args.app in CHROMIUM_DISTROS:
+        parser.error("Gecko profiling is not supported on Chrome/Chromium!")
 
     # if running power tests on geckoview/android, --host must be specified.
     if args.power_test:
