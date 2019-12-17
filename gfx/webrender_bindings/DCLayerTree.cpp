@@ -104,6 +104,12 @@ bool DCLayerTree::Initialize(HWND aHwnd) {
   return true;
 }
 
+DCSurface* DCLayerTree::GetSurface(wr::NativeSurfaceId aId) const {
+  auto surface_it = mDCSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(surface_it != mDCSurfaces.end());
+  return surface_it->second.get();
+}
+
 void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
   mRootVisual->AddVisual(mDefaultSwapChainVisual, TRUE, nullptr);
   mDefaultSwapChainVisual->SetContent(aSwapChain);
@@ -176,16 +182,21 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
 void DCLayerTree::CompositorBeginFrame() {}
 
 void DCLayerTree::CompositorEndFrame() {
+  // Check if the visual tree of surfaces is the same as last frame.
   bool same = mPrevLayers == mCurrentLayers;
 
   if (!same) {
+    // If not, we need to rebuild the visual tree. Note that addition or
+    // removal of tiles no longer needs to rebuild the main visual tree
+    // here, since they are added as children of the surface visual.
     mRootVisual->RemoveAllVisuals();
 
+    // Add surfaces in z-order they were added to the scene.
     for (auto it = mCurrentLayers.begin(); it != mCurrentLayers.end(); ++it) {
-      auto layer_it = mDCLayers.find(*it);
-      MOZ_ASSERT(layer_it != mDCLayers.end());
-      const auto layer = layer_it->second.get();
-      const auto visual = layer->GetVisual();
+      auto surface_it = mDCSurfaces.find(*it);
+      MOZ_RELEASE_ASSERT(surface_it != mDCSurfaces.end());
+      const auto surface = surface_it->second.get();
+      const auto visual = surface->GetVisual();
       mRootVisual->AddVisual(visual, FALSE, nullptr);
     }
   }
@@ -196,19 +207,12 @@ void DCLayerTree::CompositorEndFrame() {
   mCompositionDevice->Commit();
 }
 
-void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
+void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
                        uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) {
-  auto it = mDCLayers.find(wr::AsUint64(aId));
-  MOZ_ASSERT(it != mDCLayers.end());
-  if (it == mDCLayers.end()) {
-    gfxCriticalNote << "Failed to get DCLayer for bind: " << wr::AsUint64(aId);
-    return;
-  }
-
-  const auto layer = it->second.get();
+  auto surface = GetSurface(aId.surface_id);
+  auto layer = surface->GetLayer(aId.x, aId.y);
 
   *aFboId = layer->CreateEGLSurfaceForCompositionSurface(aDirtyRect, aOffset);
-
   mCurrentId = Some(aId);
 }
 
@@ -217,71 +221,75 @@ void DCLayerTree::Unbind() {
     return;
   }
 
-  auto it = mDCLayers.find(wr::AsUint64(mCurrentId.ref()));
-  MOZ_RELEASE_ASSERT(it != mDCLayers.end());
-
-  const auto layer = it->second.get();
+  const auto id = mCurrentId.ref();
+  auto surface = GetSurface(id.surface_id);
+  auto layer = surface->GetLayer(id.x, id.y);
 
   layer->EndDraw();
   mCurrentId = Nothing();
 }
 
 void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
-                                wr::DeviceIntSize aSize, bool aIsOpaque) {
-  auto it = mDCLayers.find(wr::AsUint64(aId));
-  MOZ_RELEASE_ASSERT(it == mDCLayers.end());
-  MOZ_ASSERT(it == mDCLayers.end());
-  if (it != mDCLayers.end()) {
-    // DCLayer already exists.
+                                wr::DeviceIntSize aTileSize) {
+  auto it = mDCSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(it == mDCSurfaces.end());
+  if (it != mDCSurfaces.end()) {
+    // DCSurface already exists.
     return;
   }
 
-  auto layer = MakeUnique<DCLayer>(this);
-  if (!layer->Initialize(aSize, aIsOpaque)) {
-    gfxCriticalNote << "Failed to initialize DCLayer: " << wr::AsUint64(aId);
+  auto surface = MakeUnique<DCSurface>(aTileSize, this);
+  if (!surface->Initialize()) {
+    gfxCriticalNote << "Failed to initialize DCSurface: " << wr::AsUint64(aId);
     return;
   }
 
-  mDCLayers[wr::AsUint64(aId)] = std::move(layer);
+  mDCSurfaces[aId] = std::move(surface);
 }
 
 void DCLayerTree::DestroySurface(NativeSurfaceId aId) {
-  auto it = mDCLayers.find(wr::AsUint64(aId));
-  MOZ_ASSERT(it != mDCLayers.end());
-  if (it == mDCLayers.end()) {
-    return;
-  }
-  mDCLayers.erase(it);
+  auto surface_it = mDCSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(surface_it != mDCSurfaces.end());
+  auto surface = surface_it->second.get();
+
+  mRootVisual->RemoveVisual(surface->GetVisual());
+  mDCSurfaces.erase(surface_it);
+}
+
+void DCLayerTree::CreateTile(wr::NativeSurfaceId aId, int aX, int aY,
+                             bool aIsOpaque) {
+  auto surface = GetSurface(aId);
+  surface->CreateTile(aX, aY, aIsOpaque);
+}
+
+void DCLayerTree::DestroyTile(wr::NativeSurfaceId aId, int aX, int aY) {
+  auto surface = GetSurface(aId);
+  surface->DestroyTile(aX, aY);
 }
 
 void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
                              wr::DeviceIntPoint aPosition,
                              wr::DeviceIntRect aClipRect) {
-  auto it = mDCLayers.find(wr::AsUint64(aId));
-  MOZ_ASSERT(it != mDCLayers.end());
-  if (it == mDCLayers.end()) {
-    return;
-  }
+  auto it = mDCSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(it != mDCSurfaces.end());
   const auto layer = it->second.get();
   const auto visual = layer->GetVisual();
 
   // Place the visual - this changes frame to frame based on scroll position
   // of the slice.
-  int offset_x = aPosition.x;
-  int offset_y = aPosition.y;
-  visual->SetOffsetX(offset_x);
-  visual->SetOffsetY(offset_y);
+  visual->SetOffsetX(aPosition.x);
+  visual->SetOffsetY(aPosition.y);
 
   // Set the clip rect - converting from world space to the pre-offset space
   // that DC requires for rectangle clips.
   D2D_RECT_F clip_rect;
-  clip_rect.left = aClipRect.origin.x - offset_x;
-  clip_rect.top = aClipRect.origin.y - offset_y;
+  clip_rect.left = aClipRect.origin.x - aPosition.x;
+  clip_rect.top = aClipRect.origin.y - aPosition.y;
   clip_rect.right = clip_rect.left + aClipRect.size.width;
   clip_rect.bottom = clip_rect.top + aClipRect.size.height;
   visual->SetClip(clip_rect);
 
-  mCurrentLayers.push_back(wr::AsUint64(aId));
+  mCurrentLayers.push_back(aId);
 }
 
 GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
@@ -327,12 +335,58 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
   return fboId;
 }
 
+DCSurface::DCSurface(wr::DeviceIntSize aTileSize, DCLayerTree* aDCLayerTree)
+    : mDCLayerTree(aDCLayerTree), mTileSize(aTileSize) {}
+
+DCSurface::~DCSurface() {}
+
+bool DCSurface::Initialize() {
+  HRESULT hr;
+  const auto dCompDevice = mDCLayerTree->GetCompositionDevice();
+  hr = dCompDevice->CreateVisual(getter_AddRefs(mVisual));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
+    return false;
+  }
+
+  return true;
+}
+
+void DCSurface::CreateTile(int aX, int aY, bool aIsOpaque) {
+  TileKey key(aX, aY);
+  MOZ_RELEASE_ASSERT(mDCLayers.find(key) == mDCLayers.end());
+
+  auto layer = MakeUnique<DCLayer>(mDCLayerTree);
+  if (!layer->Initialize(aX, aY, mTileSize, aIsOpaque)) {
+    gfxCriticalNote << "Failed to initialize DCLayer: " << aX << aY;
+    return;
+  }
+
+  mVisual->AddVisual(layer->GetVisual(), FALSE, NULL);
+  mDCLayers[key] = std::move(layer);
+}
+
+void DCSurface::DestroyTile(int aX, int aY) {
+  TileKey key(aX, aY);
+  auto layer = GetLayer(aX, aY);
+  mVisual->RemoveVisual(layer->GetVisual());
+  mDCLayers.erase(key);
+}
+
+DCLayer* DCSurface::GetLayer(int aX, int aY) const {
+  TileKey key(aX, aY);
+  auto layer_it = mDCLayers.find(key);
+  MOZ_RELEASE_ASSERT(layer_it != mDCLayers.end());
+  return layer_it->second.get();
+}
+
 DCLayer::DCLayer(DCLayerTree* aDCLayerTree)
     : mDCLayerTree(aDCLayerTree), mEGLImage(EGL_NO_IMAGE), mColorRBO(0) {}
 
 DCLayer::~DCLayer() { DestroyEGLSurface(); }
 
-bool DCLayer::Initialize(wr::DeviceIntSize aSize, bool aIsOpaque) {
+bool DCLayer::Initialize(int aX, int aY, wr::DeviceIntSize aSize,
+                         bool aIsOpaque) {
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
@@ -356,6 +410,11 @@ bool DCLayer::Initialize(wr::DeviceIntSize aSize, bool aIsOpaque) {
     gfxCriticalNote << "SetContent failed: " << gfx::hexa(hr);
     return false;
   }
+
+  // Position this tile at a local space offset within the parent visual
+  // Scroll offsets get applied to the parent visual only.
+  mVisual->SetOffsetX(aX * aSize.width);
+  mVisual->SetOffsetY(aY * aSize.height);
 
   return true;
 }

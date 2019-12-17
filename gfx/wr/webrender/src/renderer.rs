@@ -49,7 +49,7 @@ use api::channel::{MsgSender, PayloadReceiverHelperMethods};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, CompositorKind, Compositor};
+use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, CompositorKind, Compositor, NativeTileId};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
@@ -2968,6 +2968,9 @@ impl Renderer {
                 compositor.create_surface(
                     NativeSurfaceId::DEBUG_OVERLAY,
                     framebuffer_size,
+                );
+                compositor.create_tile(
+                    NativeTileId::DEBUG_OVERLAY,
                     false,
                 );
                 self.debug_overlay_state.current_size = Some(framebuffer_size);
@@ -2984,7 +2987,7 @@ impl Renderer {
 
                 // Bind the native surface
                 let surface_info = compositor.bind(
-                    NativeSurfaceId::DEBUG_OVERLAY,
+                    NativeTileId::DEBUG_OVERLAY,
                     DeviceIntRect::new(
                         DeviceIntPoint::zero(),
                         surface_size,
@@ -4119,7 +4122,7 @@ impl Renderer {
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
                     (texture, layer as f32, ColorF::WHITE)
                 }
-                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::NativeSurface { .. } } => {
+                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::Native { .. } } => {
                     unreachable!("bug: found native surface in simple composite path");
                 }
             };
@@ -5067,23 +5070,21 @@ impl Renderer {
             CompositorConfig::Native { ref mut compositor, .. } => {
                 for op in self.pending_native_surface_updates.drain(..) {
                     match op.details {
-                        NativeSurfaceOperationDetails::CreateSurface { size, is_opaque } => {
-                            let _inserted = self.allocated_native_surfaces.insert(op.id);
+                        NativeSurfaceOperationDetails::CreateSurface { id, tile_size } => {
+                            let _inserted = self.allocated_native_surfaces.insert(id);
                             debug_assert!(_inserted, "bug: creating existing surface");
-
-                            compositor.create_surface(
-                                op.id,
-                                size,
-                                is_opaque,
-                            );
+                            compositor.create_surface(id, tile_size);
                         }
-                        NativeSurfaceOperationDetails::DestroySurface => {
-                            let _existed = self.allocated_native_surfaces.remove(&op.id);
+                        NativeSurfaceOperationDetails::DestroySurface { id } => {
+                            let _existed = self.allocated_native_surfaces.remove(&id);
                             debug_assert!(_existed, "bug: removing unknown surface");
-
-                            compositor.destroy_surface(
-                                op.id,
-                            );
+                            compositor.destroy_surface(id);
+                        }
+                        NativeSurfaceOperationDetails::CreateTile { id, is_opaque } => {
+                            compositor.create_tile(id, is_opaque);
+                        }
+                        NativeSurfaceOperationDetails::DestroyTile { id } => {
+                            compositor.destroy_tile(id);
                         }
                     }
                 }
@@ -5258,7 +5259,7 @@ impl Renderer {
                                         true,
                                     )
                                 }
-                                ResolvedSurfaceTexture::NativeSurface { id, size, .. } => {
+                                ResolvedSurfaceTexture::Native { id, size } => {
                                     let surface_info = match self.compositor_config {
                                         CompositorConfig::Native { ref mut compositor, .. } => {
                                             compositor.bind(id, picture_target.dirty_rect)
@@ -5295,7 +5296,7 @@ impl Renderer {
                             );
 
                             // Native OS surfaces must be unbound at the end of drawing to them
-                            if let ResolvedSurfaceTexture::NativeSurface { .. } = picture_target.surface {
+                            if let ResolvedSurfaceTexture::Native { .. } = picture_target.surface {
                                 match self.compositor_config {
                                     CompositorConfig::Native { ref mut compositor, .. } => {
                                         compositor.unbind();
@@ -6774,21 +6775,14 @@ impl CompositeState {
         &self,
         compositor: &mut dyn Compositor,
     ) {
-        // For each tile, update the properties with the native OS compositor,
-        // such as position and clip rect. z-order of the tiles are implicit based
-        // on the order they are added in this loop.
-        for tile in &self.native_tiles {
-            // Extract the native surface id. We should only ever encounter native surfaces here!
-            let id = match tile.surface {
-                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::NativeSurface { id, .. }, .. } => id,
-                _ => unreachable!(),
-            };
-
-            // Add the tile to the OS compositor.
+        // Add each surface to the visual tree. z-order is implicit based on
+        // order added. Offset and clip rect apply to all tiles within this
+        // surface.
+        for surface in &self.descriptor.surfaces {
             compositor.add_surface(
-                id,
-                tile.rect.origin.to_i32(),
-                tile.clip_rect.to_i32(),
+                surface.surface_id.expect("bug: no native surface allocated"),
+                surface.offset.to_i32(),
+                surface.clip_rect.to_i32(),
             );
         }
     }
