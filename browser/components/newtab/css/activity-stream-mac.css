@@ -3163,12 +3163,39 @@ main {
     [lwt-newtab-brighttext] .ds-chevron-link::after {
       background-color: #45A1FF; }
 
-.ds-privacy-modal a:hover {
-  text-decoration: underline; }
+.ds-privacy-modal .modal-link {
+  display: flex;
+  align-items: center;
+  margin: 0 0 8px;
+  border: 0;
+  padding: 0;
+  color: #0060DF; }
+  .ds-privacy-modal .modal-link:hover {
+    text-decoration: underline;
+    cursor: pointer; }
+  .ds-privacy-modal .modal-link::before {
+    -moz-context-properties: fill;
+    fill: #0060DF;
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    margin-inline-end: 8px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px; }
+  .ds-privacy-modal .modal-link.modal-link-privacy::before {
+    background-image: url("chrome://browser/skin/settings.svg"); }
+  .ds-privacy-modal .modal-link.modal-link-manage::before {
+    background-image: url("../data/content/assets/glyph-info-16.svg"); }
+
+.ds-privacy-modal p {
+  line-height: 24px; }
 
 .ds-privacy-modal .privacy-notice {
-  width: 492px;
-  padding: 40px 0;
+  max-width: 572px;
+  padding: 40px;
   margin: auto; }
 
 .ASRouterButton {
