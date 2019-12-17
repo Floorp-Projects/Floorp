@@ -24,6 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
       clearUnsubmittedReports().catch(Cu.reportError);
     });
   document
+    .getElementById("submitAllUnsubmittedReports")
+    .addEventListener("click", () => {
+      submitAllUnsubmittedReports().catch(Cu.reportError);
+    });
+  document
     .getElementById("clearSubmittedReports")
     .addEventListener("click", () => {
       clearSubmittedReports().catch(Cu.reportError);
@@ -144,26 +149,31 @@ function showAppropriateSections() {
  */
 function submitPendingReport(reportId, row, button, buttonText, dateFormatter) {
   button.classList.add("submitting");
-  CrashSubmit.submit(reportId, { noThrottle: true }).then(
-    remoteCrashID => {
-      document.getElementById("unsubmitted").removeChild(row);
-      const report = CrashReports.getReports().filter(
-        report => report.id === remoteCrashID
-      );
-      addReportRow(false, remoteCrashID, report.date, dateFormatter);
-      showAppropriateSections();
-      dispatchEvent("CrashSubmitSucceeded");
-    },
-    () => {
-      button.classList.remove("submitting");
-      button.classList.add("failed-to-submit");
-      document.l10n.setAttributes(
-        buttonText,
-        "submit-crash-button-failure-label"
-      );
-      dispatchEvent("CrashSubmitFailed");
-    }
-  );
+  document.getElementById("submitAllUnsubmittedReports").disabled = true;
+  CrashSubmit.submit(reportId, { noThrottle: true })
+    .then(
+      remoteCrashID => {
+        document.getElementById("unsubmitted").removeChild(row);
+        const report = CrashReports.getReports().filter(
+          report => report.id === remoteCrashID
+        );
+        addReportRow(false, remoteCrashID, report.date, dateFormatter);
+        showAppropriateSections();
+        dispatchEvent("CrashSubmitSucceeded");
+      },
+      () => {
+        button.classList.remove("submitting");
+        button.classList.add("failed-to-submit");
+        document.l10n.setAttributes(
+          buttonText,
+          "submit-crash-button-failure-label"
+        );
+        dispatchEvent("CrashSubmitFailed");
+      }
+    )
+    .finally(() => {
+      document.getElementById("submitAllUnsubmittedReports").disabled = false;
+    });
 }
 
 /**
@@ -182,6 +192,22 @@ async function clearUnsubmittedReports() {
   await cleanupFolder(CrashReports.pendingDir.path);
   await clearOldReports();
   document.getElementById("reportListUnsubmitted").classList.add("hidden");
+}
+
+/**
+ * Submits all the pending crash reports and removes all pending reports from pending reports list
+ * and add them to submitted crash reports.
+ */
+async function submitAllUnsubmittedReports() {
+  for (
+    var i = 0;
+    i < document.getElementById("unsubmitted").childNodes.length;
+    i++
+  ) {
+    document
+      .getElementById("unsubmitted")
+      .childNodes[i].cells[2].childNodes[0].click();
+  }
 }
 
 /**
