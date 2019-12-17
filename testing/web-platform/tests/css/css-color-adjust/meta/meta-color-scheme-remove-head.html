@@ -7,7 +7,7 @@
 <script src="support/compute-root-color-scheme.js"></script>
 <body></body>
 <script>
-  assert_root_color_scheme("dark");
+  assert_root_color_scheme("dark", "Meta color-scheme applies.");
   document.head.remove();
-  assert_root_color_scheme("normal");
+  assert_root_color_scheme("normal", "Initial value after removing head including meta color-scheme.");
 </script>
