@@ -488,6 +488,13 @@ class GCMarker : public JSTracer {
 
  public:
   /*
+   * The compartment of the object whose trace hook is currently being called,
+   * if any. Used to catch cross-compartment edges traced without use of
+   * TraceCrossCompartmentEdge.
+   */
+  MainThreadOrGCTaskData<Compartment*> tracingCompartment;
+
+  /*
    * List of objects to mark at the beginning of a GC. May also contains string
    * directives to change mark color or wait until different phases of the GC.
    *
@@ -497,7 +504,6 @@ class GCMarker : public JSTracer {
    * used during shutdown GCs. In either case, unmarked objects may need to be
    * discarded.
    */
-
   JS::WeakCache<GCVector<JS::Heap<JS::Value>, 0, SystemAllocPolicy>> markQueue;
 
   /* Position within the test mark queue. */

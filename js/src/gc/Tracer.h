@@ -95,6 +95,9 @@ template <typename T>
 bool TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name);
 template <typename T>
 void TraceRangeInternal(JSTracer* trc, size_t len, T* vec, const char* name);
+template <typename T>
+bool TraceWeakMapKeyInternal(JSTracer* trc, Zone* zone, T* thingp,
+                             const char* name);
 
 #ifdef DEBUG
 void AssertRootMarkingPhase(JSTracer* trc);
@@ -236,6 +239,21 @@ void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
                                const WriteBarriered<T>* dst, const char* name) {
   TraceManuallyBarrieredCrossCompartmentEdge(
       trc, src, gc::ConvertToBase(dst->unsafeUnbarrieredForTracing()), name);
+}
+
+// Trace a weak map key. For debugger weak maps these may be cross compartment,
+// but the compartment must always be within the current sweep group.
+template <typename T>
+void TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone, T** thingp,
+                                 const char* name);
+
+template <typename T>
+inline void TraceWeakMapKeyEdge(JSTracer* trc, Zone* weakMapZone,
+                                const WriteBarriered<T>* thingp,
+                                const char* name) {
+  TraceWeakMapKeyEdgeInternal(
+      trc, weakMapZone,
+      gc::ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
 }
 
 // Permanent atoms and well-known symbols are shared between runtimes and must

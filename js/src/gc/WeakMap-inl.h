@@ -152,7 +152,8 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
     CellColor delegateColor = gc::detail::GetEffectiveColor(rt, delegate);
     if (keyColor < delegateColor) {
       gc::AutoSetMarkColor autoColor(*marker, delegateColor);
-      TraceEdge(marker, &key, "proxy-preserved WeakMap entry key");
+      TraceWeakMapKeyEdge(marker, zone(), &key,
+                          "proxy-preserved WeakMap entry key");
       MOZ_ASSERT(key->color() >= delegateColor);
       marked = true;
       keyColor = delegateColor;
@@ -202,7 +203,8 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
   // Trace keys only if weakMapAction() says to.
   if (trc->weakMapAction() == TraceWeakMapKeysValues) {
     for (Enum e(*this); !e.empty(); e.popFront()) {
-      TraceEdge(trc, &e.front().mutableKey(), "WeakMap entry key");
+      TraceWeakMapKeyEdge(trc, zone(), &e.front().mutableKey(),
+                          "WeakMap entry key");
     }
   }
 
