@@ -61,6 +61,7 @@ EXPORTS += [
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
     'nsIScrollObserver.h',
+    'nsWebNavigationInfo.h',
     'SerializedLoadContext.h',
 ]
 
