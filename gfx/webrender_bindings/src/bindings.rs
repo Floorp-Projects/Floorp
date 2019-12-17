@@ -1218,7 +1218,18 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
       None => None,
     };
 
-    Device::new(gl, resource_override_path, upload_method, cached_programs, false, true, true, None, false)
+    Device::new(
+        gl,
+        resource_override_path,
+        upload_method,
+        cached_programs,
+        false,
+        true,
+        true,
+        None,
+        false,
+        false,
+    )
 }
 
 extern "C" {
@@ -1373,7 +1384,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut i32,
-                                enable_gpu_markers: bool)
+                                enable_gpu_markers: bool,
+                                panic_on_gl_error: bool)
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1479,6 +1491,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         surface_origin_is_top_left,
         compositor_config,
         enable_gpu_markers,
+        panic_on_gl_error,
         ..Default::default()
     };
 

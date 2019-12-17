@@ -70,6 +70,15 @@ class NewRenderer : public RendererEvent {
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
 
+    // Only allow the panic on GL error functionality in nightly builds,
+    // since it (deliberately) crashes the GPU process if any GL call
+    // returns an error code.
+    bool panic_on_gl_error = false;
+#ifdef NIGHTLY_BUILD
+    panic_on_gl_error =
+        StaticPrefs::gfx_webrender_panic_on_gl_error_AtStartup();
+#endif
+
     bool allow_texture_swizzling = gfx::gfxVars::UseGLSwizzle();
     bool isMainWindow = true;  // TODO!
     bool supportLowPriorityTransactions = isMainWindow;
@@ -104,7 +113,8 @@ class NewRenderer : public RendererEvent {
             compositor->GetMaxUpdateRects(),
             compositor->GetMaxPartialPresentRects(), mDocHandle, &wrRenderer,
             mMaxTextureSize,
-            StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup())) {
+            StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
+            panic_on_gl_error)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
