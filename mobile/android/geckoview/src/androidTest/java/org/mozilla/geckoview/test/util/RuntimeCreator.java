@@ -23,10 +23,7 @@ public class RuntimeCreator {
 
     private static GeckoRuntime sRuntime;
     public static AtomicInteger sTestSupport = new AtomicInteger(0);
-    public static final WebExtension TEST_SUPPORT_WEB_EXTENSION =
-            new WebExtension("resource://android/assets/web_extensions/test-support/",
-                    "test-support@mozilla.com",
-                    WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
+    public static WebExtension sTestSupportExtension;
 
     // The RuntimeTelemetry.Delegate can only be set when creating the RuntimeCreator, to
     // let tests set their own Delegate we need to create a proxy here.
@@ -94,7 +91,15 @@ public class RuntimeCreator {
 
     public static void registerTestSupport() {
         sTestSupport.set(0);
-        sRuntime.registerWebExtension(TEST_SUPPORT_WEB_EXTENSION)
+        sTestSupportExtension =
+                new WebExtension("resource://android/assets/web_extensions/test-support/",
+                        "test-support@mozilla.com",
+                        WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
+                        sRuntime.getWebExtensionController());
+
+        sTestSupportExtension.setMessageDelegate(sMessageDelegate, "browser");
+
+        sRuntime.registerWebExtension(sTestSupportExtension)
                 .accept(value -> {
                     sTestSupport.set(TEST_SUPPORT_OK);
                 }, exception -> {
@@ -123,8 +128,6 @@ public class RuntimeCreator {
         if (sRuntime != null) {
             return sRuntime;
         }
-
-        TEST_SUPPORT_WEB_EXTENSION.setMessageDelegate(sMessageDelegate, "browser");
 
         final GeckoRuntimeSettings runtimeSettings = new GeckoRuntimeSettings.Builder()
                 .arguments(new String[]{"-purgecaches"})

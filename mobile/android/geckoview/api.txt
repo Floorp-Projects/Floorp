@@ -1421,8 +1421,8 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
-    ctor public WebExtension(@NonNull String, @NonNull String, long);
-    ctor public WebExtension(@NonNull String);
+    ctor public WebExtension(@NonNull String, @NonNull String, long, @NonNull WebExtensionController);
+    ctor public WebExtension(@NonNull String, @NonNull WebExtensionController);
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
     field public final long flags;

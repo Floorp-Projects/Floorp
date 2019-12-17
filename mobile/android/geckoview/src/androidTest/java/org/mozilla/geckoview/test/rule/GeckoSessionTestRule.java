@@ -1093,7 +1093,7 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     protected void prepareSession(final GeckoSession session) {
-        session.setMessageDelegate(RuntimeCreator.TEST_SUPPORT_WEB_EXTENSION, mMessageDelegate,
+        session.setMessageDelegate(RuntimeCreator.sTestSupportExtension, mMessageDelegate,
                 "browser");
         for (final Class<?> cls : DEFAULT_DELEGATES) {
             try {
