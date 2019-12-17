@@ -117,6 +117,8 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "overflow-wrap",
       "overflow-x",
       "overflow-y",
+      "overscroll-behavior-inline",
+      "overscroll-behavior-block",
       "overscroll-behavior-x",
       "overscroll-behavior-y",
       "break-after",
