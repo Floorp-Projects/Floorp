@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const FILE_URL = Services.io.newFileURI(
+  new FileUtils.File(getTestFilePath("file_dummy.html"))
+).spec;
+
 async function testTabsCreateInvalidURL(tabsCreateURL) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -64,6 +68,7 @@ add_task(async function() {
       tabsCreateURL: "javascript:console.log('tabs.update execute javascript')",
     },
     { tabsCreateURL: dataURLPage },
+    { tabsCreateURL: FILE_URL },
   ];
 
   for (let { tabsCreateURL } of testCases) {
