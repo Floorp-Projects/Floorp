@@ -23,7 +23,7 @@ Try to install it manually with:
     $ pip install -U --require-hashes -r {}
 """.strip().format(YAMLLINT_REQUIREMENTS_PATH)
 
-YAMLLINT_FORMAT_REGEX = re.compile(r'(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
+YAMLLINT_FORMAT_REGEX = re.compile(b'(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
 
 results = []
 
@@ -43,8 +43,8 @@ class YAMLLintProcess(ProcessHandlerMixin):
             print('Unable to match yaml regex against output: {}'.format(line))
             return
 
-        res = {'path': os.path.relpath(abspath, self.config['root']),
-               'message': message,
+        res = {'path': os.path.relpath(str(abspath), self.config['root']),
+               'message': str(message),
                'level': 'error',
                'lineno': line,
                'column': col,
