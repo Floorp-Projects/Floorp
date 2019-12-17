@@ -57,6 +57,9 @@ permalink: /changelog/
 * **support-test-libstate**
   * 🆕 New component providing utilities to test functionality that relies on lib-state.    
 
+* **support-locale**
+    * Add `resetToSystemDefault` and `getSystemDefault` method to `LocaleManager`
+
 # 25.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...v25.0.0)
