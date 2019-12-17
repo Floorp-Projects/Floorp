@@ -1303,8 +1303,7 @@ again:
     ok = HandleClosingGeneratorReturn(cx, regs.fp(), ok);
     ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
   } else {
-    // We may be propagating a forced return from the interrupt
-    // callback, which cannot easily force a return.
+    // We may be propagating a forced return from a debugger hook function.
     if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
       cx->clearPropagatingForcedReturn();
       if (!ForcedReturn(cx, regs)) {
@@ -3961,20 +3960,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_INSTANCEOF)
 
     CASE(JSOP_DEBUGGER) {
-      RootedValue rval(cx);
-      switch (DebugAPI::onDebuggerStatement(cx, REGS.fp())) {
-        case ResumeMode::Terminate:
-          goto error;
-        case ResumeMode::Continue:
-          break;
-        case ResumeMode::Return:
-          if (!ForcedReturn(cx, REGS)) {
-            goto error;
-          }
-          goto successful_return_continuation;
-        case ResumeMode::Throw:
-          goto error;
-        default:;
+      if (!DebugAPI::onDebuggerStatement(cx, REGS.fp())) {
+        goto error;
       }
     }
     END_CASE(JSOP_DEBUGGER)

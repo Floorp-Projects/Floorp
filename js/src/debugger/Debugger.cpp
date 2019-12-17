@@ -1039,8 +1039,8 @@ bool DebugAPI::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
 }
 
 /* static */
-ResumeMode DebugAPI::slowPathOnDebuggerStatement(JSContext* cx,
-                                                 AbstractFramePtr frame) {
+bool DebugAPI::slowPathOnDebuggerStatement(JSContext* cx,
+                                           AbstractFramePtr frame) {
   RootedValue rval(cx);
   ResumeMode resumeMode = Debugger::dispatchHook(
       cx,
@@ -1053,22 +1053,23 @@ ResumeMode DebugAPI::slowPathOnDebuggerStatement(JSContext* cx,
 
   switch (resumeMode) {
     case ResumeMode::Continue:
-    case ResumeMode::Terminate:
       break;
+    case ResumeMode::Terminate:
+      return false;
 
     case ResumeMode::Return:
-      frame.setReturnValue(rval);
-      break;
+      DebugAPI::propagateForcedReturn(cx, frame, rval);
+      return false;
 
     case ResumeMode::Throw:
       cx->setPendingExceptionAndCaptureStack(rval);
-      break;
+      return false;
 
     default:
       MOZ_CRASH("Invalid onDebuggerStatement resume mode");
   }
 
-  return resumeMode;
+  return true;
 }
 
 /* static */
@@ -6498,15 +6499,14 @@ void DebugAPI::handleUnrecoverableIonBailoutError(
 /* static */
 void DebugAPI::propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
                                      HandleValue rval) {
-  // Invoking the interrupt handler is considered a step and invokes the
-  // youngest frame's onStep handler, if any. However, we cannot handle
-  // { return: ... } resumption values straightforwardly from the interrupt
-  // handler. Instead, we set the intended return value in the frame's rval
-  // slot and set the propagating-forced-return flag on the JSContext.
-  //
-  // The interrupt handler then returns false with no exception set,
-  // signaling an uncatchable exception. In the exception handlers, we then
-  // check for the special propagating-forced-return flag.
+  // The Debugger's hooks may return a value that affects the completion
+  // value of the given frame. For example, a hook may return `{ return: 42 }`
+  // to terminate the frame and return `42` as the final frame result.
+  // To accomplish this, the debugger treats these return values as if
+  // execution of the JS function has been terminated without a pending
+  // exception, but with a special flag. When the error is handled by the
+  // interpreter or JIT, the special flag and the error state will be cleared
+  // and execution will continue from the end of the frame.
   MOZ_ASSERT(!cx->isExceptionPending());
   cx->setPropagatingForcedReturn();
   frame.setReturnValue(rval);

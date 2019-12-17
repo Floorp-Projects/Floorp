@@ -234,8 +234,8 @@ class DebugAPI {
    * Note that this method is called for all |debugger;| statements,
    * regardless of the frame's debuggee-ness.
    */
-  static inline ResumeMode onDebuggerStatement(JSContext* cx,
-                                               AbstractFramePtr frame);
+  static inline MOZ_MUST_USE bool onDebuggerStatement(JSContext* cx,
+                                                      AbstractFramePtr frame);
 
   /*
    * Announce to the debugger that an exception has been thrown and propagated
@@ -384,8 +384,8 @@ class DebugAPI {
                                           AbstractFramePtr frame);
   static ResumeMode slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
                                          CallReason reason);
-  static ResumeMode slowPathOnDebuggerStatement(JSContext* cx,
-                                                AbstractFramePtr frame);
+  static MOZ_MUST_USE bool slowPathOnDebuggerStatement(JSContext* cx,
+                                                       AbstractFramePtr frame);
   static ResumeMode slowPathOnExceptionUnwind(JSContext* cx,
                                               AbstractFramePtr frame);
   static void slowPathOnNewWasmInstance(
