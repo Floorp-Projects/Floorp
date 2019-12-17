@@ -1829,9 +1829,6 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
           // Convert int32 operands to double.
           replacement = MToDouble::New(alloc(), in);
         } else if (phiType == MIRType::Float32) {
-          MOZ_ASSERT(in->canProduceFloat32() ||
-                     (in->resultTypeSet() && in->resultTypeSet()->empty()));
-
           if (in->type() == MIRType::Int32 || in->type() == MIRType::Double) {
             replacement = MToFloat32::New(alloc(), in);
           } else {
