@@ -945,7 +945,7 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
   // Remove audio samples that have been played by MTG from the queue.
   RefPtr<AudioData> a = mAudioQueue.PeekFront();
-  for (; a && a->GetEndTime() < currentTime;) {
+  for (; a && a->GetEndTime() <= currentTime;) {
     LOG_DS(LogLevel::Debug, "Dropping audio [%" PRId64 ",%" PRId64 "]",
            a->mTime.ToMicroseconds(), a->GetEndTime().ToMicroseconds());
     RefPtr<AudioData> releaseMe = mAudioQueue.PopFront();
