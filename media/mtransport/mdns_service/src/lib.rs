@@ -281,7 +281,7 @@ impl MDNSService {
             let mut unsent_queries = LinkedList::new();
             let mut pending_queries = HashMap::new();
             loop {
-                match receiver.recv_timeout(time::Duration::from_millis(10)) {
+                match receiver.try_recv() {
                     Ok(msg) => match msg {
                         ServiceControl::Register { hostname, address } => {
                             if !validate_hostname(&hostname) {
@@ -325,10 +325,10 @@ impl MDNSService {
                             break;
                         }
                     },
-                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                         break;
                     }
-                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
+                    Err(std::sync::mpsc::TryRecvError::Empty) => {}
                 }
                 if pending_queries.len() < 50 {
                     let mut queries: Vec<Query> = Vec::new();
