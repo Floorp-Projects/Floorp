@@ -774,7 +774,6 @@ public class GeckoSession implements Parcelable {
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
-
                 if (delegate == null) {
                     callback.sendSuccess(/* granted */ false);
                     return;
@@ -799,6 +798,10 @@ public class GeckoSession implements Parcelable {
                         // doesn't support Web MIDI.
                         callback.sendError("Unsupported");
                         return;
+                    } else if ("autoplay-media-inaudible".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE;
+                    } else if ("autoplay-media-audible".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE;
                     } else {
                         throw new IllegalArgumentException("Unknown permission request: " + typeString);
                     }
@@ -4968,6 +4971,16 @@ public class GeckoSession implements Parcelable {
         int PERMISSION_XR = 3;
 
         /**
+         * Permission for allowing autoplay of inaudible (silent) video.
+         */
+        int PERMISSION_AUTOPLAY_INAUDIBLE = 3;
+
+        /**
+         * Permission for allowing autoplay of audible video.
+         */
+        int PERMISSION_AUTOPLAY_AUDIBLE = 4;
+
+        /**
          * Callback interface for notifying the result of a permission request.
          */
         interface Callback {
@@ -5217,7 +5230,10 @@ public class GeckoSession implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({PermissionDelegate.PERMISSION_GEOLOCATION,
             PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION,
-            PermissionDelegate.PERMISSION_XR})
+            PermissionDelegate.PERMISSION_PERSISTENT_STORAGE,
+            PermissionDelegate.PERMISSION_XR,
+            PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE,
+            PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE})
     /* package */ @interface Permission {}
 
     /**
