@@ -68,6 +68,7 @@ class nsJARChannel final : public nsIJARChannel,
   nsCString mSpec;
 
   bool mOpened;
+  bool mCanceled;
 
   RefPtr<nsJARProtocolHandler> mJarHandler;
   nsCOMPtr<nsIJARURI> mJarURI;

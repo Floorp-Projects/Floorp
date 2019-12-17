@@ -167,6 +167,7 @@ nsJARInputThunk::IsNonBlocking(bool* nonBlocking) {
 
 nsJARChannel::nsJARChannel()
     : mOpened(false),
+      mCanceled(false),
       mContentLength(-1),
       mLoadFlags(LOAD_NORMAL),
       mStatus(NS_OK),
@@ -560,6 +561,7 @@ nsJARChannel::GetStatus(nsresult* status) {
 
 NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status) {
+  mCanceled = true;
   mStatus = status;
   if (mPump) {
     return mPump->Cancel(status);
@@ -574,9 +576,7 @@ nsJARChannel::Cancel(nsresult status) {
 
 NS_IMETHODIMP
 nsJARChannel::GetCanceled(bool* aCanceled) {
-  nsresult status = NS_ERROR_FAILURE;
-  GetStatus(&status);
-  *aCanceled = NS_FAILED(status);
+  *aCanceled = mCanceled;
   return NS_OK;
 }
 
