@@ -13,7 +13,7 @@ use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Face, FT_New_Memory_
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_Library, FT_Outline_Get_CBox, FT_Set_Char_Size, FT_Select_Size};
 use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform, FT_String, FT_ULong};
-use freetype::freetype::{FT_Err_Unimplemented_Feature};
+use freetype::freetype::{FT_Err_Unimplemented_Feature, FT_MulFix, FT_Outline_Embolden};
 use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT};
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING};
@@ -107,6 +107,46 @@ ft_dyn_fn!(FT_Set_Var_Design_Coordinates(face: FT_Face, num_vals: FT_UInt, vals:
 
 extern "C" {
     fn FT_GlyphSlot_Embolden(slot: FT_GlyphSlot);
+}
+
+// Custom version of FT_GlyphSlot_Embolden to be less aggressive with outline
+// fonts than the default implementation in FreeType.
+#[no_mangle]
+pub extern "C" fn mozilla_glyphslot_embolden_less(slot: FT_GlyphSlot) {
+    if slot.is_null() {
+        return;
+    }
+
+    let slot_ = unsafe { &mut *slot };
+    let format = slot_.format;
+    if format != FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE {
+        // For non-outline glyphs, just fall back to FreeType's function.
+        unsafe { FT_GlyphSlot_Embolden(slot) };
+        return;
+    }
+
+    let face_ = unsafe { *slot_.face };
+
+    // FT_GlyphSlot_Embolden uses a divisor of 24 here; we'll be only half as
+    // bold.
+    let size_ = unsafe { *face_.size };
+    let strength =
+        unsafe { FT_MulFix(face_.units_per_EM as FT_Long,
+                           size_.metrics.y_scale) / 48 };
+    unsafe { FT_Outline_Embolden(&mut slot_.outline, strength) };
+
+    // Adjust metrics to suit the fattened glyph.
+    if slot_.advance.x != 0 {
+        slot_.advance.x += strength;
+    }
+    if slot_.advance.y != 0 {
+        slot_.advance.y += strength;
+    }
+    slot_.metrics.width += strength;
+    slot_.metrics.height += strength;
+    slot_.metrics.horiAdvance += strength;
+    slot_.metrics.vertAdvance += strength;
+    slot_.metrics.horiBearingY += strength;
 }
 
 enum FontFile {
@@ -495,7 +535,7 @@ impl FontContext {
         assert!(slot != ptr::null_mut());
 
         if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
-            unsafe { FT_GlyphSlot_Embolden(slot) };
+            mozilla_glyphslot_embolden_less(slot);
         }
 
         let format = unsafe { (*slot).format };
