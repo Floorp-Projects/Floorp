@@ -341,26 +341,6 @@ yellow = submarine
         self.assertEqual(parser.get('name', disabled='NO'),
                          ['testSecond.js'])
 
-    def test_server_root(self):
-        """
-        Test server_root properly expands as an absolute path
-        """
-        server_example = os.path.join(here, 'parent', 'level_1', 'level_2',
-                                      'level_3', 'level_3_server-root.ini')
-        parser = ManifestParser(manifests=(server_example,))
-
-        # A regular variable will inherit its value directly
-        self.assertEqual(parser.get('name', **{'other-root': '../root'}),
-                         ['test_3'])
-
-        # server-root will expand its value as an absolute path
-        # we will not find anything for the original value
-        self.assertEqual(parser.get('name', **{'server-root': '../root'}), [])
-
-        # check that the path has expanded
-        self.assertEqual(parser.get('server-root')[0],
-                         os.path.join(here, 'parent', 'root'))
-
     def test_copy(self):
         """Test our ability to copy a set of manifests"""
 
