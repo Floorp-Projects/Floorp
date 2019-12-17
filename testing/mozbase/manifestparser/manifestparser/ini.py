@@ -24,14 +24,13 @@ class IniParseError(Exception):
         super(IniParseError, self).__init__(msg)
 
 
-def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
-             comments=None, separators=None, strict=True, handle_defaults=True):
+def read_ini(fp, variables=None, default='DEFAULT', comments=None,
+             separators=None, strict=True, handle_defaults=True):
     """
     read an .ini file and return a list of [(section, values)]
     - fp : file pointer or path to read
     - variables : default set of variables
     - default : name of the section for the default section
-    - defaults_only : if True, return the default section only
     - comments : characters that if they start a line denote a comment
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
@@ -136,10 +135,6 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
         else:
             # something bad happened!
             raise IniParseError(fp, linenum, "Unexpected line '{}'".format(stripped))
-
-    # return the default section only if requested
-    if defaults_only:
-        return [(default, variables)]
 
     global_vars = variables if handle_defaults else {}
     sections = [(i, combine_fields(global_vars, j)) for i, j in sections]
