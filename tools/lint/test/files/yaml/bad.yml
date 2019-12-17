@@ -1,0 +1,7 @@
+---
+yamllint:
+  description: YAML linteraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax
+  include:
+        - .cron.yml
+        - browser/config/
+        - wrong

@@ -1,0 +1,6 @@
+---
+yamllint:
+    description: YAML linter
+    include:
+        - .cron.yml
+        - browser/config/
