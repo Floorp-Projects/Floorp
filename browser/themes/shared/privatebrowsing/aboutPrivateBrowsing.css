@@ -163,10 +163,6 @@ p {
   width: 1px;
 }
 
-.dummy-input {
-  display: none;
-}
-
 .search-banner {
   width: 100%;
   background-color: var(--in-content-banner-background);

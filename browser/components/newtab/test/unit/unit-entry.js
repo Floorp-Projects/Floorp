@@ -73,8 +73,11 @@ const TEST_GLOBAL = {
     },
     isSuccessCode: () => true,
   },
+  // NB: These are functions/constructors
   // eslint-disable-next-line object-shorthand
-  ContentSearchUIController: function() {}, // NB: This is a function/constructor
+  ContentSearchUIController: function() {},
+  // eslint-disable-next-line object-shorthand
+  ContentSearchHandoffUIController: function() {},
   Cc: {
     "@mozilla.org/browser/nav-bookmarks-service;1": {
       addObserver() {},
