@@ -219,6 +219,38 @@ describe("<FirstRun>", () => {
     assert.lengthOf(fakeDoc.head.querySelectorAll("link"), FLUENT_FILES.length);
   });
 
+  it("should show triplet content only when interrupt is not visible", () => {
+    assert.lengthOf(wrapper.find(Interrupt), 1, "Interrupt shown");
+    assert.propertyVal(wrapper.find(Triplets).props(), "showContent", false);
+    assert.propertyVal(wrapper.find(Triplets).props(), "showCardPanel", true);
+
+    wrapper.setProps({ interruptCleared: true });
+
+    assert.propertyVal(wrapper.find(Triplets).props(), "showContent", true);
+    assert.propertyVal(wrapper.find(Triplets).props(), "showCardPanel", true);
+  });
+
+  it("should update didUserClearInterrupt state to false on close of interrupt", () => {
+    assert.isFalse(wrapper.state().didUserClearInterrupt);
+    // Simulate calling close interrupt
+    wrapper
+      .find(Interrupt)
+      .find(".trailheadStart")
+      .simulate("click");
+
+    assert.isTrue(wrapper.state().didUserClearInterrupt);
+  });
+
+  it("should update didUserClearTriplets state to true on close of triplet", () => {
+    assert.isFalse(wrapper.state().didUserClearTriplets);
+    // Simulate calling close Triplets
+    wrapper
+      .find(Triplets)
+      .find(".icon-dismiss")
+      .simulate("click");
+    assert.isTrue(wrapper.state().didUserClearTriplets);
+  });
+
   it("should hide the interrupt and show the triplets when onNextScene is called", () => {
     // Simulate calling next scene
     wrapper
