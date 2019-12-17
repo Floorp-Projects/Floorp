@@ -16,7 +16,7 @@ import re
 import sys
 
 
-AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
+ARTIFACT_EXTENSIONS = ('.aar', '.pom', '-sources.jar', '.jar')
 HASH_EXTENSIONS = ('', '.sha1', '.md5')
 SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'
 
@@ -71,10 +71,10 @@ def _extract_old_timestamp(files):
 
 
 def does_file_name_contain_timestamp(filename):
-    """Function to filter out filenames that are part of the snapshot releae but
+    """Function to filter out filenames that are part of the snapshot release but
     they are not timestamped."""
 
-    for extension, hash_extension in itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS):
+    for extension, hash_extension in itertools.product(ARTIFACT_EXTENSIONS, HASH_EXTENSIONS):
         if filename.endswith(extension + hash_extension):
             return True
     return False
