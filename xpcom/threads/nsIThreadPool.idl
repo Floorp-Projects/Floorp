@@ -6,7 +6,7 @@
 
 #include "nsIEventTarget.idl"
 
-[scriptable, uuid(ef194cab-3f86-4b61-b132-e5e96a79e5d1)]
+[uuid(ef194cab-3f86-4b61-b132-e5e96a79e5d1)]
 interface nsIThreadPoolListener : nsISupports
 {
   /**
@@ -27,7 +27,7 @@ interface nsIThreadPoolListener : nsISupports
  * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
  * will be run on the next available worker thread.
  */
-[builtinclass, scriptable, uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
+[uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
 interface nsIThreadPool : nsIEventTarget
 {
   /**
