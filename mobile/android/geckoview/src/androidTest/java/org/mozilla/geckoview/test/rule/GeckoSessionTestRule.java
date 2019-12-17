@@ -20,7 +20,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
-import org.mozilla.geckoview.test.util.TestServer;
+import org.mozilla.geckoview.test.util.HttpBin;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
@@ -64,6 +64,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,9 +89,7 @@ import kotlin.reflect.KClass;
  */
 public class GeckoSessionTestRule implements TestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
-
-    private static final int TEST_PORT = 4245;
-    public static final String TEST_ENDPOINT = "http://localhost:" + TEST_PORT;
+    public static final String TEST_ENDPOINT = "http://localhost:4245";
 
     private static final Method sOnPageStart;
     private static final Method sOnPageStop;
@@ -1236,11 +1235,12 @@ public class GeckoSessionTestRule implements TestRule {
             public void evaluate() throws Throwable {
                 final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
 
-                TestServer server = new TestServer(InstrumentationRegistry.getTargetContext());
+                HttpBin httpBin = new HttpBin(InstrumentationRegistry.getTargetContext(),
+                        URI.create(TEST_ENDPOINT));
 
                 mInstrumentation.runOnMainSync(() -> {
                     try {
-                        server.start(TEST_PORT);
+                        httpBin.start();
 
                         RuntimeCreator.setPortDelegate(mPortDelegate);
 
@@ -1273,7 +1273,7 @@ public class GeckoSessionTestRule implements TestRule {
                         exceptionRef.set(t);
                     } finally {
                         try {
-                            server.stop();
+                            httpBin.stop();
                             cleanupStatement();
                         } catch (Throwable t) {
                             exceptionRef.compareAndSet(null, t);

@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -23,15 +24,35 @@ import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
+import org.junit.After
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.UiThreadUtils
+import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class NavigationDelegateTest : BaseSessionTest() {
+    companion object {
+        val TEST_ENDPOINT: String = "http://localhost:4242"
+    }
+
+    lateinit var server: HttpBin
+
+    @Before
+    fun setup() {
+        server = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+        server.start()
+    }
+
+    @After
+    fun cleanup() {
+        server.stop()
+    }
 
     fun testLoadErrorWithErrorPage(testUri: String, expectedCategory: Int,
                                    expectedError: Int,

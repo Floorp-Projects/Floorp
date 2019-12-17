@@ -23,7 +23,7 @@ import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
-import org.mozilla.geckoview.test.util.TestServer
+import org.mozilla.geckoview.test.util.HttpBin
 import java.net.URI
 
 import java.util.UUID
@@ -32,8 +32,7 @@ import java.util.UUID
 @MediumTest
 class WebExtensionTest : BaseSessionTest() {
     companion object {
-        val TEST_PORT: Int = 4243
-        val TEST_ENDPOINT: String = "http://localhost:${TEST_PORT}"
+        val TEST_ENDPOINT: String = "http://localhost:4243"
         val TABS_CREATE_BACKGROUND: String = "resource://android/assets/web_extensions/tabs-create/"
         val TABS_CREATE_REMOVE_BACKGROUND: String = "resource://android/assets/web_extensions/tabs-create-remove/"
         val TABS_REMOVE_BACKGROUND: String = "resource://android/assets/web_extensions/tabs-remove/"
@@ -686,16 +685,16 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun iframeTopLevel() {
-        val server = TestServer(InstrumentationRegistry.getTargetContext())
+        val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
 
         try {
-            server.start(TEST_PORT)
+            httpBin.start()
 
             mainSession.loadUri("$TEST_ENDPOINT$HELLO_IFRAME_HTML_PATH")
             sessionRule.waitForPageStop()
             testIframeTopLevel()
         } finally {
-            server.stop()
+            httpBin.stop()
         }
     }
 
