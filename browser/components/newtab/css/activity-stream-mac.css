@@ -3337,16 +3337,17 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   top: 0;
   left: 0;
   width: 100%;
-  display: none;
-  z-index: 1100; }
+  display: none; }
   .modalOverlayOuter.active {
-    display: block; }
+    display: block;
+    position: absolute; }
 
 .modal-scroll {
   position: absolute;
   width: 100%;
   height: 100%;
-  overflow: auto; }
+  overflow: auto;
+  z-index: 1100; }
 
 .modal-height {
   padding-top: 80px; }
@@ -3360,10 +3361,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   display: none;
-  z-index: 1101; }
+  z-index: 1100; }
   @media (max-width: 960px) {
     .modalOverlayInner {
-      width: 100%;
+      width: auto;
       height: 100%;
       top: 0;
       left: 0;
