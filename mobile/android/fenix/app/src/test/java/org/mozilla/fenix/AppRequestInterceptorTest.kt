@@ -4,10 +4,14 @@
 
 package org.mozilla.fenix
 
+import android.net.ConnectivityManager
 import androidx.annotation.RawRes
+import androidx.core.content.getSystemService
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
@@ -16,6 +20,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.isOnline
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -28,6 +33,11 @@ class AppRequestInterceptorTest {
 
     @Before
     fun setUp() {
+
+        mockkStatic("org.mozilla.fenix.ext.ConnectivityManagerKt")
+
+        every { testContext.getSystemService<ConnectivityManager>()!!.isOnline() } returns true
+
         interceptor = AppRequestInterceptor(testContext)
     }
 

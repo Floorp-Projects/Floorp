@@ -6,8 +6,8 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import androidx.annotation.RawRes
+import androidx.core.content.getSystemService
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.isOnline
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
@@ -71,10 +72,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     private fun improveErrorType(errorType: ErrorType): ErrorType {
         // This is not an ideal solution. For context, see:
         // https://github.com/mozilla-mobile/android-components/pull/5068#issuecomment-558415367
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
-        @Suppress("DEPRECATION") // NetworkCallback is not appropriate for this use case
-        val isConnected: Boolean = activeNetwork?.isConnectedOrConnecting == true
+
+        val isConnected: Boolean = context.getSystemService<ConnectivityManager>()!!.isOnline()
 
         return when {
             errorType == ErrorType.ERROR_UNKNOWN_HOST && !isConnected -> ErrorType.ERROR_NO_INTERNET
