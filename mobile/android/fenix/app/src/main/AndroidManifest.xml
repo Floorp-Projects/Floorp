@@ -30,12 +30,12 @@
         tools:ignore="UnusedAttribute">
 
         <!--
-          We inherited this entry (org.mozilla.gecko.App) from Fennec. We need to keep this as our
+          We inherited this entry (${applicationId}.App) from Fennec. We need to keep this as our
           main launcher to avoid launcher icons on the home screen disappearing for all our users
           on a Fennec build.
         -->
         <activity-alias
-            android:name="org.mozilla.gecko.App"
+            android:name="${applicationId}.App"
             android:targetActivity=".HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
