@@ -477,6 +477,11 @@ class ValType {
     return UnpackTypeCodeType(tc_) == TypeCode::FuncRef;
   }
 
+  bool isNullable() const {
+    MOZ_ASSERT(isReference());
+    return true;
+  }
+
   bool isTypeIndex() const {
     MOZ_ASSERT(isValid());
     return UnpackTypeCodeType(tc_) == TypeCode::Ref;
@@ -2237,12 +2242,16 @@ struct Limits {
 };
 
 // TableDesc describes a table as well as the offset of the table's base pointer
-// in global memory. The TableKind determines the representation:
+// in global memory.
+//
+// The TableKind determines the representation:
 //  - AnyRef: a wasm anyref word (wasm::AnyRef)
 //  - NullRef: as AnyRef
 //  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
 //  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
 // Eventually there should be a single unified AnyRef representation.
+//
+// TableKind::NullRef is a reasonable default initializer, if one is needed.
 
 enum class TableKind { AnyRef, NullRef, FuncRef, AsmJS };
 

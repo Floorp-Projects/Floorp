@@ -240,17 +240,27 @@ struct ModuleEnvironment {
   bool isRefSubtypeOf(ValType one, ValType two) const {
     MOZ_ASSERT(one.isReference());
     MOZ_ASSERT(two.isReference());
+    // Anything's a subtype of itself.
+    if (one == two) {
+      return true;
+    }
 #if defined(ENABLE_WASM_REFTYPES)
+    // Anything's a subtype of AnyRef.
+    if (two.isAnyRef()) {
+      return true;
+    }
+    // NullRef is a subtype of nullable types.
+    if (one.isNullRef()) {
+      return two.isNullable();
+    }
 #  if defined(ENABLE_WASM_GC)
-    return one == two || two.isAnyRef() || one.isNullRef() ||
-           (isStructType(one) && isStructType(two) && gcTypesEnabled() &&
-            isStructPrefixOf(two, one));
-#  else
-    return one == two || two.isAnyRef() || one.isNullRef();
+    // Struct One is a subtype of struct Two if Two is a prefix of One.
+    if (gcTypesEnabled() && isStructType(one) && isStructType(two)) {
+      return isStructPrefixOf(two, one);
+    }
 #  endif
-#else
-    return one == two;
 #endif
+    return false;
   }
   bool isStructType(ValType t) const {
     return t.isTypeIndex() && types[t.refType().typeIndex()].isStructType();
