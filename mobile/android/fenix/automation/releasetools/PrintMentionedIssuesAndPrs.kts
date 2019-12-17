@@ -51,7 +51,7 @@ fun getHighestVersionedTag(): String {
 }
 
 fun getMostRecentCommonAncestorWithMaster(tag: String): String {
-    runCommand("git fetch --tags")
+    runCommand("git fetch $origin --tags")
     // TODO use origin master
     return runCommand("git merge-base master $tag").trim()
 }
