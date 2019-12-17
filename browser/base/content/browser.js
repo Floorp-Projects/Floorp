@@ -5597,11 +5597,6 @@ var XULBrowserWindow = {
     // We need the state of the previous content blocking event, so update
     // event after onContentBlockingEvent is called.
     this._event = aEvent;
-
-    // Because this function will only receive content blocking event updates
-    // for the currently selected tab, we handle updates to background tabs in
-    // TabsProgressListener.onContentBlockingEvent.
-    gBrowser.selectedBrowser.updateSecurityUIForContentBlockingEvent(aEvent);
   },
 
   // This is called in multiple ways:
@@ -6029,14 +6024,6 @@ const AccessibilityRefreshBlocker = {
 };
 
 var TabsProgressListener = {
-  onContentBlockingEvent(aBrowser, aWebProgress, aRequest, aEvent) {
-    // Handle content blocking events for background (=non-selected) tabs.
-    // This event is processed for the selected tab in XULBrowserWindow.onContentBlockingEvent.
-    if (aBrowser != gBrowser.selectedBrowser) {
-      aBrowser.updateSecurityUIForContentBlockingEvent(aEvent);
-    }
-  },
-
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
     if (
