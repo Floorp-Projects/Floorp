@@ -1033,18 +1033,18 @@ browsertime-speedometer:
         extra-options:
             - --browsertime
 
-browsertime-tp6-1-profiling:
-    description: "Raptor (browsertime) tp6-1 with Gecko Profiling"
-    raptor-test: raptor-tp6-1
-    run-on-projects: ['integration', 'try']
-    apps: ["firefox"]
-    variants: ["fission"]
-    cold:
-        by-app:
-            firefox: true
-            default: false
-    treeherder-symbol: Btime-Prof(tp6-1-p)
-    max-run-time: 3000
+browsertime-tp6-profiling:
+    description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
+    raptor-test: tp6
+    raptor-subtests: ['amazon']
+    run-on-projects:
+        by-test-platform:
+            .*shippable[^-qr].*: ['mozilla-central', 'try']
+            default: []
+    apps: ['firefox']
+    pageload: 'both'
+    treeherder-symbol: Btime-Prof(tp6)
+    max-run-time: 4000
     tier: 3
     mozharness:
         extra-options:
