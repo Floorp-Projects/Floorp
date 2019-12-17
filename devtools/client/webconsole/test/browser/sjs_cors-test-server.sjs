@@ -47,8 +47,8 @@ function handleRequest(request, response) {
     case "CORSMissingAllowCredentials":
       corsMissingAllowCredentials(request, response);
       break;
-    case "CORSPreflightDidNotSucceed":
-      corsPreflightDidNotSucceed(request, response);
+    case "CORSPreflightDidNotSucceed2":
+      corsPreflightDidNotSucceed2(request, response);
       break;
     case "CORSInvalidAllowMethod":
       corsInvalidAllowMethod(request, response);
@@ -56,8 +56,8 @@ function handleRequest(request, response) {
     case "CORSInvalidAllowHeader":
       corsInvalidAllowHeader(request, response);
       break;
-    case "CORSMissingAllowHeaderFromPreflight":
-      corsMissingAllowHeaderFromPreflight(request, response);
+    case "CORSMissingAllowHeaderFromPreflight2":
+      corsMissingAllowHeaderFromPreflight2(request, response);
       break;
   }
 }
@@ -116,7 +116,7 @@ function corsMissingAllowCredentials(request, response) {
   response.setHeader("Access-Control-Allow-Origin", "http://example.com");
 }
 
-function corsPreflightDidNotSucceed(request, response) {
+function corsPreflightDidNotSucceed2(request, response) {
   const isPreflight = request.method == "OPTIONS";
   if (isPreflight) {
     response.setStatusLine(request.httpVersion, 500, "Preflight fail");
@@ -137,8 +137,8 @@ function corsInvalidAllowHeader(request, response) {
   response.setHeader("Access-Control-Allow-Headers", "xyz;");
 }
 
-function corsMissingAllowHeaderFromPreflight(request, response) {
-  response.setStatusLine(request.httpVersion, 200, "corsMissingAllowHeaderFromPreflight");
+function corsMissingAllowHeaderFromPreflight2(request, response) {
+  response.setStatusLine(request.httpVersion, 200, "corsMissingAllowHeaderFromPreflight2");
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "PUT");
 }
