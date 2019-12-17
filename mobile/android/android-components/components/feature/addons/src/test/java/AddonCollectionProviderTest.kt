@@ -52,7 +52,7 @@ class AddonCollectionProviderTest {
             assertTrue(addons.isNotEmpty())
 
             // Add-on details
-            assertEquals("607454", addon.id)
+            assertEquals("uBlock0@raymondhill.net", addon.id)
             assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
             assertEquals("2019-10-24T09:28:41Z", addon.updatedAt)
             assertEquals(

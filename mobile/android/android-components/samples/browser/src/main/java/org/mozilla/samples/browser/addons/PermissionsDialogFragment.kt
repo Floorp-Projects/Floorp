@@ -21,9 +21,10 @@ import android.widget.LinearLayout.LayoutParams
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
+import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
 
-internal const val KEY_ADD_ON_ID = "KEY_ADD_ON_ID"
+internal const val KEY_ADDON = "KEY_ADDON"
 internal const val KEY_TITLE = "KEY_TITLE"
 private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
 private const val KEY_DIALOG_WIDTH_MATCH_PARENT = "KEY_DIALOG_WIDTH_MATCH_PARENT"
@@ -35,12 +36,12 @@ private const val DEFAULT_VALUE = Int.MAX_VALUE
 
 internal class PermissionsDialogFragment : AppCompatDialogFragment() {
 
-    internal var onPositiveButtonClicked: ((String) -> Unit)? = null
+    internal var onPositiveButtonClicked: ((Addon) -> Unit)? = null
     internal var onNegativeButtonClicked: (() -> Unit)? = null
 
     private val safeArguments get() = requireNotNull(arguments)
 
-    internal val addonId get() = safeArguments.getString(KEY_ADD_ON_ID, "")
+    internal val addon get() = safeArguments.getParcelable<Addon>(KEY_ADDON)
 
     internal val positiveButtonRadius
         get() =
@@ -128,7 +129,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
         val negativeButton = rootView.findViewById<Button>(R.id.deny_button)
 
         positiveButton.setOnClickListener {
-            onPositiveButtonClicked?.invoke(addonId)
+            onPositiveButtonClicked?.invoke(addon!!)
             dismiss()
         }
 
@@ -178,11 +179,11 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
     @Suppress("LongParameterList")
     companion object {
         fun newInstance(
-            addonId: String,
+            addon: Addon,
             title: String,
             permissions: List<Int>,
             promptsStyling: PromptsStyling? = null,
-            onPositiveButtonClicked: ((String) -> Unit)? = null,
+            onPositiveButtonClicked: ((Addon) -> Unit)? = null,
             onNegativeButtonClicked: (() -> Unit)? = null
         ): PermissionsDialogFragment {
 
@@ -190,7 +191,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
             val arguments = fragment.arguments ?: Bundle()
 
             arguments.apply {
-                putString(KEY_ADD_ON_ID, addonId)
+                putParcelable(KEY_ADDON, addon)
                 putString(KEY_TITLE, title)
                 putIntArray(KEY_PERMISSIONS, permissions.toIntArray())
 

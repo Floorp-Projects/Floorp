@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.feature.addons.Addon
 import org.mozilla.samples.browser.R
+import org.mozilla.samples.browser.ext.components
 
 /**
  * An activity to show the details of a installed add-on.
@@ -35,6 +36,8 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         bindDetails(addon)
 
         bindPermissions(addon)
+
+        bindRemoveButton(addon)
     }
 
     private fun bindVersion(addon: Addon) {
@@ -46,7 +49,43 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         val switch = findViewById<Switch>(R.id.enable_switch)
         switch.setState(addon.isEnabled())
         switch.setOnCheckedChangeListener { _, isChecked ->
-            switch.setState(isChecked)
+            if (isChecked) {
+                this.components.addonManager.disableAddon(
+                    addon,
+                    onSuccess = {
+                        Toast.makeText(
+                            this,
+                            "Successfully disabled ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    onError = {
+                        Toast.makeText(
+                            this,
+                            "Failed to disable ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            } else {
+                this.components.addonManager.enableAddon(
+                    addon,
+                    onSuccess = {
+                        Toast.makeText(
+                            this,
+                            "Successfully enabled ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    onError = {
+                        Toast.makeText(
+                            this,
+                            "Failed to enable ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            }
         }
     }
 
@@ -76,9 +115,26 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindRemoveButton() {
+    private fun bindRemoveButton(addon: Addon) {
         findViewById<View>(R.id.remove_add_on).setOnClickListener {
-            Toast.makeText(this, "Removed Add-on", Toast.LENGTH_SHORT).show()
+            this.components.addonManager.uninstallAddon(
+                addon,
+                onSuccess = {
+                    Toast.makeText(
+                        this,
+                        "Successfully uninstalled ${addon.translatableName.translate()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                },
+                onError = { _, _ ->
+                    Toast.makeText(
+                        this,
+                        "Failed to uninstall ${addon.translatableName.translate()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
         }
     }
 
