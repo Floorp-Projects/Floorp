@@ -2467,6 +2467,8 @@ setterLevel:                                                                  \
                            : frontend::ParseGoal::Script;
   }
 
+  void setArgumentsHasVarBinding();
+
   bool hasEnclosingLazyScript() const {
     return warmUpData_.isEnclosingScript();
   }
@@ -2799,7 +2801,6 @@ class JSScript : public js::BaseScript {
     clearFlag(MutableFlags::HasRunOnce);
   }
 
-  void setArgumentsHasVarBinding();
   bool argumentsAliasesFormals() const {
     return argumentsHasVarBinding() && hasMappedArgsObj();
   }
