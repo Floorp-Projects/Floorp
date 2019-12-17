@@ -12,18 +12,13 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GENERATED_FILES += [
-        'wgpu_ffi_generated.h',
-    ]
+    GeneratedFile('wgpu_ffi_generated.h',
+                  script='/layout/style/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=['/gfx/wgpu/wgpu-remote'])
 
     EXPORTS.mozilla.webgpu.ffi += [
         '!wgpu_ffi_generated.h',
-    ]
-
-    ffi_generated = GENERATED_FILES['wgpu_ffi_generated.h']
-    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
-    ffi_generated.inputs = [
-        '/gfx/wgpu/wgpu-remote',
     ]
 
 
