@@ -236,7 +236,8 @@ def test_verify_payload():
       'wpt-servo-nightly-testharness-7',
       'wpt-servo-nightly-testharness-8',
       'wpt-servo-nightly-testharness-9',
-      'wpt-servo-nightly-wdspec-1',})
+      'wpt-servo-nightly-wdspec-1',
+      'wpt-servo-nightly-crashtest-1',})
 ])
 def test_schedule_tasks(event_path, is_pr, files_changed, expected):
     with mock.patch("tools.ci.tc.decision.get_fetch_rev", return_value=(None, None, None)):
