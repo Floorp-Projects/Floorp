@@ -432,19 +432,6 @@ NS_IMETHODIMP AppWindow::SetZLevel(uint32_t aLevel) {
 NS_IMETHODIMP AppWindow::GetChromeFlags(uint32_t* aChromeFlags) {
   NS_ENSURE_ARG_POINTER(aChromeFlags);
   *aChromeFlags = mChromeFlags;
-  /* mChromeFlags is kept up to date, except for scrollbar visibility.
-     That can be changed directly by the content DOM window, which
-     doesn't know to update the chrome window. So that we must check
-     separately. */
-
-  // however, it's pointless to ask if the window isn't set up yet
-  if (!mChromeLoaded) return NS_OK;
-
-  if (GetContentScrollbarVisibility())
-    *aChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
-  else
-    *aChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
-
   return NS_OK;
 }
 
@@ -2441,20 +2428,6 @@ void AppWindow::SetContentScrollbarVisibility(bool aVisible) {
   nsContentUtils::SetScrollbarsVisibility(contentWin->GetDocShell(), aVisible);
 }
 
-bool AppWindow::GetContentScrollbarVisibility() {
-  // This code already exists in dom/src/base/nsBarProp.cpp, but we can't safely
-  // get to that from here as this function is called while the DOM window is
-  // being set up, and we need the DOM window to get to that code.
-  //
-  // FIXME(emilio): This doesn't work at all for e10s or anything like that,
-  // it's likely that nobody is relying on this function.
-  if (nsCOMPtr<nsIDocShell> ds = do_QueryInterface(mPrimaryContentShell)) {
-    return nsDocShell::Cast(ds)->ScrollbarPreference() != ScrollbarPreference::Never;
-  }
-
-  return true;
-}
-
 // during spinup, attributes that haven't been loaded yet can't be dirty
 void AppWindow::PersistentAttributesDirty(uint32_t aDirtyFlags) {
   mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
@@ -2473,8 +2446,8 @@ void AppWindow::ApplyChromeFlags() {
     // So just don't do these until mChromeLoaded is true.
 
     // Scrollbars have their own special treatment.
-    SetContentScrollbarVisibility(
-        mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS ? true : false);
+    SetContentScrollbarVisibility(mChromeFlags &
+                                  nsIWebBrowserChrome::CHROME_SCROLLBARS);
   }
 
   /* the other flags are handled together. we have style rules
