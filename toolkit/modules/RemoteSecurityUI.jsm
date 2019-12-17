@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = ["RemoteSecurityUI"];
 function RemoteSecurityUI() {
   this._secInfo = null;
   this._state = 0;
-  this._event = 0;
   this._isSecureContext = false;
 }
 
@@ -19,8 +18,10 @@ RemoteSecurityUI.prototype = {
   get state() {
     return this._state;
   },
+  // TODO: This API will be removed when we remove contentBlockingEvent
+  // from nsISecureBrowserUI.idl
   get contentBlockingEvent() {
-    return this._event;
+    return 0;
   },
   get secInfo() {
     return this._secInfo;
@@ -33,8 +34,5 @@ RemoteSecurityUI.prototype = {
     this._secInfo = aSecInfo;
     this._state = aState;
     this._isSecureContext = aIsSecureContext;
-  },
-  _updateContentBlockingEvent(aEvent) {
-    this._event = aEvent;
   },
 };
