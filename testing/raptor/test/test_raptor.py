@@ -231,7 +231,7 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         '--visualMetrics', 'false',
         '--timeouts.pageLoad', str(DEFAULT_TIMEOUT),
         '--timeouts.script', str(DEFAULT_TIMEOUT),
-        '-vv',
+        '-vvv',
         '--resultDir',
         '-n', '1',
     }
