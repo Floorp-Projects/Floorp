@@ -33,14 +33,17 @@
 
 ####################################################################################################
 # Force removal of slow Dispatchers.Main ServiceLoader
-#
-# Please remove these rules when Android Gradle Plugin 3.6+ & coroutines 1.3.0+ are both in use
 ####################################################################################################
-# Ensure the custom, fast service loader implementation is removed.
--assumevalues class kotlinx.coroutines.internal.MainDispatcherLoader {
-  boolean FAST_SERVICE_LOADER_ENABLED return false;
+# Allow R8 to optimize away the FastServiceLoader.
+# Together with ServiceLoader optimization in R8
+# this results in direct instantiation when loading Dispatchers.Main
+-assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
+    boolean FAST_SERVICE_LOADER_ENABLED return false;
 }
--checkdiscard class kotlinx.coroutines.internal.FastServiceLoader
+
+-assumenosideeffects class kotlinx.coroutines.internal.FastServiceLoader {
+    boolean ANDROID_DETECTED return true;
+}
 
 ####################################################################################################
 # Mozilla Application Services
