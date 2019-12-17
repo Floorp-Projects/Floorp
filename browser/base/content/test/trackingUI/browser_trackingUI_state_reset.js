@@ -19,7 +19,7 @@ add_task(async function testResetOnLocationChange() {
   let browser = tab.linkedBrowser;
 
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     0,
     "Benign page has no content blocking event"
   );
@@ -34,7 +34,7 @@ add_task(async function testResetOnLocationChange() {
   ]);
 
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Tracking page has a content blocking event"
   );
@@ -43,7 +43,7 @@ add_task(async function testResetOnLocationChange() {
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
 
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     0,
     "Benign page has no content blocking event"
   );
@@ -60,7 +60,7 @@ add_task(async function testResetOnLocationChange() {
   await contentBlockingEvent;
 
   is(
-    trackingTab.linkedBrowser.securityUI.contentBlockingEvent,
+    trackingTab.linkedBrowser.getContentBlockingEvents(),
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Tracking page has a content blocking event"
   );
@@ -68,7 +68,7 @@ add_task(async function testResetOnLocationChange() {
 
   gBrowser.selectedTab = tab;
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     0,
     "Benign page has no content blocking event"
   );

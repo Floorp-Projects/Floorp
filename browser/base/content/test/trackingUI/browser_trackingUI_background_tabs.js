@@ -29,19 +29,19 @@ add_task(async function testBackgroundTabs() {
   let backgroundTab = BrowserTestUtils.addTab(gBrowser);
   let browser = backgroundTab.linkedBrowser;
   let hasContentBlockingEvent = TestUtils.waitForCondition(
-    () => browser.securityUI.contentBlockingEvent != 0
+    () => browser.getContentBlockingEvents() != 0
   );
   await promiseTabLoadEvent(backgroundTab, TRACKING_PAGE);
   await hasContentBlockingEvent;
 
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Background tab has the correct content blocking event."
   );
 
   is(
-    tab.linkedBrowser.securityUI.contentBlockingEvent,
+    tab.linkedBrowser.getContentBlockingEvents(),
     0,
     "Foreground tab has the correct content blocking event."
   );
@@ -54,13 +54,13 @@ add_task(async function testBackgroundTabs() {
   await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
 
   is(
-    browser.securityUI.contentBlockingEvent,
+    browser.getContentBlockingEvents(),
     Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
     "Background tab still has the correct content blocking event."
   );
 
   is(
-    tab.linkedBrowser.securityUI.contentBlockingEvent,
+    tab.linkedBrowser.getContentBlockingEvents(),
     0,
     "Foreground tab still has the correct content blocking event."
   );
