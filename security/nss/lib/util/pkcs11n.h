@@ -138,6 +138,7 @@
 /* FAKE PKCS #11 defines */
 #define CKM_FAKE_RANDOM 0x80000efeUL
 #define CKM_INVALID_MECHANISM 0xffffffffUL
+#define CKT_INVALID_TYPE 0xffffffffUL
 
 /*
  * NSS-defined crypto mechanisms

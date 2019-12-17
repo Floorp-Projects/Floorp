@@ -244,6 +244,9 @@ class coverityAction(argparse.Action):
                     print('Skipping CID: {0} from file: {1} since it\'s not related with the current patch.'.format(
                         issue['stateOnServer']['cid'], issue['strippedMainEventFilePathname']))
                     continue
+                # If path does not start with `cwd` skip it
+                if not path.startswith(cwd):
+                    continue
                 path = relpath(path)
                 if path in files_list:
                     files_list[path]['warnings'].append(build_element(issue))

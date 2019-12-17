@@ -1055,6 +1055,41 @@ TEST_F(TlsConnectTest, Select12AfterHelloRetryRequest) {
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
 }
 
+// This class increments the low byte of the first Handshake.message_seq
+// field in every handshake record.
+class MessageSeqIncrementer : public TlsRecordFilter {
+ public:
+  MessageSeqIncrementer(const std::shared_ptr<TlsAgent>& a)
+      : TlsRecordFilter(a) {}
+
+ protected:
+  PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                    const DataBuffer& data,
+                                    DataBuffer* changed) override {
+    if (header.content_type() != ssl_ct_handshake) {
+      return KEEP;
+    }
+
+    *changed = data;
+    // struct { uint8 msg_type; uint24 length; uint16 message_seq; ... }
+    // Handshake;
+    changed->data()[5]++;
+    EXPECT_NE(0, changed->data()[5]);  // Check for overflow.
+    return CHANGE;
+  }
+};
+
+// A server that receives a ClientHello with message_seq == 1
+// assumes that this is after a stateless HelloRetryRequest.
+// However, it should reject the ClientHello if it lacks a cookie.
+TEST_F(TlsConnectDatagram13, MessageSeq1ClientHello) {
+  EnsureTlsSetup();
+  MakeTlsFilter<MessageSeqIncrementer>(client_);
+  ConnectExpectAlert(server_, kTlsAlertMissingExtension);
+  EXPECT_EQ(SSL_ERROR_MISSING_COOKIE_EXTENSION, server_->error_code());
+  EXPECT_EQ(SSL_ERROR_MISSING_EXTENSION_ALERT, client_->error_code());
+}
+
 class HelloRetryRequestAgentTest : public TlsAgentTestClient {
  protected:
   void SetUp() override {
@@ -1176,6 +1211,114 @@ TEST_P(TlsConnectStreamPre13, HrrRandomOnTls10) {
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13, HrrThenTls12) {
+  StartConnect();
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(server_->ssl_fd(),
+                                                      RetryHello, &cb_called));
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+
+  client_->Handshake();  // Send CH (1.3)
+  server_->Handshake();  // Send HRR.
+  EXPECT_EQ(1U, cb_called);
+
+  // Replace the client with a new TLS 1.2 client. Don't call Init(), since
+  // it will artifically limit the server's vrange.
+  client_.reset(
+      new TlsAgent(client_->name(), TlsAgent::CLIENT, ssl_variant_stream));
+  client_->SetPeer(server_);
+  server_->SetPeer(client_);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+
+  client_->StartConnect();
+  client_->Handshake();  // Send CH (1.2)
+  ExpectAlert(server_, kTlsAlertProtocolVersion);
+  server_->Handshake();
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13, ZeroRttHrrThenTls12) {
+  SetupForZeroRtt();
+
+  client_->Set0RttEnabled(true);
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(server_->ssl_fd(),
+                                                      RetryHello, &cb_called));
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+
+  client_->Handshake();  // Send CH (1.3)
+  ZeroRttSendReceive(true, false);
+  server_->Handshake();  // Send HRR.
+  EXPECT_EQ(1U, cb_called);
+
+  // Replace the client with a new TLS 1.2 client. Don't call Init(), since
+  // it will artifically limit the server's vrange.
+  client_.reset(
+      new TlsAgent(client_->name(), TlsAgent::CLIENT, ssl_variant_stream));
+  client_->SetPeer(server_);
+  server_->SetPeer(client_);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+
+  client_->StartConnect();
+  client_->Handshake();  // Send CH (1.2)
+  ExpectAlert(server_, kTlsAlertProtocolVersion);
+  server_->Handshake();
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
+
+  // Try to write something
+  server_->Handshake();
+  client_->ExpectReadWriteError();
+  client_->SendData(1);
+  uint8_t buf[1];
+  EXPECT_EQ(-1, PR_Read(server_->ssl_fd(), buf, sizeof(buf)));
+  EXPECT_EQ(SSL_ERROR_HANDSHAKE_FAILED, PR_GetError());
+}
+
+TEST_F(TlsConnectStreamTls13, HrrThenTls12SupportedVersions) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(server_->ssl_fd(),
+                                                      RetryHello, &cb_called));
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+
+  client_->Handshake();  // Send CH (1.3)
+  ZeroRttSendReceive(true, false);
+  server_->Handshake();  // Send HRR.
+  EXPECT_EQ(1U, cb_called);
+
+  // Replace the client with a new TLS 1.2 client. Don't call Init(), since
+  // it will artifically limit the server's vrange.
+  client_.reset(
+      new TlsAgent(client_->name(), TlsAgent::CLIENT, ssl_variant_stream));
+  client_->SetPeer(server_);
+  server_->SetPeer(client_);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  // Negotiate via supported_versions
+  static const uint8_t tls12[] = {0x02, 0x03, 0x03};
+  auto replacer = MakeTlsFilter<TlsExtensionInjector>(
+      client_, ssl_tls13_supported_versions_xtn,
+      DataBuffer(tls12, sizeof(tls12)));
+
+  client_->StartConnect();
+  client_->Handshake();  // Send CH (1.2)
+  ExpectAlert(server_, kTlsAlertProtocolVersion);
+  server_->Handshake();
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
 }
 
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,

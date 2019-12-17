@@ -519,7 +519,7 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
     }
 
     sdb->private = lgdb_p;
-    sdb->version = 0;
+    sdb->version = 1;
     sdb->sdb_flags = flags;
     sdb->app_private = NULL;
     sdb->sdb_FindObjectsInit = lg_FindObjectsInit;
@@ -531,12 +531,14 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
     sdb->sdb_DestroyObject = lg_DestroyObject;
     sdb->sdb_GetMetaData = lg_GetMetaData;
     sdb->sdb_PutMetaData = lg_PutMetaData;
+    sdb->sdb_DestroyMetaData = lg_DestroyMetaData;
     sdb->sdb_Begin = lg_Begin;
     sdb->sdb_Commit = lg_Commit;
     sdb->sdb_Abort = lg_Abort;
     sdb->sdb_Reset = lg_Reset;
     sdb->sdb_Close = lg_Close;
     sdb->sdb_SetForkState = lg_SetForkState;
+    sdb->sdb_GetNewObjectID = lg_GetNewObjectID;
 
     *pSdb = sdb;
     return CKR_OK;

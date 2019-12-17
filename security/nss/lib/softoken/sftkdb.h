@@ -17,7 +17,8 @@ CK_RV sftkdb_GetAttributeValue(SFTKDBHandle *handle,
                                CK_OBJECT_HANDLE object_id, CK_ATTRIBUTE *template, CK_ULONG count);
 CK_RV sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
                                const CK_ATTRIBUTE *template, CK_ULONG count);
-CK_RV sftkdb_DestroyObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE object_id);
+CK_RV sftkdb_DestroyObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE object_id,
+                           CK_OBJECT_CLASS objclass);
 CK_RV sftkdb_closeDB(SFTKDBHandle *handle);
 
 /* keydb functions */
