@@ -170,6 +170,7 @@ XDRResult XDRState<mode>::codeCharsZ(XDRTranscodeString<char16_t>& buffer) {
 template <XDRMode mode>
 static XDRResult VersionCheck(XDRState<mode>* xdr) {
   JS::BuildIdCharVector buildId;
+  uint8_t profileSize = 0;
   MOZ_ASSERT(GetBuildId);
   if (!GetBuildId(&buildId)) {
     ReportOutOfMemory(xdr->cx());
@@ -180,9 +181,11 @@ static XDRResult VersionCheck(XDRState<mode>* xdr) {
   uint32_t buildIdLength;
   if (mode == XDR_ENCODE) {
     buildIdLength = buildId.length();
+    profileSize = sizeof(uintptr_t);
   }
 
   MOZ_TRY(xdr->codeUint32(&buildIdLength));
+  MOZ_TRY(xdr->codeUint8(&profileSize));
 
   if (mode == XDR_DECODE && buildIdLength != buildId.length()) {
     return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
@@ -192,6 +195,12 @@ static XDRResult VersionCheck(XDRState<mode>* xdr) {
     MOZ_TRY(xdr->codeBytes(buildId.begin(), buildIdLength));
   } else {
     JS::BuildIdCharVector decodedBuildId;
+
+    // Checks to make sure we are not decoding profiles of a
+    // different size than what was encoded.
+    if (profileSize != sizeof(uintptr_t)) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
 
     // buildIdLength is already checked against the length of current
     // buildId.
