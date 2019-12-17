@@ -27,7 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/details"
-                android:text="@string/add_on_authors" />
+                android:text="@string/mozac_feature_addons_authors" />
 
         <TextView
                 android:id="@+id/author_text"
@@ -52,7 +52,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/author_divider"
-                android:text="@string/add_on_version" />
+                android:text="@string/mozac_feature_addons_version" />
 
         <TextView
                 android:id="@+id/version_text"
@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/version_divider"
-                android:text="@string/add_on_last_updated" />
+                android:text="@string/mozac_feature_addons_last_updated" />
 
         <TextView
                 android:id="@+id/last_updated_text"
@@ -102,7 +102,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/last_updated_divider"
-                android:text="@string/add_on_home_page" />
+                android:text="@string/mozac_feature_addons_home_page" />
 
         <ImageView
                 android:id="@+id/home_page_text"
@@ -110,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/last_updated_divider"
                 android:layout_alignParentEnd="true"
-                android:contentDescription="@string/add_on_home_page"
+                android:contentDescription="@string/mozac_feature_addons_home_page"
                 android:src="@drawable/mozac_ic_link"
                 android:tint="@android:color/black" />
 
@@ -129,7 +129,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/home_page_divider"
-                android:text="@string/add_on_rating" />
+                android:text="@string/mozac_feature_addons_rating" />
 
         <RatingBar
                 android:id="@+id/rating_view"

@@ -45,27 +45,27 @@
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
                 android:name=".addons.AddonsActivity"
-                android:label="@string/add_ons"
+                android:label="@string/mozac_feature_addons_addons"
                 android:parentActivityName=".BrowserActivity" />
 
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
                 android:name=".addons.AddonDetailsActivity"
-                android:label="@string/add_ons" />
+                android:label="@string/mozac_feature_addons_addons" />
 
         <activity android:name=".addons.InstalledAddonDetailsActivity"
-                android:label="@string/add_ons"
+                android:label="@string/mozac_feature_addons_addons"
                 android:parentActivityName=".addons.AddonsActivity"
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
                 android:name=".addons.PermissionsDetailsActivity"
-                android:label="@string/add_ons"
+                android:label="@string/mozac_feature_addons_addons"
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
             android:name=".addons.AddonSettingsActivity"
-            android:label="@string/add_ons"
+            android:label="@string/mozac_feature_addons_addons"
             android:theme="@style/Theme.AppCompat.Light" />
 
         <activity android:name=".IntentReceiverActivity">

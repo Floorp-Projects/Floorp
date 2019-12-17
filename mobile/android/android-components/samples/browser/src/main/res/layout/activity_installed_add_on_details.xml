@@ -24,7 +24,7 @@
                 android:checked="true"
                 android:clickable="true"
                 android:focusable="true"
-                android:text="@string/addon_settings_on"
+                android:text="@string/mozac_feature_addons_settings_off"
                 android:padding="16dp"
                 android:textSize="18sp"/>
 
@@ -36,7 +36,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:drawablePadding="10dp"
                 android:padding="16dp"
-                android:text="@string/add_on_settings"
+                android:text="@string/mozac_feature_addons_settings"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_preferences"
@@ -50,7 +50,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:drawablePadding="6dp"
                 android:padding="16dp"
-                android:text="@string/add_on_details"
+                android:text="@string/mozac_feature_addons_details"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_information"
@@ -64,7 +64,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:drawablePadding="6dp"
                 android:padding="16dp"
-                android:text="@string/add_on_permissions"
+                android:text="@string/mozac_feature_addons_permissions"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_permissions" />
@@ -76,6 +76,6 @@
                 android:layout_below="@+id/permissions"
                 android:layout_marginTop="16dp"
                 android:textColor="@color/photonRed50"
-                android:text="@string/add_on_remove" />
+                android:text="@string/mozac_feature_addons_remove" />
     </RelativeLayout>
 </ScrollView>

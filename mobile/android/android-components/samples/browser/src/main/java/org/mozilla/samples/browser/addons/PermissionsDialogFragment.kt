@@ -121,7 +121,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
             false
         )
         rootView.findViewById<TextView>(R.id.title).text =
-            requireContext().getString(R.string.addon_permissions_dialog_title, title)
+            requireContext().getString(R.string.mozac_feature_addons_permissions_dialog_title, title)
         rootView.findViewById<TextView>(R.id.permissions).text = buildPermissionsText()
 
         val positiveButton = rootView.findViewById<Button>(R.id.allow_button)
@@ -165,7 +165,7 @@ internal class PermissionsDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun buildPermissionsText(): String {
-        var permissionsText = getString(R.string.addon_permissions_dialog_subtitle) + "\n\n"
+        var permissionsText = getString(R.string.mozac_feature_addons_permissions_dialog_subtitle) + "\n\n"
 
         permissions.forEachIndexed { index, item ->
             val brakeLine = if (index + 1 != permissions.size) "\n\n" else ""

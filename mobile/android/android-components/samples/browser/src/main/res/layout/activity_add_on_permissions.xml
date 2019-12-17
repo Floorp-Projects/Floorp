@@ -25,7 +25,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:background="?attr/selectableItemBackground"
-            android:text="@string/add_on_learn_more"
+            android:text="@string/mozac_feature_addons_learn_more"
             app:drawableTint="@android:color/black"
             android:textColor="@android:color/black" />
 
