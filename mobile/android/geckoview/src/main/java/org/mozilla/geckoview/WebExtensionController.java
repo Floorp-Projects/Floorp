@@ -67,7 +67,7 @@ public class WebExtensionController {
     // Avoids exposing listeners to the API
     private class Internals implements BundleEventListener,
             WebExtension.Port.DisconnectDelegate,
-            WebExtension.DelegateObserver {
+            WebExtension.DelegateController {
         private boolean mMessageListenersAttached = false;
         private boolean mActionListenersAttached = false;
 
@@ -87,7 +87,7 @@ public class WebExtensionController {
         }
 
         @Override
-        // WebExtension.DelegateObserver
+        // WebExtension.DelegateController
         public void onMessageDelegate(final String nativeApp,
                                       final WebExtension.MessageDelegate delegate) {
             if (delegate != null && !mMessageListenersAttached) {
@@ -102,7 +102,7 @@ public class WebExtensionController {
         }
 
         @Override
-        // WebExtension.DelegateObserver
+        // WebExtension.DelegateController
         public void onActionDelegate(final WebExtension.ActionDelegate delegate) {
             if (delegate != null && !mActionListenersAttached) {
                 EventDispatcher.getInstance().registerUiThreadListener(
@@ -458,7 +458,7 @@ public class WebExtensionController {
     }
 
     /* package */ void registerWebExtension(final WebExtension webExtension) {
-        webExtension.setDelegateObserver(mInternals);
+        webExtension.setDelegateController(mInternals);
         mExtensions.put(webExtension.id, webExtension);
     }
 
@@ -603,7 +603,7 @@ public class WebExtensionController {
 
     /* package */ void unregisterWebExtension(final WebExtension webExtension) {
         mExtensions.remove(webExtension.id);
-        webExtension.setDelegateObserver(null);
+        webExtension.setDelegateController(null);
 
         // Some ports may still be open so we need to go through the list and close all of the
         // ports tied to this web extension
