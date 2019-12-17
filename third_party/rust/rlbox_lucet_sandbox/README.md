@@ -23,6 +23,7 @@ First, build the rlbox_lucet_sandbox repo with
 cmake -S . -B ./build
 cmake --build ./build --target all
 ```
+(Note: The parallel build is currently broken for first build. Incremental parallel build works fine.)
 
 This lucet/wasm integration with RLBox depends on 3 external tools/libraries that are pulled in **automatically** to run the tests included in this repo.
 

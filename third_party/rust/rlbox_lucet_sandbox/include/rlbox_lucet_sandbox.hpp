@@ -201,6 +201,30 @@ namespace lucet_detail {
 
 } // namespace lucet_detail
 
+class rlbox_lucet_sandbox;
+
+struct rlbox_lucet_sandbox_thread_data
+{
+  rlbox_lucet_sandbox* sandbox;
+  uint32_t last_callback_invoked;
+};
+
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+
+rlbox_lucet_sandbox_thread_data* get_rlbox_lucet_sandbox_thread_data();
+#  define RLBOX_LUCET_SANDBOX_STATIC_VARIABLES()                               \
+    thread_local rlbox::rlbox_lucet_sandbox_thread_data                        \
+      rlbox_lucet_sandbox_thread_info{ 0, 0 };                                 \
+    namespace rlbox {                                                          \
+      rlbox_lucet_sandbox_thread_data* get_rlbox_lucet_sandbox_thread_data()   \
+      {                                                                        \
+        return &rlbox_lucet_sandbox_thread_info;                               \
+      }                                                                        \
+    }                                                                          \
+    static_assert(true, "Enforce semi-colon")
+
+#endif
+
 class rlbox_lucet_sandbox
 {
 public:
@@ -250,14 +274,10 @@ private:
   inline static std::vector<std::shared_ptr<FunctionTable>>
     saved_callback_slot_info;
 
-  struct rlbox_lucet_sandbox_thread_local
-  {
-    rlbox_lucet_sandbox* sandbox;
-    uint32_t last_callback_invoked;
-  };
-
-  thread_local static inline rlbox_lucet_sandbox_thread_local thread_data{ 0,
-                                                                           0 };
+#ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+  thread_local static inline rlbox_lucet_sandbox_thread_data thread_data{ 0,
+                                                                          0 };
+#endif
 
   template<typename T_FormalRet, typename T_ActualRet>
   inline auto serialize_to_sandbox(T_ActualRet arg)
@@ -320,6 +340,9 @@ private:
     void* /* vmContext */,
     typename lucet_detail::convert_type_to_wasm_type<T_Args>::type... params)
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_lucet_sandbox_thread_data();
+#endif
     thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
@@ -339,6 +362,9 @@ private:
     typename lucet_detail::convert_type_to_wasm_type<T_Ret>::type ret,
     typename lucet_detail::convert_type_to_wasm_type<T_Args>::type... params)
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_lucet_sandbox_thread_data();
+#endif
     thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
@@ -590,6 +616,9 @@ protected:
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_lucet_sandbox_thread_data();
+#endif
     thread_data.sandbox = this;
     lucet_set_curr_instance(sandbox);
 
@@ -610,7 +639,8 @@ protected:
     if constexpr (std::is_class_v<T_Ret>) {
       using T_Conv1 = lucet_detail::change_return_type<T_Converted, void>;
       using T_Conv2 = lucet_detail::prepend_arg_type<T_Conv1, T_PointerType>;
-      auto func_ptr_conv = reinterpret_cast<T_Conv2*>(reinterpret_cast<uintptr_t>(func_ptr));
+      auto func_ptr_conv =
+        reinterpret_cast<T_Conv2*>(reinterpret_cast<uintptr_t>(func_ptr));
       ensure_return_slot_size(sizeof(T_Ret));
       impl_invoke_with_func_ptr<T>(func_ptr_conv, return_slot, params...);
 
@@ -630,7 +660,7 @@ protected:
     }();
 
     // 0 arg functions create 0 length arrays which is not allowed
-    T_PointerType allocations_buff[alloc_length == 0? 1 : alloc_length];
+    T_PointerType allocations_buff[alloc_length == 0 ? 1 : alloc_length];
     T_PointerType* allocations = allocations_buff;
 
     auto serialize_class_arg =
@@ -661,7 +691,8 @@ protected:
     using T_ConvHeap = lucet_detail::prepend_arg_type<T_ConvNoClass, uint64_t>;
 
     // Function invocation
-    auto func_ptr_conv = reinterpret_cast<T_ConvHeap*>(reinterpret_cast<uintptr_t>(func_ptr));
+    auto func_ptr_conv =
+      reinterpret_cast<T_ConvHeap*>(reinterpret_cast<uintptr_t>(func_ptr));
 
     using T_NoVoidRet =
       std::conditional_t<std::is_void_v<T_Ret>, uint32_t, T_Ret>;
@@ -766,6 +797,9 @@ protected:
   static inline std::pair<rlbox_lucet_sandbox*, void*>
   impl_get_executed_callback_sandbox_and_key()
   {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_lucet_sandbox_thread_data();
+#endif
     auto sandbox = thread_data.sandbox;
     auto callback_num = thread_data.last_callback_invoked;
     void* key = sandbox->callback_unique_keys[callback_num];
