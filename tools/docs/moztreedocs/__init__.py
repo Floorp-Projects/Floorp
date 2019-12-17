@@ -122,12 +122,12 @@ class _SphinxManager(object):
         If this is the case, we read the information, create a temporary file,
         reuse the front matter info into the md file
         """
-        with open(markdown_file) as f:
+        with open(markdown_file, "r") as f:
             # Load the front matter header
             post = frontmatter.load(f)
             if len(post.keys()) > 0:
                 # Has a front matter, use it
-                with tempfile.NamedTemporaryFile(delete=False) as fh:
+                with tempfile.NamedTemporaryFile("w", delete=False) as fh:
                     # Use the frontmatter title
                     fh.write(post["title"] + "\n")
                     # Add the md syntax for the title
@@ -169,7 +169,7 @@ class _SphinxManager(object):
         m.populate_registry(copier)
         copier.copy(self.staging_dir, remove_empty_directories=False)
 
-        with open(self.index_path, 'rb') as fh:
+        with open(self.index_path, 'r') as fh:
             data = fh.read()
 
         def is_toplevel(key):
@@ -207,7 +207,7 @@ class _SphinxManager(object):
 
         data = data.format(**CATEGORIES)
 
-        with open(os.path.join(self.staging_dir, 'index.rst'), 'wb') as fh:
+        with open(os.path.join(self.staging_dir, 'index.rst'), 'w') as fh:
             fh.write(data)
 
 
