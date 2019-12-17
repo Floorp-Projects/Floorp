@@ -172,6 +172,7 @@ void qcms_transform_data(qcms_transform *transform, const void *src, void *dest,
 
 void qcms_enable_iccv4();
 void qcms_enable_neon();
+void qcms_enable_avx();
 
 #ifdef  __cplusplus
 }
