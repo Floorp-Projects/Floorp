@@ -70,7 +70,34 @@ declTest("destroy actor by page navigates", {
       let child = frame.contentWindow.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
-      await ContentTaskUtils.waitForEvent(frame, "load");
+
+      let willDestroyPromise = new Promise(resolve => {
+        const TOPIC = "test-js-window-actor-willdestroy";
+        Services.obs.addObserver(function obs(subject, topic, data) {
+          ok(data, "willDestroyCallback data should be true.");
+          is(subject, actorChild, "Should have this value");
+
+          Services.obs.removeObserver(obs, TOPIC);
+          resolve();
+        }, TOPIC);
+      });
+
+      let didDestroyPromise = new Promise(resolve => {
+        const TOPIC = "test-js-window-actor-diddestroy";
+        Services.obs.addObserver(function obs(subject, topic, data) {
+          ok(data, "didDestroyCallback data should be true.");
+          is(subject, actorChild, "Should have this value");
+
+          Services.obs.removeObserver(obs, TOPIC);
+          resolve();
+        }, TOPIC);
+      });
+
+      await Promise.all([
+        willDestroyPromise,
+        didDestroyPromise,
+        ContentTaskUtils.waitForEvent(frame, "load"),
+      ]);
 
       Assert.throws(
         () => child.getActor("Test"),
