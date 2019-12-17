@@ -24,8 +24,3 @@ FINAL_TARGET_FILES.actors += [
     'SiteSpecificBrowserChild.jsm',
     'SiteSpecificBrowserParent.jsm',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    EXTRA_JS_MODULES.ssb += [
-        'WindowsSupport.jsm',
-    ]

@@ -8,11 +8,11 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
-});
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "ImgTools",
@@ -55,26 +55,6 @@ const ImageTools = {
         },
         null
       );
-    });
-  },
-
-  saveIcon(container, width, height, target) {
-    return new Promise((resolve, reject) => {
-      let output = FileUtils.openFileOutputStream(target);
-      let stream = ImgTools.encodeScaledImage(
-        container,
-        "image/vnd.microsoft.icon",
-        width,
-        height,
-        ""
-      );
-      NetUtil.asyncCopy(stream, output, status => {
-        if (Components.isSuccessCode(status)) {
-          resolve();
-        } else {
-          reject(Components.Exception("Failed to save icon.", status));
-        }
-      });
     });
   },
 };
