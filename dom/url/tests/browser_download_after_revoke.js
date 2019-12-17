@@ -47,11 +47,11 @@ function test() {
     });
   }
 
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
+  const target = "http://example.com/browser/dom/url/tests/empty.html";
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, target).then(
+    onLoad
+  );
 
   info("Loading download page...");
-  BrowserTestUtils.loadURI(
-    gBrowser,
-    "http://example.com/browser/dom/url/tests/empty.html"
-  );
+  BrowserTestUtils.loadURI(gBrowser, target);
 }
