@@ -448,12 +448,12 @@ var GeckoViewWebExtension = {
   },
 
   async browserActionClick(aId) {
-    const extension = await this.extensionById(aId);
-    if (!extension) {
+    const policy = WebExtensionPolicy.getByID(aId);
+    if (!policy) {
       return;
     }
 
-    const browserAction = this.browserActions.get(extension);
+    const browserAction = this.browserActions.get(policy.extension);
     if (!browserAction) {
       return;
     }
@@ -462,12 +462,12 @@ var GeckoViewWebExtension = {
   },
 
   async pageActionClick(aId) {
-    const extension = await this.extensionById(aId);
-    if (!extension) {
+    const policy = WebExtensionPolicy.getByID(aId);
+    if (!policy) {
       return;
     }
 
-    const pageAction = this.pageActions.get(extension);
+    const pageAction = this.pageActions.get(policy.extension);
     if (!pageAction) {
       return;
     }
@@ -476,10 +476,13 @@ var GeckoViewWebExtension = {
   },
 
   async actionDelegateAttached(aId) {
-    const extension = await this.extensionById(aId);
-    if (!extension) {
+    const policy = WebExtensionPolicy.getByID(aId);
+    if (!policy) {
+      debug`Could not find extension with id=${aId}`;
       return;
     }
+
+    const { extension } = policy;
 
     const browserAction = this.browserActions.get(extension);
     if (browserAction) {
