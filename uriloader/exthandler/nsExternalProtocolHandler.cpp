@@ -58,7 +58,6 @@ class nsExtProtocolChannel : public nsIChannel,
   nsresult mStatus;
   nsLoadFlags mLoadFlags;
   bool mWasOpened;
-  bool mCanceled;
   // Set true (as a result of ConnectParent invoked from child process)
   // when this channel is on the parent process and is being used as
   // a redirect target channel.  It turns AsyncOpen into a no-op since
@@ -90,7 +89,6 @@ nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       mStatus(NS_OK),
       mLoadFlags(nsIRequest::LOAD_NORMAL),
       mWasOpened(false),
-      mCanceled(false),
       mConnectedParent(false),
       mLoadInfo(aLoadInfo) {}
 
@@ -336,12 +334,6 @@ NS_IMETHODIMP nsExtProtocolChannel::Cancel(nsresult status) {
   if (NS_SUCCEEDED(mStatus)) {
     mStatus = status;
   }
-  mCanceled = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsExtProtocolChannel::GetCanceled(bool* aCanceled) {
-  *aCanceled = mCanceled;
   return NS_OK;
 }
 

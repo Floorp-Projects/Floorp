@@ -3620,7 +3620,6 @@ class FakeChannel final : public nsIChannel,
   NS_IMETHOD IsPending(bool*) NO_IMPL;
   NS_IMETHOD GetStatus(nsresult*) NO_IMPL;
   NS_IMETHOD Cancel(nsresult) NO_IMPL;
-  NS_IMETHOD GetCanceled(bool* aCanceled) NO_IMPL;
   NS_IMETHOD Suspend() NO_IMPL;
   NS_IMETHOD Resume() NO_IMPL;
   NS_IMETHOD GetLoadGroup(nsILoadGroup**) NO_IMPL;
@@ -3697,7 +3696,7 @@ class FakeChannel final : public nsIChannel,
 #undef NO_IMPL
 
  protected:
-  ~FakeChannel() = default;
+  ~FakeChannel() {}
 
   nsCOMPtr<nsIURI> mUri;
   uint64_t mCallbackId;

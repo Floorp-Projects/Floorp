@@ -109,6 +109,11 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] attribute boolean forceAllowThirdPartyCookie;
 
     /**
+     * True iff the channel has been canceled.
+     */
+    [must_use] readonly attribute boolean canceled;
+
+    /**
      * External handlers may set this to true to notify the channel
      * that it is open on behalf of a download.
      */

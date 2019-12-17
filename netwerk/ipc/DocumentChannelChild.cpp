@@ -717,11 +717,6 @@ NS_IMETHODIMP DocumentChannelChild::GetIsDocument(bool* aIsDocument) {
   return NS_GetIsDocumentChannel(this, aIsDocument);
 }
 
-NS_IMETHODIMP DocumentChannelChild::GetCanceled(bool* aCanceled) {
-  *aCanceled = mCanceled;
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsIIdentChannel
 //-----------------------------------------------------------------------------
