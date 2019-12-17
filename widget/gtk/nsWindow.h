@@ -545,6 +545,8 @@ class nsWindow final : public nsBaseWidget {
   // Window titlebar rendering mode, CSD_SUPPORT_NONE if it's disabled
   // for this window.
   CSDSupportLevel mCSDSupportLevel;
+  // Use dedicated GdkWindow for mContainer
+  bool mDrawToContainer;
   // If true, draw our own window titlebar.
   bool mDrawInTitlebar;
   // Draw titlebar with :backdrop css state (inactive/unfocused).
