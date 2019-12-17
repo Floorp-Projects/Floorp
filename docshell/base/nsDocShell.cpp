@@ -1402,9 +1402,37 @@ nsDocShell::GetHasMixedDisplayContentBlocked(
 }
 
 NS_IMETHODIMP
-nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked) {
+nsDocShell::GetHasTrackingContentBlocked(Promise** aPromise) {
+  MOZ_ASSERT(aPromise);
+
+  ErrorResult rv;
   RefPtr<Document> doc(GetDocument());
-  *aHasTrackingContentBlocked = doc && doc->GetHasTrackingContentBlocked();
+  RefPtr<Promise> retPromise = Promise::Create(doc->GetOwnerGlobal(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  // Retrieve the document's content blocking events from the parent process.
+  RefPtr<Document::GetContentBlockingEventsPromise> promise =
+      doc->GetContentBlockingEvents();
+  if (promise) {
+    promise->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [retPromise](const Document::GetContentBlockingEventsPromise::
+                         ResolveOrRejectValue& aValue) {
+          if (aValue.IsResolve()) {
+            bool has = aValue.ResolveValue() &
+                       nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
+            retPromise->MaybeResolve(has);
+          } else {
+            retPromise->MaybeResolve(false);
+          }
+        });
+  } else {
+    retPromise->MaybeResolve(false);
+  }
+
+  retPromise.forget(aPromise);
   return NS_OK;
 }
 

@@ -15488,7 +15488,34 @@ already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
   return promise.forget();
 }
 
-already_AddRefed<Promise> Document::RequestStorageAccess(ErrorResult& aRv) {
+RefPtr<Document::GetContentBlockingEventsPromise>
+Document::GetContentBlockingEvents() {
+  RefPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
+  if (!inner) {
+    return nullptr;
+  }
+
+  RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild();
+  if (!wgc) {
+    return nullptr;
+  }
+
+  return wgc->SendGetContentBlockingEvents()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [](const WindowGlobalChild::GetContentBlockingEventsPromise::
+             ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve()) {
+          return Document::GetContentBlockingEventsPromise::CreateAndResolve(
+              aValue.ResolveValue(), __func__);
+        }
+
+        return Document::GetContentBlockingEventsPromise::CreateAndReject(
+            false, __func__);
+      });
+}
+
+already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
+    mozilla::ErrorResult& aRv) {
   nsIGlobalObject* global = GetScopeObject();
   if (!global) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);

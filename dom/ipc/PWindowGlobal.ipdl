@@ -88,6 +88,9 @@ parent:
   // Attempts to perform a "Web Share".
   async Share(IPCWebShareData aData) returns (nsresult rv);
 
+  // Get content blocking events from the parent process.
+  async GetContentBlockingEvents() returns (uint32_t events);
+
   async Destroy();
 };
 

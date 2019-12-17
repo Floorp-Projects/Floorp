@@ -95,8 +95,8 @@ add_task(async function test_opened_page() {
       "docShell.hasMixedDisplayContentBlocked is available"
     );
     is(
-      typeof docShell.hasTrackingContentBlocked,
-      "boolean",
+      typeof docShell.getHasTrackingContentBlocked,
+      "function",
       "docShell.hasTrackingContentBlocked is available"
     );
 
