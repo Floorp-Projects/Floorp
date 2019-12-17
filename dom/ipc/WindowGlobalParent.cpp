@@ -180,6 +180,10 @@ bool WindowGlobalParent::IsProcessRoot() {
   return ContentParentId() != embedder->ContentParentId();
 }
 
+uint32_t WindowGlobalParent::ContentBlockingEvents() {
+  return GetContentBlockingLog()->GetContentBlockingEventsInLog();
+}
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
     dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState,
     bool aSetNavigating) {
