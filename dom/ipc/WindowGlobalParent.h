@@ -112,6 +112,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   uint32_t ContentBlockingEvents();
 
+  void GetContentBlockingLog(nsAString& aLog);
+
   bool IsInitialDocument() { return mIsInitialDocument; }
 
   bool HasBeforeUnload() { return mHasBeforeUnload; }

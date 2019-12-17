@@ -184,6 +184,12 @@ uint32_t WindowGlobalParent::ContentBlockingEvents() {
   return GetContentBlockingLog()->GetContentBlockingEventsInLog();
 }
 
+void WindowGlobalParent::GetContentBlockingLog(nsAString& aLog) {
+  NS_ConvertUTF8toUTF16 log(GetContentBlockingLog()->Stringify());
+  aLog.Assign(std::move(log));
+}
+
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
     dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState,
     bool aSetNavigating) {
