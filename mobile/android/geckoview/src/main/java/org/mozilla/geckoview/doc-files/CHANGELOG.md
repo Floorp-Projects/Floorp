@@ -29,6 +29,7 @@ exclude: true
 - ⚠️ [`WebExtension`][69.5]'s constructor now requires a `WebExtensionController`
   instance.
 - Added [`GeckoResult.allOf`][73.10] for consuming a list of results.
+- Added [`WebExtensionController.list`][73.11] to list all installed extensions.
 
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
@@ -41,6 +42,7 @@ exclude: true
 [73.8]: {{javadoc_uri}}/LoginStorage.Delegate.html
 [73.9]: {{javadoc_uri}}/GeckoRuntime.html#setLoginStorageDelegate-org.mozilla.geckoview.LoginStorage.Delegate-
 [73.10]: {{javadoc_uri}}/GeckoResult.html#allOf-java.util.List-
+[73.11]: {{javadoc_uri}}/WebExtensionController.html#list--
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -508,4 +510,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 919027349db09895822846ea63adacb901b4ab40
+[api-version]: 2d592afef93d47a268448aa5fd3289e03bb1f678

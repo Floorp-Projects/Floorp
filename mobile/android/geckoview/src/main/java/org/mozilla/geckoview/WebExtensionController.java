@@ -51,7 +51,13 @@ public class WebExtensionController {
             mData.remove(id);
         }
 
-        public void put(final String id, final WebExtension extension) {
+        /**
+         * Add this extension to the store and update it's current value if it's already present.
+         *
+         * @param id the {@link WebExtension} id.
+         * @param extension the {@link WebExtension} to add to the store.
+         */
+        public void update(final String id, final WebExtension extension) {
             mData.put(id, extension);
         }
     }
@@ -392,14 +398,24 @@ public class WebExtensionController {
         });
     }
 
-    // TODO: Bug 1600742 make public
-    GeckoResult<List<WebExtension>> listInstalled() {
+    /**
+     * List installed extensions for this {@link GeckoRuntime}.
+     *
+     * The returned list can be used to set delegates on the {@link WebExtension} objects using
+     * {@link WebExtension#setActionDelegate}, {@link WebExtension#setMessageDelegate}.
+     *
+     * @return a {@link GeckoResult} that will resolve when the list of extensions is available.
+     */
+    @AnyThread
+    @NonNull
+    public GeckoResult<List<WebExtension>> list() {
         final CallbackResult<List<WebExtension>> result = new CallbackResult<List<WebExtension>>() {
             @Override
             public void sendSuccess(final Object response) {
                 final GeckoBundle[] bundles = ((GeckoBundle) response)
                         .getBundleArray("extensions");
                 final List<WebExtension> list = new ArrayList<>(bundles.length);
+
                 for (GeckoBundle bundle : bundles) {
                     final WebExtension extension = new WebExtension(bundle);
                     registerWebExtension(extension);
@@ -438,7 +454,7 @@ public class WebExtensionController {
 
     /* package */ void registerWebExtension(final WebExtension webExtension) {
         webExtension.setDelegateController(new DelegateController(webExtension));
-        mExtensions.put(webExtension.id, webExtension);
+        mExtensions.update(webExtension.id, webExtension);
     }
 
     /* package */ void handleMessage(final String event, final GeckoBundle message,
