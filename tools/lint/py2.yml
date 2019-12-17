@@ -32,6 +32,7 @@ py2:
 
         # These paths are intentionally excluded (Python 3 only)
         - python/mozlint
+        - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/lint
     extensions: ['py']
     support-files:
