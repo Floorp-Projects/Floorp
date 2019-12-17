@@ -39,9 +39,7 @@ let basePath = "/tests/dom/serviceworkers/test/thirdparty/";
 let origin = window.location.protocol + "//" + window.location.host;
 let thirdPartyOrigin = "https://example.com";
 
-function testIframeLoaded() {
-  ok(true, "Iframe loaded");
-  iframe.removeEventListener("load", testIframeLoaded);
+function loadIframe() {
   let message = {
     source: "parent",
     href: origin + basePath + "iframe2.html"
@@ -92,9 +90,11 @@ function testShouldIntercept(behavior, lifetime, done) {
     }, {
       status: "registrationdone",
       next() {
-        iframe.addEventListener("load", testIframeLoaded);
         iframe.src = origin + basePath + "iframe1.html";
       }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
     }, {
       status: "networkresponse",
     }, {
@@ -131,9 +131,11 @@ function testShouldNotRegister(behavior, lifetime, done) {
     runTest([{
       status: "registrationfailed",
       next() {
-        iframe.addEventListener("load", testIframeLoaded);
         iframe.src = origin + basePath + "iframe1.html";
       }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
     }, {
       status: "networkresponse",
     }, {
@@ -174,11 +176,13 @@ function testShouldNotIntercept(behavior, lifetime, done) {
             proxyWindow = window.open("window_party_iframes.html");
             proxyWindow.onload = _ => {
               iframe = proxyWindow.document.querySelector("iframe");
-              iframe.addEventListener("load", testIframeLoaded);
               iframe.src = origin + basePath + "iframe1.html";
             }
           });
       }
+    }, {
+      status: "iframeloaded",
+      next: loadIframe
     }, {
       status: "networkresponse",
     }, {
@@ -204,7 +208,6 @@ function testShouldNotIntercept(behavior, lifetime, done) {
             proxyWindow = window.open("window_party_iframes.html");
             proxyWindow.onload = _ => {
               iframe = proxyWindow.document.querySelector("iframe");
-              iframe.addEventListener("load", testIframeLoaded);
               iframe.src = thirdPartyOrigin + basePath + "unregister.html";
             }
           });

@@ -25,7 +25,17 @@
 
 </head>
 
-<body onload="window.addEventListener('message', messageListener, false);">
+<body>
+  <script>
+    onload = function() {
+      window.addEventListener('message', messageListener);
+      let message = {
+        source: "iframe",
+        status: "iframeloaded",
+      }
+      parent.postMessage(message, "*");
+    }
+  </script>
   <iframe id="iframe2"></iframe>
 </body>
 
