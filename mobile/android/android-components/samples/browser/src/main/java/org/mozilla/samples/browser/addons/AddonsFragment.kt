@@ -155,9 +155,9 @@ class AddonsFragment : Fragment(), View.OnClickListener {
         private fun bindAddon(holder: AddonViewHolder, addon: Addon) {
             val context = holder.itemView.context
             addon.rating?.let {
-                val userCount = context.getString(R.string.add_on_user_rating_count)
+                val userCount = context.getString(R.string.mozac_feature_addons_user_rating_count)
                 val ratingContentDescription =
-                    context.getString(R.string.add_on_rating_content_description)
+                    context.getString(R.string.mozac_feature_addons_rating_content_description)
                 holder.ratingView.contentDescription =
                     String.format(ratingContentDescription, it.average)
                 holder.ratingView.rating = it.average
@@ -196,12 +196,12 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             var isRecommendedSectionAdded = false
 
             if (shouldAddInstalledSection) {
-                itemsWithSections.add(Section(R.string.addon_settings_installed_section))
+                itemsWithSections.add(Section(R.string.mozac_feature_addons_installed_section))
             }
 
             sortedAddons.forEach { addon ->
                 if (!isRecommendedSectionAdded && !addon.isInstalled()) {
-                    itemsWithSections.add(Section(R.string.addon_settings_recommended_section))
+                    itemsWithSections.add(Section(R.string.mozac_feature_addons_recommended_section))
                     isRecommendedSectionAdded = true
                 }
 
