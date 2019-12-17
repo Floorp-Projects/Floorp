@@ -98,10 +98,6 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ParentChannelListener, PARENT_CHANNEL_LISTENER)
 
-inline nsISupports* ToSupports(ParentChannelListener* aDoc) {
-  return static_cast<nsIInterfaceRequestor*>(aDoc);
-}
-
 }  // namespace net
 }  // namespace mozilla
 

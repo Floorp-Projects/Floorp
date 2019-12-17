@@ -93,15 +93,6 @@ interface nsIStreamConverter : nsIStreamListener {
                           in string aToType,
                           in nsIStreamListener aListener,
                           in nsISupports aCtxt);
-
-    /**
-     * Returns the content type that the stream listener passed to asyncConvertData will
-     * see on the channel if the conversion is being done from aFromType to * /*.
-     *
-     * @throws if the converter does not support conversion to * /* or if it doesn't know
-     *         the type in advance.
-     */
-    ACString getConvertedType(in ACString aFromType);
 };
 
 %{C++

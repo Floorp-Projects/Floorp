@@ -17,7 +17,6 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
-#include "nsWebNavigationInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -77,6 +76,13 @@ nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
       mParentContentListener(nullptr) {}
 
 nsDSURIContentListener::~nsDSURIContentListener() {}
+
+nsresult nsDSURIContentListener::Init() {
+  nsresult rv;
+  mNavInfo = do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get webnav info");
+  return rv;
+}
 
 NS_IMPL_ADDREF(nsDSURIContentListener)
 NS_IMPL_RELEASE(nsDSURIContentListener)
@@ -236,13 +242,15 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
   *aCanHandleContent = false;
   *aDesiredContentType = nullptr;
 
+  nsresult rv = NS_OK;
   if (aContentType) {
-    uint32_t canHandle = nsWebNavigationInfo::IsTypeSupported(
-        nsDependentCString(aContentType), mDocShell);
+    uint32_t canHandle = nsIWebNavigationInfo::UNSUPPORTED;
+    rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType), mDocShell,
+                                   &canHandle);
     *aCanHandleContent = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

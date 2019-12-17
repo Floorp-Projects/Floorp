@@ -70,12 +70,6 @@ nsFTPDirListingConv::AsyncConvertData(const char* aFromType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFTPDirListingConv::GetConvertedType(const nsACString& aFromType,
-                                      nsACString& aToType) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // nsIStreamListener implementation
 NS_IMETHODIMP
 nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
