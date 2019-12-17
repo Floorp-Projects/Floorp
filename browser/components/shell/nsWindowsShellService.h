@@ -10,14 +10,12 @@
 #include "nsString.h"
 #include "nsToolkitShellService.h"
 #include "nsIShellService.h"
-#include "nsIWindowsShellService.h"
 
 #include <windows.h>
 #include <ole2.h>
 
 class nsWindowsShellService : public nsIShellService,
-                              public nsToolkitShellService,
-                              public nsIWindowsShellService {
+                              public nsToolkitShellService {
   virtual ~nsWindowsShellService();
 
  public:
@@ -25,7 +23,6 @@ class nsWindowsShellService : public nsIShellService,
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
-  NS_DECL_NSIWINDOWSSHELLSERVICE
 
  protected:
   nsresult LaunchControlPanelDefaultsSelectionUI();
