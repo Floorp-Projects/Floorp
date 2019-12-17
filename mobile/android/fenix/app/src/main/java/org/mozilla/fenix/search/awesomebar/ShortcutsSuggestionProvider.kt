@@ -6,6 +6,7 @@ package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
 import androidx.core.graphics.drawable.toBitmap
+import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import org.mozilla.fenix.R
@@ -27,7 +28,7 @@ class ShortcutsSuggestionProvider(
         get() = false
 
     private val settingsIcon by lazy {
-        context.getDrawable(R.drawable.ic_settings)?.toBitmap()
+        AppCompatResources.getDrawable(context, R.drawable.ic_settings)?.toBitmap()
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {

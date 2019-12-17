@@ -10,6 +10,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.download_notification_layout.*
 import mozilla.components.browser.state.state.content.DownloadState
@@ -35,7 +36,8 @@ class DownloadNotificationBottomSheetDialog(
             download_notification_title.text =
                 context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
 
-            download_notification_icon.setImageDrawable(context.getDrawable(
+            download_notification_icon.setImageDrawable(AppCompatResources.getDrawable(
+                context,
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_failed
             ))
 
@@ -56,7 +58,8 @@ class DownloadNotificationBottomSheetDialog(
 
             download_notification_title.text = titleText
 
-            download_notification_icon.setImageDrawable(context.getDrawable(
+            download_notification_icon.setImageDrawable(AppCompatResources.getDrawable(
+                context,
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_complete
             ))
 

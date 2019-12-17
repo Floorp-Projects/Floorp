@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
@@ -48,7 +49,7 @@ class WebsiteInfoView(
         @DrawableRes iconRes: Int,
         @ColorRes iconTintRes: Int
     ) {
-        val icon = view.context.getDrawable(iconRes)
+        val icon = AppCompatResources.getDrawable(view.context, iconRes)
         icon?.setTint(ContextCompat.getColor(view.context, iconTintRes))
         view.securityInfo.setText(securityInfoRes)
         view.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Outline
 import android.view.View
 import android.view.ViewOutlineProvider
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
@@ -98,11 +99,11 @@ class TabViewHolder(
             if (mediaState is MediaState.Playing) {
                 play_pause_button.contentDescription =
                     context.getString(R.string.mozac_feature_media_notification_action_pause)
-                setImageDrawable(context.getDrawable(R.drawable.pause_with_background))
+                setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.pause_with_background))
             } else {
                 play_pause_button.contentDescription =
                     context.getString(R.string.mozac_feature_media_notification_action_play)
-                setImageDrawable(context.getDrawable(R.drawable.play_with_background))
+                setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.play_with_background))
             }
         }
     }

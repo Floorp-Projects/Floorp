@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
+import androidx.appcompat.content.res.AppCompatResources
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_collection_creation.*
 import kotlinx.android.synthetic.main.component_collection_creation.view.*
@@ -137,7 +138,7 @@ class CollectionCreationView(
         view.bottom_button_bar_layout.setOnClickListener(null)
         view.bottom_button_bar_layout.isClickable = false
 
-        val drawable = view.context.getDrawable(R.drawable.ic_close)
+        val drawable = AppCompatResources.getDrawable(view.context, R.drawable.ic_close)
         drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
         view.bottom_bar_icon_button.setImageDrawable(drawable)
         view.bottom_bar_icon_button.contentDescription =
@@ -197,7 +198,7 @@ class CollectionCreationView(
         view.bottom_bar_text.text =
             view.context.getString(R.string.create_collection_add_new_collection)
 
-        val drawable = view.context.getDrawable(R.drawable.ic_new)
+        val drawable = AppCompatResources.getDrawable(view.context, R.drawable.ic_new)
         drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
         view.bottom_bar_icon_button.setImageDrawable(drawable)
         view.bottom_bar_icon_button.contentDescription = null

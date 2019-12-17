@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -30,7 +31,7 @@ fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
  */
 fun RadioButton.setStartCheckedIndicator() {
     val attr = ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
-    val buttonDrawable = context.getDrawable(attr)
+    val buttonDrawable = AppCompatResources.getDrawable(context, attr)
     buttonDrawable?.apply {
         setBounds(0, 0, intrinsicWidth, intrinsicHeight)
     }
