@@ -8698,7 +8698,6 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
         if (thisLine < 0) return NS_ERROR_FAILURE;
         iter = blockFrame->GetLineIterator();
         NS_ASSERTION(iter, "GetLineNumber() succeeded but no block frame?");
-        result = NS_OK;
 
         int edgeCase = 0;  // no edge case. this should look at thisLine
 
