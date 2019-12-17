@@ -385,6 +385,8 @@ The following is a partial list of collected preferences.
 
 - ``fission.autostart``: True if fission is enabled at startup. Default to false. For more information please visit `the project wiki page <https://wiki.mozilla.org/Project_Fission>`_.
 
+- ``security.tls.version.enable-deprecated``: True if deprecated versions of TLS (1.0 and 1.1) have been enabled by the user. Defaults to false.
+
 attribution
 ~~~~~~~~~~~
 
