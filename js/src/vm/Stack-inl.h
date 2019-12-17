@@ -47,7 +47,7 @@ inline void InterpreterFrame::initCallFrame(InterpreterFrame* prev,
                                             JSScript* script, Value* argv,
                                             uint32_t nactual,
                                             MaybeConstruct constructing) {
-  MOZ_ASSERT(callee.nonLazyScript() == script);
+  MOZ_ASSERT(callee.baseScript() == script);
 
   /* Initialize stack frame members. */
   flags_ = 0;
@@ -219,7 +219,7 @@ MOZ_ALWAYS_INLINE InterpreterFrame* InterpreterStack::getCallFrame(
     MaybeConstruct constructing, Value** pargv) {
   JSFunction* fun = &args.callee().as<JSFunction>();
 
-  MOZ_ASSERT(fun->nonLazyScript() == script);
+  MOZ_ASSERT(fun->baseScript() == script);
   unsigned nformal = fun->nargs();
   unsigned nvals = script->nslots();
 
@@ -261,7 +261,7 @@ MOZ_ALWAYS_INLINE bool InterpreterStack::pushInlineFrame(
     HandleScript script, MaybeConstruct constructing) {
   RootedFunction callee(cx, &args.callee().as<JSFunction>());
   MOZ_ASSERT(regs.sp == args.end());
-  MOZ_ASSERT(callee->nonLazyScript() == script);
+  MOZ_ASSERT(callee->baseScript() == script);
 
   InterpreterFrame* prev = regs.fp();
   jsbytecode* prevpc = regs.pc;

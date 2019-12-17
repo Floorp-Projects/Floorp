@@ -634,9 +634,9 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     fun->setFlags(uint16_t(flagsword));
     fun->initAtom(atom);
     if (firstword & IsLazy) {
-      MOZ_ASSERT(fun->lazyScript() == lazy);
+      MOZ_ASSERT(fun->baseScript() == lazy);
     } else {
-      MOZ_ASSERT(fun->nonLazyScript() == script);
+      MOZ_ASSERT(fun->baseScript() == script);
       MOZ_ASSERT(fun->nargs() == script->numArgs());
     }
 
@@ -1550,7 +1550,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     if (!frontend::CompileLazyBinASTFunction(
             cx, lazy, ss->binASTSource() + sourceStart, sourceLength)) {
       MOZ_ASSERT(fun->isInterpretedLazy());
-      MOZ_ASSERT(fun->lazyScript() == lazy);
+      MOZ_ASSERT(fun->baseScript() == lazy);
       MOZ_ASSERT(!lazy->hasScript());
       return false;
     }
@@ -1575,7 +1575,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->isInterpretedLazy());
-        MOZ_ASSERT(fun->lazyScript() == lazy);
+        MOZ_ASSERT(fun->baseScript() == lazy);
         MOZ_ASSERT(!lazy->hasScript());
         return false;
       }
@@ -1593,7 +1593,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->isInterpretedLazy());
-        MOZ_ASSERT(fun->lazyScript() == lazy);
+        MOZ_ASSERT(fun->baseScript() == lazy);
         MOZ_ASSERT(!lazy->hasScript());
         return false;
       }

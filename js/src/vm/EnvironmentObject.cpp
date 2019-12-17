@@ -1340,7 +1340,7 @@ void EnvironmentIter::settle() {
                    env_->as<CallObject>()
                        .callee()
                        .maybeCanonicalFunction()
-                       ->nonLazyScript());
+                       ->baseScript());
       } else if (scope->is<VarScope>()) {
         MOZ_ASSERT(scope == &env_->as<VarEnvironmentObject>().scope());
       } else if (scope->is<WithScope>()) {
@@ -1832,7 +1832,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return isFunctionEnvironmentWithThis(env) &&
            !env.as<CallObject>()
                 .callee()
-                .nonLazyScript()
+                .baseScript()
                 ->functionHasThisBinding();
   }
 
