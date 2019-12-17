@@ -623,9 +623,13 @@ interface TestExampleInterface {
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);
   void doEnforceRange([EnforceRange] byte arg);
+  void doEnforceRangeNullable([EnforceRange] byte? arg);
   void doClamp([Clamp] byte arg);
+  void doClampNullable([Clamp] byte? arg);
   attribute [EnforceRange] byte enforcedByte;
+  attribute [EnforceRange] byte? enforcedByteNullable;
   attribute [Clamp] byte clampedByte;
+  attribute [Clamp] byte? clampedByteNullable;
 
   // Typedefs
   const myLong myLongConstant = 5;
