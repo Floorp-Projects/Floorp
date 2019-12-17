@@ -13,6 +13,8 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 import java.math.BigInteger
 
@@ -33,11 +35,7 @@ import org.junit.*
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.junit.Ignore
-
-import org.mozilla.geckoview.GeckoWebExecutor
-import org.mozilla.geckoview.WebRequest
-import org.mozilla.geckoview.WebRequestError
-import org.mozilla.geckoview.WebResponse
+import org.mozilla.geckoview.*
 
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.TestServer
@@ -64,13 +62,9 @@ class WebExecutorTest {
         // the tests which are not using @UiThreadTest, so we do that
         // ourselves here as GeckoRuntime needs to be initialized
         // on the UI thread.
-        val latch = CountDownLatch(1)
-        Handler(Looper.getMainLooper()).post {
+        runBlocking(Dispatchers.Main) {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
-            latch.countDown()
         }
-
-        latch.await()
 
         server = TestServer(InstrumentationRegistry.getTargetContext())
         server.start(TEST_PORT)
@@ -98,7 +92,9 @@ class WebExecutorTest {
     }
 
     fun WebResponse.getBodyBytes(): ByteBuffer {
-        return ByteBuffer.wrap(body!!.readBytes())
+        body!!.use {
+            return ByteBuffer.wrap(it.readBytes())
+        }
     }
 
     fun WebResponse.getJSONBody(): JSONObject {
