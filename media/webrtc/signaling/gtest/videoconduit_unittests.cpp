@@ -1385,6 +1385,174 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFs) {
   mVideoConduit->RemoveSink(sink.get());
 }
 
+TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiatedThenSinkWants) {
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::Encoding encoding;
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodingConstraints.maxFs = 3500;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  unsigned int frame = 0;
+  mVideoConduit->StartTransmitting();
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  wants.max_pixel_count = 3600 * 16 * 16;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
+TEST_F(VideoConduitTest, TestVideoEncodeMaxFsCodecChange) {
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::Encoding encoding;
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodings.push_back(encoding);
+  codecConfig.mEncodingConstraints.maxFs = 3500;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  unsigned int frame = 0;
+  mVideoConduit->StartTransmitting();
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  VideoCodecConfig codecConfigVP9(121, "VP9", constraints);
+  codecConfigVP9.mEncodings.push_back(encoding);
+  codecConfigVP9.mEncodingConstraints.maxFs = 3500;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigVP9);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
+TEST_F(VideoConduitTest, TestVideoEncodeMaxFsSinkWantsThenCodecChange) {
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::Encoding encoding;
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  wants.max_pixel_count = 3500 * 16 * 16;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  unsigned int frame = 0;
+  mVideoConduit->StartTransmitting();
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  VideoCodecConfig codecConfigVP9(121, "VP9", constraints);
+  codecConfigVP9.mEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigVP9);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
+TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiated) {
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::Encoding encoding;
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  unsigned int frame = 0;
+  mVideoConduit->StartTransmitting();
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 1280);
+  ASSERT_EQ(sink->mVideoFrame.height(), 720);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  // Ensure that negotiating a new max-fs works
+  codecConfig.mEncodingConstraints.maxFs = 3500;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 960);
+  ASSERT_EQ(sink->mVideoFrame.height(), 540);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  // Ensure that negotiating max-fs away works
+  codecConfig.mEncodingConstraints.maxFs = 0;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(1280, 720, frame++);
+  ASSERT_EQ(sink->mVideoFrame.width(), 1280);
+  ASSERT_EQ(sink->mVideoFrame.height(), 720);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mOnFrameCount, frame);
+
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
 // Disabled: See Bug 1420493
 TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight) {
   MediaConduitErrorCode ec;
