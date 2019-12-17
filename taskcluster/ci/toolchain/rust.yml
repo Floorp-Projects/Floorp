@@ -11,18 +11,6 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-1.37:
-    treeherder:
-        symbol: TL(rust-1.37)
-    run:
-        arguments: [
-            '--channel', '1.37.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-        ]
-
 linux64-rust-1.39:
     treeherder:
         symbol: TL(rust)
