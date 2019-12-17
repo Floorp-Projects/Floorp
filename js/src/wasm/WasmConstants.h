@@ -578,8 +578,7 @@ enum class FieldFlags { Mutable = 0x01, AllowedMask = 0x01 };
 
 static const unsigned MaxTypes = 1000000;
 static const unsigned MaxFuncs = 1000000;
-static const unsigned MaxTables =
-    100000;  // TODO: get this into the shared limits spec
+static const unsigned MaxTables = 100000;
 static const unsigned MaxImports = 100000;
 static const unsigned MaxExports = 100000;
 static const unsigned MaxGlobals = 1000000;

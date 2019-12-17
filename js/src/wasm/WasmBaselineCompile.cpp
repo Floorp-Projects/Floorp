@@ -4462,9 +4462,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     const ValTypeVector& argTys = env_.funcTypes[func_.index]->args();
 
-    size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTys);
-    MOZ_ASSERT(nInboundStackArgBytes % sizeof(void*) == 0);
-    stackMapGenerator_.numStackArgWords = nInboundStackArgBytes / sizeof(void*);
+    size_t numInboundStackArgBytes = StackArgAreaSizeUnaligned(argTys);
+    MOZ_ASSERT(numInboundStackArgBytes % sizeof(void*) == 0);
+    stackMapGenerator_.numStackArgWords =
+        numInboundStackArgBytes / sizeof(void*);
 
     MOZ_ASSERT(stackMapGenerator_.machineStackTracker.length() == 0);
     if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
@@ -4480,7 +4481,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         continue;
       }
       uint32_t offset = argLoc.offsetFromArgBase();
-      MOZ_ASSERT(offset < nInboundStackArgBytes);
+      MOZ_ASSERT(offset < numInboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
       stackMapGenerator_.machineStackTracker.setGCPointer(offset /
                                                           sizeof(void*));
