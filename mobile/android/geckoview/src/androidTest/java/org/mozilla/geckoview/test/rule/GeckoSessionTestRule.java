@@ -20,6 +20,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.test.util.HttpBin;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
@@ -27,6 +28,7 @@ import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -1191,7 +1193,21 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
-    protected void cleanupStatement() {
+    protected void cleanupExtensions() throws Throwable {
+        WebExtensionController controller = getRuntime().getWebExtensionController();
+        List<WebExtension> list = waitForResult(controller.list());
+
+        // Uninstall any left-over extensions
+        for (WebExtension extension : list) {
+            waitForResult(controller.uninstall(extension));
+        }
+
+        // If an extension was still installed, this test should fail
+        assertThat("A WebExtension was left installed during this test.",
+                list.size(), equalTo(0));
+    }
+
+    protected void cleanupStatement() throws Throwable {
         mWaitScopeDelegates.clear();
         mTestScopeDelegates.clear();
 
@@ -1200,6 +1216,7 @@ public class GeckoSessionTestRule implements TestRule {
         }
 
         cleanupSession(mMainSession);
+        cleanupExtensions();
 
         if (mIgnoreCrash) {
             deleteCrashDumps();
