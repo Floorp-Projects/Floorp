@@ -466,9 +466,10 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
             }
           } else {
             MOZ_ASSERT(global.type().isReference());
-            if (!v.isNull() && !v.isObject() && global.type().isRef()) {
+            if (!global.type().isAnyRef() && !v.isObjectOrNull()) {
               return ThrowBadImportType(cx, import.field.get(),
-                                        "Object-or-null");
+                                        "Object-or-null value required for "
+                                        "non-anyref reference type");
             }
           }
 

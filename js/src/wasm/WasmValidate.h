@@ -242,15 +242,18 @@ struct ModuleEnvironment {
     MOZ_ASSERT(two.isReference());
 #if defined(ENABLE_WASM_REFTYPES)
 #  if defined(ENABLE_WASM_GC)
-    return one == two || two == RefType::any() || one == RefType::null() ||
-           (one.isRef() && two.isRef() && gcTypesEnabled() &&
+    return one == two || two.isAnyRef() || one.isNullRef() ||
+           (isStructType(one) && isStructType(two) && gcTypesEnabled() &&
             isStructPrefixOf(two, one));
 #  else
-    return one == two || two == RefType::any() || one == RefType::null();
+    return one == two || two.isAnyRef() || one.isNullRef();
 #  endif
 #else
     return one == two;
 #endif
+  }
+  bool isStructType(ValType t) const {
+    return t.isTypeIndex() && types[t.refType().typeIndex()].isStructType();
   }
 
  private:
@@ -405,7 +408,7 @@ class Encoder {
   MOZ_MUST_USE bool writeVarS64(int64_t i) { return writeVarS<int64_t>(i); }
   MOZ_MUST_USE bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    if (type.isRef()) {
+    if (type.isTypeIndex()) {
       return writeFixedU8(uint8_t(TypeCode::Ref)) &&
              writeVarU32(type.refType().typeIndex());
     }
@@ -726,8 +729,9 @@ class Decoder {
     if (!readValType(types.length(), refTypesEnabled, gcTypesEnabled, type)) {
       return false;
     }
-    if (type->isRef() && !types[type->refType().typeIndex()].isStructType()) {
-      return fail("ref does not reference a struct type");
+    if (type->isTypeIndex() &&
+        !types[type->refType().typeIndex()].isStructType()) {
+      return fail("type index does not reference a struct type");
     }
     return true;
   }

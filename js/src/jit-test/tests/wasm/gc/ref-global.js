@@ -110,7 +110,7 @@
           (import "m" "g" (global (mut (ref $box)))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
-                       /cannot expose reference type/);
+                       /cannot expose indexed reference type/);
 }
 
 // We can't export a global of a reference type because we can't later import
@@ -125,5 +125,5 @@
           (global $boxg (export "box") (mut (ref $box)) (ref.null)))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
-                       /cannot expose reference type/);
+                       /cannot expose indexed reference type/);
 }
