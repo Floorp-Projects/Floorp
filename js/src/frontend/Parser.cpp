@@ -1852,6 +1852,9 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
   if (funbox->hasMappedArgsObj()) {
     lazy->setHasMappedArgsObj();
   }
+  if (funbox->hasCallSiteObj()) {
+    lazy->setHasCallSiteObj();
+  }
 
   // Flags that need to copied back into the parser when we do the full
   // parse.
@@ -2665,6 +2668,8 @@ bool GeneralParser<ParseHandler, Unit>::taggedTemplate(
     return false;
   }
   handler_.addList(tagArgsList, callSiteObjNode);
+
+  pc_->sc()->setHasCallSiteObj();
 
   while (true) {
     if (!appendToCallSiteObj(callSiteObjNode)) {
