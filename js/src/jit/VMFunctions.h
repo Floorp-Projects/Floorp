@@ -991,8 +991,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
 
 MOZ_MUST_USE bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame,
                                   uint8_t* retAddr, bool* mustReturn);
-MOZ_MUST_USE bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame,
-                                      jsbytecode* pc, bool* mustReturn);
+MOZ_MUST_USE bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame);
 MOZ_MUST_USE bool GlobalHasLiveOnDebuggerStatement(JSContext* cx);
 
 MOZ_MUST_USE bool EnterWith(JSContext* cx, BaselineFrame* frame,

@@ -5139,25 +5139,16 @@ bool BaselineCodeGen<Handler>::emit_JSOP_EXCEPTION() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER() {
   prepareVMCall();
-  pushBytecodePCArg();
 
   frame.assertSyncedStack();
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
+  using Fn = bool (*)(JSContext*, BaselineFrame*);
   if (!callVM<Fn, jit::OnDebuggerStatement>()) {
     return false;
   }
 
-  // If the stub returns |true|, return the frame's return value.
-  Label done;
-  masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
-  {
-    masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-    masm.jump(&returnNoDebugEpilogue_);
-  }
-  masm.bind(&done);
   return true;
 }
 

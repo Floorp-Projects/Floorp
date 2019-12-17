@@ -1182,25 +1182,8 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
   return true;
 }
 
-bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
-                         bool* mustReturn) {
-  *mustReturn = false;
-
-  switch (DebugAPI::onDebuggerStatement(cx, frame)) {
-    case ResumeMode::Continue:
-      return true;
-
-    case ResumeMode::Return:
-      *mustReturn = true;
-      return jit::DebugEpilogue(cx, frame, pc, true);
-
-    case ResumeMode::Throw:
-    case ResumeMode::Terminate:
-      return false;
-
-    default:
-      MOZ_CRASH("Invalid OnDebuggerStatement resume mode");
-  }
+bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame) {
+  return DebugAPI::onDebuggerStatement(cx, frame);
 }
 
 bool GlobalHasLiveOnDebuggerStatement(JSContext* cx) {

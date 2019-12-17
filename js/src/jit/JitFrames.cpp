@@ -474,8 +474,7 @@ static void HandleExceptionBaseline(JSContext* cx, JSJitFrameIter& frame,
     }
   }
 
-  // We may be propagating a forced return from the interrupt
-  // callback, which cannot easily force a return.
+  // We may be propagating a forced return from a debugger hook function.
   if (cx->isPropagatingForcedReturn()) {
     cx->clearPropagatingForcedReturn();
     ForcedReturn(cx, frame, pc, rfe);
