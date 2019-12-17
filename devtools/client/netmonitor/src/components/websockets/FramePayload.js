@@ -236,9 +236,7 @@ class FramePayload extends Component {
             },
           ],
         },
-        header: `${this.state.formattedDataTitle} (${getFormattedSize(
-          this.state.payload.length
-        )})`,
+        header: `${this.state.formattedDataTitle}`,
         id: "ws-frame-formattedData",
         opened: true,
       });
