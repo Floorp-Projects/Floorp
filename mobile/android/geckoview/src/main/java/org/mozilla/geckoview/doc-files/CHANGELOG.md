@@ -26,6 +26,8 @@ exclude: true
   attaching a [`LoginStorage.Delegate`][73.8] via
   [`GeckoRuntime#setLoginStorageDelegate`][73.9]
   ([bug 1602881]({{bugzilla}}1602881))
+- ⚠️ [`WebExtension`][69.5]'s constructor now requires a `WebExtensionController`
+  instance.
 
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
@@ -504,4 +506,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 07ee732ba2eaafada09739c61c0196e427a2f0ed
+[api-version]: b0fb9d3cfdb5503a94f1c17c64a801970d36a69d

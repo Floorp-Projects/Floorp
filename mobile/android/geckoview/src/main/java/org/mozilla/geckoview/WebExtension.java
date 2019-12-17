@@ -159,9 +159,11 @@ public class WebExtension {
      *               </a>
      *           </ul>
      * @param flags {@link Flags} for this WebExtension.
+     * @param controller the current {@link WebExtensionController} instance
      */
     public WebExtension(final @NonNull String location, final @NonNull String id,
-                        final @WebExtensionFlags long flags) {
+                        final @WebExtensionFlags long flags,
+                        final @NonNull WebExtensionController controller) {
         this.location = location;
         this.id = id;
         this.flags = flags;
@@ -184,9 +186,11 @@ public class WebExtension {
      * @param location The WebExtension install location. It must be either a
      *                 <code>resource:</code> URI to a folder inside the APK or
      *                 a <code>file:</code> URL to a <code>.xpi</code> file.
+     * @param controller the current {@link WebExtensionController} instance
      */
-    public WebExtension(final @NonNull String location) {
-        this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE);
+    public WebExtension(final @NonNull String location,
+                        final @NonNull WebExtensionController controller) {
+        this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE, controller);
     }
 
     /**
