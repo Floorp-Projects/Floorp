@@ -2,4 +2,4 @@
 content good-package bar/
 
 # Local resource (should work)
-override chrome://good-package/content/test.xul data:application/vnd.mozilla.xul+xml,
+override chrome://good-package/content/test.xul data:application/xhtml+xml,
