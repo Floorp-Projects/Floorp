@@ -466,10 +466,6 @@ already_AddRefed<nsDocShell> nsDocShell::Create(
 
   // Create our ContentListener
   ds->mContentListener = new nsDSURIContentListener(ds);
-  rv = ds->mContentListener->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
 
   // If parent intercept is not enabled then we must forward to
   // the network controller from docshell.  We also enable if we're
