@@ -147,8 +147,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         }
                     }
             }
-
-            updateLayoutMargins(false)
         }
     }
 
