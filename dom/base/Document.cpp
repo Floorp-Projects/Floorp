@@ -78,6 +78,8 @@
 #include "mozilla/Services.h"
 #include "nsScreen.h"
 #include "ChildIterator.h"
+#include "nsSerializationHelper.h"
+#include "nsICertOverrideService.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
 #include "nsITransportSecurityInfo.h"
@@ -1381,6 +1383,8 @@ Document::Document(const char* aContentType)
   mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
+#ifndef ANDROID
+// unused by GeckoView
 static bool IsAboutErrorPage(nsGlobalWindowInner* aWin, const char* aSpec) {
   if (NS_WARN_IF(!aWin)) {
     return false;
@@ -1402,10 +1406,148 @@ static bool IsAboutErrorPage(nsGlobalWindowInner* aWin, const char* aSpec) {
 
   return aboutSpec.EqualsASCII(aSpec);
 }
+#endif
 
 bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
+#ifdef ANDROID
+  // GeckoView uses data URLs for error pages, so for now just check for any
+  // error page
+  return win && win->GetDocument() && win->GetDocument()->IsErrorPage();
+#else
   return IsAboutErrorPage(win, "neterror");
+#endif
+}
+
+already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
+    bool aIsTemporary) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    return nullptr;
+  }
+
+  ErrorResult er;
+  RefPtr<Promise> promise =
+      Promise::Create(global, er, Promise::ePropagateUserInteraction);
+  if (er.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> info;
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  nsresult rv = NS_OK;
+  if (NS_WARN_IF(!mFailedChannel)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+  nsCOMPtr<nsIURI> failedChannelURI;
+  NS_GetFinalChannelURI(mFailedChannel, getter_AddRefs(failedChannelURI));
+  if (!failedChannelURI) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  nsAutoCString host;
+  failedChannelURI->GetAsciiHost(host);
+  int32_t port;
+  failedChannelURI->GetPort(&port);
+
+  tsi = do_QueryInterface(info);
+  if (NS_WARN_IF(!tsi)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  bool isUntrusted = true;
+  rv = tsi->GetIsUntrusted(&isUntrusted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+
+  bool isDomainMismatch = true;
+  rv = tsi->GetIsDomainMismatch(&isDomainMismatch);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+
+  bool isNotValidAtThisTime = true;
+  rv = tsi->GetIsNotValidAtThisTime(&isNotValidAtThisTime);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+
+  nsCOMPtr<nsIX509Cert> cert;
+  rv = tsi->GetServerCert(getter_AddRefs(cert));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+  if (NS_WARN_IF(!cert)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  uint32_t flags = 0;
+  if (isUntrusted) {
+    flags |= nsICertOverrideService::ERROR_UNTRUSTED;
+  }
+  if (isDomainMismatch) {
+    flags |= nsICertOverrideService::ERROR_MISMATCH;
+  }
+  if (isNotValidAtThisTime) {
+    flags |= nsICertOverrideService::ERROR_TIME;
+  }
+
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsISerializable> certSer = do_QueryInterface(cert);
+    nsCString certSerialized;
+    NS_SerializeToString(certSer, certSerialized);
+
+    ContentChild* cc = ContentChild::GetSingleton();
+    MOZ_ASSERT(cc);
+    cc->SendAddCertException(certSerialized, flags, host, port, aIsTemporary)
+        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+               [promise](const mozilla::MozPromise<
+                         nsresult, mozilla::ipc::ResponseRejectReason,
+                         true>::ResolveOrRejectValue& aValue) {
+                 if (aValue.IsResolve()) {
+                   promise->MaybeResolve(aValue.ResolveValue());
+                 } else {
+                   promise->MaybeRejectWithUndefined();
+                 }
+               });
+    return promise.forget();
+  }
+
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsICertOverrideService> overrideService =
+        do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+    if (!overrideService) {
+      promise->MaybeReject(NS_ERROR_FAILURE);
+      return promise.forget();
+    }
+
+    rv = overrideService->RememberValidityOverride(host, port, cert, flags,
+                                                   aIsTemporary);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      promise->MaybeReject(rv);
+      return promise.forget();
+    }
+
+    promise->MaybeResolveWithUndefined();
+    return promise.forget();
+  }
+
+  promise->MaybeReject(NS_ERROR_FAILURE);
+  return promise.forget();
 }
 
 void Document::GetNetErrorInfo(NetErrorInfo& aInfo, ErrorResult& aRv) {
@@ -1440,7 +1582,18 @@ void Document::GetNetErrorInfo(NetErrorInfo& aInfo, ErrorResult& aRv) {
 bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
                                              JSObject* aObject) {
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
+#ifdef ANDROID
+  // GeckoView uses data URLs for error pages, so for now just check for any
+  // error page
+  return win && win->GetDocument() && win->GetDocument()->IsErrorPage();
+#else
   return IsAboutErrorPage(win, "certerror");
+#endif
+}
+
+bool Document::IsErrorPage() const {
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->LoadInfo() : nullptr;
+  return loadInfo && loadInfo->GetLoadErrorPage();
 }
 
 void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
