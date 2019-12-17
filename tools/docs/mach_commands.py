@@ -4,11 +4,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import yaml
+
+import fnmatch
+import multiprocessing
 import os
 import subprocess
 import sys
-import multiprocessing
+import time
+import yaml
+
 from functools import partial
 from pprint import pprint
 
@@ -83,11 +87,13 @@ class Documentation(MachCommandBase):
 
         docdir = self._find_doc_dir(path)
         if not docdir:
+            print(self._dump_sphinx_backtrace())
             return die('failed to generate documentation:\n'
                        '%s: could not find docs at this location' % path)
 
         result = self._run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs)
         if result != 0:
+            print(self._dump_sphinx_backtrace())
             return die('failed to generate documentation:\n'
                        '%s: sphinx return code %d' % (path, result))
         else:
@@ -123,6 +129,30 @@ class Documentation(MachCommandBase):
             server.watch(src, run_sphinx)
         server.serve(host=host, port=port, root=savedir,
                      open_url_delay=0.1 if auto_open else None)
+
+    def _dump_sphinx_backtrace(self):
+        """
+            If there is a sphinx dump file, read and return
+            its content.
+            By default, it isn't displayed.
+        """
+        pattern = "sphinx-err-*"
+        output = ""
+        tmpdir = "/tmp"
+
+        if not os.path.isdir(tmpdir):
+            # Only run it on Linux
+            return
+        files = os.listdir(tmpdir)
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                pathFile = os.path.join(tmpdir, name)
+                stat = os.stat(pathFile)
+                output += "Name: {0} / Creation date: {1}\n".format(
+                    pathFile, time.ctime(stat.st_mtime))
+                with open(pathFile) as f:
+                    output += f.read()
+        return output
 
     def _run_sphinx(self, docdir, savedir, config=None, fmt='html', jobs=None):
         import sphinx.cmd.build
