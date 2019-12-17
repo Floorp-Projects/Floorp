@@ -243,7 +243,6 @@ class AppWindow final : public nsIBaseWindow,
   void PlaceWindowLayersBehind(uint32_t aLowLevel, uint32_t aHighLevel,
                                nsIAppWindow* aBehind);
   void SetContentScrollbarVisibility(bool aVisible);
-  bool GetContentScrollbarVisibility();
   void PersistentAttributesDirty(uint32_t aDirtyFlags);
   nsresult GetTabCount(uint32_t* aResult);
 
