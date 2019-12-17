@@ -30,6 +30,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
@@ -39,6 +40,8 @@
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
 #include "graphite2/Font.h"
+
+#include "ThebesRLBox.h"
 
 #include <algorithm>
 
@@ -595,54 +598,141 @@ hb_face_t* gfxFontEntry::GetHBFace() {
   return hb_face_reference(mHBFace);
 }
 
-/*static*/ const void* gfxFontEntry::GrGetTable(const void* aAppFaceHandle,
-                                                unsigned int aName,
-                                                size_t* aLen) {
-  gfxFontEntry* fontEntry =
-      static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
-  hb_blob_t* blob = fontEntry->GetFontTable(aName);
-  if (blob) {
-    unsigned int blobLength;
-    const void* tableData = hb_blob_get_data(blob, &blobLength);
-    fontEntry->mGrTableMap->Put(tableData, blob);
-    *aLen = blobLength;
-    return tableData;
+struct gfxFontEntry::GrSandboxData {
+  rlbox_sandbox_gr sandbox;
+  sandbox_callback_gr<const void* (*)(const void*, unsigned int, size_t*)>
+      grGetTableCallback;
+  sandbox_callback_gr<void (*)(const void*, const void*)>
+      grReleaseTableCallback;
+  // Text Shapers register a callback to get glyph advances
+  sandbox_callback_gr<float (*)(const void*, uint16_t)>
+      grGetGlyphAdvanceCallback;
+
+  GrSandboxData() {
+    sandbox.create_sandbox();
+    grGetTableCallback = sandbox.register_callback(GrGetTable);
+    grReleaseTableCallback = sandbox.register_callback(GrReleaseTable);
+    grGetGlyphAdvanceCallback =
+        sandbox.register_callback(gfxGraphiteShaper::GrGetAdvance);
   }
-  *aLen = 0;
-  return nullptr;
+
+  ~GrSandboxData() {
+    grGetTableCallback.unregister();
+    grReleaseTableCallback.unregister();
+    grGetGlyphAdvanceCallback.unregister();
+    sandbox.destroy_sandbox();
+  }
+};
+
+static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
+
+/*static*/
+tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
+    rlbox_sandbox_gr& sandbox,
+    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
+    tainted_opaque_gr<unsigned int> aName, tainted_opaque_gr<size_t*> aLen) {
+  gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData;
+  tainted_gr<size_t*> t_aLen = rlbox::from_opaque(aLen);
+  *t_aLen = 0;
+  tainted_gr<const void*> ret = nullptr;
+
+  if (fontEntry) {
+    hb_blob_t* blob =
+        fontEntry->GetFontTable(rlbox::from_opaque(aName).UNSAFE_unverified());
+
+    if (blob) {
+      unsigned int blobLength;
+      const void* tableData = hb_blob_get_data(blob, &blobLength);
+      // tableData is read-only data shared with the sandbox.
+      // Making a copy in sandbox memory
+      tainted_gr<void*> t_tableData = rlbox::sandbox_reinterpret_cast<void*>(
+          sandbox.malloc_in_sandbox<char>(blobLength));
+      if (t_tableData) {
+        rlbox::memcpy(sandbox, t_tableData, tableData, blobLength);
+        *t_aLen = blobLength;
+        ret = rlbox::sandbox_const_cast<const void*>(t_tableData);
+      }
+      hb_blob_destroy(blob);
+    }
+  }
+
+  return ret.to_opaque();
 }
 
 /*static*/
-void gfxFontEntry::GrReleaseTable(const void* aAppFaceHandle,
-                                  const void* aTableBuffer) {
-  gfxFontEntry* fontEntry =
-      static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
-  void* value;
-  if (fontEntry->mGrTableMap->Remove(aTableBuffer, &value)) {
-    hb_blob_destroy(static_cast<hb_blob_t*>(value));
-  }
+void gfxFontEntry::GrReleaseTable(
+    rlbox_sandbox_gr& sandbox,
+    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
+    tainted_opaque_gr<const void*> aTableBuffer) {
+  sandbox.free_in_sandbox(rlbox::from_opaque(aTableBuffer));
 }
 
-gr_face* gfxFontEntry::GetGrFace() {
+rlbox_sandbox_gr* gfxFontEntry::GetGrSandbox() {
+  MOZ_ASSERT(mSandboxData != nullptr);
+  return &mSandboxData->sandbox;
+}
+
+sandbox_callback_gr<float (*)(const void*, uint16_t)>*
+gfxFontEntry::GetGrSandboxAdvanceCallbackHandle() {
+  MOZ_ASSERT(mSandboxData != nullptr);
+  return &mSandboxData->grGetGlyphAdvanceCallback;
+}
+
+tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
   if (!mGrFaceInitialized) {
-    gr_face_ops faceOps = {sizeof(gr_face_ops), GrGetTable, GrReleaseTable};
-    mGrTableMap = new nsDataHashtable<nsPtrHashKey<const void>, void*>;
-    mGrFace = gr_make_face_with_ops(this, &faceOps, gr_face_default);
+    // When possible, the below code will use WASM as a sandboxing mechanism.
+    // At this time the wasm sandbox does not support threads.
+    // If Thebes is updated to make callst to the sandbox on multiple threaads,
+    // we need to make sure the underlying sandbox supports threading.
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mSandboxData = new GrSandboxData();
+
+    auto p_faceOps = mSandboxData->sandbox.malloc_in_sandbox<gr_face_ops>();
+    if (!p_faceOps) {
+      MOZ_CRASH("Graphite sandbox memory allocation failed");
+    }
+    auto cleanup = MakeScopeExit(
+        [&] { mSandboxData->sandbox.free_in_sandbox(p_faceOps); });
+    p_faceOps->size = sizeof(*p_faceOps);
+    p_faceOps->get_table = mSandboxData->grGetTableCallback;
+    p_faceOps->release_table = mSandboxData->grReleaseTableCallback;
+
+    tl_grGetFontTableCallbackData = this;
+    auto face = sandbox_invoke(
+        mSandboxData->sandbox, gr_make_face_with_ops,
+        // For security, we do not pass the callback data to this arg, and use
+        // a TLS var instead. However, gr_make_face_with_ops expects this to
+        // be a non null ptr. Therefore,  we should pass some dummy non null
+        // pointer which will be passed to callbacks, but never used. Let's just
+        // pass p_faceOps again, as this is a non-null tainted pointer.
+        p_faceOps /* appFaceHandle */, p_faceOps, gr_face_default);
+    tl_grGetFontTableCallbackData = nullptr;
+    mGrFace = face.to_opaque();
     mGrFaceInitialized = true;
   }
   ++mGrFaceRefCnt;
   return mGrFace;
 }
 
-void gfxFontEntry::ReleaseGrFace(gr_face* aFace) {
-  MOZ_ASSERT(aFace == mGrFace);  // sanity-check
+void gfxFontEntry::ReleaseGrFace(tainted_opaque_gr<gr_face*> aFace) {
+  MOZ_ASSERT(rlbox::from_opaque(aFace).UNSAFE_unverified() ==
+             rlbox::from_opaque(mGrFace).UNSAFE_unverified());  // sanity-check
   MOZ_ASSERT(mGrFaceRefCnt > 0);
   if (--mGrFaceRefCnt == 0) {
-    gr_face_destroy(mGrFace);
-    mGrFace = nullptr;
+    auto t_mGrFace = rlbox::from_opaque(mGrFace);
+
+    tl_grGetFontTableCallbackData = this;
+    sandbox_invoke(mSandboxData->sandbox, gr_face_destroy, t_mGrFace);
+    tl_grGetFontTableCallbackData = nullptr;
+
+    t_mGrFace = nullptr;
+    mGrFace = t_mGrFace.to_opaque();
+
+    delete mSandboxData;
+    mSandboxData = nullptr;
+
     mGrFaceInitialized = false;
-    delete mGrTableMap;
-    mGrTableMap = nullptr;
   }
 }
 
@@ -664,9 +754,12 @@ void gfxFontEntry::CheckForGraphiteTables() {
 
 bool gfxFontEntry::HasGraphiteSpaceContextuals() {
   if (!mGraphiteSpaceContextualsInitialized) {
-    gr_face* face = GetGrFace();
-    if (face) {
-      const gr_faceinfo* faceInfo = gr_face_info(face, 0);
+    auto face = GetGrFace();
+    auto t_face = rlbox::from_opaque(face);
+    if (t_face) {
+      const gr_faceinfo* faceInfo =
+          sandbox_invoke(mSandboxData->sandbox, gr_face_info, t_face, 0)
+              .UNSAFE_unverified();
       mHasGraphiteSpaceContextuals =
           faceInfo->space_contextuals != gr_faceinfo::gr_space_none;
     }
@@ -835,8 +928,11 @@ bool gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag) {
     return result;
   }
 
-  gr_face* face = GetGrFace();
-  result = face ? gr_face_find_fref(face, aFeatureTag) != nullptr : false;
+  auto face = GetGrFace();
+  auto t_face = rlbox::from_opaque(face);
+  result = t_face ? sandbox_invoke(mSandboxData->sandbox, gr_face_find_fref,
+                                   t_face, aFeatureTag) != nullptr
+                  : false;
   ReleaseGrFace(face);
 
   mSupportedFeatures->Put(scriptFeature, result);
