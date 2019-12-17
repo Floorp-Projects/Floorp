@@ -3342,16 +3342,23 @@ void gfxPlatform::InitWebRenderConfig() {
   }
 
   // Initialize WebRender partial present config.
-  // It is used only for reporting to Decision Log.
+  // Partial present is used only when WebRender compositor is not used.
   if (StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0) {
-    // Partial present is used only when WebRender compositor is not used.
-    if (UseWebRender() && !gfxVars::UseWebRenderCompositor()) {
+    if (UseWebRender()) {
       FeatureState& featurePartial =
           gfxConfig::GetFeature(Feature::WEBRENDER_PARTIAL);
       featurePartial.EnableByDefault();
-      // Call UserEnable() only for reporting to Decision Log.
-      // If feature is enabled by default. It is not reported to Decision Log.
-      featurePartial.UserEnable("Enabled");
+      if (StaticPrefs::gfx_webrender_picture_caching()) {
+        gfxVars::SetWebRenderMaxPartialPresentRects(
+            StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup());
+        // Call UserEnable() only for reporting to Decision Log.
+        // If feature is enabled by default. It is not reported to Decision Log.
+        featurePartial.UserEnable("Enabled");
+      } else {
+        featurePartial.ForceDisable(
+            FeatureStatus::Unavailable, "Picture caching is disabled",
+            NS_LITERAL_CSTRING("FEATURE_FAILURE_PICTURE_CACHING_DISABLED"));
+      }
     }
   }
 

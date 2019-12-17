@@ -777,7 +777,7 @@ void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
 void RenderCompositorANGLE::InitializeUsePartialPresent() {
   if (UseCompositor() || !mSwapChain1 ||
       mWidget->AsWindows()->HasFxrOutputHandler() ||
-      StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() <= 0) {
+      gfx::gfxVars::WebRenderMaxPartialPresentRects() <= 0) {
     mUsePartialPresent = false;
   } else {
     mUsePartialPresent = true;
@@ -792,7 +792,7 @@ uint32_t RenderCompositorANGLE::GetMaxPartialPresentRects() {
   if (!mUsePartialPresent) {
     return 0;
   }
-  return StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup();
+  return gfx::gfxVars::WebRenderMaxPartialPresentRects();
 }
 
 bool RenderCompositorANGLE::MaybeReadback(
