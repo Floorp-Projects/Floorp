@@ -32,7 +32,6 @@ py2commands="
     cramtest
     crashtest
     devtools-css-db
-    doc
     doctor
     empty-makefiles
     file-info
