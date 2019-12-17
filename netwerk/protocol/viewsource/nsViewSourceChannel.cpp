@@ -236,6 +236,13 @@ nsViewSourceChannel::Cancel(nsresult status) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetCanceled(bool* aCanceled) {
+  NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+  return mChannel->GetCanceled(aCanceled);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::Suspend(void) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
