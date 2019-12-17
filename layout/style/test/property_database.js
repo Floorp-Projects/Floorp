@@ -12447,6 +12447,24 @@ if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
     other_values: ["contain", "none"],
     invalid_values: ["left", "1px"],
   };
+  gCSSProperties["overscroll-behavior-inline"] = {
+    domProp: "overscrollBehaviorInline",
+    inherited: false,
+    logical: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["contain", "none"],
+    invalid_values: ["left", "1px"],
+  };
+  gCSSProperties["overscroll-behavior-block"] = {
+    domProp: "overscrollBehaviorBlock",
+    inherited: false,
+    logical: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["contain", "none"],
+    invalid_values: ["left", "1px"],
+  };
   gCSSProperties["overscroll-behavior"] = {
     domProp: "overscrollBehavior",
     inherited: false,

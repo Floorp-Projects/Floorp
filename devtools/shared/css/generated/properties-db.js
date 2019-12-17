@@ -2995,6 +2995,8 @@ exports.CSS_PROPERTIES = {
       "border-end-end-radius",
       "overflow-inline",
       "overflow-block",
+      "overscroll-behavior-inline",
+      "overscroll-behavior-block",
       "margin-block-start",
       "margin-block-end",
       "margin-inline-start",
@@ -8650,6 +8652,38 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "overscroll-behavior-block": {
+    "isInherited": false,
+    "subproperties": [
+      "overscroll-behavior-block"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "contain",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
+  "overscroll-behavior-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "overscroll-behavior-inline"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "contain",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "overscroll-behavior-x": {
     "isInherited": false,
     "subproperties": [
@@ -10908,20 +10942,28 @@ exports.PREFERENCES = [
     "layout.css.overflow-clip-box.enabled"
   ],
   [
-    "overscroll-behavior-x",
-    "layout.css.overscroll-behavior.enabled"
-  ],
-  [
-    "overscroll-behavior-y",
-    "layout.css.overscroll-behavior.enabled"
-  ],
-  [
     "overflow-block",
     "layout.css.overflow-logical.enabled"
   ],
   [
     "overflow-inline",
     "layout.css.overflow-logical.enabled"
+  ],
+  [
+    "overscroll-behavior-block",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overscroll-behavior-inline",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overscroll-behavior-x",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overscroll-behavior-y",
+    "layout.css.overscroll-behavior.enabled"
   ],
   [
     "backdrop-filter",
