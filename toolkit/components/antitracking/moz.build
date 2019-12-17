@@ -8,7 +8,6 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Privacy: Anti-Tracking')
 
 XPIDL_SOURCES += [
-    'nsIAsyncStreamReader.idl',
     'nsITrackingDBService.idl',
     'nsIURLDecorationAnnotationsService.idl',
 ]

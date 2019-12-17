@@ -729,9 +729,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSetWidgetNativeData(
       const WindowsHandle& aWidgetNativeData);
 
-  mozilla::ipc::IPCResult RecvGetContentBlockingLog(
-      GetContentBlockingLogResolver&& aResolve);
-
  private:
   // Wraps up a JSON object as a structured clone and sends it to the browser
   // chrome script.
