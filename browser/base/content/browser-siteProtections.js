@@ -1672,13 +1672,12 @@ var gProtectionsHandler = {
     this._isStoppedState = !!(
       stateFlags & Ci.nsIWebProgressListener.STATE_STOP
     );
-
-    this.notifyContentBlockingEvent(gBrowser.securityUI.contentBlockingEvent);
+    this.notifyContentBlockingEvent(
+      gBrowser.selectedBrowser.getContentBlockingEvents()
+    );
   },
 
-  onContentBlockingEvent(event, webProgress, isSimulated) {
-    let previousState = gBrowser.securityUI.contentBlockingEvent;
-
+  onContentBlockingEvent(event, webProgress, isSimulated, previousState) {
     // Don't deal with about:, file: etc.
     if (!ContentBlockingAllowList.canHandle(gBrowser.selectedBrowser)) {
       this.iconBox.removeAttribute("animate");
