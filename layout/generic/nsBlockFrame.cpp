@@ -1906,6 +1906,12 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   } else {
     NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
                  "Shouldn't be incomplete if availableBSize is UNCONSTRAINED.");
+    if (aState.mBCoord == nscoord_MAX) {
+      // FIXME bug 1574046.
+      // This should never happen, but it does. nsFloatManager::ClearFloats
+      // returns |nscoord_MAX| when DONT_CLEAR_PUSHED_FLOATS is false.
+      blockEndEdgeOfChildren = aState.mBCoord = aReflowInput.AvailableBSize();
+    }
     finalSize.BSize(wm) =
         std::max(aState.mBCoord, aReflowInput.AvailableBSize());
     if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
