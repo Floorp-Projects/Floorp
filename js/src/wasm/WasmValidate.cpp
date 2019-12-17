@@ -1003,28 +1003,24 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readComparison(RefType::any(), &nothing, &nothing));
-        break;
       }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefFunc): {
         uint32_t unusedIndex;
         CHECK(iter.readRefFunc(&unusedIndex));
-        break;
       }
       case uint16_t(Op::RefNull): {
         if (!env.refTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readRefNull());
-        break;
       }
       case uint16_t(Op::RefIsNull): {
         if (!env.refTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readConversion(RefType::any(), ValType::I32, &nothing));
-        break;
       }
 #endif
       case uint16_t(Op::ThreadPrefix): {
@@ -1671,8 +1667,11 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
     if (!refTypesEnabled) {
       return d.fail("expected 'funcref' element type");
     }
-    tableKind = elementType == uint8_t(TypeCode::AnyRef) ? TableKind::AnyRef
-                                                         : TableKind::NullRef;
+    if (elementType == uint8_t(TypeCode::AnyRef)) {
+      tableKind = TableKind::AnyRef;
+    } else {
+      tableKind = TableKind::NullRef;
+    }
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES

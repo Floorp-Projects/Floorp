@@ -2271,9 +2271,11 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
     }
-    tableKind = StringEqualsLiteral(elementLinearStr, "anyref")
-                    ? TableKind::AnyRef
-                    : TableKind::NullRef;
+    if (StringEqualsLiteral(elementLinearStr, "anyref")) {
+      tableKind = TableKind::AnyRef;
+    } else {
+      tableKind = TableKind::NullRef;
+    }
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
