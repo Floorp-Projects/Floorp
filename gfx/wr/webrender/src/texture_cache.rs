@@ -995,12 +995,11 @@ impl TextureCache {
                 &descriptor,
                 origin,
                 entry.size,
-                entry.texture_id,
                 layer_index as i32,
                 use_upload_format,
                 &dirty_rect,
             );
-            self.pending_updates.push_update(op);
+            self.pending_updates.push_update(entry.texture_id, op);
         }
     }
 
@@ -1873,7 +1872,6 @@ impl TextureCacheUpdate {
         descriptor: &ImageDescriptor,
         origin: DeviceIntPoint,
         size: DeviceIntSize,
-        texture_id: CacheTextureId,
         layer_index: i32,
         use_upload_format: bool,
         dirty_rect: &ImageDirtyRect,
@@ -1913,7 +1911,6 @@ impl TextureCacheUpdate {
                 let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x * descriptor.format.bytes_per_pixel();
 
                 TextureCacheUpdate {
-                    id: texture_id,
                     rect: DeviceIntRect::new(
                         DeviceIntPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y),
                         DeviceIntSize::new(
@@ -1930,7 +1927,6 @@ impl TextureCacheUpdate {
             }
             DirtyRect::All => {
                 TextureCacheUpdate {
-                    id: texture_id,
                     rect: DeviceIntRect::new(origin, size),
                     source,
                     stride: descriptor.stride,
