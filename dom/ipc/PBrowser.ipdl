@@ -1022,11 +1022,6 @@ child:
      */
     async SetWidgetNativeData(WindowsHandle aHandle);
 
-    /**
-     * Requests the content blocking log, which is sent back in response.
-     */
-    async GetContentBlockingLog() returns(IPCStream ipcStream, bool success);
-
     async SkipBrowsingContextDetach() returns (bool success);
 
 parent:
