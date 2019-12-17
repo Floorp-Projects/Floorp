@@ -201,34 +201,8 @@ bool ScrollbarsProp::GetVisible(CallerType aCallerType, ErrorResult& aRv) {
   return pref != ScrollbarPreference::Never;
 }
 
-void ScrollbarsProp::SetVisible(bool aVisible, CallerType aCallerType,
-                                ErrorResult& aRv) {
-  if (aCallerType != CallerType::System) {
-    return;
-  }
-
-  /* Scrollbars, unlike the other barprops, implement visibility directly
-     rather than handing off to the superclass (and from there to the
-     chrome window) because scrollbar visibility uniquely applies only
-     to the window making the change (arguably. it does now, anyway.)
-     and because embedding apps have no interface for implementing this
-     themselves, and therefore the implementation must be internal. */
-
-  nsContentUtils::SetScrollbarsVisibility(mDOMWindow->GetDocShell(), aVisible);
-
-  /* Notably absent is the part where we notify the chrome window using
-     GetBrowserChrome()->SetChromeFlags(). Given the possibility of multiple
-     DOM windows (multiple top-level windows, even) within a single
-     chrome window, the historical concept of a single "has scrollbars"
-     flag in the chrome is inapplicable, and we can't tell at this level
-     whether we represent the particular DOM window that makes this decision
-     for the chrome.
-
-     So only this object (and its corresponding DOM window) knows whether
-     scrollbars are visible. The corresponding chrome window will need to
-     ask (one of) its DOM window(s) when it needs to know about scrollbar
-     visibility, rather than caching its own copy of that information.
-  */
+void ScrollbarsProp::SetVisible(bool aVisible, CallerType, ErrorResult&) {
+  /* Do nothing */
 }
 
 }  // namespace dom
