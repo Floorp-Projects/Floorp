@@ -91,12 +91,6 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char* aFromType,
   return rv;
 }
 
-NS_IMETHODIMP
-nsDeflateConverter::GetConvertedType(const nsACString& aFromType,
-                                     nsACString& aToType) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest* aRequest,
                                                   nsIInputStream* aInputStream,
                                                   uint64_t aOffset,

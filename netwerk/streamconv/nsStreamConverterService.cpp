@@ -353,25 +353,6 @@ nsStreamConverterService::CanConvert(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-nsStreamConverterService::ConvertedType(const nsACString& aFromType,
-                                        nsACString& aOutToType) {
-  // first determine whether we can even handle this conversion
-  // build a CONTRACTID
-  nsAutoCString contractID;
-  contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");
-  contractID.Append(aFromType);
-  contractID.AppendLiteral("&to=*/*");
-  const char* cContractID = contractID.get();
-
-  nsresult rv;
-  nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(cContractID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    return converter->GetConvertedType(aFromType, aOutToType);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsStreamConverterService::Convert(nsIInputStream* aFromStream,
                                   const char* aFromType, const char* aToType,
                                   nsISupports* aContext,

@@ -14,7 +14,6 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
-#include "mozilla/dom/BrowserParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
@@ -60,26 +59,20 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIProcessSwitchRequestor,
                              public nsIMultiPartChannelListener {
  public:
-  explicit DocumentLoadListener(dom::BrowserParent* aBrowser,
+  explicit DocumentLoadListener(const dom::PBrowserOrId& aIframeEmbedding,
                                 nsILoadContext* aLoadContext,
                                 PBOverrideStatus aOverrideStatus,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
-  // Must be the same BrowserParent as was passed to the constructor, we
-  // expect Necko to pass it again so that we don't need a member var for
-  // it.
-  bool Open(dom::BrowserParent* aBrowser, nsDocShellLoadState* aLoadState,
-            class LoadInfo* aLoadInfo, const nsString* aInitiatorType,
-            nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
-            bool aIsActive, bool aIsTopLevelDoc,
-            bool aHasNonEmptySandboxingFlags,
+  bool Open(nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+            const nsString* aInitiatorType, nsLoadFlags aLoadFlags,
+            uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
+            bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
             const Maybe<ipc::URIParams>& aTopWindowURI,
             const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,
             const nsString& aCustomUserAgent, const uint64_t& aChannelId,
-            const TimeStamp& aAsyncOpenTime,
-            const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
-            nsresult* aRv);
+            const TimeStamp& aAsyncOpenTime, nsresult* aRv);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -140,13 +133,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Called by the bridge when it disconnects, so that we can drop
   // our reference to it.
   void DocumentChannelBridgeDisconnected();
-
-  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus) {
-    if (mDocumentChannelBridge) {
-      mDocumentChannelBridge->DisconnectChildListeners(aStatus,
-                                                       aLoadGroupStatus);
-    }
-  }
 
   base::ProcessId OtherPid() const {
     if (mDocumentChannelBridge) {

@@ -409,7 +409,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
 
 already_AddRefed<PDocumentChannelParent>
 NeckoParent::AllocPDocumentChannelParent(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
+    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& args) {
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       GetRequestingPrincipal(Some(args.loadInfo()));
@@ -422,21 +422,17 @@ NeckoParent::AllocPDocumentChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  RefPtr<dom::BrowserParent> browser =
-      static_cast<dom::BrowserParent*>(aBrowser);
   RefPtr<DocumentChannelParent> p =
-      new DocumentChannelParent(browser, loadContext, overrideStatus);
+      new DocumentChannelParent(aBrowser, loadContext, overrideStatus);
   return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
-    PDocumentChannelParent* aActor, PBrowserParent* aBrowser,
+    PDocumentChannelParent* aActor, const PBrowserOrId& aBrowser,
     const SerializedLoadContext& aSerialized,
     const DocumentChannelCreationArgs& aArgs) {
   DocumentChannelParent* p = static_cast<DocumentChannelParent*>(aActor);
-  RefPtr<dom::BrowserParent> browser =
-      static_cast<dom::BrowserParent*>(aBrowser);
-  if (!p->Init(browser, aArgs)) {
+  if (!p->Init(aArgs)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

@@ -128,10 +128,10 @@ class NeckoParent : public PNeckoParent {
                                           const uint16_t& port);
 
   already_AddRefed<PDocumentChannelParent> AllocPDocumentChannelParent(
-      PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
+      const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
       const DocumentChannelCreationArgs& args);
   virtual mozilla::ipc::IPCResult RecvPDocumentChannelConstructor(
-      PDocumentChannelParent* aActor, PBrowserParent* aBrowser,
+      PDocumentChannelParent* aActor, const PBrowserOrId& aBrowser,
       const SerializedLoadContext& aSerialized,
       const DocumentChannelCreationArgs& aArgs) override;
   bool DeallocPDocumentChannelParent(PDocumentChannelParent* channel);

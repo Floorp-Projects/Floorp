@@ -35,14 +35,6 @@ interface nsIStreamConverterService : nsISupports {
     boolean canConvert(in string aFromType, in string aToType);
 
     /**
-     * Returns the content type that will be returned from a converter
-     * created with aFromType and  * /*.
-     * Can fail if no converters support this conversion, or if the
-     * output type isn't known in advance.
-     */
-    ACString convertedType(in ACString aFromType);
-
-    /**
      * <b>SYNCHRONOUS VERSION</b>
      * Converts a stream of one type, to a stream of another type.
      *
