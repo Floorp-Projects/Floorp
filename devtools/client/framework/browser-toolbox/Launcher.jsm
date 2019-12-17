@@ -250,7 +250,14 @@ BrowserToolboxLauncher.prototype = {
       BROWSER_TOOLBOX_WINDOW_URL,
     ];
 
+    const isBrowserToolboxFission = Services.prefs.getBoolPref(
+      "devtools.browsertoolbox.fission",
+      false
+    );
     const environment = {
+      // Will be read by the Browser Toolbox Firefox instance to update the
+      // devtools.browsertoolbox.fission pref on the Browser Toolbox profile.
+      MOZ_BROWSER_TOOLBOX_FISSION_PREF: isBrowserToolboxFission ? "1" : "0",
       // Disable safe mode for the new process in case this was opened via the
       // keyboard shortcut.
       MOZ_DISABLE_SAFE_MODE_KEY: "1",
