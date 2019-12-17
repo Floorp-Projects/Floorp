@@ -160,11 +160,16 @@ pref(layout.css.column-span.enabled,true) == 1420528-1.html 1420528-1-ref.html
 == fieldset-00K.html fieldset-00K-ref.html
 == fieldset-00L.html fieldset-00L-ref.html
 
+== block-max-height-001.html block-max-height-001-ref.html
+== block-max-height-002.html block-max-height-001-ref.html
+== block-min-height-001.html block-min-height-001-ref.html
+== block-min-height-002.html block-min-height-001-ref.html
+
 == bfc-001.html bfc-001-ref.html
 == bfc-002.html bfc-001-ref.html
 == bfc-003.html bfc-001-ref.html
-fails == bfc-004.html bfc-004-ref.html # bug 1602430 and bug 1602484
+fails == bfc-004.html bfc-004-ref.html # bug 1602484
 == bfc-005.html bfc-004-ref.html
 == bfc-006.html bfc-006-ref.html
-fails == bfc-007.html bfc-006-ref.html # bug 1602430
-fails == bfc-008.html bfc-006-ref.html # bug 1602430
+== bfc-007.html bfc-006-ref.html
+== bfc-008.html bfc-006-ref.html

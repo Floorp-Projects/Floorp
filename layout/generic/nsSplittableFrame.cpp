@@ -186,6 +186,14 @@ void nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame) {
 
 nscoord nsSplittableFrame::ConsumedBSize(WritingMode aWM) const {
   nscoord bSize = 0;
+
+  // FIXME: wallpaper the bogus max-block-size:100% in ua.css (bug 1603088)
+  const auto& pseudoType = Style()->GetPseudoType();
+  if (pseudoType == PseudoStyleType::columnContent ||
+      pseudoType == PseudoStyleType::columnSet) {
+    return bSize;
+  }
+
   for (nsIFrame* prev = GetPrevContinuation(); prev;
        prev = prev->GetPrevContinuation()) {
     bSize += prev->ContentBSize(aWM);
