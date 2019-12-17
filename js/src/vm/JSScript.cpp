@@ -5461,7 +5461,7 @@ Scope* JSScript::innermostScope(jsbytecode* pc) {
   return bodyScope();
 }
 
-void JSScript::setArgumentsHasVarBinding() {
+void BaseScript::setArgumentsHasVarBinding() {
   setFlag(ImmutableFlags::ArgumentsHasVarBinding);
   setFlag(MutableFlags::NeedsArgsAnalysis);
 }
