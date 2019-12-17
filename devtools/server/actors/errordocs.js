@@ -144,10 +144,10 @@ const CorsErrorDocs = {
   CORSNotSupportingCredentials: "CORSNotSupportingCredentials",
   CORSMethodNotFound: "CORSMethodNotFound",
   CORSMissingAllowCredentials: "CORSMissingAllowCredentials",
-  CORSPreflightDidNotSucceed: "CORSPreflightDidNotSucceed",
+  CORSPreflightDidNotSucceed2: "CORSPreflightDidNotSucceed2",
   CORSInvalidAllowMethod: "CORSInvalidAllowMethod",
   CORSInvalidAllowHeader: "CORSInvalidAllowHeader",
-  CORSMissingAllowHeaderFromPreflight: "CORSMissingAllowHeaderFromPreflight",
+  CORSMissingAllowHeaderFromPreflight2: "CORSMissingAllowHeaderFromPreflight2",
 };
 
 const baseStorageAccessPolicyErrorUrl =

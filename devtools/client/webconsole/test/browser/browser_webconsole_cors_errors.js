@@ -32,11 +32,14 @@ add_task(async function() {
   await checkCorsMessage(message, "CORSDisabled");
   await pushPref("content.cors.disable", false);
 
-  info("Test CORSPreflightDidNotSucceed");
-  onCorsMessage = waitForMessage(hud, `CORS preflight channel did not succeed`);
-  makeFaultyCorsCall("CORSPreflightDidNotSucceed");
+  info("Test CORSPreflightDidNotSucceed2");
+  onCorsMessage = waitForMessage(
+    hud,
+    `CORS preflight response did not succeed`
+  );
+  makeFaultyCorsCall("CORSPreflightDidNotSucceed2");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSPreflightDidNotSucceed");
+  await checkCorsMessage(message, "CORSPreflightDidNotSucceed2");
 
   info("Test CORS did not succeed");
   onCorsMessage = waitForMessage(hud, "Reason: CORS request did not succeed");
@@ -135,17 +138,17 @@ add_task(async function() {
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSInvalidAllowHeader");
 
-  info("Test CORSMissingAllowHeaderFromPreflight");
+  info("Test CORSMissingAllowHeaderFromPreflight2");
   onCorsMessage = waitForMessage(
     hud,
-    `Reason: missing token ${quote("xyz")} in CORS ` +
+    `Reason: header ${quote("xyz")} is not allowed according to ` +
       `header ${quote(
         "Access-Control-Allow-Headers"
-      )} from CORS preflight channel`
+      )} from CORS preflight response`
   );
-  makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight");
+  makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight2");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight");
+  await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight2");
 
   // See Bug 1480671.
   // XXX: how to make Origin to not be included in the request ?
@@ -205,7 +208,7 @@ function makeFaultyCorsCall(errorCategory, corsUrl) {
         options.credentials = "include";
       }
 
-      if (category === "CORSMissingAllowHeaderFromPreflight") {
+      if (category === "CORSMissingAllowHeaderFromPreflight2") {
         options.headers = new content.Headers({ xyz: true });
       }
 
