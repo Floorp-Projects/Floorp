@@ -36,6 +36,7 @@ sys.path.insert(0, OUR_DIR)
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
+    'sphinx.ext.doctest',
     'sphinx.ext.graphviz',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
