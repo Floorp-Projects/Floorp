@@ -50,7 +50,6 @@ import mozpack.path as mozpath
 from types import FunctionType
 
 import itertools
-import six
 
 
 # The MOZ_HARDENING_CFLAGS and MOZ_HARDENING_LDFLAGS differ depending on whether
@@ -314,7 +313,7 @@ class BaseCompileFlags(ContextDerivedValue, dict):
 
         klass_name = self.__class__.__name__
         for k, v, build_vars in self.flag_variables:
-            if not isinstance(k, six.text_type):
+            if not isinstance(k, unicode):
                 raise ValueError('Flag %s for %s is not a string'
                                  % (k, klass_name))
             if not isinstance(build_vars, tuple):
@@ -329,7 +328,7 @@ class BaseCompileFlags(ContextDerivedValue, dict):
         # a template were set and which were provided as defaults.
         template_name = getattr(context, 'template', None)
         if template_name in (None, 'Gyp'):
-            dict.__init__(self, ((k, v if v is None else TypedList(six.text_type)(v))
+            dict.__init__(self, ((k, v if v is None else TypedList(unicode)(v))
                                  for k, v, _ in self.flag_variables))
         else:
             dict.__init__(self)
@@ -612,7 +611,7 @@ class WasmFlags(TargetCompileFlags):
         TargetCompileFlags.__init__(self, context)
 
 
-class FinalTargetValue(ContextDerivedValue, six.text_type):
+class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
             value = 'dist/'
@@ -622,7 +621,7 @@ class FinalTargetValue(ContextDerivedValue, six.text_type):
                 value += 'bin'
             if context['DIST_SUBDIR']:
                 value += '/' + context['DIST_SUBDIR']
-        return six.text_type.__new__(cls, value)
+        return unicode.__new__(cls, value)
 
 
 def Enum(*values):
@@ -671,7 +670,7 @@ class PathMeta(type):
         return super(PathMeta, cls).__call__(context, value)
 
 
-class Path(ContextDerivedValue, six.text_type):
+class Path(ContextDerivedValue, unicode):
     """Stores and resolves a source path relative to a given context
 
     This class is used as a backing type for some of the sandbox variables.
@@ -702,7 +701,7 @@ class Path(ContextDerivedValue, six.text_type):
     def __cmp__(self, other):
         if isinstance(other, Path) and self.srcdir != other.srcdir:
             return cmp(self.full_path, other.full_path)
-        return cmp(six.text_type(self), other)
+        return cmp(unicode(self), other)
 
     # __cmp__ is not enough because unicode has __eq__, __ne__, etc. defined
     # and __cmp__ is only used for those when they don't exist.
@@ -1015,18 +1014,18 @@ ReftestManifestList = OrderedPathListWithAction(read_reftest_manifest)
 OrderedSourceList = ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList)
 OrderedTestFlavorList = TypedList(Enum(*all_test_flavors()),
                                   StrictOrderingOnAppendList)
-OrderedStringList = TypedList(six.text_type, StrictOrderingOnAppendList)
+OrderedStringList = TypedList(unicode, StrictOrderingOnAppendList)
 DependentTestsEntry = ContextDerivedTypedRecord(('files', OrderedSourceList),
                                                 ('tags', OrderedStringList),
                                                 ('flavors', OrderedTestFlavorList))
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
-                                    [('product', six.text_type), ('component', six.text_type)])
+                                    [('product', unicode), ('component', unicode)])
 SchedulingComponents = ContextDerivedTypedRecord(
-        ('inclusive', TypedList(six.text_type, StrictOrderingOnAppendList)),
-        ('exclusive', TypedList(six.text_type, StrictOrderingOnAppendList)))
+        ('inclusive', TypedList(unicode, StrictOrderingOnAppendList)),
+        ('exclusive', TypedList(unicode, StrictOrderingOnAppendList)))
 
 GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory({
-    'script': six.text_type,
+    'script': unicode,
     'inputs': list,
     'force': bool,
     'flags': list, })
@@ -1348,8 +1347,8 @@ VARIABLES = {
         ),
 
     'RUST_LIBRARY_TARGET_DIR': (
-        six.text_type,
-        six.text_type,
+        unicode,
+        unicode,
         """Where CARGO_TARGET_DIR should point when compiling this library.  If
         not set, it defaults to the current objdir.  It should be a relative path
         to the current objdir; absolute paths should not be used.
@@ -1370,13 +1369,13 @@ VARIABLES = {
         ),
 
     'RUST_TESTS': (
-        TypedList(six.text_type),
+        TypedList(unicode),
         list,
         """Names of Rust tests to build and run via `cargo test`.
         """),
 
     'RUST_TEST_FEATURES': (
-        TypedList(six.text_type),
+        TypedList(unicode),
         list,
         """Cargo features to activate for RUST_TESTS.
         """
@@ -1633,7 +1632,7 @@ VARIABLES = {
                         """Like ``OBJDIR_FILES``, with preprocessing. Use sparingly.
         """),
 
-    'FINAL_LIBRARY': (six.text_type, six.text_type,
+    'FINAL_LIBRARY': (unicode, unicode,
                       """Library in which the objects of the current directory will be linked.
 
         This variable contains the name of a library, defined elsewhere with
@@ -1678,7 +1677,7 @@ VARIABLES = {
                      """Source code files to compile with the wasm compiler.
         """),
 
-    'HOST_LIBRARY_NAME': (six.text_type, six.text_type,
+    'HOST_LIBRARY_NAME': (unicode, unicode,
                           """Name of target library generated when cross compiling.
         """),
 
@@ -1689,7 +1688,7 @@ VARIABLES = {
         libraries that link into this library via FINAL_LIBRARY.
         """),
 
-    'LIBRARY_NAME': (six.text_type, six.text_type,
+    'LIBRARY_NAME': (unicode, unicode,
                      """The code name of the library generated for a directory.
 
         By default STATIC_LIBRARY_NAME and SHARED_LIBRARY_NAME take this name.
@@ -1701,7 +1700,7 @@ VARIABLES = {
         ``example/components/xpcomsample.lib`` on Windows.
         """),
 
-    'SHARED_LIBRARY_NAME': (six.text_type, six.text_type,
+    'SHARED_LIBRARY_NAME': (unicode, unicode,
                             """The name of the static library generated for a directory, if it needs to
         differ from the library code name.
 
@@ -1709,17 +1708,17 @@ VARIABLES = {
         """),
 
     'SANDBOXED_WASM_LIBRARY_NAME': (
-        six.text_type, six.text_type,
+        unicode, unicode,
         """The name of the static sandboxed wasm library generated for a directory.
         """),
 
-    'SHARED_LIBRARY_OUTPUT_CATEGORY': (six.text_type, six.text_type,
+    'SHARED_LIBRARY_OUTPUT_CATEGORY': (unicode, unicode,
                                        """The output category for this context's shared library. If set this will
         correspond to the build command that will build this shared library, and
         the library will not be built as part of the default build.
         """),
 
-    'RUST_LIBRARY_OUTPUT_CATEGORY': (six.text_type, six.text_type,
+    'RUST_LIBRARY_OUTPUT_CATEGORY': (unicode, unicode,
                                      """The output category for this context's rust library. If set this will
         correspond to the build command that will build this rust library, and
         the library will not be built as part of the default build.
@@ -1732,7 +1731,7 @@ VARIABLES = {
         Implies FORCE_SHARED_LIB.
         """),
 
-    'STATIC_LIBRARY_NAME': (six.text_type, six.text_type,
+    'STATIC_LIBRARY_NAME': (unicode, unicode,
                             """The name of the static library generated for a directory, if it needs to
         differ from the library code name.
 
@@ -1764,31 +1763,31 @@ VARIABLES = {
 
         This variable contains a list of system libaries to link against.
         """),
-    'RCFILE': (Path, six.text_type,
+    'RCFILE': (Path, unicode,
                """The program .rc file.
 
         This variable can only be used on Windows.
         """),
 
-    'RESFILE': (six.text_type, six.text_type,
+    'RESFILE': (unicode, unicode,
                 """The program .res file.
 
         This variable can only be used on Windows.
         """),
 
-    'RCINCLUDE': (Path, six.text_type,
+    'RCINCLUDE': (Path, unicode,
                   """The resource script file to be included in the default .res file.
 
         This variable can only be used on Windows.
         """),
 
-    'DEFFILE': (Path, six.text_type,
+    'DEFFILE': (Path, unicode,
                 """The program .def (module definition) file.
 
         This variable can only be used on Windows.
         """),
 
-    'SYMBOLS_FILE': (Path, six.text_type,
+    'SYMBOLS_FILE': (Path, unicode,
                      """A file containing a list of symbols to export from a shared library.
 
         The given file contains a list of symbols to be exported, and is
@@ -1809,7 +1808,7 @@ VARIABLES = {
         ``BIN_SUFFIX``, the name will remain unchanged.
         """),
 
-    'SONAME': (six.text_type, six.text_type,
+    'SONAME': (unicode, unicode,
                """The soname of the shared object currently being linked
 
         soname is the "logical name" of a shared object, often used to provide
@@ -1891,7 +1890,7 @@ VARIABLES = {
         ``GENERATED_FILES``.
         """),
 
-    'PROGRAM': (six.text_type, six.text_type,
+    'PROGRAM': (unicode, unicode,
                 """Compiled executable name.
 
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
@@ -1899,7 +1898,7 @@ VARIABLES = {
         ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
         """),
 
-    'HOST_PROGRAM': (six.text_type, six.text_type,
+    'HOST_PROGRAM': (unicode, unicode,
                      """Compiled host executable name.
 
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will be
@@ -1937,7 +1936,7 @@ VARIABLES = {
         files.
         """),
 
-    'XPIDL_MODULE': (six.text_type, six.text_type,
+    'XPIDL_MODULE': (unicode, unicode,
                      """XPCOM Interface Definition Module Name.
 
         This is the name of the ``.xpt`` file that is created by linking
@@ -2090,14 +2089,14 @@ VARIABLES = {
         """),
 
     # The following variables are used to control the target of installed files.
-    'XPI_NAME': (six.text_type, six.text_type,
+    'XPI_NAME': (unicode, unicode,
                  """The name of an extension XPI to generate.
 
         When this variable is present, the results of this directory will end up
         being packaged into an extension instead of the main dist/bin results.
         """),
 
-    'DIST_SUBDIR': (six.text_type, six.text_type,
+    'DIST_SUBDIR': (unicode, unicode,
                     """The name of an alternate directory to install files to.
 
         When this variable is present, the results of this directory will end up
@@ -2105,7 +2104,7 @@ VARIABLES = {
         otherwise be placed.
         """),
 
-    'FINAL_TARGET': (FinalTargetValue, six.text_type,
+    'FINAL_TARGET': (FinalTargetValue, unicode,
                      """The name of the directory to install targets to.
 
         The directory is relative to the top of the object directory. The
@@ -2125,7 +2124,7 @@ VARIABLES = {
 
     'GYP_DIRS': (StrictOrderingOnAppendListWithFlagsFactory({
             'variables': dict,
-            'input': six.text_type,
+            'input': unicode,
             'sandbox_vars': dict,
             'no_chromium': bool,
             'no_unified': bool,
@@ -2170,7 +2169,7 @@ VARIABLES = {
             'sandbox_vars': dict,
             'non_unified_sources': StrictOrderingOnAppendList,
             'mozilla_flags': list,
-            'gn_target': six.text_type,
+            'gn_target': unicode,
         }), list,
         """List of dirs containing gn files describing targets to build. Attributes:
             - variables, a dictionary containing variables and values to pass

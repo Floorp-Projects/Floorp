@@ -1,4 +1,4 @@
-FROM          ubuntu:18.04
+FROM          ubuntu:16.04
 MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 
 RUN mkdir /builds
