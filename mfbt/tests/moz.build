@@ -33,6 +33,7 @@ CppUnitTests([
     'TestFastBernoulliTrial',
     'TestFloatingPoint',
     'TestFunctionTypeTraits',
+    'TestHashTable',
     'TestIntegerPrintfMacros',
     'TestIntegerRange',
     'TestJSONWriter',
