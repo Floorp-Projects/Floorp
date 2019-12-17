@@ -1846,6 +1846,9 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
   if (funbox->hasThisBinding()) {
     lazy->setFunctionHasThisBinding();
   }
+  if (funbox->hasExtensibleScope()) {
+    lazy->setFunHasExtensibleScope();
+  }
 
   // Flags that need to copied back into the parser when we do the full
   // parse.
