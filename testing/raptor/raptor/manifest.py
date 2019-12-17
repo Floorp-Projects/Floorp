@@ -232,8 +232,8 @@ def write_test_settings_json(args, test_details, oskey):
 
         test_settings['raptor-options'].update({
             'gecko_profile': True,
-            'gecko_profile_entries': int(test_details.get('gecko_profile_entries')),
-            'gecko_profile_interval': int(test_details.get('gecko_profile_interval')),
+            'gecko_profile_entries': int(test_details.get('gecko_profile_entries', 1000000)),
+            'gecko_profile_interval': int(test_details.get('gecko_profile_interval', 1)),
             'gecko_profile_threads': ','.join(set(threads)),
         })
 
