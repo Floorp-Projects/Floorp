@@ -59,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
         };
 
         WebExtension extension = new WebExtension(
-                "resource://android/assets/messaging/");
+                "resource://android/assets/messaging/",
+                sRuntime.getWebExtensionController());
 
         extension.setMessageDelegate(messageDelegate, "browser");
 

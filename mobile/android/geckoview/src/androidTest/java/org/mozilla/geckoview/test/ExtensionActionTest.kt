@@ -49,7 +49,8 @@ class ExtensionActionTest : BaseSessionTest() {
         val backgroundPortResult = GeckoResult<WebExtension.Port>()
 
         extension = WebExtension("resource://android/assets/web_extensions/actions/",
-                "actions", WebExtension.Flags.ALLOW_CONTENT_MESSAGING)
+                "actions", WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
+                sessionRule.runtime.webExtensionController)
 
         sessionRule.session.setMessageDelegate(
                 extension!!,

@@ -69,7 +69,8 @@ class WebExtensionTest : BaseSessionTest() {
         assertThat("The border color should be empty when loading without extensions.",
                 colorBefore as String, equalTo(""))
 
-        val borderify = WebExtension("resource://android/assets/web_extensions/borderify/")
+        val borderify = WebExtension("resource://android/assets/web_extensions/borderify/",
+                controller)
 
         // Load the WebExtension that will add a border to the body
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(borderify))
@@ -280,7 +281,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
         controller.tabDelegate = tabDelegate
-        tabsExtension = WebExtension(TABS_CREATE_BACKGROUND)
+        tabsExtension = WebExtension(TABS_CREATE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(tabsCreateResult)
@@ -321,7 +322,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND)
+        tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
@@ -357,7 +358,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND)
+        val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND, controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
@@ -371,11 +372,12 @@ class WebExtensionTest : BaseSessionTest() {
         val uuid = "{${UUID.randomUUID()}}"
 
         if (background) {
-            webExtension = WebExtension(MESSAGING_BACKGROUND, uuid, WebExtension.Flags.NONE)
+            webExtension = WebExtension(MESSAGING_BACKGROUND, uuid, WebExtension.Flags.NONE,
+                    controller)
             webExtension.setMessageDelegate(messageDelegate, "browser")
         } else {
             webExtension = WebExtension(MESSAGING_CONTENT, uuid,
-                    WebExtension.Flags.ALLOW_CONTENT_MESSAGING)
+                    WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
             sessionRule.session.setMessageDelegate(webExtension, messageDelegate, "browser")
         }
 
@@ -680,7 +682,7 @@ class WebExtensionTest : BaseSessionTest() {
         }
 
         messaging = WebExtension("resource://android/assets/web_extensions/messaging-iframe/",
-                "{${UUID.randomUUID()}}", WebExtension.Flags.ALLOW_CONTENT_MESSAGING)
+                "{${UUID.randomUUID()}}", WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
         sessionRule.session.setMessageDelegate(messaging, messageDelegate, "browser")
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
@@ -723,7 +725,8 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/")
+        extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/",
+                controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
         mainSession.setMessageDelegate(extension, messageDelegate, "browser")
@@ -811,7 +814,7 @@ class WebExtensionTest : BaseSessionTest() {
     private fun testRegisterError(location: String, expectedError: String) {
         try {
             sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(
-                    WebExtension(location)
+                    WebExtension(location, controller)
             ))
         } catch (ex: Exception) {
             // Let's make sure the error message contains the WebExtension URL

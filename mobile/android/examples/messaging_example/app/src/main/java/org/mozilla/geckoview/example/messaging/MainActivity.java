@@ -53,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
         WebExtension extension = new WebExtension(
                 "resource://android/assets/messaging/",
                 "myextension",
-                WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
+                WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
+                sRuntime.getWebExtensionController());
 
         sRuntime.registerWebExtension(extension).exceptionally(e -> {
             Log.e("MessageDelegate", "Error registering WebExtension", e);
