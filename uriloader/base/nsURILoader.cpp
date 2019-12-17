@@ -52,9 +52,6 @@ mozilla::LazyLogModule nsURILoader::mLog("URILoader");
   MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Error, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(nsURILoader::mLog, mozilla::LogLevel::Debug)
 
-#define NS_PREF_DISABLE_BACKGROUND_HANDLING \
-  "security.exthelperapp.disable_background_handling"
-
 static uint32_t sConvertDataLimit = 20;
 
 static bool InitPreferences() {
@@ -538,36 +535,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
   // All attempts to dispatch this content have failed.  Just pass it off to
   // the helper app service.
   //
-
-  //
-  // Optionally, we may want to disable background handling by the external
-  // helper application service.
-  //
-  if (mozilla::Preferences::GetBool(NS_PREF_DISABLE_BACKGROUND_HANDLING,
-                                    false)) {
-    // First, we will ensure that the parent docshell is in an active
-    // state as we will disallow all external application handling unless it is
-    // in the foreground.
-    nsCOMPtr<nsIDocShell> docShell(do_GetInterface(m_originalContext));
-    if (!docShell) {
-      // If we can't perform our security check we definitely don't want to go
-      // any further!
-      LOG(
-          ("Failed to get DocShell to ensure it is active before anding off to "
-           "helper app service. Aborting."));
-      return NS_ERROR_FAILURE;
-    }
-
-    // Ensure the DocShell is active before continuing.
-    bool isActive = false;
-    docShell->GetIsActive(&isActive);
-    if (!isActive) {
-      LOG(
-          ("  Check for active DocShell returned false. Aborting hand off to "
-           "helper app service."));
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
-  }
 
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
       do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
