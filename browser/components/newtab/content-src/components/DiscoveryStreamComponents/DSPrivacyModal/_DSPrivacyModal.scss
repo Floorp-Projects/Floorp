@@ -1,11 +1,48 @@
 .ds-privacy-modal {
-  a:hover {
-    text-decoration: underline;
+  .modal-link {
+    display: flex;
+    align-items: center;
+    margin: 0 0 8px;
+    border: 0;
+    padding: 0;
+    color: $blue-60;
+
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    &::before {
+      -moz-context-properties: fill;
+      fill: $blue-60;
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      margin-inline-end: 8px;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+    }
+
+    &.modal-link-privacy::before {
+      background-image: url('chrome://browser/skin/settings.svg');
+    }
+
+    &.modal-link-manage::before {
+      background-image: url('../data/content/assets/glyph-info-16.svg');
+    }
+  }
+
+
+  p {
+    line-height: 24px;
   }
 
   .privacy-notice {
-    width: 492px;
-    padding: 40px 0;
+    max-width: 572px;
+    padding: 40px;
     margin: auto;
   }
 }

@@ -3,23 +3,28 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { ModalOverlayWrapper } from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
 
 export class DSPrivacyModal extends React.PureComponent {
   constructor(props) {
     super(props);
     this.closeModal = this.closeModal.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
+    this.onLearnLinkClick = this.onLearnLinkClick.bind(this);
+    this.onManageLinkClick = this.onManageLinkClick.bind(this);
   }
 
-  onLinkClick(event) {
+  onLearnLinkClick(event) {
     this.props.dispatch(
       ac.UserEvent({
         event: "CLICK_PRIVACY_INFO",
         source: "DS_PRIVACY_MODAL",
       })
     );
+  }
+
+  onManageLinkClick(event) {
+    this.props.dispatch(ac.OnlyToMain({ type: at.SETTINGS_OPEN }));
   }
 
   closeModal() {
@@ -39,10 +44,17 @@ export class DSPrivacyModal extends React.PureComponent {
           <h3 data-l10n-id="newtab-privacy-modal-header" />
           <p data-l10n-id="newtab-privacy-modal-paragraph" />
           <a
+            className="modal-link modal-link-privacy"
             data-l10n-id="newtab-privacy-modal-link"
-            onClick={this.onLinkClick}
+            onClick={this.onLearnLinkClick}
             href="https://www.mozilla.org/en-US/privacy/firefox/"
           />
+          <button
+            className="modal-link modal-link-manage"
+            onClick={this.onManageLinkClick}
+          >
+            Manage sponsored content settings
+          </button>
         </div>
         <section className="actions">
           <button
