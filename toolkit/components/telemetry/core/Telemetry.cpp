@@ -60,7 +60,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
 #include "nsITelemetry.h"
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)
 #  include "other/UntrustedModules.h"
 #endif
 #include "nsJSUtils.h"
