@@ -12,6 +12,7 @@
     <string name="request_audio">Share audio with "%1$s"</string>
     <string name="request_media">Share video and audio with "%1$s"</string>
     <string name="request_xr">Share WebXR displays with "%1$s"?</string>
+    <string name="request_autoplay">Allow video to autoplay on "%1$s"?</string>
     <string name="media_back_camera">Back camera</string>
     <string name="media_front_camera">Front camera</string>
     <string name="media_microphone">Microphone</string>
