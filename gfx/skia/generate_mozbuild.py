@@ -72,6 +72,10 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY']:
 if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['SK_CAN_USE_DLOPEN'] = 0
 
+# Reduce strength of synthetic-emboldening used in the freetype backend
+# (see bug 1600470).
+DEFINES['SK_OUTLINE_EMBOLDEN_DIVISOR'] = 48
+
 # Suppress warnings in third-party code.
 CXXFLAGS += [
     '-Wno-deprecated-declarations',
