@@ -272,25 +272,12 @@ nsAsyncRedirectVerifyHelper::Run() {
 }
 
 bool nsAsyncRedirectVerifyHelper::IsOldChannelCanceled() {
-  bool canceled;
-  nsCOMPtr<nsIHttpChannelInternal> oldChannelInternal =
-      do_QueryInterface(mOldChan);
-  if (oldChannelInternal) {
-    nsresult rv = oldChannelInternal->GetCanceled(&canceled);
-    if (NS_SUCCEEDED(rv) && canceled) {
-      return true;
-    }
-  } else if (mOldChan) {
-    // For non-HTTP channels check on the status, failure
-    // indicates the channel has probably been canceled.
-    nsresult status = NS_ERROR_FAILURE;
-    mOldChan->GetStatus(&status);
-    if (NS_FAILED(status)) {
-      return true;
-    }
+  if (!mOldChan) {
+    return false;
   }
-
-  return false;
+  bool canceled;
+  nsresult rv = mOldChan->GetCanceled(&canceled);
+  return NS_SUCCEEDED(rv) && canceled;
 }
 
 }  // namespace net

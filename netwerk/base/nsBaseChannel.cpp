@@ -942,6 +942,14 @@ nsBaseChannel::CheckListenerChain() {
   return listener->CheckListenerChain();
 }
 
+NS_IMETHODIMP nsBaseChannel::GetCanceled(bool* aCanceled) {
+  // Failure indicates the channel has probably been canceled.
+  nsresult status = NS_ERROR_FAILURE;
+  GetStatus(&status);
+  *aCanceled = NS_FAILED(status);
+  return NS_OK;
+}
+
 void nsBaseChannel::SetupNeckoTarget() {
   mNeckoTarget =
       nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
