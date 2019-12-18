@@ -167,7 +167,7 @@ NativeLayerCA::~NativeLayerCA() {
     mSurfacePoolHandle->ReturnSurfaceToPool(mFrontSurface->mSurface);
   }
   for (const auto& surf : mSurfaces) {
-    mSurfacePoolHandle->ReturnSurfaceToPool(surf.mSurface);
+    mSurfacePoolHandle->ReturnSurfaceToPool(surf.mEntry.mSurface);
   }
 
   [mContentCALayer release];
@@ -254,7 +254,7 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
     mFrontSurface->mInvalidRegion.OrWith(r);
   }
   for (auto& surf : mSurfaces) {
-    surf.mInvalidRegion.OrWith(r);
+    surf.mEntry.mInvalidRegion.OrWith(r);
   }
 }
 
@@ -396,7 +396,7 @@ void NativeLayerCA::NotifySurfaceReady() {
                      "NotifySurfaceReady called without preceding call to NextSurface");
   if (mReadySurface) {
     IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
-    mSurfaces.push_back(*mReadySurface);
+    mSurfaces.push_back({*mReadySurface, 0});
     mReadySurface = Nothing();
   }
 
@@ -413,7 +413,7 @@ void NativeLayerCA::DiscardBackbuffers() {
   MutexAutoLock lock(mMutex);
 
   for (const auto& surf : mSurfaces) {
-    mSurfacePoolHandle->ReturnSurfaceToPool(surf.mSurface);
+    mSurfacePoolHandle->ReturnSurfaceToPool(surf.mEntry.mSurface);
   }
   mSurfaces.clear();
 }
@@ -525,7 +525,7 @@ void NativeLayerCA::ApplyChanges() {
     IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
 
     if (mFrontSurface) {
-      mSurfaces.push_back(*mFrontSurface);
+      mSurfaces.push_back({*mFrontSurface, 0});
       mFrontSurface = Nothing();
     }
 
@@ -537,20 +537,29 @@ void NativeLayerCA::ApplyChanges() {
 // Called when mMutex is already being held by the current thread.
 Maybe<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::GetUnusedSurfaceAndCleanUp(
     const MutexAutoLock&) {
-  std::vector<SurfaceWithInvalidRegion> usedSurfaces;
+  std::vector<SurfaceWithInvalidRegionAndCheckCount> usedSurfaces;
   Maybe<SurfaceWithInvalidRegion> unusedSurface;
 
   // Separate mSurfaces into used and unused surfaces.
   for (auto& surf : mSurfaces) {
-    if (IOSurfaceIsInUse(surf.mSurface.get())) {
-      usedSurfaces.push_back(std::move(surf));
+    if (IOSurfaceIsInUse(surf.mEntry.mSurface.get())) {
+      surf.mCheckCount++;
+      if (surf.mCheckCount < 10) {
+        usedSurfaces.push_back(std::move(surf));
+      } else {
+        // The window server has been holding on to this surface for an unreasonably long time. This
+        // is known to happen sometimes, for example in occluded windows or after a GPU switch. In
+        // that case, release our references to the surface so that it doesn't look like we're
+        // trying to keep it alive.
+        mSurfacePoolHandle->ReturnSurfaceToPool(std::move(surf.mEntry.mSurface));
+      }
     } else {
       if (unusedSurface) {
         // Multiple surfaces are unused. Keep the most recent one and release any earlier ones. The
         // most recent one requires the least amount of copying during partial repaints.
         mSurfacePoolHandle->ReturnSurfaceToPool(std::move(unusedSurface->mSurface));
       }
-      unusedSurface = Some(std::move(surf));
+      unusedSurface = Some(std::move(surf.mEntry));
     }
   }
 
