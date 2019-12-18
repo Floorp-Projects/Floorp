@@ -15,12 +15,6 @@ loader.lazyRequireGetter(
   "devtools/server/connectors/frame-connector",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "connectToFrameWithJsWindowActor",
-  "devtools/server/connectors/js-window-actor/frame-js-window-actor-connector",
-  true
-);
 
 const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
   initialize(connection, browsingContext) {
@@ -42,11 +36,11 @@ const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
   },
 
   async _connectBrowsingContext() {
-    return connectToFrameWithJsWindowActor(
-      this.conn,
-      this._browsingContext,
-      this.destroy
-    );
+    const id = this.id;
+    return {
+      error: "NoJSWindowAPISupport",
+      message: `The browsingContext '${id}' can only be accessed via JSWindowAPI`,
+    };
   },
 
   get _mm() {

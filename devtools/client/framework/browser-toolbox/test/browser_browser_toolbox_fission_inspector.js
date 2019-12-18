@@ -18,9 +18,7 @@ add_task(async function() {
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });
-  await ToolboxTask.importFunctions({
-    selectNodeFront,
-  });
+  await ToolboxTask.importFunctions({});
 
   const tab = await addTab(
     `data:text/html,<div id="my-div" style="color: red">Foo</div>`
@@ -36,14 +34,20 @@ add_task(async function() {
     inspector.sidebar.select("computedview");
     await onSidebarSelect;
 
-    const browser = await selectNodeFront(
-      inspector,
+    async function select(walker, selector) {
+      const nodeFront = await walker.querySelector(walker.rootNode, selector);
+      const updated = inspector.once("inspector-updated");
+      inspector.selection.setNodeFront(nodeFront);
+      await updated;
+      return nodeFront;
+    }
+    const browser = await select(
       inspector.walker,
       'browser[remote="true"][test-tab]'
     );
     const browserTarget = await browser.connectToRemoteFrame();
     const walker = (await browserTarget.getFront("inspector")).walker;
-    await selectNodeFront(inspector, walker, "#my-div");
+    await select(walker, "#my-div");
 
     const view = inspector.getPanel("computedview").computedView;
     function getProperty(name) {
