@@ -26,7 +26,7 @@ class TestInstallManifest(TestWithTmpDir):
 
     def test_malformed(self):
         f = self.tmppath('manifest')
-        open(f, 'wt').write('junk\n')
+        open(f, 'wb').write('junk\n')
         with self.assertRaises(UnreadableInstallManifest):
             InstallManifest(f)
 
@@ -94,7 +94,7 @@ class TestInstallManifest(TestWithTmpDir):
         m.write(path=p)
         self.assertTrue(os.path.isfile(p))
 
-        with open(p, 'r') as fh:
+        with open(p, 'rb') as fh:
             c = fh.read()
 
         self.assertEqual(c.count('\n'), 9)
@@ -109,7 +109,7 @@ class TestInstallManifest(TestWithTmpDir):
         p2 = self.tmppath('m2')
         m2.write(path=p2)
 
-        with open(p2, 'r') as fh:
+        with open(p2, 'rb') as fh:
             c2 = fh.read()
 
         self.assertEqual(c, c2)
@@ -161,7 +161,7 @@ class TestInstallManifest(TestWithTmpDir):
         m.write(path=track, expand_pattern=True)
 
         m = InstallManifest(path=track)
-        self.assertEqual(sorted(dest for dest in m._dests),
+        self.assertEqual([dest for dest in m._dests],
                          ['dest/foo/file1', 'dest/foo/file2'])
 
     def test_or(self):

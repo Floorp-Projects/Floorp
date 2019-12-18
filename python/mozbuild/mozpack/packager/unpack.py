@@ -81,7 +81,7 @@ class UnpackFinder(BaseFinder):
             if is_manifest(p):
                 m = self.files[p] if self.files.contains(p) \
                     else ManifestFile(base)
-                for e in parse_manifest(self.base, p, f.open('rt')):
+                for e in parse_manifest(self.base, p, f.open()):
                     m.add(self._handle_manifest_entry(e, jars))
                 if self.files.contains(p):
                     continue
