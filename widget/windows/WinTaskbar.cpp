@@ -27,6 +27,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/Preferences.h"
+#include "nsAppRunner.h"
+#include "nsXREDirProvider.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>
@@ -202,6 +204,13 @@ WinTaskbar::~WinTaskbar() {
 
 // static
 bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
+  // If an ID has already been set then use that.
+  PWSTR id;
+  if (SUCCEEDED(GetCurrentProcessExplicitAppUserModelID(&id))) {
+    aDefaultGroupId.Assign(id);
+    CoTaskMemFree(id);
+  }
+
   // If marked as such in prefs, use a hash of the profile path for the id
   // instead of the install path hash setup by the installer.
   bool useProfile = Preferences::GetBool("taskbar.grouping.useprofile", false);
@@ -227,43 +236,41 @@ bool WinTaskbar::GetAppUserModelID(nsAString& aDefaultGroupId) {
   // under (HKLM||HKCU)/Software/Mozilla/Firefox/TaskBarIDs. If for any reason
   // hash generation operation fails, the installer will not store a value in
   // the registry or set ids on shortcuts. A lack of an id can also occur for
-  // zipped builds. We skip setting the global id in this case as well.
+  // zipped builds.
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
-  if (!appInfo) return false;
-
   nsCString appName;
-  if (NS_FAILED(appInfo->GetName(appName))) {
-    // We just won't register then, let Windows handle it.
-    return false;
-  }
+  if (appInfo && NS_SUCCEEDED(appInfo->GetName(appName))) {
+    nsAutoString regKey;
+    regKey.AssignLiteral("Software\\Mozilla\\");
+    AppendASCIItoUTF16(appName, regKey);
+    regKey.AppendLiteral("\\TaskBarIDs");
 
-  nsAutoString regKey;
-  regKey.AssignLiteral("Software\\Mozilla\\");
-  AppendASCIItoUTF16(appName, regKey);
-  regKey.AppendLiteral("\\TaskBarIDs");
+    WCHAR path[MAX_PATH];
+    if (GetModuleFileNameW(nullptr, path, MAX_PATH)) {
+      wchar_t* slash = wcsrchr(path, '\\');
+      if (!slash) return false;
+      *slash = '\0';  // no trailing slash
 
-  WCHAR path[MAX_PATH];
-  if (GetModuleFileNameW(nullptr, path, MAX_PATH)) {
-    wchar_t* slash = wcsrchr(path, '\\');
-    if (!slash) return false;
-    *slash = '\0';  // no trailing slash
-
-    // The hash is short, but users may customize this, so use a respectable
-    // string buffer.
-    wchar_t buf[256];
-    if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, regKey.get(), path, buf,
-                                 sizeof buf)) {
-      aDefaultGroupId.Assign(buf);
-    } else if (WinUtils::GetRegistryKey(HKEY_CURRENT_USER, regKey.get(), path,
-                                        buf, sizeof buf)) {
-      aDefaultGroupId.Assign(buf);
+      // The hash is short, but users may customize this, so use a respectable
+      // string buffer.
+      wchar_t buf[256];
+      if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, regKey.get(), path, buf,
+                                   sizeof buf)) {
+        aDefaultGroupId.Assign(buf);
+      } else if (WinUtils::GetRegistryKey(HKEY_CURRENT_USER, regKey.get(), path,
+                                          buf, sizeof buf)) {
+        aDefaultGroupId.Assign(buf);
+      }
     }
   }
 
-  return !aDefaultGroupId.IsEmpty();
+  // If we haven't found an ID yet then use the install hash.
+  if (aDefaultGroupId.IsEmpty()) {
+    gDirServiceProvider->GetInstallHash(aDefaultGroupId);
+  }
 
-  return true;
+  return !aDefaultGroupId.IsEmpty();
 }
 
 NS_IMETHODIMP
@@ -380,6 +387,7 @@ WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder** aJumpListBuilder) {
 NS_IMETHODIMP
 WinTaskbar::SetGroupIdForWindow(mozIDOMWindow* aParent,
                                 const nsAString& aIdentifier) {
+  printf("*** Set group id to %s\n", NS_ConvertUTF16toUTF8(aIdentifier).get());
   return SetWindowAppUserModelProp(aParent, nsString(aIdentifier));
 }
 
