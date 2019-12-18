@@ -1158,7 +1158,8 @@ class AstImport : public AstNode {
         kind_(kind),
         limits_(limits),
         tableKind_(TableKind::NullRef) {
-    MOZ_ASSERT(kind != DefinitionKind::Table, "A table must have a kind");
+    MOZ_ASSERT(kind != DefinitionKind::Table,
+               "A table must have a meaningful DefinitionKind");
   }
   AstImport(AstName name, AstName module, AstName field, const Limits& limits,
             TableKind tableKind)
