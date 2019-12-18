@@ -146,6 +146,11 @@ this.TelemetryFeed = class TelemetryFeed {
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
       this._addWindowListeners(win);
     }
+    // Set a scalar for the "deletion-request" ping (See bug 1602064)
+    Services.telemetry.scalarSet(
+      "deletion.request.impression_id",
+      this._impressionId
+    );
   }
 
   handleEvent(event) {
