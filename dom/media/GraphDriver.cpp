@@ -536,7 +536,6 @@ bool AudioCallbackDriver::Init() {
     if (!mFromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(true);
     }
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     FallbackToSystemClockDriver();
     return true;
   }
@@ -558,7 +557,6 @@ bool AudioCallbackDriver::Init() {
 
   if (!mOutputChannels) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     FallbackToSystemClockDriver();
     return true;
   }
@@ -645,7 +643,6 @@ bool AudioCallbackDriver::Init() {
     if (!mFromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(firstStream);
     }
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     FallbackToSystemClockDriver();
     return true;
   }
@@ -977,7 +974,6 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
     MOZ_ASSERT(!ThreadRunning());
     mShouldFallbackIfError = false;
     RemoveMixerCallback();
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     FallbackToSystemClockDriver();
   } else if (aState == CUBEB_STATE_STOPPED) {
     MOZ_ASSERT(!ThreadRunning());
@@ -1121,9 +1117,10 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
 
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
-  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
   nextDriver->MarkAsFallback();
+
+  MonitorAutoLock lock(GraphImpl()->GetMonitor());
   SetNextDriver(nextDriver);
   // We're not using SwitchAtNextIteration here, because there
   // won't be a next iteration if we don't restart things manually:
