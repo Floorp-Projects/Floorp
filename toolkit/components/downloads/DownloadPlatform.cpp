@@ -29,6 +29,7 @@
 #  include <shlobj.h>
 #  include <urlmon.h>
 #  include "nsILocalFileWin.h"
+#  include "WinTaskbar.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -98,6 +99,31 @@ CFURLRef CreateCFURLFromNSIURI(nsIURI* aURI) {
 }
 #endif
 
+#ifdef XP_WIN
+static void AddToRecentDocs(nsIFile* aTarget, nsAutoString& aPath) {
+  nsString modelId;
+  if (mozilla::widget::WinTaskbar::GetAppUserModelID(modelId)) {
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(uri), aTarget)) && uri) {
+      nsCString spec;
+      if (NS_SUCCEEDED(uri->GetSpec(spec))) {
+        IShellItem2* psi = nullptr;
+        if (SUCCEEDED(
+                SHCreateItemFromParsingName(NS_ConvertASCIItoUTF16(spec).get(),
+                                            nullptr, IID_PPV_ARGS(&psi)))) {
+          SHARDAPPIDINFO info = {psi, modelId.get()};
+          ::SHAddToRecentDocs(SHARD_APPIDINFO, &info);
+          psi->Release();
+          return;
+        }
+      }
+    }
+  }
+
+  ::SHAddToRecentDocs(SHARD_PATHW, aPath.get());
+}
+#endif
+
 DownloadPlatform::DownloadPlatform() {
   mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
                                  NS_LITERAL_CSTRING("DownloadPlatform"));
@@ -138,7 +164,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
       if (addToRecentDocs && !aIsPrivate) {
 #      ifdef XP_WIN
-        ::SHAddToRecentDocs(SHARD_PATHW, path.get());
+        AddToRecentDocs(aTarget, path);
 #      elif defined(MOZ_WIDGET_GTK)
         GtkRecentManager* manager = gtk_recent_manager_get_default();
 
