@@ -168,12 +168,6 @@ class GraphDriver {
   void SetGraphTime(GraphDriver* aPreviousDriver,
                     GraphTime aLastSwitchNextIterationStart,
                     GraphTime aLastSwitchNextIterationEnd);
-  /**
-   * Call this to indicate that another iteration of the control loop is
-   * required on its regular schedule. The monitor must not be held.
-   * This function has to be idempotent.
-   */
-  void EnsureNextIteration();
 
   MediaTrackGraphImpl* GraphImpl() const { return mGraphImpl; }
 
