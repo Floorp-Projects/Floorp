@@ -715,6 +715,14 @@ double AudioContext::CurrentTime() {
                                                  GetRandomTimelineSeed());
 }
 
+nsISerialEventTarget* AudioContext::GetMainThread() const {
+  if (nsPIDOMWindowInner* window = GetParentObject()) {
+    return window->AsGlobal()->EventTargetFor(TaskCategory::Other);
+  }
+
+  return GetCurrentThreadSerialEventTarget();
+}
+
 void AudioContext::DisconnectFromOwner() {
   mIsDisconnecting = true;
   Shutdown();
@@ -775,54 +783,6 @@ void AudioContext::Shutdown() {
   if (mIsOffline && mDestination) {
     mDestination->OfflineShutdown();
   }
-}
-
-StateChangeTask::StateChangeTask(AudioContext* aAudioContext, void* aPromise,
-                                 AudioContextState aNewState)
-    : Runnable("dom::StateChangeTask"),
-      mAudioContext(aAudioContext),
-      mPromise(aPromise),
-      mAudioNodeTrack(nullptr),
-      mNewState(aNewState) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "This constructor should be used from the main thread.");
-}
-
-StateChangeTask::StateChangeTask(AudioNodeTrack* aTrack, void* aPromise,
-                                 AudioContextState aNewState)
-    : Runnable("dom::StateChangeTask"),
-      mAudioContext(nullptr),
-      mPromise(aPromise),
-      mAudioNodeTrack(aTrack),
-      mNewState(aNewState) {
-  MOZ_ASSERT(!NS_IsMainThread(),
-             "This constructor should be used from the graph thread.");
-}
-
-NS_IMETHODIMP
-StateChangeTask::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mAudioContext && !mAudioNodeTrack) {
-    return NS_OK;
-  }
-  if (mAudioNodeTrack) {
-    AudioNode* node = mAudioNodeTrack->Engine()->NodeMainThread();
-    if (!node) {
-      return NS_OK;
-    }
-    mAudioContext = node->Context();
-    if (!mAudioContext) {
-      return NS_OK;
-    }
-  }
-
-  mAudioContext->OnStateChanged(mPromise, mNewState);
-  // We have can't call Release() on the AudioContext on the MTG thread, so we
-  // unref it here, on the main thread.
-  mAudioContext = nullptr;
-
-  return NS_OK;
 }
 
 /* This runnable allows to fire the "statechange" event */
@@ -992,6 +952,7 @@ void AudioContext::SuspendFromChrome() {
 
 void AudioContext::SuspendInternal(void* aPromise,
                                    AudioContextOperationFlags aFlags) {
+  MOZ_ASSERT(NS_IsMainThread());
   Destination()->Suspend();
 
   nsTArray<mozilla::MediaTrack*> tracks;
@@ -1002,9 +963,17 @@ void AudioContext::SuspendInternal(void* aPromise,
   if (!mSuspendCalled) {
     tracks = GetAllTracks();
   }
-  Graph()->ApplyAudioContextOperation(DestinationTrack(), tracks,
-                                      AudioContextOperation::Suspend, aPromise,
-                                      aFlags);
+  auto promise = Graph()->ApplyAudioContextOperation(
+      DestinationTrack(), tracks, AudioContextOperation::Suspend);
+  if ((aFlags & AudioContextOperationFlags::SendStateChange)) {
+    promise->Then(
+        GetMainThread(), "AudioContext::OnStateChanged",
+        [self = RefPtr<AudioContext>(this),
+         aPromise](AudioContextState aNewState) {
+          self->OnStateChanged(aPromise, aNewState);
+        },
+        [] { MOZ_CRASH("Unexpected rejection"); });
+  }
 
   mSuspendCalled = true;
 }
@@ -1065,9 +1034,16 @@ void AudioContext::ResumeInternal(AudioContextOperationFlags aFlags) {
   if (mSuspendCalled) {
     tracks = GetAllTracks();
   }
-  Graph()->ApplyAudioContextOperation(DestinationTrack(), tracks,
-                                      AudioContextOperation::Resume, nullptr,
-                                      aFlags);
+  auto promise = Graph()->ApplyAudioContextOperation(
+      DestinationTrack(), tracks, AudioContextOperation::Resume);
+  if (aFlags & AudioContextOperationFlags::SendStateChange) {
+    promise->Then(
+        GetMainThread(), "AudioContext::OnStateChanged",
+        [self = RefPtr<AudioContext>(this)](AudioContextState aNewState) {
+          self->OnStateChanged(nullptr, aNewState);
+        },
+        [] { MOZ_CRASH("Unexpected rejection"); });
+  }
   mSuspendCalled = false;
 }
 
@@ -1183,8 +1159,17 @@ void AudioContext::CloseInternal(void* aPromise,
     if (!mSuspendCalled && !mCloseCalled) {
       tracks = GetAllTracks();
     }
-    Graph()->ApplyAudioContextOperation(
-        ds, tracks, AudioContextOperation::Close, aPromise, aFlags);
+    auto promise = Graph()->ApplyAudioContextOperation(
+        ds, tracks, AudioContextOperation::Close);
+    if ((aFlags & AudioContextOperationFlags::SendStateChange)) {
+      promise->Then(
+          GetMainThread(), "AudioContext::OnStateChanged",
+          [self = RefPtr<AudioContext>(this),
+           aPromise](AudioContextState aNewState) {
+            self->OnStateChanged(aPromise, aNewState);
+          },
+          [] { MOZ_CRASH("Unexpected rejection"); });
+    }
   }
   mCloseCalled = true;
 }

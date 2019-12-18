@@ -7,6 +7,7 @@
 #include <MediaTrackGraphImpl.h>
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
+#include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -401,12 +402,20 @@ AsyncCubebTask::Run() {
 }
 
 TrackAndPromiseForOperation::TrackAndPromiseForOperation(
-    MediaTrack* aTrack, void* aPromise, dom::AudioContextOperation aOperation,
-    dom::AudioContextOperationFlags aFlags)
+    MediaTrack* aTrack, dom::AudioContextOperation aOperation,
+    AbstractThread* aMainThread,
+    MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&& aHolder)
     : mTrack(aTrack),
-      mPromise(aPromise),
       mOperation(aOperation),
-      mFlags(aFlags) {}
+      mMainThread(aMainThread),
+      mHolder(std::move(aHolder)) {}
+
+TrackAndPromiseForOperation::TrackAndPromiseForOperation(
+    TrackAndPromiseForOperation&& aOther) noexcept
+    : mTrack(std::move(aOther.mTrack)),
+      mOperation(aOther.mOperation),
+      mMainThread(std::move(aOther.mMainThread)),
+      mHolder(std::move(aOther.mHolder)) {}
 
 AudioCallbackDriver::AudioCallbackDriver(
     MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
@@ -422,6 +431,7 @@ AudioCallbackDriver::AudioCallbackDriver(
       mStarted(false),
       mInitShutdownThread(
           SharedThreadPool::Get(NS_LITERAL_CSTRING("CubebOperation"), 1)),
+      mPromisesForOperation("AudioCallbackDriver::mPromisesForOperation"),
       mAudioThreadId(std::thread::id()),
       mAudioThreadRunning(false),
       mShouldFallbackIfError(false),
@@ -449,7 +459,12 @@ AudioCallbackDriver::AudioCallbackDriver(
 }
 
 AudioCallbackDriver::~AudioCallbackDriver() {
-  MOZ_ASSERT(mPromisesForOperation.IsEmpty());
+#ifdef DEBUG
+  {
+    auto promises = mPromisesForOperation.Lock();
+    MOZ_ASSERT(promises->IsEmpty());
+  }
+#endif
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
     audio::AudioNotificationReceiver::Unregister(this);
@@ -979,47 +994,47 @@ uint32_t AudioCallbackDriver::IterationDuration() {
 bool AudioCallbackDriver::IsStarted() { return mStarted; }
 
 void AudioCallbackDriver::EnqueueTrackAndPromiseForOperation(
-    MediaTrack* aTrack, void* aPromise, dom::AudioContextOperation aOperation,
-    dom::AudioContextOperationFlags aFlags) {
+    MediaTrack* aTrack, dom::AudioContextOperation aOperation,
+    AbstractThread* aMainThread,
+    MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&& aHolder) {
   MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
-  MonitorAutoLock mon(mGraphImpl->GetMonitor());
-  MOZ_ASSERT((aFlags | dom::AudioContextOperationFlags::SendStateChange) ||
-             !aPromise);
-  if (aFlags == dom::AudioContextOperationFlags::SendStateChange) {
-    mPromisesForOperation.AppendElement(
-        TrackAndPromiseForOperation(aTrack, aPromise, aOperation, aFlags));
-  }
+  auto promises = mPromisesForOperation.Lock();
+  promises->AppendElement(TrackAndPromiseForOperation(
+      aTrack, aOperation, aMainThread, std::move(aHolder)));
 }
 
 void AudioCallbackDriver::CompleteAudioContextOperations(
     AsyncCubebOperation aOperation) {
   MOZ_ASSERT(OnCubebOperationThread());
-  AutoTArray<TrackAndPromiseForOperation, 1> array;
-
-  // We can't lock for the whole function because AudioContextOperationCompleted
-  // will grab the monitor
-  {
-    MonitorAutoLock mon(GraphImpl()->GetMonitor());
-    array.SwapElements(mPromisesForOperation);
-  }
-
-  for (uint32_t i = 0; i < array.Length(); i++) {
-    TrackAndPromiseForOperation& s = array[i];
+  auto promises = mPromisesForOperation.Lock();
+  for (uint32_t i = 0; i < promises->Length(); i++) {
+    TrackAndPromiseForOperation& s = promises.ref()[i];
     if ((aOperation == AsyncCubebOperation::INIT &&
          s.mOperation == dom::AudioContextOperation::Resume) ||
         (aOperation == AsyncCubebOperation::SHUTDOWN &&
          s.mOperation != dom::AudioContextOperation::Resume)) {
-      MOZ_ASSERT(s.mFlags == dom::AudioContextOperationFlags::SendStateChange);
-      GraphImpl()->AudioContextOperationCompleted(s.mTrack, s.mPromise,
-                                                  s.mOperation, s.mFlags);
-      array.RemoveElementAt(i);
+      AudioContextState state;
+      switch (s.mOperation) {
+        case dom::AudioContextOperation::Resume:
+          state = dom::AudioContextState::Running;
+          break;
+        case dom::AudioContextOperation::Suspend:
+          state = dom::AudioContextState::Suspended;
+          break;
+        case dom::AudioContextOperation::Close:
+          state = dom::AudioContextState::Closed;
+          break;
+        default:
+          MOZ_CRASH("Unexpected operation");
+      }
+      s.mMainThread->Dispatch(NS_NewRunnableFunction(
+          "AudioContextOperation::Resolve",
+          [holder = std::move(s.mHolder), state]() mutable {
+            holder.Resolve(state, __func__);
+          }));
+      promises->RemoveElementAt(i);
       i--;
     }
-  }
-
-  if (!array.IsEmpty()) {
-    MonitorAutoLock mon(GraphImpl()->GetMonitor());
-    mPromisesForOperation.AppendElements(array);
   }
 }
 

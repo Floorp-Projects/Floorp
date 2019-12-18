@@ -13,6 +13,7 @@
 #include "SelfRef.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPtr.h"
 
@@ -381,13 +382,16 @@ class OfflineClockDriver : public ThreadedDriver {
 };
 
 struct TrackAndPromiseForOperation {
-  TrackAndPromiseForOperation(MediaTrack* aTrack, void* aPromise,
-                              dom::AudioContextOperation aOperation,
-                              dom::AudioContextOperationFlags aFlags);
+  TrackAndPromiseForOperation(
+      MediaTrack* aTrack, dom::AudioContextOperation aOperation,
+      AbstractThread* aMainThread,
+      MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&&
+          aHolder);
+  TrackAndPromiseForOperation(TrackAndPromiseForOperation&& aOther) noexcept;
   RefPtr<MediaTrack> mTrack;
-  void* mPromise;
   dom::AudioContextOperation mOperation;
-  dom::AudioContextOperationFlags mFlags;
+  RefPtr<AbstractThread> mMainThread;
+  MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise> mHolder;
 };
 
 enum class AsyncCubebOperation { INIT, SHUTDOWN };
@@ -478,11 +482,13 @@ class AudioCallbackDriver : public GraphDriver,
     return AudioInputType::Unknown;
   }
 
-  /* Enqueue a promise that is going to be resolved when a specific operation
-   * occurs on the cubeb stream. */
+  /* Enqueue a promise that is going to be resolved on the given main thread
+   * when a specific operation occurs on the cubeb stream. */
   void EnqueueTrackAndPromiseForOperation(
-      MediaTrack* aTrack, void* aPromise, dom::AudioContextOperation aOperation,
-      dom::AudioContextOperationFlags aFlags);
+      MediaTrack* aTrack, dom::AudioContextOperation aOperation,
+      AbstractThread* aMainThread,
+      MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&&
+          aHolder);
 
   std::thread::id ThreadId() { return mAudioThreadId.load(); }
 
@@ -577,8 +583,7 @@ class AudioCallbackDriver : public GraphDriver,
   /* Shared thread pool with up to one thread for off-main-thread
    * initialization and shutdown of the audio stream via AsyncCubebTask. */
   const RefPtr<SharedThreadPool> mInitShutdownThread;
-  /* This must be accessed with the graph monitor held. */
-  AutoTArray<TrackAndPromiseForOperation, 1> mPromisesForOperation;
+  DataMutex<AutoTArray<TrackAndPromiseForOperation, 1>> mPromisesForOperation;
   cubeb_device_pref mInputDevicePreference;
   /* The mixer that the graph mixes into during an iteration. Audio thread only.
    */
