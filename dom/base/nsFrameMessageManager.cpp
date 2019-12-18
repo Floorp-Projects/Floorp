@@ -442,17 +442,7 @@ static bool AllowMessage(size_t aDataLength, const nsAString& aMessageName) {
   // result in an overly large IPC message.
   static const size_t kMaxMessageSize =
       IPC::Channel::kMaximumMessageSize - 20 * 1024;
-  if (aDataLength < kMaxMessageSize) {
-    return true;
-  }
-
-  NS_ConvertUTF16toUTF8 messageName(aMessageName);
-  messageName.StripTaggedASCII(ASCIIMask::Mask0to9());
-
-  Telemetry::Accumulate(Telemetry::REJECTED_MESSAGE_MANAGER_MESSAGE,
-                        messageName);
-
-  return false;
+  return aDataLength < kMaxMessageSize;
 }
 
 void nsFrameMessageManager::SendMessage(
