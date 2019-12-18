@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* globals OS */
 /* exported Process */
 
 /* import-globals-from subprocess_shared.js */
@@ -398,9 +399,11 @@ class Process extends BaseProcess {
         libc.getcwd(cwd, cwd.length);
 
         if (libc.chdir(options.workdir) < 0) {
-          throw new Error(
-            `Unable to change working directory to ${options.workdir}`
-          );
+          if (OS.Constants.Sys.Name !== "OpenBSD") {
+            throw new Error(
+              `Unable to change working directory to ${options.workdir}`
+            );
+          }
         }
       }
 
