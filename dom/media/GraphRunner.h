@@ -16,6 +16,7 @@ struct PRThread;
 
 namespace mozilla {
 
+class AudioMixer;
 class GraphDriver;
 class MediaTrackGraphImpl;
 
@@ -32,7 +33,7 @@ class GraphRunner final : public Runnable {
    * Signals one iteration of mGraph. Hands aStateEnd over to mThread and runs
    * the iteration there.
    */
-  bool OneIteration(GraphTime aStateEnd);
+  bool OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Runs mGraph until it shuts down.
@@ -57,24 +58,40 @@ class GraphRunner final : public Runnable {
                        already_AddRefed<nsIThread> aThread);
   ~GraphRunner();
 
+  class IterationState {
+    GraphTime mStateEnd;
+    AudioMixer* MOZ_NON_OWNING_REF mMixer;
+
+   public:
+    IterationState(GraphTime aStateEnd, AudioMixer* aMixer)
+        : mStateEnd(aStateEnd), mMixer(aMixer) {}
+    IterationState& operator=(const IterationState& aOther) {
+      mStateEnd = aOther.mStateEnd;
+      mMixer = aOther.mMixer;
+      return *this;
+    }
+    GraphTime StateEnd() const { return mStateEnd; }
+    AudioMixer* Mixer() const { return mMixer; }
+  };
+
   // Monitor used for yielding mThread through Wait(), and scheduling mThread
   // through Signal() from a GraphDriver.
   Monitor mMonitor;
   // The MediaTrackGraph we're running. Weakptr beecause this graph owns us and
   // guarantees that our lifetime will not go beyond that of itself.
   MediaTrackGraphImpl* const mGraph;
-  // GraphTime being handed over to the graph through OneIteration. Protected by
+  // State being handed over to the graph through OneIteration. Protected by
   // mMonitor.
-  GraphTime mStateEnd;
+  Maybe<IterationState> mIterationState;
   // Reply from mGraph's OneIteration. Protected by mMonitor.
   bool mStillProcessing;
 
   enum class ThreadState {
     Wait,      // Waiting for a message.  This is the initial state.
                // A transition from Run back to Wait occurs on the runner
-               // thread after it processes as far as mStateEnd and sets
-               // mStillProcessing.
-    Run,       // Set on driver thread after each mStateEnd update.
+               // thread after it processes as far as mIterationState->mStateEnd
+               // and sets mStillProcessing.
+    Run,       // Set on driver thread after each mIterationState update.
     Shutdown,  // Set when Shutdown() is called on main thread.
   };
   // Protected by mMonitor until set to Shutdown, after which this is not
