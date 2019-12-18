@@ -3840,9 +3840,10 @@ devtools-environment@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/devtools-environment/-/devtools-environment-0.0.6.tgz#11584f5b1ead784c2356d8da647a630fed591a4e"
 
-devtools-launchpad@^0.0.160:
-  version "0.0.160"
-  resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.160.tgz#c0c7260b169fdcebd92bd6a383f78b377e5c15bd"
+devtools-launchpad@^0.0.161:
+  version "0.0.161"
+  resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.161.tgz#22073f35388c7cd7df71726daded76c5f12abfde"
+  integrity sha512-OtrMSlVXfbkQyIPkyoz/ng7VyIDh+t2dsUHghSIJY6ADQoz0AgQVVIz+9+l/JEfEpQIs7UtLkXEMgf+Xrg1Z9w==
   dependencies:
     amd-loader "0.0.8"
     autoprefixer "^7.1.2"
@@ -3871,7 +3872,7 @@ devtools-launchpad@^0.0.160:
     devtools-contextmenu "~1.0.14"
     devtools-environment "^0.0.5"
     devtools-license-check "^0.7.0"
-    devtools-mc-assets "^0.0.7"
+    devtools-mc-assets "^0.0.8"
     devtools-modules "~1.1.6"
     devtools-sprintf-js "^1.0.3"
     express "^4.13.4"
@@ -3949,9 +3950,10 @@ devtools-linters@^0.0.4:
     retext-syntax-urls "^1.0.0"
     unified "^6.1.0"
 
-devtools-mc-assets@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/devtools-mc-assets/-/devtools-mc-assets-0.0.7.tgz#d02a12ab66c46a3f535ef90f64cfac9a5dd1bfa4"
+devtools-mc-assets@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/devtools-mc-assets/-/devtools-mc-assets-0.0.8.tgz#47fc23240a916ed2c7d7bc6cc859882d49527e84"
+  integrity sha512-+nvHMtga7sji1nCL+RaGyqZTfrmJtsdcsQIkI3VQuxvnRMcih59XcxzTrlEn9tQtQFLL0rNk5oqqbPfrKrCstA==
 
 devtools-modules@~1.1.6, devtools-modules@~1.1.9:
   version "1.1.9"
