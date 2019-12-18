@@ -126,6 +126,9 @@ class GraphDriver {
    * - If the result is Stop: the driver potentially updates its internal state
    *   and interacts with the graph (e.g., NotifyOutputData), then it must call
    *   Stopped() exactly once.
+   * - If the result is SwitchDriver: the driver updates internal state as for
+   *   the Stop result, then it must call Switched() exactly once and start
+   *   NextDriver().
    */
   class IterationResult final {
     struct Undefined {};
@@ -143,11 +146,29 @@ class GraphDriver {
         mStoppedRunnable = nullptr;
       }
     };
-    Variant<Undefined, StillProcessing, Stop> mResult;
+    struct SwitchDriver {
+      SwitchDriver(RefPtr<GraphDriver> aDriver,
+                   RefPtr<Runnable> aSwitchedRunnable)
+          : mDriver(std::move(aDriver)),
+            mSwitchedRunnable(std::move(aSwitchedRunnable)) {}
+      SwitchDriver(const SwitchDriver&) = delete;
+      SwitchDriver(SwitchDriver&& aOther)
+          : mDriver(std::move(aOther.mDriver)),
+            mSwitchedRunnable(std::move(aOther.mSwitchedRunnable)) {}
+      ~SwitchDriver() { MOZ_ASSERT(!mSwitchedRunnable); }
+      RefPtr<GraphDriver> mDriver;
+      RefPtr<Runnable> mSwitchedRunnable;
+      void Switched() {
+        mSwitchedRunnable->Run();
+        mSwitchedRunnable = nullptr;
+      }
+    };
+    Variant<Undefined, StillProcessing, Stop, SwitchDriver> mResult;
 
     explicit IterationResult(StillProcessing&& aArg)
         : mResult(std::move(aArg)) {}
     explicit IterationResult(Stop&& aArg) : mResult(std::move(aArg)) {}
+    explicit IterationResult(SwitchDriver&& aArg) : mResult(std::move(aArg)) {}
 
    public:
     IterationResult() : mResult(Undefined()) {}
@@ -163,17 +184,36 @@ class GraphDriver {
     static IterationResult CreateStop(RefPtr<Runnable> aStoppedRunnable) {
       return IterationResult(Stop(std::move(aStoppedRunnable)));
     }
+    static IterationResult CreateSwitchDriver(
+        RefPtr<GraphDriver> aDriver, RefPtr<Runnable> aSwitchedRunnable) {
+      return IterationResult(
+          SwitchDriver(std::move(aDriver), std::move(aSwitchedRunnable)));
+    }
 
     bool IsStillProcessing() const { return mResult.is<StillProcessing>(); }
     bool IsStop() const { return mResult.is<Stop>(); }
+    bool IsSwitchDriver() const { return mResult.is<SwitchDriver>(); }
 
     void Stopped() {
       MOZ_ASSERT(IsStop());
       mResult.as<Stop>().Stopped();
     }
+
+    GraphDriver* NextDriver() const {
+      if (!IsSwitchDriver()) {
+        return nullptr;
+      }
+      return mResult.as<SwitchDriver>().mDriver;
+    }
+
+    void Switched() {
+      MOZ_ASSERT(IsSwitchDriver());
+      mResult.as<SwitchDriver>().Switched();
+    }
   };
 
-  GraphDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate);
+  GraphDriver(MediaTrackGraphImpl* aGraphImpl, GraphDriver* aPreviousDriver,
+              uint32_t aSampleRate);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
   /* Start the graph, init the driver, start the thread.
@@ -196,14 +236,11 @@ class GraphDriver {
    */
   virtual void EnsureNextIteration() {}
 
-  /* Return whether we are switching or not. */
-  bool Switching();
   /* Implement the switching of the driver and the necessary updates */
-  void SwitchToNextDriver();
+  void SwitchToDriver(GraphDriver* aDriver);
 
-  // Those are simply or setting the associated pointer, but assert that the
-  // lock is held.
-  GraphDriver* NextDriver();
+  // Those are simply for accessing the associated pointer. Graph thread only,
+  // or if one is not running, main thread.
   GraphDriver* PreviousDriver();
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
@@ -216,17 +253,11 @@ class GraphDriver {
   virtual SystemClockDriver* AsSystemClockDriver() { return nullptr; }
 
   /**
-   * Tell the driver it has to stop and return the current time of the graph, so
-   * another driver can start from the right point in time.
-   */
-  void SwitchAtNextIteration(GraphDriver* aDriver);
-
-  /**
    * Set the state of the driver so it can start at the right point in time,
    * after switching from another driver.
    */
-  void SetState(GraphDriver* aPreviousDriver, GraphTime aIterationStart,
-                GraphTime aIterationEnd, GraphTime aStateComputedTime);
+  void SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
+                GraphTime aStateComputedTime);
 
   MediaTrackGraphImpl* GraphImpl() const { return mGraphImpl; }
 
@@ -256,9 +287,6 @@ class GraphDriver {
   }
 
  protected:
-  // Sets the associated pointer, asserting that the lock is held
-  void SetNextDriver(GraphDriver* aNextDriver);
-
   // Time of the start of this graph iteration. This must be accessed while
   // having the monitor.
   GraphTime mIterationStart = 0;
@@ -283,10 +311,7 @@ class GraphDriver {
   // thread.
   // This must be accessed using the {Set,Get}PreviousDriver methods.
   RefPtr<GraphDriver> mPreviousDriver;
-  // This is non-null only when this driver is going to switch to an other
-  // driver at the end of this iteration.
-  // This must be accessed using the {Set,Get}NextDriver methods.
-  RefPtr<GraphDriver> mNextDriver;
+
   virtual ~GraphDriver() = default;
 };
 
@@ -341,7 +366,8 @@ class ThreadedDriver : public GraphDriver {
   };
 
  public:
-  ThreadedDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate);
+  ThreadedDriver(MediaTrackGraphImpl* aGraphImpl, GraphDriver* aPreviousDriver,
+                 uint32_t aSampleRate);
   virtual ~ThreadedDriver();
 
   void EnsureNextIteration() override;
@@ -393,7 +419,8 @@ class ThreadedDriver : public GraphDriver {
 enum class FallbackMode { Regular, Fallback };
 class SystemClockDriver : public ThreadedDriver {
  public:
-  SystemClockDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+  SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
+                    GraphDriver* aPreviousDriver, uint32_t aSampleRate,
                     FallbackMode aFallback = FallbackMode::Regular);
   virtual ~SystemClockDriver();
   bool IsFallback();
@@ -481,7 +508,8 @@ class AudioCallbackDriver : public GraphDriver,
 {
  public:
   /** If aInputChannelCount is zero, then this driver is output-only. */
-  AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+  AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+                      GraphDriver* aPreviousDriver, uint32_t aSampleRate,
                       uint32_t aOutputChannelCount, uint32_t aInputChannelCount,
                       CubebUtils::AudioDeviceID aOutputDeviceID,
                       CubebUtils::AudioDeviceID aInputDeviceID,
