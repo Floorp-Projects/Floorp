@@ -73,6 +73,7 @@ pub struct LazilyCompiledShader {
     program: Option<Program>,
     name: &'static str,
     kind: ShaderKind,
+    cached_projection: Transform3D<f32>,
     features: Vec<&'static str>,
 }
 
@@ -88,6 +89,9 @@ impl LazilyCompiledShader {
             program: None,
             name,
             kind,
+            //Note: this isn't really the default state, but there is no chance
+            // an actual projection passed here would accidentally match.
+            cached_projection: Transform3D::identity(),
             features: features.to_vec(),
         };
 
@@ -111,7 +115,8 @@ impl LazilyCompiledShader {
         projection: &Transform3D<f32>,
         renderer_errors: &mut Vec<RendererError>,
     ) {
-        let program = match self.get(device) {
+        let update_projection = self.cached_projection != *projection;
+        let program = match self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE) {
             Ok(program) => program,
             Err(e) => {
                 renderer_errors.push(RendererError::from(e));
@@ -119,7 +124,11 @@ impl LazilyCompiledShader {
             }
         };
         device.bind_program(program);
-        device.set_uniforms(program, projection);
+        if update_projection {
+            device.set_uniforms(program, projection);
+            // thanks NLL for this (`program` technically borrows `self`)
+            self.cached_projection = *projection;
+        }
     }
 
     fn get_internal(
@@ -243,10 +252,6 @@ impl LazilyCompiledShader {
         }
 
         Ok(program)
-    }
-
-    fn get(&mut self, device: &mut Device) -> Result<&mut Program, ShaderError> {
-        self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE)
     }
 
     fn deinit(self, device: &mut Device) {
