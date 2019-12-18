@@ -3589,9 +3589,7 @@ static bool EmitTableSize(FunctionCompiler& f) {
   f.iter().setResult(ret);
   return true;
 }
-#endif  // ENABLE_WASM_REFTYPES
 
-#ifdef ENABLE_WASM_REFTYPES
 static bool EmitRefFunc(FunctionCompiler& f) {
   uint32_t funcIndex;
   if (!f.iter().readRefFunc(&funcIndex)) {
@@ -3668,7 +3666,7 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
       f.compare(input, nullVal, JSOP_EQ, MCompare::Compare_RefOrNull));
   return true;
 }
-#endif
+#endif  // ENABLE_WASM_REFTYPES
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
   if (!f.iter().readFunctionStart(f.funcIndex())) {
