@@ -802,10 +802,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 #endif
 
   // Don't add the callback until we're inited and ready
-  if (!mAddedMixer) {
-    GraphImpl()->mMixer.AddCallback(WrapNotNull(this));
-    mAddedMixer = true;
-  }
+  AddMixerCallback();
 
   GraphTime stateComputedTime = StateComputedTime();
   if (stateComputedTime == 0) {
@@ -979,8 +976,8 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   if (aState == CUBEB_STATE_ERROR && mShouldFallbackIfError) {
     MOZ_ASSERT(!ThreadRunning());
     mShouldFallbackIfError = false;
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     RemoveMixerCallback();
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
     FallbackToSystemClockDriver();
   } else if (aState == CUBEB_STATE_STOPPED) {
     MOZ_ASSERT(!ThreadRunning());
