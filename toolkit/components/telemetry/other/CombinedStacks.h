@@ -67,6 +67,18 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks);
 
 namespace IPC {
 
+#if defined(NIGHTLY_BUILD)
+#  define ANNOTATE_READ_FAILURE()                         \
+    CrashReporter::AnnotateCrashReport(                   \
+        CrashReporter::Annotation::                       \
+            UntrustedModulesDataCombinedStackReadFailure, \
+        __LINE__)
+#else
+#  define ANNOTATE_READ_FAILURE() \
+    do {                          \
+    } while (false)
+#endif  // defined(NIGHTLY_BUILD)
+
 template <>
 struct ParamTraits<mozilla::Telemetry::CombinedStacks> {
   typedef mozilla::Telemetry::CombinedStacks paramType;
@@ -81,24 +93,30 @@ struct ParamTraits<mozilla::Telemetry::CombinedStacks> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
+      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mStacks)) {
+      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mNextIndex)) {
+      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mMaxStacksCount)) {
+      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     return true;
   }
 };
+
+#undef ANNOTATE_READ_FAILURE
 
 }  // namespace IPC
 
