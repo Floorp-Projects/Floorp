@@ -243,16 +243,15 @@ void ThreadedDriver::Shutdown() {
   }
 }
 
-SystemClockDriver::SystemClockDriver(MediaTrackGraphImpl* aGraphImpl)
+SystemClockDriver::SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
+                                     FallbackMode aFallback)
     : ThreadedDriver(aGraphImpl),
       mInitialTimeStamp(TimeStamp::Now()),
       mCurrentTimeStamp(TimeStamp::Now()),
       mLastTimeStamp(TimeStamp::Now()),
-      mIsFallback(false) {}
+      mIsFallback(aFallback == FallbackMode::Fallback) {}
 
 SystemClockDriver::~SystemClockDriver() {}
-
-void SystemClockDriver::MarkAsFallback() { mIsFallback = true; }
 
 bool SystemClockDriver::IsFallback() { return mIsFallback; }
 
@@ -1117,8 +1116,8 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
 
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
-  SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
-  nextDriver->MarkAsFallback();
+  SystemClockDriver* nextDriver =
+      new SystemClockDriver(GraphImpl(), FallbackMode::Fallback);
 
   MonitorAutoLock lock(GraphImpl()->GetMonitor());
   SetNextDriver(nextDriver);
