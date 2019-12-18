@@ -5,7 +5,10 @@
 
 #ifndef MOZILLA_SCRATCHBUFFER_H_
 #define MOZILLA_SCRATCHBUFFER_H_
-#include <mozilla/PodOperations.h>
+
+#include "mozilla/PodOperations.h"
+#include "mozilla/UniquePtr.h"
+
 #include <algorithm>
 
 namespace mozilla {

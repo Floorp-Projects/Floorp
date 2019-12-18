@@ -279,16 +279,17 @@ void ThreadedDriver::RunThread() {
          (long)mIterationStart, (long)mIterationEnd, (long)mStateComputedTime,
          (long)nextStateComputedTime));
 
-    bool stillProcessing =
+    IterationResult result =
         GraphImpl()->OneIteration(nextStateComputedTime, nullptr);
 
-    if (!stillProcessing) {
+    if (result.IsStop()) {
       // Enter shutdown mode. The stable-state handler will detect this and
       // complete shutdown.
       dom::WorkletThread::DeleteCycleCollectedJSContext();
       GraphImpl()->SignalMainThreadCleanup();
       break;
     }
+    MOZ_ASSERT(result.IsStillProcessing());
     mStateComputedTime = nextStateComputedTime;
     WaitForNextIteration();
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
@@ -806,12 +807,14 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                  mSampleRate, mInputChannelCount);
   }
 
-  bool stillProcessing;
-  if (mBuffer.Available()) {
+  bool iterate = mBuffer.Available();
+  IterationResult result =
+      iterate ? GraphImpl()->OneIteration(nextStateComputedTime, &mMixer)
+              : IterationResult::CreateStillProcessing();
+  if (iterate) {
     // We totally filled the buffer (and mScratchBuffer isn't empty).
     // We don't need to run an iteration and if we do so we may overflow.
-    stillProcessing = GraphImpl()->OneIteration(nextStateComputedTime, &mMixer);
-    if (stillProcessing) {
+    if (result.IsStillProcessing()) {
       mStateComputedTime = nextStateComputedTime;
     }
   } else {
@@ -819,7 +822,6 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
         ("%p: DataCallback buffer filled entirely from scratch "
          "buffer, skipping iteration.",
          GraphImpl()));
-    stillProcessing = true;
   }
 
   mBuffer.BufferFilled();
@@ -844,7 +846,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   }
 #endif
 
-  if (!stillProcessing) {
+  if (result.IsStop()) {
     // About to hand over control of the graph.  Do not start a new driver if
     // StateCallback() receives an error for this stream while the main thread
     // or another driver has control of the graph.
@@ -856,6 +858,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     mGraphImpl->SignalMainThreadCleanup();
     return aFrames - 1;
   }
+  MOZ_ASSERT(result.IsStillProcessing());
 
   bool switching = false;
   {

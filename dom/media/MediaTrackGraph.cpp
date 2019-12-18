@@ -1322,8 +1322,8 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   return true;
 }
 
-bool MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
-                                       AudioMixer* aMixer) {
+auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer)
+    -> IterationResult {
   if (mGraphRunner) {
     return mGraphRunner->OneIteration(aStateEnd, aMixer);
   }
@@ -1331,8 +1331,9 @@ bool MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
   return OneIterationImpl(aStateEnd, aMixer);
 }
 
-bool MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
-                                           AudioMixer* aMixer) {
+auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
+                                           AudioMixer* aMixer)
+    -> IterationResult {
   TRACE_AUDIO_CALLBACK();
 
   if (SoftRealTimeLimitReached()) {
@@ -1374,7 +1375,11 @@ bool MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
   // thread during the iteration.
   RunMessagesInQueue();
 
-  return UpdateMainThreadState();
+  if (!UpdateMainThreadState()) {
+    return IterationResult::CreateStop();
+  }
+
+  return IterationResult::CreateStillProcessing();
 }
 
 void MediaTrackGraphImpl::ApplyTrackUpdate(TrackUpdate* aUpdate) {
