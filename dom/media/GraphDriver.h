@@ -480,10 +480,6 @@ class AudioCallbackDriver : public GraphDriver,
   TimeDuration AudioOutputLatency();
 
  private:
-  /* Remove Mixer callbacks when switching */
-  void RemoveMixerCallback();
-  /* Add this driver in Mixer callbacks. */
-  void AddMixerCallback();
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
    * We need to pan the sound output to the right speaker if we are using the
@@ -560,11 +556,9 @@ class AudioCallbackDriver : public GraphDriver,
   /* This must be accessed with the graph monitor held. */
   AutoTArray<TrackAndPromiseForOperation, 1> mPromisesForOperation;
   cubeb_device_pref mInputDevicePreference;
-  /* This is used to signal adding the mixer callback on first run
-   * of audio callback. This is atomic because it is touched from different
-   * threads, the audio callback thread and the state change thread. However,
-   * the order of the threads does not allow concurent access. */
-  Atomic<bool> mAddedMixer;
+  /* The mixer that the graph mixes into during an iteration. Audio thread only.
+   */
+  AudioMixer mMixer;
   /* Contains the id of the audio thread for as long as the callback
    * is taking place, after that it is reseted to an invalid value. */
   std::atomic<std::thread::id> mAudioThreadId;

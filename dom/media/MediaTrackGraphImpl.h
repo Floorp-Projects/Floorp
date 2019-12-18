@@ -212,14 +212,15 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Proxy method called by GraphDriver to iterate the graph.
    * If this graph was created with GraphRunType SINGLE_THREAD, mGraphRunner
    * will take care of calling OneIterationImpl from its thread. Otherwise,
-   * OneIterationImpl is called directly.
+   * OneIterationImpl is called directly. Output from the graph gets mixed into
+   * aMixer, if it is non-null.
    */
-  bool OneIteration(GraphTime aStateEnd);
+  bool OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Returns true if this MediaTrackGraph should keep running
    */
-  bool OneIterationImpl(GraphTime aStateEnd);
+  bool OneIterationImpl(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Called from the driver, when the graph thread is about to stop, to tell
@@ -290,7 +291,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Do all the processing and play the audio and video, from
    * mProcessedTime to mStateComputedTime.
    */
-  void Process();
+  void Process(AudioMixer* aMixer);
 
   /**
    * For use during ProcessedMediaTrack::ProcessInput() or
@@ -389,13 +390,13 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
-
   struct TrackKeyAndVolume {
     MediaTrack* mTrack;
     void* mKey;
     float mVolume;
   };
-  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv, GraphTime aPlayedTime);
+  TrackTime PlayAudio(AudioMixer* aMixer, const TrackKeyAndVolume& aTkv,
+                      GraphTime aPlayedTime);
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
    * aListener. */
@@ -920,7 +921,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * blocking order.
    */
   bool mTrackOrderDirty;
-  AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
 
   // used to limit graph shutdown time
