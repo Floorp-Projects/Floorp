@@ -58,6 +58,11 @@ add_task(async function() {
     [MESSAGES[1], MESSAGES[2], MESSAGES[3], MESSAGES[4], MESSAGES[5]],
     5
   );
+
+  info("Filter out messages ending with numbers");
+  await setFilterInput(hud, "-/[^0-9]$/", MESSAGES[0]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(filteredNodes, [MESSAGES[0]], 1);
 });
 
 async function setFilterInput(hud, value, lastMessage) {
