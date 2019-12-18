@@ -110,15 +110,9 @@ async function testPrompt(Prompt) {
         Prompt == PermissionUI.DesktopNotificationPermissionPrompt;
       let isPersistentStoragePrompt =
         Prompt == PermissionUI.PersistentStoragePermissionPrompt;
-      let isStorageAccessPrompt =
-        Prompt == PermissionUI.StorageAccessPermissionPrompt;
 
       let expectedSecondaryActionsCount =
-        isNotificationPrompt ||
-        isPersistentStoragePrompt ||
-        isStorageAccessPrompt
-          ? 2
-          : 1;
+        isNotificationPrompt || isPersistentStoragePrompt ? 2 : 1;
       Assert.equal(
         notification.secondaryActions.length,
         expectedSecondaryActionsCount,

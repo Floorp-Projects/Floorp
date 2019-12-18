@@ -20,14 +20,11 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(StorageAccessPermissionRequest,
 
 StorageAccessPermissionRequest::StorageAccessPermissionRequest(
     nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
-    AllowCallback&& aAllowCallback,
-    AllowAnySiteCallback&& aAllowAnySiteCallback,
-    CancelCallback&& aCancelCallback)
+    AllowCallback&& aAllowCallback, CancelCallback&& aCancelCallback)
     : ContentPermissionRequestBase(aNodePrincipal, aWindow,
                                    NS_LITERAL_CSTRING("dom.storage_access"),
                                    NS_LITERAL_CSTRING("storage-access")),
       mAllowCallback(std::move(aAllowCallback)),
-      mAllowAnySiteCallback(std::move(aAllowAnySiteCallback)),
       mCancelCallback(std::move(aCancelCallback)),
       mCallbackCalled(false) {
   mPermissionRequests.AppendElement(
@@ -58,11 +55,7 @@ StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices) {
 
   if (!mCallbackCalled) {
     mCallbackCalled = true;
-    if (choices.Length() == 1 &&
-        choices[0].choice().EqualsLiteral("allow-on-any-site")) {
-      mAllowAnySiteCallback();
-    } else if (choices.Length() == 1 &&
-               choices[0].choice().EqualsLiteral("allow")) {
+    if (choices.Length() == 1 && choices[0].choice().EqualsLiteral("allow")) {
       mAllowCallback();
     }
   }
@@ -103,10 +96,9 @@ StorageAccessPermissionRequest::MaybeDelayAutomaticGrants() {
 }
 
 already_AddRefed<StorageAccessPermissionRequest>
-StorageAccessPermissionRequest::Create(
-    nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
-    AllowAnySiteCallback&& aAllowAnySiteCallback,
-    CancelCallback&& aCancelCallback) {
+StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
+                                       AllowCallback&& aAllowCallback,
+                                       CancelCallback&& aCancelCallback) {
   if (!aWindow) {
     return nullptr;
   }
@@ -115,9 +107,9 @@ StorageAccessPermissionRequest::Create(
     return nullptr;
   }
   RefPtr<StorageAccessPermissionRequest> request =
-      new StorageAccessPermissionRequest(
-          aWindow, win->GetPrincipal(), std::move(aAllowCallback),
-          std::move(aAllowAnySiteCallback), std::move(aCancelCallback));
+      new StorageAccessPermissionRequest(aWindow, win->GetPrincipal(),
+                                         std::move(aAllowCallback),
+                                         std::move(aCancelCallback));
   return request.forget();
 }
 
