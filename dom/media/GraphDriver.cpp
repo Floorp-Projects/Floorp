@@ -31,8 +31,8 @@ extern mozilla::LazyLogModule gMediaTrackGraphLog;
 
 namespace mozilla {
 
-GraphDriver::GraphDriver(MediaTrackGraphImpl* aGraphImpl)
-    : mGraphImpl(aGraphImpl) {}
+GraphDriver::GraphDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate)
+    : mGraphImpl(aGraphImpl), mSampleRate(aSampleRate) {}
 
 void GraphDriver::SetState(GraphDriver* aPreviousDriver,
                            GraphTime aIterationStart, GraphTime aIterationEnd,
@@ -133,8 +133,9 @@ void GraphDriver::SetPreviousDriver(GraphDriver* aPreviousDriver) {
   mPreviousDriver = aPreviousDriver;
 }
 
-ThreadedDriver::ThreadedDriver(MediaTrackGraphImpl* aGraphImpl)
-    : GraphDriver(aGraphImpl), mThreadRunning(false) {}
+ThreadedDriver::ThreadedDriver(MediaTrackGraphImpl* aGraphImpl,
+                               uint32_t aSampleRate)
+    : GraphDriver(aGraphImpl, aSampleRate), mThreadRunning(false) {}
 
 class MediaTrackGraphShutdownThreadRunnable : public Runnable {
  public:
@@ -228,8 +229,9 @@ void ThreadedDriver::Shutdown() {
 }
 
 SystemClockDriver::SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
+                                     uint32_t aSampleRate,
                                      FallbackMode aFallback)
-    : ThreadedDriver(aGraphImpl),
+    : ThreadedDriver(aGraphImpl, aSampleRate),
       mInitialTimeStamp(TimeStamp::Now()),
       mCurrentTimeStamp(TimeStamp::Now()),
       mLastTimeStamp(TimeStamp::Now()),
@@ -341,8 +343,8 @@ TimeDuration SystemClockDriver::WaitInterval() {
 }
 
 OfflineClockDriver::OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl,
-                                       GraphTime aSlice)
-    : ThreadedDriver(aGraphImpl), mSlice(aSlice) {}
+                                       uint32_t aSampleRate, GraphTime aSlice)
+    : ThreadedDriver(aGraphImpl, aSampleRate), mSlice(aSlice) {}
 
 OfflineClockDriver::~OfflineClockDriver() {}
 
@@ -407,12 +409,12 @@ TrackAndPromiseForOperation::TrackAndPromiseForOperation(
       mFlags(aFlags) {}
 
 AudioCallbackDriver::AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+                                         uint32_t aSampleRate,
                                          uint32_t aOutputChannelCount,
                                          uint32_t aInputChannelCount,
                                          AudioInputType aAudioInputType)
-    : GraphDriver(aGraphImpl),
+    : GraphDriver(aGraphImpl, aSampleRate),
       mOutputChannels(aOutputChannelCount),
-      mSampleRate(0),
       mInputChannelCount(aInputChannelCount),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
       mStarted(false),
@@ -499,7 +501,7 @@ bool AudioCallbackDriver::Init() {
   MOZ_ASSERT(!NS_IsMainThread(),
              "This is blocking and should never run on the main thread.");
 
-  mSampleRate = output.rate = mGraphImpl->GraphRate();
+  output.rate = mSampleRate;
 
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     output.format = CUBEB_SAMPLE_S16NE;
@@ -1032,7 +1034,7 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
   SystemClockDriver* nextDriver =
-      new SystemClockDriver(GraphImpl(), FallbackMode::Fallback);
+      new SystemClockDriver(GraphImpl(), mSampleRate, FallbackMode::Fallback);
 
   MonitorAutoLock lock(GraphImpl()->GetMonitor());
   SetNextDriver(nextDriver);

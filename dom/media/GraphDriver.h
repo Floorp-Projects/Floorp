@@ -68,6 +68,24 @@ enum class AudioContextOperation;
 }
 
 /**
+ * XXX
+ * Dependencies on mGraphImpl:
+ * OK
+ * - NotifyInputData
+ * - OneIteration
+ * - NotifyOutputData
+ * - DeviceChanged
+ * TRY TO REMOVE
+ * - RunByGraphThread (asserts)
+ * - SetCurrentDriver
+ * - MillisecondsToMediaTime (make static)
+ * - SecondsToMediaTime (make static)
+ * - SignalMainThreadCleanup (unclear)
+ * - mOutputDeviceID, mInputDeviceID (const ctor?)
+ * - AudioContextOperationCompleted
+ */
+
+/**
  * A driver is responsible for the scheduling of the processing, the thread
  * management, and give the different clocks to a MediaTrackGraph. This is an
  * abstract base class. A MediaTrackGraph can be driven by an
@@ -117,7 +135,7 @@ enum class AudioContextOperation;
  */
 class GraphDriver {
  public:
-  explicit GraphDriver(MediaTrackGraphImpl* aGraphImpl);
+  GraphDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
   /* Start the graph, init the driver, start the thread.
@@ -197,6 +215,9 @@ class GraphDriver {
   GraphTime mStateComputedTime = 0;
   // The MediaTrackGraphImpl associated with this driver.
   const RefPtr<MediaTrackGraphImpl> mGraphImpl;
+  // The sample rate for the graph, and in case of an audio driver, also for the
+  // cubeb stream.
+  const uint32_t mSampleRate;
 
   // This is non-null only when this driver has recently switched from an other
   // driver, and has not cleaned it up yet (for example because the audio stream
@@ -266,7 +287,7 @@ class ThreadedDriver : public GraphDriver {
   };
 
  public:
-  explicit ThreadedDriver(MediaTrackGraphImpl* aGraphImpl);
+  ThreadedDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate);
   virtual ~ThreadedDriver();
 
   void EnsureNextIteration() override;
@@ -318,8 +339,8 @@ class ThreadedDriver : public GraphDriver {
 enum class FallbackMode { Regular, Fallback };
 class SystemClockDriver : public ThreadedDriver {
  public:
-  explicit SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
-                             FallbackMode aFallback = FallbackMode::Regular);
+  SystemClockDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+                    FallbackMode aFallback = FallbackMode::Regular);
   virtual ~SystemClockDriver();
   bool IsFallback();
   SystemClockDriver* AsSystemClockDriver() override { return this; }
@@ -347,7 +368,8 @@ class SystemClockDriver : public ThreadedDriver {
  */
 class OfflineClockDriver : public ThreadedDriver {
  public:
-  OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl, GraphTime aSlice);
+  OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+                     GraphTime aSlice);
   virtual ~OfflineClockDriver();
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
 
@@ -402,7 +424,7 @@ class AudioCallbackDriver : public GraphDriver,
 {
  public:
   /** If aInputChannelCount is zero, then this driver is output-only. */
-  AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+  AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
                       uint32_t aOutputChannelCount, uint32_t aInputChannelCount,
                       AudioInputType aAudioInputType);
   virtual ~AudioCallbackDriver();
@@ -518,9 +540,6 @@ class AudioCallbackDriver : public GraphDriver,
   /* cubeb stream for this graph. This is guaranteed to be non-null after Init()
    * has been called, and is synchronized internaly. */
   nsAutoRef<cubeb_stream> mAudioStream;
-  /* The sample rate for the aforementionned cubeb stream. This is set on
-   * initialization and can be read safely afterwards. */
-  uint32_t mSampleRate;
   /* The number of input channels from cubeb. Set before opening cubeb. If it is
    * zero then the driver is output-only. */
   const uint32_t mInputChannelCount;
