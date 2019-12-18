@@ -293,7 +293,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
     js::frontend::Parser<js::frontend::FullParseHandler, mozilla::Utf8Unit>
         txtParser(cx, txtOptions, txtSource.begin(), txtSource.length(),
                   /* foldConstants = */ false, parseInfo, nullptr, nullptr,
-                  sourceObject, frontend::ParseGoal::Script);
+                  sourceObject);
     if (!txtParser.checkOptions()) {
       MOZ_CRASH("Bad options");
     }

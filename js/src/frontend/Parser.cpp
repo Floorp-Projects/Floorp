@@ -192,7 +192,7 @@ ParserSharedBase::~ParserSharedBase() {
 
 ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
                        bool foldConstants, ParseInfo& parseInfo,
-                       ScriptSourceObject* sourceObject, ParseGoal parseGoal)
+                       ScriptSourceObject* sourceObject)
     : ParserSharedBase(cx, parseInfo, sourceObject,
                        ParserSharedBase::Kind::Parser),
       anyChars(cx, options, this),
@@ -204,7 +204,6 @@ ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
       isUnexpectedEOF_(false),
       awaitHandling_(AwaitIsName),
       inParametersOfAsyncFunction_(false),
-      parseGoal_(uint8_t(parseGoal)),
       treeHolder_(parseInfo.treeHolder) {
 }
 
@@ -222,10 +221,8 @@ template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
     ParseInfo& parserInfo, LazyScript* lazyOuterFunction,
-    ScriptSourceObject* sourceObject, ParseGoal parseGoal,
-    void* internalSyntaxParser)
-    : ParserBase(cx, options, foldConstants, parserInfo, sourceObject,
-                 parseGoal),
+    ScriptSourceObject* sourceObject, void* internalSyntaxParser)
+    : ParserBase(cx, options, foldConstants, parserInfo, sourceObject),
       handler_(cx, parserInfo.allocScope.alloc(), lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
@@ -234,9 +231,9 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
     size_t length, bool foldConstants, ParseInfo& parserInfo,
     SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction,
-    ScriptSourceObject* sourceObject, ParseGoal parseGoal)
+    ScriptSourceObject* sourceObject)
     : Base(cx, options, foldConstants, parserInfo, syntaxParser,
-           lazyOuterFunction, sourceObject, parseGoal),
+           lazyOuterFunction, sourceObject),
       tokenStream(cx, options, units, length) {}
 
 template <typename Unit>
@@ -1771,7 +1768,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   // Eager Function tree mode, emit the lazy script now.
-  return data.create(cx_, funbox, sourceObject_, parseGoal());
+  return data.create(cx_, funbox, sourceObject_);
 }
 
 bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
@@ -1800,8 +1797,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      return data->create(parser->cx_, funbox, parser->sourceObject_,
-                          parser->parseGoal());
+      return data->create(parser->cx_, funbox, parser->sourceObject_);
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
@@ -1809,14 +1805,13 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
 }
 
 bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
-                                    HandleScriptSourceObject sourceObject,
-                                    ParseGoal parseGoal) {
+                                    HandleScriptSourceObject sourceObject) {
   Rooted<JSFunction*> function(cx, funbox->function());
   MOZ_ASSERT(function);
   LazyScript* lazy = LazyScript::Create(
       cx, function, sourceObject, closedOverBindings, innerFunctionBoxes,
       funbox->sourceStart, funbox->sourceEnd, funbox->toStringStart,
-      funbox->toStringEnd, funbox->startLine, funbox->startColumn, parseGoal);
+      funbox->toStringEnd, funbox->startLine, funbox->startColumn);
   if (!lazy) {
     return false;
   }
@@ -1857,6 +1852,9 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
   }
   if (funbox->argumentsHasLocalBinding()) {
     lazy->setArgumentsHasVarBinding();
+  }
+  if (funbox->hasModuleGoal()) {
+    lazy->setHasModuleGoal();
   }
 
   // Flags that need to copied back into the parser when we do the full

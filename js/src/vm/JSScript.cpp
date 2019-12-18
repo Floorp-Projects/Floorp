@@ -5646,7 +5646,7 @@ LazyScript* LazyScript::Create(
     const frontend::AtomVector& closedOverBindings,
     const frontend::FunctionBoxVector& innerFunctionBoxes, uint32_t sourceStart,
     uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
-    uint32_t lineno, uint32_t column, frontend::ParseGoal parseGoal) {
+    uint32_t lineno, uint32_t column) {
   uint32_t ngcthings =
       innerFunctionBoxes.length() + closedOverBindings.length();
 
@@ -5657,8 +5657,6 @@ LazyScript* LazyScript::Create(
     return nullptr;
   }
 
-  lazy->setFlag(ImmutableFlags::HasModuleGoal,
-                (parseGoal == frontend::ParseGoal::Module));
   lazy->setFlag(ImmutableFlags::HasInnerFunctions, !innerFunctionBoxes.empty());
   lazy->setFlag(ImmutableFlags::IsFunction);
 
