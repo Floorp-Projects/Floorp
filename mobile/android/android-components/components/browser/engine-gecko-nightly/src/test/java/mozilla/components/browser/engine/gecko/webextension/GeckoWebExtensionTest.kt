@@ -30,12 +30,14 @@ import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.WebExtension
+import org.mozilla.geckoview.WebExtensionController
 
 @RunWith(AndroidJUnit4::class)
 class GeckoWebExtensionTest {
 
     @Test
     fun `register background message handler`() {
+        val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
@@ -47,6 +49,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
 
@@ -89,6 +92,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `register content message handler`() {
+        val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val session: GeckoEngineSession = mock()
@@ -104,6 +108,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
         assertFalse(extension.hasContentMessageHandler(session, "mozacTest"))
@@ -149,6 +154,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `disconnect port from content script`() {
+        val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val session: GeckoEngineSession = mock()
@@ -162,6 +168,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
@@ -180,6 +187,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `disconnect port from background script`() {
+        val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
@@ -188,6 +196,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerBackgroundMessageHandler("mozacTest", messageHandler)
@@ -207,6 +216,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `register global default action handler`() {
+        val webExtensionController: WebExtensionController = mock()
         val nativeGeckoWebExt: WebExtension = mock()
         val actionHandler: ActionHandler = mock()
         val actionDelegateCaptor = argumentCaptor<WebExtension.ActionDelegate>()
@@ -219,6 +229,7 @@ class GeckoWebExtensionTest {
             "url",
             false,
             false,
+            webExtensionController,
             nativeGeckoWebExt
         )
         extensionWithActions.registerActionHandler(actionHandler)
@@ -230,6 +241,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerActionHandler(actionHandler)
@@ -252,6 +264,7 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `register session-specific action handler`() {
+        val webExtensionController: WebExtensionController = mock()
         val session: GeckoEngineSession = mock()
         val geckoSession: GeckoSession = mock()
         whenever(session.geckoSession).thenReturn(geckoSession)
@@ -268,6 +281,7 @@ class GeckoWebExtensionTest {
             url = "url",
             allowContentMessaging = true,
             supportActions = true,
+            webExtensionController = webExtensionController,
             nativeExtension = nativeGeckoWebExt
         )
         extension.registerActionHandler(session, actionHandler)
@@ -289,7 +303,11 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `all metadata fields are mapped correctly`() {
-        val extensionWithoutMetadata = GeckoWebExtension(WebExtension("url", "id", WebExtension.Flags.NONE))
+        val webExtensionController: WebExtensionController = mock()
+        val extensionWithoutMetadata = GeckoWebExtension(
+            WebExtension("url", "id", WebExtension.Flags.NONE, webExtensionController),
+            webExtensionController
+        )
         assertNull(extensionWithoutMetadata.getMetadata())
 
         val metaDataBundle = GeckoBundle()
@@ -309,7 +327,7 @@ class GeckoWebExtensionTest {
         bundle.putBundle("metaData", metaDataBundle)
 
         val nativeWebExtension = MockWebExtension(bundle)
-        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension)
+        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension, webExtensionController)
         val metadata = extensionWithMetadata.getMetadata()
         assertNotNull(metadata!!)
         assertEquals("1.0", metadata.version)
@@ -326,7 +344,11 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `nullable metadata fields `() {
-        val extensionWithoutMetadata = GeckoWebExtension(WebExtension("url", "id", WebExtension.Flags.NONE))
+        val webExtensionController: WebExtensionController = mock()
+        val extensionWithoutMetadata = GeckoWebExtension(
+            WebExtension("url", "id", WebExtension.Flags.NONE, webExtensionController),
+            webExtensionController
+        )
         assertNull(extensionWithoutMetadata.getMetadata())
 
         val metaDataBundle = GeckoBundle()
@@ -339,7 +361,7 @@ class GeckoWebExtensionTest {
         bundle.putBundle("metaData", metaDataBundle)
 
         val nativeWebExtension = MockWebExtension(bundle)
-        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension)
+        val extensionWithMetadata = GeckoWebExtension(nativeWebExtension, webExtensionController)
         val metadata = extensionWithMetadata.getMetadata()
         assertNotNull(metadata!!)
         assertEquals("1.0", metadata.version)
@@ -356,16 +378,27 @@ class GeckoWebExtensionTest {
 
     @Test
     fun `isBuiltIn depends on URI scheme`() {
-        val builtInExtension = GeckoWebExtension(WebExtension("resource://url", "id", WebExtension.Flags.NONE))
+        val webExtensionController: WebExtensionController = mock()
+        val builtInExtension = GeckoWebExtension(
+            WebExtension("resource://url", "id", WebExtension.Flags.NONE, webExtensionController),
+            webExtensionController
+        )
         assertTrue(builtInExtension.isBuiltIn())
 
-        val externalExtension = GeckoWebExtension(WebExtension("https://url", "id", WebExtension.Flags.NONE))
+        val externalExtension = GeckoWebExtension(
+            WebExtension("https://url", "id", WebExtension.Flags.NONE, webExtensionController),
+            webExtensionController
+        )
         assertFalse(externalExtension.isBuiltIn())
     }
 
     @Test
     fun `isEnabled depends on native state`() {
-        val extension = GeckoWebExtension(WebExtension("resource://url", "id", WebExtension.Flags.NONE))
+        val webExtensionController: WebExtensionController = mock()
+        val extension = GeckoWebExtension(
+            WebExtension("resource://url", "id", WebExtension.Flags.NONE, webExtensionController),
+            webExtensionController
+        )
         assertTrue(extension.isEnabled())
     }
 }
