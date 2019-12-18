@@ -41,7 +41,10 @@ async function showChangePasswordDoorhanger(
   let windowGlobal = browser.browsingContext.currentWindowGlobal;
   let loginManagerActor = windowGlobal.getActor("LoginManager");
   let prompter = loginManagerActor._getPrompter(browser, null);
-  ok(!PopupNotifications.isPanelOpen, "Check the doorhanger isnt already open");
+  ok(
+    !PopupNotifications.isPanelOpen,
+    "Check the doorhanger isn't already open"
+  );
 
   let promiseShown = BrowserTestUtils.waitForEvent(
     PopupNotifications.panel,
@@ -49,6 +52,7 @@ async function showChangePasswordDoorhanger(
   );
 
   prompter.promptToChangePassword(
+    browser,
     oldLogin,
     formLogin,
     false, // dimissed prompt

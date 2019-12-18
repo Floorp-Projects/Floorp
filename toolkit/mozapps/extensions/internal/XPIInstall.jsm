@@ -2562,7 +2562,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       );
       let prompt = factory.getPrompt(win, Ci.nsIAuthPrompt2);
 
-      if (this.browser && prompt instanceof Ci.nsILoginManagerPrompter) {
+      if (this.browser && prompt instanceof Ci.nsILoginManagerAuthPrompter) {
         prompt.browser = this.browser;
       }
 
