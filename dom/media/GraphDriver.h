@@ -271,13 +271,14 @@ class ThreadedDriver : public GraphDriver {
  * A SystemClockDriver drives a MediaTrackGraph using a system clock, and waits
  * using a monitor, between each iteration.
  */
+enum class FallbackMode { Regular, Fallback };
 class SystemClockDriver : public ThreadedDriver {
  public:
-  explicit SystemClockDriver(MediaTrackGraphImpl* aGraphImpl);
+  explicit SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
+                             FallbackMode aFallback = FallbackMode::Regular);
   virtual ~SystemClockDriver();
   TimeDuration WaitInterval() override;
   MediaTime GetIntervalForIteration() override;
-  void MarkAsFallback();
   bool IsFallback();
   SystemClockDriver* AsSystemClockDriver() override { return this; }
 
@@ -290,7 +291,7 @@ class SystemClockDriver : public ThreadedDriver {
 
   // This is true if this SystemClockDriver runs the graph because we could not
   // open an audio stream.
-  bool mIsFallback;
+  const bool mIsFallback;
 };
 
 /**
