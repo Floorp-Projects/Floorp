@@ -23,7 +23,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
-import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
@@ -78,14 +77,14 @@ class BrowserToolbarView(
             val popupWindow = PopupWindow(
                 customView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                view.context.dimen(R.dimen.context_menu_height),
+                view.context.resources.getDimensionPixelSize(R.dimen.context_menu_height),
                 true
             )
 
             val selectedSession = container.context.components.core.sessionManager.selectedSession
 
             popupWindow.elevation =
-                view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
+                view.context.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
 
             customView.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
             customView.paste_and_go.isVisible =
@@ -117,7 +116,7 @@ class BrowserToolbarView(
 
             popupWindow.showAsDropDown(
                 view,
-                view.context.dimen(R.dimen.context_menu_x_offset),
+                view.context.resources.getDimensionPixelSize(R.dimen.context_menu_x_offset),
                 0,
                 Gravity.START
             )

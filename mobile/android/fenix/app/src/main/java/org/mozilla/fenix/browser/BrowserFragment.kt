@@ -28,7 +28,6 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.jetbrains.anko.dimen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -129,7 +128,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
 
         browserEngine.bottomMargin = if (requireContext().settings().shouldUseBottomToolbar) {
-            requireContext().dimen(R.dimen.browser_toolbar_height)
+            requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
         } else {
             0
         }

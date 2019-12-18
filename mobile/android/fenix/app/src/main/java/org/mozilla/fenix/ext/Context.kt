@@ -24,7 +24,6 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.jetbrains.anko.dimen
 import org.jetbrains.anko.px2dip
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -114,4 +113,4 @@ fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_RE
     Settings.getInstance(this, isCrashReportEnabledInBuild)
 
 fun Context.getDimenInDip(@DimenRes resource: Int) =
-    this.px2dip(this.dimen(resource))
+    this.px2dip(this.resources.getDimensionPixelSize(resource))
