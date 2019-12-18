@@ -1316,8 +1316,6 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
     return false;
   }
 
-  CurrentDriver()->WaitForNextIteration();
-
   SwapMessageQueues();
   return true;
 }

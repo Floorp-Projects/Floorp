@@ -302,6 +302,7 @@ void ThreadedDriver::RunThread() {
       break;
     }
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    WaitForNextIteration();
     if (NextDriver()) {
       LOG(LogLevel::Debug,
           ("%p: Switching to AudioCallbackDriver", GraphImpl()));
@@ -728,10 +729,6 @@ void AudioCallbackDriver::AddMixerCallback() {
     mGraphImpl->mMixer.AddCallback(WrapNotNull(this));
     mAddedMixer = true;
   }
-}
-
-void AudioCallbackDriver::WaitForNextIteration() {
-  // Do not block.
 }
 
 void AudioCallbackDriver::WakeUp() {}

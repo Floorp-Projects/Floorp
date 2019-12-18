@@ -120,10 +120,7 @@ class GraphDriver {
   explicit GraphDriver(MediaTrackGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* For {System,Offline}ClockDriver, this waits until it's time to process
-   * more data.  For AudioCallbackDriver, this is a no-op. */
-  virtual void WaitForNextIteration() = 0;
-  /* Wakes up the graph if it is waiting. */
+  /* Wakes up the graph if it is waiting for the next iteration. */
   virtual void WakeUp() = 0;
   /* Start the graph, init the driver, start the thread.
    * A driver cannot be started twice, it must be shutdown
@@ -229,7 +226,10 @@ class ThreadedDriver : public GraphDriver {
  public:
   explicit ThreadedDriver(MediaTrackGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
-  void WaitForNextIteration() override;
+  /**
+   * Waits until it's time to process more data.
+   * */
+  void WaitForNextIteration();
   void WakeUp() override;
   void Start() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
@@ -359,7 +359,6 @@ class AudioCallbackDriver : public GraphDriver,
   virtual ~AudioCallbackDriver();
 
   void Start() override;
-  void WaitForNextIteration() override;
   void WakeUp() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
 #if defined(XP_WIN)
