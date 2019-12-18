@@ -5382,14 +5382,8 @@ JSObject* js::SuperFunOperation(JSContext* cx, HandleObject callee) {
     return nullptr;
   }
 
-  RootedValue superFunVal(cx, UndefinedValue());
-  if (!superFun) {
-    superFunVal = NullValue();
-  } else if (!superFun->isConstructor()) {
-    superFunVal = ObjectValue(*superFun);
-  }
-
-  if (superFunVal.isObjectOrNull()) {
+  if (!superFun || !superFun->isConstructor()) {
+    RootedValue superFunVal(cx, ObjectOrNullValue(superFun));
     ReportIsNotFunction(cx, superFunVal, JSDVG_IGNORE_STACK, CONSTRUCT);
     return nullptr;
   }
