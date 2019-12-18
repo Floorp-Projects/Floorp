@@ -190,6 +190,8 @@ class CompositorOGL final : public Compositor {
 
   void WaitForGPU() override;
 
+  RefPtr<SurfacePoolHandle> GetSurfacePoolHandle() override;
+
   bool SupportsPartialTextureUpdate() override;
 
   bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override {
@@ -292,6 +294,7 @@ class CompositorOGL final : public Compositor {
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
+  RefPtr<SurfacePoolHandle> mSurfacePoolHandle;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
   bool mCanRenderToDefaultFramebuffer = true;

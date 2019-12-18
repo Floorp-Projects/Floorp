@@ -584,6 +584,7 @@ class nsChildView final : public nsBaseWidget {
   // wrapper layer.
   // Lazily created by EnsureContentLayerForMainThreadPainting().
   RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
+  RefPtr<mozilla::layers::SurfacePoolHandle> mPoolHandle;
 
   // In BasicLayers mode, this is the invalid region of mContentLayer.
   LayoutDeviceIntRegion mContentLayerInvalidRegion;

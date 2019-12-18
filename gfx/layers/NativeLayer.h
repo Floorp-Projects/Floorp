@@ -22,6 +22,7 @@ namespace layers {
 
 class NativeLayer;
 class NativeLayerCA;
+class SurfacePoolHandle;
 
 // NativeLayerRoot and NativeLayer allow building up a flat layer "tree" of
 // sibling layers. These layers provide a cross-platform abstraction for the
@@ -33,8 +34,9 @@ class NativeLayerRoot {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeLayerRoot)
 
-  virtual already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize,
-                                                    bool aIsOpaque) = 0;
+  virtual already_AddRefed<NativeLayer> CreateLayer(
+      const gfx::IntSize& aSize, bool aIsOpaque,
+      SurfacePoolHandle* aSurfacePoolHandle) = 0;
   virtual void AppendLayer(NativeLayer* aLayer) = 0;
   virtual void RemoveLayer(NativeLayer* aLayer) = 0;
   virtual void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) = 0;
@@ -101,31 +103,19 @@ class NativeLayer {
   virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRegion& aUpdateRegion, gfx::BackendType aBackendType) = 0;
 
-  // Set the GLContext to use for the MozFramebuffer that are returned from
-  // NextSurfaceAsFramebuffer. If changed to a different value, all
-  // MozFramebuffers tracked by this layer will be discarded.
-  // It's a good idea to call SetGLContext(nullptr) before destroying this
-  // layer so that GL resource destruction happens at a good time and on the
-  // right thread.
-  virtual void SetGLContext(gl::GLContext* aGLContext) = 0;
-  virtual gl::GLContext* GetGLContext() = 0;
-
-  // Must only be called if a non-null GLContext is set on this layer.
   // Returns a GLuint for a framebuffer that can be used for drawing to the
   // surface. The size of the framebuffer will be the same as the size of this
   // layer. If aNeedsDepth is true, the framebuffer is created with a depth
   // buffer. The caller should draw to the framebuffer, unbind it, and then call
   // NotifySurfaceReady(). It can limit its drawing to aUpdateRegion (which is
   // in the framebuffer's device space, possibly "upside down" if
-  // SurfaceIsFlipped()). The framebuffer will be created using the GLContext
-  // that was set on this layer with a call to SetGLContext. The NativeLayer
-  // will keep a reference to the MozFramebuffer so that it can reuse the same
-  // MozFramebuffer whenever it uses the same underlying surface. Calling
-  // SetGLContext with a different context will release that reference. After a
-  // call to NextSurface*, NextSurface* must not be called again until after
-  // NotifySurfaceReady has been called. Can be called on any thread. When used
-  // from multiple threads, callers need to make sure that they still only call
-  // NextSurface and NotifySurfaceReady alternatingly and not in any other
+  // SurfaceIsFlipped()).
+  // The framebuffer will be created in the GLContext that this layer's
+  // SurfacePoolHandle was created for.
+  // After a call to NextSurface*, NextSurface* must not be called again until
+  // after NotifySurfaceReady has been called. Can be called on any thread. When
+  // used from multiple threads, callers need to make sure that they still only
+  // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
   // aUpdateRegion must not extend beyond the layer size.
   virtual Maybe<GLuint> NextSurfaceAsFramebuffer(
@@ -135,6 +125,11 @@ class NativeLayer {
   // call to NextSurface* is now finished being drawn to and can be displayed on
   // the screen. Resets the invalid region on the surface to the empty region.
   virtual void NotifySurfaceReady() = 0;
+
+  // If you know that this layer will likely not draw any more frames, then it's
+  // good to call DiscardBackbuffers in order to save memory and allow other
+  // layer's to pick up the released surfaces from the pool.
+  virtual void DiscardBackbuffers() = 0;
 
  protected:
   virtual ~NativeLayer() {}

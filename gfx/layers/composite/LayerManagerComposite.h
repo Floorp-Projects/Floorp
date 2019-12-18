@@ -486,6 +486,7 @@ class LayerManagerComposite final : public HostLayerManager {
   CompositorScreenshotGrabber mProfilerScreenshotGrabber;
   RefPtr<TextRenderer> mTextRenderer;
   RefPtr<NativeLayerRoot> mNativeLayerRoot;
+  RefPtr<SurfacePoolHandle> mSurfacePoolHandle;
   std::deque<RefPtr<NativeLayer>> mNativeLayers;
   RefPtr<NativeLayer> mGPUStatsLayer;
   RefPtr<NativeLayer> mUnusedTransformWarningLayer;

@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Triangle.h"            // for Triangle, TexturedTriangle
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
 #include "mozilla/layers/LayersTypes.h"      // for LayersBackend
+#include "mozilla/layers/SurfacePool.h"      // for SurfacePoolHandle
 #include "mozilla/layers/TextureSourceProvider.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
@@ -511,6 +512,8 @@ class Compositor : public TextureSourceProvider {
   virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
 
   virtual void WaitForGPU() {}
+
+  virtual RefPtr<SurfacePoolHandle> GetSurfacePoolHandle() { return nullptr; }
 
   /**
    * Whether textures created by this compositor can receive partial updates.

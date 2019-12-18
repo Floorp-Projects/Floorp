@@ -15,6 +15,7 @@ namespace mozilla {
 namespace layers {
 class NativeLayerRoot;
 class NativeLayer;
+class SurfacePoolHandle;
 }  // namespace layers
 
 namespace wr {
@@ -73,6 +74,7 @@ class RenderCompositorOGL : public RenderCompositor {
   // Can be null.
   RefPtr<layers::NativeLayerRoot> mNativeLayerRoot;
   RefPtr<layers::NativeLayer> mNativeLayerForEntireWindow;
+  RefPtr<layers::SurfacePoolHandle> mSurfacePoolHandle;
 
   struct TileKeyHashFn {
     std::size_t operator()(const TileKey& aId) const {
