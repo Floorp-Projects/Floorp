@@ -5,44 +5,35 @@
 package org.mozilla.geckoview.test
 
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.support.test.InstrumentationRegistry
-
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
-
-import java.math.BigInteger
-
-import java.nio.ByteBuffer
-import java.nio.CharBuffer
-import java.nio.charset.Charset
-
-import java.security.MessageDigest
-
-import java.util.concurrent.CountDownLatch
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
-
 import org.json.JSONObject
-import org.junit.*
-
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
-import org.junit.Ignore
-
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
-
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.TestServer
 import java.io.IOException
+import java.math.BigInteger
 import java.net.UnknownHostException
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.Charset
+import java.security.MessageDigest
 import java.util.*
 
 @MediumTest
@@ -64,13 +55,9 @@ class WebExecutorTest {
         // the tests which are not using @UiThreadTest, so we do that
         // ourselves here as GeckoRuntime needs to be initialized
         // on the UI thread.
-        val latch = CountDownLatch(1)
-        Handler(Looper.getMainLooper()).post {
+        runBlocking(Dispatchers.Main) {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
-            latch.countDown()
         }
-
-        latch.await()
 
         server = TestServer(InstrumentationRegistry.getTargetContext())
         server.start(TEST_PORT)
@@ -98,7 +85,9 @@ class WebExecutorTest {
     }
 
     fun WebResponse.getBodyBytes(): ByteBuffer {
-        return ByteBuffer.wrap(body!!.readBytes())
+        body!!.use {
+            return ByteBuffer.wrap(it.readBytes())
+        }
     }
 
     fun WebResponse.getJSONBody(): JSONObject {

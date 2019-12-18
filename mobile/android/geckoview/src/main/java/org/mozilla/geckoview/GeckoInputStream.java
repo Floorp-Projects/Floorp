@@ -47,6 +47,11 @@ import java.util.LinkedList;
     public synchronized void close() throws IOException {
         super.close();
         mClosed = true;
+
+        if (mSupport != null) {
+            mSupport.close();
+            mSupport = null;
+        }
     }
 
     @Override
@@ -191,6 +196,9 @@ import java.util.LinkedList;
     private static class Support extends JNIObject {
         @WrapForJNI(dispatchTo = "gecko")
         private native void resume();
+
+        @WrapForJNI(dispatchTo = "gecko")
+        private native void close();
 
         @Override // JNIObject
         protected void disposeNative() {
