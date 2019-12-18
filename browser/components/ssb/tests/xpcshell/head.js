@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
+let xreDirProvider = Cc["@mozilla.org/xre/directory-provider;1"].getService(
+  Ci.nsIXREDirProvider
+);
+
 const SSB_STORE_PREFIX = "ssb:";
 
 const uri = spec => Services.io.newURI(spec);
