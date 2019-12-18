@@ -223,6 +223,12 @@ ExternalHelperAppParent::Cancel(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
+ExternalHelperAppParent::GetCanceled(bool* aCanceled) {
+  *aCanceled = NS_FAILED(mStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ExternalHelperAppParent::Suspend() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
