@@ -56,15 +56,16 @@ function startTest() {
     mediaRecorder.pause();
     // We may rewrite this once we settle Bug 1363915, could listen for pause event instead
     is(mediaRecorder.state, 'paused', 'Media recorder should be paused');
-    // Change our canvas color and size, these changes should not be recorded due to pause
-    canvas.width = canvas.height = new_canvas_size;
-    helper.drawColor(canvas, helper.blue);
 
-    // Wait awhile with the canvas as blue. Then change color to green, resume, and record green
+    // Wait a while, then while paused draw blue at another size, then again
+    // green at the original size and resume.
     let numberOfPaintsSincePause = 0;
-    let draw = () => {
+    window.requestAnimationFrame(function draw() {
       numberOfPaintsSincePause++;
-      if(numberOfPaintsSincePause == 60) {
+      if (numberOfPaintsSincePause == 2) {
+        canvas.width = canvas.height = new_canvas_size;
+        helper.drawColor(canvas, helper.blue);
+      } else if (numberOfPaintsSincePause == 60) {
         canvas.width = canvas.height = canvas_size;
         helper.drawColor(canvas, helper.green);
       } else if (numberOfPaintsSincePause == 62) {
@@ -75,8 +76,7 @@ function startTest() {
         return; // Early return, we don't want to request any more animation frames
       }
       window.requestAnimationFrame(draw);
-    };
-    window.requestAnimationFrame(draw);
+    });
   };
 
   mediaRecorder.onstop = () => {
