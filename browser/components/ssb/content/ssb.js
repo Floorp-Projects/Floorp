@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   SiteSpecificBrowser: "resource:///modules/SiteSpecificBrowserService.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  WindowsSupport: "resource:///modules/ssb/WindowsSupport.jsm",
 });
 
 let gSSBBrowser = null;
@@ -76,6 +77,9 @@ class ProgressListener {
     this.isInitial = false;
     if (isInitial && gSSB.needsUpdate) {
       await gSSB.updateFromBrowser(gSSBBrowser);
+      if (Services.appinfo.OS == "WINNT") {
+        WindowsSupport.applyOSIntegration(gSSB, window);
+      }
     }
 
     // So the testing harness knows when the ssb is properly initialized.

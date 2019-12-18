@@ -5,14 +5,24 @@
 var EXPORTED_SYMBOLS = ["WindowsSupport"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { SiteSpecificBrowserService } = ChromeUtils.import(
   "resource:///modules/SiteSpecificBrowserService.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OS: "resource://gre/modules/osfile.jsm",
+  ImageTools: "resource:///modules/ssb/ImageTools.jsm",
+});
 
 const shellService = Cc["@mozilla.org/browser/shell-service;1"].getService(
   Ci.nsIWindowsShellService
+);
+
+const uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
+  Ci.nsIWindowsUIUtils
 );
 
 const File = Components.Constructor(
@@ -60,6 +70,44 @@ const WindowsSupport = {
       await OS.File.remove(link);
     } catch (e) {
       console.error(e);
+    }
+  },
+
+  /**
+   * Applies the necessary OS integration to an open SSB.
+   *
+   * Sets the window icon based on the available icons.
+   *
+   * @param {SiteSpecificBrowser} ssb the SSB.
+   * @param {DOMWindow} window the window showing the SSB.
+   */
+  async applyOSIntegration(ssb, window) {
+    const getIcon = async size => {
+      let icon = ssb.getIcon(size);
+      if (!icon) {
+        return null;
+      }
+
+      try {
+        let image = await ImageTools.loadImage(Services.io.newURI(icon.src));
+        return image.container;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    };
+
+    if (!SiteSpecificBrowserService.useOSIntegration) {
+      return;
+    }
+
+    let icons = await Promise.all([
+      getIcon(uiUtils.systemSmallIconSize),
+      getIcon(uiUtils.systemLargeIconSize),
+    ]);
+
+    if (icons[0] || icons[1]) {
+      uiUtils.setWindowIcon(window, icons[0], icons[1]);
     }
   },
 };
