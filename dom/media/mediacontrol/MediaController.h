@@ -71,7 +71,7 @@ class MediaController final {
  private:
   ~MediaController();
 
-  already_AddRefed<BrowsingContext> GetContext() const;
+  void UpdateMediaActionToContentMediaIfNeeded(MediaControlActions aAction);
   void IncreaseControlledMediaNum();
   void DecreaseControlledMediaNum();
 
