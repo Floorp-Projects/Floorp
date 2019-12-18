@@ -48,6 +48,7 @@ extern LazyLogModule gMediaTrackGraphLog;
 namespace dom {
 enum class AudioContextOperation;
 enum class AudioContextOperationFlags;
+enum class AudioContextState : uint8_t;
 }  // namespace dom
 
 /*
@@ -1053,9 +1054,13 @@ class MediaTrackGraph {
    */
   void AddTrack(MediaTrack* aTrack);
 
-  /* From the main thread, ask the MTG to send back an event when the graph
-   * thread is running, and audio is being processed. */
-  void NotifyWhenGraphStarted(AudioNodeTrack* aNodeTrack);
+  /* From the main thread, ask the MTG to tell us when the graph
+   * thread is running, and audio is being processed, by resolving the returned
+   * promise. The promise is rejected with NS_ERROR_NOT_AVAILABLE if aNodeTrack
+   * is destroyed, or NS_ERROR_ILLEGAL_DURING_SHUTDOWN if the graph is shut
+   * down, before the promise could be resolved. */
+  using GraphStartedPromise = GenericPromise;
+  RefPtr<GraphStartedPromise> NotifyWhenGraphStarted(AudioNodeTrack* aTrack);
   /* From the main thread, suspend, resume or close an AudioContext.
    * aTracks are the tracks of all the AudioNodes of the AudioContext that
    * need to be suspended or resumed. This can be empty if this is a second
@@ -1064,13 +1069,13 @@ class MediaTrackGraph {
    * This can possibly pause the graph thread, releasing system resources, if
    * all tracks have been suspended/closed.
    *
-   * When the operation is complete, aPromise is resolved.
+   * When the operation is complete, the returned promise is resolved.
    */
-  void ApplyAudioContextOperation(MediaTrack* aDestinationTrack,
-                                  const nsTArray<MediaTrack*>& aTracks,
-                                  dom::AudioContextOperation aState,
-                                  void* aPromise,
-                                  dom::AudioContextOperationFlags aFlags);
+  using AudioContextOperationPromise =
+      MozPromise<dom::AudioContextState, bool, true>;
+  RefPtr<AudioContextOperationPromise> ApplyAudioContextOperation(
+      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      dom::AudioContextOperation aOperation);
 
   bool IsNonRealtime() const;
   /**
