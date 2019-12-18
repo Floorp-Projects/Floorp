@@ -55,7 +55,10 @@ namespace dom {
 
 class ImageListener : public MediaDocumentStreamListener {
  public:
-  NS_DECL_NSIREQUESTOBSERVER
+  // NS_DECL_NSIREQUESTOBSERVER
+  // We only implement OnStartRequest; OnStopRequest is
+  // implemented by MediaDocumentStreamListener
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override;
 
   explicit ImageListener(ImageDocument* aDocument);
   virtual ~ImageListener();
@@ -124,15 +127,6 @@ ImageListener::OnStartRequest(nsIRequest* request) {
   }
 
   return MediaDocumentStreamListener::OnStartRequest(request);
-}
-
-NS_IMETHODIMP
-ImageListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
-  ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
-  nsContentUtils::DispatchChromeEvent(imgDoc, ToSupports(imgDoc),
-                                      NS_LITERAL_STRING("ImageContentLoaded"),
-                                      CanBubble::eYes, Cancelable::eYes);
-  return MediaDocumentStreamListener::OnStopRequest(aRequest, aStatus);
 }
 
 ImageDocument::ImageDocument()
