@@ -203,6 +203,15 @@ NS_IMETHODIMP
 nsIconChannel::Cancel(nsresult status) { return mPump->Cancel(status); }
 
 NS_IMETHODIMP
+nsIconChannel::GetCanceled(bool* result) {
+  // Failure indicates the channel has probably been canceled.
+  nsresult status = NS_ERROR_FAILURE;
+  GetStatus(&status);
+  *result = NS_FAILED(status);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsIconChannel::Suspend(void) { return mPump->Suspend(); }
 
 NS_IMETHODIMP

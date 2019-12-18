@@ -337,6 +337,11 @@ NS_IMETHODIMP nsExtProtocolChannel::Cancel(nsresult status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::GetCanceled(bool* aCanceled) {
+  *aCanceled = NS_FAILED(mStatus);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::Suspend() {
   MOZ_ASSERT_UNREACHABLE("Suspend");
   return NS_ERROR_NOT_IMPLEMENTED;
