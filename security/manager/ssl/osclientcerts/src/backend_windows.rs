@@ -175,11 +175,6 @@ impl Cert {
 
 struct CertContext(PCCERT_CONTEXT);
 
-// TODO: CERT_CONTEXT may not be thread-safe (unclear) (but in any case we're protected by the mutex
-// on the manager, so this should be ok?)
-unsafe impl Send for CertContext {}
-unsafe impl Sync for CertContext {}
-
 impl CertContext {
     fn new(cert: PCCERT_CONTEXT) -> CertContext {
         CertContext(unsafe { CertDuplicateCertificateContext(cert) })
