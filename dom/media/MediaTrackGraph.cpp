@@ -1376,7 +1376,9 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
   RunMessagesInQueue();
 
   if (!UpdateMainThreadState()) {
-    return IterationResult::CreateStop();
+    return IterationResult::CreateStop(
+        NewRunnableMethod("MediaTrackGraphImpl::SignalMainThreadCleanup", this,
+                          &MediaTrackGraphImpl::SignalMainThreadCleanup));
   }
 
   return IterationResult::CreateStillProcessing();
