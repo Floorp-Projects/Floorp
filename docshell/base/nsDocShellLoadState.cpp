@@ -9,11 +9,11 @@
 #include "SHEntryParent.h"
 #include "SHEntryChild.h"
 #include "nsISHEntry.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIChildChannel.h"
 #include "ReferrerInfo.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
@@ -492,7 +492,8 @@ void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
 }
 
 nsresult nsDocShellLoadState::SetupInheritingPrincipal(
-    uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes) {
+    BrowsingContext::Type aType,
+    const mozilla::OriginAttributes& aOriginAttributes) {
   // We need a principalToInherit.
   //
   // If principalIsExplicit is not set there are 4 possibilities:
@@ -521,7 +522,7 @@ nsresult nsDocShellLoadState::SetupInheritingPrincipal(
   // (4) we dont' pass a principal into the channel, and a principal will be
   //     created later from the channel's internal data.
   mPrincipalToInherit = mTriggeringPrincipal;
-  if (mPrincipalToInherit && aItemType != nsIDocShellTreeItem::typeChrome) {
+  if (mPrincipalToInherit && aType != BrowsingContext::Type::Chrome) {
     if (mPrincipalToInherit->IsSystemPrincipal()) {
       if (mPrincipalIsExplicit) {
         return NS_ERROR_DOM_SECURITY_ERR;

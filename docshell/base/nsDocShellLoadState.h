@@ -7,6 +7,8 @@
 #ifndef nsDocShellLoadState_h__
 #define nsDocShellLoadState_h__
 
+#include "mozilla/dom/BrowsingContext.h"
+
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -183,7 +185,8 @@ class nsDocShellLoadState final {
   // else if the principal should be set up later in the process (after loads).
   // See comments in function for more info on principal selection algorithm
   nsresult SetupInheritingPrincipal(
-      uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes);
+      mozilla::dom::BrowsingContext::Type aType,
+      const mozilla::OriginAttributes& aOriginAttributes);
 
   // If no triggering principal exists at the moment, create one using referrer
   // information and origin attributes.
