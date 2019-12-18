@@ -1336,6 +1336,18 @@ StorageAccessPermissionPrompt.prototype = {
           self.allow({ "storage-access": "allow" });
         },
       },
+      {
+        label: gBrowserBundle.GetStringFromName(
+          "storageAccess.AllowOnAnySite.label"
+        ),
+        accessKey: gBrowserBundle.GetStringFromName(
+          "storageAccess.AllowOnAnySite.accesskey"
+        ),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
+        callback(state) {
+          self.allow({ "storage-access": "allow-on-any-site" });
+        },
+      },
     ];
   },
 

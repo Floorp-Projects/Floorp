@@ -1097,7 +1097,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
                         aValue) {
                    if (aValue.IsResolve()) {
                      return StorageAccessGrantPromise::CreateAndResolve(
-                         eAllow, __func__);
+                         NS_SUCCEEDED(aValue.ResolveValue()) ? eAllowOnAnySite
+                                                             : eAllow,
+                         __func__);
                    }
                    return StorageAccessGrantPromise::CreateAndReject(false,
                                                                      __func__);
@@ -1151,7 +1153,8 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
     nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
     const nsCString& aTrackingOrigin, int aAllowMode) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant);
+  MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant ||
+             aAllowMode == eAllowOnAnySite);
 
   if (!aParentPrincipal || !aTrackingPrincipal) {
     LOG(("Invalid input arguments passed"));
@@ -1186,8 +1189,34 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
       StaticPrefs::privacy_restrict3rdpartystorage_expiration() * 1000;
   int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
 
+  nsresult rv;
+  if (aAllowMode == eAllowOnAnySite) {
+    uint32_t privateBrowsingId = 0;
+    rv = aTrackingPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    if (!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) {
+      // If we are coming from a private window, make sure to store a
+      // session-only permission which won't get persisted to disk.
+      expirationType = nsIPermissionManager::EXPIRE_SESSION;
+      when = 0;
+    }
+
+    LOG(
+        ("Setting 'any site' permission expiry: %u, proceeding to save in the "
+         "permission manager",
+         expirationTime));
+
+    rv = permManager->AddFromPrincipal(
+        aTrackingPrincipal, NS_LITERAL_CSTRING("cookie"),
+        nsICookiePermission::ACCESS_ALLOW, expirationType, when);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
+  // We must grant the storage permission also if we allow it for any site
+  // because the setting 'cookie' permission is not applied to existing
+  // documents (See CookieSettings documentation).
+
   uint32_t privateBrowsingId = 0;
-  nsresult rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+  rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
   if ((!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) ||
       (aAllowMode == eAllowAutoGrant)) {
     // If we are coming from a private window or are automatically granting a
