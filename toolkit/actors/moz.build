@@ -7,6 +7,9 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
+with Files('AutoScroll*.jsm'):
+    BUG_COMPONENT = ('Core', 'Panning and Zooming')
+
 with Files('Finder*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -25,6 +28,8 @@ FINAL_TARGET_FILES.actors += [
     'AutoCompleteParent.jsm',
     'AutoplayChild.jsm',
     'AutoplayParent.jsm',
+    'AutoScrollChild.jsm',
+    'AutoScrollParent.jsm',
     'BrowserElementChild.jsm',
     'BrowserElementParent.jsm',
     'ControllersChild.jsm',
