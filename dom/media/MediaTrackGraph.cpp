@@ -125,7 +125,7 @@ TrackTime MediaTrackGraphImpl::GraphTimeToTrackTimeWithBlocking(
 }
 
 GraphTime MediaTrackGraphImpl::IterationEnd() const {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   return CurrentDriver()->IterationEnd();
 }
 
@@ -676,7 +676,7 @@ nsresult MediaTrackGraphImpl::OpenAudioInput(CubebUtils::AudioDeviceID aID,
 
 void MediaTrackGraphImpl::CloseAudioInputImpl(
     Maybe<CubebUtils::AudioDeviceID>& aID, AudioDataListener* aListener) {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   // It is possible to not know the ID here, find it first.
   if (aID.isNothing()) {
     for (auto iter = mInputDeviceUsers.Iter(); !iter.Done(); iter.Next()) {
