@@ -6685,11 +6685,20 @@ uint32_t ScrollFrameHelper::GetAvailableScrollingDirectionsForUserInputEvents()
   scrollRange.width = std::max(scrolledRect.width - scrollPort.width, 0);
   scrollRange.height = std::max(scrolledRect.height - scrollPort.height, 0);
 
+  // We check if there is at least one half of a screen pixel of scroll range to
+  // roughly match what apz does when it checks if the change in scroll position
+  // in screen pixels round to zero or not.
+  // (https://searchfox.org/mozilla-central/rev/2f09184ec781a2667feec87499d4b81b32b6c48e/gfx/layers/apz/src/AsyncPanZoomController.cpp#3210)
+  // This isn't quite half a screen pixel, it doesn't take into account CSS
+  // transforms, but should be good enough.
+  float halfScreenPixel =
+      GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel() /
+      (mOuter->PresShell()->GetCumulativeResolution() * 2.f);
   uint32_t directions = 0;
-  if (scrollRange.width > 0) {
+  if (scrollRange.width >= halfScreenPixel) {
     directions |= nsIScrollableFrame::HORIZONTAL;
   }
-  if (scrollRange.height > 0) {
+  if (scrollRange.height >= halfScreenPixel) {
     directions |= nsIScrollableFrame::VERTICAL;
   }
   return directions;
