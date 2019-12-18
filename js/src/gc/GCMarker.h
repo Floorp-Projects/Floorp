@@ -488,11 +488,12 @@ class GCMarker : public JSTracer {
 
  public:
   /*
-   * The compartment of the object whose trace hook is currently being called,
-   * if any. Used to catch cross-compartment edges traced without use of
+   * The compartment and zone of the object whose trace hook is currently being
+   * called, if any. Used to catch cross-compartment edges traced without use of
    * TraceCrossCompartmentEdge.
    */
   MainThreadOrGCTaskData<Compartment*> tracingCompartment;
+  MainThreadOrGCTaskData<Zone*> tracingZone;
 
   /*
    * List of objects to mark at the beginning of a GC. May also contains string
