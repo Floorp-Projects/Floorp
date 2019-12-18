@@ -42,6 +42,27 @@ const WindowsSupport = {
       return;
     }
 
+    let dir = OS.Path.join(OS.Constants.Path.profileDir, "ssb", ssb.id);
+    await OS.File.makeDir(dir, {
+      from: OS.Constants.Path.profileDir,
+      ignoreExisting: true,
+    });
+
+    let iconFile = new File(OS.Path.join(dir, "icon.ico"));
+
+    // We should be embedding multiple icon sizes, but the current icon encoder
+    // does not support this. For now just embed a sensible size.
+    let icon = ssb.getIcon(128);
+    if (icon) {
+      let { container } = await ImageTools.loadImage(
+        Services.io.newURI(icon.src)
+      );
+      ImageTools.saveIcon(container, 128, 128, iconFile);
+    } else {
+      // TODO use a default icon file.
+      iconFile = null;
+    }
+
     let desktop = Services.dirsvc.get("Desk", Ci.nsIFile);
     let link = OS.Path.join(desktop.path, `${ssb.name}.lnk`);
 
@@ -49,6 +70,7 @@ const WindowsSupport = {
       Services.dirsvc.get("XREExeF", Ci.nsIFile),
       ["-profile", OS.Constants.Path.profileDir, "-start-ssb", ssb.id],
       ssb.name,
+      iconFile,
       new File(link)
     );
   },
@@ -68,6 +90,16 @@ const WindowsSupport = {
 
     try {
       await OS.File.remove(link);
+    } catch (e) {
+      console.error(e);
+    }
+
+    let dir = OS.Path.join(OS.Constants.Path.profileDir, "ssb", ssb.id);
+    try {
+      await OS.File.removeDir(dir, {
+        ignoreAbsent: true,
+        ignorePermissions: true,
+      });
     } catch (e) {
       console.error(e);
     }
