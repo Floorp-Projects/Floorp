@@ -175,6 +175,7 @@ raptor-tp6m-1-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-1-cold
@@ -189,6 +190,7 @@ raptor-tp6m-2-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-2-cold
@@ -203,6 +205,7 @@ raptor-tp6m-3-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-3-cold
@@ -217,6 +220,7 @@ raptor-tp6m-4-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-4-cold
@@ -231,6 +235,7 @@ raptor-tp6m-5-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-5-cold
@@ -245,6 +250,7 @@ raptor-tp6m-6-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-6-cold
@@ -259,6 +265,7 @@ raptor-tp6m-7-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-7-cold
@@ -273,6 +280,7 @@ raptor-tp6m-8-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-8-cold
@@ -287,6 +295,7 @@ raptor-tp6m-9-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-9-cold
@@ -301,6 +310,7 @@ raptor-tp6m-10-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-10-cold
@@ -315,6 +325,7 @@ raptor-tp6m-11-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-11-cold
@@ -329,6 +340,7 @@ raptor-tp6m-12-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-12-cold
@@ -343,6 +355,7 @@ raptor-tp6m-13-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-13-cold
@@ -357,6 +370,7 @@ raptor-tp6m-14-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-14-cold
@@ -371,6 +385,7 @@ raptor-tp6m-15-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-15-cold
@@ -385,6 +400,7 @@ raptor-tp6m-16-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-16-cold
@@ -399,6 +415,7 @@ raptor-tp6m-17-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-17-cold
@@ -413,6 +430,7 @@ raptor-tp6m-18-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-18-cold
@@ -427,6 +445,7 @@ raptor-tp6m-19-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-19-cold
@@ -441,6 +460,7 @@ raptor-tp6m-20-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-20-cold
@@ -455,6 +475,7 @@ raptor-tp6m-21-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-21-cold
@@ -469,6 +490,7 @@ raptor-tp6m-22-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-22-cold
@@ -483,6 +505,7 @@ raptor-tp6m-23-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-23-cold
@@ -497,6 +520,7 @@ raptor-tp6m-24-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-24-cold
@@ -511,6 +535,7 @@ raptor-tp6m-25-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-25-cold
@@ -525,6 +550,7 @@ raptor-tp6m-26-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-26-cold
@@ -539,6 +565,7 @@ raptor-tp6m-27-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-27-cold
@@ -553,6 +580,7 @@ raptor-tp6m-28-fenix-cold:
     run-on-projects: []
     e10s: true
     tier: 2
+    max-run-time: 2400
     mozharness:
         extra-options:
             - --test=raptor-tp6m-28-cold

@@ -27,7 +27,7 @@ import mozinfo
 import mozprocess
 import mozproxy.utils as mpu
 import mozversion
-from condprof.client import get_profile
+from condprof.client import get_profile, ProfileNotFoundError
 from condprof.util import get_current_platform
 from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
@@ -108,7 +108,7 @@ either Raptor or browsertime."""
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
                  interrupt_handler=None, e10s=True, enable_webrender=False,
                  results_handler_class=RaptorResultsHandler, no_conditioned_profile=False,
-                 extra_prefs={}, **kwargs):
+                 device_name=None, extra_prefs={}, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -134,6 +134,7 @@ either Raptor or browsertime."""
             'e10s': e10s,
             'enable_webrender': enable_webrender,
             'no_conditioned_profile': no_conditioned_profile,
+            'device_name': device_name,
             'enable_fission': extra_prefs.get('fission.autostart', False),
             'extra_prefs': extra_prefs
         }
@@ -141,11 +142,8 @@ either Raptor or browsertime."""
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         # See bug 1582757; until we support aarch64 conditioned-profile builds, fall back
         # to mozrunner-created profiles
-        # only use conditioned profiles on Firefox desktop for now;
-        # see bug 1597711 for GeckoView/Android support
         self.no_condprof = ((self.config['platform'] == 'win'
                              and self.config['processor'] == 'aarch64') or
-                            (self.config['app'] in self.firefox_android_apps) or
                             self.config['no_conditioned_profile'])
 
         # We can never use e10s on fennec
@@ -199,8 +197,20 @@ either Raptor or browsertime."""
                  .format(temp_download_dir))
         # call condprof's client API to yield our platform-specific
         # conditioned-profile binary
-        platform = get_current_platform()
-        cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
+        if isinstance(self, PerftestAndroid):
+            android_app = self.config["binary"].split("org.mozilla.")[-1]
+            device_name = self.config.get("device_name")
+            if device_name is None:
+                device_name = "g5"
+            platform = "%s-%s" % (device_name, android_app)
+        else:
+            platform = get_current_platform()
+        try:
+            cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
+        except ProfileNotFoundError:
+            # If we can't find the profile on mozilla-central, we look on try
+            cond_prof_target_dir = get_profile(temp_download_dir, platform,
+                                               "settled", repo="try")
         # now get the full directory path to our fetched conditioned profile
         self.conditioned_profile_dir = os.path.join(temp_download_dir, cond_prof_target_dir)
         if not os.path.exists(cond_prof_target_dir):
@@ -1866,7 +1876,8 @@ def main(args=sys.argv[1:]):
                           intent=args.intent,
                           interrupt_handler=SignalHandler(),
                           enable_webrender=args.enable_webrender,
-                          extra_prefs=args.extra_prefs or {}
+                          extra_prefs=args.extra_prefs or {},
+                          device_name=args.device_name
                           )
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
