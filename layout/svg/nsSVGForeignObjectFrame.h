@@ -54,8 +54,7 @@ class nsSVGForeignObjectFrame final : public nsContainerFrame,
       return false;
     }
 
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
+    return nsContainerFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
   }
 
   virtual bool IsSVGTransformed(Matrix* aOwnTransform,
