@@ -225,6 +225,9 @@
 #include "nsIAsyncInputStream.h"
 #include "xpcpublic.h"
 #include "nsHyphenationManager.h"
+#include "nsICertOverrideService.h"
+#include "nsIX509Cert.h"
+#include "nsSerializationHelper.h"
 
 #include "mozilla/Sprintf.h"
 
@@ -5746,6 +5749,31 @@ mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
         new nsHangDetails(HangDetails(aDetails), PersistedToDisk::No);
     obs->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvAddCertException(
+    const nsACString& aSerializedCert, uint32_t aFlags,
+    const nsACString& aHostName, int32_t aPort, bool aIsTemporary,
+    AddCertExceptionResolver&& aResolver) {
+  nsCOMPtr<nsISupports> certObj;
+  nsresult rv = NS_DeserializeObject(aSerializedCert, getter_AddRefs(certObj));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certObj);
+    if (!cert) {
+      rv = NS_ERROR_INVALID_ARG;
+    } else {
+      nsCOMPtr<nsICertOverrideService> overrideService =
+          do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+      if (!overrideService) {
+        rv = NS_ERROR_FAILURE;
+      } else {
+        rv = overrideService->RememberValidityOverride(aHostName, aPort, cert,
+                                                       aFlags, aIsTemporary);
+      }
+    }
+  }
+  aResolver(rv);
   return IPC_OK();
 }
 

@@ -1187,6 +1187,11 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aHangDetails);
 
+  mozilla::ipc::IPCResult RecvAddCertException(
+      const nsACString& aSerializedCert, uint32_t aFlags,
+      const nsACString& aHostName, int32_t aPort, bool aIsTemporary,
+      AddCertExceptionResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvAutomaticStorageAccessCanBeGranted(
       const Principal& aPrincipal,
       AutomaticStorageAccessCanBeGrantedResolver&& aResolver);

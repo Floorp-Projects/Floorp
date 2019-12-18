@@ -317,12 +317,14 @@ partial interface Document {
   attribute EventHandler onpointerlockerror;
 };
 
+// Mozilla-internal document extensions specific to error pages.
 partial interface Document {
+  [Func="Document::CallerIsTrustedAboutCertError"]
+  Promise<any> addCertException(boolean isTemporary);
+
   [Func="Document::CallerIsTrustedAboutCertError", Throws]
   FailedCertSecurityInfo getFailedCertSecurityInfo();
-};
 
-partial interface Document {
   [Func="Document::CallerIsTrustedAboutNetError", Throws]
   NetErrorInfo getNetErrorInfo();
 };
