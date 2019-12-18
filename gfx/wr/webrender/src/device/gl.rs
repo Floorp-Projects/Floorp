@@ -1054,6 +1054,21 @@ pub struct Device {
     dump_shader_source: Option<String>,
 
     surface_origin_is_top_left: bool,
+
+    /// A debug boolean for tracking if the shader program has been set after
+    /// a blend mode change.
+    ///
+    /// This is needed for compatibility with next-gen
+    /// GPU APIs that switch states using "pipeline object" that bundles
+    /// together the blending state with the shader.
+    ///
+    /// Having the constraint of always binding the shader last would allow
+    /// us to have the "pipeline object" bound at that time. Without this
+    /// constraint, we'd either have to eagerly bind the "pipeline object"
+    /// on changing either the shader or the blend more, or lazily bind it
+    /// at draw call time, neither of which is desirable.
+    #[cfg(debug_assertions)]
+    shader_is_ready: bool,
 }
 
 /// Contains the parameters necessary to bind a draw target.
@@ -1497,6 +1512,9 @@ impl Device {
             optimal_pbo_stride,
             dump_shader_source,
             surface_origin_is_top_left,
+
+            #[cfg(debug_assertions)]
+            shader_is_ready: false,
         }
     }
 
@@ -1619,6 +1637,10 @@ impl Device {
     pub fn begin_frame(&mut self) -> GpuFrameId {
         debug_assert!(!self.inside_frame);
         self.inside_frame = true;
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
 
         // If our profiler state has changed, apply or remove the profiling
         // wrapper from our GL context.
@@ -1996,6 +2018,10 @@ impl Device {
     pub fn bind_program(&mut self, program: &Program) {
         debug_assert!(self.inside_frame);
         debug_assert!(program.is_initialized());
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = true;
+        }
 
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
@@ -2606,12 +2632,18 @@ impl Device {
         transform: &Transform3D<f32>,
     ) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl
             .uniform_matrix_4fv(program.u_transform, false, &transform.to_row_major_array());
     }
 
     pub fn switch_mode(&self, mode: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.uniform_1i(self.program_mode_id.0, mode);
     }
 
@@ -3149,6 +3181,9 @@ impl Device {
 
     pub fn draw_triangles_u16(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.draw_elements(
             gl::TRIANGLES,
             index_count,
@@ -3159,6 +3194,9 @@ impl Device {
 
     pub fn draw_triangles_u32(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.draw_elements(
             gl::TRIANGLES,
             index_count,
@@ -3169,16 +3207,25 @@ impl Device {
 
     pub fn draw_nonindexed_points(&mut self, first_vertex: i32, vertex_count: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.draw_arrays(gl::POINTS, first_vertex, vertex_count);
     }
 
     pub fn draw_nonindexed_lines(&mut self, first_vertex: i32, vertex_count: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.draw_arrays(gl::LINES, first_vertex, vertex_count);
     }
 
     pub fn draw_indexed_triangles_instanced_u16(&mut self, index_count: i32, instance_count: i32) {
         debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
         self.gl.draw_elements_instanced(
             gl::TRIANGLES,
             index_count,
@@ -3305,82 +3352,132 @@ impl Device {
         self.gl.disable(gl::SCISSOR_TEST);
     }
 
-    pub fn set_blend(&self, enable: bool) {
+    pub fn set_blend(&mut self, enable: bool) {
         if enable {
             self.gl.enable(gl::BLEND);
         } else {
             self.gl.disable(gl::BLEND);
         }
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
     }
 
-    pub fn set_blend_mode_alpha(&self) {
-        self.gl.blend_func_separate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA,
-                                    gl::ONE, gl::ONE);
+    fn set_blend_factors(
+        &mut self,
+        color: (gl::GLenum, gl::GLenum),
+        alpha: (gl::GLenum, gl::GLenum),
+    ) {
         self.gl.blend_equation(gl::FUNC_ADD);
+        if color == alpha {
+            self.gl.blend_func(color.0, color.1);
+        } else {
+            self.gl.blend_func_separate(color.0, color.1, alpha.0, alpha.1);
+        }
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
     }
 
-    pub fn set_blend_mode_premultiplied_alpha(&self) {
-        self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-        self.gl.blend_equation(gl::FUNC_ADD);
+    pub fn set_blend_mode_alpha(&mut self) {
+        self.set_blend_factors(
+            (gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA),
+            (gl::ONE, gl::ONE),
+        );
     }
 
-    pub fn set_blend_mode_premultiplied_dest_out(&self) {
-        self.gl.blend_func(gl::ZERO, gl::ONE_MINUS_SRC_ALPHA);
-        self.gl.blend_equation(gl::FUNC_ADD);
+    pub fn set_blend_mode_premultiplied_alpha(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
     }
 
-    pub fn set_blend_mode_multiply(&self) {
-        self.gl
-            .blend_func_separate(gl::ZERO, gl::SRC_COLOR, gl::ZERO, gl::SRC_ALPHA);
-        self.gl.blend_equation(gl::FUNC_ADD);
+    pub fn set_blend_mode_premultiplied_dest_out(&mut self) {
+        self.set_blend_factors(
+            (gl::ZERO, gl::ONE_MINUS_SRC_ALPHA),
+            (gl::ZERO, gl::ONE_MINUS_SRC_ALPHA),
+        );
     }
-    pub fn set_blend_mode_max(&self) {
+
+    pub fn set_blend_mode_multiply(&mut self) {
+        self.set_blend_factors(
+            (gl::ZERO, gl::SRC_COLOR),
+            (gl::ZERO, gl::SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_subpixel_pass0(&mut self) {
+        self.set_blend_factors(
+            (gl::ZERO, gl::ONE_MINUS_SRC_COLOR),
+            (gl::ZERO, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_subpixel_pass1(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE),
+            (gl::ONE, gl::ONE),
+        );
+    }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass0(&mut self) {
+        self.set_blend_factors(
+            (gl::ZERO, gl::ONE_MINUS_SRC_COLOR),
+            (gl::ZERO, gl::ONE),
+        );
+    }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass1(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE_MINUS_DST_ALPHA, gl::ONE),
+            (gl::ZERO, gl::ONE),
+        );
+    }
+    pub fn set_blend_mode_subpixel_with_bg_color_pass2(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_subpixel_constant_text_color(&mut self, color: ColorF) {
+        // color is an unpremultiplied color.
+        self.gl.blend_color(color.r, color.g, color.b, 1.0);
+        self.set_blend_factors(
+            (gl::CONSTANT_COLOR, gl::ONE_MINUS_SRC_COLOR),
+            (gl::CONSTANT_ALPHA, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_subpixel_dual_source(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE_MINUS_SRC1_COLOR),
+            (gl::ONE, gl::ONE_MINUS_SRC1_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_show_overdraw(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+
+    pub fn set_blend_mode_max(&mut self) {
         self.gl
             .blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE);
         self.gl.blend_equation_separate(gl::MAX, gl::FUNC_ADD);
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
     }
-    pub fn set_blend_mode_min(&self) {
+    pub fn set_blend_mode_min(&mut self) {
         self.gl
             .blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE);
         self.gl.blend_equation_separate(gl::MIN, gl::FUNC_ADD);
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
     }
-    pub fn set_blend_mode_subpixel_pass0(&self) {
-        self.gl.blend_func(gl::ZERO, gl::ONE_MINUS_SRC_COLOR);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_pass1(&self) {
-        self.gl.blend_func(gl::ONE, gl::ONE);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass0(&self) {
-        self.gl.blend_func_separate(gl::ZERO, gl::ONE_MINUS_SRC_COLOR, gl::ZERO, gl::ONE);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass1(&self) {
-        self.gl.blend_func_separate(gl::ONE_MINUS_DST_ALPHA, gl::ONE, gl::ZERO, gl::ONE);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass2(&self) {
-        self.gl.blend_func_separate(gl::ONE, gl::ONE, gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_constant_text_color(&self, color: ColorF) {
-        // color is an unpremultiplied color.
-        self.gl.blend_color(color.r, color.g, color.b, 1.0);
-        self.gl
-            .blend_func(gl::CONSTANT_COLOR, gl::ONE_MINUS_SRC_COLOR);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_subpixel_dual_source(&self) {
-        self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC1_COLOR);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-    pub fn set_blend_mode_show_overdraw(&self) {
-        self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-        self.gl.blend_equation(gl::FUNC_ADD);
-    }
-
-    pub fn set_blend_mode_advanced(&self, mode: MixBlendMode) {
+    pub fn set_blend_mode_advanced(&mut self, mode: MixBlendMode) {
         self.gl.blend_equation(match mode {
             MixBlendMode::Normal => {
                 // blend factor only make sense for the normal mode
@@ -3403,6 +3500,10 @@ impl Device {
             MixBlendMode::Color => gl::HSL_COLOR_KHR,
             MixBlendMode::Luminosity => gl::HSL_LUMINOSITY_KHR,
         });
+        #[cfg(debug_assertions)]
+        {
+            self.shader_is_ready = false;
+        }
     }
 
     pub fn supports_extension(&self, extension: &str) -> bool {
