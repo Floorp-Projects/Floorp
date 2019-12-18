@@ -74,10 +74,10 @@ jobs:
         run:
             using: run-task
             command: >-
-                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3.6 $CONDPROF_ROOT &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3.7 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3.6 condprof/runner.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
+                bin/python3.7 condprof/runner.py --firefox $MOZ_FETCHES_DIR/firefox/firefox-bin $CONDPROF_ARCHIVES
         worker:
             docker-image: {in-tree: condprof}
             artifacts:
