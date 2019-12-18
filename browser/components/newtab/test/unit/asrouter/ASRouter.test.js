@@ -123,6 +123,7 @@ describe("ASRouter", () => {
     sandbox.stub(ASRouterPreferences, "trailhead").get(() => {
       return { trailheadTriplet: "test" };
     });
+    sandbox.stub(ASRouterPreferences, "useReleaseSnippets").get(() => true);
     sandbox.replaceGetter(
       ASRouterPreferences,
       "personalizedCfrScores",
@@ -898,6 +899,25 @@ describe("ASRouter", () => {
       assert.calledOnce(stub);
       assert.calledWithExactly(stub, url);
       assert.equal(Router.state.providers[0].url, replacedUrl);
+    });
+    it("should use release snippets", () => {
+      const url = "https://www.example.com/%CHANNEL%/";
+      const provider = { id: "foo", enabled: true, type: "remote", url };
+      setMessageProviderPref([provider]);
+
+      Router._updateMessageProviders();
+
+      assert.isTrue(Router.state.providers[0].url.includes("release"));
+    });
+    it("should not use release snippets", () => {
+      sandbox.stub(ASRouterPreferences, "useReleaseSnippets").get(() => false);
+      const url = "https://www.example.com/%CHANNEL%/";
+      const provider = { id: "foo", enabled: true, type: "remote", url };
+      setMessageProviderPref([provider]);
+
+      Router._updateMessageProviders();
+
+      assert.isFalse(Router.state.providers[0].url.includes("release"));
     });
     it("should only add the providers that are enabled", () => {
       const providers = [
