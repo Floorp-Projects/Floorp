@@ -355,9 +355,6 @@ extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
-#if defined(MOZ_WIDGET_ANDROID)
-extern const mozilla::Module kBrowserModule;
-#endif
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
@@ -443,9 +440,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
-#if defined(MOZ_WIDGET_ANDROID)
-  RegisterModule(&kBrowserModule);
-#endif
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);

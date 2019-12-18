@@ -10,45 +10,7 @@ with Files('**'):
 with Files('extensions/**'):
     BUG_COMPONENT = ('WebExtensions', 'Android')
 
-XPIDL_SOURCES += [
-    'SessionStore.idl',
-]
-
-XPIDL_MODULE = 'MobileComponents'
-
-EXTRA_COMPONENTS += [
-    'AboutRedirector.js',
-    'AddonUpdateService.js',
-    'BlocklistPrompt.js',
-    'BrowserCLH.js',
-    'ColorPicker.js',
-    'ContentDispatchChooser.js',
-    'ContentPermissionPrompt.js',
-    'DirectoryProvider.js',
-    'FilePicker.js',
-    'FxAccountsPush.js',
-    'HelperAppDialog.js',
-    'ImageBlockingPolicy.js',
-    'LoginManagerPrompter.js',
-    'NSSDialogService.js',
-    'PersistentNotificationHandler.js',
-    'PresentationDevicePrompt.js',
-    'PresentationRequestUIGlue.js',
-    'PromptService.js',
-    'SessionStore.js',
-    'TabSource.js',
-    'XPIDialogService.js',
-]
-
-# Keep it this way if at all possible.  If you need preprocessing,
-# consider adding fields to AppConstants.jsm.
-EXTRA_PP_COMPONENTS += [
-    'MobileComponents.manifest',
-]
-
 DIRS += [
     'extensions',
-    'build',
     'geckoview',
-    'search',
 ]
