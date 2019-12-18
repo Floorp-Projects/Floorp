@@ -854,6 +854,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 #if DEBUG
     if (mGraphDriverRunning) {
       mMonitor.AssertCurrentThreadOwns();
+    } else {
+      MOZ_ASSERT(NS_IsMainThread());
     }
 #endif
     return mLifecycleState;
@@ -862,6 +864,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 #if DEBUG
     if (mGraphDriverRunning) {
       mMonitor.AssertCurrentThreadOwns();
+    } else {
+      MOZ_ASSERT(NS_IsMainThread());
     }
 #endif
     return mLifecycleState;
