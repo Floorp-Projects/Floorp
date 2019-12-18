@@ -18,7 +18,6 @@ from itertools import chain
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import (
     FileAvoidWrite,
-    ensure_bytes,
     ensure_unicode,
 )
 from mozpack.executables import (
@@ -220,7 +219,7 @@ class BaseFile(object):
                 shutil.copyfileobj(self.open(), dest)
             return True
 
-        src = self.open()
+        src = self.open('rb')
         copy_content = b''
         while True:
             dest_content = dest.read(32768)
@@ -660,7 +659,7 @@ class DeflatedFile(BaseFile):
         assert isinstance(file, JarFileReader)
         self.file = file
 
-    def open(self):
+    def open(self, mode='rb'):
         self.file.seek(0)
         return self.file
 
@@ -729,17 +728,17 @@ class ManifestFile(BaseFile):
         else:
             self._entries.remove(entry)
 
-    def open(self):
+    def open(self, mode='rt'):
         '''
         Return a file-like object allowing to read() the serialized content of
         the manifest.
         '''
-        return BytesIO(
-            ensure_bytes(
-                ''.join(
-                    '%s\n' % e.rebase(self._base)
-                    for e in chain(self._entries, self._interfaces)
-                )))
+        content = ''.join(
+            '%s\n' % e.rebase(self._base)
+            for e in chain(self._entries, self._interfaces))
+        if 'b' in mode:
+            return BytesIO(six.ensure_binary(content))
+        return six.StringIO(six.ensure_text(content))
 
     def __iter__(self):
         '''
