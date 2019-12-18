@@ -573,15 +573,22 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * It is only safe to call this at the very end of an iteration, when there
    * has been a SwitchAtNextIteration call during the iteration. The driver
    * should return and pass the control to the new driver shortly after.
-   * We can also switch from Revive() (on MainThread). Monitor must be held.
+   * Monitor must be held.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    MOZ_ASSERT(RunByGraphDriver(mDriver) || !mDriver->ThreadRunning());
-#ifdef DEBUG
-    mMonitor.AssertCurrentThreadOwns();
-#endif
+    MOZ_ASSERT_IF(mDriver->ThreadRunning(), RunByGraphDriver(mDriver));
+    MOZ_ASSERT_IF(!mDriver->ThreadRunning(), NS_IsMainThread());
     mDriver = aDriver;
   }
+
+  GraphDriver* NextDriver() const {
+    MOZ_ASSERT(OnGraphThread());
+    return mNextDriver;
+  }
+
+  bool Switching() const { return NextDriver(); }
+
+  void SwitchAtNextIteration(GraphDriver* aNextDriver);
 
   Monitor& GetMonitor() { return mMonitor; }
 
@@ -676,6 +683,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Must hold monitor to access it.
    */
   RefPtr<GraphDriver> mDriver;
+
+  // Set during an iteration to switch driver after the iteration has finished.
+  // Should the current iteration be the last iteration, the next driver will be
+  // discarded. Access through SwitchAtNextIteration()/NextDriver(). Graph
+  // thread only.
+  RefPtr<GraphDriver> mNextDriver;
 
   // The following state is managed on the graph thread only, unless
   // mLifecycleState > LIFECYCLE_RUNNING in which case the graph thread
