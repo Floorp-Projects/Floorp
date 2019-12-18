@@ -167,7 +167,7 @@ bool SystemClockDriver::IsFallback() { return mIsFallback; }
 void ThreadedDriver::RunThread() {
   mThreadRunning = true;
   while (true) {
-    mIterationStart = IterationEnd();
+    mIterationStart = mIterationEnd;
     mIterationEnd += GetIntervalForIteration();
 
     if (mStateComputedTime < mIterationEnd) {
@@ -202,7 +202,8 @@ void ThreadedDriver::RunThread() {
          (long)nextStateComputedTime));
 
     mStateComputedTime = nextStateComputedTime;
-    IterationResult result = Graph()->OneIteration(mStateComputedTime, nullptr);
+    IterationResult result =
+        Graph()->OneIteration(mStateComputedTime, mIterationEnd, nullptr);
 
     if (result.IsStop()) {
       // Signal that we're done stopping.
@@ -231,7 +232,7 @@ MediaTime SystemClockDriver::GetIntervalForIteration() {
 
   MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
           ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
-           Graph(), MediaTimeToSeconds(IterationEnd() + interval),
+           Graph(), MediaTimeToSeconds(mIterationEnd + interval),
            (now - mInitialTimeStamp).ToSeconds(),
            MediaTimeToSeconds(mStateComputedTime)));
 
@@ -726,8 +727,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   bool iterate = mBuffer.Available();
   IterationResult result =
-      iterate ? Graph()->OneIteration(nextStateComputedTime, &mMixer)
-              : IterationResult::CreateStillProcessing();
+      iterate
+          ? Graph()->OneIteration(nextStateComputedTime, mIterationEnd, &mMixer)
+          : IterationResult::CreateStillProcessing();
   if (iterate) {
     // We totally filled the buffer (and mScratchBuffer isn't empty).
     // We don't need to run an iteration and if we do so we may overflow.

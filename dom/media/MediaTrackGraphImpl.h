@@ -216,13 +216,14 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * OneIterationImpl is called directly. Output from the graph gets mixed into
    * aMixer, if it is non-null.
    */
-  IterationResult OneIteration(GraphTime aStateEnd,
+  IterationResult OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
                                AudioMixer* aMixer) override;
 
   /**
    * Returns true if this MediaTrackGraph should keep running
    */
-  IterationResult OneIterationImpl(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIterationImpl(GraphTime aStateEnd, GraphTime aIterationEnd,
+                                   AudioMixer* aMixer);
 
   /**
    * Called from the driver, when the graph thread is about to stop, to tell
@@ -725,6 +726,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * at this time.  This is behind mStateComputedTime during processing.
    */
   GraphTime mProcessedTime = 0;
+  /**
+   * The end of the current iteration. Only access on the graph thread.
+   */
+  GraphTime mIterationEndTime = 0;
   /**
    * The graph should stop processing at this time.
    */

@@ -30,7 +30,7 @@ class MockGraphInterface : public GraphInterface {
   MOCK_METHOD0(DeviceChanged, void());
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
-  IterationResult OneIteration(GraphTime, AudioMixer*) {
+  IterationResult OneIteration(GraphTime, GraphTime, AudioMixer*) {
     return mKeepProcessing ? IterationResult::CreateStillProcessing()
                            : IterationResult::CreateStop(
                                  NS_NewRunnableFunction(__func__, [] {}));
