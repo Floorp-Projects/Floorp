@@ -66,7 +66,6 @@ static const char kContentBundles[][52] = {
     "chrome://global/locale/commonDialogs.properties",
     "chrome://global/locale/css.properties",
     "chrome://global/locale/dom/dom.properties",
-    "chrome://global/locale/intl.properties",
     "chrome://global/locale/layout/HtmlForm.properties",
     "chrome://global/locale/layout/htmlparser.properties",
     "chrome://global/locale/layout_errors.properties",
