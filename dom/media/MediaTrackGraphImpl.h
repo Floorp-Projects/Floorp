@@ -91,11 +91,10 @@ class MessageBlock {
  * object too.
  */
 class MediaTrackGraphImpl : public MediaTrackGraph,
+                            public GraphInterface,
                             public nsIMemoryReporter,
                             public nsITimerCallback,
                             public nsINamed {
-  using IterationResult = GraphDriver::IterationResult;
-
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -127,7 +126,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * True if we're on aDriver's thread, or if we're on mGraphRunner's thread
    * and mGraphRunner is currently run by aDriver.
    */
-  bool InDriverIteration(GraphDriver* aDriver);
+  bool InDriverIteration(GraphDriver* aDriver) override;
 #endif
 
   /**
@@ -217,7 +216,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * OneIterationImpl is called directly. Output from the graph gets mixed into
    * aMixer, if it is non-null.
    */
-  IterationResult OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIteration(GraphTime aStateEnd,
+                               AudioMixer* aMixer) override;
 
   /**
    * Returns true if this MediaTrackGraph should keep running
@@ -428,15 +428,15 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /* Called on the graph thread when there is new output data for listeners.
    * This is the mixed audio output of this MediaTrackGraph. */
   void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        TrackRate aRate, uint32_t aChannels);
+                        TrackRate aRate, uint32_t aChannels) override;
   /* Called on the graph thread when there is new input data for listeners. This
    * is the raw audio input for this MediaTrackGraph. */
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
-                       TrackRate aRate, uint32_t aChannels);
+                       TrackRate aRate, uint32_t aChannels) override;
   /* Called every time there are changes to input/output audio devices like
    * plug/unplug etc. This can be called on any thread, and posts a message to
    * the main thread so that it can post a message to the graph thread. */
-  void DeviceChanged();
+  void DeviceChanged() override;
   /* Called every time there are changes to input/output audio devices. This is
    * called on the graph thread. */
   void DeviceChangedImpl();
