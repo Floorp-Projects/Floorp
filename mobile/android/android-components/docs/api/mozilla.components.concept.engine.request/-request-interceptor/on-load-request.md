@@ -2,14 +2,20 @@
 
 # onLoadRequest
 
-`open fun onLoadRequest(session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`, uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`InterceptionResponse`](-interception-response/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L46)
+`open fun onLoadRequest(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`, uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, hasUserGesture: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, isSameDomain: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`InterceptionResponse`](-interception-response/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L52)
 
 A request to open an URI. This is called before each page load to allow
 providing custom behavior.
 
 ### Parameters
 
-`session` - The engine session that initiated the callback.
+`engineSession` - The engine session that initiated the callback.
+
+`uri` - The the URI of the request.
+
+`hasUserGesture` - If the request if triggered by the user then true, else false.
+
+`isSameDomain` - If the request is the same domain as the current URL then true, else false.
 
 **Return**
 An [InterceptionResponse](-interception-response/index.md) object containing alternative content

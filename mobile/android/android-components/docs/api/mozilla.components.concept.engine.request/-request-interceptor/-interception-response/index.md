@@ -2,7 +2,7 @@
 
 # InterceptionResponse
 
-`sealed class InterceptionResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L17)
+`sealed class InterceptionResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L18)
 
 An alternative response for an intercepted request.
 
@@ -10,6 +10,7 @@ An alternative response for an intercepted request.
 
 | Name | Summary |
 |---|---|
+| [AppIntent](-app-intent/index.md) | `data class AppIntent : `[`InterceptionResponse`](./index.md) |
 | [Content](-content/index.md) | `data class Content : `[`InterceptionResponse`](./index.md) |
 | [Url](-url/index.md) | `data class Url : `[`InterceptionResponse`](./index.md) |
 
@@ -17,5 +18,6 @@ An alternative response for an intercepted request.
 
 | Name | Summary |
 |---|---|
+| [AppIntent](-app-intent/index.md) | `data class AppIntent : `[`InterceptionResponse`](./index.md) |
 | [Content](-content/index.md) | `data class Content : `[`InterceptionResponse`](./index.md) |
 | [Url](-url/index.md) | `data class Url : `[`InterceptionResponse`](./index.md) |
