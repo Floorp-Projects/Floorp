@@ -5180,10 +5180,6 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     Client::Type clientType;
     bool ok = Client::TypeFromText(leafName, clientType, fallible);
     if (!ok) {
-      UNKNOWN_FILE_WARNING(leafName);
-      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_UnexpectedClient);
-      RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
-
       // Our upgrade process should have attempted to delete the deprecated
       // client directory and failed to upgrade if it could not be deleted. So
       // if we're here, either a) there's a bug in our code or b) a user copied
@@ -5200,10 +5196,13 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
           CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
         }
 
-        MOZ_DIAGNOSTIC_ASSERT(true, "Found a deprecated client");
+        MOZ_DIAGNOSTIC_ASSERT(false, "Found a deprecated client");
       }
 
-      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
+      // Unknown directories during initialization are now allowed. Just warn if
+      // we find them.
+      UNKNOWN_FILE_WARNING(leafName);
+      continue;
     }
 
     UsageInfo usageInfo;
@@ -9015,10 +9014,9 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
       Client::Type clientType;
       bool ok = Client::TypeFromText(leafName, clientType, fallible);
       if (!ok) {
+        // Unknown directories during getting usage for an origin (even for an
+        // uninitialized origin) are now allowed. Just warn if we find them.
         UNKNOWN_FILE_WARNING(leafName);
-        if (!initialized) {
-          return NS_ERROR_UNEXPECTED;
-        }
         continue;
       }
 
