@@ -779,7 +779,10 @@ var ThirdPartyCookies = {
     for (let perm of Services.perms.getAllForPrincipal(
       gBrowser.contentPrincipal
     )) {
-      if (perm.type == "3rdPartyStorage^" + origin) {
+      if (
+        perm.type == "3rdPartyStorage^" + origin ||
+        perm.type.startsWith("3rdPartyStorage^" + origin + "^")
+      ) {
         return perm.capability;
       }
     }
@@ -796,7 +799,10 @@ var ThirdPartyCookies = {
     for (let perm of Services.perms.getAllForPrincipal(
       gBrowser.contentPrincipal
     )) {
-      if (perm.type == "3rdPartyStorage^" + origin) {
+      if (
+        perm.type == "3rdPartyStorage^" + origin ||
+        perm.type.startsWith("3rdPartyStorage^" + origin + "^")
+      ) {
         Services.perms.removePermission(perm);
       }
     }
