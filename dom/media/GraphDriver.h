@@ -57,6 +57,18 @@ static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
 static const int AUDIO_TARGET_MS =
     2 * MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS;
 
+/**
+ * After starting a fallback driver, wait this long before attempting to re-init
+ * the audio stream the first time.
+ */
+static const int AUDIO_INITIAL_FALLBACK_BACKOFF_STEP_MS = 10;
+
+/**
+ * The backoff step duration for when to next attempt to re-init the audio
+ * stream is capped at this value.
+ */
+static const int AUDIO_MAX_FALLBACK_BACKOFF_STEP_MS = 1000;
+
 class AudioCallbackDriver;
 class GraphDriver;
 class MediaTrack;
@@ -758,6 +770,12 @@ class AudioCallbackDriver : public GraphDriver,
   /* Set to true in the first iteration after starting. Accessed in data
    * callback while running, or in Start(). */
   bool mRanFirstIteration = false;
+  /* If using a fallback driver, this is the duration to wait after failing to
+   * start it before attempting to start it again. */
+  TimeDuration mNextReInitBackoffStep;
+  /* If using a fallback driver, this is the next time we'll try to start the
+   * audio stream. */
+  TimeStamp mNextReInitAttempt;
 #ifdef XP_MACOSX
   /* When using the built-in speakers on macbook pro (13 and 15, all models),
    * it's best to hard pan the audio on the right, to avoid feedback into the
