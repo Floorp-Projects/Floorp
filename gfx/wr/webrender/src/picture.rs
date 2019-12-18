@@ -431,7 +431,7 @@ impl PrimitiveDependencyInfo {
 }
 
 /// A stable ID for a given tile, to help debugging. These are also used
-/// as unique identfiers for tile surfaces when using a native compositor.
+/// as unique identifiers for tile surfaces when using a native compositor.
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
