@@ -6645,20 +6645,6 @@ uint32_t nsIScrollableFrame::GetAvailableScrollingDirections() const {
   return directions;
 }
 
-uint32_t nsIScrollableFrame::GetAvailableVisualScrollingDirections() const {
-  nscoord oneDevPixel =
-      GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
-  uint32_t directions = 0;
-  nsRect scrollRange = GetVisualScrollRange();
-  if (scrollRange.width >= oneDevPixel) {
-    directions |= HORIZONTAL;
-  }
-  if (scrollRange.height >= oneDevPixel) {
-    directions |= VERTICAL;
-  }
-  return directions;
-}
-
 nsRect ScrollFrameHelper::GetScrollRangeForUserInputEvents() const {
   // This function computes a scroll range based on a scrolled rect and scroll
   // port defined as follows:
