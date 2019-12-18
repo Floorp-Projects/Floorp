@@ -22,7 +22,6 @@ GraphRunner::GraphRunner(MediaTrackGraphImpl* aGraph,
     : Runnable("GraphRunner"),
       mMonitor("GraphRunner::mMonitor"),
       mGraph(aGraph),
-      mStillProcessing(true),
       mThreadState(ThreadState::Wait),
       mThread(aThread) {
   mThread->Dispatch(do_AddRef(this));
@@ -57,7 +56,8 @@ void GraphRunner::Shutdown() {
   mThread->Shutdown();
 }
 
-bool GraphRunner::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer) {
+auto GraphRunner::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer)
+    -> IterationResult {
   TRACE_AUDIO_CALLBACK();
 
   MonitorAutoLock lock(mMonitor);
@@ -77,7 +77,7 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer) {
   // Signal that mIterationState was updated
   mThreadState = ThreadState::Run;
   mMonitor.Notify();
-  // Wait for mStillProcessing to update
+  // Wait for mIterationResult to update
   do {
     mMonitor.Wait();
   } while (mThreadState == ThreadState::Run);
@@ -89,7 +89,9 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer) {
 
   mIterationState = Nothing();
 
-  return mStillProcessing;
+  IterationResult result = std::move(mIterationResult);
+  mIterationResult = IterationResult();
+  return result;
 }
 
 NS_IMETHODIMP GraphRunner::Run() {
@@ -106,9 +108,9 @@ NS_IMETHODIMP GraphRunner::Run() {
     }
     MOZ_DIAGNOSTIC_ASSERT(mIterationState.isSome());
     TRACE();
-    mStillProcessing = mGraph->OneIterationImpl(mIterationState->StateEnd(),
+    mIterationResult = mGraph->OneIterationImpl(mIterationState->StateEnd(),
                                                 mIterationState->Mixer());
-    // Signal that mStillProcessing was updated
+    // Signal that mIterationResult was updated
     mThreadState = ThreadState::Wait;
     mMonitor.Notify();
   }

@@ -118,6 +118,37 @@ enum class AudioContextOperation;
  */
 class GraphDriver {
  public:
+  /**
+   * Object returned from OneIteration() instructing the iterating GraphDriver
+   * what to do.
+   */
+  class IterationResult final {
+    struct Undefined {};
+    struct StillProcessing {};
+    struct Stop {};
+    Variant<Undefined, StillProcessing, Stop> mResult;
+
+    explicit IterationResult(StillProcessing&& aArg)
+        : mResult(std::move(aArg)) {}
+    explicit IterationResult(Stop&& aArg) : mResult(std::move(aArg)) {}
+
+   public:
+    IterationResult() : mResult(Undefined()) {}
+    IterationResult(const IterationResult&) = delete;
+    IterationResult(IterationResult&&) = default;
+
+    IterationResult& operator=(const IterationResult&) = delete;
+    IterationResult& operator=(IterationResult&&) = default;
+
+    static IterationResult CreateStillProcessing() {
+      return IterationResult(StillProcessing());
+    }
+    static IterationResult CreateStop() { return IterationResult(Stop()); }
+
+    bool IsStillProcessing() const { return mResult.is<StillProcessing>(); }
+    bool IsStop() const { return mResult.is<Stop>(); }
+  };
+
   GraphDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
