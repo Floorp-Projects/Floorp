@@ -35,7 +35,8 @@ const add_plain_task = add_task.bind(this);
 
 this.add_task = function(taskFn, opts = {}) {
   const { createTab = true } = opts;
-  add_plain_task(async function() {
+
+  const fn = async function() {
     let client;
     await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
     info("CDP server started");
@@ -90,7 +91,10 @@ this.add_task = function(taskFn, opts = {}) {
         gBrowser.removeCurrentTab();
       }
     }
-  });
+  };
+
+  Object.defineProperty(fn, "name", { value: taskFn.name, writable: false });
+  add_plain_task(fn);
 };
 
 /**
