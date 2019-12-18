@@ -408,14 +408,16 @@ TrackAndPromiseForOperation::TrackAndPromiseForOperation(
       mOperation(aOperation),
       mFlags(aFlags) {}
 
-AudioCallbackDriver::AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
-                                         uint32_t aSampleRate,
-                                         uint32_t aOutputChannelCount,
-                                         uint32_t aInputChannelCount,
-                                         AudioInputType aAudioInputType)
+AudioCallbackDriver::AudioCallbackDriver(
+    MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+    uint32_t aOutputChannelCount, uint32_t aInputChannelCount,
+    CubebUtils::AudioDeviceID aOutputDeviceID,
+    CubebUtils::AudioDeviceID aInputDeviceID, AudioInputType aAudioInputType)
     : GraphDriver(aGraphImpl, aSampleRate),
       mOutputChannels(aOutputChannelCount),
       mInputChannelCount(aInputChannelCount),
+      mOutputDeviceID(aOutputDeviceID),
+      mInputDeviceID(aInputDeviceID),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
       mStarted(false),
       mInitShutdownThread(
@@ -570,8 +572,8 @@ bool AudioCallbackDriver::Init() {
 
   cubeb_stream* stream = nullptr;
   bool inputWanted = mInputChannelCount > 0;
-  CubebUtils::AudioDeviceID outputId = GraphImpl()->mOutputDeviceID;
-  CubebUtils::AudioDeviceID inputId = GraphImpl()->mInputDeviceID;
+  CubebUtils::AudioDeviceID outputId = mOutputDeviceID;
+  CubebUtils::AudioDeviceID inputId = mInputDeviceID;
 
   // XXX Only pass input input if we have an input listener.  Always
   // set up output because it's easier, and it will just get silence.

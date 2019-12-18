@@ -68,24 +68,6 @@ enum class AudioContextOperation;
 }
 
 /**
- * XXX
- * Dependencies on mGraphImpl:
- * OK
- * - NotifyInputData
- * - OneIteration
- * - NotifyOutputData
- * - DeviceChanged
- * TRY TO REMOVE
- * - RunByGraphThread (asserts)
- * - SetCurrentDriver
- * - MillisecondsToMediaTime (make static)
- * - SecondsToMediaTime (make static)
- * - SignalMainThreadCleanup (unclear)
- * - mOutputDeviceID, mInputDeviceID (const ctor?)
- * - AudioContextOperationCompleted
- */
-
-/**
  * A driver is responsible for the scheduling of the processing, the thread
  * management, and give the different clocks to a MediaTrackGraph. This is an
  * abstract base class. A MediaTrackGraph can be driven by an
@@ -426,6 +408,8 @@ class AudioCallbackDriver : public GraphDriver,
   /** If aInputChannelCount is zero, then this driver is output-only. */
   AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
                       uint32_t aOutputChannelCount, uint32_t aInputChannelCount,
+                      CubebUtils::AudioDeviceID aOutputDeviceID,
+                      CubebUtils::AudioDeviceID aInputDeviceID,
                       AudioInputType aAudioInputType);
   virtual ~AudioCallbackDriver();
 
@@ -543,6 +527,11 @@ class AudioCallbackDriver : public GraphDriver,
   /* The number of input channels from cubeb. Set before opening cubeb. If it is
    * zero then the driver is output-only. */
   const uint32_t mInputChannelCount;
+  /**
+   * Devices to use for cubeb input & output, or nullptr for default device.
+   */
+  const CubebUtils::AudioDeviceID mOutputDeviceID;
+  const CubebUtils::AudioDeviceID mInputDeviceID;
   /* Approximation of the time between two callbacks. This is used to schedule
    * video frames. This is in milliseconds. Only even used (after
    * inizatialization) on the audio callback thread. */
