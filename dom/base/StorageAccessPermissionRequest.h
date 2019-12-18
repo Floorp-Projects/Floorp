@@ -29,10 +29,12 @@ class StorageAccessPermissionRequest final
   NS_IMETHOD Allow(JS::HandleValue choices) override;
 
   typedef std::function<void()> AllowCallback;
+  typedef std::function<void()> AllowAnySiteCallback;
   typedef std::function<void()> CancelCallback;
 
   static already_AddRefed<StorageAccessPermissionRequest> Create(
       nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
+      AllowAnySiteCallback&& aAllowAnySiteCallback,
       CancelCallback&& aCancelCallback);
 
   typedef MozPromise<bool, bool, true> AutoGrantDelayPromise;
@@ -42,12 +44,14 @@ class StorageAccessPermissionRequest final
   StorageAccessPermissionRequest(nsPIDOMWindowInner* aWindow,
                                  nsIPrincipal* aNodePrincipal,
                                  AllowCallback&& aAllowCallback,
+                                 AllowAnySiteCallback&& aAllowAnySiteCallback,
                                  CancelCallback&& aCancelCallback);
   ~StorageAccessPermissionRequest();
 
   unsigned CalculateSimulatedDelay();
 
   AllowCallback mAllowCallback;
+  AllowAnySiteCallback mAllowAnySiteCallback;
   CancelCallback mCancelCallback;
   nsTArray<PermissionRequest> mPermissionRequests;
   bool mCallbackCalled;
