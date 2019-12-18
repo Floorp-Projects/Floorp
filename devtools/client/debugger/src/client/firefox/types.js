@@ -195,6 +195,7 @@ export type Target = {
   destroy: () => void,
   threadFront: ThreadFront,
   name: string,
+  workerName?: string,
   isBrowsingContext: boolean,
   isContentProcess: boolean,
   isWorkerTarget: boolean,

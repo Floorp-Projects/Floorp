@@ -123,6 +123,7 @@ this.addEventListener("message", function(event) {
         JSON.stringify({
           type: "connected",
           id: packet.id,
+          workerName: consoleActor.evaluateJS({ text: "self.name" }).result,
           threadActor: threadActor.actorID,
           consoleActor: consoleActor.actorID,
         })

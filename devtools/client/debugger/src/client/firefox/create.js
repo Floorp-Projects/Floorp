@@ -97,7 +97,9 @@ export function createThread(actor: string, target: Target): Thread {
     actor,
     url: target.url,
     type: getTargetType(target),
-    name: target.name,
+    name: target.isWorkerTarget
+      ? target.workerName || target.name
+      : target.name,
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
   };
 }

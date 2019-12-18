@@ -125,13 +125,15 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     }
 
     return connectToWorker(this.conn, this._dbg, this.actorID, options).then(
-      ({ threadActor, transport, consoleActor }) => {
+      ({ workerName, threadActor, transport, consoleActor }) => {
+        this._workerName = workerName;
         this._threadActor = threadActor;
         this._transport = transport;
         this._consoleActor = consoleActor;
 
         return {
           type: "connected",
+          workerName: this._workerName,
           threadActor: this._threadActor,
           consoleActor: this._consoleActor,
         };
