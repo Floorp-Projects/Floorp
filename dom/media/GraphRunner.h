@@ -52,7 +52,7 @@ class GraphRunner final : public Runnable {
    * Returns true if called on mThread, and aDriver was the driver that called
    * OneIteration() last.
    */
-  bool RunByGraphDriver(GraphDriver* aDriver);
+  bool InDriverIteration(GraphDriver* aDriver);
 #endif
 
  private:
