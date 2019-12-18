@@ -230,6 +230,7 @@ const TEST_GLOBAL = {
     telemetry: {
       setEventRecordingEnabled: () => {},
       recordEvent: eventDetails => {},
+      scalarSet: () => {},
     },
     console: { logStringMessage: () => {} },
     prefs: {

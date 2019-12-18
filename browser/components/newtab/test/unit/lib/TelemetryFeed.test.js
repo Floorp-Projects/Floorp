@@ -244,6 +244,18 @@ describe("TelemetryFeed", () => {
         );
       });
     });
+    it("should set a scalar for deletion-request", () => {
+      sandbox.spy(Services.telemetry, "scalarSet");
+
+      instance.init();
+
+      assert.calledOnce(Services.telemetry.scalarSet);
+      assert.calledWith(
+        Services.telemetry.scalarSet,
+        "deletion.request.impression_id",
+        instance._impressionId
+      );
+    });
   });
   describe("#handleEvent", () => {
     it("should dispatch a TAB_PINNED_EVENT", () => {
