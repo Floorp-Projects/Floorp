@@ -70,8 +70,9 @@ bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
                "One of the delta values must be non-zero at least");
 
   nsPoint scrollPt = aScrollFrame->GetVisualViewportOffset();
-  nsRect scrollRange = aScrollFrame->GetVisualScrollRange();
-  uint32_t directions = aScrollFrame->GetAvailableVisualScrollingDirections();
+  nsRect scrollRange = aScrollFrame->GetScrollRangeForUserInputEvents();
+  uint32_t directions =
+      aScrollFrame->GetAvailableScrollingDirectionsForUserInputEvents();
 
   return (aDirectionX && (directions & nsIScrollableFrame::HORIZONTAL) &&
           CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(),
