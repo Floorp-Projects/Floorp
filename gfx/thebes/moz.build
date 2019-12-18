@@ -60,7 +60,6 @@ EXPORTS += [
     'gfxUtils.h',
     'SharedFontList.h',
     'SoftwareVsyncSource.h',
-    'ThebesRLBoxTypes.h',
     'VsyncSource.h',
 ]
 
@@ -69,7 +68,6 @@ EXPORTS.mozilla.gfx += [
     'DeviceManagerDx.h',
     'PrintTarget.h',
     'PrintTargetThebes.h',
-    'ThebesRLBox.h',
 ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
