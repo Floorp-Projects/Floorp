@@ -130,8 +130,7 @@ class AntiTrackingCommon final {
   static RefPtr<FirstPartyStorageAccessGrantPromise>
   SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
       nsIPrincipal* aPrincipal, nsIPrincipal* aTrackingPrinciapl,
-      const nsCString& aParentOrigin, const nsCString& aGrantedOrigin,
-      int aAllowMode);
+      const nsCString& aTrackingOrigin, int aAllowMode);
 
   // Check whether a top window principal is on the content blocking allow list.
   static nsresult IsOnContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
