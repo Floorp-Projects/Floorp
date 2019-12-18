@@ -96,6 +96,7 @@ describe("DiscoveryStreamFeed", () => {
           }),
           [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
           "discoverystream.enabled": true,
+          "feeds.section.topstories": true,
         },
       },
     });
@@ -1949,6 +1950,20 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledOnce(feed.clearSpocs);
     });
+    it("should re enable stories when top stories is turned on", async () => {
+      sandbox.stub(feed, "refreshAll").returns(Promise.resolve());
+      feed.loaded = true;
+      setPref(CONFIG_PREF_NAME, {
+        enabled: true,
+      });
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "feeds.section.topstories", value: true },
+      });
+
+      assert.calledOnce(feed.refreshAll);
+    });
   });
 
   describe("#onAction: SYSTEM_TICK", () => {
@@ -2243,7 +2258,16 @@ describe("DiscoveryStreamFeed", () => {
 
         const fakeComponents = { components: [{ feed: { url: "foo.com" } }] };
         const fakeLayout = [fakeComponents];
-        const fakeDiscoveryStream = { DiscoveryStream: { layout: fakeLayout } };
+        const fakeDiscoveryStream = {
+          DiscoveryStream: {
+            layout: fakeLayout,
+          },
+          Prefs: {
+            values: {
+              "feeds.section.topstories": true,
+            },
+          },
+        };
         sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
         sandbox.stub(feed, "rotate").callsFake(val => val);
         sandbox
