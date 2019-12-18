@@ -16,13 +16,13 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 
-import org.junit.Assume.assumeThat
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Ignore
+import org.mozilla.geckoview.GeckoRuntimeSettings
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -258,6 +258,25 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Permission should not be granted",
                 result as String, equalTo("denied"))
+    }
+
+    @Test
+    fun autoplayReject() {
+        // The profile used in automation sets this to false, so we need to hack it back to true here.
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "media.geckoview.autoplay.request" to true))
+        sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
+
+        mainSession.loadTestPath(AUTOPLAY_PATH)
+
+        mainSession.waitUntilCalled(object : Callbacks.PermissionDelegate {
+            @AssertCalled(count = 2)
+            override fun onContentPermissionRequest(session: GeckoSession, uri: String?, type: Int, callback: GeckoSession.PermissionDelegate.Callback) {
+                val expectedType = if (sessionRule.currentCall.counter == 1) GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE else GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
+                assertThat("Type should match", type, equalTo(expectedType))
+                callback.reject()
+            }
+        })
     }
 
     // @Test fun persistentStorage() {
