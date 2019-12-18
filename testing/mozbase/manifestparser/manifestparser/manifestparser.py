@@ -164,8 +164,8 @@ class ManifestParser(object):
         defaults['here'] = here
 
         # read the configuration
-        sections = read_ini(fp=fp, variables=defaults, strict=self.strict,
-                            handle_defaults=self._handle_defaults)
+        sections, defaults = read_ini(fp=fp, defaults=defaults, strict=self.strict,
+                                      handle_defaults=self._handle_defaults)
         if parentmanifest and filename:
             # A manifest can be read multiple times, via "include:", optionally
             # with section-specific variables. These variables only apply to

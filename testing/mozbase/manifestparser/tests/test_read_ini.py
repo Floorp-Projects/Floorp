@@ -28,7 +28,7 @@ def parse_manifest():
         buf = StringIO()
         buf.write(dedent(string))
         buf.seek(0)
-        return read_ini(buf, **kwargs)
+        return read_ini(buf, **kwargs)[0]
 
     return inner
 
@@ -78,6 +78,36 @@ def test_dupes_error(parse_manifest):
 
     with pytest.raises(AssertionError):
         parse_manifest(dupes, strict=False)
+
+
+def test_defaults_handling(parse_manifest):
+    manifest = """
+    [DEFAULT]
+    flower = rose
+    skip-if = true
+
+    [test_defaults]
+    """
+
+    result = parse_manifest(manifest)[0][1]
+    assert result['flower'] == 'rose'
+    assert result['skip-if'] == 'true'
+
+    result = parse_manifest(
+        manifest,
+        defaults={
+            'flower': 'tulip',
+            'colour': 'pink',
+            'skip-if': 'false',
+        },
+    )[0][1]
+    assert result['flower'] == 'rose'
+    assert result['colour'] == 'pink'
+    assert result['skip-if'] == '(false) || (true)'
+
+    result = parse_manifest(manifest.replace('DEFAULT', 'default'))[0][1]
+    assert result['flower'] == 'rose'
+    assert result['skip-if'] == 'true'
 
 
 if __name__ == '__main__':
