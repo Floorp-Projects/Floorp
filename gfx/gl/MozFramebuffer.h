@@ -49,6 +49,8 @@ class MozFramebuffer final {
     if (mColorTarget == LOCAL_GL_RENDERBUFFER) return 0;
     return mColorName;
   }
+  bool HasDepth() const { return mDepthRB; }
+  bool HasStencil() const { return mStencilRB; }
 };
 
 }  // namespace gl
