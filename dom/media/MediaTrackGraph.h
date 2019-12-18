@@ -50,22 +50,6 @@ enum class AudioContextOperation;
 enum class AudioContextOperationFlags;
 }  // namespace dom
 
-inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
-                                            TrackRate aInRate,
-                                            TrackTicks aTicks) {
-  MOZ_ASSERT(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
-  MOZ_ASSERT(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
-  MOZ_ASSERT(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
-  return (aTicks * aOutRate) / aInRate;
-}
-inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate, TrackRate aInRate,
-                                          TrackTicks aTicks) {
-  MOZ_ASSERT(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
-  MOZ_ASSERT(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
-  MOZ_ASSERT(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
-  return (aTicks * aOutRate + aInRate - 1) / aInRate;
-}
-
 /*
  * MediaTrackGraph is a framework for synchronized audio/video processing
  * and playback. It is designed to be used by other browser components such as
