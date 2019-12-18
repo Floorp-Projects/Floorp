@@ -223,9 +223,9 @@ function run_test() {
   // Initialize the permission manager service
   var pm = Services.perms;
 
-  // The schema should be upgraded to 11, and a 'modificationTime' column should
+  // The schema should be upgraded to 10, and a 'modificationTime' column should
   // exist with all records having a value of 0.
-  Assert.equal(connection.schemaVersion, 11);
+  Assert.equal(connection.schemaVersion, 10);
 
   let select = connection.createStatement(
     "SELECT modificationTime FROM moz_perms"

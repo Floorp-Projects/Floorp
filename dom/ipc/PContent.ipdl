@@ -1481,6 +1481,7 @@ parent:
     async FirstPartyStorageAccessGrantedForOrigin(Principal aParentPrincipal,
                                                   Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
+                                                  nsCString aGrantedOrigin,
                                                   int aAllowMode)
           returns (bool unused);
 
