@@ -78,6 +78,19 @@ function stubGeneratedPasswordForBrowsingContextId(id) {
             "https://www.example.com^userContextId=6"
           ),
         },
+        get embedderElement() {
+          info("returning embedderElement");
+          let browser = MockDocument.createTestDocument(
+            "chrome://browser/content/browser.xhtml",
+            `<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+              <browser></browser>
+             </box>`,
+            "application/xml",
+            true
+          ).querySelector("browser");
+          MockDocument.mockBrowsingContextProperty(browser, this);
+          return browser;
+        },
         get top() {
           return this;
         },
@@ -229,11 +242,11 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     "Checking promptToChangePassword was called"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[2],
+    fakePromptToChangePassword.getCall(0).args[3],
     "promptToChangePassword had a truthy 'dismissed' argument"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[3],
+    fakePromptToChangePassword.getCall(0).args[4],
     "promptToChangePassword had a truthy 'notifySaved' argument"
   );
 
@@ -341,11 +354,11 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited_editToEmpty() {
     "Checking promptToChangePassword was called"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[2],
+    fakePromptToChangePassword.getCall(0).args[3],
     "promptToChangePassword had a truthy 'dismissed' argument"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[3],
+    fakePromptToChangePassword.getCall(0).args[4],
     "promptToChangePassword had a truthy 'notifySaved' argument"
   );
 
@@ -415,18 +428,18 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     "Checking promptToChangePassword was called"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[2],
+    fakePromptToChangePassword.getCall(0).args[3],
     "promptToChangePassword had a truthy 'dismissed' argument"
   );
   ok(
-    fakePromptToChangePassword.getCall(0).args[3],
+    fakePromptToChangePassword.getCall(0).args[4],
     "promptToChangePassword had a truthy 'notifySaved' argument"
   );
 
   info("Add a username in storage");
   let loginWithUsername = login.clone();
   loginWithUsername.username = "added_username";
-  LoginManagerPrompter.prototype._updateLogin(login, loginWithUsername);
+  LoginManagerPrompter._updateLogin(login, loginWithUsername);
 
   info("Edit the password");
   const newPassword = generatedPassword + "🔥";
@@ -562,11 +575,11 @@ add_task(
       "Checking promptToChangePassword was called"
     );
     ok(
-      fakePromptToChangePassword.getCall(0).args[2],
+      fakePromptToChangePassword.getCall(0).args[3],
       "promptToChangePassword had a truthy 'dismissed' argument"
     );
     ok(
-      !fakePromptToChangePassword.getCall(0).args[3],
+      !fakePromptToChangePassword.getCall(0).args[4],
       "promptToChangePassword had a falsey 'notifySaved' argument"
     );
 
@@ -650,11 +663,11 @@ add_task(
       "Checking promptToSavePassword was called"
     );
     ok(
-      fakePromptToSavePassword.getCall(0).args[1],
+      fakePromptToSavePassword.getCall(0).args[2],
       "promptToSavePassword had a truthy 'dismissed' argument"
     );
     ok(
-      !fakePromptToSavePassword.getCall(0).args[2],
+      !fakePromptToSavePassword.getCall(0).args[3],
       "promptToSavePassword had a falsey 'notifySaved' argument"
     );
 
@@ -675,11 +688,11 @@ add_task(
       "Checking promptToSavePassword was called again"
     );
     ok(
-      fakePromptToSavePassword.getCall(1).args[1],
+      fakePromptToSavePassword.getCall(1).args[2],
       "promptToSavePassword had a truthy 'dismissed' argument"
     );
     ok(
-      !fakePromptToSavePassword.getCall(1).args[2],
+      !fakePromptToSavePassword.getCall(1).args[3],
       "promptToSavePassword had a falsey 'notifySaved' argument"
     );
 
@@ -753,11 +766,11 @@ add_task(
       "Checking promptToChangePassword was called"
     );
     ok(
-      fakePromptToChangePassword.getCall(0).args[1],
+      fakePromptToChangePassword.getCall(0).args[2],
       "promptToChangePassword had a truthy 'dismissed' argument"
     );
     ok(
-      fakePromptToChangePassword.getCall(0).args[2],
+      fakePromptToChangePassword.getCall(0).args[3],
       "promptToChangePassword had a truthy 'notifySaved' argument"
     );
 
@@ -809,11 +822,11 @@ add_task(
       "Checking promptToChangePassword was called"
     );
     ok(
-      fakePromptToChangePassword.getCall(0).args[1],
+      fakePromptToChangePassword.getCall(0).args[2],
       "promptToChangePassword had a truthy 'dismissed' argument"
     );
     ok(
-      fakePromptToChangePassword.getCall(0).args[2],
+      fakePromptToChangePassword.getCall(0).args[3],
       "promptToChangePassword had a truthy 'notifySaved' argument"
     );
 

@@ -10,43 +10,14 @@ interface nsIDOMWindow;
 
 webidl Element;
 
-[scriptable, uuid(425f73b9-b2db-4e8a-88c5-9ac2512934ce)]
+[scriptable, uuid(c47ff942-9678-44a5-bc9b-05e0d676c79c)]
 interface nsILoginManagerPrompter : nsISupports {
-  /**
-   * Initialize the prompter. Must be called before using other interfaces.
-   *
-   * @param aWindow
-   *        The window in which the user is doing some login-related action that's
-   *        resulting in a need to prompt them for something. The prompt
-   *        will be associated with this window (or, if a notification bar
-   *        is being used, topmost opener in some cases).
-   *
-   *        aWindow can be null if there is no associated window, e.g. in a JSM
-   *        or Sandbox. In this case there will be no checkbox to save the login
-   *        since the window is needed to know if this is a private context.
-   *
-   *        If this window is a content window, the corresponding window and browser
-   *        elements will be calculated. If this window is a chrome window, the
-   *        corresponding browser element needs to be set using setBrowser.
-   */
-  void init(in nsIDOMWindow aWindow);
-
-  /**
-   * The browser this prompter is being created for.
-   * This is required if the init function received a chrome window as argument.
-   */
-  attribute Element browser;
-
-  /**
-   * The opener browser that was used to open the window passed to init.
-   * The opener can be used to determine in which window the prompt
-   * should be shown.
-   */
-  attribute Element openerBrowser;
 
   /**
    * Ask the user if they want to save a login (Yes, Never, Not Now)
    *
+   * @param aBrowser
+   *        The browser of the webpage request that triggered the prompt.
    * @param aLogin
    *        The login to be saved.
    * @param dismissed
@@ -56,7 +27,8 @@ interface nsILoginManagerPrompter : nsISupports {
    *        A boolean value indicating whether the notification should indicate that
    *        a login has been saved
    */
-  void promptToSavePassword(in nsILoginInfo aLogin,
+  void promptToSavePassword(in Element aBrowser,
+                            in nsILoginInfo aLogin,
                             [optional] in boolean dismissed,
                             [optional] in boolean notifySaved);
 
@@ -64,6 +36,8 @@ interface nsILoginManagerPrompter : nsISupports {
    * Ask the user if they want to change a login's password or username.
    * If the user consents, modifyLogin() will be called.
    *
+   * @param aBrowser
+   *        The browser of the webpage request that triggered the prompt.
    * @param aOldLogin
    *        The existing login (with the old password).
    * @param aNewLogin
@@ -75,7 +49,8 @@ interface nsILoginManagerPrompter : nsISupports {
    *        A string guid value for the old login to be removed if the changes
    *        match it to a different login
    */
-  void promptToChangePassword(in nsILoginInfo aOldLogin,
+  void promptToChangePassword(in Element aBrowser,
+                              in nsILoginInfo aOldLogin,
                               in nsILoginInfo aNewLogin,
                               [optional] in boolean dismissed,
                               [optional] in boolean notifySaved,
@@ -87,6 +62,8 @@ interface nsILoginManagerPrompter : nsISupports {
    * login should be changed. If the user consents, modifyLogin() will
    * be called.
    *
+   * @param aBrowser
+   *        The browser of the webpage request that triggered the prompt.
    * @param logins
    *        An array of existing logins.
    * @param aNewLogin
@@ -98,6 +75,7 @@ interface nsILoginManagerPrompter : nsISupports {
    *       is called.
    */
   void promptToChangePasswordWithUsernames(
+          in Element aBrowser,
           in Array<nsILoginInfo> logins,
           in nsILoginInfo aNewLogin);
 };
