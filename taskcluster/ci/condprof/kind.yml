@@ -152,7 +152,7 @@ jobs:
             platform: android-hw-g5-7-0-arm7-api-16/opt
         index:
             product: firefox
-            job-name: condprof-g5-fenix
+            job-name: condprof-g5-fenix.performancetest
         dependencies:
             build-linux/opt: build-linux-shippable/opt
         fetches:
@@ -162,13 +162,13 @@ jobs:
         run:
             run-as-root: true
             command: >-
-                curl -L -o target.apk https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.performance-test.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.fenix.nightly ../../archive
+                bin/python3 condprof/runner.py --device-name g5 --firefox org.mozilla.fenix.performancetest ../../archive
         worker:
             artifacts:
                 - name: public/condprof
@@ -188,17 +188,17 @@ jobs:
                 - artifact: target.condprof.tests.tar.gz
         index:
             product: firefox
-            job-name: condprof-p2_aarch64-fenix
+            job-name: condprof-p2_aarch64-fenix.performancetest
         run:
             run-as-root: true
             command: >-
-                curl -L -o target.apk https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.performance-test.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
                 adb install -r target.apk &&
                 rm -rf target.apk &&
                 $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
                 cd $CONDPROF_ROOT &&
                 export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
-                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fenix.nightly ../../archive
+                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fenix.performancetest ../../archive
         worker:
             artifacts:
                 - name: public/condprof
