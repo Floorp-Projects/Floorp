@@ -4964,6 +4964,26 @@ firstStartup:
     record_in_processes:
       - main
 
+# The following section is for the "deletion-request" ping (bug 1585410). All the
+# extra identifiers other than `client_id` could be added here.
+deletion.request:
+  impression_id:
+    bug_numbers:
+      - 1602064
+    description: >
+      An identifier used by user interaction pings in Pocket/newtab and Messaging System.
+    expires: never
+    kind: string
+    notification_emails:
+      - najiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'deletion-request'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
@@ -5420,6 +5440,26 @@ telemetry.test:
       - 'main'
     record_into_store:
       - 'sync'
+
+  impression_id_only:
+    bug_numbers:
+      - 1602064
+    description: >
+      This is a test uint type with only the deletion-request store.
+    expires: never
+    kind: string
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+      - najiang@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+      - 'thunderbird'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'deletion-request'
 
   multiple_stores:
     bug_numbers:
