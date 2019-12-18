@@ -259,8 +259,9 @@ void ThreadedDriver::RunThread() {
       LOG(LogLevel::Debug, ("%p: Time did not advance", GraphImpl()));
     }
 
-    GraphTime nextStateComputedTime = GraphImpl()->RoundUpToEndOfAudioBlock(
-        mIterationEnd + GraphImpl()->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+    GraphTime nextStateComputedTime =
+        MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
+            mIterationEnd + MillisecondsToMediaTime(AUDIO_TARGET_MS));
     if (nextStateComputedTime < mStateComputedTime) {
       // A previous driver may have been processing further ahead of
       // iterationEnd.
@@ -303,15 +304,14 @@ void ThreadedDriver::RunThread() {
 MediaTime SystemClockDriver::GetIntervalForIteration() {
   TimeStamp now = TimeStamp::Now();
   MediaTime interval =
-      GraphImpl()->SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
+      SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
   mCurrentTimeStamp = now;
 
-  MOZ_LOG(
-      gMediaTrackGraphLog, LogLevel::Verbose,
-      ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
-       GraphImpl(), GraphImpl()->MediaTimeToSeconds(IterationEnd() + interval),
-       (now - mInitialTimeStamp).ToSeconds(),
-       GraphImpl()->MediaTimeToSeconds(mStateComputedTime)));
+  MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
+          ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
+           GraphImpl(), MediaTimeToSeconds(IterationEnd() + interval),
+           (now - mInitialTimeStamp).ToSeconds(),
+           MediaTimeToSeconds(mStateComputedTime)));
 
   return interval;
 }
@@ -349,7 +349,7 @@ OfflineClockDriver::OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl,
 OfflineClockDriver::~OfflineClockDriver() {}
 
 MediaTime OfflineClockDriver::GetIntervalForIteration() {
-  return GraphImpl()->MillisecondsToMediaTime(mSlice);
+  return MillisecondsToMediaTime(mSlice);
 }
 
 AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
@@ -753,8 +753,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // State computed time is decided by the audio callback's buffer length. We
   // compute the iteration start and end from there, trying to keep the amount
   // of buffering in the graph constant.
-  GraphTime nextStateComputedTime = GraphImpl()->RoundUpToEndOfAudioBlock(
-      mStateComputedTime + mBuffer.Available());
+  GraphTime nextStateComputedTime =
+      MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(mStateComputedTime +
+                                                    mBuffer.Available());
 
   mIterationStart = mIterationEnd;
   // inGraph is the number of audio frames there is between the state time and
