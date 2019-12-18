@@ -48,6 +48,7 @@
 --no-native-regexp
 --nursery-strings=off
 --nursery-strings=on
+--parser-deferred-alloc
 --spectre-mitigations=off
 --spectre-mitigations=on
 --more-compartments
