@@ -151,7 +151,7 @@ class NativeLayerCA : public NativeLayer {
     gfx::IntRegion mInvalidRegion;
   };
 
-  std::vector<SurfaceWithInvalidRegion> RemoveExcessUnusedSurfaces(
+  Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock&);
 
   // Controls access to all fields of this class.
@@ -226,7 +226,7 @@ class NativeLayerCA : public NativeLayer {
   // The queue of surfaces which make up the rest of our "swap chain".
   // mSurfaces.front() is the next surface we'll attempt to use.
   // mSurfaces.back() is the one that was used most recently.
-  std::deque<SurfaceWithInvalidRegion> mSurfaces;
+  std::vector<SurfaceWithInvalidRegion> mSurfaces;
 
   // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
   RefPtr<MacIOSurface> mInProgressLockedIOSurface;

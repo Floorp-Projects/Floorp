@@ -270,18 +270,8 @@ bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
       "ERROR: Do not call NextSurface twice in sequence. Call NotifySurfaceReady before the "
       "next call to NextSurface.");
 
-  // Find the last surface in unusedSurfaces. If such
-  // a surface exists, it is the surface we will recycle.
-  std::vector<SurfaceWithInvalidRegion> unusedSurfaces = RemoveExcessUnusedSurfaces(aLock);
-
-  Maybe<SurfaceWithInvalidRegion> surf;
-  if (!unusedSurfaces.empty()) {
-    // We found the surface we want to recycle.
-    surf = Some(unusedSurfaces.back());
-
-    // Remove surf from unusedSurfaces.
-    unusedSurfaces.pop_back();
-  } else {
+  Maybe<SurfaceWithInvalidRegion> surf = GetUnusedSurfaceAndCleanUp(aLock);
+  if (!surf) {
     CFTypeRefPtr<IOSurfaceRef> newSurf = mSurfacePoolHandle->ObtainSurfaceFromPool(mSize);
     if (!newSurf) {
       NSLog(@"NextSurface returning false because IOSurfaceCreate failed to create the surface.");
@@ -289,12 +279,6 @@ bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
     }
     surf = Some(SurfaceWithInvalidRegion{newSurf, IntRect({}, mSize)});
   }
-
-  // Delete all other unused surfaces.
-  for (auto unusedSurf : unusedSurfaces) {
-    mSurfacePoolHandle->ReturnSurfaceToPool(unusedSurf.mSurface);
-  }
-  unusedSurfaces.clear();
 
   MOZ_RELEASE_ASSERT(surf);
   mInProgressSurface = std::move(surf);
@@ -551,25 +535,29 @@ void NativeLayerCA::ApplyChanges() {
 }
 
 // Called when mMutex is already being held by the current thread.
-std::vector<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::RemoveExcessUnusedSurfaces(
+Maybe<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::GetUnusedSurfaceAndCleanUp(
     const MutexAutoLock&) {
   std::vector<SurfaceWithInvalidRegion> usedSurfaces;
-  std::vector<SurfaceWithInvalidRegion> unusedSurfaces;
+  Maybe<SurfaceWithInvalidRegion> unusedSurface;
 
-  // Separate mSurfaces into used and unused surfaces, leaving 1 surface behind.
-  while (mSurfaces.size() > 1) {
-    auto surf = std::move(mSurfaces.front());
-    mSurfaces.pop_front();
+  // Separate mSurfaces into used and unused surfaces.
+  for (auto& surf : mSurfaces) {
     if (IOSurfaceIsInUse(surf.mSurface.get())) {
       usedSurfaces.push_back(std::move(surf));
     } else {
-      unusedSurfaces.push_back(std::move(surf));
+      if (unusedSurface) {
+        // Multiple surfaces are unused. Keep the most recent one and release any earlier ones. The
+        // most recent one requires the least amount of copying during partial repaints.
+        mSurfacePoolHandle->ReturnSurfaceToPool(std::move(unusedSurface->mSurface));
+      }
+      unusedSurface = Some(std::move(surf));
     }
   }
-  // Put the used surfaces back into mSurfaces, at the beginning.
-  mSurfaces.insert(mSurfaces.begin(), usedSurfaces.begin(), usedSurfaces.end());
 
-  return unusedSurfaces;
+  // Put the used surfaces back into mSurfaces.
+  mSurfaces = std::move(usedSurfaces);
+
+  return unusedSurface;
 }
 
 }  // namespace layers
