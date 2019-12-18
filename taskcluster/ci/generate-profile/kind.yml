@@ -174,7 +174,7 @@ jobs:
                 - win64-clang-cl
                 - win32-minidump-stackwalk
 
-    macosx64/pgo:
+    macosx64-shippable/opt:
         description: "macosx64 Profile Generation"
         shipping-phase: build
         shipping-product: firefox
@@ -182,7 +182,7 @@ jobs:
             product: firefox
             job-name: macosx64-profile
         treeherder:
-            platform: macosx64/pgo
+            platform: macosx64-shippable/opt
         worker-type: t-osx-1014-pgo
         worker:
             max-run-time: 7200
