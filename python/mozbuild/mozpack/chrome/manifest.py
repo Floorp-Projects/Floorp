@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 import os
+import six
 
 import mozpack.path as mozpath
 from mozpack.chrome.flags import Flags
@@ -353,6 +354,7 @@ def parse_manifest(root, path, fileobj=None):
         fileobj = open(path)
     linenum = 0
     for line in fileobj:
+        line = six.ensure_text(line)
         linenum += 1
         with errors.context(path, linenum):
             e = parse_manifest_line(base, line)
