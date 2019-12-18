@@ -383,6 +383,9 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                         TrackRate aRate, uint32_t aChannels) override {
     MOZ_CRASH("Unexpected NotifyOutputData from fallback SystemClockDriver");
   }
+  void NotifyStarted() override {
+    MOZ_CRASH("Unexpected NotifyStarted from fallback SystemClockDriver");
+  }
   void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override {
     MOZ_CRASH("Unexpected NotifyInputData from fallback SystemClockDriver");
@@ -721,6 +724,7 @@ void AudioCallbackDriver::Start() {
   MOZ_ASSERT(mAudioStreamState == AudioStreamState::None);
   MOZ_ASSERT_IF(PreviousDriver(), PreviousDriver()->InIteration());
   mAudioStreamState = AudioStreamState::Pending;
+  mRanFirstIteration = false;
 
   if (mFallbackDriverState == FallbackDriverState::None) {
     // Starting an audio driver could take a while. We start a system driver in
@@ -863,6 +867,11 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 #ifdef DEBUG
   AutoInCallback aic(this);
 #endif
+
+  if (!mRanFirstIteration) {
+    Graph()->NotifyStarted();
+    mRanFirstIteration = true;
+  }
 
   uint32_t durationMS = aFrames * 1000 / mSampleRate;
 

@@ -1031,6 +1031,16 @@ void AudioInputProcessing::InsertInGraph(const T* aBuffer, size_t aFrames,
   mTrack->AppendData(&segment);
 }
 
+void AudioInputProcessing::NotifyStarted(MediaTrackGraphImpl* aGraph) {
+  MOZ_ASSERT(aGraph->OnGraphThread());
+  // This is called when an AudioCallbackDriver switch has happened for any
+  // reason, including other reasons than starting this audio input stream. We
+  // reset state when this happens, as a fallback driver may have fiddled with
+  // the amount of buffered silence during the switch.
+  mLiveFramesAppended = false;
+  mLiveSilenceAppended = false;
+}
+
 // Called back on GraphDriver thread!
 // Note this can be called back after ::Shutdown()
 void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,

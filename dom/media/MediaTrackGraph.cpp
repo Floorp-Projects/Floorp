@@ -818,6 +818,24 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
   }
 }
 
+void MediaTrackGraphImpl::NotifyStarted() {
+#ifdef ANDROID
+  if (!mInputDeviceUsers.GetValue(mInputDeviceID)) {
+    return;
+  }
+#else
+  if (!mInputDeviceID) {
+    return;
+  }
+#endif
+  nsTArray<RefPtr<AudioDataListener>>* listeners =
+      mInputDeviceUsers.GetValue(mInputDeviceID);
+  MOZ_ASSERT(listeners);
+  for (auto& listener : *listeners) {
+    listener->NotifyStarted(this);
+  }
+}
+
 void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
                                           size_t aFrames, TrackRate aRate,
                                           uint32_t aChannels) {
@@ -826,12 +844,10 @@ void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
     return;
   }
 #else
-#  ifdef DEBUG
   // Either we have an audio input device, or we just removed the audio input
   // this iteration, and we're switching back to an output-only driver next
   // iteration.
   MOZ_ASSERT(mInputDeviceID || Switching());
-#  endif
   if (!mInputDeviceID) {
     return;
   }

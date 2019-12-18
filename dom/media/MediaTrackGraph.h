@@ -111,6 +111,11 @@ class AudioDataListenerInterface {
                                 AudioDataValue* aBuffer, size_t aFrames,
                                 TrackRate aRate, uint32_t aChannels) = 0;
   /**
+   * An AudioCallbackDriver signaling that it has started and may notify of data
+   * soon.
+   */
+  virtual void NotifyStarted(MediaTrackGraphImpl* aGraph) = 0;
+  /**
    * Input data from a microphone (or other audio source.  This is not
    * guaranteed to be in any particular size chunks.
    */
