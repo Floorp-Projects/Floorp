@@ -2,11 +2,15 @@
 
 # WebExtensionSupport
 
-`object WebExtensionSupport` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionSupport.kt#L33)
+`object WebExtensionSupport` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/webextensions/src/main/java/mozilla/components/support/webextensions/WebExtensionSupport.kt#L37)
 
 Provides functionality to make sure web extension related events in the
 [Engine](../../mozilla.components.concept.engine/-engine/index.md) are reflected in the browser state by dispatching the
 corresponding actions to the [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md).
+
+Note that this class can be removed once the browser-state migration
+is completed and the [Engine](../../mozilla.components.concept.engine/-engine/index.md) has direct access to the [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md):
+https://github.com/orgs/mozilla-mobile/projects/31
 
 ### Properties
 

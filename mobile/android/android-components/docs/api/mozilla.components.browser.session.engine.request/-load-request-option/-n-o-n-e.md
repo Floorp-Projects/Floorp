@@ -2,4 +2,4 @@
 
 # NONE
 
-`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L30)
+`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L33)

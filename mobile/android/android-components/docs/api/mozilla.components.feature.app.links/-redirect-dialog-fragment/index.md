@@ -4,7 +4,7 @@
 
 `abstract class RedirectDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/RedirectDialogFragment.kt#L16)
 
-This is a general representation of a dialog meant to be used in collaboration with [AppLinksFeature](../-app-links-feature/index.md)
+This is a general representation of a dialog meant to be used in collaboration with [AppLinksInterceptor](../-app-links-interceptor/index.md)
 to show a dialog before an external link is opened.
 If [SimpleRedirectDialogFragment](../-simple-redirect-dialog-fragment/index.md) is not flexible enough for your use case you should inherit for this class.
 Be mindful to call [onConfirmRedirect](on-confirm-redirect.md) when you want to open the linked app.
@@ -13,7 +13,7 @@ Be mindful to call [onConfirmRedirect](on-confirm-redirect.md) when you want to 
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `RedirectDialogFragment()`<br>This is a general representation of a dialog meant to be used in collaboration with [AppLinksFeature](../-app-links-feature/index.md) to show a dialog before an external link is opened. If [SimpleRedirectDialogFragment](../-simple-redirect-dialog-fragment/index.md) is not flexible enough for your use case you should inherit for this class. Be mindful to call [onConfirmRedirect](on-confirm-redirect.md) when you want to open the linked app. |
+| [&lt;init&gt;](-init-.md) | `RedirectDialogFragment()`<br>This is a general representation of a dialog meant to be used in collaboration with [AppLinksInterceptor](../-app-links-interceptor/index.md) to show a dialog before an external link is opened. If [SimpleRedirectDialogFragment](../-simple-redirect-dialog-fragment/index.md) is not flexible enough for your use case you should inherit for this class. Be mindful to call [onConfirmRedirect](on-confirm-redirect.md) when you want to open the linked app. |
 
 ### Properties
 
@@ -25,7 +25,7 @@ Be mindful to call [onConfirmRedirect](on-confirm-redirect.md) when you want to 
 
 | Name | Summary |
 |---|---|
-| [setAppLinkRedirect](set-app-link-redirect.md) | `fun setAppLinkRedirect(redirect: `[`AppLinkRedirect`](../-app-link-redirect/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
+| [setAppLinkRedirectUrl](set-app-link-redirect-url.md) | `fun setAppLinkRedirectUrl(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
 
 ### Companion Object Properties
 

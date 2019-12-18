@@ -2,7 +2,7 @@
 
 # setNewLocale
 
-`fun setNewLocale(context: <ERROR CLASS>, language: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L31)
+`fun setNewLocale(context: <ERROR CLASS>, language: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/locale/src/main/java/mozilla/components/support/locale/LocaleManager.kt#L33)
 
 Change the system defined locale to the indicated in the [language](set-new-locale.md#mozilla.components.support.locale.LocaleManager$setNewLocale(, kotlin.String)/language) parameter.
 This new [language](set-new-locale.md#mozilla.components.support.locale.LocaleManager$setNewLocale(, kotlin.String)/language) will be stored and will be the new current locale returned by [getCurrentLocale](get-current-locale.md).

@@ -33,7 +33,7 @@ Intents passed are guaranteed to be openable by a non-browser app.
 
 | Name | Summary |
 |---|---|
-| [setAppLinkRedirect](../-redirect-dialog-fragment/set-app-link-redirect.md) | `fun setAppLinkRedirect(redirect: `[`AppLinkRedirect`](../-app-link-redirect/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
+| [setAppLinkRedirectUrl](../-redirect-dialog-fragment/set-app-link-redirect-url.md) | `fun setAppLinkRedirectUrl(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
 
 ### Companion Object Properties
 
