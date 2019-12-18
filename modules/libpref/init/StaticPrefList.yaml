@@ -3757,8 +3757,10 @@
 
 - name: gfx.webrender.enable-low-priority-pool
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
   # If affinity and priority code is done for the platform, enable this:
+#if defined(XP_WIN)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #else
   value: false
