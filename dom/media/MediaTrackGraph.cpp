@@ -298,7 +298,7 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
     if (CurrentDriver()->AsAudioCallbackDriver()->IsStarted() &&
         !(CurrentDriver()->Switching())) {
       if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
-        SystemClockDriver* driver = new SystemClockDriver(this);
+        SystemClockDriver* driver = new SystemClockDriver(this, mSampleRate);
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
     }
@@ -316,7 +316,7 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, graphOutputChannelCount, AudioInputChannelCount(),
+          this, mSampleRate, graphOutputChannelCount, AudioInputChannelCount(),
           AudioInputDevicePreference());
       CurrentDriver()->SwitchAtNextIteration(driver);
     }
@@ -332,7 +332,7 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
     if (graphOutputChannelCount !=
         CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount()) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, graphOutputChannelCount, AudioInputChannelCount(),
+          this, mSampleRate, graphOutputChannelCount, AudioInputChannelCount(),
           AudioInputDevicePreference());
       MonitorAutoLock mon(mMonitor);
       CurrentDriver()->SwitchAtNextIteration(driver);
@@ -645,8 +645,8 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, AudioOutputChannelCount(), AudioInputChannelCount(),
-          AudioInputDevicePreference());
+          this, mSampleRate, AudioOutputChannelCount(),
+          AudioInputChannelCount(), AudioInputDevicePreference());
       LOG(LogLevel::Debug,
           ("%p OpenAudioInput: starting new AudioCallbackDriver(input) %p",
            this, driver));
@@ -722,15 +722,15 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(
       LOG(LogLevel::Debug,
           ("%p: CloseInput: output present (AudioCallback)", this));
 
-      driver = new AudioCallbackDriver(this, AudioOutputChannelCount(),
-                                       AudioInputChannelCount(),
-                                       AudioInputDevicePreference());
+      driver = new AudioCallbackDriver(
+          this, mSampleRate, AudioOutputChannelCount(),
+          AudioInputChannelCount(), AudioInputDevicePreference());
       CurrentDriver()->SwitchAtNextIteration(driver);
     } else if (CurrentDriver()->AsAudioCallbackDriver()) {
       LOG(LogLevel::Debug,
           ("%p: CloseInput: no output present (SystemClockCallback)", this));
 
-      driver = new SystemClockDriver(this);
+      driver = new SystemClockDriver(this, mSampleRate);
       CurrentDriver()->SwitchAtNextIteration(driver);
     }  // else SystemClockDriver->SystemClockDriver, no switch
   }
@@ -754,8 +754,8 @@ void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, AudioOutputChannelCount(), AudioInputChannelCount(),
-          AudioInputDevicePreference());
+          this, mSampleRate, AudioOutputChannelCount(),
+          AudioInputChannelCount(), AudioInputDevicePreference());
       CurrentDriver()->SwitchAtNextIteration(driver);
     }
   }
@@ -943,7 +943,7 @@ void MediaTrackGraphImpl::ReevaluateInputDevice() {
   }
   if (needToSwitch) {
     AudioCallbackDriver* newDriver = new AudioCallbackDriver(
-        this, AudioOutputChannelCount(), AudioInputChannelCount(),
+        this, mSampleRate, AudioOutputChannelCount(), AudioInputChannelCount(),
         AudioInputDevicePreference());
     {
       MonitorAutoLock lock(mMonitor);
@@ -2917,13 +2917,14 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
       // Always start with zero input channels, and no particular preferences
       // for the input channel.
-      mDriver = new AudioCallbackDriver(this, aChannelCount, 0,
+      mDriver = new AudioCallbackDriver(this, mSampleRate, aChannelCount, 0,
                                         AudioInputType::Unknown);
     } else {
-      mDriver = new SystemClockDriver(this);
+      mDriver = new SystemClockDriver(this, mSampleRate);
     }
   } else {
-    mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
+    mDriver =
+        new OfflineClockDriver(this, mSampleRate, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
 
   mLastMainThreadUpdate = TimeStamp::Now();
@@ -3409,9 +3410,9 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
         MOZ_ASSERT(nextDriver->AsAudioCallbackDriver());
         driver = nextDriver->AsAudioCallbackDriver();
       } else {
-        driver = new AudioCallbackDriver(this, AudioOutputChannelCount(),
-                                         AudioInputChannelCount(),
-                                         AudioInputDevicePreference());
+        driver = new AudioCallbackDriver(
+            this, mSampleRate, AudioOutputChannelCount(),
+            AudioInputChannelCount(), AudioInputDevicePreference());
         MonitorAutoLock lock(mMonitor);
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
@@ -3440,7 +3441,7 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
 
       SystemClockDriver* driver;
       if (!nextDriver) {
-        driver = new SystemClockDriver(this);
+        driver = new SystemClockDriver(this, mSampleRate);
         MonitorAutoLock lock(mMonitor);
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
