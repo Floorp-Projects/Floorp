@@ -383,10 +383,6 @@ class nsXULElement : public nsStyledElement {
   }
 
   // WebIDL API
-  void GetDir(DOMString& aValue) const { GetXULAttr(nsGkAtoms::dir, aValue); }
-  void SetDir(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::dir, aValue, rv);
-  }
   void GetFlex(DOMString& aValue) const { GetXULAttr(nsGkAtoms::flex, aValue); }
   void SetFlex(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::flex, aValue, rv);
