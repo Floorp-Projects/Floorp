@@ -280,7 +280,7 @@ mochitest-media:
         by-test-platform:
             android-hw-.*-api-16/opt: ['try']
             android-hw-.*-api-16/(?:debug|pgo)?: ['try', 'trunk', 'mozilla-beta', 'mozilla-release']
-            windows10-aarch64/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     variants:
         by-test-platform:
