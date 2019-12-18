@@ -511,15 +511,7 @@ function initPageCertError() {
 }
 
 function addCertException() {
-  const isPermanent =
-    !RPMIsWindowPrivate() &&
-    RPMGetBoolPref("security.certerrors.permanentOverride");
-  document.addCertException(!isPermanent).then(
-    () => {
-      location.reload();
-    },
-    err => {}
-  );
+  RPMSendAsyncMessage("AddCertException", { location: document.location.href });
 }
 
 function onReturnButtonClick(e) {
