@@ -178,7 +178,8 @@ struct GraphInterface {
   virtual void DeviceChanged() = 0;
   /* Called by GraphDriver to iterate the graph. Output from the graph gets
    * mixed into aMixer, if it is non-null. */
-  virtual IterationResult OneIteration(GraphTime aStateEnd,
+  virtual IterationResult OneIteration(GraphTime aStateComputedEnd,
+                                       GraphTime aIterationEnd,
                                        AudioMixer* aMixer) = 0;
 #ifdef DEBUG
   /* True if we're on aDriver's thread, or if we're on mGraphRunner's thread
@@ -271,8 +272,6 @@ class GraphDriver {
   GraphDriver* PreviousDriver();
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
-  GraphTime IterationEnd() { return mIterationEnd; }
-
   virtual AudioCallbackDriver* AsAudioCallbackDriver() { return nullptr; }
 
   virtual OfflineClockDriver* AsOfflineClockDriver() { return nullptr; }
@@ -314,11 +313,9 @@ class GraphDriver {
   }
 
  protected:
-  // Time of the start of this graph iteration. This must be accessed while
-  // having the monitor.
+  // Time of the start of this graph iteration.
   GraphTime mIterationStart = 0;
-  // Time of the end of this graph iteration. This must be accessed while having
-  // the monitor.
+  // Time of the end of this graph iteration.
   GraphTime mIterationEnd = 0;
   // Time until which the graph has processed data.
   GraphTime mStateComputedTime = 0;

@@ -32,10 +32,11 @@ class GraphRunner final : public Runnable {
   MOZ_CAN_RUN_SCRIPT void Shutdown();
 
   /**
-   * Signals one iteration of mGraph. Hands aStateEnd over to mThread and runs
+   * Signals one iteration of mGraph. Hands state over to mThread and runs
    * the iteration there.
    */
-  IterationResult OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
+                               AudioMixer* aMixer);
 
   /**
    * Runs mGraph until it shuts down.
@@ -62,17 +63,21 @@ class GraphRunner final : public Runnable {
 
   class IterationState {
     GraphTime mStateEnd;
+    GraphTime mIterationEnd;
     AudioMixer* MOZ_NON_OWNING_REF mMixer;
 
    public:
-    IterationState(GraphTime aStateEnd, AudioMixer* aMixer)
-        : mStateEnd(aStateEnd), mMixer(aMixer) {}
+    IterationState(GraphTime aStateEnd, GraphTime aIterationEnd,
+                   AudioMixer* aMixer)
+        : mStateEnd(aStateEnd), mIterationEnd(aIterationEnd), mMixer(aMixer) {}
     IterationState& operator=(const IterationState& aOther) {
       mStateEnd = aOther.mStateEnd;
+      mIterationEnd = aOther.mIterationEnd;
       mMixer = aOther.mMixer;
       return *this;
     }
     GraphTime StateEnd() const { return mStateEnd; }
+    GraphTime IterationEnd() const { return mIterationEnd; }
     AudioMixer* Mixer() const { return mMixer; }
   };
 
