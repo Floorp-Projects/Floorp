@@ -301,23 +301,17 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage);
 
-  /**
-   * Called when a suspend/resume/close operation has been completed, on the
-   * graph thread.
-   */
-  void AudioContextOperationCompleted(MediaTrack* aTrack, void* aPromise,
-                                      dom::AudioContextOperation aOperation,
-                                      dom::AudioContextOperationFlags aFlags);
+  void NotifyWhenGraphStarted(RefPtr<AudioNodeTrack> aTrack,
+                              MozPromiseHolder<GraphStartedPromise>&& aHolder);
 
   /**
-   * Apply and AudioContext operation (suspend/resume/closed), on the graph
+   * Apply an AudioContext operation (suspend/resume/close), on the graph
    * thread.
    */
-  void ApplyAudioContextOperationImpl(MediaTrack* aDestinationTrack,
-                                      const nsTArray<MediaTrack*>& aTracks,
-                                      dom::AudioContextOperation aOperation,
-                                      void* aPromise,
-                                      dom::AudioContextOperationFlags aSource);
+  void ApplyAudioContextOperationImpl(
+      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      dom::AudioContextOperation aOperation,
+      MozPromiseHolder<AudioContextOperationPromise>&& aHolder);
 
   /**
    * Increment suspend count on aTrack and move it to mSuspendedTracks if
