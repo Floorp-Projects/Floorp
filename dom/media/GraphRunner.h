@@ -21,7 +21,7 @@ class AudioMixer;
 class MediaTrackGraphImpl;
 
 class GraphRunner final : public Runnable {
-  using IterationResult = GraphDriver::IterationResult;
+  using IterationResult = GraphInterface::IterationResult;
 
  public:
   static already_AddRefed<GraphRunner> Create(MediaTrackGraphImpl* aGraph);

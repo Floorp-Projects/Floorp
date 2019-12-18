@@ -57,10 +57,9 @@ static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
 static const int AUDIO_TARGET_MS =
     2 * MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS;
 
-class MediaTrack;
-class MediaTrackGraphImpl;
-
 class AudioCallbackDriver;
+class GraphDriver;
+class MediaTrack;
 class OfflineClockDriver;
 class SystemClockDriver;
 
@@ -68,56 +67,7 @@ namespace dom {
 enum class AudioContextOperation;
 }
 
-/**
- * A driver is responsible for the scheduling of the processing, the thread
- * management, and give the different clocks to a MediaTrackGraph. This is an
- * abstract base class. A MediaTrackGraph can be driven by an
- * OfflineClockDriver, if the graph is offline, or a SystemClockDriver, if the
- * graph is real time.
- * A MediaTrackGraph holds an owning reference to its driver.
- *
- * The lifetime of drivers is a complicated affair. Here are the different
- * scenarii that can happen:
- *
- * Starting a MediaTrackGraph with an AudioCallbackDriver
- * - A new thread T is created, from the main thread.
- * - On this thread T, cubeb is initialized if needed, and a cubeb_stream is
- *   created and started
- * - The thread T posts a message to the main thread to terminate itself.
- * - The graph runs off the audio thread
- *
- * Starting a MediaTrackGraph with a SystemClockDriver:
- * - A new thread T is created from the main thread.
- * - The graph runs off this thread.
- *
- * Switching from a SystemClockDriver to an AudioCallbackDriver:
- * - A new AudioCallabackDriver is created and initialized on the graph thread
- * - At the end of the MTG iteration, the SystemClockDriver transfers its timing
- *   info and a reference to itself to the AudioCallbackDriver. It then starts
- *   the AudioCallbackDriver.
- * - When the AudioCallbackDriver starts, it checks if it has been switched from
- *   a SystemClockDriver, and if that is the case, sends a message to the main
- *   thread to shut the SystemClockDriver thread down.
- * - The graph now runs off an audio callback
- *
- * Switching from an AudioCallbackDriver to a SystemClockDriver:
- * - A new SystemClockDriver is created, and set as mNextDriver.
- * - At the end of the MTG iteration, the AudioCallbackDriver transfers its
- *   timing info and a reference to itself to the SystemClockDriver. A new
- *   SystemClockDriver is started from the current audio thread.
- * - When starting, the SystemClockDriver checks if it has been switched from an
- *   AudioCallbackDriver. If yes, it creates a new temporary thread to release
- *   the cubeb_streams. This temporary thread closes the cubeb_stream, and
- *   then dispatches a message to the main thread to be terminated.
- * - The graph now runs off a normal thread.
- *
- * Two drivers cannot run at the same time for the same graph. The thread safety
- * of the different attributes of drivers, and they access pattern is documented
- * next to the members themselves.
- *
- */
-class GraphDriver {
- public:
+struct GraphInterface {
   /**
    * Object returned from OneIteration() instructing the iterating GraphDriver
    * what to do.
@@ -212,7 +162,84 @@ class GraphDriver {
     }
   };
 
-  GraphDriver(MediaTrackGraphImpl* aGraphImpl, GraphDriver* aPreviousDriver,
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  /* Called on the graph thread when there is new output data for listeners.
+   * This is the mixed audio output of this MediaTrackGraph. */
+  virtual void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
+                                TrackRate aRate, uint32_t aChannels) = 0;
+  /* Called on the graph thread when there is new input data for listeners. This
+   * is the raw audio input for this MediaTrackGraph. */
+  virtual void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
+                               TrackRate aRate, uint32_t aChannels) = 0;
+  /* Called every time there are changes to input/output audio devices like
+   * plug/unplug etc. This can be called on any thread, and posts a message to
+   * the main thread so that it can post a message to the graph thread. */
+  virtual void DeviceChanged() = 0;
+  /* Called by GraphDriver to iterate the graph. Output from the graph gets
+   * mixed into aMixer, if it is non-null. */
+  virtual IterationResult OneIteration(GraphTime aStateEnd,
+                                       AudioMixer* aMixer) = 0;
+#ifdef DEBUG
+  /* True if we're on aDriver's thread, or if we're on mGraphRunner's thread
+   * and mGraphRunner is currently run by aDriver. */
+  virtual bool InDriverIteration(GraphDriver* aDriver) = 0;
+#endif
+};
+
+/**
+ * A driver is responsible for the scheduling of the processing, the thread
+ * management, and give the different clocks to a MediaTrackGraph. This is an
+ * abstract base class. A MediaTrackGraph can be driven by an
+ * OfflineClockDriver, if the graph is offline, or a SystemClockDriver, if the
+ * graph is real time.
+ * A MediaTrackGraph holds an owning reference to its driver.
+ *
+ * The lifetime of drivers is a complicated affair. Here are the different
+ * scenarii that can happen:
+ *
+ * Starting a MediaTrackGraph with an AudioCallbackDriver
+ * - A new thread T is created, from the main thread.
+ * - On this thread T, cubeb is initialized if needed, and a cubeb_stream is
+ *   created and started
+ * - The thread T posts a message to the main thread to terminate itself.
+ * - The graph runs off the audio thread
+ *
+ * Starting a MediaTrackGraph with a SystemClockDriver:
+ * - A new thread T is created from the main thread.
+ * - The graph runs off this thread.
+ *
+ * Switching from a SystemClockDriver to an AudioCallbackDriver:
+ * - A new AudioCallabackDriver is created and initialized on the graph thread
+ * - At the end of the MTG iteration, the SystemClockDriver transfers its timing
+ *   info and a reference to itself to the AudioCallbackDriver. It then starts
+ *   the AudioCallbackDriver.
+ * - When the AudioCallbackDriver starts, it checks if it has been switched from
+ *   a SystemClockDriver, and if that is the case, sends a message to the main
+ *   thread to shut the SystemClockDriver thread down.
+ * - The graph now runs off an audio callback
+ *
+ * Switching from an AudioCallbackDriver to a SystemClockDriver:
+ * - A new SystemClockDriver is created, and set as mNextDriver.
+ * - At the end of the MTG iteration, the AudioCallbackDriver transfers its
+ *   timing info and a reference to itself to the SystemClockDriver. A new
+ *   SystemClockDriver is started from the current audio thread.
+ * - When starting, the SystemClockDriver checks if it has been switched from an
+ *   AudioCallbackDriver. If yes, it creates a new temporary thread to release
+ *   the cubeb_streams. This temporary thread closes the cubeb_stream, and
+ *   then dispatches a message to the main thread to be terminated.
+ * - The graph now runs off a normal thread.
+ *
+ * Two drivers cannot run at the same time for the same graph. The thread safety
+ * of the different attributes of drivers, and they access pattern is documented
+ * next to the members themselves.
+ *
+ */
+class GraphDriver {
+ public:
+  using IterationResult = GraphInterface::IterationResult;
+
+  GraphDriver(GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
               uint32_t aSampleRate);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
@@ -259,7 +286,7 @@ class GraphDriver {
   void SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
                 GraphTime aStateComputedTime);
 
-  MediaTrackGraphImpl* GraphImpl() const { return mGraphImpl; }
+  GraphInterface* Graph() const { return mGraphInterface; }
 
 #ifdef DEBUG
   // True if the current thread is currently iterating the MTG.
@@ -295,8 +322,8 @@ class GraphDriver {
   GraphTime mIterationEnd = 0;
   // Time until which the graph has processed data.
   GraphTime mStateComputedTime = 0;
-  // The MediaTrackGraphImpl associated with this driver.
-  const RefPtr<MediaTrackGraphImpl> mGraphImpl;
+  // The GraphInterface this driver is currently iterating.
+  const RefPtr<GraphInterface> mGraphInterface;
   // The sample rate for the graph, and in case of an audio driver, also for the
   // cubeb stream.
   const uint32_t mSampleRate;
@@ -366,7 +393,7 @@ class ThreadedDriver : public GraphDriver {
   };
 
  public:
-  ThreadedDriver(MediaTrackGraphImpl* aGraphImpl, GraphDriver* aPreviousDriver,
+  ThreadedDriver(GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
                  uint32_t aSampleRate);
   virtual ~ThreadedDriver();
 
@@ -413,13 +440,13 @@ class ThreadedDriver : public GraphDriver {
 };
 
 /**
- * A SystemClockDriver drives a MediaTrackGraph using a system clock, and waits
+ * A SystemClockDriver drives a GraphInterface using a system clock, and waits
  * using a monitor, between each iteration.
  */
 enum class FallbackMode { Regular, Fallback };
 class SystemClockDriver : public ThreadedDriver {
  public:
-  SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
+  SystemClockDriver(GraphInterface* aGraphInterface,
                     GraphDriver* aPreviousDriver, uint32_t aSampleRate,
                     FallbackMode aFallback = FallbackMode::Regular);
   virtual ~SystemClockDriver();
@@ -449,7 +476,7 @@ class SystemClockDriver : public ThreadedDriver {
  */
 class OfflineClockDriver : public ThreadedDriver {
  public:
-  OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl, uint32_t aSampleRate,
+  OfflineClockDriver(GraphInterface* aGraphInterface, uint32_t aSampleRate,
                      GraphTime aSlice);
   virtual ~OfflineClockDriver();
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
@@ -508,7 +535,7 @@ class AudioCallbackDriver : public GraphDriver,
 {
  public:
   /** If aInputChannelCount is zero, then this driver is output-only. */
-  AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+  AudioCallbackDriver(GraphInterface* aGraphInterface,
                       GraphDriver* aPreviousDriver, uint32_t aSampleRate,
                       uint32_t aOutputChannelCount, uint32_t aInputChannelCount,
                       CubebUtils::AudioDeviceID aOutputDeviceID,
@@ -712,7 +739,7 @@ class AsyncCubebTask : public Runnable {
 
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
-  RefPtr<MediaTrackGraphImpl> mShutdownGrip;
+  RefPtr<GraphInterface> mShutdownGrip;
 };
 
 }  // namespace mozilla
