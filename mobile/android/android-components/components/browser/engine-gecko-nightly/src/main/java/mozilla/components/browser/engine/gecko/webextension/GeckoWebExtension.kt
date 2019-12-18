@@ -18,6 +18,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
 import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
@@ -30,18 +31,20 @@ class GeckoWebExtension(
     url: String,
     allowContentMessaging: Boolean = true,
     supportActions: Boolean = false,
+    webExtensionController: WebExtensionController,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
-        createWebExtensionFlags(allowContentMessaging)
+        createWebExtensionFlags(allowContentMessaging),
+        webExtensionController
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
 ) : WebExtension(id, url, supportActions) {
 
     private val logger = Logger("GeckoWebExtension")
 
-    constructor(native: GeckoNativeWebExtension) :
-        this(native.id, native.location, true, true, native)
+    constructor(native: GeckoNativeWebExtension, webExtensionController: WebExtensionController) :
+        this(native.id, native.location, true, true, webExtensionController, native)
 
     /**
      * Uniquely identifies a port using its name and the session it
