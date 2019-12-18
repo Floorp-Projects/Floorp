@@ -61,7 +61,7 @@ struct ClonedMessageData
   SerializedStructuredCloneBuffer data;
   IPCBlob[] blobs;
   IPCStream[] inputStreams;
-  MessagePortIdentifier[] identfiers;
+  MessagePortIdentifier[] identifiers;
 };
 
 union IPCDataTransferData
