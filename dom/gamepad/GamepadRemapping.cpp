@@ -110,6 +110,13 @@ class DefaultRemapper final : public GamepadRemapper {
 
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
+    if (GetAxisCount() <= aAxis) {
+      NS_WARNING(
+          nsPrintfCString("Axis idx '%d' doesn't support in DefaultRemapper().",
+                          aAxis)
+              .get());
+      return;
+    }
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -120,6 +127,13 @@ class DefaultRemapper final : public GamepadRemapper {
 
   virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,
                                 bool aPressed) const override {
+    if (GetButtonCount() <= aButton) {
+      NS_WARNING(
+          nsPrintfCString(
+              "Button idx '%d' doesn't support in DefaultRemapper().", aButton)
+              .get());
+      return;
+    }
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -190,7 +204,7 @@ class ADT1Remapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString("Button idx '%d' doesn't support in ADT1Remapper().",
                           aButton)
@@ -263,7 +277,7 @@ class TwoAxesEightKeysRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in TwoAxesEightKeysRemapper().",
@@ -339,7 +353,7 @@ class StadiaControllerRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (STADIA_BUTTON_COUNT <= aIndex) {
+    if (STADIA_BUTTON_COUNT <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in StadiaControllerRemapper().",
@@ -531,7 +545,7 @@ class Dualshock4Remapper final : public GamepadRemapper {
                                                  BUTTON_INDEX_META,
                                                  DUALSHOCK_BUTTON_TOUCHPAD};
 
-    if (buttonMapping.size() <= aIndex) {
+    if (buttonMapping.size() <= aButton) {
       NS_WARNING(nsPrintfCString(
                      "Button idx '%d' doesn't support in Dualshock4Remapper().",
                      aButton)
@@ -609,7 +623,7 @@ class LogitechDInputRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in LogitechDInputRemapper().",
@@ -642,6 +656,13 @@ class SwitchJoyConRemapper final : public GamepadRemapper {
 
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
+    if (GetAxisCount() <= aAxis) {
+      NS_WARNING(
+          nsPrintfCString(
+              "Axis idx '%d' doesn't support in SwitchJoyConRemapper().", aAxis)
+              .get());
+      return;
+    }
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -675,6 +696,13 @@ class SwitchProRemapper final : public GamepadRemapper {
 
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
+    if (GetAxisCount() <= aAxis) {
+      NS_WARNING(
+          nsPrintfCString(
+              "Axis idx '%d' doesn't support in SwitchProRemapper().", aAxis)
+              .get());
+      return;
+    }
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -759,7 +787,7 @@ class NvShieldRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in NvShieldRemapper().", aButton)
@@ -852,7 +880,7 @@ class NvShield2017Remapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in NvShield2017Remapper().",
@@ -936,7 +964,7 @@ class IBuffaloRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in IBuffaloRemapper().", aButton)
@@ -1107,7 +1135,7 @@ class BoomN64PsxRemapper final : public GamepadRemapper {
         BUTTON_INDEX_DPAD_UP,          BUTTON_INDEX_DPAD_RIGHT,
         BUTTON_INDEX_DPAD_DOWN,        BUTTON_INDEX_DPAD_LEFT};
 
-    if (buttonMapping.size() <= aIndex) {
+    if (buttonMapping.size() <= aButton) {
       NS_WARNING(nsPrintfCString(
                      "Button idx '%d' doesn't support in BoomN64PsxRemapper().",
                      aButton)
@@ -1184,7 +1212,7 @@ class AnalogGamepadRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in AnalogGamepadRemapper().",
@@ -1280,7 +1308,7 @@ class RazerServalRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in RazerServalRemapper().",
@@ -1362,7 +1390,7 @@ class MogaProRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in MogaProRemapper().", aButton)
@@ -1443,7 +1471,7 @@ class OnLiveWirelessRemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString(
               "Button idx '%d' doesn't support in OnLiveWirelessRemapper().",
@@ -1524,7 +1552,7 @@ class OUYARemapper final : public GamepadRemapper {
       return;
     }
 
-    if (GetButtonCount() <= aIndex) {
+    if (GetButtonCount() <= aButton) {
       NS_WARNING(
           nsPrintfCString("Button idx '%d' doesn't support in OUYARemapper().",
                           aButton)
