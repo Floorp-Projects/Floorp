@@ -19,7 +19,7 @@ job-defaults:
         by-test-platform:
             android-hw-.*-qr/debug: ['try', 'mozilla-central']
             android-hw-.*-qr/opt: ['try', 'mozilla-central', 'autoland']
-            windows10-aarch64/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
         script:

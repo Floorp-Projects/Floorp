@@ -1024,7 +1024,10 @@ browsertime-tp6:
 browsertime-speedometer:
     description: "Raptor (browsertime) Speedometer on Firefox"
     raptor-test: raptor-speedometer
-    run-on-projects: ['integration', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try']
+            default: ['integration', 'try']
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime(sp)
