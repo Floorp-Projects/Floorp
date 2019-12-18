@@ -17,7 +17,7 @@ url = "https://nimbledroid.com/api/v2/apks"
 
 def uploadApk(apk,key):
 	headers = {"Accept":"*/*"}
-	payload = {'auto_scenarios':'false'}
+	payload = {'auto_scenarios':'false', 'device_config': 'android5,android7'}
 	response = requests.post(url, auth=(key, ''), headers=headers, files=apk, data=payload)
 
 	if response.status_code != 201:
