@@ -1913,7 +1913,6 @@ STATIC_ATOMS = [
     Atom("onFullZoomChange", "onFullZoomChange"),
     Atom("onGloballyAutoplayBlocked", "onGloballyAutoplayBlocked"),
     Atom("onHiddenPlugin", "onHiddenPlugin"),
-    Atom("onImageContentLoaded", "onImageContentLoaded"),
     Atom("onMozApplicationManifest", "onMozApplicationManifest"),
     Atom("onMozDOMFullscreen_Entered", "onMozDOMFullscreen:Entered"),
     Atom("onMozDOMFullscreen_Exit", "onMozDOMFullscreen:Exit"),
