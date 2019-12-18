@@ -627,7 +627,7 @@ enum class CheckIsCallableKind : uint8_t { IteratorReturn };
 
 bool ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind);
 
-bool ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
+bool ThrowUninitializedThis(JSContext* cx);
 
 bool ThrowInitializedThis(JSContext* cx);
 

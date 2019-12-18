@@ -1440,7 +1440,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       // Forcing return from a class constructor. There are rules.
       if (vp.isUndefined()) {
         if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
-          return ThrowUninitializedThis(cx, frame);
+          return ThrowUninitializedThis(cx);
         }
 
         vp.set(thisv);

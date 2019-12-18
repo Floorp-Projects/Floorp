@@ -2349,15 +2349,12 @@ bool BaselineCodeGen<Handler>::emitCheckThis(ValueOperand val, bool reinit) {
 
   if (reinit) {
     using Fn = bool (*)(JSContext*);
-    if (!callVM<Fn, BaselineThrowInitializedThis>()) {
+    if (!callVM<Fn, ThrowInitializedThis>()) {
       return false;
     }
   } else {
-    masm.loadBaselineFramePtr(BaselineFrameReg, val.scratchReg());
-    pushArg(val.scratchReg());
-
-    using Fn = bool (*)(JSContext*, BaselineFrame*);
-    if (!callVM<Fn, BaselineThrowUninitializedThis>()) {
+    using Fn = bool (*)(JSContext*);
+    if (!callVM<Fn, ThrowUninitializedThis>()) {
       return false;
     }
   }

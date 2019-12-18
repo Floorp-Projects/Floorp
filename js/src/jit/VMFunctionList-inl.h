@@ -47,8 +47,6 @@ namespace jit {
     js::jit::BaselineCompileFromBaselineInterpreter)                           \
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)                 \
-  _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
-  _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
   _(BigIntAdd, JS::BigInt::add)                                                \
   _(BigIntBitAnd, JS::BigInt::bitAnd)                                          \
   _(BigIntBitNot, JS::BigInt::bitNot)                                          \
@@ -277,10 +275,12 @@ namespace jit {
   _(SuperFunOperation, js::SuperFunOperation)                                  \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \
+  _(ThrowInitializedThis, js::ThrowInitializedThis)                            \
   _(ThrowMsgOperation, js::ThrowMsgOperation)                                  \
   _(ThrowObjectCoercible, js::jit::ThrowObjectCoercible)                       \
   _(ThrowOperation, js::ThrowOperation)                                        \
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
+  _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
   _(ToIdOperation, js::ToIdOperation)                                          \
   _(ToObjectSlow, js::ToObjectSlow)                                            \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
