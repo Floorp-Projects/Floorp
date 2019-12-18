@@ -1026,22 +1026,25 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    */
   async refreshAll(options = {}) {
     const { updateOpenTabs, isStartup } = options;
+    const storiesEnabled = this.store.getState().Prefs.values[PREF_TOPSTORIES];
     const dispatch = updateOpenTabs
       ? action => this.store.dispatch(ac.BroadcastToContent(action))
       : this.store.dispatch;
 
     this.loadAffinityScoresCache();
     await this.loadLayout(dispatch, isStartup);
-    await Promise.all([
-      this.loadSpocs(dispatch, isStartup).catch(error =>
-        Cu.reportError(`Error trying to load spocs feeds: ${error}`)
-      ),
-      this.loadComponentFeeds(dispatch, isStartup).catch(error =>
-        Cu.reportError(`Error trying to load component feeds: ${error}`)
-      ),
-    ]);
-    if (isStartup) {
-      await this._maybeUpdateCachedData();
+    if (storiesEnabled) {
+      await Promise.all([
+        this.loadSpocs(dispatch, isStartup).catch(error =>
+          Cu.reportError(`Error trying to load spocs feeds: ${error}`)
+        ),
+        this.loadComponentFeeds(dispatch, isStartup).catch(error =>
+          Cu.reportError(`Error trying to load component feeds: ${error}`)
+        ),
+      ]);
+      if (isStartup) {
+        await this._maybeUpdateCachedData();
+      }
     }
   }
 
@@ -1151,6 +1154,13 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           value: this.totalRequestTime,
         })
       );
+    }
+  }
+
+  enableStories() {
+    if (this.config.enabled && this.loaded) {
+      // If stories are being re enabled, ensure we have stories.
+      this.refreshAll({ updateOpenTabs: true });
     }
   }
 
@@ -1460,6 +1470,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             if (!action.data.value) {
               // Ensure we delete any remote data potentially related to spocs.
               this.clearSpocs();
+            } else {
+              this.enableStories();
             }
             break;
           // Check if spocs was disabled. Remove them if they were.
