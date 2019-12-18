@@ -47,6 +47,13 @@ struct MOZ_RAII ParseInfo {
                  ? ParseInfo::Mode::Deferred
                  : ParseInfo::Mode::Eager) {}
 
+  // To avoid any misuses, make sure this is neither copyable,
+  // movable or assignable.
+  ParseInfo(const ParseInfo&) = delete;
+  ParseInfo(ParseInfo&&) = delete;
+  ParseInfo& operator=(const ParseInfo&) = delete;
+  ParseInfo& operator=(ParseInfo&&) = delete;
+
   bool isEager() { return mode == Mode::Eager; }
   bool isDeferred() { return mode == Mode::Deferred; }
 };
