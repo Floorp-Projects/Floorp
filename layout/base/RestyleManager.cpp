@@ -1615,8 +1615,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // for the optimization for 0.99 over opacity values since we have no way
       // to call nsSVGUtils::CanOptimizeOpacity() there.
       if ((hint & nsChangeHint_UpdateOpacityLayer) &&
-          nsSVGUtils::CanOptimizeOpacity(frame) &&
-          frame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+          nsSVGUtils::CanOptimizeOpacity(frame)) {
         hint &= ~nsChangeHint_UpdateOpacityLayer;
         hint |= nsChangeHint_RepaintFrame;
       }
