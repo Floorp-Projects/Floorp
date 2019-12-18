@@ -207,6 +207,8 @@ GeckoViewStartup.prototype = {
           "GeckoView:SetDefaultPrefs",
           "GeckoView:SetLocale",
         ]);
+
+        Services.obs.notifyObservers(null, "geckoview-startup-complete");
         break;
       }
     }

@@ -527,6 +527,7 @@ nsresult nsAppShell::Init() {
       mozilla::services::GetObserverService();
   if (obsServ) {
     obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
+    obsServ->AddObserver(this, "geckoview-startup-complete", false);
     obsServ->AddObserver(this, "profile-after-change", false);
     obsServ->AddObserver(this, "quit-application", false);
     obsServ->AddObserver(this, "quit-application-granted", false);
@@ -576,7 +577,12 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
     NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,
                                   "browser-delayed-startup-finished");
-
+  } else if (!strcmp(aTopic, "geckoview-startup-complete")) {
+    if (jni::IsAvailable()) {
+      java::GeckoThread::CheckAndSetState(
+          java::GeckoThread::State::PROFILE_READY(),
+          java::GeckoThread::State::RUNNING());
+    }
   } else if (!strcmp(aTopic, "profile-after-change")) {
     if (jni::IsAvailable()) {
       java::GeckoThread::SetState(java::GeckoThread::State::PROFILE_READY());
@@ -599,13 +605,6 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<dom::Document> doc = do_QueryInterface(aSubject);
     MOZ_ASSERT(doc);
     if (const RefPtr<nsWindow> window = nsWindow::From(doc->GetWindow())) {
-      if (jni::IsAvailable()) {
-        // When our first window has loaded, assume any JS
-        // initialization has run and set Gecko to ready.
-        java::GeckoThread::CheckAndSetState(
-            java::GeckoThread::State::PROFILE_READY(),
-            java::GeckoThread::State::RUNNING());
-      }
       window->OnGeckoViewReady();
     }
   } else if (!strcmp(aTopic, "quit-application")) {
