@@ -292,8 +292,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitThisEnvironmentCallee();
   MOZ_MUST_USE bool emitSuperBase();
 
-  void tellDebuggerAboutCompiledScript(JSContext* cx);
-
   uint32_t mainOffset() const { return *mainOffset_; }
 
   bool inPrologue() const { return mainOffset_.isNothing(); }

@@ -65,8 +65,7 @@
 #include "vm/Opcodes.h"   // JSOP_*
 #include "wasm/AsmJS.h"   // IsAsmJSModule
 
-#include "debugger/DebugAPI-inl.h"  // DebugAPI
-#include "vm/JSObject-inl.h"        // JSObject
+#include "vm/JSObject-inl.h"  // JSObject
 
 using namespace js;
 using namespace js::frontend;
@@ -1598,20 +1597,6 @@ bool BytecodeEmitter::emitSuperBase() {
   return emit1(JSOP_SUPERBASE);
 }
 
-void BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx) {
-  // Note: when parsing off thread the resulting scripts need to be handed to
-  // the debugger after rejoining to the main thread.
-  if (cx->isHelperThreadContext()) {
-    return;
-  }
-
-  // Lazy scripts are never top level (despite always being invoked with a
-  // nullptr parent), and so the hook should never be fired.
-  if (emitterMode != LazyFunction && !parent) {
-    DebugAPI::onNewScript(cx, script);
-  }
-}
-
 void BytecodeEmitter::reportNeedMoreArgsError(ParseNode* pn,
                                               const char* errorName,
                                               const char* requiredArgs,
@@ -2501,8 +2486,6 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   if (!JSScript::fullyInitFromEmitter(cx, script, this)) {
     return false;
   }
-
-  tellDebuggerAboutCompiledScript(cx);
 
   return true;
 }
