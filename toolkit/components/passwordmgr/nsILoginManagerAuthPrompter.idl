@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "nsISupports.idl"
+
+interface nsILoginInfo;
+interface nsIDOMWindow;
+
+webidl Element;
+
+[scriptable, uuid(425f73b9-b2db-4e8a-88c5-9ac2512934ce)]
+interface nsILoginManagerAuthPrompter : nsISupports {
+  /**
+   * Initialize the prompter. Must be called before using other interfaces.
+   *
+   * @param aWindow
+   *        The window in which the user is doing some login-related action that's
+   *        resulting in a need to prompt them for something. The prompt
+   *        will be associated with this window (or, if a notification bar
+   *        is being used, topmost opener in some cases).
+   *
+   *        aWindow can be null if there is no associated window, e.g. in a JSM
+   *        or Sandbox. In this case there will be no checkbox to save the login
+   *        since the window is needed to know if this is a private context.
+   *
+   *        If this window is a content window, the corresponding window and browser
+   *        elements will be calculated. If this window is a chrome window, the
+   *        corresponding browser element needs to be set using setBrowser.
+   */
+  void init(in nsIDOMWindow aWindow);
+
+  /**
+   * The browser this prompter is being created for.
+   * This is required if the init function received a chrome window as argument.
+   */
+  attribute Element browser;
+
+  /**
+   * The opener browser that was used to open the window passed to init.
+   * The opener can be used to determine in which window the prompt
+   * should be shown.
+   */
+  attribute Element openerBrowser;
+};
+%{C++
+
+#define NS_LOGINMANAGERAUTHPROMPTER_CONTRACTID "@mozilla.org/login-manager/authprompter/;1"
+
+%}

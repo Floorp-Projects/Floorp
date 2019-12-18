@@ -98,7 +98,7 @@
 #include "nsAuthInformationHolder.h"
 #include "nsICancelable.h"
 #include "gfxUtils.h"
-#include "nsILoginManagerPrompter.h"
+#include "nsILoginManagerAuthPrompter.h"
 #include "nsPIWindowRoot.h"
 #include "nsIAuthPrompt2.h"
 #include "gfxDrawable.h"
@@ -3163,7 +3163,7 @@ BrowserParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   rv = wwatch->GetPrompt(window, iid, getter_AddRefs(prompt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoginManagerPrompter> prompter = do_QueryInterface(prompt);
+  nsCOMPtr<nsILoginManagerAuthPrompter> prompter = do_QueryInterface(prompt);
   if (prompter) {
     prompter->SetBrowser(mFrameElement);
   }
