@@ -36,23 +36,26 @@ MediaController::~MediaController() {
 void MediaController::Play() {
   LOG("Play");
   mIsPlaying = true;
-  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::ePlay);
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
   mIsPlaying = false;
-  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::ePause);
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::ePause);
 }
 
 void MediaController::Stop() {
   LOG("Stop");
   mIsPlaying = false;
-  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::eStop);
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::eStop);
 }
 
-void MediaController::UpdateMediaActionToContentMediaIfNeeded(
-    MediaControlActions aAction) {
+void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
+    MediaControlKeysEvent aEvent) {
   // There is no controlled media existing, we have no need to update media
   // action to the content process.
   if (!ControlledMediaNum()) {
@@ -60,7 +63,7 @@ void MediaController::UpdateMediaActionToContentMediaIfNeeded(
   }
   RefPtr<BrowsingContext> context = BrowsingContext::Get(mBrowsingContextId);
   if (context) {
-    context->Canonical()->UpdateMediaAction(aAction);
+    context->Canonical()->UpdateMediaControlKeysEvent(aEvent);
   }
 }
 

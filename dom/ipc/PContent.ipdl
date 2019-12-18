@@ -115,7 +115,7 @@ using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
-using mozilla::dom::MediaControlActions from "ipc/MediaControlIPC.h";
+using mozilla::dom::MediaControlKeysEvent from "ipc/MediaControlIPC.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 
 union ChromeRegistryItem
@@ -844,10 +844,11 @@ child:
     async StartDelayedAutoplayMediaComponents(BrowsingContext aContext);
 
     /**
-     * This method is used to apply the media action to outer window in the
-     * content process, such as play, pause, stop ..e.t.c.
+     * This method is used to dispatch MediaControlKeysEvent to content process
+     * in order to control media within a specific browsing context tree.
      */
-    async UpdateMediaAction(BrowsingContext aContext, MediaControlActions aAction);
+    async UpdateMediaControlKeysEvent(BrowsingContext aContext,
+                                      MediaControlKeysEvent aEvent);
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
