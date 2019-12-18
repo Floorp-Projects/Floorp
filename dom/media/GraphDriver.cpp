@@ -85,8 +85,6 @@ GraphTime GraphDriver::StateComputedTime() const {
   return GraphImpl()->mStateComputedTime;
 }
 
-void GraphDriver::EnsureNextIteration() { GraphImpl()->EnsureNextIteration(); }
-
 #ifdef DEBUG
 bool GraphDriver::OnGraphThread() {
   return GraphImpl()->RunByGraphDriver(this);
@@ -341,8 +339,8 @@ void ThreadedDriver::WaitForNextIteration() {
   }
   // NOTE: mNeedAnotherIteration while also atomic may have changed before
   // we could set mGraphDriverAsleep, so we must re-test it.
-  // (EnsureNextIteration sets mNeedAnotherIteration, then tests
-  // mGraphDriverAsleep
+  // (GraphImpl::EnsureNextIteration() sets mNeedAnotherIteration, then tests
+  // mGraphDriverAsleep)
   if (another || GraphImpl()->mNeedAnotherIteration) {  // atomic
     timeout = WaitInterval();
     if (!another) {
