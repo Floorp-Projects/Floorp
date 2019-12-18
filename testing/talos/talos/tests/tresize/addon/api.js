@@ -8,28 +8,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "aomStartup",
-  "@mozilla.org/addons/addon-manager-startup;1",
-  "amIAddonManagerStartup"
-);
-
 /* globals ExtensionAPI */
 
 const PREFIX = "tresize@mozilla.org";
 
 this.tresize = class extends ExtensionAPI {
   onStartup() {
-    const manifestURI = Services.io.newURI(
-      "manifest.json",
-      null,
-      this.extension.rootURI
-    );
-    this.chromeHandle = aomStartup.registerChrome(manifestURI, [
-      ["content", "tresize", "chrome/"],
-    ]);
-
     let { baseURI } = this.extension;
 
     this.listener = function listener({ target, data }) {
@@ -67,6 +51,5 @@ this.tresize = class extends ExtensionAPI {
       `${PREFIX}:chrome-run-message`,
       this.listener
     );
-    this.chromeHandle.destruct();
   }
 };
