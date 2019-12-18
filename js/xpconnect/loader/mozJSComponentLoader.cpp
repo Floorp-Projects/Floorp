@@ -89,6 +89,8 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 #define ERROR_ARRAY_ELEMENT "%s - EXPORTED_SYMBOLS[%d] is not a string."
 #define ERROR_GETTING_SYMBOL "%s - Could not get symbol '%s'."
 #define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
+#define ERROR_UNINITIALIZED_SYMBOL \
+  "%s - Symbol '%s' accessed before initialization. Cyclic import?"
 
 static bool Dump(JSContext* cx, unsigned argc, Value* vp) {
   if (!nsJSUtils::DumpEnabled()) {
@@ -1224,6 +1226,18 @@ nsresult mozJSComponentLoader::ExtractExports(
         return NS_ERROR_FAILURE;
       }
       return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_SYMBOL, aInfo,
+                                bytes.get());
+    }
+
+    // It's possible |value| is the uninitialized lexical MagicValue when
+    // there's a cyclic import: const obj = ChromeUtils.import("parent.jsm").
+    if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+      RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+      JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
+      if (!bytes) {
+        return NS_ERROR_FAILURE;
+      }
+      return ReportOnCallerUTF8(cxhelper, ERROR_UNINITIALIZED_SYMBOL, aInfo,
                                 bytes.get());
     }
 
