@@ -3636,6 +3636,12 @@ public class GeckoSession implements Parcelable {
          * @param uri The URI that failed to load.
          * @param error A WebRequestError containing details about the error
          * @return A URI to display as an error. Returning null will halt the load entirely.
+         *         The following special methods are made available to the URI:
+         *         - document.addCertException(isTemporary), returns Promise
+         *         - document.getFailedCertSecurityInfo(), returns FailedCertSecurityInfo
+         *         - document.getNetErrorInfo(), returns NetErrorInfo
+         * @see <a href="https://searchfox.org/mozilla-central/source/dom/webidl/FailedCertSecurityInfo.webidl">FailedCertSecurityInfo IDL</a>
+         * @see <a href="https://searchfox.org/mozilla-central/source/dom/webidl/NetErrorInfo.webidl">NetErrorInfo IDL</a>
          */
         @UiThread
         default @Nullable GeckoResult<String> onLoadError(@NonNull GeckoSession session,
