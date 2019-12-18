@@ -64,7 +64,7 @@ After registration, the scalars can be recorded through the usual scalar JS API.
 
 .. note::
 
-    Accumulating in dynamic scalars only works in content child processes and in the parent process. All the accumulations (parent and content chldren) are aggregated together .
+    Accumulating in dynamic scalars only works in content child processes and in the parent process. All the accumulations (parent and content children) are aggregated together .
 
 New scalars registered here are subject to the same :ref:`limitations <scalar-limitations>` as the ones registered through ``Scalars.yaml``, e.g. the length of the category name or the allowed characters.
 
@@ -178,7 +178,7 @@ Optional Fields
 
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels, unless the user has opted out. With the latter the scalar is submitted by default on release and pre-release channels, unless the user has opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``false``.
-- ``keys``: A string list. Only valid for *keyed scalars*. Defines a case insensititve list of allowed keys that can be used for this scalar. The list is limited to 100 keys with a maximum length of 72 characters each. When using a key that is not in the list, an error is returned.
+- ``keys``: A string list. Only valid for *keyed scalars*. Defines a case insensitive list of allowed keys that can be used for this scalar. The list is limited to 100 keys with a maximum length of 72 characters each. When using a key that is not in the list, an error is returned.
 - ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]``.
 - ``operating_systems``: This field restricts recording to certain operating systems only. Use that in-place of previous ``cpp_guards`` to avoid inclusion on not-specified operating systems. It defaults to ``all``. Currently supported values are:
 
