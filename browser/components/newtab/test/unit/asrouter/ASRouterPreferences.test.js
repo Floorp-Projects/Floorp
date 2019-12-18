@@ -375,6 +375,17 @@ describe("ASRouterPreferences", () => {
       );
     });
   });
+  describe("#useReleaseSnippets", () => {
+    it("should return the pref value", () => {
+      global.useReleaseSnippets = true;
+
+      assert.isTrue(ASRouterPreferences.useReleaseSnippets);
+
+      global.useReleaseSnippets = false;
+
+      assert.isFalse(ASRouterPreferences.useReleaseSnippets);
+    });
+  });
   describe("#getTrailheadConfigFromPref", () => {
     it("should return trailHeadTriplet and trailHeadInterrupt", () => {
       let result = getTrailheadConfigFromPref("foo-bar");
