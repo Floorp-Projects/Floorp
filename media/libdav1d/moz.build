@@ -137,29 +137,28 @@ bitdepth_basenames = [
     'recon_tmpl.c'
 ]
 
-GENERATED_FILES += [
-    '16bd_%s' % p for p in bitdepth_basenames
-]
+generated_files = []
 
 for f in bitdepth_basenames:
-    a = GENERATED_FILES['16bd_%s' % f]
-    a.script = 'generate_source.py:add_define'
-    a.inputs = [relative_path + f]
-    a.flags = ['BITDEPTH', '16']
+    file_bd16 = '16bd_%s' % f
+    file_bd8 = '8bd_%s' % f
 
-GENERATED_FILES += [
-    '8bd_%s' % p for p in bitdepth_basenames
-]
+    GeneratedFile(file_bd16,
+                  script='generate_source.py',
+                  entry_point='add_define',
+                  inputs=[relative_path + f],
+                  flags=['BITDEPTH', '16'])
+    GeneratedFile(file_bd8,
+                  script='generate_source.py',
+                  entry_point='add_define',
+                  inputs=[relative_path + f],
+                  flags=['BITDEPTH', '8'])
 
-for f in bitdepth_basenames:
-    a = GENERATED_FILES['8bd_%s' % f]
-    a.script = 'generate_source.py:add_define'
-    a.inputs = [relative_path + f]
-    a.flags = ['BITDEPTH', '8']
+    generated_files += [file_bd16, file_bd8]
 
-SOURCES += [
-    '!%s' % p for p in GENERATED_FILES if p.endswith('.c')
-]
+for p in generated_files:
+    if p.endswith('.c'):
+        SOURCES += ['!%s' % p]
 
 EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/cdef.h',
