@@ -9,7 +9,6 @@
 "use strict";
 
 add_task(async function() {
-  await pushPref("fission.autostart", true);
   const tabTarget = await addTabTarget(MAIN_DOMAIN + "doc_iframe.html");
   await testLocalListFrames(tabTarget);
   await testBrowserListFrames(tabTarget);
@@ -23,11 +22,10 @@ async function testLocalListFrames(tabTarget) {
   const { frames } = await tabTarget.listRemoteFrames();
   is(frames.length, 2, "Got two frames");
 
-  // Since we do not have access to remote frames yet this will return null.
-  // This test should be updated when we have access to remote frames.
+  info("Check that we can connect to the remote targets");
   for (const frame of frames) {
     const frameTarget = await frame.getTarget();
-    is(frameTarget, null, "We cannot get remote iframe fronts yet");
+    ok(frameTarget && frameTarget.actor, "Valid frame target retrieved");
   }
 
   // However we can confirm that the newly created iframe is there.
@@ -68,13 +66,11 @@ async function getFrames(target) {
   const { result } = await consoleFront.evaluateJSAsync("var a = 42; a");
   is(result, 42, "console.eval worked");
 
-  // Although we can get metadata about the child frames,
-  // since we do not have access to remote frames yet, this will return null.
-  // This test should be updated when we have access to remote frames.
+  info("Check that we can connect to the remote frames");
   const childFrames = frames.filter(d => d.parentID === descriptor.id);
   for (const frame of childFrames) {
     const frameTarget = await frame.getTarget();
-    is(frameTarget, null, "We cannot get remote iframe fronts yet");
+    ok(frameTarget && frameTarget.actor, "Valid frame target retrieved");
   }
 
   await getFirstFrameAgain(front, descriptor, target);
