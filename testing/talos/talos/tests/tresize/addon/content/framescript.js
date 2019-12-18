@@ -16,7 +16,7 @@
       ) {
         if (reply.data.id == uniqueMessageId) {
           removeMessageListener(TRESIZE_PREFIX + "chrome-run-reply", done);
-          content.wrappedJSObject.logResults(reply.data.result);
+          content.wrappedJSObject.tpRecordTime(reply.data.result.average);
         }
       });
 
@@ -25,6 +25,7 @@
         locationSearch: e.detail.locationSearch,
       });
     },
-    false
+    false,
+    true
   );
 })();
