@@ -246,6 +246,7 @@ EXPORTS.mozilla.layers += [
     'ShareableCanvasRenderer.h',
     'SourceSurfaceSharedData.h',
     'SourceSurfaceVolatileData.h',
+    'SurfacePool.h',
     'SyncObject.h',
     'TextureSourceProvider.h',
     'TextureWrapperImage.h',
@@ -306,6 +307,7 @@ if CONFIG['MOZ_WAYLAND']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
         'NativeLayerCA.h',
+        'SurfacePoolCA.h',
         'TextureSync.h',
     ]
     EXPORTS += [
@@ -314,6 +316,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     UNIFIED_SOURCES += [
         'NativeLayerCA.mm',
+        'SurfacePoolCA.mm',
         'TextureSync.cpp',
     ]
     SOURCES += [

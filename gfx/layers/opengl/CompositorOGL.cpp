@@ -287,6 +287,11 @@ void CompositorOGL::Destroy() {
 void CompositorOGL::CleanupResources() {
   if (!mGLContext) return;
 
+  if (mSurfacePoolHandle) {
+    mSurfacePoolHandle->Pool()->DestroyGLResourcesForContext(mGLContext);
+    mSurfacePoolHandle = nullptr;
+  }
+
   RefPtr<GLContext> ctx = mGLContext->GetSharedContext();
   if (!ctx) {
     ctx = mGLContext;
@@ -758,7 +763,6 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
   }
 
   aNativeLayer->SetSurfaceIsFlipped(true);
-  aNativeLayer->SetGLContext(mGLContext);
 
   IntRect layerRect = aNativeLayer->GetRect();
   IntRegion invalidRelativeToLayer =
@@ -2066,6 +2070,15 @@ void CompositorOGL::WaitForGPU() {
   }
   mPreviousFrameDoneSync = mThisFrameDoneSync;
   mThisFrameDoneSync = nullptr;
+}
+
+RefPtr<SurfacePoolHandle> CompositorOGL::GetSurfacePoolHandle() {
+#ifdef XP_MACOSX
+  if (!mSurfacePoolHandle) {
+    mSurfacePoolHandle = SurfacePool::Create(0)->GetHandleForGL(mGLContext);
+  }
+#endif
+  return mSurfacePoolHandle;
 }
 
 bool CompositorOGL::NeedToRecreateFullWindowRenderTarget() const {

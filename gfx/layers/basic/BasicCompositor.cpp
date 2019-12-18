@@ -1108,6 +1108,15 @@ void BasicCompositor::EndFrame() {
   mShouldInvalidateWindow = false;
 }
 
+RefPtr<SurfacePoolHandle> BasicCompositor::GetSurfacePoolHandle() {
+#ifdef XP_MACOSX
+  if (!mSurfacePoolHandle) {
+    mSurfacePoolHandle = SurfacePool::Create(0)->GetHandleForGL(nullptr);
+  }
+#endif
+  return mSurfacePoolHandle;
+}
+
 void BasicCompositor::TryToEndRemoteDrawing() {
   if (mIsDestroyed || !mRenderTarget) {
     return;

@@ -26,6 +26,7 @@
 #include <CoreVideo/CoreVideo.h>
 
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/SurfacePool.h"
 #include "VsyncSource.h"
 
 using namespace mozilla;

@@ -140,6 +140,8 @@ class BasicCompositor : public Compositor {
   void NormalDrawingDone() override;
   void EndFrame() override;
 
+  RefPtr<SurfacePoolHandle> GetSurfacePoolHandle() override;
+
   bool SupportsPartialTextureUpdate() override { return true; }
   bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override {
     return true;
@@ -197,6 +199,8 @@ class BasicCompositor : public Compositor {
   // Non-null only between BeginFrameForWindow and EndFrame if
   // BeginFrameForWindow has been called with a non-null aNativeLayer.
   RefPtr<NativeLayer> mCurrentNativeLayer;
+
+  RefPtr<SurfacePoolHandle> mSurfacePoolHandle;
 
   gfx::IntRegion mInvalidRegion;
 

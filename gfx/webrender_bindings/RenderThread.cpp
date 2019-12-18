@@ -128,6 +128,7 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
 
   ClearAllBlobImageResources();
   ClearSharedGL();
+  ClearSharedSurfacePool();
 }
 
 // static
@@ -849,9 +850,25 @@ gl::GLContext* RenderThread::SharedGL() {
 
 void RenderThread::ClearSharedGL() {
   MOZ_ASSERT(IsInRenderThread());
+  if (mSurfacePool) {
+    mSurfacePool->DestroyGLResourcesForContext(mSharedGL);
+  }
   mShaders = nullptr;
   mSharedGL = nullptr;
 }
+
+RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {
+#ifdef XP_MACOSX
+  if (!mSurfacePool) {
+    size_t poolSizeLimit =
+        StaticPrefs::gfx_webrender_compositor_surface_pool_size_AtStartup();
+    mSurfacePool = layers::SurfacePool::Create(poolSizeLimit);
+  }
+#endif
+  return mSurfacePool;
+}
+
+void RenderThread::ClearSharedSurfacePool() { mSurfacePool = nullptr; }
 
 WebRenderShaders::WebRenderShaders(gl::GLContext* gl,
                                    WebRenderProgramCache* programCache) {

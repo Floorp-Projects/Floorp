@@ -3708,6 +3708,11 @@
 #endif
   mirror: once
 
+- name: gfx.webrender.compositor.surface-pool-size
+  type: uint32_t
+  value: 25
+  mirror: once
+
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
   value: 0
