@@ -8,9 +8,10 @@ from collections import defaultdict
 from itertools import chain
 from unittest import TestCase
 
-import mozunit
 from six.moves import range
+from six import iteritems
 
+import mozunit
 from manifestparser.filters import (
     chunk_by_dir,
     chunk_by_runtime,
@@ -91,8 +92,8 @@ class ChunkByDir(TestCase):
                         { <dir>: <num tests> }
         """
         i = 0
-        for d, num in dirs.iteritems():
-            for j in range(num):
+        for d, num in iteritems(dirs):
+            for _ in range(num):
                 i += 1
                 name = 'test%i' % i
                 test = {'name': name,
@@ -119,7 +120,7 @@ class ChunkByDir(TestCase):
                     f = chunk_by_dir(this, total, depth)
                     res.append(list(f(tests, {})))
 
-                lengths = map(num_groups, res)
+                lengths = list(map(num_groups, res))
                 # the chunk with the most dirs should have at most one more
                 # dir than the chunk with the least dirs
                 self.assertLessEqual(max(lengths) - min(lengths), 1)
@@ -182,8 +183,8 @@ class ChunkByRuntime(TestCase):
                      { <dir>: <num tests> }
         """
         i = 0
-        for d, num in dirs.iteritems():
-            for j in range(num):
+        for d, num in iteritems(dirs):
+            for _ in range(num):
                 i += 1
                 name = 'test%i' % i
                 manifest = os.path.join(d, 'manifest.ini')
@@ -203,10 +204,10 @@ class ChunkByRuntime(TestCase):
 
     def chunk_by_round_robin(self, tests, total, runtimes):
         tests_by_manifest = []
-        for manifest, runtime in runtimes.items():
+        for manifest, runtime in iteritems(runtimes):
             mtests = [t for t in tests if t['manifest_relpath'] == manifest]
             tests_by_manifest.append((runtime, mtests))
-        tests_by_manifest.sort()
+        tests_by_manifest.sort(key=lambda x: x[0], reverse=False)
 
         chunks = [[] for i in range(total)]
         d = 1  # direction
