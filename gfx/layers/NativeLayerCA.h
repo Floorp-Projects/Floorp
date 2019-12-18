@@ -34,6 +34,8 @@ class MozFramebuffer;
 
 namespace layers {
 
+class SurfacePoolHandleCA;
+
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer.
@@ -52,8 +54,9 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void SetBackingScale(float aBackingScale);
 
   // Overridden methods
-  already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize,
-                                            bool aIsOpaque) override;
+  already_AddRefed<NativeLayer> CreateLayer(
+      const gfx::IntSize& aSize, bool aIsOpaque,
+      SurfacePoolHandle* aSurfacePoolHandle) override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
@@ -92,11 +95,10 @@ class NativeLayerCA : public NativeLayer {
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
-  void SetGLContext(gl::GLContext* aGLContext) override;
-  gl::GLContext* GetGLContext() override;
   Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
                                          bool aNeedsDepth) override;
   void NotifySurfaceReady() override;
+  void DiscardBackbuffers() override;
   bool IsOpaque() override;
   void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
   Maybe<gfx::IntRect> ClipRect() override;
@@ -106,7 +108,8 @@ class NativeLayerCA : public NativeLayer {
  protected:
   friend class NativeLayerRootCA;
 
-  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque);
+  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
+                SurfacePoolHandleCA* aSurfacePoolHandle);
   ~NativeLayerCA() override;
 
   // Gets the next surface for drawing from our swap chain and stores it in
@@ -157,7 +160,7 @@ class NativeLayerCA : public NativeLayer {
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface
   // determines it is no longer needed (because the swap chain has grown too
-  // long) or until the layer is destroyed.
+  // long) or until DiscardBackbuffers() is called or the layer is destroyed.
   // During the surface's lifetime, it will continuously move through the fields
   // mInProgressSurface, mReadySurface, mFrontSurface, and back to front through
   // the mSurfaces queue:
@@ -228,10 +231,7 @@ class NativeLayerCA : public NativeLayer {
   // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
   RefPtr<MacIOSurface> mInProgressLockedIOSurface;
 
-  RefPtr<gl::GLContextCGL> mGLContext;
-
-  std::unordered_map<CFTypeRefPtr<IOSurfaceRef>, UniquePtr<gl::MozFramebuffer>>
-      mFramebuffers;
+  RefPtr<SurfacePoolHandleCA> mSurfacePoolHandle;
 
   gfx::IntPoint mPosition;
   const gfx::IntSize mSize;

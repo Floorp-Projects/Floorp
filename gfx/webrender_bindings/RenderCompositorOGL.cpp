@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/SurfacePool.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -44,6 +45,15 @@ RenderCompositorOGL::RenderCompositorOGL(
       mPreviousFrameDoneSync(nullptr),
       mThisFrameDoneSync(nullptr) {
   MOZ_ASSERT(mGL);
+  if (mNativeLayerRoot) {
+#ifdef XP_MACOSX
+    auto pool = RenderThread::Get()->SharedSurfacePool();
+    if (pool) {
+      mSurfacePoolHandle = pool->GetHandleForGL(mGL);
+    }
+#endif
+    MOZ_RELEASE_ASSERT(mSurfacePoolHandle);
+  }
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
@@ -85,9 +95,8 @@ bool RenderCompositorOGL::BeginFrame() {
     }
     if (!mNativeLayerForEntireWindow) {
       mNativeLayerForEntireWindow =
-          mNativeLayerRoot->CreateLayer(bufferSize, false);
+          mNativeLayerRoot->CreateLayer(bufferSize, false, mSurfacePoolHandle);
       mNativeLayerForEntireWindow->SetSurfaceIsFlipped(true);
-      mNativeLayerForEntireWindow->SetGLContext(mGL);
       mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
     }
   }
@@ -169,6 +178,7 @@ void RenderCompositorOGL::CompositorBeginFrame() {
   mAddedPixelCount = 0;
   mAddedClippedPixelCount = 0;
   mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
+  mSurfacePoolHandle->OnBeginFrame();
 }
 
 void RenderCompositorOGL::CompositorEndFrame() {
@@ -198,6 +208,7 @@ void RenderCompositorOGL::CompositorEndFrame() {
   mDrawnPixelCount = 0;
 
   mNativeLayerRoot->SetLayers(mAddedLayers);
+  mSurfacePoolHandle->OnEndFrame();
 }
 
 void RenderCompositorOGL::Bind(wr::NativeTileId aId,
@@ -251,8 +262,8 @@ void RenderCompositorOGL::CreateTile(wr::NativeSurfaceId aId, int aX, int aY,
   Surface& surface = surfaceCursor->second;
 
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
-      IntSize(surface.mTileSize.width, surface.mTileSize.height), aIsOpaque);
-  layer->SetGLContext(mGL);
+      IntSize(surface.mTileSize.width, surface.mTileSize.height), aIsOpaque,
+      mSurfacePoolHandle);
   surface.mNativeLayers.insert({TileKey(aX, aY), layer});
   mTotalPixelCount += gfx::IntRect({}, layer->GetSize()).Area();
 }
@@ -267,9 +278,16 @@ void RenderCompositorOGL::DestroyTile(wr::NativeSurfaceId aId, int aX, int aY) {
   RefPtr<layers::NativeLayer> layer = std::move(layerCursor->second);
   surface.mNativeLayers.erase(layerCursor);
   mTotalPixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
+
   // If the layer is currently present in mNativeLayerRoot, it will be destroyed
   // once CompositorEndFrame() replaces mNativeLayerRoot's layers and drops that
-  // reference.
+  // reference. So until that happens, the layer still needs to hold on to its
+  // front buffer. However, we can tell it to drop its back buffers now, because
+  // we know that we will never draw to it again.
+  // Dropping the back buffers now puts them back in the surface pool, so those
+  // surfaces can be immediately re-used for drawing in other layers in the
+  // current frame.
+  layer->DiscardBackbuffers();
 }
 
 void RenderCompositorOGL::AddSurface(wr::NativeSurfaceId aId,

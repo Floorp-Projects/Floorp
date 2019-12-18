@@ -1336,16 +1336,18 @@ void nsChildView::EnsureContentLayerForMainThreadPainting() {
     mContentLayer = nullptr;
   }
   if (!mContentLayer) {
-    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer(size, false);
+    mPoolHandle = SurfacePool::Create(0)->GetHandleForGL(nullptr);
+    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer(size, false, mPoolHandle);
     mNativeLayerRoot->AppendLayer(contentLayer);
     mContentLayer = contentLayer->AsNativeLayerCA();
+    mContentLayer->SetSurfaceIsFlipped(false);
     mContentLayerInvalidRegion = GetBounds();
   }
 }
 
 void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
-  mContentLayer->SetSurfaceIsFlipped(false);
+  mPoolHandle->OnBeginFrame();
   RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(
       mContentLayerInvalidRegion.ToUnknownRegion(), gfx::BackendType::SKIA);
   if (!dt) {
@@ -1355,6 +1357,7 @@ void nsChildView::PaintWindowInContentLayer() {
   PaintWindowInDrawTarget(dt, mContentLayerInvalidRegion, dt->GetSize());
   mContentLayer->NotifySurfaceReady();
   mContentLayerInvalidRegion.SetEmpty();
+  mPoolHandle->OnEndFrame();
 }
 
 void nsChildView::HandleMainThreadCATransaction() {
