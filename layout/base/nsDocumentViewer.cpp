@@ -3133,23 +3133,25 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
   nsIFrame* root = presShell->GetRootFrame();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  nscoord prefWidth;
+  WritingMode wm = root->GetWritingMode();
+
+  nscoord prefISize;
   {
     RefPtr<gfxContext> rcx(presShell->CreateReferenceRenderingContext());
-    prefWidth = root->GetPrefISize(rcx);
-  }
-  if (prefWidth > aMaxWidth) {
-    prefWidth = aMaxWidth;
+    nscoord maxISize = wm.IsVertical() ? aMaxHeight : aMaxWidth;
+    prefISize = std::min(root->GetPrefISize(rcx), maxISize);
   }
 
   // We should never intentionally get here with this sentinel value, but it's
   // possible that a document with huge sizes might inadvertently have a
-  // prefWidth that exactly matches NS_UNCONSTRAINEDSIZE.
+  // prefISize that exactly matches NS_UNCONSTRAINEDSIZE.
   // Just bail if that happens.
-  NS_ENSURE_TRUE(prefWidth != NS_UNCONSTRAINEDSIZE, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(prefISize != NS_UNCONSTRAINEDSIZE, NS_ERROR_FAILURE);
 
-  nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight,
-                                        ResizeReflowOptions::BSizeLimit);
+  nscoord height = wm.IsVertical() ? prefISize : aMaxHeight;
+  nscoord width = wm.IsVertical() ? aMaxWidth : prefISize;
+  nsresult rv =
+      presShell->ResizeReflow(width, height, ResizeReflowOptions::BSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsPresContext> presContext = GetPresContext();
