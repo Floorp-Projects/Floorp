@@ -4515,8 +4515,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
                   bce->outermostScope().hasOnChain(ScopeKind::NonSyntactic));
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
-  script->setFlag(ImmutableFlags::HasModuleGoal,
-                  bce->outermostScope().hasOnChain(ScopeKind::Module));
+  script->setFlag(ImmutableFlags::HasModuleGoal, bce->sc->hasModuleGoal());
 
   // Initialize script flags from FunctionBox
   if (bce->sc->isFunctionBox()) {
