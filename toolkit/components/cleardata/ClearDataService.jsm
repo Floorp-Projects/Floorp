@@ -879,19 +879,14 @@ const PermissionsCleaner = {
 
         if (!toBeRemoved && perm.type.startsWith("3rdPartyStorage^")) {
           let parts = perm.type.split("^");
-          for (let i = 1; i < parts.length; ++i) {
-            let uri;
-            try {
-              uri = Services.io.newURI(parts[i]);
-            } catch (ex) {
-              continue;
-            }
-
-            toBeRemoved = Services.eTLD.hasRootDomain(uri.host, aHost);
-            if (toBeRemoved) {
-              break;
-            }
+          let uri;
+          try {
+            uri = Services.io.newURI(parts[1]);
+          } catch (ex) {
+            continue;
           }
+
+          toBeRemoved = Services.eTLD.hasRootDomain(uri.host, aHost);
         }
 
         if (!toBeRemoved) {
