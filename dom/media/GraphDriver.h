@@ -528,6 +528,7 @@ class AudioCallbackDriver : public GraphDriver,
 #endif
 {
   using IterationResult = GraphInterface::IterationResult;
+  enum class FallbackDriverState;
   class FallbackWrapper;
 
  public:
@@ -608,7 +609,9 @@ class AudioCallbackDriver : public GraphDriver,
 
   /* Returns true if this audio callback driver has successfully started and not
    * yet stopped. If the fallback driver is active, this returns false. */
-  bool ThreadRunning() override { return mAudioThreadRunning; }
+  bool ThreadRunning() override {
+    return mAudioStreamState == AudioStreamState::Running;
+  }
 
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */
@@ -637,12 +640,18 @@ class AudioCallbackDriver : public GraphDriver,
    *  Fall back to a SystemClockDriver using a normal thread. If needed,
    *  the graph will try to re-open an audio stream later. */
   void FallbackToSystemClockDriver();
-  /* Called by the fallback driver when it has just finished its last iteration.
-   * Either because it was told to stop or switch by the graph, or because we
-   * told it to after the audio stream started. Hands over state to the audio
-   * driver that may iterate the graph after this has been called. */
+  /* Called by the fallback driver when it has fully stopped, after finishing
+   * its last iteration. If it stopped after the audio stream started, aState
+   * will be None. If it stopped after the graph told it to stop, or switch,
+   * aState will be Stopped. Hands over state to the audio driver that may
+   * iterate the graph after this has been called. */
   void FallbackDriverStopped(GraphTime aIterationStart, GraphTime aIterationEnd,
-                             GraphTime aStateComputedTime);
+                             GraphTime aStateComputedTime,
+                             FallbackDriverState aState);
+
+  /* Called at the end of the fallback driver's iteration to see whether we
+   * should attempt to start the AudioStream again. */
+  void MaybeStartAudioStream();
 
   /* This is true when the method is executed on CubebOperation thread pool. */
   bool OnCubebOperationThread() {
@@ -688,7 +697,6 @@ class AudioCallbackDriver : public GraphDriver,
    * This is read on previous driver's thread (during callbacks from
    * cubeb_stream_init) and the audio thread (when switching away from this
    * driver back to a SystemClockDriver).
-   * This is synchronized by the Graph's monitor.
    * */
   Atomic<bool> mStarted;
 
@@ -709,9 +717,29 @@ class AudioCallbackDriver : public GraphDriver,
   /* Contains the id of the audio thread for as long as the callback
    * is taking place, after that it is reseted to an invalid value. */
   std::atomic<std::thread::id> mAudioThreadId;
-  /* True when audio thread is running. False before
-   * starting and after stopping it the audio thread. */
-  Atomic<bool> mAudioThreadRunning;
+  /* State of the audio stream, see inline comments. */
+  enum class AudioStreamState {
+    /* There is no AudioStream and no pending AsyncCubebTask to INIT one. */
+    None,
+    /* There is no AudioStream but an AsyncCubebTask to INIT one is pending. */
+    Pending,
+    /* There is a running AudioStream. */
+    Running,
+    /* There is an AudioStream that is draining, and will soon stop. */
+    Stopping
+  };
+  Atomic<AudioStreamState> mAudioStreamState;
+  /* State of the fallback driver, see inline comments. */
+  enum class FallbackDriverState {
+    /* There is no fallback driver. */
+    None,
+    /* There is a fallback driver trying to iterate us. */
+    Running,
+    /* There was a fallback driver and the graph stopped it. No audio callback
+       may iterate the graph. */
+    Stopped,
+  };
+  Atomic<FallbackDriverState> mFallbackDriverState;
   /* SystemClockDriver used as fallback if this AudioCallbackDriver fails to
    * init or start. */
   DataMutex<RefPtr<FallbackWrapper>> mFallback;
