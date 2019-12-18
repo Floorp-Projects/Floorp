@@ -323,8 +323,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   bool inParametersOfAsyncFunction_ : 1;
 
-  /* ParseGoal */ uint8_t parseGoal_ : 1;
-
   FunctionTreeHolder& treeHolder_;
 
   MOZ_MUST_USE bool publishDeferredFunctions(FunctionTree* root);
@@ -342,7 +340,9 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
     return inParametersOfAsyncFunction_;
   }
 
-  ParseGoal parseGoal() const { return ParseGoal(parseGoal_); }
+  ParseGoal parseGoal() const {
+    return pc_->sc()->hasModuleGoal() ? ParseGoal::Module : ParseGoal::Script;
+  }
 
   template <class, typename>
   friend class AutoAwaitIsKeyword;
@@ -351,7 +351,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
              bool foldConstants, ParseInfo& parseInfo,
-             ScriptSourceObject* sourceObject, ParseGoal parseGoal);
+             ScriptSourceObject* sourceObject);
   ~ParserBase();
 
   bool checkOptions();
@@ -519,7 +519,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, ParseInfo& parserInfo,
                    LazyScript* lazyOuterFunction,
-                   ScriptSourceObject* sourceObject, ParseGoal parseGoal,
+                   ScriptSourceObject* sourceObject,
                    void* internalSyntaxParser);
 
  protected:
@@ -528,10 +528,10 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                    bool foldConstants, ParseInfo& parserInfo,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
                    LazyScript* lazyOuterFunction,
-                   ScriptSourceObject* sourceObject, ParseGoal parseGoal)
+                   ScriptSourceObject* sourceObject)
       : PerHandlerParser(
             cx, options, foldConstants, parserInfo, lazyOuterFunction,
-            sourceObject, parseGoal,
+            sourceObject,
             // JSOPTION_EXTRA_WARNINGS adds extra warnings not
             // generated when functions are parsed lazily.
             // ("use strict" doesn't inhibit lazy parsing.)
@@ -992,8 +992,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
                 ParseInfo& parserInfo, SyntaxParser* syntaxParser,
-                LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
-                ParseGoal parseGoal);
+                LazyScript* lazyOuterFunction,
+                ScriptSourceObject* sourceObject);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);
