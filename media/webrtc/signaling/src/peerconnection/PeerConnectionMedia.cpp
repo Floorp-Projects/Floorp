@@ -481,8 +481,8 @@ void PeerConnectionMedia::FlushIceCtxOperationQueueIfReady() {
   ASSERT_ON_THREAD(mMainThread);
 
   if (IsIceCtxReady()) {
-    for (auto& mQueuedIceCtxOperation : mQueuedIceCtxOperations) {
-      mQueuedIceCtxOperation->Run();
+    for (auto& queuedIceCtxOperation : mQueuedIceCtxOperations) {
+      queuedIceCtxOperation->Run();
     }
     mQueuedIceCtxOperations.clear();
   }
