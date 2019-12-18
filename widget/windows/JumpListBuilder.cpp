@@ -107,6 +107,11 @@ JumpListBuilder::JumpListBuilder()
       return;
     }
 
+    nsString modelId;
+    if (mozilla::widget::WinTaskbar::GetAppUserModelID(modelId)) {
+      jumpListMgr->SetAppID(modelId.get());
+    }
+
     // Since we are accessing mJumpListMgr across different threads
     // (ie, different apartments), mJumpListMgr must be an agile reference.
     mJumpListMgr = jumpListMgr;
