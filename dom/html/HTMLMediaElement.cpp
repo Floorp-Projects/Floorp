@@ -2178,6 +2178,7 @@ void HTMLMediaElement::AbortExistingLoads() {
   mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
+  mIsBlessed = false;
 
   mTags = nullptr;
   mAudioTrackSilenceStartedTime = 0.0;
