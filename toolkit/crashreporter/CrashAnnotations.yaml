@@ -883,6 +883,21 @@ UnmarshalActCtxManifestPath:
     Proxy stream unmarshalling current activation context manifest path.
   type: string
 
+UntrustedModulesDataCombinedStackReadFailure:
+  description: >
+    Location of failure reading UntrustedModulesData combined stack info over IPC
+  type: integer
+
+UntrustedModulesDataProcessedStackReadFailure:
+  description: >
+    Location of failure reading UntrustedModulesData processed stack info over IPC
+  type: integer
+
+UntrustedModulesDataReadFailure:
+  description: >
+    Location of failure reading UntrustedModulesData over IPC
+  type: integer
+
 UptimeTS:
   description: >
     Uptime in seconds. This annotation uses a string instead of an integer
