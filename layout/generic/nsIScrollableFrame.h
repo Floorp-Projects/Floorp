@@ -95,12 +95,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   uint32_t GetAvailableScrollingDirections() const;
   /**
-   * Returns the directions in which scrolling is allowed (if the scroll range
-   * is at least one device pixel in that direction) when taking into account
-   * the visual viewport size.
-   */
-  uint32_t GetAvailableVisualScrollingDirections() const;
-  /**
    * Returns the directions in which scrolling is allowed when taking into
    * account the visual viewport size and overflow hidden. (An (apz) zoomed in
    * overflow hidden scrollframe is actually user scrollable.)
