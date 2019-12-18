@@ -1071,11 +1071,6 @@ bool ObjectIsConstructor(JSObject* obj);
 
 MOZ_MUST_USE bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
 
-MOZ_MUST_USE bool BaselineThrowUninitializedThis(JSContext* cx,
-                                                 BaselineFrame* frame);
-
-MOZ_MUST_USE bool BaselineThrowInitializedThis(JSContext* cx);
-
 MOZ_MUST_USE bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
 MOZ_MUST_USE bool ThrowObjectCoercible(JSContext* cx, HandleValue v);
