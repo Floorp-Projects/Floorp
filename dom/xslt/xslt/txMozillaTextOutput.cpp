@@ -21,12 +21,15 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-txMozillaTextOutput::txMozillaTextOutput(nsITransformObserver* aObserver) {
+txMozillaTextOutput::txMozillaTextOutput(nsITransformObserver* aObserver)
+    : mObserver(do_GetWeakReference(aObserver)), mCreatedDocument(false) {
   MOZ_COUNT_CTOR(txMozillaTextOutput);
-  mObserver = do_GetWeakReference(aObserver);
 }
 
-txMozillaTextOutput::txMozillaTextOutput(DocumentFragment* aDest) {
+txMozillaTextOutput::txMozillaTextOutput(DocumentFragment* aDest)
+    : mTextParent(aDest),
+      mDocument(mTextParent->OwnerDoc()),
+      mCreatedDocument(false) {
   MOZ_COUNT_CTOR(txMozillaTextOutput);
   mTextParent = aDest;
   mDocument = mTextParent->OwnerDoc();
@@ -66,7 +69,7 @@ nsresult txMozillaTextOutput::endDocument(nsresult aResult) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // This should really be handled by Document::EndLoad
-  if (mObserver) {
+  if (mCreatedDocument) {
     MOZ_ASSERT(mDocument->GetReadyStateEnum() == Document::READYSTATE_LOADING,
                "Bad readyState");
   } else {
@@ -116,6 +119,7 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
   // Create the document
   nsresult rv = NS_NewXMLDocument(getter_AddRefs(mDocument), aLoadedAsData);
   NS_ENSURE_SUCCESS(rv, rv);
+  mCreatedDocument = true;
   // This should really be handled by Document::BeginLoad
   MOZ_ASSERT(
       mDocument->GetReadyStateEnum() == Document::READYSTATE_UNINITIALIZED,

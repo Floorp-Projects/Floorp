@@ -42,6 +42,7 @@ class txMozillaTextOutput : public txAOutputXMLEventHandler {
   RefPtr<mozilla::dom::Document> mDocument;
   txOutputFormat mOutputFormat;
   nsString mText;
+  bool mCreatedDocument;
 };
 
 #endif
