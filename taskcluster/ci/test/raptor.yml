@@ -42,6 +42,11 @@ job-defaults:
                     - raptor/linux64_config_taskcluster.py
                 default:
                     - raptor/linux_config.py
+    fission-run-on-projects:
+        by-test-platform:
+            linux64-shippable-qr/opt: ['mozilla-central']
+            windows10-64-shippable-qr/opt: ['mozilla-central']
+            default: []
 
 raptor-tp6-1-firefox:
     description: "Raptor tp6-1 on Firefox"
