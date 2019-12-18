@@ -283,7 +283,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     MOZ_ASSERT(mFrontMessageQueue.IsEmpty());
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
     if (!mFrontMessageQueue.IsEmpty()) {
-      EnsureNextIterationLocked();
+      EnsureNextIteration();
     }
   }
   /**
@@ -598,25 +598,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   Monitor& GetMonitor() { return mMonitor; }
 
-  void EnsureNextIteration() {
-    mNeedAnotherIteration = true;  // atomic
-    // Note: GraphDriver must ensure that there's no race on setting
-    // mNeedAnotherIteration and mGraphDriverAsleep -- see
-    // WaitForNextIteration()
-    if (mGraphDriverAsleep) {  // atomic
-      MonitorAutoLock mon(mMonitor);
-      CurrentDriver()
-          ->WakeUp();  // Might not be the same driver; might have woken already
-    }
-  }
-
-  void EnsureNextIterationLocked() {
-    mNeedAnotherIteration = true;  // atomic
-    if (mGraphDriverAsleep) {      // atomic
-      CurrentDriver()
-          ->WakeUp();  // Might not be the same driver; might have woken already
-    }
-  }
+  void EnsureNextIteration() { CurrentDriver()->EnsureNextIteration(); }
 
   // Capture API. This allows to get a mixed-down output for a window.
   void RegisterCaptureTrackForWindow(uint64_t aWindowId,
@@ -778,11 +760,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // This is only touched on the graph thread.
   nsDataHashtable<nsVoidPtrHashKey, nsTArray<RefPtr<AudioDataListener>>>
       mInputDeviceUsers;
-
-  // True if the graph needs another iteration after the current iteration.
-  Atomic<bool> mNeedAnotherIteration;
-  // GraphDriver may need a WakeUp() if something changes
-  Atomic<bool> mGraphDriverAsleep;
 
   // mMonitor guards the data below.
   // MediaTrackGraph normally does its work without holding mMonitor, so it is

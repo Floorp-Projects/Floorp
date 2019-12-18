@@ -120,8 +120,6 @@ class GraphDriver {
   explicit GraphDriver(MediaTrackGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* Wakes up the graph if it is waiting for the next iteration. */
-  virtual void WakeUp() = 0;
   /* Start the graph, init the driver, start the thread.
    * A driver cannot be started twice, it must be shutdown
    * before being started again. */
@@ -135,6 +133,12 @@ class GraphDriver {
    * number of buffers of this audio backend: say we have four buffers, and 40ms
    * latency, we will get a callback approximately every 10ms. */
   virtual uint32_t IterationDuration() = 0;
+  /*
+   * Signaled by the graph when it needs another iteration. Goes unhandled for
+   * GraphDrivers that are not able to sleep indefinitely (i.e., all drivers but
+   * ThreadedDriver). Can be called on any thread.
+   */
+  virtual void EnsureNextIteration() {}
 
   /* Return whether we are switching or not. */
   bool Switching();
@@ -159,7 +163,7 @@ class GraphDriver {
    * Tell the driver it has to stop and return the current time of the graph, so
    * another driver can start from the right point in time.
    */
-  virtual void SwitchAtNextIteration(GraphDriver* aDriver);
+  void SwitchAtNextIteration(GraphDriver* aDriver);
 
   /**
    * Set the state of the driver so it can start at the right point in time,
@@ -217,14 +221,55 @@ class MediaTrackGraphInitThreadRunnable;
  * This class is a driver that manages its own thread.
  */
 class ThreadedDriver : public GraphDriver {
+  class IterationWaitHelper {
+    Monitor mMonitor;
+    // The below members are guarded by mMonitor.
+    bool mNeedAnotherIteration = false;
+    TimeStamp mWakeTime;
+
+   public:
+    IterationWaitHelper() : mMonitor("IterationWaitHelper::mMonitor") {}
+
+    /**
+     * If another iteration is needed we wait for aDuration, otherwise we wait
+     * for a wake-up. If a wake-up occurs before aDuration time has passed, we
+     * wait for aDuration nonetheless.
+     */
+    void WaitForNextIterationAtLeast(TimeDuration aDuration) {
+      MonitorAutoLock lock(mMonitor);
+      TimeStamp now = TimeStamp::Now();
+      mWakeTime = now + aDuration;
+      while (true) {
+        if (mNeedAnotherIteration && now >= mWakeTime) {
+          break;
+        }
+        if (mNeedAnotherIteration) {
+          lock.Wait(mWakeTime - now);
+        } else {
+          lock.Wait(TimeDuration::Forever());
+        }
+        now = TimeStamp::Now();
+      }
+      mWakeTime = TimeStamp();
+      mNeedAnotherIteration = false;
+    }
+
+    /**
+     * Sets mNeedAnotherIteration to true and notifies the monitor, in case a
+     * driver is currently waiting.
+     */
+    void EnsureNextIteration() {
+      MonitorAutoLock lock(mMonitor);
+      mNeedAnotherIteration = true;
+      lock.Notify();
+    }
+  };
+
  public:
   explicit ThreadedDriver(MediaTrackGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
-  /**
-   * Waits until it's time to process more data.
-   * */
-  void WaitForNextIteration();
-  void WakeUp() override;
+
+  void EnsureNextIteration() override;
   void Start() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
   /**
@@ -242,9 +287,12 @@ class ThreadedDriver : public GraphDriver {
   }
 
   bool ThreadRunning() override { return mThreadRunning; }
-  /*
-   * Return the TimeDuration to wait before the next rendering iteration.
-   */
+
+ protected:
+  /* Waits until it's time to process more data. */
+  void WaitForNextIteration();
+  /* Implementation dependent time the ThreadedDriver should wait between
+   * iterations. */
   virtual TimeDuration WaitInterval() = 0;
   /* When the graph wakes up to do an iteration, implementations return the
    * range of time that will be processed.  This is called only once per
@@ -252,13 +300,15 @@ class ThreadedDriver : public GraphDriver {
    * call. */
   virtual MediaTime GetIntervalForIteration() = 0;
 
- protected:
   nsCOMPtr<nsIThread> mThread;
 
  private:
   // This is true if the thread is running. It is false
   // before starting the thread and after stopping it.
   Atomic<bool> mThreadRunning;
+
+  // Any thread.
+  IterationWaitHelper mWaitHelper;
 };
 
 /**
@@ -271,10 +321,13 @@ class SystemClockDriver : public ThreadedDriver {
   explicit SystemClockDriver(MediaTrackGraphImpl* aGraphImpl,
                              FallbackMode aFallback = FallbackMode::Regular);
   virtual ~SystemClockDriver();
-  TimeDuration WaitInterval() override;
-  MediaTime GetIntervalForIteration() override;
   bool IsFallback();
   SystemClockDriver* AsSystemClockDriver() override { return this; }
+
+ protected:
+  /* Return the TimeDuration to wait before the next rendering iteration. */
+  TimeDuration WaitInterval() override;
+  MediaTime GetIntervalForIteration() override;
 
  private:
   // Those are only modified (after initialization) on the graph thread. The
@@ -283,8 +336,8 @@ class SystemClockDriver : public ThreadedDriver {
   TimeStamp mCurrentTimeStamp;
   TimeStamp mLastTimeStamp;
 
-  // This is true if this SystemClockDriver runs the graph because we could not
-  // open an audio stream.
+  // This is true if this SystemClockDriver runs the graph because we could
+  // not open an audio stream.
   const bool mIsFallback;
 };
 
@@ -296,9 +349,11 @@ class OfflineClockDriver : public ThreadedDriver {
  public:
   OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  TimeDuration WaitInterval() override;
-  MediaTime GetIntervalForIteration() override;
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
+
+ protected:
+  TimeDuration WaitInterval() override { return 0; }
+  MediaTime GetIntervalForIteration() override;
 
  private:
   // Time, in GraphTime, for each iteration
@@ -353,7 +408,6 @@ class AudioCallbackDriver : public GraphDriver,
   virtual ~AudioCallbackDriver();
 
   void Start() override;
-  void WakeUp() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
 #if defined(XP_WIN)
   void ResetDefaultDevice() override;
