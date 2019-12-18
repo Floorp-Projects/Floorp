@@ -243,7 +243,8 @@ class GraphDriver {
   GraphDriver(GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
               uint32_t aSampleRate);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
   /* Start the graph, init the driver, start the thread.
    * A driver cannot be started twice, it must be shutdown
    * before being started again. */
@@ -262,7 +263,7 @@ class GraphDriver {
    * GraphDrivers that are not able to sleep indefinitely (i.e., all drivers but
    * ThreadedDriver). Can be called on any thread.
    */
-  virtual void EnsureNextIteration() {}
+  virtual void EnsureNextIteration() = 0;
 
   /* Implement the switching of the driver and the necessary updates */
   void SwitchToDriver(GraphDriver* aDriver);
@@ -390,9 +391,10 @@ class ThreadedDriver : public GraphDriver {
   };
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadedDriver, override);
+
   ThreadedDriver(GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
                  uint32_t aSampleRate);
-  virtual ~ThreadedDriver();
 
   void EnsureNextIteration() override;
   void Start() override;
@@ -425,6 +427,8 @@ class ThreadedDriver : public GraphDriver {
    * call. */
   virtual MediaTime GetIntervalForIteration() = 0;
 
+  virtual ~ThreadedDriver();
+
   nsCOMPtr<nsIThread> mThread;
 
  private:
@@ -440,14 +444,11 @@ class ThreadedDriver : public GraphDriver {
  * A SystemClockDriver drives a GraphInterface using a system clock, and waits
  * using a monitor, between each iteration.
  */
-enum class FallbackMode { Regular, Fallback };
 class SystemClockDriver : public ThreadedDriver {
  public:
   SystemClockDriver(GraphInterface* aGraphInterface,
-                    GraphDriver* aPreviousDriver, uint32_t aSampleRate,
-                    FallbackMode aFallback = FallbackMode::Regular);
+                    GraphDriver* aPreviousDriver, uint32_t aSampleRate);
   virtual ~SystemClockDriver();
-  bool IsFallback();
   SystemClockDriver* AsSystemClockDriver() override { return this; }
 
  protected:
@@ -461,10 +462,6 @@ class SystemClockDriver : public ThreadedDriver {
   TimeStamp mInitialTimeStamp;
   TimeStamp mCurrentTimeStamp;
   TimeStamp mLastTimeStamp;
-
-  // This is true if this SystemClockDriver runs the graph because we could
-  // not open an audio stream.
-  const bool mIsFallback;
 };
 
 /**
@@ -530,7 +527,12 @@ class AudioCallbackDriver : public GraphDriver,
                             public audio::DeviceChangeListener
 #endif
 {
+  using IterationResult = GraphInterface::IterationResult;
+  class FallbackWrapper;
+
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioCallbackDriver, override);
+
   /** If aInputChannelCount is zero, then this driver is output-only. */
   AudioCallbackDriver(GraphInterface* aGraphInterface,
                       GraphDriver* aPreviousDriver, uint32_t aSampleRate,
@@ -538,7 +540,6 @@ class AudioCallbackDriver : public GraphDriver,
                       CubebUtils::AudioDeviceID aOutputDeviceID,
                       CubebUtils::AudioDeviceID aInputDeviceID,
                       AudioInputType aAudioInputType);
-  virtual ~AudioCallbackDriver();
 
   void Start() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
@@ -553,6 +554,7 @@ class AudioCallbackDriver : public GraphDriver,
   static void StateCallback_s(cubeb_stream* aStream, void* aUser,
                               cubeb_state aState);
   static void DeviceChangedCallback_s(void* aUser);
+
   /* This function is called by the underlying audio backend when a refill is
    * needed. This is what drives the whole graph when it is used to output
    * audio. If the return value is exactly aFrames, this function will get
@@ -566,6 +568,10 @@ class AudioCallbackDriver : public GraphDriver,
   /* This is an approximation of the number of millisecond there are between two
    * iterations of the graph. */
   uint32_t IterationDuration() override;
+  /* If the audio stream has started, this does nothing. There will be another
+   * iteration. If there is an active fallback driver, we forward the call so it
+   * can wake up. */
+  void EnsureNextIteration() override;
 
   /* This function gets called when the graph has produced the audio frames for
    * this iteration. */
@@ -575,10 +581,7 @@ class AudioCallbackDriver : public GraphDriver,
 
   AudioCallbackDriver* AsAudioCallbackDriver() override { return this; }
 
-  uint32_t OutputChannelCount() {
-    MOZ_ASSERT(mOutputChannels != 0 && mOutputChannels <= 8);
-    return mOutputChannels;
-  }
+  uint32_t OutputChannelCount() { return mOutputChannels; }
 
   uint32_t InputChannelCount() { return mInputChannelCount; }
 
@@ -603,6 +606,8 @@ class AudioCallbackDriver : public GraphDriver,
     return mAudioThreadId.load() == std::this_thread::get_id();
   }
 
+  /* Returns true if this audio callback driver has successfully started and not
+   * yet stopped. If the fallback driver is active, this returns false. */
   bool ThreadRunning() override { return mAudioThreadRunning; }
 
   /* Whether the underlying cubeb stream has been started. See comment for
@@ -632,6 +637,12 @@ class AudioCallbackDriver : public GraphDriver,
    *  Fall back to a SystemClockDriver using a normal thread. If needed,
    *  the graph will try to re-open an audio stream later. */
   void FallbackToSystemClockDriver();
+  /* Called by the fallback driver when it has just finished its last iteration.
+   * Either because it was told to stop or switch by the graph, or because we
+   * told it to after the audio stream started. Hands over state to the audio
+   * driver that may iterate the graph after this has been called. */
+  void FallbackDriverStopped(GraphTime aIterationStart, GraphTime aIterationEnd,
+                             GraphTime aStateComputedTime);
 
   /* This is true when the method is executed on CubebOperation thread pool. */
   bool OnCubebOperationThread() {
@@ -650,8 +661,8 @@ class AudioCallbackDriver : public GraphDriver,
    * audio buffer cubeb passes us. This is only ever accessed on the audio
    * callback thread. */
   AudioCallbackBufferWrapper<AudioDataValue> mBuffer;
-  /* cubeb stream for this graph. This is guaranteed to be non-null after Init()
-   * has been called, and is synchronized internaly. */
+  /* cubeb stream for this graph. This is non-null after a successful
+   * cubeb_stream_init(). CubebOperation thread only. */
   nsAutoRef<cubeb_stream> mAudioStream;
   /* The number of input channels from cubeb. Set before opening cubeb. If it is
    * zero then the driver is output-only. */
@@ -701,23 +712,17 @@ class AudioCallbackDriver : public GraphDriver,
   /* True when audio thread is running. False before
    * starting and after stopping it the audio thread. */
   Atomic<bool> mAudioThreadRunning;
-  /* Indication of whether a fallback SystemClockDriver should be started if
-   * StateCallback() receives an error.  No mutex need be held during access.
-   * The transition to true happens before cubeb_stream_start() is called.
-   * After transitioning to false on the last DataCallback(), the stream is
-   * not accessed from another thread until the graph thread either signals
-   * main thread cleanup or dispatches an event to switch to another
-   * driver. */
-  bool mShouldFallbackIfError;
-  /* True if this driver was created from a driver created because of a previous
-   * AudioCallbackDriver failure. */
-  bool mFromFallback;
+  /* SystemClockDriver used as fallback if this AudioCallbackDriver fails to
+   * init or start. */
+  DataMutex<RefPtr<FallbackWrapper>> mFallback;
 #ifdef XP_MACOSX
   /* When using the built-in speakers on macbook pro (13 and 15, all models),
    * it's best to hard pan the audio on the right, to avoid feedback into the
    * microphone that is located next to the left speaker.  */
   Atomic<bool> mNeedsPanning;
 #endif
+
+  virtual ~AudioCallbackDriver();
 };
 
 class AsyncCubebTask : public Runnable {

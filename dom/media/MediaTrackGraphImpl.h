@@ -577,8 +577,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Monitor must be held.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    MOZ_ASSERT_IF(mDriver->ThreadRunning(), InDriverIteration(mDriver));
-    MOZ_ASSERT_IF(!mDriver->ThreadRunning(), NS_IsMainThread());
+    MOZ_ASSERT_IF(mGraphDriverRunning, InDriverIteration(mDriver));
+    MOZ_ASSERT_IF(!mGraphDriverRunning, NS_IsMainThread());
     mDriver = aDriver;
   }
 
