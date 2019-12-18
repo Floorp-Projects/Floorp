@@ -121,7 +121,7 @@ stateloop:
           }
         }
       dataloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case TAG_OPEN: {
         for (;;) {
@@ -162,7 +162,7 @@ stateloop:
           }
         }
       tagopenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case TAG_NAME: {
         for (;;) {
@@ -220,7 +220,7 @@ stateloop:
           }
         }
       tagnameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_ATTRIBUTE_NAME: {
         for (;;) {
@@ -279,7 +279,7 @@ stateloop:
           }
         }
       beforeattributenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case ATTRIBUTE_NAME: {
         for (;;) {
@@ -341,7 +341,7 @@ stateloop:
           }
         }
       attributenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_ATTRIBUTE_VALUE: {
         for (;;) {
@@ -379,7 +379,7 @@ stateloop:
           }
         }
       beforeattributevalueloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case ATTRIBUTE_VALUE_DOUBLE_QUOTED: {
         for (;;) {
@@ -404,7 +404,7 @@ stateloop:
           }
         }
       attributevaluedoublequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_ATTRIBUTE_VALUE_QUOTED: {
         for (;;) {
@@ -439,7 +439,7 @@ stateloop:
           }
         }
       afterattributevaluequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SELF_CLOSING_START_TAG: {
         c = read();
@@ -562,7 +562,7 @@ stateloop:
           }
         }
       markupdeclarationopenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case MARKUP_DECLARATION_HYPHEN: {
         for (;;) {
@@ -583,7 +583,7 @@ stateloop:
           }
         }
       markupdeclarationhyphenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_START: {
         for (;;) {
@@ -607,7 +607,7 @@ stateloop:
           }
         }
       commentstartloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT: {
         for (;;) {
@@ -626,7 +626,7 @@ stateloop:
           }
         }
       commentloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_END_DASH: {
         for (;;) {
@@ -646,7 +646,7 @@ stateloop:
           }
         }
       commentenddashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_END: {
         for (;;) {
