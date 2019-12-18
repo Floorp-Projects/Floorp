@@ -767,13 +767,6 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 // Token server used by Firefox Account-authenticated Sync.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
-#ifdef NIGHTLY_BUILD
-// Use new audio focus management, "media.audioFocus.management".
-pref("dom.audiochannel.audioCompeting", false);
-#else
-pref("dom.audiochannel.audioCompeting", true);
-#endif
-
 pref("dom.audiochannel.mediaControl", true);
 
 // Space separated list of URLS that are allowed to send objects (instead of
