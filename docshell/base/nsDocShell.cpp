@@ -760,9 +760,10 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
     return NS_OK;
   }
 
+  BrowsingContext::Type bcType = mBrowsingContext->GetType();
+
   // Set up the inheriting principal in LoadState.
-  nsresult rv =
-      aLoadState->SetupInheritingPrincipal(mItemType, mOriginAttributes);
+  nsresult rv = aLoadState->SetupInheritingPrincipal(bcType, mOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadState->SetupTriggeringPrincipal(mOriginAttributes);
