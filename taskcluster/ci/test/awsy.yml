@@ -38,8 +38,8 @@ job-defaults:
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     fission-run-on-projects:
         by-test-platform:
-            linux64(?!-shippable).*: ['mozilla-central']
-            windows10-64(-qr)?/opt: ['mozilla-central']
+            linux64-shippable-qr/opt: ['mozilla-central']
+            windows10-64-shippable-qr/opt: ['mozilla-central']
             default: []
 
 
