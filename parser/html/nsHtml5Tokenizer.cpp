@@ -497,7 +497,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -505,7 +505,7 @@ stateloop:
           }
         }
       dataloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case TAG_OPEN: {
         for (;;) {
@@ -583,7 +583,7 @@ stateloop:
           }
         }
       tagopenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case TAG_NAME: {
         for (;;) {
@@ -602,7 +602,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -631,7 +631,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -645,7 +645,7 @@ stateloop:
           }
         }
       tagnameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_ATTRIBUTE_NAME: {
         for (;;) {
@@ -664,7 +664,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -687,7 +687,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case '\"':
             case '\'':
@@ -696,7 +696,7 @@ stateloop:
               if (P::reportErrors) {
                 errBadCharBeforeAttributeNameOrNull(c);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -713,7 +713,7 @@ stateloop:
           }
         }
       beforeattributenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case ATTRIBUTE_NAME: {
         for (;;) {
@@ -732,7 +732,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -770,7 +770,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case '\"':
             case '\'':
@@ -778,7 +778,7 @@ stateloop:
               if (P::reportErrors) {
                 errQuoteOrLtInAttributeNameOrNull(c);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -790,7 +790,7 @@ stateloop:
           }
         }
       attributenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_ATTRIBUTE_VALUE: {
         for (;;) {
@@ -805,7 +805,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -852,7 +852,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case '<':
             case '=':
@@ -860,7 +860,7 @@ stateloop:
               if (P::reportErrors) {
                 errLtOrEqualsOrGraveInUnquotedAttributeOrNull(c);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               attributeLine = line;
@@ -875,7 +875,7 @@ stateloop:
           }
         }
       beforeattributevalueloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case ATTRIBUTE_VALUE_DOUBLE_QUOTED: {
         for (;;) {
@@ -916,7 +916,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -925,7 +925,7 @@ stateloop:
           }
         }
       attributevaluedoublequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_ATTRIBUTE_VALUE_QUOTED: {
         for (;;) {
@@ -943,7 +943,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -980,7 +980,7 @@ stateloop:
           }
         }
       afterattributevaluequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SELF_CLOSING_START_TAG: {
         if (++pos == endPos) {
@@ -1029,7 +1029,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -1062,7 +1062,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case '<':
             case '\"':
@@ -1072,7 +1072,7 @@ stateloop:
               if (P::reportErrors) {
                 errUnquotedAttributeValOrNull(c);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1094,7 +1094,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -1125,7 +1125,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case '\"':
             case '\'':
@@ -1133,7 +1133,7 @@ stateloop:
               if (P::reportErrors) {
                 errQuoteOrLtInAttributeNameOrNull(c);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               addAttributeWithoutValue();
@@ -1184,7 +1184,7 @@ stateloop:
                     mViewSource, nsHtml5Tokenizer::CDATA_START, reconsume, pos);
                 NS_HTML5_CONTINUE(stateloop);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (P::reportErrors) {
@@ -1199,7 +1199,7 @@ stateloop:
           }
         }
       markupdeclarationopenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case MARKUP_DECLARATION_HYPHEN: {
         for (;;) {
@@ -1226,7 +1226,7 @@ stateloop:
           }
         }
       markupdeclarationhyphenloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_START: {
         for (;;) {
@@ -1265,7 +1265,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1276,7 +1276,7 @@ stateloop:
           }
         }
       commentstartloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT: {
         for (;;) {
@@ -1302,7 +1302,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1311,7 +1311,7 @@ stateloop:
           }
         }
       commentloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_END_DASH: {
         for (;;) {
@@ -1340,7 +1340,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1351,7 +1351,7 @@ stateloop:
           }
         }
       commentenddashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case COMMENT_END: {
         for (;;) {
@@ -1394,7 +1394,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               adjustDoubleHyphenAndAppendToStrBufAndErr(c);
@@ -1439,7 +1439,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1485,7 +1485,7 @@ stateloop:
           }
           case '\0': {
             c = 0xfffd;
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default: {
             appendStrBuf(c);
@@ -1524,7 +1524,7 @@ stateloop:
             break;
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CDATA_SECTION: {
         for (;;) {
@@ -1553,7 +1553,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -1561,7 +1561,7 @@ stateloop:
           }
         }
       cdatasectionloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CDATA_RSQB: {
         for (;;) {
@@ -1587,7 +1587,7 @@ stateloop:
           }
         }
       cdatarsqb_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CDATA_RSQB_RSQB: {
         for (;;) {
@@ -1656,7 +1656,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1665,7 +1665,7 @@ stateloop:
           }
         }
       attributevaluesinglequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CONSUME_CHARACTER_REFERENCE: {
         if (++pos == endPos) {
@@ -1724,7 +1724,7 @@ stateloop:
                 reconsume, pos);
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CHARACTER_REFERENCE_HILO_LOOKUP: {
         {
@@ -1761,7 +1761,7 @@ stateloop:
                                 nsHtml5Tokenizer::CHARACTER_REFERENCE_TAIL,
                                 reconsume, pos);
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case CHARACTER_REFERENCE_TAIL: {
         for (;;) {
@@ -1909,7 +1909,7 @@ stateloop:
                               reconsume, pos);
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DECIMAL_NRC_LOOP: {
         for (;;) {
@@ -1978,7 +1978,7 @@ stateloop:
           }
         }
       decimalloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case HANDLE_NCR_VALUE: {
         charRefBufLen = 0;
@@ -2084,7 +2084,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2131,7 +2131,7 @@ stateloop:
           }
           case '\0': {
             c = 0xfffd;
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default: {
             if (c >= 'A' && c <= 'Z') {
@@ -2199,7 +2199,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2236,7 +2236,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2244,7 +2244,7 @@ stateloop:
           }
         }
       rawtextloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case RAWTEXT_RCDATA_LESS_THAN_SIGN: {
         for (;;) {
@@ -2271,7 +2271,7 @@ stateloop:
           }
         }
       rawtextrcdatalessthansignloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case NON_DATA_END_TAG_NAME: {
         for (;;) {
@@ -2316,7 +2316,7 @@ stateloop:
               }
               case '\n': {
                 silentLineFeed();
-                MOZ_FALLTHROUGH;
+                [[fallthrough]];
               }
               case ' ':
               case '\t':
@@ -2390,7 +2390,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -2399,7 +2399,7 @@ stateloop:
           }
         }
       boguscommentloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BOGUS_COMMENT_HYPHEN: {
       boguscommenthyphenloop:
@@ -2433,7 +2433,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -2473,7 +2473,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2481,7 +2481,7 @@ stateloop:
           }
         }
       scriptdataloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_LESS_THAN_SIGN: {
         for (;;) {
@@ -2517,7 +2517,7 @@ stateloop:
           }
         }
       scriptdatalessthansignloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPE_START: {
         for (;;) {
@@ -2541,7 +2541,7 @@ stateloop:
           }
         }
       scriptdataescapestartloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPE_START_DASH: {
         for (;;) {
@@ -2565,7 +2565,7 @@ stateloop:
           }
         }
       scriptdataescapestartdashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPED_DASH_DASH: {
         for (;;) {
@@ -2606,7 +2606,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               state = P::transition(mViewSource,
@@ -2617,7 +2617,7 @@ stateloop:
           }
         }
       scriptdataescapeddashdashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPED: {
         for (;;) {
@@ -2654,7 +2654,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2662,7 +2662,7 @@ stateloop:
           }
         }
       scriptdataescapedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPED_DASH: {
         for (;;) {
@@ -2701,7 +2701,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               state = P::transition(mViewSource,
@@ -2712,7 +2712,7 @@ stateloop:
           }
         }
       scriptdataescapeddashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN: {
         for (;;) {
@@ -2753,7 +2753,7 @@ stateloop:
           }
         }
       scriptdataescapedlessthanloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPE_START: {
         for (;;) {
@@ -2787,7 +2787,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -2809,7 +2809,7 @@ stateloop:
           }
         }
       scriptdatadoubleescapestartloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPED: {
         for (;;) {
@@ -2846,7 +2846,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -2854,7 +2854,7 @@ stateloop:
           }
         }
       scriptdatadoubleescapedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPED_DASH: {
         for (;;) {
@@ -2893,7 +2893,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               state = P::transition(
@@ -2904,7 +2904,7 @@ stateloop:
           }
         }
       scriptdatadoubleescapeddashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH: {
         for (;;) {
@@ -2944,7 +2944,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               state = P::transition(
@@ -2955,7 +2955,7 @@ stateloop:
           }
         }
       scriptdatadoubleescapeddashdashloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN: {
         for (;;) {
@@ -2981,7 +2981,7 @@ stateloop:
           }
         }
       scriptdatadoubleescapedlessthanloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case SCRIPT_DATA_DOUBLE_ESCAPE_END: {
         for (;;) {
@@ -3014,7 +3014,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3068,7 +3068,7 @@ stateloop:
           }
         }
       markupdeclarationdoctypeloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE: {
         for (;;) {
@@ -3091,7 +3091,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3114,7 +3114,7 @@ stateloop:
           }
         }
       doctypeloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_DOCTYPE_NAME: {
         for (;;) {
@@ -3133,7 +3133,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3152,7 +3152,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -3167,7 +3167,7 @@ stateloop:
           }
         }
       beforedoctypenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE_NAME: {
         for (;;) {
@@ -3186,7 +3186,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3206,7 +3206,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -3218,7 +3218,7 @@ stateloop:
           }
         }
       doctypenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_DOCTYPE_NAME: {
         for (;;) {
@@ -3233,7 +3233,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3269,7 +3269,7 @@ stateloop:
           }
         }
       afterdoctypenameloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE_UBLIC: {
         for (;;) {
@@ -3300,7 +3300,7 @@ stateloop:
           }
         }
       doctypeublicloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_DOCTYPE_PUBLIC_KEYWORD: {
         for (;;) {
@@ -3323,7 +3323,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3375,7 +3375,7 @@ stateloop:
           }
         }
       afterdoctypepublickeywordloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_DOCTYPE_PUBLIC_IDENTIFIER: {
         for (;;) {
@@ -3390,7 +3390,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3432,7 +3432,7 @@ stateloop:
           }
         }
       beforedoctypepublicidentifierloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED: {
         for (;;) {
@@ -3470,7 +3470,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -3479,7 +3479,7 @@ stateloop:
           }
         }
       doctypepublicidentifierdoublequotedloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_DOCTYPE_PUBLIC_IDENTIFIER: {
         for (;;) {
@@ -3499,7 +3499,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3548,7 +3548,7 @@ stateloop:
           }
         }
       afterdoctypepublicidentifierloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS: {
         for (;;) {
@@ -3563,7 +3563,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3601,7 +3601,7 @@ stateloop:
           }
         }
       betweendoctypepublicandsystemidentifiersloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED: {
         for (;;) {
@@ -3639,7 +3639,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -3661,7 +3661,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3683,7 +3683,7 @@ stateloop:
           }
         }
       afterdoctypesystemidentifierloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BOGUS_DOCTYPE: {
         for (;;) {
@@ -3708,7 +3708,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               continue;
@@ -3745,7 +3745,7 @@ stateloop:
           }
         }
       doctypeystemloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_DOCTYPE_SYSTEM_KEYWORD: {
         for (;;) {
@@ -3768,7 +3768,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3820,7 +3820,7 @@ stateloop:
           }
         }
       afterdoctypesystemkeywordloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case BEFORE_DOCTYPE_SYSTEM_IDENTIFIER: {
         for (;;) {
@@ -3835,7 +3835,7 @@ stateloop:
             }
             case '\n': {
               silentLineFeed();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case ' ':
             case '\t':
@@ -3877,7 +3877,7 @@ stateloop:
           }
         }
       beforedoctypesystemidentifierloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED: {
         for (;;) {
@@ -3915,7 +3915,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -3960,7 +3960,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -3989,7 +3989,7 @@ stateloop:
           }
         }
       processinginstructionloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case PROCESSING_INSTRUCTION_QUESTION_MARK: {
         if (++pos == endPos) {

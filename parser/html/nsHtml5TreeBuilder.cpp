@@ -302,7 +302,7 @@ void nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start,
       if (!isInForeignButNotHtmlOrMathTextIntegrationPoint()) {
         reconstructTheActiveFormattingElements();
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case TEXT: {
       accumulateCharacters(buf, start, length);
@@ -600,7 +600,7 @@ void nsHtml5TreeBuilder::eof() {
         if (isTemplateModeStackEmpty()) {
           NS_HTML5_BREAK(eofloop);
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_TEMPLATE: {
         int32_t eltPos = findLast(nsGkAtoms::_template);
@@ -731,7 +731,7 @@ starttagloop:
                 NS_HTML5_CONTINUE(starttagloop);
               }
             }
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default: {
             if (kNameSpaceID_SVG == currNs) {
@@ -862,7 +862,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_TABLE_BODY: {
         switch (group) {
@@ -902,7 +902,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_TABLE: {
         for (;;) {
@@ -1015,7 +1015,7 @@ starttagloop:
           }
         }
       intableloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_CAPTION: {
         switch (group) {
@@ -1043,7 +1043,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_CELL: {
         switch (group) {
@@ -1064,7 +1064,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case FRAMESET_OK: {
         switch (group) {
@@ -1117,11 +1117,11 @@ starttagloop:
               framesetOk = false;
               mode = IN_BODY;
             }
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_BODY: {
         for (;;) {
@@ -1343,7 +1343,7 @@ starttagloop:
             case AREA_OR_WBR:
             case KEYGEN: {
               reconstructTheActiveFormattingElements();
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
 #ifdef ENABLE_VOID_MENUITEM
             case MENUITEM:
@@ -1406,7 +1406,7 @@ starttagloop:
                 attributes = nullptr;
                 NS_HTML5_BREAK(starttagloop);
               }
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             }
             case NOFRAMES:
             case IFRAME:
@@ -1540,7 +1540,7 @@ starttagloop:
           }
         }
       inbodyloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_HEAD: {
         for (;;) {
@@ -1611,7 +1611,7 @@ starttagloop:
           }
         }
       inheadloop_end:;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_HEAD_NOSCRIPT: {
         switch (group) {
@@ -1716,7 +1716,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_SELECT: {
         switch (group) {
@@ -1824,7 +1824,7 @@ starttagloop:
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case AFTER_FRAMESET: {
         switch (group) {
@@ -2383,7 +2383,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             NS_HTML5_BREAK(endtagloop);
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_ROW: {
         switch (group) {
@@ -2439,7 +2439,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_TABLE_BODY: {
         switch (group) {
@@ -2478,7 +2478,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_TABLE: {
         switch (group) {
@@ -2513,7 +2513,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             errStrayEndTag(name);
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_CAPTION: {
         switch (group) {
@@ -2562,7 +2562,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_CELL: {
         switch (group) {
@@ -2607,7 +2607,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case FRAMESET_OK:
       case IN_BODY: {
@@ -2858,7 +2858,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             }
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           case A:
           case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
@@ -2867,7 +2867,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             if (adoptionAgencyEndTag(name)) {
               NS_HTML5_BREAK(endtagloop);
             }
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default: {
             if (isCurrent(name)) {
@@ -2894,7 +2894,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             }
           }
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_HEAD: {
         switch (group) {
@@ -2999,7 +2999,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           }
           default:;  // fall through
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case IN_SELECT: {
         switch (group) {
