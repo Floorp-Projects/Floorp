@@ -185,10 +185,8 @@ class AudioChannelService final : public nsIObserver {
     explicit AudioChannelWindow(uint64_t aWindowID)
         : mWindowID(aWindowID),
           mIsAudioCaptured(false),
-          mOwningAudioFocus(!AudioChannelService::IsEnableAudioCompeting()),
           mShouldSendActiveMediaBlockStopEvent(false) {}
 
-    void AudioFocusChanged(AudioChannelAgent* aNewPlayingAgent);
     void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible,
                              AudibleChangedReasons aReason);
 
@@ -204,10 +202,6 @@ class AudioChannelService final : public nsIObserver {
     // Raw pointer because the AudioChannelAgent must unregister itself.
     nsTObserverArray<AudioChannelAgent*> mAgents;
     nsTObserverArray<AudioChannelAgent*> mAudibleAgents;
-
-    // Owning audio focus when the window starts playing audible sound, and
-    // lose audio focus when other windows starts playing.
-    bool mOwningAudioFocus;
 
     // If we've dispatched "activeMediaBlockStart" event, we must dispatch
     // another event "activeMediablockStop" when the window is resumed from
@@ -232,18 +226,6 @@ class AudioChannelService final : public nsIObserver {
 
     void NotifyChannelActive(uint64_t aWindowID, bool aActive);
     void MaybeNotifyMediaBlockStart(AudioChannelAgent* aAgent);
-
-    void RequestAudioFocus(AudioChannelAgent* aAgent);
-
-    // We need to do audio competing only when the new incoming agent started.
-    void NotifyAudioCompetingChanged(AudioChannelAgent* aAgent);
-
-    uint32_t GetCompetingBehavior(AudioChannelAgent* aAgent) const;
-    bool IsAgentInvolvingInAudioCompeting(AudioChannelAgent* aAgent) const;
-    bool IsAudioCompetingInSameTab() const;
-    bool IsContainingPlayingAgent(AudioChannelAgent* aAgent) const;
-
-    bool IsInactiveWindow() const;
   };
 
   AudioChannelWindow* GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow);
