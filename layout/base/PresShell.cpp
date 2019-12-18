@@ -195,6 +195,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "VisualViewport.h"
+#include "ZoomConstraintsClient.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
