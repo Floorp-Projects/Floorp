@@ -75,7 +75,7 @@ class ClonedMessageData;
 class BrowserChild;
 class GetFilesHelperChild;
 class TabContext;
-enum class MediaControlActions : uint32_t;
+enum class MediaControlKeysEvent : uint32_t;
 
 class ContentChild final
     : public PContentChild,
@@ -673,8 +673,8 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
       BrowsingContext* aContext);
 
-  mozilla::ipc::IPCResult RecvUpdateMediaAction(BrowsingContext* aContext,
-                                                MediaControlActions aAction);
+  mozilla::ipc::IPCResult RecvUpdateMediaControlKeysEvent(
+      BrowsingContext* aContext, MediaControlKeysEvent aEvent);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
   void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);

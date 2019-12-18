@@ -233,10 +233,11 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
   return uniqueSiteOrigins.Count();
 }
 
-void CanonicalBrowsingContext::UpdateMediaAction(MediaControlActions aAction) {
-  MediaActionHandler::UpdateMediaAction(this, aAction);
+void CanonicalBrowsingContext::UpdateMediaControlKeysEvent(
+    MediaControlKeysEvent aEvent) {
+  MediaActionHandler::HandleMediaControlKeysEvent(this, aEvent);
   Group()->EachParent([&](ContentParent* aParent) {
-    Unused << aParent->SendUpdateMediaAction(this, aAction);
+    Unused << aParent->SendUpdateMediaControlKeysEvent(this, aEvent);
   });
 }
 

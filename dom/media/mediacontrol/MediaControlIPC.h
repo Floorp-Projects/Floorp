@@ -9,16 +9,15 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-#include "mozilla/dom/MediaController.h"
+#include "mozilla/dom/MediaControlKeysEvent.h"
 
 namespace IPC {
 template <>
-struct ParamTraits<mozilla::dom::MediaControlActions>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::MediaControlActions,
-          mozilla::dom::MediaControlActions::ePlay,
-          mozilla::dom::MediaControlActions(
-              mozilla::dom::MediaControlActions::eActionsNum)> {};
+struct ParamTraits<mozilla::dom::MediaControlKeysEvent>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::MediaControlKeysEvent,
+          mozilla::dom::MediaControlKeysEvent::ePlay,
+          mozilla::dom::MediaControlKeysEvent::eStop> {};
 }  // namespace IPC
 
 #endif  // mozilla_MediaControlIPC_hh
