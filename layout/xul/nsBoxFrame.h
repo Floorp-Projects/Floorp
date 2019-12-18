@@ -117,7 +117,7 @@ class nsBoxFrame : public nsContainerFrame {
     // NS_UNCONSTRAINEDSIZE wide.)
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock |
-                   eXULBox | nsIFrame::eExcludesIgnorableWhitespace));
+                   eXULBox));
   }
 
 #ifdef DEBUG_FRAME_DUMP
