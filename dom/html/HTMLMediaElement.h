@@ -1831,7 +1831,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool mInitialized = false;
 
   // True if user has called load(), seek() or element has started playing
-  // before. It's *only* use for checking autoplay policy
+  // before. It's *only* use for `click-to-play` blocking autoplay policy.
+  // In addition, we would reset this once media aborts current load.
   bool mIsBlessed = false;
 
   // True if the first frame has been successfully loaded.
