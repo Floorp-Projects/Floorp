@@ -302,8 +302,10 @@ ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
     forkserver.mAppProcBuilder->InitAppProcess(aArgc, aArgv);
     forkserver.mAppProcBuilder.reset();
 
-    // Open log files again with the right names with the new PID.
-    nsTraceRefcnt::ResetLogFiles();
+    MOZ_ASSERT(NS_LITERAL_CSTRING("tab") == (*aArgv)[*aArgc - 1], "Only |tab| is allowed!");
+
+    // Open log files again with right names and the new PID.
+    nsTraceRefcnt::ResetLogFiles((*aArgv)[*aArgc - 1]);
 
     return false;
 }
