@@ -244,7 +244,6 @@ struct ModuleEnvironment {
     if (one == two) {
       return true;
     }
-#if defined(ENABLE_WASM_REFTYPES)
     // Anything's a subtype of AnyRef.
     if (two.isAnyRef()) {
       return true;
@@ -253,12 +252,11 @@ struct ModuleEnvironment {
     if (one.isNullRef()) {
       return two.isNullable();
     }
-#  if defined(ENABLE_WASM_GC)
+#if defined(ENABLE_WASM_GC)
     // Struct One is a subtype of struct Two if Two is a prefix of One.
     if (gcTypesEnabled() && isStructType(one) && isStructType(two)) {
       return isStructPrefixOf(two, one);
     }
-#  endif
 #endif
     return false;
   }
