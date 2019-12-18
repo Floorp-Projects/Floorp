@@ -1468,6 +1468,14 @@ parent:
     async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
 
     /*
+     * Adds a certificate exception for the given hostname and port.
+     */
+    async AddCertException(nsCString aSerializedCert, uint32_t aFlags,
+                           nsCString aHostName, int32_t aPort,
+                           bool aIsTemporary)
+          returns (nsresult success);
+
+    /*
      * Determines whether storage access can be granted automatically by the
      * storage access API without showing a user prompt.
      */
