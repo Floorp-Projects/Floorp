@@ -134,7 +134,7 @@ void Gamepad::init(IOHIDDeviceRef aDevice, bool aDefaultRemapper) {
 
     if (usagePage == kDesktopUsagePage && usage >= kAxisUsageMin &&
         usage <= kAxisUsageMax) {
-      Axis axis = {aDefaultRemapper ? int(buttons.Length())
+      Axis axis = {aDefaultRemapper ? int(axes.Length())
                                     : static_cast<int>(usage - kAxisUsageMin),
                    element,
                    usagePage,
@@ -147,7 +147,7 @@ void Gamepad::init(IOHIDDeviceRef aDevice, bool aDefaultRemapper) {
                IOHIDElementGetLogicalMax(element) -
                        IOHIDElementGetLogicalMin(element) ==
                    7) {
-      Axis axis = {aDefaultRemapper ? int(buttons.Length())
+      Axis axis = {aDefaultRemapper ? int(axes.Length())
                                     : static_cast<int>(usage - kAxisUsageMin),
                    element,
                    usagePage,
