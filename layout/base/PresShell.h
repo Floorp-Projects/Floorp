@@ -17,7 +17,6 @@
 #include "TouchManager.h"
 #include "Units.h"
 #include "Visibility.h"
-#include "ZoomConstraintsClient.h"
 #include "gfxPoint.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
@@ -99,6 +98,7 @@ struct RangePaintInfo;
 class ReflowCountMgr;
 #endif
 class WeakFrame;
+class ZoomConstraintsClient;
 
 template <class E>
 class nsCOMArray;
