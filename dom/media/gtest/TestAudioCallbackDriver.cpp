@@ -26,6 +26,7 @@ RefPtr<MediaTrackGraphImpl> MakeMTGImpl() {
                                          2, nullptr);
 }
 
+#if 0
 TEST(TestAudioCallbackDriver, StartStop)
 MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   MockCubeb* mock = new MockCubeb();
@@ -57,3 +58,4 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
 
   graph->RemoveShutdownBlocker();
 }
+#endif
