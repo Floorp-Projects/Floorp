@@ -305,6 +305,7 @@ nsHttpChannel::nsHttpChannel()
       mOfflineCacheLastModifiedTime(0),
       mSuspendTotalTime(0),
       mRedirectType(0),
+      mComputedCrossOriginOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL),
       mCacheOpenWithPriority(false),
       mCacheQueueSizeWhenOpen(0),
       mCachedContentIsValid(false),
@@ -7344,10 +7345,10 @@ nsHttpChannel::GetCrossOriginOpenerPolicy(
   // If this method is called before OnStartRequest (ie. before we call
   // ComputeCrossOriginOpenerPolicy) or if we were unable to compute the
   // policy we'll throw an error.
-  if (!mComputedCrossOriginOpenerPolicy.isSome()) {
+  if (!mOnStartRequestCalled) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aPolicy = mComputedCrossOriginOpenerPolicy.value();
+  *aPolicy = mComputedCrossOriginOpenerPolicy;
   return NS_OK;
 }
 
@@ -7411,7 +7412,6 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   if (!head) {
     // Not having a response head is not a hard failure at the point where
     // this method is called.
-    mComputedCrossOriginOpenerPolicy = Some(nsILoadInfo::OPENER_POLICY_NULL);
     return NS_OK;
   }
 
@@ -7428,7 +7428,7 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
       nsILoadInfo::OPENER_POLICY_NULL;
   Unused << ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
-  mComputedCrossOriginOpenerPolicy = Some(resultPolicy);
+  mComputedCrossOriginOpenerPolicy = resultPolicy;
 
   // If bc's popup sandboxing flag set is not empty and potentialCOOP is
   // non-null, then navigate bc to a network error and abort these steps.
