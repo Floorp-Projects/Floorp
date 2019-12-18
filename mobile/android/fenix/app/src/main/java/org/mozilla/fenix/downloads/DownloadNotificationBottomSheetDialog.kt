@@ -8,9 +8,11 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
-import androidx.appcompat.content.res.AppCompatResources
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.download_notification_layout.*
 import mozilla.components.browser.state.state.content.DownloadState
@@ -36,10 +38,9 @@ class DownloadNotificationBottomSheetDialog(
             download_notification_title.text =
                 context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
 
-            download_notification_icon.setImageDrawable(AppCompatResources.getDrawable(
-                context,
+            download_notification_icon.setImageResource(
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_failed
-            ))
+            )
 
             download_notification_action_button.apply {
                 text = context.getString(
@@ -58,10 +59,9 @@ class DownloadNotificationBottomSheetDialog(
 
             download_notification_title.text = titleText
 
-            download_notification_icon.setImageDrawable(AppCompatResources.getDrawable(
-                context,
+            download_notification_icon.setImageResource(
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_complete
-            ))
+            )
 
             download_notification_action_button.apply {
                 text = context.getString(
@@ -91,15 +91,20 @@ class DownloadNotificationBottomSheetDialog(
         download_notification_filename.text = download.fileName
 
         setOnShowListener {
+            val bottomSheet =
+                findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
             window?.apply {
                 setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 setLayout(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
+                    ViewGroup.LayoutParams.MATCH_PARENT
                 )
                 navigationBarColor = ContextCompat.getColor(
-                        context,
-                        ThemeManager.resolveAttribute(R.attr.foundation, context
+                    context,
+                    ThemeManager.resolveAttribute(
+                        R.attr.foundation, context
                     )
                 )
             }
