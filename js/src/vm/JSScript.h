@@ -2376,7 +2376,7 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(funHasExtensibleScope,
                                       FunHasExtensibleScope)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasCallSiteObj, HasCallSiteObj)
-  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasModuleGoal, HasModuleGoal)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(functionHasThisBinding,
                                       FunctionHasThisBinding)
   // FunctionHasExtraBodyVarScope: custom logic below.
@@ -3367,8 +3367,7 @@ class LazyScript : public BaseScript {
       const frontend::AtomVector& closedOverBindings,
       const frontend::FunctionBoxVector& innerFunctionBoxes,
       uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
-      uint32_t toStringEnd, uint32_t lineno, uint32_t column,
-      frontend::ParseGoal parseGoal);
+      uint32_t toStringEnd, uint32_t lineno, uint32_t column);
 
   // Create a LazyScript and initialize the closedOverBindings and the
   // innerFunctions with dummy values to be replaced in a later initialization

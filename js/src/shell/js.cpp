@@ -5302,10 +5302,9 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Parser<FullParseHandler, char16_t> parser(cx, options, chars, length,
-                                            /* foldConstants = */ false,
-                                            parseInfo, nullptr, nullptr,
-                                            sourceObject, goal);
+  Parser<FullParseHandler, char16_t> parser(
+      cx, options, chars, length,
+      /* foldConstants = */ false, parseInfo, nullptr, nullptr, sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5378,7 +5377,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, options, chars, length, false, parseInfo, nullptr, nullptr,
-      sourceObject, frontend::ParseGoal::Script);
+      sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }

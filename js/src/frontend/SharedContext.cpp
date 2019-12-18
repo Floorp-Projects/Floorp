@@ -199,6 +199,9 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   if (lazy->hasDirectEval()) {
     setHasDirectEval();
   }
+  if (lazy->hasModuleGoal()) {
+    setHasModuleGoal();
+  }
 
   sourceStart = lazy->sourceStart();
   sourceEnd = lazy->sourceEnd();
@@ -251,6 +254,9 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 
     thisBinding_ = ThisBinding::Function;
   }
+
+  // We inherit the parse goal from our top-level.
+  hasModuleGoal_ = sc->hasModuleGoal();
 
   if (sc->inWith()) {
     inWith_ = true;
@@ -329,6 +335,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
       bindings(cx),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
+  hasModuleGoal_ = true;
 }
 
 }  // namespace frontend
