@@ -812,7 +812,7 @@ class TestManifestFile(TestWithTmpDir):
         )
 
         f.copy(self.tmppath('chrome.manifest'))
-        content = open(self.tmppath('chrome.manifest'), 'rb').read()
+        content = open(self.tmppath('chrome.manifest'), 'rt').read()
         self.assertEqual(content[:42], f.open().read(42))
         self.assertEqual(content, f.open().read())
 
