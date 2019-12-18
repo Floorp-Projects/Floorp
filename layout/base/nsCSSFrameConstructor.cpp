@@ -5269,7 +5269,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
   // Don't create frames for non-SVG element children of SVG elements.
   if (!aElement.IsSVGElement()) {
     if (aParentFrame && IsFrameForSVG(aParentFrame) &&
-        !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+        !aParentFrame->IsSVGForeignObjectFrame()) {
       return nullptr;
     }
     if (aFlags & ITEM_IS_WITHIN_SVG_TEXT) {
