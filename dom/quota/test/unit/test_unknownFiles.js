@@ -29,7 +29,7 @@ function* testSteps() {
     dir: false,
   };
 
-  const unknownClient = {
+  const unknownOriginDirectory = {
     path: "storage/permanent/chrome/foo",
     dir: true,
   };
@@ -94,6 +94,7 @@ function* testSteps() {
     "Initialization succeeded even though there are unknown files in " +
       "repositories"
   );
+  ok(request.result === true, "The origin directory was created");
 
   info("Clearing origin");
 
@@ -109,7 +110,10 @@ function* testSteps() {
 
   ok(request.resultCode == NS_OK, "Clearing succeeded");
 
-  info("Stage 3 - Testing unknown origin files found during origin init");
+  info(
+    "Stage 3 - Testing unknown origin files and unknown origin directories " +
+      "found during origin init"
+  );
 
   info("Initializing");
 
@@ -118,99 +122,76 @@ function* testSteps() {
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
 
-  info("Creating unknown file");
+  for (let unknownFile of [unknownOriginFile, unknownOriginDirectory]) {
+    info("Creating unknown file");
 
-  file = createFile(unknownOriginFile);
+    file = createFile(unknownFile);
 
-  info("Initializing origin");
+    info("Initializing origin");
 
-  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
-  yield undefined;
+    request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
+    yield undefined;
 
-  ok(
-    request.resultCode == NS_OK,
-    "Initialization succeeded even though there are unknown files in origin " +
-      "directories"
-  );
+    ok(
+      request.resultCode == NS_OK,
+      "Initialization succeeded even though there are unknown files or " +
+        "directories in origin directories"
+    );
+    ok(request.result === false, "The origin directory wasn't created");
 
-  info("Getting usage");
+    info("Getting usage");
 
-  request = getCurrentUsage(continueToNextStepSync);
-  yield undefined;
+    request = getCurrentUsage(continueToNextStepSync);
+    yield undefined;
 
-  ok(
-    request.resultCode == NS_OK,
-    "Get usage succeeded even though there are unknown files in origin " +
-      "directories"
-  );
+    ok(
+      request.resultCode == NS_OK,
+      "Get usage succeeded even though there are unknown files or directories" +
+        "in origin directories"
+    );
+    ok(request.result, "The request result is not null");
+    ok(request.result.usage === 0, "The usage was 0");
+    ok(request.result.fileUsage === 0, "The fileUsage was 0");
 
-  info("Clearing origin");
+    file.remove(/* recursive */ false);
 
-  request = clearChromeOrigin(continueToNextStepSync);
-  yield undefined;
+    info("Getting usage");
 
-  ok(request.resultCode == NS_OK, "Clearing succeeded");
+    request = getCurrentUsage(continueToNextStepSync);
+    yield undefined;
 
-  info("Stage 4 - Testing unknown client files found during origin init");
+    ok(request.resultCode == NS_OK, "Get usage succeeded");
+    ok(request.result, "The request result is not null");
+    ok(request.result.usage === 0, "The usage was 0");
+    ok(request.result.fileUsage === 0, "The fileUsage was 0");
 
-  info("Creating unknown file");
+    info("Initializing origin");
 
-  file = createFile(unknownClient);
+    request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
+    yield undefined;
 
-  info("Initializing origin");
+    ok(request.resultCode == NS_OK, "Initialization succeeded");
+    ok(request.result === false, "The origin directory wasn't created");
 
-  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
-  yield undefined;
+    file = createFile(unknownFile);
 
-  ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
-  ok(request.result === null, "The request result is null");
+    info("Getting usage");
 
-  info("Getting usage");
+    request = getCurrentUsage(continueToNextStepSync);
+    yield undefined;
 
-  request = getCurrentUsage(continueToNextStepSync);
-  yield undefined;
+    ok(request.resultCode == NS_OK, "Get usage succeeded");
+    ok(request.result, "The request result is not null");
+    ok(request.result.usage === 0, "The usage was 0");
+    ok(request.result.fileUsage === 0, "The fileUsage was 0");
 
-  ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
-  ok(request.result === null, "The request result is null");
+    info("Clearing origin");
 
-  file.remove(/* recursive */ false);
+    request = clearChromeOrigin(continueToNextStepSync);
+    yield undefined;
 
-  info("Getting usage");
-
-  request = getCurrentUsage(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Get usage succeeded");
-
-  info("Clearing origin");
-
-  request = clearChromeOrigin(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Clearing succeeded");
-
-  info("Initializing origin");
-
-  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
-
-  file = createFile(unknownClient);
-
-  info("Getting usage");
-
-  request = getCurrentUsage(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Get usage succeeded");
-
-  info("Clearing origin");
-
-  request = clearChromeOrigin(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Clearing succeeded");
+    ok(request.resultCode == NS_OK, "Clearing succeeded");
+  }
 
   info("Clearing");
 
