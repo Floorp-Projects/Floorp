@@ -6,6 +6,7 @@ const TRR_URI_PREF = "network.trr.uri";
 const TRR_RESOLVERS_PREF = "network.trr.resolvers";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
 const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
+const NEXTDNS_RESOLVER_VALUE = "https://trr.dns.nextdns.io/";
 
 const modeCheckboxSelector = "#networkDnsOverHttps";
 const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";
@@ -301,6 +302,21 @@ let testVariations = [
     expectedModeChecked: true,
     clickMode: true,
     expectedModePref: 0,
+  },
+  // Test selecting non-default, non-custom TRR provider, NextDNS.
+  {
+    name: "Select NextDNS as TRR provider",
+    [TRR_MODE_PREF]: 2,
+    selectResolver: NEXTDNS_RESOLVER_VALUE,
+    expectedFinalUriPref: NEXTDNS_RESOLVER_VALUE,
+  },
+  {
+    name: "return to default from NextDNS",
+    [TRR_MODE_PREF]: 2,
+    [TRR_URI_PREF]: NEXTDNS_RESOLVER_VALUE,
+    expectedResolverListValue: NEXTDNS_RESOLVER_VALUE,
+    selectResolver: DEFAULT_RESOLVER_VALUE,
+    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   // test that selecting Custom, when we have a TRR_CUSTOM_URI_PREF subsequently changes TRR_URI_PREF
   {
