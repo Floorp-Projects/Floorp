@@ -126,7 +126,7 @@ TrackTime MediaTrackGraphImpl::GraphTimeToTrackTimeWithBlocking(
 
 GraphTime MediaTrackGraphImpl::IterationEnd() const {
   MOZ_ASSERT(OnGraphThread());
-  return CurrentDriver()->IterationEnd();
+  return mIterationEndTime;
 }
 
 void MediaTrackGraphImpl::UpdateCurrentTimeForTracks(
@@ -1302,19 +1302,23 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   return true;
 }
 
-auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd, AudioMixer* aMixer)
-    -> IterationResult {
+auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
+                                       GraphTime aIterationEnd,
+                                       AudioMixer* aMixer) -> IterationResult {
   if (mGraphRunner) {
-    return mGraphRunner->OneIteration(aStateEnd, aMixer);
+    return mGraphRunner->OneIteration(aStateEnd, aIterationEnd, aMixer);
   }
 
-  return OneIterationImpl(aStateEnd, aMixer);
+  return OneIterationImpl(aStateEnd, aIterationEnd, aMixer);
 }
 
 auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
+                                           GraphTime aIterationEnd,
                                            AudioMixer* aMixer)
     -> IterationResult {
   TRACE_AUDIO_CALLBACK();
+
+  mIterationEndTime = aIterationEnd;
 
   if (SoftRealTimeLimitReached()) {
     DemoteThreadFromRealTime();
