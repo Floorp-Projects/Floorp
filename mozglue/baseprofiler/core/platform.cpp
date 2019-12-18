@@ -552,6 +552,11 @@ class ActivePS {
 
     for (uint32_t i = 0; i < mFilters.length(); ++i) {
       std::string filter = mFilters[i];
+
+      if (filter == "*") {
+        return true;
+      }
+
       std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
 
       // Crude, non UTF-8 compatible, case insensitive substring search
