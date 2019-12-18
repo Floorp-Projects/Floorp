@@ -410,6 +410,8 @@ abstract class AbstractFetchDownloadService : Service() {
 
         FileOutputStream(file, append).use(block)
 
+        if (downloadJobs[download.id]?.status != DownloadJobStatus.COMPLETED) { return }
+
         addCompletedDownload(
             title = download.fileName!!,
             description = download.fileName!!,
