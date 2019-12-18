@@ -21,10 +21,6 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<BrowsingContext> MediaController::GetContext() const {
-  return BrowsingContext::Get(mBrowsingContextId);
-}
-
 MediaController::MediaController(uint64_t aContextId)
     : mBrowsingContextId(aContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
@@ -40,27 +36,31 @@ MediaController::~MediaController() {
 void MediaController::Play() {
   LOG("Play");
   mIsPlaying = true;
-  RefPtr<BrowsingContext> context = GetContext();
-  if (context) {
-    context->Canonical()->UpdateMediaAction(MediaControlActions::ePlay);
-  }
+  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
   mIsPlaying = false;
-  RefPtr<BrowsingContext> context = GetContext();
-  if (context) {
-    context->Canonical()->UpdateMediaAction(MediaControlActions::ePause);
-  }
+  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::ePause);
 }
 
 void MediaController::Stop() {
   LOG("Stop");
   mIsPlaying = false;
-  RefPtr<BrowsingContext> context = GetContext();
+  UpdateMediaActionToContentMediaIfNeeded(MediaControlActions::eStop);
+}
+
+void MediaController::UpdateMediaActionToContentMediaIfNeeded(
+    MediaControlActions aAction) {
+  // There is no controlled media existing, we have no need to update media
+  // action to the content process.
+  if (!ControlledMediaNum()) {
+    return;
+  }
+  RefPtr<BrowsingContext> context = BrowsingContext::Get(mBrowsingContextId);
   if (context) {
-    context->Canonical()->UpdateMediaAction(MediaControlActions::eStop);
+    context->Canonical()->UpdateMediaAction(aAction);
   }
 }
 
