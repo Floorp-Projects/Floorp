@@ -26,7 +26,7 @@ class TestInstallManifest(TestWithTmpDir):
 
     def test_malformed(self):
         f = self.tmppath('manifest')
-        open(f, 'wb').write('junk\n')
+        open(f, 'wt').write('junk\n')
         with self.assertRaises(UnreadableInstallManifest):
             InstallManifest(f)
 
@@ -94,7 +94,7 @@ class TestInstallManifest(TestWithTmpDir):
         m.write(path=p)
         self.assertTrue(os.path.isfile(p))
 
-        with open(p, 'rb') as fh:
+        with open(p, 'r') as fh:
             c = fh.read()
 
         self.assertEqual(c.count('\n'), 9)
@@ -109,7 +109,7 @@ class TestInstallManifest(TestWithTmpDir):
         p2 = self.tmppath('m2')
         m2.write(path=p2)
 
-        with open(p2, 'rb') as fh:
+        with open(p2, 'r') as fh:
             c2 = fh.read()
 
         self.assertEqual(c, c2)
