@@ -108,32 +108,12 @@
 
 @BINPATH@/components/antitracking.manifest
 
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/amContentHandler.js
-@BINPATH@/components/amWebAPI.js
-@BINPATH@/components/amInstallTrigger.js
-#ifndef RELEASE_OR_BETA
-# Bug 1440601
-# @BINPATH@/components/TabSource.js
-#endif
-#endif
-
-#ifndef MOZ_GECKOVIEW_JAR
-#ifdef MOZ_UPDATER
-@BINPATH@/components/nsUpdateService.manifest
-#endif
-#endif
-
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/HandlerService.manifest
 @BINPATH@/components/HandlerService.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
 @BINPATH@/components/l10n-registry.manifest
-
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/TelemetryStartup.manifest
-#endif
 
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
@@ -247,27 +227,6 @@
 #else
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
-@BINPATH@/components/AboutRedirector.js
-@BINPATH@/components/AddonUpdateService.js
-@BINPATH@/components/BlocklistPrompt.js
-@BINPATH@/components/BrowserCLH.js
-@BINPATH@/components/ColorPicker.js
-@BINPATH@/components/ContentDispatchChooser.js
-@BINPATH@/components/ContentPermissionPrompt.js
-@BINPATH@/components/ImageBlockingPolicy.js
-@BINPATH@/components/DirectoryProvider.js
-@BINPATH@/components/FilePicker.js
-@BINPATH@/components/FxAccountsPush.js
-@BINPATH@/components/HelperAppDialog.js
-@BINPATH@/components/LoginManagerPrompter.js
-@BINPATH@/components/MobileComponents.manifest
-@BINPATH@/components/NSSDialogService.js
-@BINPATH@/components/PersistentNotificationHandler.js
-@BINPATH@/components/PresentationDevicePrompt.js
-@BINPATH@/components/PresentationRequestUIGlue.js
-@BINPATH@/components/PromptService.js
-@BINPATH@/components/SessionStore.js
-@BINPATH@/components/XPIDialogService.js
 #endif
 
 ; Remote control protocol
