@@ -38,6 +38,7 @@ private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
+    private val failedToLunch: () -> Unit = { },
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net"
 ) {
@@ -173,11 +174,12 @@ class AppLinksUseCases(
     class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
-        operator fun invoke(appIntent: Intent?) {
+        operator fun invoke(appIntent: Intent?, failedToLaunchAction: () -> Unit = {}) {
             appIntent?.let {
                 try {
                     context.startActivity(it)
                 } catch (e: ActivityNotFoundException) {
+                    failedToLaunchAction()
                     Logger.error("failed to start third party app activity", e)
                 }
             }

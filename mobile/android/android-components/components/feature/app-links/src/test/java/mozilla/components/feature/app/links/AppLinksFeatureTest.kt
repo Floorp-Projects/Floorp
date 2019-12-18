@@ -141,7 +141,7 @@ class AppLinksFeatureTest {
         userTapsOnSession(intentUrl, false)
 
         verifyNoMoreInteractions(mockDialog)
-        verify(mockOpenRedirect).invoke(any())
+        verify(mockOpenRedirect).invoke(any(), any())
     }
 
     @Test

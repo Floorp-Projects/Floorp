@@ -262,7 +262,7 @@
     <ID>UndocumentedPublicFunction:AppLinkRedirect.kt$AppLinkRedirect$fun hasFallback()</ID>
     <ID>UndocumentedPublicFunction:AppLinkRedirect.kt$AppLinkRedirect$fun isRedirect()</ID>
     <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$operator fun invoke(url: String): AppLinkRedirect</ID>
-    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke(appIntent: Intent?)</ID>
+    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke(appIntent: Intent?, failedToLaunchAction: () -> Unit = {})</ID>
     <ID>UndocumentedPublicFunction:Arguments.kt$Arguments$fun assertIsNotBlank(input: String, exceptionIdentifier: String)</ID>
     <ID>UndocumentedPublicFunction:Arguments.kt$Arguments$fun assertIsValidUserAgent(userAgent: String)</ID>
     <ID>UndocumentedPublicFunction:AutoPushFeature.kt$DeliveryManager$fun serviceForChannelId(channelId: String): PushType</ID>
