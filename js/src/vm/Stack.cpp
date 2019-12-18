@@ -280,7 +280,7 @@ bool InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv) {
   }
 
   if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
-    return ThrowUninitializedThis(cx, this);
+    return ThrowUninitializedThis(cx);
   }
 
   setReturnValue(thisv);

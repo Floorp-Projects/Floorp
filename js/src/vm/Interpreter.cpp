@@ -2698,7 +2698,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_CHECKTHIS) {
       if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
-        MOZ_ALWAYS_FALSE(ThrowUninitializedThis(cx, REGS.fp()));
+        MOZ_ALWAYS_FALSE(ThrowUninitializedThis(cx));
         goto error;
       }
     }
@@ -5349,7 +5349,7 @@ bool js::ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind) {
   return false;
 }
 
-bool js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame) {
+bool js::ThrowUninitializedThis(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_UNINITIALIZED_THIS);
   return false;
