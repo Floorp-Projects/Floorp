@@ -6659,10 +6659,9 @@ uint32_t nsIScrollableFrame::GetAvailableVisualScrollingDirections() const {
   return directions;
 }
 
-uint32_t ScrollFrameHelper::GetAvailableScrollingDirectionsForUserInputEvents()
-    const {
-  // This function basically computes a scroll range based on a scrolled rect
-  // and scroll port defined as follows:
+nsRect ScrollFrameHelper::GetScrollRangeForUserInputEvents() const {
+  // This function computes a scroll range based on a scrolled rect and scroll
+  // port defined as follows:
   //   scrollable rect = overflow:hidden ? layout viewport : scrollable rect
   //   scroll port = have visual viewport ? visual viewport : layout viewport
   // The results in the same notion of scroll range that APZ uses (the combined
@@ -6681,9 +6680,16 @@ uint32_t ScrollFrameHelper::GetAvailableScrollingDirectionsForUserInputEvents()
 
   nsSize scrollPort = GetVisualViewportSize();
 
-  nsSize scrollRange;
+  nsRect scrollRange = scrolledRect;
   scrollRange.width = std::max(scrolledRect.width - scrollPort.width, 0);
   scrollRange.height = std::max(scrolledRect.height - scrollPort.height, 0);
+
+  return scrollRange;
+}
+
+uint32_t ScrollFrameHelper::GetAvailableScrollingDirectionsForUserInputEvents()
+    const {
+  nsRect scrollRange = GetScrollRangeForUserInputEvents();
 
   // We check if there is at least one half of a screen pixel of scroll range to
   // roughly match what apz does when it checks if the change in scroll position

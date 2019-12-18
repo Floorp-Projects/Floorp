@@ -207,6 +207,10 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual nsRect GetVisualScrollRange() const = 0;
   /**
+   * Like GetVisualScrollRange but also takes into account overflow: hidden.
+   */
+  virtual nsRect GetScrollRangeForUserInputEvents() const = 0;
+  /**
    * Return how much we would try to scroll by in each direction if
    * asked to scroll by one "line" vertically and horizontally.
    */
