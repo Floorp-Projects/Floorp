@@ -168,6 +168,9 @@ struct GraphInterface {
    * This is the mixed audio output of this MediaTrackGraph. */
   virtual void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
                                 TrackRate aRate, uint32_t aChannels) = 0;
+  /* Called on the graph thread before the first Notify*Data after an
+   * AudioCallbackDriver starts. */
+  virtual void NotifyStarted() = 0;
   /* Called on the graph thread when there is new input data for listeners. This
    * is the raw audio input for this MediaTrackGraph. */
   virtual void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
@@ -752,6 +755,9 @@ class AudioCallbackDriver : public GraphDriver,
   /* SystemClockDriver used as fallback if this AudioCallbackDriver fails to
    * init or start. */
   DataMutex<RefPtr<FallbackWrapper>> mFallback;
+  /* Set to true in the first iteration after starting. Accessed in data
+   * callback while running, or in Start(). */
+  bool mRanFirstIteration = false;
 #ifdef XP_MACOSX
   /* When using the built-in speakers on macbook pro (13 and 15, all models),
    * it's best to hard pan the audio on the right, to avoid feedback into the
