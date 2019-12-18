@@ -80,6 +80,8 @@ class MOZ_STACK_CLASS BytecodeCompiler {
 
   ScriptSourceObject* sourceObjectPtr() const { return sourceObject.get(); }
 
+  JS::Handle<JSScript*> getScript() { return script; }
+
  protected:
   void assertSourceCreated() const {
     MOZ_ASSERT(sourceObject != nullptr);
