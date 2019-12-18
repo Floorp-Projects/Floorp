@@ -4616,9 +4616,6 @@ pref("dom.input.fallbackUploadDir", "");
 // Turn rewriting of youtube embeds on/off
 pref("plugins.rewrite_youtube_embeds", true);
 
-pref("dom.audiochannel.audioCompeting", false);
-pref("dom.audiochannel.audioCompeting.allAgents", false);
-
 // Default media volume
 pref("media.default_volume", "1.0");
 
