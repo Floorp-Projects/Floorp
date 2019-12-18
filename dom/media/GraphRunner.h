@@ -7,6 +7,7 @@
 #ifndef mozilla_GraphRunner_h
 #define mozilla_GraphRunner_h
 
+#include "GraphDriver.h"
 #include "MediaSegment.h"
 #include "mozilla/Monitor.h"
 
@@ -17,10 +18,11 @@ struct PRThread;
 namespace mozilla {
 
 class AudioMixer;
-class GraphDriver;
 class MediaTrackGraphImpl;
 
 class GraphRunner final : public Runnable {
+  using IterationResult = GraphDriver::IterationResult;
+
  public:
   static already_AddRefed<GraphRunner> Create(MediaTrackGraphImpl* aGraph);
 
@@ -33,7 +35,7 @@ class GraphRunner final : public Runnable {
    * Signals one iteration of mGraph. Hands aStateEnd over to mThread and runs
    * the iteration there.
    */
-  bool OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Runs mGraph until it shuts down.
@@ -83,14 +85,14 @@ class GraphRunner final : public Runnable {
   // State being handed over to the graph through OneIteration. Protected by
   // mMonitor.
   Maybe<IterationState> mIterationState;
-  // Reply from mGraph's OneIteration. Protected by mMonitor.
-  bool mStillProcessing;
+  // Result from mGraph's OneIteration. Protected by mMonitor.
+  IterationResult mIterationResult;
 
   enum class ThreadState {
     Wait,      // Waiting for a message.  This is the initial state.
                // A transition from Run back to Wait occurs on the runner
                // thread after it processes as far as mIterationState->mStateEnd
-               // and sets mStillProcessing.
+               // and sets mIterationResult.
     Run,       // Set on driver thread after each mIterationState update.
     Shutdown,  // Set when Shutdown() is called on main thread.
   };

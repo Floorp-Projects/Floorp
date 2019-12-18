@@ -94,6 +94,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
                             public nsIMemoryReporter,
                             public nsITimerCallback,
                             public nsINamed {
+  using IterationResult = GraphDriver::IterationResult;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -215,12 +217,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * OneIterationImpl is called directly. Output from the graph gets mixed into
    * aMixer, if it is non-null.
    */
-  bool OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIteration(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Returns true if this MediaTrackGraph should keep running
    */
-  bool OneIterationImpl(GraphTime aStateEnd, AudioMixer* aMixer);
+  IterationResult OneIterationImpl(GraphTime aStateEnd, AudioMixer* aMixer);
 
   /**
    * Called from the driver, when the graph thread is about to stop, to tell
