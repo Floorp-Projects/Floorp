@@ -161,7 +161,7 @@ class TestInstallManifest(TestWithTmpDir):
         m.write(path=track, expand_pattern=True)
 
         m = InstallManifest(path=track)
-        self.assertEqual([dest for dest in m._dests],
+        self.assertEqual(sorted(dest for dest in m._dests),
                          ['dest/foo/file1', 'dest/foo/file2'])
 
     def test_or(self):
