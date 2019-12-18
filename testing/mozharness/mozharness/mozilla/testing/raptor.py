@@ -139,6 +139,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Run without the conditioned profile.",
         }],
+        [["--device-name"], {
+            "dest": "device_name",
+            "default": None,
+            "help": "Device name of mobile device.",
+        }],
         [["--geckoProfile"], {
             "dest": "gecko_profile",
             "action": "store_true",
@@ -490,6 +495,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             kw_options['obj-path'] = self.config['obj_path']
         if self.test_url_params:
             kw_options['test-url-params'] = self.test_url_params
+        if self.config.get('device_name') is not None:
+            kw_options['device-name'] = self.config['device_name']
 
         kw_options.update(kw)
         if self.host:
