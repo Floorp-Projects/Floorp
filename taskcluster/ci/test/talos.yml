@@ -33,6 +33,11 @@ job-defaults:
                     - talos/linux64_config_taskcluster.py
                 default:
                     - talos/linux_config.py
+    fission-run-on-projects:
+        by-test-platform:
+            linux64-shippable-qr/opt: ['mozilla-central']
+            windows10-64-shippable-qr/opt: ['mozilla-central']
+            default: []
 
 talos-bcv:
     description: "Talos basic compositor video"
