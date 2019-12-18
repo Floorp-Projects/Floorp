@@ -978,11 +978,11 @@ bool MediaTrackGraphImpl::ShouldUpdateMainThread() {
   }
 
   TimeStamp now = TimeStamp::Now();
-  // For offline graphs, update now if there is no pending iteration or if it
-  // has been long enough since the last update.
-  if (!mNeedAnotherIteration ||
-      ((now - mLastMainThreadUpdate).ToMilliseconds() >
-       CurrentDriver()->IterationDuration())) {
+  // For offline graphs, update now if it has been long enough since the last
+  // update, or if it has reached the end.
+  if ((now - mLastMainThreadUpdate).ToMilliseconds() >
+          CurrentDriver()->IterationDuration() ||
+      mStateComputedTime >= mEndTime) {
     mLastMainThreadUpdate = now;
     return true;
   }
@@ -1662,7 +1662,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       if (LifecycleStateRef() <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
         MessageBlock* block = mBackMessageQueue.AppendElement();
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
-        EnsureNextIterationLocked();
+        EnsureNextIteration();
       }
 
       // If this MediaTrackGraph has entered regular (non-forced) shutdown it
@@ -2560,7 +2560,10 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   NotifyDirectConsumers(aRawSegment ? aRawSegment : aSegment);
   appended = aSegment->GetDuration();
   mUpdateTrack->mData->AppendFrom(aSegment);  // note: aSegment is now dead
-  graph->EnsureNextIteration();
+  {
+    MonitorAutoLock lock(graph->GetMonitor());
+    graph->EnsureNextIteration();
+  }
 
   return appended;
 }
@@ -2673,6 +2676,7 @@ void SourceMediaTrack::End() {
   }
   mUpdateTrack->mEnded = true;
   if (auto graph = GraphImpl()) {
+    MonitorAutoLock lock(graph->GetMonitor());
     graph->EnsureNextIteration();
   }
 }
@@ -2882,8 +2886,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
       mPortCount(0),
       mInputDeviceID(nullptr),
       mOutputDeviceID(nullptr),
-      mNeedAnotherIteration(false),
-      mGraphDriverAsleep(false),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
       mForceShutDown(false),
