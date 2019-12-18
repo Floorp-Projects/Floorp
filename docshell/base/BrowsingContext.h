@@ -518,6 +518,8 @@ class BrowsingContext : public nsISupports,
 
   RefPtr<SessionStorageManager> GetSessionStorageManager();
 
+  Type GetType() const { return mType; }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
