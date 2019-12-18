@@ -2072,7 +2072,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
 }
 
 static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
-                                nsIFrame* aParentFrame,
+                                nsContainerFrame* aParentFrame,
                                 nsIContent* aChildContent) {
   // XXX the GetContent() != aChildContent check is needed due to bug 135040.
   // Remove it once that's fixed.
@@ -2090,12 +2090,14 @@ static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
 
   // We could handle all this in CreateNeededPseudoContainers or some other
   // place after we build our frame construction items, but that would involve
-  // creating frame construction items for whitespace kids of
-  // eExcludesIgnorableWhitespace frames, where we know we'll be dropping them
-  // all anyway, and involve an extra walk down the frame construction item
-  // list.
-  if (!aParentFrame ||
-      !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
+  // creating frame construction items for whitespace kids that ignores
+  // white-space, where we know we'll be dropping them all anyway, and involve
+  // an extra walk down the frame construction item list.
+  auto excludesIgnorableWhitespace = [](nsIFrame* aParentFrame) {
+    return aParentFrame->IsFrameOfType(nsIFrame::eXULBox) ||
+           aParentFrame->IsFrameOfType(nsIFrame::eMathML);
+  };
+  if (!aParentFrame || !excludesIgnorableWhitespace(aParentFrame) ||
       aParentFrame->IsGeneratedContentFrame() || !aChildContent->IsText()) {
     return true;
   }
