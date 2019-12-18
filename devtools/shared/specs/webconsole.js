@@ -179,6 +179,7 @@ const webconsoleSpecPrototype = {
         frameActor: Arg(2, "nullable:string"),
         selectedNodeActor: Arg(3, "nullable:string"),
         authorizedEvaluations: Arg(4, "nullable:json"),
+        expressionVars: Arg(5, "nullable:json"),
       },
       response: RetVal("console.autocomplete"),
     },

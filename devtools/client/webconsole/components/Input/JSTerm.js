@@ -241,7 +241,10 @@ class JSTerm extends Component {
         autoCloseBrackets: false,
         lineNumbers: this.props.editorMode,
         lineWrapping: true,
-        mode: Editor.modes.js,
+        mode: {
+          name: "javascript",
+          globalVars: true,
+        },
         styleActiveLine: false,
         tabIndex: "0",
         viewportMargin: Infinity,
@@ -464,7 +467,11 @@ class JSTerm extends Component {
 
           "Ctrl-Space": () => {
             if (!this.autocompletePopup.isOpen) {
-              this.props.autocompleteUpdate(true);
+              this.props.autocompleteUpdate(
+                true,
+                null,
+                this._getExpressionVariables()
+              );
               return null;
             }
 
@@ -771,6 +778,35 @@ class JSTerm extends Component {
   }
 
   /**
+   * Retrieve variable declared in the expression from the CodeMirror state, in order
+   * to display them in the autocomplete popup.
+   */
+  _getExpressionVariables() {
+    const cm = this.editor.codeMirror;
+    const { state } = cm.getTokenAt(cm.getCursor());
+    const variables = [];
+
+    if (state.context) {
+      for (let c = state.context; c; c = c.prev) {
+        for (let v = c.vars; v; v = v.next) {
+          variables.push(v.name);
+        }
+      }
+    }
+
+    const keys = ["localVars", "globalVars"];
+    for (const key of keys) {
+      if (state[key]) {
+        for (let v = state[key]; v; v = v.next) {
+          variables.push(v.name);
+        }
+      }
+    }
+
+    return variables;
+  }
+
+  /**
    * The editor "changes" event handler.
    */
   _onEditorChanges(cm, changes) {
@@ -787,7 +823,7 @@ class JSTerm extends Component {
         !isJsTermChangeOnly &&
         (this.props.autocomplete || this.hasAutocompletionSuggestion())
       ) {
-        this.autocompleteUpdate();
+        this.autocompleteUpdate(false, null, this._getExpressionVariables());
       }
       this.lastInputValue = value;
       this.terminalInputChanged(value);
@@ -1281,8 +1317,8 @@ function mapDispatchToProps(dispatch) {
   return {
     updateHistoryPosition: (direction, expression) =>
       dispatch(actions.updateHistoryPosition(direction, expression)),
-    autocompleteUpdate: (force, getterPath) =>
-      dispatch(actions.autocompleteUpdate(force, getterPath)),
+    autocompleteUpdate: (force, getterPath, expressionVars) =>
+      dispatch(actions.autocompleteUpdate(force, getterPath, expressionVars)),
     autocompleteClear: () => dispatch(actions.autocompleteClear()),
     evaluateExpression: expression =>
       dispatch(actions.evaluateExpression(expression)),
