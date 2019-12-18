@@ -26,6 +26,12 @@
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
 
+  <linkset>
+    <html:link rel="localization" href="browser/branding/brandings.ftl"/>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/browserContext.ftl"/>
+  </linkset>
+
   <commandset id="mainCommandset">
     <command id="Browser:Back"
              oncommand="getPanelBrowser().webNavigation.goBack();"
