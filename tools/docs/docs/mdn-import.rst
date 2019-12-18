@@ -12,7 +12,10 @@ to the firefox source docs.
 2. Add a ``?raw=1`` add the end of the MDN URL
 
 3. Run pandoc the following way:
-   ``pandoc -t rst https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build/Linux_and_MacOS_build_preparation\?raw\=1  > my-file.rst``
+
+.. code-block:: shell
+
+   $ pandoc -t rst https://wiki.developer.mozilla.org/docs/Web/JavaScript?raw\=1  > doc.rst
 
 4. Verify the rst syntax using `./mach lint -l rst`_
 
