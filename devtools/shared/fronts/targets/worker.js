@@ -78,6 +78,7 @@ class WorkerTargetFront extends TargetMixin(
       const connectResponse = await this.connect({});
       // Set the console actor ID on the form to expose it to Target.attachConsole
       // Set the ThreadActor on the target form so it is accessible by getFront
+      this.workerName = connectResponse.workerName;
       this.targetForm.consoleActor = connectResponse.consoleActor;
       this.targetForm.threadActor = connectResponse.threadActor;
       this._threadActor = connectResponse.threadActor;
