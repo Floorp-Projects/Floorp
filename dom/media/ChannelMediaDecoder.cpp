@@ -239,7 +239,6 @@ void ChannelMediaDecoder::ShutdownInternal() {
       [self = RefPtr<ChannelMediaDecoder>(this)] {
         MediaShutdownManager::Instance().Unregister(self);
       });
-  return;
 }
 
 nsresult ChannelMediaDecoder::Load(nsIChannel* aChannel,
