@@ -1346,7 +1346,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     cursor,
     frameActorId,
     selectedNodeActor,
-    authorizedEvaluations
+    authorizedEvaluations,
+    expressionVars = []
   ) {
     let dbgObject = null;
     let environment = null;
@@ -1393,6 +1394,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         webconsoleActor: this,
         selectedNodeActor,
         authorizedEvaluations,
+        expressionVars,
       });
 
       if (result === null) {

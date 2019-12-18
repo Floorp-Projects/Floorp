@@ -573,6 +573,27 @@ function runChecks(dbgObject, environment, sandbox) {
 
   results = propertyProvider(`/*I'm a comment\n \t */\n\nt`);
   test_has_result(results, "testObject");
+
+  info("Test local expression variables");
+  results = propertyProvider("b", { expressionVars: ["a", "b", "c"] });
+  test_has_result(results, "b");
+  Assert.equal(results.matches.has("a"), false);
+  Assert.equal(results.matches.has("c"), false);
+
+  info(
+    "Test that local expression variables are not included when accessing an object properties"
+  );
+  results = propertyProvider("testObject.prop", {
+    expressionVars: ["propLocal"],
+  });
+  Assert.equal(results.matches.has("propLocal"), false);
+  test_has_result(results, "propA");
+
+  results = propertyProvider("testObject['prop", {
+    expressionVars: ["propLocal"],
+  });
+  test_has_result(results, "'propA'");
+  Assert.equal(results.matches.has("propLocal"), false);
 }
 
 /**

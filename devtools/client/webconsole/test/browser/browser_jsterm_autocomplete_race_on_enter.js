@@ -119,7 +119,7 @@ add_task(async function() {
     "Hitting Enter quickly after a letter that should close the popup evaluates the expression"
   );
   onPopupOpened = autocompletePopup.once("popup-opened");
-  await setInputValueForAutocompletion(hud, "var docx = 1; doc");
+  await setInputValueForAutocompletion(hud, "doc");
   await onPopupOpened;
   checkInputCompletionValue(hud, "ument", "completeNode has expected value");
 
