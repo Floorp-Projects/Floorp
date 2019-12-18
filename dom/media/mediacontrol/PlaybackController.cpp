@@ -94,21 +94,26 @@ void PlaybackController::SeekTo() {
   return;
 }
 
-void MediaActionHandler::UpdateMediaAction(BrowsingContext* aContext,
-                                           MediaControlActions aAction) {
+void MediaActionHandler::HandleMediaControlKeysEvent(
+    BrowsingContext* aContext, MediaControlKeysEvent aEvent) {
   PlaybackController controller(aContext);
-  switch (aAction) {
-    case MediaControlActions::ePlay:
+  switch (aEvent) {
+    case MediaControlKeysEvent::ePlay:
       controller.Play();
       break;
-    case MediaControlActions::ePause:
+    case MediaControlKeysEvent::ePause:
       controller.Pause();
       break;
-    case MediaControlActions::eStop:
+    case MediaControlKeysEvent::eStop:
       controller.Stop();
       break;
+    case MediaControlKeysEvent::ePlayPause:
+    case MediaControlKeysEvent::ePrevTrack:
+    case MediaControlKeysEvent::eNextTrack:
+    case MediaControlKeysEvent::eSeekBackward:
+    case MediaControlKeysEvent::eSeekForward:
     default:
-      MOZ_ASSERT_UNREACHABLE("Invalid action.");
+      MOZ_ASSERT_UNREACHABLE("Invalid event.");
   };
 }
 

@@ -16,20 +16,6 @@ extern mozilla::LazyLogModule gMediaControlLog;
 namespace mozilla {
 namespace dom {
 
-inline const char* ToMediaControlActionsStr(MediaControlActions aAction) {
-  switch (aAction) {
-    case MediaControlActions::ePlay:
-      return "Play";
-    case MediaControlActions::ePause:
-      return "Pause";
-    case MediaControlActions::eStop:
-      return "Stop";
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid action.");
-  }
-  return "UNKNOWN";
-}
-
 inline const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
   switch (aKeyEvent) {
     case MediaControlKeysEvent::ePause:

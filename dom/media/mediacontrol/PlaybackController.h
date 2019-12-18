@@ -5,7 +5,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_PLAYBACKCONTROLLER_H_
 #define DOM_MEDIA_MEDIACONTROL_PLAYBACKCONTROLLER_H_
 
-#include "MediaController.h"
+#include "MediaControlKeysEvent.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BrowsingContext.h"
 
@@ -52,8 +52,8 @@ class MOZ_STACK_CLASS PlaybackController {
 
 class MediaActionHandler {
  public:
-  static void UpdateMediaAction(BrowsingContext* aContext,
-                                MediaControlActions aAction);
+  static void HandleMediaControlKeysEvent(BrowsingContext* aContext,
+                                          MediaControlKeysEvent aEvent);
 };
 
 }  // namespace dom
