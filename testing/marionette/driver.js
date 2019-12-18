@@ -5,7 +5,11 @@
 "use strict";
 /* global XPCNativeWrapper */
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -3676,6 +3680,187 @@ GeckoDriver.prototype.teardownReftest = function() {
   this._reftest = null;
 };
 
+/**
+ * Print page as PDF.
+ *
+ * @param {boolean=} landscape
+ *     Paper orientation. Defaults to false.
+ * @param {number=} margin.bottom
+ *     Bottom margin in cm. Defaults to 1cm (~0.4 inches).
+ * @param {number=} margin.left
+ *     Left margin in cm. Defaults to 1cm (~0.4 inches).
+ * @param {number=} margin.right
+ *     Right margin in cm. Defaults to 1cm (~0.4 inches).
+ * @param {number=} margin.top
+ *     Top margin in cm. Defaults to 1cm (~0.4 inches).
+ * @param {string=} pageRanges (not supported)
+ *     Paper ranges to print, e.g., '1-5, 8, 11-13'.
+ *     Defaults to the empty string, which means print all pages.
+ * @param {number=} page.height
+ *     Paper height in cm. Defaults to US letter height (11 inches / 27.94cm)
+ * @param {number=} page.width
+ *     Paper width in cm. Defaults to US letter width (8.5 inches / 21.59cm)
+ * @param {boolean=} shrinkToFit
+ *     Whether or not to override page size as defined by CSS.
+ *     Defaults to true, in which case the content will be scaled
+ *     to fit the paper size.
+ * @param {boolean=} printBackground
+ *     Print background graphics. Defaults to false.
+ * @param {number=} scale
+ *     Scale of the webpage rendering. Defaults to 1.
+ *
+ * @return {string}
+ *     Base64 encoded PDF representing printed document
+ */
+GeckoDriver.prototype.print = async function(cmd) {
+  const printMaxScaleValue = 2.0;
+  const printMinScaleValue = 0.1;
+  const letterPaperSizeCm = {
+    width: 21.59,
+    height: 27.94,
+  };
+
+  assert.content(this.context);
+  assert.open(this.getCurrentWindow());
+  await this._handleUserPrompts();
+
+  const {
+    landscape = false,
+    margin = {
+      top: 1,
+      bottom: 1,
+      left: 1,
+      right: 1,
+    },
+    page = letterPaperSizeCm,
+    shrinkToFit = true,
+    printBackground = false,
+    scale = 1.0,
+  } = cmd.parameters;
+
+  for (let prop of ["top", "bottom", "left", "right"]) {
+    assert.positiveNumber(
+      margin[prop],
+      pprint`margin.${prop} is not a positive number`
+    );
+  }
+  for (let prop of ["width", "height"]) {
+    assert.positiveNumber(
+      page[prop],
+      pprint`page.${prop} is not a positive number`
+    );
+  }
+  assert.positiveNumber(scale, `scale ${scale} is not a positive number`);
+  assert.that(
+    s => s >= printMinScaleValue && scale <= printMaxScaleValue,
+    `scale ${scale} is outside the range ${printMinScaleValue}-${printMaxScaleValue}`
+  )(scale);
+  assert.boolean(shrinkToFit);
+  assert.boolean(landscape);
+  assert.boolean(printBackground);
+
+  // Create a unique filename for the temporary PDF file
+  const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "marionette.pdf");
+  const { file, path: filePath } = await OS.File.openUnique(basePath);
+  await file.close();
+
+  const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+    Ci.nsIPrintSettingsService
+  );
+
+  const printSettings = psService.newPrintSettings;
+  printSettings.isInitializedFromPrinter = true;
+  printSettings.isInitializedFromPrefs = true;
+  printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+  printSettings.printerName = "";
+  printSettings.printSilent = true;
+  printSettings.printToFile = true;
+  printSettings.showPrintProgress = false;
+  printSettings.toFileName = filePath;
+
+  printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeMillimeters;
+  printSettings.paperWidth = page.width * 10;
+  printSettings.paperHeight = page.height * 10;
+
+  // Margins are always in inches irrspective of paperSizeUnit
+
+  let cmToInches = cm => cm / 2.54;
+
+  printSettings.marginBottom = cmToInches(margin.bottom);
+  printSettings.marginLeft = cmToInches(margin.left);
+  printSettings.marginRight = cmToInches(margin.right);
+  printSettings.marginTop = cmToInches(margin.top);
+
+  printSettings.printBGColors = printBackground;
+  printSettings.printBGImages = printBackground;
+  printSettings.scaling = scale;
+  printSettings.shrinkToFit = shrinkToFit;
+
+  printSettings.headerStrCenter = "";
+  printSettings.headerStrLeft = "";
+  printSettings.headerStrRight = "";
+  printSettings.footerStrCenter = "";
+  printSettings.footerStrLeft = "";
+  printSettings.footerStrRight = "";
+
+  if (landscape) {
+    printSettings.orientation = Ci.nsIPrintSettings.kLandscapeOrientation;
+  }
+
+  await new Promise(resolve => {
+    // Bug 1603739 - With e10s enabled the WebProgressListener states
+    // STOP too early, which means the file hasn't been completely written.
+    const waitForFileWritten = () => {
+      const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
+
+      let lastSize = 0;
+      const timerId = setInterval(async () => {
+        const fileInfo = await OS.File.stat(filePath);
+        if (lastSize > 0 && fileInfo.size == lastSize) {
+          clearInterval(timerId);
+          resolve();
+        }
+        lastSize = fileInfo.size;
+      }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
+    };
+
+    const printProgressListener = {
+      onStateChange(webProgress, request, flags, status) {
+        if (
+          flags & Ci.nsIWebProgressListener.STATE_STOP &&
+          flags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+        ) {
+          waitForFileWritten();
+        }
+      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+    };
+    let linkedBrowser = this.curBrowser.tab.linkedBrowser;
+    linkedBrowser.print(
+      linkedBrowser.outerWindowID,
+      printSettings,
+      printProgressListener
+    );
+  });
+
+  const fp = await OS.File.open(filePath);
+
+  // return all data as a base64 encoded string
+  let bytes;
+  try {
+    bytes = await fp.read();
+  } finally {
+    fp.close();
+    await OS.File.remove(filePath);
+  }
+
+  // Each UCS2 character has an upper byte of 0 and a lower byte matching
+  // the binary data
+  return {
+    value: btoa(String.fromCharCode.apply(null, bytes)),
+  };
+};
+
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
@@ -3756,6 +3941,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:NewSession": GeckoDriver.prototype.newSession,
   "WebDriver:NewWindow": GeckoDriver.prototype.newWindow,
   "WebDriver:PerformActions": GeckoDriver.prototype.performActions,
+  "WebDriver:Print": GeckoDriver.prototype.print,
   "WebDriver:Refresh": GeckoDriver.prototype.refresh,
   "WebDriver:ReleaseActions": GeckoDriver.prototype.releaseActions,
   "WebDriver:SendAlertText": GeckoDriver.prototype.sendKeysToDialog,
