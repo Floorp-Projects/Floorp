@@ -273,7 +273,7 @@ class nsMathMLmtdInnerFrame final : public nsBlockFrame, public nsMathMLFrame {
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     return nsBlockFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+        aFlags & ~nsIFrame::eMathML);
   }
 
   virtual const nsStyleText* StyleTextForLineLayout() override;

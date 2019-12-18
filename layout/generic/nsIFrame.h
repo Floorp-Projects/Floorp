@@ -2919,21 +2919,17 @@ class nsIFrame : public nsQueryFrame {
     eXULBox = 1 << 10,
     eCanContainOverflowContainers = 1 << 11,
     eTablePart = 1 << 12,
-    // If this bit is set, the frame doesn't allow ignorable whitespace as
-    // children. For example, the whitespace between <table>\n<tr>\n<td>
-    // will be excluded during the construction of children.
-    eExcludesIgnorableWhitespace = 1 << 13,
-    eSupportsCSSTransforms = 1 << 14,
+    eSupportsCSSTransforms = 1 << 13,
 
     // A replaced element that has replaced-element sizing
     // characteristics (i.e., like images or iframes), as opposed to
     // inline-block sizing characteristics (like form controls).
-    eReplacedSizing = 1 << 15,
+    eReplacedSizing = 1 << 14,
 
     // Does this frame class support 'contain: layout' and
     // 'contain:paint' (supporting one is equivalent to supporting the
     // other).
-    eSupportsContainLayoutAndPaint = 1 << 16,
+    eSupportsContainLayoutAndPaint = 1 << 15,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
