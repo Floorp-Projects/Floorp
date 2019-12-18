@@ -747,8 +747,6 @@ bool FunctionScriptEmitter::initScript() {
     return false;
   }
 
-  bce_->tellDebuggerAboutCompiledScript(bce_->cx);
-
 #ifdef DEBUG
   state_ = State::End;
 #endif

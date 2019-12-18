@@ -30,6 +30,7 @@
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 
+#include "debugger/DebugAPI-inl.h"  // DebugAPI
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
@@ -194,6 +195,18 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
                           SharedContext* sc);
 };
 
+/* If we're on main thread, tell the Debugger about a newly compiled script.
+ *
+ * See: finishSingleParseTask/finishMultiParseTask for the off-thread case.
+ */
+static void tellDebuggerAboutCompiledScript(JSContext* cx,
+                                            Handle<JSScript*> script) {
+  if (cx->isHelperThreadContext()) {
+    return;
+  }
+  DebugAPI::onNewScript(cx, script);
+}
+
 template <typename Unit>
 static JSScript* CreateGlobalScript(
     GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
@@ -208,14 +221,14 @@ static JSScript* CreateGlobalScript(
     return nullptr;
   }
 
-  JSScript* script =
-      compiler.compileScript(info, nullptr, info.sharedContext());
-  if (!script) {
+  if (!compiler.compileScript(info, nullptr, info.sharedContext())) {
     return nullptr;
   }
 
+  tellDebuggerAboutCompiledScript(info.context(), info.getScript());
+
   assertException.reset();
-  return script;
+  return info.getScript();
 }
 
 JSScript* frontend::CompileGlobalScript(
@@ -241,14 +254,14 @@ static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
     return nullptr;
   }
 
-  JSScript* script =
-      compiler.compileScript(info, info.environment(), info.sharedContext());
-  if (!script) {
+  if (!compiler.compileScript(info, info.environment(), info.sharedContext())) {
     return nullptr;
   }
 
+  tellDebuggerAboutCompiledScript(info.context(), info.getScript());
+
   assertException.reset();
-  return script;
+  return info.getScript();
 }
 
 JSScript* frontend::CompileEvalScript(EvalScriptInfo& info,
@@ -797,6 +810,8 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     *sourceObjectOut = sourceObj;
   }
 
+  tellDebuggerAboutCompiledScript(cx, script);
+
   assertException.reset();
   return script;
 }
@@ -838,10 +853,12 @@ static ModuleObject* InternalParseModule(
   AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
   ModuleCompiler<Unit> compiler(srcBuf);
-  ModuleObject* module = compiler.compile(allocScope, info);
+  Rooted<ModuleObject*> module(cx, compiler.compile(allocScope, info));
   if (!module) {
     return nullptr;
   }
+
+  tellDebuggerAboutCompiledScript(cx, info.getScript());
 
   assertException.reset();
   return module;
@@ -1196,6 +1213,11 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
                                                 asyncKind, parameterListEnd);
   if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
     return false;
+  }
+
+  // AsmJS may succeed compile, but does not create scripts.
+  if (info.getScript()) {
+    tellDebuggerAboutCompiledScript(cx, info.getScript());
   }
 
   assertException.reset();
