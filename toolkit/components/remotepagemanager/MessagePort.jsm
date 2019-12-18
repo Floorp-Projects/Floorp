@@ -41,7 +41,6 @@ let RPMAccessManager = {
       getFormatURLPref: ["app.support.baseURL"],
       getBoolPref: [
         "security.certerrors.mitm.priming.enabled",
-        "security.certerrors.permanentOverride",
         "security.enterprise_roots.auto-enabled",
         "security.certerror.hideAddException",
         "security.ssl.errorReporting.automatic",
@@ -53,7 +52,6 @@ let RPMAccessManager = {
         "services.settings.last_update_seconds",
       ],
       getAppBuildID: ["yes"],
-      isWindowPrivate: ["yes"],
       recordTelemetryEvent: ["yes"],
       addToHistogram: ["yes"],
     },
