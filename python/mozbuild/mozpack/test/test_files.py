@@ -147,20 +147,20 @@ class TestDest(TestWithTmpDir):
     def test_dest(self):
         dest = Dest(self.tmppath('dest'))
         self.assertFalse(dest.exists())
-        dest.write('foo')
+        dest.write(b'foo')
         self.assertTrue(dest.exists())
-        dest.write('foo')
-        self.assertEqual(dest.read(4), 'foof')
-        self.assertEqual(dest.read(), 'oo')
-        self.assertEqual(dest.read(), '')
-        dest.write('bar')
-        self.assertEqual(dest.read(4), 'bar')
+        dest.write(b'foo')
+        self.assertEqual(dest.read(4), b'foof')
+        self.assertEqual(dest.read(), b'oo')
+        self.assertEqual(dest.read(), b'')
+        dest.write(b'bar')
+        self.assertEqual(dest.read(4), b'bar')
         dest.close()
-        self.assertEqual(dest.read(), 'bar')
-        dest.write('foo')
+        self.assertEqual(dest.read(), b'bar')
+        dest.write(b'foo')
         dest.close()
-        dest.write('qux')
-        self.assertEqual(dest.read(), 'qux')
+        dest.write(b'qux')
+        self.assertEqual(dest.read(), b'qux')
 
 
 rand = bytes(random.choice(b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
@@ -228,7 +228,7 @@ class TestFile(TestWithTmpDir):
         Test whether File.open returns an appropriately reset file object.
         '''
         src = self.tmppath('src')
-        content = ''.join(samples)
+        content = b''.join(samples)
         with open(src, 'wb') as tmp:
             tmp.write(content)
 
@@ -245,7 +245,7 @@ class TestFile(TestWithTmpDir):
         dest = self.tmppath('dest')
 
         with open(src, 'wb') as tmp:
-            tmp.write('test')
+            tmp.write(b'test')
 
         # Initial copy
         f = File(src)
@@ -253,23 +253,23 @@ class TestFile(TestWithTmpDir):
 
         # Ensure subsequent copies won't trigger writes
         f.copy(DestNoWrite(dest))
-        self.assertEqual('test', open(dest, 'rb').read())
+        self.assertEqual(b'test', open(dest, 'rb').read())
 
         # When the source file is newer, but with the same content, no copy
         # should occur
         time = os.path.getmtime(src) - 1
         os.utime(dest, (time, time))
         f.copy(DestNoWrite(dest))
-        self.assertEqual('test', open(dest, 'rb').read())
+        self.assertEqual(b'test', open(dest, 'rb').read())
 
         # When the source file is older than the destination file, even with
         # different content, no copy should occur.
         with open(src, 'wb') as tmp:
-            tmp.write('fooo')
+            tmp.write(b'fooo')
         time = os.path.getmtime(dest) - 1
         os.utime(src, (time, time))
         f.copy(DestNoWrite(dest))
-        self.assertEqual('test', open(dest, 'rb').read())
+        self.assertEqual(b'test', open(dest, 'rb').read())
 
         # Double check that under conditions where a copy occurs, we would get
         # an exception.
@@ -279,7 +279,7 @@ class TestFile(TestWithTmpDir):
 
         # skip_if_older=False is expected to force a copy in this situation.
         f.copy(dest, skip_if_older=False)
-        self.assertEqual('fooo', open(dest, 'rb').read())
+        self.assertEqual(b'fooo', open(dest, 'rb').read())
 
 
 class TestAbsoluteSymlinkFile(TestWithTmpDir):
@@ -471,12 +471,12 @@ class TestPreprocessedFile(TestWithTmpDir):
         dest = self.tmppath('dest')
 
         with open(src, 'wb') as tmp:
-            tmp.write('#ifdef FOO\ntest\n#endif')
+            tmp.write(b'#ifdef FOO\ntest\n#endif')
 
         f = PreprocessedFile(src, depfile_path=None, marker='#', defines={'FOO': True})
         self.assertTrue(f.copy(dest))
 
-        self.assertEqual('test\n', open(dest, 'rb').read())
+        self.assertEqual(b'test\n', open(dest, 'rb').read())
 
     def test_preprocess_file_no_write(self):
         '''
@@ -488,7 +488,7 @@ class TestPreprocessedFile(TestWithTmpDir):
         depfile = self.tmppath('depfile')
 
         with open(src, 'wb') as tmp:
-            tmp.write('#ifdef FOO\ntest\n#endif')
+            tmp.write(b'#ifdef FOO\ntest\n#endif')
 
         # Initial copy
         f = PreprocessedFile(src, depfile_path=depfile, marker='#', defines={'FOO': True})
@@ -496,20 +496,20 @@ class TestPreprocessedFile(TestWithTmpDir):
 
         # Ensure subsequent copies won't trigger writes
         self.assertFalse(f.copy(DestNoWrite(dest)))
-        self.assertEqual('test\n', open(dest, 'rb').read())
+        self.assertEqual(b'test\n', open(dest, 'rb').read())
 
         # When the source file is older than the destination file, even with
         # different content, no copy should occur.
         with open(src, 'wb') as tmp:
-            tmp.write('#ifdef FOO\nfooo\n#endif')
+            tmp.write(b'#ifdef FOO\nfooo\n#endif')
         time = os.path.getmtime(dest) - 1
         os.utime(src, (time, time))
         self.assertFalse(f.copy(DestNoWrite(dest)))
-        self.assertEqual('test\n', open(dest, 'rb').read())
+        self.assertEqual(b'test\n', open(dest, 'rb').read())
 
         # skip_if_older=False is expected to force a copy in this situation.
         self.assertTrue(f.copy(dest, skip_if_older=False))
-        self.assertEqual('fooo\n', open(dest, 'rb').read())
+        self.assertEqual(b'fooo\n', open(dest, 'rb').read())
 
     def test_preprocess_file_dependencies(self):
         '''
@@ -521,10 +521,10 @@ class TestPreprocessedFile(TestWithTmpDir):
         deps = self.tmppath('src.pp')
 
         with open(src, 'wb') as tmp:
-            tmp.write('#ifdef FOO\ntest\n#endif')
+            tmp.write(b'#ifdef FOO\ntest\n#endif')
 
         with open(incl, 'wb') as tmp:
-            tmp.write('foo bar')
+            tmp.write(b'foo bar')
 
         # Initial copy
         f = PreprocessedFile(src, depfile_path=deps, marker='#', defines={'FOO': True})
@@ -532,21 +532,21 @@ class TestPreprocessedFile(TestWithTmpDir):
 
         # Update the source so it #includes the include file.
         with open(src, 'wb') as tmp:
-            tmp.write('#include incl\n')
+            tmp.write(b'#include incl\n')
         time = os.path.getmtime(dest) + 1
         os.utime(src, (time, time))
         self.assertTrue(f.copy(dest))
-        self.assertEqual('foo bar', open(dest, 'rb').read())
+        self.assertEqual(b'foo bar', open(dest, 'rb').read())
 
         # If one of the dependencies changes, the file should be updated. The
         # mtime of the dependency is set after the destination file, to avoid
         # both files having the same time.
         with open(incl, 'wb') as tmp:
-            tmp.write('quux')
+            tmp.write(b'quux')
         time = os.path.getmtime(dest) + 1
         os.utime(incl, (time, time))
         self.assertTrue(f.copy(dest))
-        self.assertEqual('quux', open(dest, 'rb').read())
+        self.assertEqual(b'quux', open(dest, 'rb').read())
 
         # Perform one final copy to confirm that we don't run the preprocessor
         # again. We update the mtime of the destination so it's newer than the
@@ -575,15 +575,15 @@ class TestPreprocessedFile(TestWithTmpDir):
         self.assertTrue(os.path.islink(dest))
 
         with open(pp_source, 'wb') as tmp:
-            tmp.write('#define FOO\nPREPROCESSED')
+            tmp.write(b'#define FOO\nPREPROCESSED')
 
         f = PreprocessedFile(pp_source, depfile_path=deps, marker='#',
                              defines={'FOO': True})
         self.assertTrue(f.copy(dest))
 
-        self.assertEqual('PREPROCESSED', open(dest, 'rb').read())
+        self.assertEqual(b'PREPROCESSED', open(dest, 'rb').read())
         self.assertFalse(os.path.islink(dest))
-        self.assertEqual('', open(source, 'rb').read())
+        self.assertEqual(b'', open(source, 'rb').read())
 
 
 class TestExistingFile(TestWithTmpDir):
@@ -712,9 +712,10 @@ class TestDeflatedFile(TestWithTmpDir):
         contents = {}
         with JarWriter(src) as jar:
             for content in samples:
-                name = b''.join(random.choice(
-                    b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                    for i in range(8))
+                name = ''.join(
+                    random.choice(
+                        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                    ) for i in range(8))
                 jar.add(name, content, compress=True)
                 contents[name] = content
 
@@ -811,7 +812,7 @@ class TestManifestFile(TestWithTmpDir):
         )
 
         f.copy(self.tmppath('chrome.manifest'))
-        content = open(self.tmppath('chrome.manifest')).read()
+        content = open(self.tmppath('chrome.manifest'), 'rb').read()
         self.assertEqual(content[:42], f.open().read(42))
         self.assertEqual(content, f.open().read())
 
@@ -869,15 +870,15 @@ foo2_xpt = GeneratedFile(
 class TestMinifiedProperties(TestWithTmpDir):
     def test_minified_properties(self):
         propLines = [
-            b'# Comments are removed',
-            b'foo = bar',
-            b'',
-            b'# Another comment',
+            '# Comments are removed',
+            'foo = bar',
+            '',
+            '# Another comment',
         ]
-        prop = GeneratedFile(b'\n'.join(propLines))
+        prop = GeneratedFile('\n'.join(propLines))
         self.assertEqual(MinifiedProperties(prop).open().readlines(),
                          ['foo = bar\n', '\n'])
-        open(self.tmppath('prop'), 'wb').write('\n'.join(propLines))
+        open(self.tmppath('prop'), 'w').write('\n'.join(propLines))
         MinifiedProperties(File(self.tmppath('prop'))) \
             .copy(self.tmppath('prop2'))
         self.assertEqual(open(self.tmppath('prop2')).readlines(),
@@ -886,15 +887,15 @@ class TestMinifiedProperties(TestWithTmpDir):
 
 class TestMinifiedJavaScript(TestWithTmpDir):
     orig_lines = [
-        b'// Comment line',
-        b'let foo = "bar";',
-        b'var bar = true;',
-        b'',
-        b'// Another comment',
+        '// Comment line',
+        'let foo = "bar";',
+        'var bar = true;',
+        '',
+        '// Another comment',
     ]
 
     def test_minified_javascript(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
         min_f = MinifiedJavaScript(orig_f)
 
         mini_lines = min_f.open().readlines()
@@ -910,7 +911,7 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         ]
 
     def test_minified_verify_success(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
         min_f = MinifiedJavaScript(orig_f,
                                    verify_command=self._verify_command('0'))
 
@@ -919,7 +920,7 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         self.assertTrue(len(mini_lines) < len(self.orig_lines))
 
     def test_minified_verify_failure(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
         errors.out = six.StringIO()
         min_f = MinifiedJavaScript(orig_f,
                                    verify_command=self._verify_command('1'))
@@ -1020,7 +1021,7 @@ def do_check(test, finder, pattern, result):
 class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):
         ensureParentDir(self.tmppath(path))
-        open(self.tmppath(path), 'wb').write(path)
+        open(self.tmppath(path), 'wb').write(six.ensure_binary(path))
 
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
@@ -1148,7 +1149,7 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
             real_path = mozpath.join('a', path)
         ensureParentDir(self.tmppath(real_path))
         if not content:
-            content = path
+            content = six.ensure_binary(path)
         open(self.tmppath(real_path), 'wb').write(content)
 
     def do_check(self, pattern, result):
@@ -1161,8 +1162,8 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
         # Also add files in $tmp/a/foo/qux because ComposedFinder is
         # expected to mask foo/qux entirely with content from $tmp/b.
         ensureParentDir(self.tmppath('a/foo/qux/hoge'))
-        open(self.tmppath('a/foo/qux/hoge'), 'wb').write('hoge')
-        open(self.tmppath('a/foo/qux/bar'), 'wb').write('not the right content')
+        open(self.tmppath('a/foo/qux/hoge'), 'wb').write(b'hoge')
+        open(self.tmppath('a/foo/qux/bar'), 'wb').write(b'not the right content')
         self.finder = ComposedFinder({
             '': FileFinder(self.tmppath('a')),
             'foo/qux': FileFinder(self.tmppath('b')),
@@ -1174,6 +1175,8 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
 
 
 @unittest.skipUnless(hglib, 'hglib not available')
+@unittest.skipIf(six.PY3 and os.name == 'nt',
+                 'Does not currently work in Python3 on Windows')
 class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
     def setUp(self):
         super(TestMercurialRevisionFinder, self).setUp()
@@ -1197,7 +1200,7 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
             # b'' because py2 needs !unicode
             b'ui.username="Dummy User <dummy@example.com>"',
         )
-        client = hglib.open(self.tmpdir,
+        client = hglib.open(six.ensure_binary(self.tmpdir),
                             encoding=b'UTF-8',  # b'' because py2 needs !unicode
                             configs=configs)
         self._clients.append(client)
@@ -1207,8 +1210,8 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         with self._client() as c:
             ensureParentDir(self.tmppath(path))
             with open(self.tmppath(path), 'wb') as fh:
-                fh.write(path)
-            c.add(self.tmppath(path))
+                fh.write(six.ensure_binary(path))
+            c.add(six.ensure_binary(self.tmppath(path)))
 
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
@@ -1232,42 +1235,43 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
     def test_old_revision(self):
         with self._client() as c:
             with open(self.tmppath('foo'), 'wb') as fh:
-                fh.write('foo initial')
-            c.add(self.tmppath('foo'))
+                fh.write(b'foo initial')
+            c.add(six.ensure_binary(self.tmppath('foo')))
             c.commit('initial')
 
             with open(self.tmppath('foo'), 'wb') as fh:
-                fh.write('foo second')
+                fh.write(b'foo second')
             with open(self.tmppath('bar'), 'wb') as fh:
-                fh.write('bar second')
-            c.add(self.tmppath('bar'))
+                fh.write(b'bar second')
+            c.add(six.ensure_binary(self.tmppath('bar')))
             c.commit('second')
             # This wipes out the working directory, ensuring the finder isn't
             # finding anything from the filesystem.
-            c.rawcommand(['update', 'null'])
+            c.rawcommand([b'update', b'null'])
 
-        finder = self._get_finder(self.tmpdir, 0)
+        finder = self._get_finder(self.tmpdir, '0')
         f = finder.get('foo')
-        self.assertEqual(f.read(), 'foo initial')
-        self.assertEqual(f.read(), 'foo initial', 'read again for good measure')
+        self.assertEqual(f.read(), b'foo initial')
+        self.assertEqual(f.read(), b'foo initial',
+                         'read again for good measure')
         self.assertIsNone(finder.get('bar'))
 
-        finder = self._get_finder(self.tmpdir, rev=1)
+        finder = self._get_finder(self.tmpdir, rev='1')
         f = finder.get('foo')
-        self.assertEqual(f.read(), 'foo second')
+        self.assertEqual(f.read(), b'foo second')
         f = finder.get('bar')
-        self.assertEqual(f.read(), 'bar second')
+        self.assertEqual(f.read(), b'bar second')
         f = None
 
     def test_recognize_repo_paths(self):
         with self._client() as c:
             with open(self.tmppath('foo'), 'wb') as fh:
-                fh.write('initial')
-            c.add(self.tmppath('foo'))
+                fh.write(b'initial')
+            c.add(six.ensure_binary(self.tmppath('foo')))
             c.commit('initial')
-            c.rawcommand(['update', 'null'])
+            c.rawcommand([b'update', b'null'])
 
-        finder = self._get_finder(self.tmpdir, 0,
+        finder = self._get_finder(self.tmpdir, '0',
                                   recognize_repo_paths=True)
         with self.assertRaises(NotImplementedError):
             list(finder.find(''))
@@ -1279,7 +1283,7 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
 
         f = finder.get(self.tmppath('foo'))
         self.assertIsInstance(f, MercurialFile)
-        self.assertEqual(f.read(), 'initial')
+        self.assertEqual(f.read(), b'initial')
         f = None
 
 
