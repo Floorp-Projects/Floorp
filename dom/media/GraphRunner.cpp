@@ -129,7 +129,7 @@ bool GraphRunner::OnThread() {
 }
 
 #ifdef DEBUG
-bool GraphRunner::RunByGraphDriver(GraphDriver* aDriver) {
+bool GraphRunner::InDriverIteration(GraphDriver* aDriver) {
   if (!OnThread()) {
     return false;
   }

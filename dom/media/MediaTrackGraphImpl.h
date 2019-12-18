@@ -127,7 +127,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * True if we're on aDriver's thread, or if we're on mGraphRunner's thread
    * and mGraphRunner is currently run by aDriver.
    */
-  bool RunByGraphDriver(GraphDriver* aDriver);
+  bool InDriverIteration(GraphDriver* aDriver);
 #endif
 
   /**
@@ -576,7 +576,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Monitor must be held.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    MOZ_ASSERT_IF(mDriver->ThreadRunning(), RunByGraphDriver(mDriver));
+    MOZ_ASSERT_IF(mDriver->ThreadRunning(), InDriverIteration(mDriver));
     MOZ_ASSERT_IF(!mDriver->ThreadRunning(), NS_IsMainThread());
     mDriver = aDriver;
   }

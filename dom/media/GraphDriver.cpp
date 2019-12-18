@@ -40,7 +40,7 @@ GraphDriver::GraphDriver(MediaTrackGraphImpl* aGraphImpl,
 
 void GraphDriver::SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
                            GraphTime aStateComputedTime) {
-  MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
+  MOZ_ASSERT(InIteration() || !ThreadRunning());
 
   mIterationStart = aIterationStart;
   mIterationEnd = aIterationEnd;
@@ -48,18 +48,16 @@ void GraphDriver::SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
 }
 
 #ifdef DEBUG
-bool GraphDriver::OnGraphThread() {
-  return GraphImpl()->RunByGraphDriver(this);
-}
+bool GraphDriver::InIteration() { return GraphImpl()->InDriverIteration(this); }
 #endif
 
 GraphDriver* GraphDriver::PreviousDriver() {
-  MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
+  MOZ_ASSERT(InIteration() || !ThreadRunning());
   return mPreviousDriver;
 }
 
 void GraphDriver::SetPreviousDriver(GraphDriver* aPreviousDriver) {
-  MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
+  MOZ_ASSERT(InIteration() || !ThreadRunning());
   mPreviousDriver = aPreviousDriver;
 }
 
@@ -565,7 +563,7 @@ bool AudioCallbackDriver::Init() {
 void AudioCallbackDriver::Start() {
   MOZ_ASSERT(!IsStarted());
   MOZ_ASSERT(NS_IsMainThread() || OnCubebOperationThread() ||
-             (PreviousDriver() && PreviousDriver()->OnGraphThread()));
+             (PreviousDriver() && PreviousDriver()->InIteration()));
   if (mPreviousDriver) {
     if (mPreviousDriver->AsAudioCallbackDriver()) {
       LOG(LogLevel::Debug, ("Releasing audio driver off main thread."));
@@ -813,7 +811,7 @@ static const char* StateToString(cubeb_state aState) {
 }
 
 void AudioCallbackDriver::StateCallback(cubeb_state aState) {
-  MOZ_ASSERT(!OnGraphThread());
+  MOZ_ASSERT(!InIteration());
   LOG(LogLevel::Debug,
       ("AudioCallbackDriver State: %s", StateToString(aState)));
 
@@ -834,7 +832,7 @@ void AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
                                         AudioSampleFormat aFormat,
                                         uint32_t aChannels, uint32_t aFrames,
                                         uint32_t aSampleRate) {
-  MOZ_ASSERT(OnGraphThread());
+  MOZ_ASSERT(InIteration());
   uint32_t toWrite = mBuffer.Available();
 
   if (!mBuffer.Available()) {
@@ -884,7 +882,7 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
 }
 
 void AudioCallbackDriver::DeviceChangedCallback() {
-  MOZ_ASSERT(!OnGraphThread());
+  MOZ_ASSERT(!InIteration());
   // Tell the audio engine the device has changed, it might want to reset some
   // state.
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
@@ -900,7 +898,7 @@ void AudioCallbackDriver::DeviceChangedCallback() {
 }
 
 uint32_t AudioCallbackDriver::IterationDuration() {
-  MOZ_ASSERT(OnGraphThread());
+  MOZ_ASSERT(InIteration());
   // The real fix would be to have an API in cubeb to give us the number. Short
   // of that, we approximate it here. bug 1019507
   return mIterationDurationMS;
@@ -912,7 +910,7 @@ void AudioCallbackDriver::EnqueueTrackAndPromiseForOperation(
     MediaTrack* aTrack, dom::AudioContextOperation aOperation,
     AbstractThread* aMainThread,
     MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&& aHolder) {
-  MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
+  MOZ_ASSERT(InIteration() || !ThreadRunning());
   auto promises = mPromisesForOperation.Lock();
   promises->AppendElement(TrackAndPromiseForOperation(
       aTrack, aOperation, aMainThread, std::move(aHolder)));
