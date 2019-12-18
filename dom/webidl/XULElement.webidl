@@ -13,8 +13,6 @@ interface XULElement : Element {
 
   // Layout properties
   [SetterThrows]
-  attribute DOMString dir;
-  [SetterThrows]
   attribute DOMString flex;
   [SetterThrows]
   attribute DOMString ordinal;
