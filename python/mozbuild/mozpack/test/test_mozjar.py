@@ -151,23 +151,23 @@ class TestJar(unittest.TestCase):
 
         files = [j for j in JarReader(fileobj=s)]
 
-        self.assertEqual(files[0].filename, 'foo')
+        self.assertEqual(files[0].filename, b'foo')
         self.assertFalse(files[0].compressed)
         self.assertEqual(files[0].read(), b'foo')
 
-        self.assertEqual(files[1].filename, 'bar')
+        self.assertEqual(files[1].filename, b'bar')
         self.assertTrue(files[1].compressed)
         self.assertEqual(files[1].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
-        self.assertEqual(files[2].filename, 'baz/qux')
+        self.assertEqual(files[2].filename, b'baz/qux')
         self.assertFalse(files[2].compressed)
         self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         if os.sep == '\\':
-            self.assertEqual(files[3].filename, 'baz/backslash',
+            self.assertEqual(files[3].filename, b'baz/backslash',
                              'backslashes in filenames on Windows should get normalized')
         else:
-            self.assertEqual(files[3].filename, 'baz\\backslash',
+            self.assertEqual(files[3].filename, b'baz\\backslash',
                              'backslashes in filenames on POSIX platform are untouched')
 
         s = MockDest()
@@ -179,47 +179,47 @@ class TestJar(unittest.TestCase):
         jar = JarReader(fileobj=s)
         files = [j for j in jar]
 
-        self.assertEqual(files[0].filename, 'bar')
+        self.assertEqual(files[0].filename, b'bar')
         self.assertFalse(files[0].compressed)
         self.assertEqual(files[0].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
-        self.assertEqual(files[1].filename, 'foo')
+        self.assertEqual(files[1].filename, b'foo')
         self.assertFalse(files[1].compressed)
         self.assertEqual(files[1].read(), b'foo')
 
-        self.assertEqual(files[2].filename, 'baz/qux')
+        self.assertEqual(files[2].filename, b'baz/qux')
         self.assertTrue(files[2].compressed)
         self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
-        self.assertTrue('bar' in jar)
-        self.assertTrue('foo' in jar)
-        self.assertFalse('baz' in jar)
-        self.assertTrue('baz/qux' in jar)
-        self.assertTrue(jar['bar'], files[1])
-        self.assertTrue(jar['foo'], files[0])
-        self.assertTrue(jar['baz/qux'], files[2])
+        self.assertTrue(b'bar' in jar)
+        self.assertTrue(b'foo' in jar)
+        self.assertFalse(b'baz' in jar)
+        self.assertTrue(b'baz/qux' in jar)
+        self.assertTrue(jar[b'bar'], files[1])
+        self.assertTrue(jar[b'foo'], files[0])
+        self.assertTrue(jar[b'baz/qux'], files[2])
 
         s.seek(0)
         jar = JarReader(fileobj=s)
-        self.assertTrue('bar' in jar)
-        self.assertTrue('foo' in jar)
-        self.assertFalse('baz' in jar)
-        self.assertTrue('baz/qux' in jar)
+        self.assertTrue(b'bar' in jar)
+        self.assertTrue(b'foo' in jar)
+        self.assertFalse(b'baz' in jar)
+        self.assertTrue(b'baz/qux' in jar)
 
         files[0].seek(0)
-        self.assertEqual(jar['bar'].filename, files[0].filename)
-        self.assertEqual(jar['bar'].compressed, files[0].compressed)
-        self.assertEqual(jar['bar'].read(), files[0].read())
+        self.assertEqual(jar[b'bar'].filename, files[0].filename)
+        self.assertEqual(jar[b'bar'].compressed, files[0].compressed)
+        self.assertEqual(jar[b'bar'].read(), files[0].read())
 
         files[1].seek(0)
-        self.assertEqual(jar['foo'].filename, files[1].filename)
-        self.assertEqual(jar['foo'].compressed, files[1].compressed)
-        self.assertEqual(jar['foo'].read(), files[1].read())
+        self.assertEqual(jar[b'foo'].filename, files[1].filename)
+        self.assertEqual(jar[b'foo'].compressed, files[1].compressed)
+        self.assertEqual(jar[b'foo'].read(), files[1].read())
 
         files[2].seek(0)
-        self.assertEqual(jar['baz/qux'].filename, files[2].filename)
-        self.assertEqual(jar['baz/qux'].compressed, files[2].compressed)
-        self.assertEqual(jar['baz/qux'].read(), files[2].read())
+        self.assertEqual(jar[b'baz/qux'].filename, files[2].filename)
+        self.assertEqual(jar[b'baz/qux'].compressed, files[2].compressed)
+        self.assertEqual(jar[b'baz/qux'].read(), files[2].read())
 
     def test_rejar(self):
         s = MockDest()
@@ -236,15 +236,15 @@ class TestJar(unittest.TestCase):
         jar = JarReader(fileobj=new)
         files = [j for j in jar]
 
-        self.assertEqual(files[0].filename, 'foo')
+        self.assertEqual(files[0].filename, b'foo')
         self.assertFalse(files[0].compressed)
         self.assertEqual(files[0].read(), b'foo')
 
-        self.assertEqual(files[1].filename, 'bar')
+        self.assertEqual(files[1].filename, b'bar')
         self.assertTrue(files[1].compressed)
         self.assertEqual(files[1].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
-        self.assertEqual(files[2].filename, 'baz/qux')
+        self.assertEqual(files[2].filename, b'baz/qux')
         self.assertTrue(files[2].compressed)
         self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
@@ -258,7 +258,7 @@ class TestJar(unittest.TestCase):
         jar = JarReader(fileobj=s)
         files = [j for j in jar]
 
-        self.assertEqual(files[0].filename, 'test_data')
+        self.assertEqual(files[0].filename, b'test_data')
         self.assertFalse(files[0].compressed)
         self.assertEqual(files[0].read(), b'test_data')
 
@@ -281,12 +281,12 @@ class TestPreload(unittest.TestCase):
             jar.preload(['baz/qux', 'bar'])
 
         jar = JarReader(fileobj=s)
-        self.assertEqual(jar.last_preloaded, 'bar')
+        self.assertEqual(jar.last_preloaded, b'bar')
         files = [j for j in jar]
 
-        self.assertEqual(files[0].filename, 'baz/qux')
-        self.assertEqual(files[1].filename, 'bar')
-        self.assertEqual(files[2].filename, 'foo')
+        self.assertEqual(files[0].filename, b'baz/qux')
+        self.assertEqual(files[1].filename, b'bar')
+        self.assertEqual(files[2].filename, b'foo')
 
 
 class TestJarLog(unittest.TestCase):

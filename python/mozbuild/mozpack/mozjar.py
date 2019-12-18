@@ -278,9 +278,9 @@ class JarFileReader(object):
         assert header['compression'] in [JAR_DEFLATED, JAR_STORED, JAR_BROTLI]
         self._data = data
         # Copy some local file header fields.
-        for name in ['compressed_size', 'uncompressed_size', 'crc32']:
+        for name in ['filename', 'compressed_size',
+                     'uncompressed_size', 'crc32']:
             setattr(self, name, header[name])
-        self.filename = six.ensure_text(header['filename'])
         self.compressed = header['compression'] != JAR_STORED
         self.compress = header['compression']
 
@@ -413,9 +413,9 @@ class JarReader(object):
             if (host == 0 and xattr & 0x10) or (host == 3 and
                                                 xattr & (0o040000 << 16)):
                 continue
-            entries[six.ensure_text(entry['filename'])] = entry
+            entries[entry['filename']] = entry
             if entry['offset'] < preload:
-                self._last_preloaded = six.ensure_text(entry['filename'])
+                self._last_preloaded = entry['filename']
         self._entries = entries
         return entries
 
@@ -563,7 +563,7 @@ class JarWriter(object):
                     header[name] = entry[name]
             entry['offset'] = offset
             offset += len(content) + header.size
-            if six.ensure_text(entry['filename']) == self._last_preloaded:
+            if entry['filename'] == self._last_preloaded:
                 preload_size = offset
             headers[entry] = header
         # Prepare end of central directory
@@ -586,10 +586,7 @@ class JarWriter(object):
         # Store local file entries followed by compressed data
         for entry, content in six.itervalues(self._contents):
             self._data.write(headers[entry].serialize())
-            if isinstance(content, memoryview):
-                self._data.write(content.tobytes())
-            else:
-                self._data.write(content)
+            self._data.write(content)
         # On non optimized archives, store the central directory entries.
         if not preload_size:
             end['cdir_offset'] = offset
@@ -618,7 +615,7 @@ class JarWriter(object):
         JarFileReader instance. The latter two allow to avoid uncompressing
         data to recompress it.
         '''
-        name = mozpath.normsep(six.ensure_text(name))
+        name = mozpath.normsep(name)
 
         if name in self._contents and not skip_duplicates:
             raise JarWriterError("File %s already in JarWriter" % name)
@@ -666,7 +663,7 @@ class JarWriter(object):
         entry['crc32'] = deflater.crc32
         entry['compressed_size'] = deflater.compressed_size
         entry['uncompressed_size'] = deflater.uncompressed_size
-        entry['filename'] = six.ensure_binary(name)
+        entry['filename'] = name
         self._contents[name] = entry, deflater.compressed_data
 
     def preload(self, files):
@@ -721,10 +718,10 @@ class Deflater(object):
         '''
         Append a buffer to the Deflater.
         '''
+        self._data.write(data)
+
         if isinstance(data, memoryview):
             data = data.tobytes()
-        data = six.ensure_binary(data)
-        self._data.write(data)
 
         if self.compress:
             if self._deflater:
