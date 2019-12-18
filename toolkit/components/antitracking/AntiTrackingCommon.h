@@ -76,7 +76,7 @@ class AntiTrackingCommon final {
     eOpenerAfterUserInteraction,
     eOpener
   };
-  enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant, eAllowOnAnySite };
+  enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
   // Grant the permission for aOrigin to have access to the first party storage.
   // This method can handle 2 different scenarios:
