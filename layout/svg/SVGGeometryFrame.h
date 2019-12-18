@@ -69,8 +69,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
       return false;
     }
 
-    return nsFrame::IsFrameOfType(aFlags &
-                                  ~(nsIFrame::eSVG | nsIFrame::eSVGGeometry));
+    return nsFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
   }
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
