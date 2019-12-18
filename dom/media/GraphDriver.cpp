@@ -721,6 +721,13 @@ void AudioCallbackDriver::Start() {
   MOZ_ASSERT(mAudioStreamState == AudioStreamState::None);
   MOZ_ASSERT_IF(PreviousDriver(), PreviousDriver()->InIteration());
   mAudioStreamState = AudioStreamState::Pending;
+
+  if (mFallbackDriverState == FallbackDriverState::None) {
+    // Starting an audio driver could take a while. We start a system driver in
+    // the meantime so that the graph is kept running.
+    FallbackToSystemClockDriver();
+  }
+
   if (mPreviousDriver) {
     if (mPreviousDriver->AsAudioCallbackDriver()) {
       LOG(LogLevel::Debug, ("Releasing audio driver off main thread."));
@@ -1160,7 +1167,8 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
 
 void AudioCallbackDriver::FallbackToSystemClockDriver() {
   MOZ_ASSERT(!ThreadRunning());
-  MOZ_ASSERT(mAudioStreamState == AudioStreamState::None);
+  MOZ_ASSERT(mAudioStreamState == AudioStreamState::None ||
+             mAudioStreamState == AudioStreamState::Pending);
   MOZ_ASSERT(mFallbackDriverState == FallbackDriverState::None);
   LOG(LogLevel::Debug,
       ("%p: AudioCallbackDriver %p Falling back to SystemClockDriver.", Graph(),
