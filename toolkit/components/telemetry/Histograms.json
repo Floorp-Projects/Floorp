@@ -13156,16 +13156,6 @@
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds and block the main thread are included in this probe."
   },
-  "REJECTED_MESSAGE_MANAGER_MESSAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["amccreight@mozilla.com"],
-    "bug_numbers": [1272423],
-    "expires_in_version": "55",
-    "kind": "count",
-    "keyed": true,
-    "description": "Each key is the message name, with digits removed, from an async message manager message that was rejected for being over approximately 128MB, recorded in the sending process at the time of sending."
-  },
   "SANDBOX_HAS_SECCOMP_BPF": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
