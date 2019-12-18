@@ -78,7 +78,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
-            SpeechProcessingIntentProcessor(this),
+            SpeechProcessingIntentProcessor(this, components.analytics.metrics),
             StartSearchIntentProcessor(components.analytics.metrics),
             DeepLinkIntentProcessor(this),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId)

@@ -10,6 +10,7 @@ import mozilla.components.browser.search.SearchEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
 
 class SearchFragmentStoreTest {
 
@@ -56,6 +57,7 @@ class SearchFragmentStoreTest {
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
-        session = null
+        session = null,
+        searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
     )
 }

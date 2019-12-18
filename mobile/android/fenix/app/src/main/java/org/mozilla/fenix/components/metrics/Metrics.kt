@@ -271,27 +271,31 @@ sealed class Event {
                 }
         }
 
-        sealed class EventSource {
-            data class Suggestion(val engineSource: EngineSource) : EventSource()
-            data class Action(val engineSource: EngineSource) : EventSource()
-
-            private val source: EngineSource
-                get() = when (this) {
-                    is Suggestion -> engineSource
-                    is Action -> engineSource
-                }
+        sealed class EventSource(open val engineSource: EngineSource) {
+            data class Suggestion(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class Action(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class Widget(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class Shortcut(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class Other(override val engineSource: EngineSource) : EventSource(engineSource)
 
             private val label: String
                 get() = when (this) {
                     is Suggestion -> "suggestion"
                     is Action -> "action"
+                    is Widget -> "widget"
+                    is Shortcut -> "shortcut"
+                    is Other -> "other"
                 }
 
             val countLabel: String
-                get() = "${source.identifier.toLowerCase(Locale.getDefault())}.$label"
+                get() = "${engineSource.identifier.toLowerCase(Locale.getDefault())}.$label"
 
             val sourceLabel: String
-                get() = "${source.descriptor}.$label"
+                get() = "${engineSource.descriptor}.$label"
+        }
+
+        enum class SearchAccessPoint {
+            SUGGESTION, ACTION, WIDGET, SHORTCUT, NONE
         }
 
         override val extras: Map<Events.performedSearchKeys, String>?

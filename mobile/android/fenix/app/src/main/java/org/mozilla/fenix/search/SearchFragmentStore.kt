@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.components.metrics.Event
 
 /**
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
@@ -55,7 +56,8 @@ data class SearchFragmentState(
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
     val session: Session?,
-    val pastedText: String? = null
+    val pastedText: String? = null,
+    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
 ) : State
 
 /**

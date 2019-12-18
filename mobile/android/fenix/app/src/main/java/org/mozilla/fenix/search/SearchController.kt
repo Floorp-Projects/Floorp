@@ -14,12 +14,15 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.ACTION
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.SUGGESTION
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.searchEngineManager
 
 /**
  * An interface that handles the view manipulation of the Search, triggered by the Interactor
@@ -54,10 +57,21 @@ class DefaultSearchController(
             val event = if (url.isUrl()) {
                 Event.EnteredUrl(false)
             } else {
-                createSearchEvent(store.state.searchEngineSource.searchEngine, false)
+                val searchAccessPoint = when (store.state.searchAccessPoint) {
+                    NONE -> ACTION
+                    else -> store.state.searchAccessPoint
+                }
+
+                searchAccessPoint?.let { sap ->
+                    MetricsUtils.createSearchEvent(
+                        store.state.searchEngineSource.searchEngine,
+                        context,
+                        sap
+                    )
+                }
             }
 
-            context.metrics.track(event)
+            event?.let { context.metrics.track(it) }
             if (CustomSearchEngineStore.isCustomSearchEngine(
                     context,
                     store.state.searchEngineSource.searchEngine.identifier
@@ -111,8 +125,20 @@ class DefaultSearchController(
             forceSearch = true
         )
 
-        val event = createSearchEvent(store.state.searchEngineSource.searchEngine, true)
-        context.metrics.track(event)
+        val searchAccessPoint = when (store.state.searchAccessPoint) {
+            NONE -> SUGGESTION
+            else -> store.state.searchAccessPoint
+        }
+
+        val event = searchAccessPoint?.let { sap ->
+            MetricsUtils.createSearchEvent(
+                store.state.searchEngineSource.searchEngine,
+                context,
+                sap
+            )
+        }
+        event?.let { context.metrics.track(it) }
+
         if (CustomSearchEngineStore.isCustomSearchEngine(
                 context,
                 store.state.searchEngineSource.searchEngine.identifier
@@ -141,23 +167,5 @@ class DefaultSearchController(
         val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null)
         navController.nav(R.id.searchFragment, directions)
         context.components.core.sessionManager.select(session)
-    }
-
-    private fun createSearchEvent(
-        engine: SearchEngine,
-        isSuggestion: Boolean
-    ): Event.PerformedSearch {
-        val isShortcut = engine != context.searchEngineManager.defaultSearchEngine
-        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)
-
-        val engineSource =
-            if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)
-            else Event.PerformedSearch.EngineSource.Default(engine, isCustom)
-
-        val source =
-            if (isSuggestion) Event.PerformedSearch.EventSource.Suggestion(engineSource)
-            else Event.PerformedSearch.EventSource.Action(engineSource)
-
-        return Event.PerformedSearch(source)
     }
 }

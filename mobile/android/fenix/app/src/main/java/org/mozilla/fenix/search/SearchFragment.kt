@@ -80,6 +80,9 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             ?.let(SearchFragmentArgs.Companion::fromBundle)
             ?.let { it.pastedText }
 
+        val searchAccessPoint = arguments
+                ?.let(SearchFragmentArgs.Companion::fromBundle)?.searchAccessPoint
+
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url.orEmpty()
         val currentSearchEngine = SearchEngineSource.Default(
@@ -107,7 +110,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,
                     showBookmarkSuggestions = requireContext().settings().shouldShowBookmarkSuggestions,
                     session = session,
-                    pastedText = pastedText
+                    pastedText = pastedText,
+                    searchAccessPoint = searchAccessPoint
                 )
             )
         }

@@ -23,9 +23,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
@@ -44,6 +45,7 @@ class SearchInteractorTest {
         val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
         val searchEngine = SearchEngineSource.Default(mockk(relaxed = true))
+        val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint = mockk(relaxed = true)
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.searchEngineManager } returns searchEngineManager
@@ -52,6 +54,7 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
+        every { state.searchAccessPoint } returns searchAccessPoint
 
         every {
             context.getSharedPreferences(
@@ -170,6 +173,7 @@ class SearchInteractorTest {
         val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
         val searchEngine = SearchEngineSource.Default(mockk(relaxed = true))
+        val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint = mockk(relaxed = true)
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.searchEngineManager } returns searchEngineManager
@@ -178,6 +182,7 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
+        every { state.searchAccessPoint } returns searchAccessPoint
 
         every {
             context.getSharedPreferences(

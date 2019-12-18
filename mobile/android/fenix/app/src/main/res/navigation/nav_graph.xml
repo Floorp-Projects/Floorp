@@ -112,6 +112,10 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="search_access_point"
+            app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint"
+            android:defaultValue="NONE" />
     </fragment>
 
     <fragment

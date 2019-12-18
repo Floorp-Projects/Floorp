@@ -8,6 +8,10 @@ import android.content.Intent
 import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 /**
@@ -15,12 +19,21 @@ import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
  * Once the search is complete then a new search should be started.
  */
 class SpeechProcessingIntentProcessor(
-    private val activity: HomeActivity
+    private val activity: HomeActivity,
+    private val metrics: MetricController
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return if (intent.extras?.getBoolean(HomeActivity.OPEN_TO_BROWSER_AND_LOAD) == true) {
             out.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, false)
+
+            val searchEvent = MetricsUtils.createSearchEvent(
+                activity.components.search.provider.getDefaultEngine(activity),
+                activity,
+                Event.PerformedSearch.SearchAccessPoint.WIDGET
+            )
+            searchEvent?.let { metrics.track(it) }
+
             activity.openToBrowserAndLoad(
                 searchTermOrURL = intent.getStringExtra(SPEECH_PROCESSING).orEmpty(),
                 newTab = true,

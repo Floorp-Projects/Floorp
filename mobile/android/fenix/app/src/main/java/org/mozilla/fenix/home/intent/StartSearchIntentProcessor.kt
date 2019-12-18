@@ -22,20 +22,36 @@ class StartSearchIntentProcessor(
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         val event = intent.extras?.getString(HomeActivity.OPEN_TO_SEARCH)
+        var source: Event.PerformedSearch.SearchAccessPoint? = null
         return if (event != null) {
             when (event) {
-                SEARCH_WIDGET -> metrics.track(Event.SearchWidgetNewTabPressed)
-                STATIC_SHORTCUT_NEW_TAB -> metrics.track(Event.PrivateBrowsingStaticShortcutTab)
-                STATIC_SHORTCUT_NEW_PRIVATE_TAB -> metrics.track(Event.PrivateBrowsingStaticShortcutPrivateTab)
-                PRIVATE_BROWSING_PINNED_SHORTCUT -> metrics.track(Event.PrivateBrowsingPinnedShortcutPrivateTab)
+                SEARCH_WIDGET -> {
+                    metrics.track(Event.SearchWidgetNewTabPressed)
+                    source = Event.PerformedSearch.SearchAccessPoint.WIDGET
+                }
+                STATIC_SHORTCUT_NEW_TAB -> {
+                    metrics.track(Event.PrivateBrowsingStaticShortcutTab)
+                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                }
+                STATIC_SHORTCUT_NEW_PRIVATE_TAB -> {
+                    metrics.track(Event.PrivateBrowsingStaticShortcutPrivateTab)
+                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                }
+                PRIVATE_BROWSING_PINNED_SHORTCUT -> {
+                    metrics.track(Event.PrivateBrowsingPinnedShortcutPrivateTab)
+                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                }
             }
 
             out.removeExtra(HomeActivity.OPEN_TO_SEARCH)
 
-            val directions = NavGraphDirections.actionGlobalSearch(
-                sessionId = null
-            )
-            navController.nav(null, directions)
+            val directions = source?.let {
+                NavGraphDirections.actionGlobalSearch(
+                    sessionId = null,
+                    searchAccessPoint = it
+                )
+            }
+            directions?.let { navController.nav(null, it) }
             true
         } else {
             false
