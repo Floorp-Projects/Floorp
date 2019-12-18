@@ -7,6 +7,7 @@ package mozilla.components.support.migration
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -375,7 +376,7 @@ class FennecMigrator private constructor(
     fun <T> startMigrationServiceIfNeeded(service: Class<T>) where T : AbstractMigrationService {
         if (hasMigrationsToRun()) {
             logger.debug("Has migrations to run. Starting service.")
-            context.startService(Intent(context, service))
+            ContextCompat.startForegroundService(context, Intent(context, service))
         } else {
             logger.debug("No migrations to run. Not starting service.")
         }
