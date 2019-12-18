@@ -113,7 +113,7 @@ class FileRegistry(object):
         '''
         Return all paths stored in the container, in the order they were added.
         '''
-        return self._files.keys()
+        return list(self._files)
 
     def __len__(self):
         '''
