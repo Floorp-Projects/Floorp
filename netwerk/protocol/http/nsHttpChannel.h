@@ -651,7 +651,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // Gets computed during ComputeCrossOriginOpenerPolicyMismatch so we have
   // the channel's policy even if we don't know policy initiator.
-  Maybe<nsILoadInfo::CrossOriginOpenerPolicy> mComputedCrossOriginOpenerPolicy;
+  nsILoadInfo::CrossOriginOpenerPolicy mComputedCrossOriginOpenerPolicy;
 
   bool mCacheOpenWithPriority;
   uint32_t mCacheQueueSizeWhenOpen;
