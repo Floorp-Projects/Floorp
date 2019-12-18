@@ -183,6 +183,22 @@ class GraphDriver {
   // GraphDriver's thread has started and the thread is running.
   virtual bool ThreadRunning() = 0;
 
+  double MediaTimeToSeconds(GraphTime aTime) const {
+    NS_ASSERTION(aTime > -TRACK_TIME_MAX && aTime <= TRACK_TIME_MAX,
+                 "Bad time");
+    return static_cast<double>(aTime) / mSampleRate;
+  }
+
+  GraphTime SecondsToMediaTime(double aS) const {
+    NS_ASSERTION(0 <= aS && aS <= TRACK_TICKS_MAX / TRACK_RATE_MAX,
+                 "Bad seconds");
+    return mSampleRate * aS;
+  }
+
+  GraphTime MillisecondsToMediaTime(int32_t aMS) const {
+    return RateConvertTicksRoundDown(mSampleRate, 1000, aMS);
+  }
+
  protected:
   // Sets the associated pointer, asserting that the lock is held
   void SetNextDriver(GraphDriver* aNextDriver);

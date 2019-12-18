@@ -553,16 +553,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     return static_cast<double>(aTime) / GraphRate();
   }
 
-  GraphTime SecondsToMediaTime(double aS) const {
-    NS_ASSERTION(0 <= aS && aS <= TRACK_TICKS_MAX / TRACK_RATE_MAX,
-                 "Bad seconds");
-    return GraphRate() * aS;
-  }
-
-  GraphTime MillisecondsToMediaTime(int32_t aMS) const {
-    return RateConvertTicksRoundDown(GraphRate(), 1000, aMS);
-  }
-
   /**
    * Signal to the graph that the thread has paused indefinitly,
    * or resumed.
