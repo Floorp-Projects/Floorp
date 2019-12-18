@@ -192,8 +192,8 @@ struct GraphInterface {
  * A driver is responsible for the scheduling of the processing, the thread
  * management, and give the different clocks to a MediaTrackGraph. This is an
  * abstract base class. A MediaTrackGraph can be driven by an
- * OfflineClockDriver, if the graph is offline, or a SystemClockDriver, if the
- * graph is real time.
+ * OfflineClockDriver, if the graph is offline, or a SystemClockDriver or an
+ * AudioCallbackDriver, if the graph is real time.
  * A MediaTrackGraph holds an owning reference to its driver.
  *
  * The lifetime of drivers is a complicated affair. Here are the different
@@ -211,30 +211,39 @@ struct GraphInterface {
  * - The graph runs off this thread.
  *
  * Switching from a SystemClockDriver to an AudioCallbackDriver:
- * - A new AudioCallabackDriver is created and initialized on the graph thread
+ * - At the end of the MTG iteration, the graph tells the current driver to
+ *   switch to an AudioCallbackDriver, which is created and initialized on the
+ *   graph thread.
  * - At the end of the MTG iteration, the SystemClockDriver transfers its timing
  *   info and a reference to itself to the AudioCallbackDriver. It then starts
  *   the AudioCallbackDriver.
- * - When the AudioCallbackDriver starts, it checks if it has been switched from
- *   a SystemClockDriver, and if that is the case, sends a message to the main
- *   thread to shut the SystemClockDriver thread down.
- * - The graph now runs off an audio callback
+ * - When the AudioCallbackDriver starts, it:
+ *   - Starts a fallback SystemClockDriver that runs until the
+ *     AudioCallbackDriver is running, in case it takes a long time to start (it
+ *     could block on I/O, e.g., negotiating a bluetooth connection).
+ *   - Checks if it has been switched from a SystemClockDriver, and if that is
+ *     the case, sends a message to the main thread to shut the
+ *     SystemClockDriver thread down.
+ * - When the AudioCallbackDriver is running, data callbacks are blocked. The
+ *   fallback driver detects this in its callback and stops itself. The first
+ *   DataCallback after the fallback driver had stopped goes through.
+ * - The graph now runs off an audio callback.
  *
  * Switching from an AudioCallbackDriver to a SystemClockDriver:
- * - A new SystemClockDriver is created, and set as mNextDriver.
- * - At the end of the MTG iteration, the AudioCallbackDriver transfers its
- *   timing info and a reference to itself to the SystemClockDriver. A new
- *   SystemClockDriver is started from the current audio thread.
+ * - At the end of the MTG iteration, the graph tells the current driver to
+ *   switch to a SystemClockDriver.
+ * - the AudioCallbackDriver transfers its timing info and a reference to itself
+ *   to the SystemClockDriver. A new SystemClockDriver is started from the
+ *   current audio thread.
  * - When starting, the SystemClockDriver checks if it has been switched from an
  *   AudioCallbackDriver. If yes, it creates a new temporary thread to release
- *   the cubeb_streams. This temporary thread closes the cubeb_stream, and
- *   then dispatches a message to the main thread to be terminated.
+ *   the cubeb_streams. This temporary thread closes the cubeb_stream, and then
+ *   dispatches a message to the main thread to be terminated.
  * - The graph now runs off a normal thread.
  *
  * Two drivers cannot run at the same time for the same graph. The thread safety
- * of the different attributes of drivers, and they access pattern is documented
+ * of the different members of drivers, and their access pattern is documented
  * next to the members themselves.
- *
  */
 class GraphDriver {
  public:
