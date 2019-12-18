@@ -58,7 +58,10 @@
 <head>
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <link rel="localization" href="browser/branding/brandings.ftl"/>
+  <link rel="localization" href="toolkit/global/textActions.ftl"/>
   <link rel="localization" href="browser/browser.ftl"/>
+  <link rel="localization" href="browser/browserContext.ftl"/>
   <link rel="localization" href="browser/menubar.ftl"/>
   <link rel="localization" href="browser/protectionsPanel.ftl"/>
   <link rel="localization" href="browser/appmenu.ftl"/>
@@ -575,21 +578,13 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
     <tooltip id="back-button-tooltip">
-      <description class="tooltip-label" value="&backButton.tooltip;"/>
-#ifdef XP_MACOSX
-      <description class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
-#else
-      <description class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
-#endif
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-back"/>
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
     </tooltip>
 
     <tooltip id="forward-button-tooltip">
-      <description class="tooltip-label" value="&forwardButton.tooltip;"/>
-#ifdef XP_MACOSX
-      <description class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
-#else
-      <description class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
-#endif
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-forward"/>
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
     </tooltip>
 
 #include popup-notifications.inc
@@ -792,7 +787,7 @@
       <toolbartabstop/>
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&backCmd.label;"
+                       data-l10n-id="toolbar-button-back"
                        removable="false" overflows="false"
                        keepbroadcastattributeswhencustomizing="true"
                        command="Browser:BackOrBackDuplicate"
@@ -800,7 +795,7 @@
                        tooltip="back-button-tooltip"
                        context="backForwardMenu"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&forwardCmd.label;"
+                       data-l10n-id="toolbar-button-forward"
                        removable="false" overflows="false"
                        keepbroadcastattributeswhencustomizing="true"
                        command="Browser:ForwardOrForwardDuplicate"
@@ -808,10 +803,10 @@
                        tooltip="forward-button-tooltip"
                        context="backForwardMenu"/>
         <toolbaritem id="stop-reload-button" class="chromeclass-toolbar-additional"
-                     title="&reloadCmd.label;"
+                     data-l10n-id="toolbar-button-stop-reload"
                      removable="true" overflows="false">
           <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                         label="&reloadCmd.label;"
+                         data-l10n-id="toolbar-button-reload"
                          command="Browser:ReloadOrDuplicate"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="dynamic-shortcut-tooltip">
@@ -820,7 +815,7 @@
             </box>
           </toolbarbutton>
           <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                         label="&stopCmd.label;"
+                         data-l10n-id="toolbar-button-stop"
                          command="Browser:Stop"
                          tooltip="dynamic-shortcut-tooltip">
             <box class="toolbarbutton-animatable-box">
