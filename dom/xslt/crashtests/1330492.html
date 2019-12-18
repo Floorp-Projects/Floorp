@@ -17,6 +17,7 @@ addEventListener("DOMContentLoaded", function(){
   let xsl = doc.parseFromString(o_xslt.textContent, "text/xml");
   xsltPrs.importStylesheet(xsl);
   xsltPrs.transformToFragment(xml, document);
+  xsltPrs.transformToDocument(xml);
 });
 </script>
 </html>
