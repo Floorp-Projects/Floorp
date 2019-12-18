@@ -32,23 +32,17 @@ extern mozilla::LazyLogModule gMediaTrackGraphLog;
 namespace mozilla {
 
 GraphDriver::GraphDriver(MediaTrackGraphImpl* aGraphImpl)
-    : mIterationStart(0),
-      mIterationEnd(0),
-      mGraphImpl(aGraphImpl),
-      mPreviousDriver(nullptr),
-      mNextDriver(nullptr) {}
+    : mGraphImpl(aGraphImpl) {}
 
-void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
-                               GraphTime aLastSwitchNextIterationStart,
-                               GraphTime aLastSwitchNextIterationEnd) {
+void GraphDriver::SetState(GraphDriver* aPreviousDriver,
+                           GraphTime aIterationStart, GraphTime aIterationEnd,
+                           GraphTime aStateComputedTime) {
   MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
-  // We set mIterationEnd here, because the first thing a driver do when it
-  // does an iteration is to update graph times, so we are in fact setting
-  // mIterationStart of the next iteration by setting the end of the previous
-  // iteration.
-  mIterationStart = aLastSwitchNextIterationStart;
-  mIterationEnd = aLastSwitchNextIterationEnd;
+
+  mIterationStart = aIterationStart;
+  mIterationEnd = aIterationEnd;
+  mStateComputedTime = aStateComputedTime;
 
   MOZ_ASSERT(!PreviousDriver());
   MOZ_ASSERT(aPreviousDriver);
@@ -81,10 +75,6 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver) {
   SetNextDriver(aNextDriver);
 }
 
-GraphTime GraphDriver::StateComputedTime() const {
-  return GraphImpl()->mStateComputedTime;
-}
-
 #ifdef DEBUG
 bool GraphDriver::OnGraphThread() {
   return GraphImpl()->RunByGraphDriver(this);
@@ -102,7 +92,8 @@ void GraphDriver::SwitchToNextDriver() {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   MOZ_ASSERT(NextDriver());
 
-  NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
+  NextDriver()->SetState(this, mIterationStart, mIterationEnd,
+                         mStateComputedTime);
   GraphImpl()->SetCurrentDriver(NextDriver());
   NextDriver()->Start();
   SetNextDriver(nullptr);
@@ -259,10 +250,9 @@ void ThreadedDriver::RunThread() {
     mIterationStart = IterationEnd();
     mIterationEnd += GetIntervalForIteration();
 
-    GraphTime stateComputedTime = StateComputedTime();
-    if (stateComputedTime < mIterationEnd) {
+    if (mStateComputedTime < mIterationEnd) {
       LOG(LogLevel::Warning, ("%p: Global underrun detected", GraphImpl()));
-      mIterationEnd = stateComputedTime;
+      mIterationEnd = mStateComputedTime;
     }
 
     if (mIterationStart >= mIterationEnd) {
@@ -274,7 +264,7 @@ void ThreadedDriver::RunThread() {
 
     GraphTime nextStateComputedTime = GraphImpl()->RoundUpToEndOfAudioBlock(
         mIterationEnd + GraphImpl()->MillisecondsToMediaTime(AUDIO_TARGET_MS));
-    if (nextStateComputedTime < stateComputedTime) {
+    if (nextStateComputedTime < mStateComputedTime) {
       // A previous driver may have been processing further ahead of
       // iterationEnd.
       LOG(LogLevel::Warning,
@@ -282,23 +272,24 @@ void ThreadedDriver::RunThread() {
            "state[%ld; "
            "%ld]",
            GraphImpl(), (long)mIterationStart, (long)mIterationEnd,
-           (long)stateComputedTime, (long)nextStateComputedTime));
-      nextStateComputedTime = stateComputedTime;
+           (long)mStateComputedTime, (long)nextStateComputedTime));
+      nextStateComputedTime = mStateComputedTime;
     }
     LOG(LogLevel::Verbose,
         ("%p: interval[%ld; %ld] state[%ld; %ld]", GraphImpl(),
-         (long)mIterationStart, (long)mIterationEnd, (long)stateComputedTime,
+         (long)mIterationStart, (long)mIterationEnd, (long)mStateComputedTime,
          (long)nextStateComputedTime));
 
     bool stillProcessing = GraphImpl()->OneIteration(nextStateComputedTime);
 
     if (!stillProcessing) {
-      // Enter shutdown mode. The stable-state handler will detect this
-      // and complete shutdown if the graph does not get restarted.
+      // Enter shutdown mode. The stable-state handler will detect this and
+      // complete shutdown.
       dom::WorkletThread::DeleteCycleCollectedJSContext();
       GraphImpl()->SignalMainThreadCleanup();
       break;
     }
+    mStateComputedTime = nextStateComputedTime;
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     WaitForNextIteration();
     if (NextDriver()) {
@@ -322,7 +313,7 @@ MediaTime SystemClockDriver::GetIntervalForIteration() {
       ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
        GraphImpl(), GraphImpl()->MediaTimeToSeconds(IterationEnd() + interval),
        (now - mInitialTimeStamp).ToSeconds(),
-       GraphImpl()->MediaTimeToSeconds(StateComputedTime())));
+       GraphImpl()->MediaTimeToSeconds(mStateComputedTime)));
 
   return interval;
 }
@@ -795,8 +786,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // Don't add the callback until we're inited and ready
   AddMixerCallback();
 
-  GraphTime stateComputedTime = StateComputedTime();
-  if (stateComputedTime == 0) {
+  if (mStateComputedTime == 0) {
     MonitorAutoLock mon(GraphImpl()->GetMonitor());
     // Because this function is called during cubeb_stream_init (to prefill the
     // audio buffers), it can be that we don't have a message here (because this
@@ -829,15 +819,15 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // compute the iteration start and end from there, trying to keep the amount
   // of buffering in the graph constant.
   GraphTime nextStateComputedTime = GraphImpl()->RoundUpToEndOfAudioBlock(
-      stateComputedTime + mBuffer.Available());
+      mStateComputedTime + mBuffer.Available());
 
   mIterationStart = mIterationEnd;
   // inGraph is the number of audio frames there is between the state time and
   // the current time, i.e. the maximum theoretical length of the interval we
   // could use as [mIterationStart; mIterationEnd].
-  GraphTime inGraph = stateComputedTime - mIterationStart;
+  GraphTime inGraph = mStateComputedTime - mIterationStart;
   // We want the interval [mIterationStart; mIterationEnd] to be before the
-  // interval [stateComputedTime; nextStateComputedTime]. We also want
+  // interval [mStateComputedTime; nextStateComputedTime]. We also want
   // the distance between these intervals to be roughly equivalent each time, to
   // ensure there is no clock drift between current time and state time. Since
   // we can't act on the state time because we have to fill the audio buffer, we
@@ -848,15 +838,15 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
       ("%p: interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) "
        "(duration ticks: %ld)",
        GraphImpl(), (long)mIterationStart, (long)mIterationEnd,
-       (long)stateComputedTime, (long)nextStateComputedTime, (long)aFrames,
+       (long)mStateComputedTime, (long)nextStateComputedTime, (long)aFrames,
        (uint32_t)durationMS,
-       (long)(nextStateComputedTime - stateComputedTime)));
+       (long)(nextStateComputedTime - mStateComputedTime)));
 
-  if (stateComputedTime < mIterationEnd) {
+  if (mStateComputedTime < mIterationEnd) {
     LOG(LogLevel::Error,
         ("%p: Media graph global underrun detected", GraphImpl()));
     MOZ_ASSERT_UNREACHABLE("We should not underrun in full duplex");
-    mIterationEnd = stateComputedTime;
+    mIterationEnd = mStateComputedTime;
   }
 
   // Process mic data if any/needed
@@ -870,6 +860,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // We totally filled the buffer (and mScratchBuffer isn't empty).
     // We don't need to run an iteration and if we do so we may overflow.
     stillProcessing = GraphImpl()->OneIteration(nextStateComputedTime);
+    if (stillProcessing) {
+      mStateComputedTime = nextStateComputedTime;
+    }
   } else {
     LOG(LogLevel::Verbose,
         ("%p: DataCallback buffer filled entirely from scratch "

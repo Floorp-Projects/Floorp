@@ -162,12 +162,11 @@ class GraphDriver {
   virtual void SwitchAtNextIteration(GraphDriver* aDriver);
 
   /**
-   * Set the time for a graph, on a driver. This is used so a new driver just
-   * created can start at the right point in time.
+   * Set the state of the driver so it can start at the right point in time,
+   * after switching from another driver.
    */
-  void SetGraphTime(GraphDriver* aPreviousDriver,
-                    GraphTime aLastSwitchNextIterationStart,
-                    GraphTime aLastSwitchNextIterationEnd);
+  void SetState(GraphDriver* aPreviousDriver, GraphTime aIterationStart,
+                GraphTime aIterationEnd, GraphTime aStateComputedTime);
 
   MediaTrackGraphImpl* GraphImpl() const { return mGraphImpl; }
 
@@ -181,16 +180,17 @@ class GraphDriver {
   virtual bool ThreadRunning() = 0;
 
  protected:
-  GraphTime StateComputedTime() const;
   // Sets the associated pointer, asserting that the lock is held
   void SetNextDriver(GraphDriver* aNextDriver);
 
   // Time of the start of this graph iteration. This must be accessed while
   // having the monitor.
-  GraphTime mIterationStart;
+  GraphTime mIterationStart = 0;
   // Time of the end of this graph iteration. This must be accessed while having
   // the monitor.
-  GraphTime mIterationEnd;
+  GraphTime mIterationEnd = 0;
+  // Time until which the graph has processed data.
+  GraphTime mStateComputedTime = 0;
   // The MediaTrackGraphImpl associated with this driver.
   const RefPtr<MediaTrackGraphImpl> mGraphImpl;
 
@@ -208,7 +208,7 @@ class GraphDriver {
   // driver at the end of this iteration.
   // This must be accessed using the {Set,Get}NextDriver methods.
   RefPtr<GraphDriver> mNextDriver;
-  virtual ~GraphDriver() {}
+  virtual ~GraphDriver() = default;
 };
 
 class MediaTrackGraphInitThreadRunnable;
