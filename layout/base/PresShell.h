@@ -17,7 +17,6 @@
 #include "TouchManager.h"
 #include "Units.h"
 #include "Visibility.h"
-#include "ZoomConstraintsClient.h"
 #include "gfxPoint.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
@@ -39,7 +38,6 @@
 #include "nsColor.h"
 #include "nsCOMArray.h"
 #include "nsCoord.h"
-#include "nsDOMNavigationTiming.h"
 #include "nsFrameManager.h"
 #include "nsFrameState.h"
 #include "nsHashKeys.h"
@@ -113,6 +111,7 @@ class EventStates;
 class GeckoMVMContext;
 class OverflowChangedTracker;
 class StyleSheet;
+class ZoomConstraintsClient;
 
 #ifdef ACCESSIBILITY
 namespace a11y {
