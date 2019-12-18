@@ -2945,9 +2945,9 @@ AbstractThread* MediaTrackGraph::AbstractMainThread() {
 }
 
 #ifdef DEBUG
-bool MediaTrackGraphImpl::RunByGraphDriver(GraphDriver* aDriver) {
+bool MediaTrackGraphImpl::InDriverIteration(GraphDriver* aDriver) {
   return aDriver->OnThread() ||
-         (mGraphRunner && mGraphRunner->RunByGraphDriver(aDriver));
+         (mGraphRunner && mGraphRunner->InDriverIteration(aDriver));
 }
 #endif
 

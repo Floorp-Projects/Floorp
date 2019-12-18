@@ -262,8 +262,8 @@ class GraphDriver {
   MediaTrackGraphImpl* GraphImpl() const { return mGraphImpl; }
 
 #ifdef DEBUG
-  // True if the current thread is driving the MTG.
-  bool OnGraphThread();
+  // True if the current thread is currently iterating the MTG.
+  bool InIteration();
 #endif
   // True if the current thread is the GraphDriver's thread.
   virtual bool OnThread() = 0;
