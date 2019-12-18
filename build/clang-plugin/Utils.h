@@ -172,8 +172,7 @@ inline bool isInIgnoredNamespaceForImplicitCtor(const Decl *Declaration) {
          Name == "dwarf2reader" ||      // dwarf2reader
          Name == "arm_ex_to_module" ||  // arm_ex_to_module
          Name == "testing" ||           // gtest
-         Name == "Json" ||              // jsoncpp
-         Name == "rlbox";               // rlbox
+         Name == "Json";                // jsoncpp
 }
 
 inline bool isInIgnoredNamespaceForImplicitConversion(const Decl *Declaration) {
@@ -185,8 +184,7 @@ inline bool isInIgnoredNamespaceForImplicitConversion(const Decl *Declaration) {
   return Name == "std" ||             // standard C++ lib
          Name == "__gnu_cxx" ||       // gnu C++ lib
          Name == "google_breakpad" || // breakpad
-         Name == "testing" ||         // gtest
-         Name == "rlbox";             // rlbox
+         Name == "testing";           // gtest
 }
 
 inline bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {

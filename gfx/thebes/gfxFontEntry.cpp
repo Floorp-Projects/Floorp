@@ -30,7 +30,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
@@ -40,8 +39,6 @@
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
 #include "graphite2/Font.h"
-
-#include "ThebesRLBox.h"
 
 #include <algorithm>
 
@@ -598,150 +595,54 @@ hb_face_t* gfxFontEntry::GetHBFace() {
   return hb_face_reference(mHBFace);
 }
 
-struct gfxFontEntry::GrSandboxData {
-  rlbox_sandbox_gr sandbox;
-  sandbox_callback_gr<const void* (*)(const void*, unsigned int, size_t*)>
-      grGetTableCallback;
-  sandbox_callback_gr<void (*)(const void*, const void*)>
-      grReleaseTableCallback;
-  // Text Shapers register a callback to get glyph advances
-  sandbox_callback_gr<float (*)(const void*, uint16_t)>
-      grGetGlyphAdvanceCallback;
-
-  GrSandboxData() {
-    sandbox.create_sandbox();
-    grGetTableCallback = sandbox.register_callback(GrGetTable);
-    grReleaseTableCallback = sandbox.register_callback(GrReleaseTable);
-    grGetGlyphAdvanceCallback =
-        sandbox.register_callback(gfxGraphiteShaper::GrGetAdvance);
+/*static*/ const void* gfxFontEntry::GrGetTable(const void* aAppFaceHandle,
+                                                unsigned int aName,
+                                                size_t* aLen) {
+  gfxFontEntry* fontEntry =
+      static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
+  hb_blob_t* blob = fontEntry->GetFontTable(aName);
+  if (blob) {
+    unsigned int blobLength;
+    const void* tableData = hb_blob_get_data(blob, &blobLength);
+    fontEntry->mGrTableMap->Put(tableData, blob);
+    *aLen = blobLength;
+    return tableData;
   }
-
-  ~GrSandboxData() {
-    grGetTableCallback.unregister();
-    grReleaseTableCallback.unregister();
-    grGetGlyphAdvanceCallback.unregister();
-    sandbox.destroy_sandbox();
-  }
-};
-
-static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
-
-/*static*/
-tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
-    rlbox_sandbox_gr& sandbox,
-    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
-    tainted_opaque_gr<unsigned int> aName, tainted_opaque_gr<size_t*> aLen) {
-  gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData;
-  tainted_gr<size_t*> t_aLen = rlbox::from_opaque(aLen);
-  *t_aLen = 0;
-  tainted_gr<const void*> ret = nullptr;
-
-  if (fontEntry) {
-    unsigned int fontTableKey =
-        rlbox::from_opaque(aName).unverified_safe_because(
-            "This is only being used to index into a hashmap, which is robust "
-            "for any value. No checks needed.");
-    hb_blob_t* blob = fontEntry->GetFontTable(fontTableKey);
-
-    if (blob) {
-      unsigned int blobLength;
-      const void* tableData = hb_blob_get_data(blob, &blobLength);
-      // tableData is read-only data shared with the sandbox.
-      // Making a copy in sandbox memory
-      tainted_gr<void*> t_tableData = rlbox::sandbox_reinterpret_cast<void*>(
-          sandbox.malloc_in_sandbox<char>(blobLength));
-      if (t_tableData) {
-        rlbox::memcpy(sandbox, t_tableData, tableData, blobLength);
-        *t_aLen = blobLength;
-        ret = rlbox::sandbox_const_cast<const void*>(t_tableData);
-      }
-      hb_blob_destroy(blob);
-    }
-  }
-
-  return ret.to_opaque();
+  *aLen = 0;
+  return nullptr;
 }
 
 /*static*/
-void gfxFontEntry::GrReleaseTable(
-    rlbox_sandbox_gr& sandbox,
-    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
-    tainted_opaque_gr<const void*> aTableBuffer) {
-  sandbox.free_in_sandbox(rlbox::from_opaque(aTableBuffer));
+void gfxFontEntry::GrReleaseTable(const void* aAppFaceHandle,
+                                  const void* aTableBuffer) {
+  gfxFontEntry* fontEntry =
+      static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
+  void* value;
+  if (fontEntry->mGrTableMap->Remove(aTableBuffer, &value)) {
+    hb_blob_destroy(static_cast<hb_blob_t*>(value));
+  }
 }
 
-rlbox_sandbox_gr* gfxFontEntry::GetGrSandbox() {
-  MOZ_ASSERT(mSandboxData != nullptr);
-  return &mSandboxData->sandbox;
-}
-
-sandbox_callback_gr<float (*)(const void*, uint16_t)>*
-gfxFontEntry::GetGrSandboxAdvanceCallbackHandle() {
-  MOZ_ASSERT(mSandboxData != nullptr);
-  return &mSandboxData->grGetGlyphAdvanceCallback;
-}
-
-tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
+gr_face* gfxFontEntry::GetGrFace() {
   if (!mGrFaceInitialized) {
-    // When possible, the below code will use WASM as a sandboxing mechanism.
-    // At this time the wasm sandbox does not support threads.
-    // If Thebes is updated to make callst to the sandbox on multiple threaads,
-    // we need to make sure the underlying sandbox supports threading.
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mSandboxData = new GrSandboxData();
-
-    auto p_faceOps = mSandboxData->sandbox.malloc_in_sandbox<gr_face_ops>();
-    if (!p_faceOps) {
-      MOZ_CRASH("Graphite sandbox memory allocation failed");
-    }
-    auto cleanup = MakeScopeExit(
-        [&] { mSandboxData->sandbox.free_in_sandbox(p_faceOps); });
-    p_faceOps->size = sizeof(*p_faceOps);
-    p_faceOps->get_table = mSandboxData->grGetTableCallback;
-    p_faceOps->release_table = mSandboxData->grReleaseTableCallback;
-
-    tl_grGetFontTableCallbackData = this;
-    auto face = sandbox_invoke(
-        mSandboxData->sandbox, gr_make_face_with_ops,
-        // For security, we do not pass the callback data to this arg, and use
-        // a TLS var instead. However, gr_make_face_with_ops expects this to
-        // be a non null ptr. Therefore,  we should pass some dummy non null
-        // pointer which will be passed to callbacks, but never used. Let's just
-        // pass p_faceOps again, as this is a non-null tainted pointer.
-        p_faceOps /* appFaceHandle */, p_faceOps, gr_face_default);
-    tl_grGetFontTableCallbackData = nullptr;
-    mGrFace = face.to_opaque();
+    gr_face_ops faceOps = {sizeof(gr_face_ops), GrGetTable, GrReleaseTable};
+    mGrTableMap = new nsDataHashtable<nsPtrHashKey<const void>, void*>;
+    mGrFace = gr_make_face_with_ops(this, &faceOps, gr_face_default);
     mGrFaceInitialized = true;
   }
   ++mGrFaceRefCnt;
   return mGrFace;
 }
 
-void gfxFontEntry::ReleaseGrFace(tainted_opaque_gr<gr_face*> aFace) {
-  MOZ_ASSERT(
-      (rlbox::from_opaque(aFace) == rlbox::from_opaque(mGrFace))
-          .unverified_safe_because(
-              "This is safe as the only thing we are doing is comparing "
-              "addresses of two tainted pointers. Furthermore this is used "
-              "merely as a debugging aid in the debug builds. This function is "
-              "called only from the trusted Firefox code rather than the "
-              "untrusted libGraphite."));  // sanity-check
+void gfxFontEntry::ReleaseGrFace(gr_face* aFace) {
+  MOZ_ASSERT(aFace == mGrFace);  // sanity-check
   MOZ_ASSERT(mGrFaceRefCnt > 0);
   if (--mGrFaceRefCnt == 0) {
-    auto t_mGrFace = rlbox::from_opaque(mGrFace);
-
-    tl_grGetFontTableCallbackData = this;
-    sandbox_invoke(mSandboxData->sandbox, gr_face_destroy, t_mGrFace);
-    tl_grGetFontTableCallbackData = nullptr;
-
-    t_mGrFace = nullptr;
-    mGrFace = t_mGrFace.to_opaque();
-
-    delete mSandboxData;
-    mSandboxData = nullptr;
-
+    gr_face_destroy(mGrFace);
+    mGrFace = nullptr;
     mGrFaceInitialized = false;
+    delete mGrTableMap;
+    mGrTableMap = nullptr;
   }
 }
 
@@ -761,32 +662,18 @@ void gfxFontEntry::CheckForGraphiteTables() {
   mHasGraphiteTables = HasFontTable(TRUETYPE_TAG('S', 'i', 'l', 'f'));
 }
 
-tainted_boolean_hint gfxFontEntry::HasGraphiteSpaceContextuals() {
+bool gfxFontEntry::HasGraphiteSpaceContextuals() {
   if (!mGraphiteSpaceContextualsInitialized) {
-    auto face = GetGrFace();
-    auto t_face = rlbox::from_opaque(face);
-    if (t_face) {
-      tainted_gr<const gr_faceinfo*> faceInfo =
-          sandbox_invoke(mSandboxData->sandbox, gr_face_info, t_face, 0);
-      // Comparison with a value in sandboxed memory returns a
-      // tainted_boolean_hint, i.e. a "hint", since the value could be changed
-      // maliciously at any moment.
-      tainted_boolean_hint is_not_none =
+    gr_face* face = GetGrFace();
+    if (face) {
+      const gr_faceinfo* faceInfo = gr_face_info(face, 0);
+      mHasGraphiteSpaceContextuals =
           faceInfo->space_contextuals != gr_faceinfo::gr_space_none;
-      mHasGraphiteSpaceContextuals = is_not_none.unverified_safe_because(
-          "Note ideally mHasGraphiteSpaceContextuals would be "
-          "tainted_boolean_hint, but RLBox does not yet support bitfields, so "
-          "it is not wrapped. However, its value is only ever accessed through "
-          "this function which returns a tainted_boolean_hint, so unwrapping "
-          "temporarily is safe. We remove the wrapper now and re-add it "
-          "below.");
     }
     ReleaseGrFace(face);  // always balance GetGrFace, even if face is null
     mGraphiteSpaceContextualsInitialized = true;
   }
-
-  bool ret = mHasGraphiteSpaceContextuals;
-  return tainted_boolean_hint(ret);
+  return mHasGraphiteSpaceContextuals;
 }
 
 #define FEATURE_SCRIPT_MASK 0x000000ff  // script index replaces low byte of tag
@@ -948,11 +835,8 @@ bool gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag) {
     return result;
   }
 
-  auto face = GetGrFace();
-  auto t_face = rlbox::from_opaque(face);
-  result = t_face ? sandbox_invoke(mSandboxData->sandbox, gr_face_find_fref,
-                                   t_face, aFeatureTag) != nullptr
-                  : false;
+  gr_face* face = GetGrFace();
+  result = face ? gr_face_find_fref(face, aFeatureTag) != nullptr : false;
   ReleaseGrFace(face);
 
   mSupportedFeatures->Put(scriptFeature, result);
