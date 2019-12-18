@@ -309,16 +309,13 @@ def fill_formatter(formatter, contents):
             formatter.add(k, v)
 
 
-def get_contents(registry, read_all=False, mode='rt'):
+def get_contents(registry, read_all=False):
     result = {}
     for k, v in registry:
         if isinstance(v, FileRegistry):
             result[k] = get_contents(v)
         elif isinstance(v, ManifestFile) or read_all:
-            if 'b' in mode:
-                result[k] = v.open(mode).read()
-            else:
-                result[k] = v.open(mode).read().splitlines()
+            result[k] = v.open().read().splitlines()
         else:
             result[k] = v
     return result
@@ -467,7 +464,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
         with self.assertRaises(ErrorMessage) as e:
             f.add_manifest(ManifestContent('chrome', 'foo', 'foo/'))
 
-        self.assertEqual(str(e.exception),
+        self.assertEqual(e.exception.message,
                          'Error: "content foo foo/" overrides '
                          '"content foo foo/unix"')
 
@@ -476,7 +473,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
         with self.assertRaises(ErrorMessage) as e:
             f.add_manifest(ManifestContent('chrome', 'foo', 'foo/', 'os=WINNT'))
 
-        self.assertEqual(str(e.exception),
+        self.assertEqual(e.exception.message,
                          'Error: "content foo foo/ os=WINNT" overrides '
                          '"content foo foo/win os=WINNT"')
 
@@ -486,7 +483,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
         with self.assertRaises(ErrorMessage) as e:
             f.add_manifest(ManifestContent('chrome', 'bar', 'bar/unix'))
 
-        self.assertEqual(str(e.exception),
+        self.assertEqual(e.exception.message,
                          'Error: "content bar bar/unix" overrides '
                          '"content bar bar/win os=WINNT"')
 
@@ -510,7 +507,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
             f.add_manifest(ManifestSkin('chrome', 'foo', 'classic/1.0',
                                         'foo/skin/classic/foo'))
 
-        self.assertEqual(str(e.exception),
+        self.assertEqual(e.exception.message,
                          'Error: "skin foo classic/1.0 foo/skin/classic/foo" overrides '
                          '"skin foo classic/1.0 foo/skin/classic/"')
 
@@ -518,7 +515,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
             f.add_manifest(ManifestLocale('chrome', 'foo', 'en-US',
                                           'foo/locale/en-US/foo'))
 
-        self.assertEqual(str(e.exception),
+        self.assertEqual(e.exception.message,
                          'Error: "locale foo en-US foo/locale/en-US/foo" overrides '
                          '"locale foo en-US foo/locale/en-US/"')
 
