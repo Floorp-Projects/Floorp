@@ -1183,6 +1183,9 @@ void AudioCallbackDriver::FallbackToSystemClockDriver() {
       ("%p: AudioCallbackDriver %p Falling back to SystemClockDriver.", Graph(),
        this));
   mFallbackDriverState = FallbackDriverState::Running;
+  mNextReInitBackoffStep =
+      TimeDuration::FromMilliseconds(AUDIO_INITIAL_FALLBACK_BACKOFF_STEP_MS);
+  mNextReInitAttempt = TimeStamp::Now() + mNextReInitBackoffStep;
   auto fallback =
       MakeRefPtr<FallbackWrapper>(Graph(), this, mSampleRate, mIterationStart,
                                   mIterationEnd, mStateComputedTime);
@@ -1200,6 +1203,8 @@ void AudioCallbackDriver::FallbackDriverStopped(GraphTime aIterationStart,
   mIterationStart = aIterationStart;
   mIterationEnd = aIterationEnd;
   mStateComputedTime = aStateComputedTime;
+  mNextReInitAttempt = TimeStamp();
+  mNextReInitBackoffStep = TimeDuration();
   {
     auto fallback = mFallback.Lock();
     MOZ_ASSERT(fallback.ref()->OnThread());
@@ -1216,12 +1221,26 @@ void AudioCallbackDriver::FallbackDriverStopped(GraphTime aIterationStart,
 void AudioCallbackDriver::MaybeStartAudioStream() {
   AudioStreamState streamState = mAudioStreamState;
   if (streamState != AudioStreamState::None) {
+    LOG(LogLevel::Verbose,
+        ("%p: AudioCallbackDriver %p Cannot re-init.", Graph(), this));
+    return;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+  if (now < mNextReInitAttempt) {
+    LOG(LogLevel::Verbose,
+        ("%p: AudioCallbackDriver %p Not time to re-init yet. %.3fs left.",
+         Graph(), this, (mNextReInitAttempt - now).ToSeconds()));
     return;
   }
 
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver %p Attempting to re-init "
                         "audio stream from fallback driver.",
                         Graph(), this));
+  mNextReInitBackoffStep = std::min(
+      mNextReInitBackoffStep * 2,
+      TimeDuration::FromMilliseconds(AUDIO_MAX_FALLBACK_BACKOFF_STEP_MS));
+  mNextReInitAttempt = now + mNextReInitBackoffStep;
   Start();
 }
 
