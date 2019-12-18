@@ -18,6 +18,7 @@ def options(request):
     opts = {
         'app': 'firefox',
         'binary': 'path/to/dummy/browser',
+        'no_conditioned_profile': True
     }
 
     if hasattr(request.module, 'OPTIONS'):

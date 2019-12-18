@@ -142,6 +142,8 @@ def create_parser(mach_interface=False):
             help="Enable the WebRender compositor in Gecko.")
     add_arg('--no-conditioned-profile', dest="no_conditioned_profile", action="store_true",
             default=False, help="Run Raptor tests without a conditioned profile.")
+    add_arg('--device-name', dest="device_name", default=None,
+            type=str, help="Device name of mobile device.")
     add_arg('--enable-fission', dest="enable_fission", action="store_true", default=False,
             help="Enable Fission (site isolation) in Gecko.")
     add_arg('--setpref', dest="extra_prefs", action="append", default=[],

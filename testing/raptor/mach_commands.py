@@ -58,6 +58,7 @@ class RaptorRunner(MozbuildObject):
         self.memory_test = kwargs['memory_test']
         self.power_test = kwargs['power_test']
         self.cpu_test = kwargs['cpu_test']
+        self.device_name = kwargs['device_name']
 
         if Conditions.is_android(self) or kwargs["app"] in FIREFOX_ANDROID_BROWSERS:
             self.binary_path = None
@@ -156,6 +157,7 @@ class RaptorRunner(MozbuildObject):
             'memory_test': self.memory_test,
             'cpu_test': self.cpu_test,
             'is_release_build': self.is_release_build,
+            'device_name': self.device_name,
         }
 
         sys.path.insert(0, os.path.join(self.topsrcdir, 'tools', 'browsertime'))
