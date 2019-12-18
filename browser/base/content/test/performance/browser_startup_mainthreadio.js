@@ -267,7 +267,7 @@ const startupPhases = {
       condition: WIN || MAC,
       fsync: 7,
       stat: 26,
-      write: 38,
+      write: 40,
     },
     {
       // bug 975996
