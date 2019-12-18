@@ -188,11 +188,6 @@ class MediaTrackGraphInitThreadRunnable : public Runnable {
 
       MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
       mDriver->SetPreviousDriver(nullptr);
-    } else {
-      MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(),
-                 "Don't start a graph without messages queued.");
-      mDriver->mGraphImpl->SwapMessageQueues();
     }
 
     mDriver->RunThread();
@@ -685,12 +680,16 @@ void AudioCallbackDriver::Start() {
 bool AudioCallbackDriver::StartStream() {
   MOZ_ASSERT(!IsStarted() && OnCubebOperationThread());
   mShouldFallbackIfError = true;
+  // Set mStarted before cubeb_stream_start, since starting the cubeb stream can
+  // result in a callback (that may read mStarted) before mStarted would
+  // otherwise be set to true.
+  mStarted = true;
   if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not start cubeb stream for MTG.");
+    mStarted = false;
     return false;
   }
 
-  mStarted = true;
   return true;
 }
 
@@ -785,19 +784,6 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   // Don't add the callback until we're inited and ready
   AddMixerCallback();
-
-  if (mStateComputedTime == 0) {
-    MonitorAutoLock mon(GraphImpl()->GetMonitor());
-    // Because this function is called during cubeb_stream_init (to prefill the
-    // audio buffers), it can be that we don't have a message here (because this
-    // driver is the first one for this graph), and the graph would exit. Simply
-    // return here until we have messages.
-    if (!GraphImpl()->MessagesQueued()) {
-      PodZero(aOutputBuffer, aFrames * mOutputChannels);
-      return aFrames;
-    }
-    GraphImpl()->SwapMessageQueues();
-  }
 
   uint32_t durationMS = aFrames * 1000 / mSampleRate;
 

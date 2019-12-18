@@ -954,7 +954,7 @@ bool MediaTrackGraphImpl::OnGraphThreadOrNotRunning() const {
   // either we're on the right thread (and calling CurrentDriver() is safe),
   // or we're going to fail the assert anyway, so don't cross-check
   // via CurrentDriver().
-  return mDetectedNotRunning ? NS_IsMainThread() : OnGraphThread();
+  return mGraphDriverRunning ? OnGraphThread() : NS_IsMainThread();
 }
 
 bool MediaTrackGraphImpl::OnGraphThread() const {
@@ -1480,7 +1480,7 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
   // See bug 1535398.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mGraph->mDetectedNotRunning && mGraph->mDriver,
+    MOZ_ASSERT(!mGraph->mGraphDriverRunning && mGraph->mDriver,
                "We should know the graph thread control loop isn't running!");
 
     LOG(LogLevel::Debug, ("%p: Shutting down graph", mGraph.get()));
@@ -1488,7 +1488,7 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
     // We've asserted the graph isn't running.  Use mDriver instead of
     // CurrentDriver to avoid thread-safety checks
 #if 0  // AudioCallbackDrivers are released asynchronously anyways
-    // XXX a better test would be have setting mDetectedNotRunning make sure
+    // XXX a better test would be have setting mGraphDriverRunning make sure
     // any current callback has finished and block future ones -- or just
     // handle it all in Shutdown()!
     if (mGraph->mDriver->AsAudioCallbackDriver()) {
@@ -1674,27 +1674,27 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
     }
 
     if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
+      // Start the driver now. We couldn't start it earlier because the graph
+      // might exit immediately on finding it has no tracks. The first message
+      // for a new graph must create a track. Ensure that his message runs on
+      // the first iteration.
+      MOZ_ASSERT(MessagesQueued());
+      SwapMessageQueues();
+
+      LOG(LogLevel::Debug,
+          ("%p: Starting a graph with a %s", this,
+           CurrentDriver()->AsAudioCallbackDriver() ? "AudioCallbackDriver"
+                                                    : "SystemClockDriver"));
       LifecycleStateRef() = LIFECYCLE_RUNNING;
-      // Start the thread now. We couldn't start it earlier because
-      // the graph might exit immediately on finding it has no tracks. The
-      // first message for a new graph must create a track.
-      {
-        // We should exit the monitor for now, because starting a track might
-        // take locks, and we don't want to deadlock.
-        LOG(LogLevel::Debug,
-            ("%p: Starting a graph with a %s", this,
-             CurrentDriver()->AsAudioCallbackDriver() ? "AudioCallbackDriver"
-                                                      : "SystemClockDriver"));
-        RefPtr<GraphDriver> driver = CurrentDriver();
-        MonitorAutoUnlock unlock(mMonitor);
-        driver->Start();
-        // It's not safe to Shutdown() a thread from StableState, and
-        // releasing this may shutdown a SystemClockDriver thread.
-        // Proxy the release to outside of StableState.
-        NS_ReleaseOnMainThreadSystemGroup("MediaTrackGraphImpl::CurrentDriver",
-                                          driver.forget(),
-                                          true);  // always proxy
-      }
+      mGraphDriverRunning = true;
+      RefPtr<GraphDriver> driver = CurrentDriver();
+      driver->Start();
+      // It's not safe to Shutdown() a thread from StableState, and
+      // releasing this may shutdown a SystemClockDriver thread.
+      // Proxy the release to outside of StableState.
+      NS_ReleaseOnMainThreadSystemGroup("MediaTrackGraphImpl::CurrentDriver",
+                                        driver.forget(),
+                                        true);  // always proxy
     }
 
     if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
@@ -1714,7 +1714,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
       mAbstractMainThread->Dispatch(event.forget());
     }
 
-    mDetectedNotRunning = LifecycleStateRef() > LIFECYCLE_RUNNING;
+    mGraphDriverRunning = LifecycleStateRef() == LIFECYCLE_RUNNING;
   }
 
   // Make sure we get a new current time in the next event loop task
@@ -1729,7 +1729,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
 
 #ifdef DEBUG
   mCanRunMessagesSynchronously =
-      mDetectedNotRunning &&
+      !mGraphDriverRunning &&
       LifecycleStateRef() >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
 #endif
 
@@ -1778,7 +1778,7 @@ void MediaTrackGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage) {
   MOZ_ASSERT_IF(aMessage->GetTrack(), !aMessage->GetTrack()->IsDestroyed());
   MOZ_DIAGNOSTIC_ASSERT(mMainThreadTrackCount > 0 || mMainThreadPortCount > 0);
 
-  if (mDetectedNotRunning &&
+  if (!mGraphDriverRunning &&
       LifecycleStateRef() > LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
     // The graph control loop is not running and main thread cleanup has
     // happened. From now on we can't append messages to
@@ -2888,7 +2888,7 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
       mForceShutDown(false),
       mPostedRunInStableStateEvent(false),
-      mDetectedNotRunning(false),
+      mGraphDriverRunning(false),
       mPostedRunInStableState(false),
       mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER),
       mTrackOrderDirty(false),
@@ -2904,7 +2904,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
       mAudioOutputLatency(0.0) {
   if (aRunTypeRequested == SINGLE_THREAD && !mGraphRunner) {
     // Failed to create thread.  Jump to the last phase of the lifecycle.
-    mDetectedNotRunning = true;
     mLifecycleState = LIFECYCLE_WAITING_FOR_TRACK_DESTRUCTION;
 #ifdef DEBUG
     mCanRunMessagesSynchronously = true;
