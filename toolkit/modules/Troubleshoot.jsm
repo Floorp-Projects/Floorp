@@ -102,6 +102,7 @@ const PREFS_WHITELIST = [
 
 // The blacklist, unlike the whitelist, is a list of regular expressions.
 const PREFS_BLACKLIST = [
+  /^browser[.]fixup[.]domainwhitelist[.]/,
   /^media[.]webrtc[.]debug[.]aec_log_dir/,
   /^media[.]webrtc[.]debug[.]log_file/,
   /^network[.]proxy[.]/,
