@@ -468,22 +468,10 @@ const PREFS_CONFIG = new Map([
     {
       title: "Configuration for the new pocket new tab",
       getValue: ({ geo, locale }) => {
-        // PLEASE NOTE:
-        // hardcoded_layout in `lib/DiscoveryStreamFeed.jsm` only works for en-* and DE and requires refactoring for other locales
-        const dsEnablementMatrix = {
-          US: ["en-CA", "en-GB", "en-US"],
-          CA: ["en-CA", "en-GB", "en-US"],
-          DE: ["de", "de-DE", "de-AT", "de-CH"],
-        };
-
-        // Verify that the current geo & locale combination is enabled
-        const isEnabled =
-          !!dsEnablementMatrix[geo] && dsEnablementMatrix[geo].includes(locale);
-
         return JSON.stringify({
           api_key_pref: "extensions.pocket.oAuthConsumerKey",
           collapsible: true,
-          enabled: isEnabled,
+          enabled: true,
           show_spocs: showSpocs({ geo }),
           hardcoded_layout: true,
           personalized: true,

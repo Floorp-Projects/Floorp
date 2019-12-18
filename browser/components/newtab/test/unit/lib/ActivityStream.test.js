@@ -239,29 +239,6 @@ describe("ActivityStream", () => {
         JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
       );
     });
-    it("should be false with no geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("NOGEO");
-
-      as._updateDynamicPrefs();
-
-      assert.isFalse(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
-      );
-    });
-    it("should be false with weird geo and locale combination", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("DE");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
-        .get(() => "en-US");
-
-      as._updateDynamicPrefs();
-
-      assert.isFalse(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
-      );
-    });
   });
   describe("_updateDynamicPrefs topstories default value", () => {
     it("should be false with no geo/locale", () => {
