@@ -7440,8 +7440,9 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
     return NS_ERROR_BLOCKED_BY_POLICY;
   }
 
+  // In xpcshell-tests we don't always have a current window global
   if (!ctx->Canonical()->GetCurrentWindowGlobal()) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;
   }
 
   // We use the top window principal as the documentOrigin
