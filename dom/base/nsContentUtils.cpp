@@ -20,7 +20,7 @@
 #include "imgRequestProxy.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/Array.h"        // JS::NewArrayObject
+#include "js/Array.h"  // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{GetArrayBufferData,IsArrayBufferObject,NewArrayBuffer}
 #include "js/JSON.h"
 #include "js/RegExp.h"  // JS::ExecuteRegExpNoStatics, JS::NewUCRegExpObject, JS::RegExpFlags
@@ -532,6 +532,47 @@ class SameOriginCheckerImpl final : public nsIChannelEventSink,
 };
 
 }  // namespace
+
+AutoSuppressEventHandlingAndSuspend::AutoSuppressEventHandlingAndSuspend(
+    BrowsingContextGroup* aGroup) {
+  for (const auto& bc : aGroup->Toplevels()) {
+    SuppressBrowsingContext(bc);
+  }
+}
+
+void AutoSuppressEventHandlingAndSuspend::SuppressBrowsingContext(
+    BrowsingContext* aBC) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> win = aBC->GetDOMWindow()) {
+    if (RefPtr<Document> doc = win->GetExtantDoc()) {
+      mDocuments.AppendElement(doc);
+      mWindows.AppendElement(win->GetCurrentInnerWindow());
+      // Note: Document::SuppressEventHandling will also automatically suppress
+      // event handling for any in-process sub-documents. However, since we need
+      // to deal with cases where remote BrowsingContexts may be interleaved
+      // with in-process ones, we still need to walk the entire tree ourselves.
+      // This may be slightly redundant in some cases, but since event handling
+      // suppressions maintain a count of current blockers, it does not cause
+      // any problems.
+      doc->SuppressEventHandling();
+      win->GetCurrentInnerWindow()->Suspend();
+    }
+  }
+
+  BrowsingContext::Children children;
+  aBC->GetChildren(children);
+  for (const auto& bc : children) {
+    SuppressBrowsingContext(bc);
+  }
+}
+
+AutoSuppressEventHandlingAndSuspend::~AutoSuppressEventHandlingAndSuspend() {
+  for (const auto& win : mWindows) {
+    win->Resume();
+  }
+  for (const auto& doc : mDocuments) {
+    doc->UnsuppressEventHandlingAndFireEvents(true);
+  }
+}
 
 /**
  * This class is used to determine whether or not the user is currently
