@@ -188,16 +188,16 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   ~IDBFactory();
 
   static nsresult CreateForMainThreadJSInternal(
-      nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+      nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo> aPrincipalInfo,
       IDBFactory** aFactory);
 
   static nsresult CreateInternal(nsIGlobalObject* aGlobal,
-                                 nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+                                 nsAutoPtr<PrincipalInfo> aPrincipalInfo,
                                  uint64_t aInnerWindowID,
                                  IDBFactory** aFactory);
 
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
-                                           nsIPrincipal** aPrincipal);
+                                           nsCOMPtr<nsIPrincipal>* aPrincipal);
 
   MOZ_MUST_USE RefPtr<IDBOpenDBRequest> OpenInternal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
