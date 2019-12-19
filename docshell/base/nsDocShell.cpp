@@ -9755,19 +9755,14 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   // open a channel for the url
-  nsCOMPtr<nsIChannel> channel;
 
   // If we have a pending channel, use the channel we've already created here.
   // We don't need to set up load flags for our channel, as it has already been
   // created.
-  nsCOMPtr<nsIChildChannel> pendingChannel =
-      aLoadState->GetPendingRedirectedChannel();
-  if (pendingChannel) {
+  nsCOMPtr<nsIChannel> channel = aLoadState->GetPendingRedirectedChannel();
+  if (channel) {
     MOZ_ASSERT(!aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC),
                "pending channel for srcdoc load?");
-
-    channel = do_QueryInterface(pendingChannel);
-    MOZ_ASSERT(channel, "nsIChildChannel isn't a nsIChannel?");
 
     // If we have a request outparameter, shove our channel into it.
     if (aRequest) {
@@ -12769,14 +12764,11 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
   // Call into InternalLoad with the pending channel when it is received.
   cpcl->RegisterCallback(
       aIdentifier,
-      [self, aHistoryIndex](nsIChildChannel* aChannel,
+      [self, aHistoryIndex](nsIChannel* aChannel,
                             nsTArray<net::DocumentChannelRedirect>&& aRedirects,
                             uint32_t aLoadStateLoadFlags) {
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
-          nsCOMPtr<nsIRequest> request = do_QueryInterface(aChannel);
-          if (request) {
-            request->Cancel(NS_BINDING_ABORTED);
-          }
+          aChannel->Cancel(NS_BINDING_ABORTED);
           return;
         }
 
@@ -12788,14 +12780,11 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         }
         loadState->SetLoadFlags(aLoadStateLoadFlags);
 
-        if (nsCOMPtr<nsIChannel> channel = do_QueryInterface(aChannel)) {
-          nsCOMPtr<nsIURI> previousURI;
-          uint32_t previousFlags = 0;
-          ExtractLastVisit(channel, getter_AddRefs(previousURI),
-                           &previousFlags);
-          self->SavePreviousRedirectsAndLastVisit(channel, previousURI,
-                                                  previousFlags, aRedirects);
-        }
+        nsCOMPtr<nsIURI> previousURI;
+        uint32_t previousFlags = 0;
+        ExtractLastVisit(aChannel, getter_AddRefs(previousURI), &previousFlags);
+        self->SavePreviousRedirectsAndLastVisit(aChannel, previousURI,
+                                                previousFlags, aRedirects);
 
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
