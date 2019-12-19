@@ -261,3 +261,97 @@ async function createFile(contents, options = {}) {
 
   return { file, path };
 }
+
+class RecordEvents {
+  /**
+   * A timeline of events chosen by calls to `addRecorder`.
+   * Call `configure`` for each client event you want to record.
+   * Then `await record(someTimeout)` to record a timeline that you
+   * can make assertions about.
+   *
+   * const history = new RecordEvents(expectedNumberOfEvents);
+   *
+   * history.addRecorder({
+   *  event: Runtime.executionContextDestroyed,
+   *  eventName: "Runtime.executionContextDestroyed",
+   *  messageFn: payload => {
+   *    return `Received Runtime.executionContextDestroyed for id ${payload.executionContextId}`;
+   *  },
+   * });
+   *
+   *
+   * @param {number} total
+   *     Number of expected events. Stop recording when this number is exceeded.
+   *
+   */
+  constructor(total) {
+    this.events = [];
+    this.promises = new Set();
+    this.subscriptions = new Set();
+    this.total = total;
+  }
+
+  /**
+   * Configure an event to be recorded and logged.
+   * The recording stops once we accumulate more than the expected
+   * total of all configured events.
+   *
+   * @param {Object} options
+   * @param {CDPEvent} options.event
+   *     https://github.com/cyrus-and/chrome-remote-interface#clientdomaineventcallback
+   * @param {string} options.eventName
+   *     Name to use for reporting.
+   * @param {function(payload):string=} options.messageFn
+   */
+  addRecorder(options = {}) {
+    const {
+      event,
+      eventName,
+      messageFn = () => `Received ${eventName}`,
+    } = options;
+    const promise = new Promise(resolve => {
+      const unsubscribe = event(payload => {
+        info(messageFn(payload));
+        this.events.push({ eventName, payload });
+        if (this.events.length > this.total) {
+          this.subscriptions.delete(unsubscribe);
+          unsubscribe();
+          resolve(this.events);
+        }
+      });
+      this.subscriptions.add(unsubscribe);
+    });
+    this.promises.add(promise);
+  }
+
+  /**
+   * Record events until we hit the timeout or the expected total is exceeded.
+   *
+   * @param {number=} timeout
+   *     milliseconds
+   *
+   * @return {Array<{ eventName, payload }>} Recorded events
+   */
+  async record(timeout = 1000) {
+    await Promise.race([Promise.all(this.promises), timeoutPromise(timeout)]);
+    for (const unsubscribe of this.subscriptions) {
+      unsubscribe();
+    }
+    return this.events;
+  }
+
+  /**
+   * Find first occurrence of the given event.
+   *
+   * @param {string} eventName
+   *
+   * @return {object} The event payload, if any.
+   */
+  findEvent(eventName) {
+    const event = this.events.find(el => el.eventName == eventName);
+    if (event) {
+      return event.payload;
+    }
+    return {};
+  }
+}
