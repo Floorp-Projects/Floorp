@@ -424,7 +424,9 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             options.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
         if self.config['enable_webrender']:
             options.extend(['--enable-webrender'])
-        if self.config['enable_fission']:
+        # enabling fission can come from the --enable-fission cmd line argument; or in CI
+        # it comes from a taskcluster transform which adds a --setpref for fission.autostart
+        if self.config['enable_fission'] or "fission.autostart=true" in self.config['extra_prefs']:
             options.extend(['--enable-fission'])
 
         return options

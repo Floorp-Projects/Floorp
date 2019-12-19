@@ -249,6 +249,10 @@ function FindProxyForURL(url, host) {
     if config['gecko_profile']:
         talos_results.add_extra_option('geckoProfile')
 
+    # differentiate fission vs non-fission results in perfherder
+    if browser_config.get('enable_fission', False):
+        talos_results.add_extra_option('fission')
+
     testname = None
 
     # run the tests
