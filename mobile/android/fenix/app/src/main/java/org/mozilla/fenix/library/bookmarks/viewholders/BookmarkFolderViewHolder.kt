@@ -8,7 +8,6 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.concept.storage.BookmarkNode
-import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
@@ -44,12 +43,19 @@ class BookmarkFolderViewHolder(
         }
 
         containerView.changeSelected(item in selectionHolder.selectedItems)
-        containerView.iconView.image = AppCompatResources.getDrawable(
-            containerView.context,
-            R.drawable.ic_folder_icon
-        )?.apply {
-            setTint(ContextCompat.getColor(containerView.context, R.color.primary_text_light_theme))
-        }
+        containerView.iconView.setImageDrawable(
+            AppCompatResources.getDrawable(
+                containerView.context,
+                R.drawable.ic_folder_icon
+            )?.apply {
+                setTint(
+                    ContextCompat.getColor(
+                        containerView.context,
+                        R.color.primary_text_light_theme
+                    )
+                )
+            }
+        )
         containerView.titleView.text = item.title
     }
 }

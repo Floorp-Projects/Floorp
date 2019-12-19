@@ -14,7 +14,6 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.support.ktx.android.util.dpToFloat
-import org.jetbrains.anko.imageBitmap
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -123,7 +122,7 @@ class TabViewHolder(
         if (icon == null) {
             favicon_image.context.components.core.icons.loadIntoView(favicon_image, url)
         } else {
-            favicon_image.imageBitmap = icon
+            favicon_image.setImageBitmap(icon)
         }
     }
 
