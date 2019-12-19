@@ -46,6 +46,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
+        'AssembleCmdLine.h',
         'ModuleVersionInfo.h',
         'PolicyChecks.h',
         'UntrustedModulesProcessor.h',
