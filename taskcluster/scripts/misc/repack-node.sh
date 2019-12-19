@@ -31,7 +31,7 @@ win64)
     ;;
 win32)
     ARCH=win-x86
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
+    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
     SHA256SUM=3ecc0ab4c6ad957f5dfb9ca22453cd35908029fba86350fc96d070e8e5c213b5
     SUFFIX=zip
     UNARCHIVE=unzip
