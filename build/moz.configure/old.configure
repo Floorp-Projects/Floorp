@@ -22,6 +22,15 @@ def autoconf(mozconfig, autoconf):
                              assignment)
                 if m:
                     mozconfig_autoconf = m.group(1)
+                # Check whether we've exported any known-broken variables.
+                m = re.match('(?:export\s+)?(?:CC|CXX)\s*:?=\s*(?:.+)$',
+                             assignment)
+                if m:
+                    die('Setting the value of CC or CXX with "mk_add_options" '
+                        'can cause the build to fail unexpectedly. Please '
+                        'change your mozconfig to instead use '
+                        '"ac_add_options", e.g. ac_add_options '
+                        'CC=my-custom-cc".')
 
     autoconf = autoconf[0] if autoconf else None
 
