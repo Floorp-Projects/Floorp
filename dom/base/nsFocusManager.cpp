@@ -1126,9 +1126,9 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
   // Look for any remote child frames, iterate over them and send the activation
   // notification.
   nsContentUtils::CallOnAllRemoteChildren(
-      aWindow, [&aActive](BrowserParent* aBrowserParent) -> bool {
+      aWindow, [&aActive](BrowserParent* aBrowserParent) -> CallState {
         Unused << aBrowserParent->SendParentActivated(aActive);
-        return false;
+        return CallState::Stop;
       });
 }
 
