@@ -156,8 +156,8 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principal);
 
-  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  rv = PrincipalToPrincipalInfo(principal, principalInfo);
+  auto principalInfo = MakeUnique<PrincipalInfo>();
+  rv = PrincipalToPrincipalInfo(principal, principalInfo.get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -202,7 +202,7 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  auto principalInfo = MakeUnique<PrincipalInfo>();
   nsIPrincipal* principal = sop->GetEffectiveStoragePrincipal();
   MOZ_ASSERT(principal);
   bool isSystem;
@@ -210,7 +210,7 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo);
+  nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo.get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -219,7 +219,8 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  rv = CreateForMainThreadJSInternal(aGlobal, principalInfo, aFactory);
+  rv = CreateForMainThreadJSInternal(aGlobal, std::move(principalInfo),
+                                     aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -238,9 +239,9 @@ nsresult IDBFactory::CreateForWorker(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::T__None);
 
-  nsresult rv = CreateInternal(
-      aGlobal, nsAutoPtr<PrincipalInfo>(new PrincipalInfo(aPrincipalInfo)),
-      aInnerWindowID, aFactory);
+  nsresult rv =
+      CreateInternal(aGlobal, MakeUnique<PrincipalInfo>(aPrincipalInfo),
+                     aInnerWindowID, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -250,7 +251,7 @@ nsresult IDBFactory::CreateForWorker(nsIGlobalObject* aGlobal,
 
 // static
 nsresult IDBFactory::CreateForMainThreadJSInternal(
-    nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo> aPrincipalInfo,
+    nsIGlobalObject* aGlobal, UniquePtr<PrincipalInfo> aPrincipalInfo,
     IDBFactory** aFactory) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGlobal);
@@ -273,7 +274,7 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
 
 // static
 nsresult IDBFactory::CreateInternal(nsIGlobalObject* aGlobal,
-                                    nsAutoPtr<PrincipalInfo> aPrincipalInfo,
+                                    UniquePtr<PrincipalInfo> aPrincipalInfo,
                                     uint64_t aInnerWindowID,
                                     IDBFactory** aFactory) {
   MOZ_ASSERT(aGlobal);

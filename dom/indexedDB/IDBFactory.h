@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StorageTypeBinding.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
@@ -57,7 +57,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   class BackgroundCreateCallback;
   struct PendingRequestInfo;
 
-  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
+  UniquePtr<PrincipalInfo> mPrincipalInfo;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
@@ -130,7 +130,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   PrincipalInfo* GetPrincipalInfo() const {
     AssertIsOnOwningThread();
 
-    return mPrincipalInfo;
+    return mPrincipalInfo.get();
   }
 
   uint64_t InnerWindowID() const {
@@ -188,11 +188,11 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   ~IDBFactory();
 
   static nsresult CreateForMainThreadJSInternal(
-      nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo> aPrincipalInfo,
+      nsIGlobalObject* aGlobal, UniquePtr<PrincipalInfo> aPrincipalInfo,
       IDBFactory** aFactory);
 
   static nsresult CreateInternal(nsIGlobalObject* aGlobal,
-                                 nsAutoPtr<PrincipalInfo> aPrincipalInfo,
+                                 UniquePtr<PrincipalInfo> aPrincipalInfo,
                                  uint64_t aInnerWindowID,
                                  IDBFactory** aFactory);
 
