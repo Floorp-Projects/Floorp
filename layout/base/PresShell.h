@@ -2080,15 +2080,10 @@ class PresShell final : public nsStubDocumentObserver,
     struct MOZ_STACK_CLASS EventTargetData final {
       EventTargetData() = delete;
       EventTargetData(const EventTargetData& aOther) = delete;
-      EventTargetData(PresShell* aPresShell, nsIFrame* aFrameToHandleEvent)
-          : mPresShell(aPresShell), mFrame(aFrameToHandleEvent) {}
-
-      void SetPresShellAndFrame(PresShell* aPresShell,
-                                nsIFrame* aFrameToHandleEvent) {
-        mPresShell = aPresShell;
-        mFrame = aFrameToHandleEvent;
-        mContent = nullptr;
+      explicit EventTargetData(nsIFrame* aFrameToHandleEvent) {
+        SetFrameAndComputePresShell(aFrameToHandleEvent);
       }
+
       void SetFrameAndComputePresShell(nsIFrame* aFrameToHandleEvent);
       void SetFrameAndComputePresShellAndContent(nsIFrame* aFrameToHandleEvent,
                                                  WidgetGUIEvent* aGUIEvent);
@@ -2139,7 +2134,7 @@ class PresShell final : public nsStubDocumentObserver,
       void UpdateTouchEventTarget(WidgetGUIEvent* aGUIEvent);
 
       RefPtr<PresShell> mPresShell;
-      nsIFrame* mFrame;
+      nsIFrame* mFrame = nullptr;
       nsCOMPtr<nsIContent> mContent;
       nsCOMPtr<nsIContent> mOverrideClickTarget;
     };
