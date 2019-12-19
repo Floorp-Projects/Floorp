@@ -58,20 +58,14 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     }
   }
 
+  // For-of loops have the iterator next method and the iterator itself on the
+  // stack.
+
   int32_t iterDepth = bce_->bytecodeSection().stackDepth();
-
-  // For-of loops have the iterator next method, the iterator itself, and
-  // the result.value on the stack.
-  // Push an undefined to balance the stack.
-  if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //              [stack] NEXT ITER UNDEF
-    return false;
-  }
-
   loopInfo_.emplace(bce_, iterDepth, allowSelfHostedIter_, iterKind_);
 
   if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
-    //              [stack] NEXT ITER UNDEF
+    //              [stack] NEXT ITER
     return false;
   }
 
@@ -89,7 +83,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 
     if (headLexicalEmitterScope_->hasEnvironment()) {
       if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
-        //          [stack] NEXT ITER UNDEF
+        //          [stack] NEXT ITER
         return false;
       }
     }
@@ -111,10 +105,6 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     }
   }
 
-  if (!bce_->emit1(JSOP_POP)) {
-    //              [stack] NEXT ITER
-    return false;
-  }
   if (!bce_->emit1(JSOP_DUP2)) {
     //              [stack] NEXT ITER NEXT ITER
     return false;
@@ -134,31 +124,10 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  InternalIfEmitter ifDone(bce_);
-
-  if (!ifDone.emitThen()) {
-    //              [stack] NEXT ITER RESULT
-    return false;
-  }
-
-  // Remove RESULT from the stack to release it.
-  if (!bce_->emit1(JSOP_POP)) {
-    //              [stack] NEXT ITER
-    return false;
-  }
-  if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //              [stack] NEXT ITER UNDEF
-    return false;
-  }
-
-  // If the iteration is done, leave loop here, instead of the branch at
-  // the end of the loop.
-  if (!loopInfo_->emitSpecialBreakForDone(bce_)) {
-    //              [stack] NEXT ITER UNDEF
-    return false;
-  }
-
-  if (!ifDone.emitEnd()) {
+  // if (done) break;
+  MOZ_ASSERT(bce_->innermostNestableControl == loopInfo_.ptr(),
+             "must be at the top-level of the loop");
+  if (!bce_->emitJump(JSOP_IFNE, &loopInfo_->breaks)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
@@ -185,19 +154,9 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 bool ForOfEmitter::emitBody() {
   MOZ_ASSERT(state_ == State::Initialize);
 
-  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_,
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_ + 1,
              "the stack must be balanced around the initializing "
              "operation");
-
-  // Remove VALUE from the stack to release it.
-  if (!bce_->emit1(JSOP_POP)) {
-    //              [stack] NEXT ITER
-    return false;
-  }
-  if (!bce_->emit1(JSOP_UNDEFINED)) {
-    //              [stack] NEXT ITER UNDEF
-    return false;
-  }
 
 #ifdef DEBUG
   state_ = State::Body;
@@ -208,14 +167,16 @@ bool ForOfEmitter::emitBody() {
 bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   MOZ_ASSERT(state_ == State::Body);
 
-  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_,
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_ + 1,
              "the stack must be balanced around the for-of body");
 
   if (!loopInfo_->emitEndCodeNeedingIteratorClose(bce_)) {
+    //              [stack] NEXT ITER VALUE
     return false;
   }
 
   if (!loopInfo_->emitContinueTarget(bce_)) {
+    //              [stack] NEXT ITER VALUE
     return false;
   }
 
@@ -229,12 +190,20 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     }
   }
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_FOR_OF)) {
-    //              [stack] NEXT ITER UNDEF
+  if (!bce_->emit1(JSOP_POP)) {
+    //              [stack] NEXT ITER
     return false;
   }
 
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_FOR_OF)) {
+    //              [stack] NEXT ITER
+    return false;
+  }
+
+  // All jumps/breaks to this point still have an extra value on the stack.
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_);
+  bce_->bytecodeSection().setStackDepth(bce_->bytecodeSection().stackDepth() +
+                                        1);
 
   if (!bce_->emitPopN(3)) {
     //              [stack]

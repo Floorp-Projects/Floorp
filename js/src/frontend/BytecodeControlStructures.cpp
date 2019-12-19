@@ -52,19 +52,6 @@ bool LoopControl::emitContinueTarget(BytecodeEmitter* bce) {
   return bce->emitJumpTargetAndPatch(continues);
 }
 
-bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
-  // This doesn't pop stack values, nor handle any other controls.
-  // Should be called on the toplevel of the loop.
-  MOZ_ASSERT(bce->bytecodeSection().stackDepth() == stackDepth_);
-  MOZ_ASSERT(bce->innermostNestableControl == this);
-
-  if (!bce->emitJump(JSOP_GOTO, &breaks)) {
-    return false;
-  }
-
-  return true;
-}
-
 bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
                                const Maybe<uint32_t>& nextPos) {
   // Insert a NOP if needed to ensure the script does not start with a

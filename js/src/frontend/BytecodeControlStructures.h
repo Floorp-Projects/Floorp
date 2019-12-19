@@ -125,9 +125,6 @@ class LoopControl : public BreakableControl {
 
   MOZ_MUST_USE bool emitContinueTarget(BytecodeEmitter* bce);
 
-  // Emit a jump to break target from the top level of the loop.
-  MOZ_MUST_USE bool emitSpecialBreakForDone(BytecodeEmitter* bce);
-
   // `nextPos` is the offset in the source code for the character that
   // corresponds to the next instruction after JSOP_LOOPHEAD.
   // Can be Nothing() if not available.
