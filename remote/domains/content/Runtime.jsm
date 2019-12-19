@@ -315,7 +315,8 @@ class Runtime extends ContentProcessDomain {
 
   /**
    * Helper method to destroy the ExecutionContext of the given id. Also emit
-   * the related `Runtime.executionContextDestroyed` event.
+   * the related `Runtime.executionContextDestroyed` and
+   * `Runtime.executionContextsCleared` events.
    * ContextObserver will call this method with either `id` or `frameId` argument
    * being set.
    *
@@ -355,6 +356,7 @@ class Runtime extends ContentProcessDomain {
       }
       if (this.contextsByWindow.get(ctx.windowId).size == 0) {
         this.contextsByWindow.delete(ctx.windowId);
+        this.emit("Runtime.executionContextsCleared");
       }
     }
   }
