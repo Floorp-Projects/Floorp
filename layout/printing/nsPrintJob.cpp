@@ -521,10 +521,10 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
-static bool DocHasPrintCallbackCanvas(Document& aDoc, void* aData) {
+static CallState DocHasPrintCallbackCanvas(Document& aDoc, void* aData) {
   Element* root = aDoc.GetRootElement();
   if (!root) {
-    return true;
+    return CallState::Continue;
   }
   RefPtr<nsContentList> canvases =
       NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("canvas"));
@@ -536,10 +536,10 @@ static bool DocHasPrintCallbackCanvas(Document& aDoc, void* aData) {
       // This subdocument has a print callback. Set result and return false to
       // stop iteration.
       *static_cast<bool*>(aData) = true;
-      return false;
+      return CallState::Stop;
     }
   }
-  return true;
+  return CallState::Continue;
 }
 
 static bool AnySubdocHasPrintCallbackCanvas(Document& aDoc) {
