@@ -112,6 +112,7 @@ class ExternalHelperAppParent
   bool mIPCClosed;
   nsLoadFlags mLoadFlags;
   nsresult mStatus;
+  bool mCanceled;
   int64_t mContentLength;
   bool mWasFileChannel;
   uint32_t mContentDisposition;
