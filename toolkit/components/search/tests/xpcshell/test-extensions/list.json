@@ -4,6 +4,11 @@
       "plainengine", "special-engine"
     ]
   },
+  "af": {
+    "visibleDefaultEngines": [
+      "plainengine", "special-engine", "multilocale-an", "multilocale-af"
+    ]
+  },
   "an": {
     "visibleDefaultEngines": [
       "plainengine", "special-engine", "multilocale-an"

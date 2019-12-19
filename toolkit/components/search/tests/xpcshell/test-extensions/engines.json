@@ -31,6 +31,17 @@
       "appliesTo": [{
         "included": { "regions": ["an"] }
       }]
+    },
+    {
+      "webExtension": {
+        "id": "multilocale@search.mozilla.org",
+        "version": "1.0",
+        "locales": ["af", "an"]
+      },
+      "orderHint": 6500,
+      "appliesTo": [{
+        "included": { "regions": ["af"] }
+      }]
     }
   ]
 }
