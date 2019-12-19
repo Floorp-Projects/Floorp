@@ -210,12 +210,10 @@ bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
     return false;
   }
   pc += JSOP_NEW_LENGTH;
-  if (JSOp(*pc) == JSOP_SETPROP) {
-    if (script->getName(pc) == cx->names().prototype) {
-      return true;
-    }
+  if (JSOp(*pc) != JSOP_SETPROP) {
+    return false;
   }
-  return false;
+  return script->getName(pc) == cx->names().prototype;
 }
 
 /* static */
