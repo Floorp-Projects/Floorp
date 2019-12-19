@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <numeric>
 #include <stdint.h>  // UINTPTR_MAX, uintptr_t
+#include <utility>
 #include "FileInfo.h"
 #include "FileManager.h"
 #include "IDBObjectStore.h"
@@ -14701,8 +14702,8 @@ bool VersionChangeTransaction::CopyDatabaseMetadata() {
   MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
   MOZ_ASSERT(info->mMetadata == origMetadata);
 
-  mOldMetadata = info->mMetadata.forget();
-  info->mMetadata.swap(newMetadata);
+  mOldMetadata = std::move(info->mMetadata);
+  info->mMetadata = std::move(newMetadata);
 
   // Replace metadata pointers for all live databases.
   for (const auto& liveDatabase : info->mLiveDatabases) {
@@ -14761,7 +14762,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     info->mMetadata->mObjectStores.MarkImmutable();
   } else {
     // Replace metadata pointers for all live databases.
-    info->mMetadata = oldMetadata.forget();
+    info->mMetadata = std::move(oldMetadata);
 
     for (auto& liveDatabase : info->mLiveDatabases) {
       liveDatabase->mMetadata = info->mMetadata;
