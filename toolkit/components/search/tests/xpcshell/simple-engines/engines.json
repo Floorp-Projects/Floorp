@@ -1,9 +1,9 @@
 {
   "data": [
     {
-      "engineName": "bug645970",
+      "engineName": "basic",
       "webExtension": {
-        "id":"bug645970@search.mozilla.org",
+        "id":"basic@search.mozilla.org",
         "version": "1.0"
       },
       "appliesTo": [{

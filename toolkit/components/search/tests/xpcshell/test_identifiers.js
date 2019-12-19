@@ -10,7 +10,7 @@
 const SEARCH_APP_DIR = 1;
 
 add_task(async function setup() {
-  await useTestEngines("data", "search-extensions");
+  await useTestEngines("simple-engines");
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -21,7 +21,7 @@ add_test(function test_identifier() {
 
     await installTestEngine();
     let profileEngine = Services.search.getEngineByName(kTestEngineName);
-    let jarEngine = Services.search.getEngineByName("bug645970");
+    let jarEngine = Services.search.getEngineByName("basic");
 
     Assert.ok(profileEngine instanceof Ci.nsISearchEngine);
     Assert.ok(jarEngine instanceof Ci.nsISearchEngine);
@@ -32,7 +32,7 @@ add_test(function test_identifier() {
 
     // An engine loaded from a JAR will have an identifier corresponding to
     // the filename inside the JAR. (In this case it's the same as the name.)
-    Assert.equal(jarEngine.identifier, "bug645970");
+    Assert.equal(jarEngine.identifier, "basic");
 
     run_next_test();
   });

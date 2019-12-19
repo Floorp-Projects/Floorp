@@ -3,7 +3,7 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  await useTestEngines("data", "search-extensions");
+  await useTestEngines("simple-engines");
 });
 
 add_task(async function test_async_addon() {

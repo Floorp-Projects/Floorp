@@ -80,7 +80,7 @@ add_task(async function test_submission_url_built_in() {
 });
 
 add_task(async function test_submission_url_distribution() {
-  const engine = Services.search.getEngineByName("bug645970");
+  const engine = Services.search.getEngineByName("basic");
   await Services.search.setDefault(engine);
 
   const engineInfo = await Services.search.getDefaultEngineInfo();
