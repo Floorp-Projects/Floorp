@@ -4,6 +4,13 @@
     "description": "Heuristics for disabling DNS-over-HTTPS (DoH)",
     "functions": [
       {
+        "name": "isTesting",
+        "type": "function",
+        "description": "Returns true if we are running in automation",
+        "parameters": [],
+        "async": true
+      },
+      {
         "name": "setupTelemetry",
         "type": "function",
         "description": "Sets up the Telemetry for the addon",

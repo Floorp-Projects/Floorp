@@ -82,7 +82,7 @@
         "parameters": [
           {
             "type": "string",
-            "enum": ["doh-rollout.doorhanger-decision"]
+            "enum": ["doh-rollout.doorhanger-decision", "doh-rollout.heuristics.mockValues"]
           },
           {
             "type": "string",

@@ -18,6 +18,11 @@ async function log() {
 // Gate-keeping pref to run the add-on
 const DOH_ENABLED_PREF = "doh-rollout.enabled";
 
+// When in automation, we parse this string pref as JSON and use it as our
+// heuristics results set. This allows tests to set up different cases and
+// verify the correct response.
+const MOCK_HEURISTICS_PREF = "doh-rollout.heuristics.mockValues";
+
 // Pref that sets DoH to on/off. It has multiple modes:
 // 0: Off (default)
 // 1: null (No setting)
@@ -214,6 +219,14 @@ const rollout = {
   // Pretend that there was a network change at the beginning of time.
   lastNetworkChangeTime: 0,
 
+  async isTesting() {
+    if (this._isTesting === undefined) {
+      this._isTesting = await browser.experiments.heuristics.isTesting();
+    }
+
+    return this._isTesting;
+  },
+
   async doorhangerAcceptListener(tabId) {
     log("Doorhanger accepted on tab", tabId);
     await stateManager.setState("UIOk");
@@ -234,20 +247,30 @@ const rollout = {
 
   async heuristics(evaluateReason) {
     // Run heuristics defined in heuristics.js and experiments/heuristics/api.js
-    let results = await runHeuristics();
+    let results;
+
+    if (await rollout.isTesting()) {
+      results = await browser.experiments.preferences.getCharPref(
+        MOCK_HEURISTICS_PREF,
+        "disable_doh"
+      );
+      results = JSON.parse(results);
+    } else {
+      results = await runHeuristics();
+    }
 
     // Check if DoH should be disabled
-    let disableDoh = Object.values(results).includes("disable_doh")
+    let decision = Object.values(results).includes("disable_doh")
       ? "disable_doh"
       : "enable_doh";
 
-    log("Heuristics decision on " + evaluateReason + ": " + disableDoh);
+    log("Heuristics decision on " + evaluateReason + ": " + decision);
 
     // Send Telemetry on results of heuristics
     results.evaluateReason = evaluateReason;
-    browser.experiments.heuristics.sendHeuristicsPing(disableDoh, results);
+    browser.experiments.heuristics.sendHeuristicsPing(decision, results);
 
-    return disableDoh;
+    return decision;
   },
 
   async getSetting(name, defaultValue) {
@@ -424,7 +447,6 @@ const rollout = {
 
   async init() {
     log("calling init");
-
     // Check if the add-on has run before
     let doneFirstRun = await this.getSetting(DOH_DONE_FIRST_RUN_PREF, false);
 
@@ -465,6 +487,7 @@ const rollout = {
       }
 
       log("Queing a heuristics run in 60s, will cancel if network fluctuates.");
+      let gracePeriod = (await rollout.isTesting()) ? 0 : 60000;
       rollout.networkSettledTimeout = setTimeout(async () => {
         log("No network fluctuation for 60 seconds, running heuristics.");
         // Only run the heuristics if user hasn't explicitly enabled/disabled DoH
@@ -484,7 +507,7 @@ const rollout = {
         } else {
           await stateManager.setState("enabled");
         }
-      }, 60000);
+      }, gracePeriod);
     });
 
     // Listen to the captive portal when it unlocks
