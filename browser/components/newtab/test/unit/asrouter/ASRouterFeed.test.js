@@ -30,6 +30,7 @@ describe("ASRouterFeed", () => {
       uninit: sandbox.stub(),
     };
     globals.set({
+      GroupsConfigurationProvider: { getMessages: () => [] },
       ASRouterPreferences,
       BookmarkPanelHub: FakeBookmarkPanelHub,
       ToolbarBadgeHub: FakeToolbarBadgeHub,
