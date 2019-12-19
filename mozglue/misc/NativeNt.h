@@ -240,6 +240,23 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
     mSectionFileName.Buffer = mBuf;
   }
 
+  MemorySectionNameBuf(const MemorySectionNameBuf& aOther) {
+    *this = aOther;
+  }
+
+  // We cannot use default copy here because mSectionFileName.Buffer needs to
+  // be updated to point to |this->mBuf|, not |aOther.mBuf|.
+  MemorySectionNameBuf& operator=(const MemorySectionNameBuf& aOther) {
+    mSectionFileName.Length = aOther.mSectionFileName.Length;
+    mSectionFileName.MaximumLength = sizeof(mBuf);
+    mSectionFileName.Buffer = mBuf;
+    memcpy(mBuf, aOther.mBuf, aOther.mSectionFileName.Length);
+    return *this;
+  }
+
+  MemorySectionNameBuf(MemorySectionNameBuf&&) = delete;
+  MemorySectionNameBuf& operator=(MemorySectionNameBuf&&) = delete;
+
   // Native NT paths, so we can't assume MAX_PATH. Use a larger buffer.
   WCHAR mBuf[2 * MAX_PATH];
 
