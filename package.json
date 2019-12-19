@@ -3,9 +3,7 @@
   "description": "This package file is for node modules used in mozilla-central",
   "repository": {},
   "license": "MPL-2.0",
-  "dependencies": {
-    "yarn": "^1.16.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-eslint": "10.0.3",
     "eslint": "6.2.2",
@@ -23,7 +21,8 @@
     "eslint-plugin-prettier": "3.1.0",
     "eslint-plugin-react": "7.14.3",
     "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js",
-    "prettier": "1.17.0"
+    "prettier": "1.17.0",
+    "yarn": "1.21.1"
   },
   "notes(private)": "We don't want to publish to npm, so this is marked as private",
   "private": true
