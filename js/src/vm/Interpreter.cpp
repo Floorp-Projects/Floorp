@@ -1912,23 +1912,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       if (script->isDebuggee()) {
         if (DebugAPI::stepModeEnabled(script)) {
-          RootedValue rval(cx);
-          ResumeMode mode = DebugAPI::onSingleStep(cx, &rval);
-          switch (mode) {
-            case ResumeMode::Terminate:
-              goto error;
-            case ResumeMode::Continue:
-              break;
-            case ResumeMode::Return:
-              REGS.fp()->setReturnValue(rval);
-              if (!ForcedReturn(cx, REGS)) {
-                goto error;
-              }
-              goto successful_return_continuation;
-            case ResumeMode::Throw:
-              cx->setPendingExceptionAndCaptureStack(rval);
-              goto error;
-            default:;
+          if (!DebugAPI::onSingleStep(cx)) {
+            goto error;
           }
           moreInterrupts = true;
         }
