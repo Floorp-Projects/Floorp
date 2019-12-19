@@ -322,12 +322,6 @@ class DebugAPI {
 
   /*** Assorted methods for interacting with the runtime. *********************/
 
-  // When a step handler called during the interrupt callback forces the current
-  // frame to return, set state in the frame and context so that the exception
-  // handler will perform the forced return.
-  static void propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
-                                    HandleValue rval);
-
   // Checks if the current compartment is allowed to execute code.
   static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx,
                                                  HandleScript script);
