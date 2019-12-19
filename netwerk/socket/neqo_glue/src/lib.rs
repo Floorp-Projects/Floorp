@@ -28,7 +28,6 @@ pub struct NeqoHttp3Conn {
     remote_addr: SocketAddr,
     refcnt: AtomicRefcnt,
     packets_to_send: Vec<Datagram>,
-    events: Vec<Http3ClientEvent>,
 }
 
 impl NeqoHttp3Conn {
@@ -82,7 +81,6 @@ impl NeqoHttp3Conn {
             remote_addr: remote,
             refcnt: unsafe { AtomicRefcnt::new() },
             packets_to_send: Vec::new(),
-            events: Vec::new(),
         }));
         unsafe { Ok(RefPtr::from_raw(conn).unwrap()) }
     }
@@ -484,15 +482,10 @@ pub enum Http3Event {
     NoEvent,
 }
 
-// conn.conn.events() returns multiple events that will be store in
-// conn.events. The function returns a single even.
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_event(conn: &mut NeqoHttp3Conn) -> Http3Event {
-    if conn.events.is_empty() {
-        conn.events = conn.conn.events().collect();
-    }
     loop {
-        match conn.events.pop() {
+        match conn.conn.next_event() {
             None => break Http3Event::NoEvent,
             Some(e) => {
                 let fe: Http3Event = e.into();
