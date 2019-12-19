@@ -279,9 +279,6 @@ class BaselineCodeGen {
   // Shared epilogue code to return to the caller.
   NonAssertingLabel return_;
 
-  // Like return_ but skips the debug epilogue instrumentation.
-  NonAssertingLabel returnNoDebugEpilogue_;
-
   NonAssertingLabel postBarrierSlot_;
 
   // Prologue code where we resume for Ion prologue bailouts.
