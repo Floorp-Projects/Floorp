@@ -1460,7 +1460,7 @@
         "included": { "everywhere": true }
       }, {
         "included": { "locales": { "matches": [
-          "af", "an", "ar", "as", "ast", "az", "be", "bg",
+          "af", "an", "ar", "as", "ast", "az", "bg",
           "br", "bs", "crh", "cy", "da", "de", "dsb",
           "el", "eo", "et", "eu", "fa", "fi", "fy-NL", "ga-IE",
           "gd", "gl", "gn", "he", "hr", "hsb", "hu", "ia",
