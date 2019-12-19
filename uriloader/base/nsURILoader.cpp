@@ -715,38 +715,37 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel* channel, uint32_t aFlags,
   nsCOMPtr<nsIStreamListener> loader;
   nsresult rv = OpenChannel(channel, aFlags, aWindowContext, false,
                             getter_AddRefs(loader));
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_WONT_HANDLE_CONTENT) {
-      // Not really an error, from this method's point of view
-      return NS_OK;
-    }
-  }
 
-  if (aFlags & nsIURILoader::REDIRECTED_CHANNEL) {
-    // Our channel was redirected from another process, so doesn't need to
-    // be opened again. However, it does need its listener hooked up
-    // correctly.
-    if (nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(channel)) {
+  if (NS_SUCCEEDED(rv)) {
+    if (aFlags & nsIURILoader::REDIRECTED_CHANNEL) {
+      // Our channel was redirected from another process, so doesn't need to
+      // be opened again. However, it does need its listener hooked up
+      // correctly.
+      nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(channel);
+      MOZ_ASSERT(childChannel);
+      if (!childChannel) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
       return childChannel->CompleteRedirectSetup(loader, nullptr);
     }
 
-    // It's possible for the redirected channel to not implement
-    // nsIChildChannel and be entirely local (like srcdoc). In that case we
-    // can just open the local instance and it will work.
-  }
+    // this method is not complete!!! Eventually, we should first go
+    // to the content listener and ask them for a protocol handler...
+    // if they don't give us one, we need to go to the registry and get
+    // the preferred protocol handler.
 
-  // This method is not complete. Eventually, we should first go
-  // to the content listener and ask them for a protocol handler...
-  // if they don't give us one, we need to go to the registry and get
-  // the preferred protocol handler.
+    // But for now, I'm going to let necko do the work for us....
+    rv = channel->AsyncOpen(loader);
 
-  // But for now, I'm going to let necko do the work for us....
-  rv = channel->AsyncOpen(loader);
-
-  // no content from this load - that's OK.
-  if (rv == NS_ERROR_NO_CONTENT) {
-    LOG(("  rv is NS_ERROR_NO_CONTENT -- doing nothing"));
-    return NS_OK;
+    // no content from this load - that's OK.
+    if (rv == NS_ERROR_NO_CONTENT) {
+      LOG(("  rv is NS_ERROR_NO_CONTENT -- doing nothing"));
+      rv = NS_OK;
+    }
+  } else if (rv == NS_ERROR_WONT_HANDLE_CONTENT) {
+    // Not really an error, from this method's point of view
+    rv = NS_OK;
   }
   return rv;
 }
