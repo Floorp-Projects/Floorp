@@ -8792,6 +8792,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
     return NS_ERROR_FAILURE;
   }
+  if (mBrowsingContext->PendingInitialization()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   mOriginalUriString.Truncate();
 

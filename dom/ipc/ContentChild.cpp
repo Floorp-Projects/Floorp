@@ -997,6 +997,11 @@ nsresult ContentChild::ProvideWindowCommon(
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
+  browsingContext->SetPendingInitialization(true);
+  auto unsetPending = MakeScopeExit([browsingContext]() {
+    browsingContext->SetPendingInitialization(false);
+  });
+
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
 
   // The initial about:blank document we generate within the nsDocShell will
@@ -1069,7 +1074,6 @@ nsresult ContentChild::ProvideWindowCommon(
     rv = info.rv();
     *aWindowIsNew = info.windowOpened();
     nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
-    nsCString urlToLoad = info.urlToLoad();
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = info.dimensions();
     bool hasSiblings = info.hasSiblings();
@@ -1217,6 +1221,7 @@ nsresult ContentChild::ProvideWindowCommon(
   // SendBrowserFrameOpenWindow with information we're going to need to return
   // from this function, So we spin a nested event loop until they get back to
   // us.
+  //
 
   // Prevent the docshell from becoming active while the nested event loop is
   // spinning.
