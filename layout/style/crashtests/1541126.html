@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<script>
+function eh1() {
+  a.selectionEnd = 1
+}
+function eh2() {
+  var d = c.contentDocument.createRange()
+  d.cloneRange().insertNode(b)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.documentElement.className = "";
+    });
+  });
+}
+</script>
+<textarea id="a" onselect="eh2()">
+</textarea>
+<video id="b" controls=""></video>
+<iframe id="c" srcdoc=""></iframe>
+<details ontoggle="eh1()" open="">

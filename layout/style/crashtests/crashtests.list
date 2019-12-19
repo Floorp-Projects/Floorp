@@ -301,6 +301,7 @@ load 1514086.html
 load 1533783.html
 load 1533891.html
 pref(gfx.omta.background-color,true) load 1533968.html
+load 1541126.html
 load 1545177.html
 skip-if(geckoview&&webrender) skip-if(Android) load 1546255.html # Bug 1563020 for GV+WR & Bug 1553971
 pref(layout.css.resizeobserver.enabled,true) load 1552911.html
