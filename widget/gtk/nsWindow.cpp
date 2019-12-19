@@ -1719,10 +1719,10 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
   return rect;
 }
 
-void nsWindow::UpdateClientOffset() {
-  AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffset", OTHER);
+void nsWindow::UpdateClientOffsetFromFrameExtents() {
+  AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
 
-  if (!mIsTopLevel || !mShell || !mIsX11Display ||
+  if (!mIsTopLevel || !mShell ||
       gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
     mClientOffset = nsIntPoint(0, 0);
     return;
@@ -1745,31 +1745,33 @@ void nsWindow::UpdateClientOffset() {
                         (guchar**)&frame_extents) ||
       length_returned / sizeof(glong) != 4) {
     mClientOffset = nsIntPoint(0, 0);
-    return;
+  } else {
+    // data returned is in the order left, right, top, bottom
+    auto left = int32_t(frame_extents[0]);
+    auto top = int32_t(frame_extents[2]);
+    g_free(frame_extents);
+
+    mClientOffset = nsIntPoint(left, top);
   }
 
-  // data returned is in the order left, right, top, bottom
-  auto left = int32_t(frame_extents[0]);
-  auto top = int32_t(frame_extents[2]);
+  // Send a WindowMoved notification. This ensures that BrowserParent
+  // picks up the new client offset and sends it to the child process
+  // if appropriate.
+  NotifyWindowMoved(mBounds.x, mBounds.y);
 
-  g_free(frame_extents);
-
-  mClientOffset = nsIntPoint(left, top);
+  LOG(("nsWindow::UpdateClientOffsetFromFrameExtents [%p] %d,%d\n", (void*)this,
+       mClientOffset.x, mClientOffset.y));
 }
 
 LayoutDeviceIntPoint nsWindow::GetClientOffset() {
-  return LayoutDeviceIntPoint::FromUnknownPoint(mClientOffset);
+  return mIsX11Display ? LayoutDeviceIntPoint::FromUnknownPoint(mClientOffset)
+                       : LayoutDeviceIntPoint(0, 0);
 }
 
 gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
                                          GdkEventProperty* aEvent) {
   if (aEvent->atom == gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE)) {
-    UpdateClientOffset();
-
-    // Send a WindowMoved notification. This ensures that BrowserParent
-    // picks up the new client offset and sends it to the child process
-    // if appropriate.
-    NotifyWindowMoved(mBounds.x, mBounds.y);
+    UpdateClientOffsetFromFrameExtents();
     return FALSE;
   }
 
@@ -2588,6 +2590,17 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
                         &allocation.height);
     OnSizeAllocate(&allocation);
   }
+
+  // Client offset are upated by _NET_FRAME_EXTENTS on X11 when system titlebar
+  // is enabled. In ither cases (Wayland or system titlebar is off on X11)
+  // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
+  // it from mContainer position.
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
+      UpdateClientOffsetFromCSDWindow();
+    }
+  }
+
   return FALSE;
 }
 
@@ -3476,9 +3489,6 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }
 
   if (mDrawInTitlebar) {
-    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
-      UpdateClientOffsetForCSDWindow();
-    }
     if (mTransparencyBitmapForTitlebar) {
       if (mSizeState == nsSizeMode_Normal && !mIsTiled) {
         UpdateTitlebarTransparencyBitmap();
@@ -3535,6 +3545,10 @@ void nsWindow::OnCompositedChanged() {
 }
 
 void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
+  LOG(("nsWindow::OnScaleChanged [%p] %d,%d -> %d x %d\n", (void*)this,
+       aAllocation->x, aAllocation->y, aAllocation->width,
+       aAllocation->height));
+
   // Force scale factor recalculation
   mWindowScaleFactorChanged = true;
 
@@ -6830,36 +6844,29 @@ void nsWindow::ClearCachedResources() {
   }
 }
 
-/* nsWindow::UpdateClientOffsetForCSDWindow() is designed to be called from
- * paint code to update mClientOffset any time. It also propagates
- * the mClientOffset to child tabs.
+/* nsWindow::UpdateClientOffsetFromCSDWindow() is designed to be called from
+ * nsWindow::OnConfigureEvent() when mContainer window is already positioned.
  *
  * It works only for CSD decorated GtkWindow.
  */
-void nsWindow::UpdateClientOffsetForCSDWindow() {
-  // We update window offset on X11 as the window position is calculated
-  // relatively to mShell. We don't do that on Wayland as our wl_subsurface
-  // is attached to mContainer and mShell is ignored.
-  if (!mIsX11Display) {
-    return;
-  }
+void nsWindow::UpdateClientOffsetFromCSDWindow() {
+  int x, y;
+  gdk_window_get_position(mGdkWindow, &x, &y);
 
-  // _NET_FRAME_EXTENTS is not set on client decorated windows,
-  // so we need to read offset between mContainer and toplevel mShell
-  // window.
-  if (mSizeState == nsSizeMode_Normal) {
-    GtkBorder decorationSize = GetCSDDecorationSize(
-        gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
-    mClientOffset = nsIntPoint(GdkCoordToDevicePixels(decorationSize.left),
-                               GdkCoordToDevicePixels(decorationSize.top));
-  } else {
-    mClientOffset = nsIntPoint(0, 0);
-  }
+  x = GdkCoordToDevicePixels(x);
+  y = GdkCoordToDevicePixels(y);
 
-  // Send a WindowMoved notification. This ensures that BrowserParent
-  // picks up the new client offset and sends it to the child process
-  // if appropriate.
-  NotifyWindowMoved(mBounds.x, mBounds.y);
+  if (mClientOffset.x != x || mClientOffset.y != y) {
+    mClientOffset = nsIntPoint(x, y);
+
+    LOG(("nsWindow::UpdateClientOffsetFromCSDWindow [%p] %d, %d\n", (void*)this,
+         mClientOffset.x, mClientOffset.y));
+
+    // Send a WindowMoved notification. This ensures that BrowserParent
+    // picks up the new client offset and sends it to the child process
+    // if appropriate.
+    NotifyWindowMoved(mBounds.x, mBounds.y);
+  }
 }
 
 nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
@@ -6943,13 +6950,6 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
 #endif
     RefreshWindowClass();
-
-    // When we use system titlebar setup managed by Gtk+ we also get
-    // _NET_FRAME_EXTENTS property for our toplevel window so we can't
-    // update the client offset it here.
-    if (aState) {
-      UpdateClientOffsetForCSDWindow();
-    }
 
     gtk_widget_destroy(tmpWindow);
   }
