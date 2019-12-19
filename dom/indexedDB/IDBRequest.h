@@ -12,7 +12,6 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 #define PRIVATE_IDBREQUEST_IID                       \
