@@ -461,6 +461,9 @@ enum WebIDLProcType {
  "rdd",
  "socket",
  "remoteSandboxBroker",
+#ifdef MOZ_ENABLE_FORKSERVER
+ "forkServer",
+#endif
  "unknown",
 };
 
