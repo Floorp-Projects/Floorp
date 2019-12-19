@@ -6,6 +6,7 @@
 
 #include "mozilla/RangeUtils.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsContentUtils.h"
@@ -83,13 +84,14 @@ bool RangeUtils::IsValidPoints(
     return false;
   }
 
-  bool disconnected = false;
-  int32_t order = nsContentUtils::ComparePoints_Deprecated(
-      aStartBoundary, aEndBoundary, &disconnected);
-  if (NS_WARN_IF(disconnected)) {
+  const Maybe<int32_t> order =
+      nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary);
+  if (!order) {
+    MOZ_ASSERT_UNREACHABLE();
     return false;
   }
-  return order != 1;
+
+  return *order != 1;
 }
 
 // Utility routine to detect if a content node is completely contained in a
@@ -152,27 +154,29 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // silence the warning. (Bug 1438996)
 
   // is RANGE(start) <= NODE(start) ?
-  bool disconnected = false;
-  *aNodeIsBeforeRange =
-      nsContentUtils::ComparePoints_Deprecated(
-          aAbstractRange->StartRef().Container(),
-          *aAbstractRange->StartRef().Offset(
-              RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
-          parent, nodeStart, &disconnected) > 0;
-  if (NS_WARN_IF(disconnected)) {
+  Maybe<int32_t> order = nsContentUtils::ComparePoints(
+      aAbstractRange->StartRef().Container(),
+      *aAbstractRange->StartRef().Offset(
+          RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
+      parent, nodeStart);
+  if (NS_WARN_IF(!order)) {
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  }
+  *aNodeIsBeforeRange = *order > 0;
+
+  // is RANGE(end) >= NODE(end) ?
+  order = nsContentUtils::ComparePoints(
+      aAbstractRange->EndRef().Container(),
+      *aAbstractRange->EndRef().Offset(
+          RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
+      parent, nodeEnd);
+
+  if (NS_WARN_IF(!order)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
 
-  // is RANGE(end) >= NODE(end) ?
-  *aNodeIsAfterRange =
-      nsContentUtils::ComparePoints_Deprecated(
-          aAbstractRange->EndRef().Container(),
-          *aAbstractRange->EndRef().Offset(
-              RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
-          parent, nodeEnd, &disconnected) < 0;
-  if (NS_WARN_IF(disconnected)) {
-    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
-  }
+  *aNodeIsAfterRange = *order < 0;
+
   return NS_OK;
 }
 
