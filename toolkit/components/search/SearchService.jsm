@@ -2719,7 +2719,7 @@ SearchService.prototype = {
     if (locale != SearchUtils.DEFAULT_TAG) {
       shortName += "-" + locale;
     }
-    if ("telemetryId" in engineParams && engineParams.telemetryId) {
+    if ("telemetryId" in engineParams) {
       shortName = engineParams.telemetryId;
     }
 

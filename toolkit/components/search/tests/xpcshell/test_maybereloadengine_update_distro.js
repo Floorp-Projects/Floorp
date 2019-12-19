@@ -6,13 +6,13 @@
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 
 add_task(async function setup() {
-  await useTestEngines("simple-engines");
+  await useTestEngines("data", "search-extensions");
   const defaultBranch = Services.prefs.getDefaultBranch(null);
 
   defaultBranch.setCharPref("distribution.id", "partner-test");
   defaultBranch.setCharPref(
     kDefaultenginenamePref,
-    "data:text/plain,browser.search.defaultenginename=basic"
+    "data:text/plain,browser.search.defaultenginename=bug645970"
   );
 
   installDistributionEngine();
@@ -46,12 +46,12 @@ add_task(async function test_maybereloadengine_update_distro() {
     let defaultEngine = await Services.search.getDefault();
     Assert.equal(
       defaultEngine._shortName,
-      "basic",
+      "bug645970",
       "Should have kept the same name"
     );
     Assert.equal(
       defaultEngine._loadPath,
-      "[distribution]/searchplugins/common/basic.xml",
+      "[distribution]/searchplugins/common/bug645970.xml",
       "Should have kept the distribution engine"
     );
     Assert.equal(
