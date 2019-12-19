@@ -36,7 +36,6 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Document.h"
 #include "nsIObserver.h"
@@ -280,7 +279,7 @@ void IDBDatabase::EnterSetVersionTransaction(uint64_t aNewVersion) {
   MOZ_ASSERT(mSpec);
   MOZ_ASSERT(!mPreviousSpec);
 
-  mPreviousSpec = new DatabaseSpec(*mSpec);
+  mPreviousSpec = MakeUnique<DatabaseSpec>(*mSpec);
 
   mSpec->metadata().version() = aNewVersion;
 }
