@@ -10,7 +10,7 @@
 # or the dist/bin directory.  (.lldbinit files in the objdir and dist/bin set
 # topsrcdir appropriately.)
 script topsrcdir = topsrcdir if "topsrcdir" in locals() else os.getcwd()
-script sys.path.append(os.path.join(topsrcdir, "python/lldbutils"))
+script sys.path.append(os.path.join(topsrcdir, "third_party/python/lldbutils"))
 script import lldbutils
 script lldbutils.init()
 
