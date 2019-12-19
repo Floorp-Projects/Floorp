@@ -116,7 +116,7 @@ add_task(async function() {
   setInputValue(hud, "");
 
   info(
-    "Hitting Enter quicly after a letter that should close the popup evaluates the expression"
+    "Hitting Enter quickly after a letter that should close the popup evaluates the expression"
   );
   onPopupOpened = autocompletePopup.once("popup-opened");
   await setInputValueForAutocompletion(hud, "var docx = 1; doc");
@@ -135,4 +135,19 @@ add_task(async function() {
     "",
     "the input is empty and the expression was evaluated"
   );
+
+  info(
+    "Hitting Enter quickly after a letter that will make the expression exactly match another item than the selected one"
+  );
+  onPopupOpened = autocompletePopup.once("popup-opened");
+  await setInputValueForAutocompletion(hud, "cons");
+  await onPopupOpened;
+  checkInputCompletionValue(hud, "ole", "completeNode has expected value");
+  info(`Quickly type "t" and "Enter"`);
+  onPopupClosed = autocompletePopup.once("popup-closed");
+  EventUtils.synthesizeKey("t");
+  await waitForTime(5);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onPopupClosed;
+  is(getInputValue(hud), "const", "the input has the expected item");
 });
