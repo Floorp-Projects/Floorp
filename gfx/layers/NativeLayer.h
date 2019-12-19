@@ -106,7 +106,15 @@ class NativeLayer {
   // Returns a GLuint for a framebuffer that can be used for drawing to the
   // surface. The size of the framebuffer will be the same as the size of this
   // layer. If aNeedsDepth is true, the framebuffer is created with a depth
-  // buffer. The caller should draw to the framebuffer, unbind it, and then call
+  // buffer.
+  // The framebuffer's depth buffer (if present) may be shared with other
+  // framebuffers of the same size, even from entirely different NativeLayer
+  // objects. The caller should not assume anything about the depth buffer's
+  // existing contents (i.e. it should clear it at the beginning of the draw).
+  // Callers should draw to one layer at a time, such that there is no
+  // interleaved drawing to different framebuffers that could be tripped up by
+  // the sharing.
+  // The caller should draw to the framebuffer, unbind it, and then call
   // NotifySurfaceReady(). It can limit its drawing to aUpdateRegion (which is
   // in the framebuffer's device space, possibly "upside down" if
   // SurfaceIsFlipped()).

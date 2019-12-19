@@ -94,6 +94,11 @@ class SurfacePoolCA final : public SurfacePool {
   // Get or create the framebuffer for the given surface and GL context.
   // The returned framebuffer handle will become invalid once
   // DestroyGLResourcesForContext or DecrementGLContextHandleCount are called.
+  // The framebuffer's depth buffer (if present) may be shared between multiple
+  // framebuffers! Do not assume anything about the depth buffer's existing
+  // contents (i.e. clear it at the beginning of the draw), and do not
+  // interleave drawing commands to different framebuffers in such a way that
+  // the shared depth buffer could cause trouble.
   Maybe<GLuint> GetFramebufferForSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
                                          gl::GLContext* aGL,
                                          bool aNeedsDepthBuffer);
@@ -160,6 +165,12 @@ class SurfacePoolCA final : public SurfacePool {
                                      const gfx::IntSize& aSize,
                                      gl::GLContext* aGL);
 
+    RefPtr<gl::DepthAndStencilBuffer> GetDepthBufferForSharing(
+        gl::GLContext* aGL, const gfx::IntSize& aSize);
+    UniquePtr<gl::MozFramebuffer> CreateFramebufferForTexture(
+        gl::GLContext* aGL, const gfx::IntSize& aSize, GLuint aTexture,
+        bool aNeedsDepthBuffer);
+
     // Every IOSurface that is managed by the pool is wrapped in a
     // SurfacePoolEntry object. Every entry is stored in one of three buckets at
     // any given time: mInUseEntries, mPendingEntries, or mAvailableEntries. All
@@ -216,6 +227,14 @@ class SurfacePoolCA final : public SurfacePool {
     // that context exist.
     std::unordered_map<gl::GLContext*, SurfacePoolCAWrapperForGL*> mWrappers;
     size_t mPoolSizeLimit = 0;
+
+    struct DepthBufferEntry {
+      RefPtr<gl::GLContext> mGLContext;
+      gfx::IntSize mSize;
+      WeakPtr<gl::DepthAndStencilBuffer> mBuffer;
+    };
+
+    nsTArray<DepthBufferEntry> mDepthBuffers;
   };
 
   DataMutex<LockedPool> mPool;
