@@ -73,3 +73,6 @@ if CONFIG['ENABLE_REMOTE_AGENT']:
 
 if CONFIG['MOZ_FOGOTYPE']:
     gkrust_features += ['fogotype']
+
+if CONFIG['MOZ_USING_WASM_SANDBOXING']:
+    gkrust_features += ['wasm_library_sandboxing']
