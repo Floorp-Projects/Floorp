@@ -392,6 +392,9 @@ class nsWindow final : public nsBaseWidget {
   nsresult SetSystemFont(const nsCString& aFontName) override;
   nsresult GetSystemFont(nsCString& aFontName) override;
 
+  nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) final;
+  nsresult ResetPrefersReducedMotionOverrideForTest() final;
+
   typedef enum {
     CSD_SUPPORT_SYSTEM,  // CSD including shadows
     CSD_SUPPORT_CLIENT,  // CSD without shadows
