@@ -110,6 +110,21 @@ void JSWindowActor::RejectPendingQueries() {
   }
 }
 
+/* static */
+bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
+                                 size_t aDataLength) {
+  // A message includes more than structured clone data, so subtract
+  // 20KB to make it more likely that a message within this bound won't
+  // result in an overly large IPC message.
+  static const size_t kMaxMessageSize =
+      IPC::Channel::kMaximumMessageSize - 20 * 1024;
+  if (aDataLength < kMaxMessageSize) {
+    return true;
+  }
+
+  return false;
+}
+
 void JSWindowActor::SetName(const nsAString& aName) {
   MOZ_ASSERT(mName.IsEmpty(), "Cannot set name twice!");
   mName = aName;

@@ -87,6 +87,12 @@ void JSWindowActorChild::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
     return;
   }
 
+  if (NS_WARN_IF(
+          !AllowMessage(aMeta, aData.DataLength() + aStack.DataLength()))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   // Cross-process case - send data over WindowGlobalChild to other side.
   ClonedMessageData msgData;
   ClonedMessageData stackData;
