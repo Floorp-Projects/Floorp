@@ -1,7 +1,7 @@
 {
   "default": {
       "visibleDefaultEngines": [
-            "bug645970"
+            "basic"
         ]
   },
   "hidden": {
