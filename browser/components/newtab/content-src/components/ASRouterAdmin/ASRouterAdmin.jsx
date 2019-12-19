@@ -455,6 +455,13 @@ export class ASRouterAdminInner extends React.PureComponent {
     ASRouterUtils.sendMessage({ type: "RESET_PROVIDER_PREF" });
   }
 
+  toggleGroups(id, value) {
+    ASRouterUtils.sendMessage({
+      type: "SET_GROUP_STATE",
+      data: { id, value },
+    });
+  }
+
   handleExpressionEval() {
     const context = {};
     for (const param of Object.keys(this.state.stringTargetingParameters)) {
@@ -590,9 +597,19 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   renderMessageItem(msg) {
-    const isBlocked =
+    const isBlockedByGroup = this.state.groups
+      .filter(group => msg.groups.includes(group.id))
+      .some(group => !group.enabled);
+    const msgProvider = this.state.providers.find(
+      provider => provider.id === msg.provider
+    );
+    const isProviderExcluded =
+      msgProvider.exclude && msgProvider.exclude.includes(msg.id);
+    const isMessageBlocked =
       this.state.messageBlockList.includes(msg.id) ||
       this.state.messageBlockList.includes(msg.campaign);
+    const isBlocked =
+      isMessageBlocked || isBlockedByGroup || isProviderExcluded;
     const impressions = this.state.messageImpressions[msg.id]
       ? this.state.messageImpressions[msg.id].length
       : 0;
@@ -626,7 +643,17 @@ export class ASRouterAdminInner extends React.PureComponent {
           <br />({impressions} impressions)
         </td>
         <td className="message-summary">
-          <pre>{JSON.stringify(msg, null, 2)}</pre>
+          {isBlocked && (
+            <tr>
+              Block reason:
+              {isBlockedByGroup && " Blocked by group"}
+              {isProviderExcluded && " Excluded by provider"}
+              {isMessageBlocked && " Message blocked"}
+            </tr>
+          )}
+          <tr>
+            <pre>{JSON.stringify(msg, null, 2)}</pre>
+          </tr>
         </td>
       </tr>
     );
@@ -932,6 +959,16 @@ export class ASRouterAdminInner extends React.PureComponent {
     });
   }
 
+  _getGroupImpressionsCount(id, frequency) {
+    if (frequency) {
+      return this.state.groupImpressions[id]
+        ? this.state.groupImpressions[id].length
+        : 0;
+    }
+
+    return "n/a";
+  }
+
   renderPocketStory(story) {
     return (
       <tr className="message-item" key={story.guid}>
@@ -1130,6 +1167,35 @@ export class ASRouterAdminInner extends React.PureComponent {
             {this.renderAttributionParamers()}
           </React.Fragment>
         );
+      case "groups":
+        return (
+          <React.Fragment>
+            <h2>Message Groups</h2>
+            <table>
+              <thead>
+                <tr className="message-item">
+                  <td>Enabled</td>
+                  <td>Impressions count</td>
+                  <td>Custom frequency</td>
+                </tr>
+              </thead>
+              {this.state.groups &&
+                this.state.groups.map(({ id, enabled, frequency }, index) => (
+                  <Row key={id}>
+                    <td>
+                      <TogglePrefCheckbox
+                        checked={enabled}
+                        pref={id}
+                        onChange={this.toggleGroups}
+                      />
+                    </td>
+                    <td>{this._getGroupImpressionsCount(id, frequency)}</td>
+                    <td>{JSON.stringify(frequency, null, 2)}</td>
+                  </Row>
+                ))}
+            </table>
+          </React.Fragment>
+        );
       case "pocket":
         return (
           <React.Fragment>
@@ -1194,6 +1260,9 @@ export class ASRouterAdminInner extends React.PureComponent {
             </li>
             <li>
               <a href="#devtools-targeting">Targeting</a>
+            </li>
+            <li>
+              <a href="#devtools-groups">Message Groups</a>
             </li>
             <li>
               <a href="#devtools-pocket">Pocket</a>

@@ -219,6 +219,7 @@ const MESSAGES = () => [
   {
     id: "BOOKMARK_CFR",
     template: "cfr_doorhanger",
+    groups: ["cfr-fxa"],
     content: {
       layout: "icon_and_message",
       category: "cfrFeatures",
