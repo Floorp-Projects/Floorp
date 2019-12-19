@@ -67,7 +67,7 @@ function init() {
     nameVersion.append(name, version);
 
     const fragment = document.createXULElement("hbox");
-    fragment.pack = "end";
+    fragment.setAttribute("pack", "end");
 
     if (listItem.blocked) {
       fragment.appendChild(
