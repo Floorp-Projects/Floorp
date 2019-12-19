@@ -12,11 +12,11 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSString;
 
 namespace js {
+class PropertyName;
 
-extern JSString* BooleanToString(JSContext* cx, bool b);
+extern PropertyName* BooleanToString(JSContext* cx, bool b);
 
 }  // namespace js
 

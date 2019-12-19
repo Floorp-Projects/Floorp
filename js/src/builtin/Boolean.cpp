@@ -140,7 +140,7 @@ const ClassSpec BooleanObject::classSpec_ = {
     boolean_methods,
     nullptr};
 
-JSString* js::BooleanToString(JSContext* cx, bool b) {
+PropertyName* js::BooleanToString(JSContext* cx, bool b) {
   return b ? cx->names().true_ : cx->names().false_;
 }
 
