@@ -24,7 +24,6 @@ def register(graph_config):
     """
     _import_modules(["job", "worker_types", "routes", "target_tasks"])
     extend_parameters_schema({
-        Required("head_tag"): text_type,
         Required("pull_request_number"): Any(All(int, Range(min=1)), None),
         Required("release_type"): text_type,
         Required("release_version"): text_type,
@@ -37,8 +36,7 @@ def _import_modules(modules):
 
 
 def get_decision_parameters(graph_config, parameters):
-    head_tag = os.environ.get("MOBILE_HEAD_TAG", "").decode('utf-8')
-    parameters["head_tag"] = head_tag
+    head_tag = parameters["head_tag"].decode("utf-8")
     parameters["release_type"] = _resolve_release_type(head_tag)
     parameters["release_version"] = read_version_file()
     if head_tag:
