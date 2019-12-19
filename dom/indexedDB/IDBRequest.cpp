@@ -437,9 +437,8 @@ void IDBOpenDBRequest::DispatchNonTransactionError(nsresult aErrorCode) {
   SetError(aErrorCode);
 
   // Make an error event and fire it at the target.
-  RefPtr<Event> event = CreateGenericEvent(
-      this, nsDependentString(kErrorEventType), eDoesBubble, eCancelable);
-  MOZ_ASSERT(event);
+  auto event = CreateGenericEvent(this, nsDependentString(kErrorEventType),
+                                  eDoesBubble, eCancelable);
 
   IgnoredErrorResult rv;
   DispatchEvent(*event, rv);
