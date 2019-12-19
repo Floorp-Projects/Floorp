@@ -1362,10 +1362,6 @@ void nsPresContext::SysColorChangedInternal() {
   // Reset default background and foreground colors for the document since they
   // may be using system colors
   PreferenceSheet::Refresh();
-
-  // The system color values are computed to colors in the style data,
-  // so normal style data comparison is sufficient here.
-  RebuildAllStyleData(nsChangeHint(0), RestyleHint{0});
 }
 
 void nsPresContext::RefreshSystemMetrics() {
