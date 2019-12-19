@@ -1207,16 +1207,9 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     mHasLoadedNonBlankURI = true;
   }
 
-  bool isRoot = false;      // Is this the root docshell
+  bool isRoot = !mBrowsingContext->GetParent();
   bool isSubFrame = false;  // Is this a subframe navigation?
 
-  nsCOMPtr<nsIDocShellTreeItem> root;
-
-  GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-  if (root.get() == static_cast<nsIDocShellTreeItem*>(this)) {
-    // This is the root docshell
-    isRoot = true;
-  }
   if (mLSHE) {
     isSubFrame = mLSHE->GetIsSubFrame();
   }
