@@ -298,6 +298,7 @@ class nsBaseChannel
   nsAutoPtr<nsString> mContentDispositionFilename;
   int64_t mContentLength;
   bool mWasOpened;
+  bool mCanceled;
 
   friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };
