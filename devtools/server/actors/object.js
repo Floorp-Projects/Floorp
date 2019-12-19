@@ -108,7 +108,6 @@ const proto = {
       incrementGripDepth,
       decrementGripDepth,
     };
-    this._originalDescriptors = new Map();
   },
 
   rawValue: function() {
@@ -116,96 +115,15 @@ const proto = {
   },
 
   addWatchpoint(property, label, watchpointType) {
-    // We promote the object actor to the thread pool
-    // so that it lives for the lifetime of the watchpoint.
-    this.thread.threadObjectGrip(this);
-
-    if (this._originalDescriptors.has(property)) {
-      return;
-    }
-
-    const obj = this.rawValue();
-    const dbgDesc = this.obj.getOwnPropertyDescriptor(property);
-    const desc = Object.getOwnPropertyDescriptor(obj, property) || dbgDesc;
-
-    if (desc.set || desc.get || !desc.configurable) {
-      return;
-    }
-
-    this._originalDescriptors.set(property, { desc, dbgDesc, watchpointType });
-
-    const pauseAndRespond = type => {
-      const frame = this.thread.dbg.getNewestFrame();
-      this.thread._pauseAndRespond(frame, {
-        type: type,
-        message: label,
-      });
-    };
-
-    if (watchpointType === "get") {
-      this.obj.defineProperty(property, {
-        configurable: desc.configurable,
-        enumerable: desc.enumerable,
-        set: this.obj.makeDebuggeeValue(v => {
-          desc.value = v;
-        }),
-        get: this.obj.makeDebuggeeValue(() => {
-          const frame = this.thread.dbg.getNewestFrame();
-
-          if (!this.thread.hasMoved(frame, "getWatchpoint")) {
-            return false;
-          }
-
-          if (!this.thread.skipBreakpoints) {
-            pauseAndRespond("getWatchpoint");
-          }
-
-          return desc.value;
-        }),
-      });
-    }
-
-    if (watchpointType === "set") {
-      this.obj.defineProperty(property, {
-        configurable: desc.configurable,
-        enumerable: desc.enumerable,
-        set: this.obj.makeDebuggeeValue(v => {
-          const frame = this.thread.dbg.getNewestFrame();
-
-          if (!this.thread.hasMoved(frame, "setWatchpoint")) {
-            desc.value = v;
-            return;
-          }
-
-          if (!this.thread.skipBreakpoints) {
-            pauseAndRespond("setWatchpoint");
-          }
-
-          desc.value = v;
-        }),
-        get: this.obj.makeDebuggeeValue(() => {
-          return desc.value;
-        }),
-      });
-    }
+    this.thread.addWatchpoint(this, { property, label, watchpointType });
   },
 
   removeWatchpoint(property) {
-    if (!this._originalDescriptors.has(property)) {
-      return;
-    }
-
-    const { dbgDesc, desc } = this._originalDescriptors.get(property);
-    this._originalDescriptors.delete(property);
-    this.obj.defineProperty(property, { ...dbgDesc, value: desc.value });
-
-    this.thread.demoteObjectGrip(this);
+    this.thread.removeWatchpoint(this, property);
   },
 
   removeWatchpoints() {
-    this._originalDescriptors.forEach((_, property) =>
-      this.removeWatchpoint(property)
-    );
+    this.thread.removeWatchpoint(this);
   },
 
   /**
@@ -861,18 +779,17 @@ const proto = {
       configurable: desc.configurable,
       enumerable: desc.enumerable,
     };
+    const obj = this.rawValue();
 
     if ("value" in desc) {
       retval.writable = desc.writable;
       retval.value = this.hooks.createValueGrip(desc.value);
-    } else if (this._originalDescriptors.has(name.toString())) {
-      name = name.toString();
-      const watchpointType = this._originalDescriptors.get(name).watchpointType;
-      desc = this._originalDescriptors.get(name).desc;
+    } else if (this.thread.getWatchpoint(obj, name.toString())) {
+      const watchpoint = this.thread.getWatchpoint(obj, name.toString());
       retval.value = this.hooks.createValueGrip(
-        this.obj.makeDebuggeeValue(desc.value)
+        this.obj.makeDebuggeeValue(watchpoint.desc.value)
       );
-      retval.watchpoint = watchpointType;
+      retval.watchpoint = watchpoint.watchpointType;
     } else {
       if ("get" in desc) {
         retval.get = this.hooks.createValueGrip(desc.get);
@@ -968,9 +885,7 @@ const proto = {
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release: function() {
-    this.removeWatchpoints();
-  },
+  release: function() {},
 };
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);

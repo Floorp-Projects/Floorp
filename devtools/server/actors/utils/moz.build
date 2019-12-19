@@ -21,4 +21,5 @@ DevToolsModules(
     'TabSources.js',
     'track-change-emitter.js',
     'walker-search.js',
+    'watchpoint-map.js',
 )

@@ -18,6 +18,9 @@ const {
   eventBreakpointForNotification,
   makeEventBreakpointMessage,
 } = require("devtools/server/actors/utils/event-breakpoints");
+const {
+  WatchpointMap,
+} = require("devtools/server/actors/utils/watchpoint-map");
 
 const { logEvent } = require("devtools/server/actors/utils/logEvent");
 
@@ -111,6 +114,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._activeEventPause = null;
     this._pauseOverlay = null;
     this._priorPause = null;
+
+    this._watchpointsMap = new WatchpointMap(this);
 
     this._options = {
       autoBlackBox: false,
@@ -1461,6 +1466,18 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
+  addWatchpoint(objActor, data) {
+    this._watchpointsMap.add(objActor, data);
+  },
+
+  removeWatchpoint(objActor, property) {
+    this._watchpointsMap.remove(objActor, property);
+  },
+
+  getWatchpoint(obj, property) {
+    return this._watchpointsMap.get(obj, property);
+  },
+
   /**
    * Handle a protocol request to pause the debuggee.
    */
@@ -1777,17 +1794,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this.threadLifetimePool.addActor(actor);
     this.threadLifetimePool.objectActors.set(actor.obj, actor);
-  },
-
-  demoteObjectGrip: function(actor) {
-    // We want to reuse the existing actor ID, so we just remove it from the
-    // current pool's weak map and then let ActorPool.addActor do the rest.
-    actor.registeredPool.objectActors.delete(actor.obj);
-
-    actor.originalRegisteredPool.addActor(actor);
-    actor.originalRegisteredPool.objectActors.set(actor.obj, actor);
-
-    delete actor.originalRegisteredPool;
   },
 
   _onWindowReady: function({ isTopLevel, isBFCache, window }) {
