@@ -76,6 +76,12 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
     return;
   }
 
+  if (NS_WARN_IF(
+          !AllowMessage(aMeta, aData.DataLength()))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   // Cross-process case - send data over WindowGlobalParent to other side.
   ClonedMessageData msgData;
   RefPtr<BrowserParent> browserParent = mManager->GetBrowserParent();
