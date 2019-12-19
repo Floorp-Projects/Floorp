@@ -159,17 +159,20 @@ panelview[mainview] > .panel-header {
   }
 }
 
+@supports not -moz-bool-pref("browser.tabs.tabmanager.enabled") {
+  #tabbrowser-tabs:not([overflow="true"]):not([hashiddentabs]) ~ #alltabs-button {
+    visibility: collapse;
+  }
+  #tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
+    visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
+  }
+}
 
-#tabbrowser-tabs:not([overflow="true"]):not([hashiddentabs]) ~ #alltabs-button,
 #tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > #tabs-newtab-button,
 #tabbrowser-tabs:not([hasadjacentnewtabbutton]) > .tabbrowser-arrowscrollbox > #tabs-newtab-button,
 #TabsToolbar[customizing="true"] #tabs-newtab-button {
   visibility: collapse;
-}
-
-#tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
-  visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
 }
 
 .tabbrowser-tab:not([pinned]) {
