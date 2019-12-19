@@ -451,6 +451,7 @@ const tests = [
 
   async function() {
     info("Open the panel with dropmarker, type something, Enter.");
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:blank" },
       async browser => {
@@ -464,6 +465,7 @@ const tests = [
         await promise;
       }
     );
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     return {
       category: "urlbar",
       method: "engagement",
@@ -645,6 +647,7 @@ const tests = [
 
   async function() {
     info("Open the panel with dropmarker, type something, blur it.");
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:blank" },
       async browser => {
@@ -656,6 +659,7 @@ const tests = [
         gURLBar.blur();
       }
     );
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     return {
       category: "urlbar",
       method: "abandonment",

@@ -97,8 +97,10 @@ async function test_window(win) {
           "Ensure we're on the expected page"
         );
 
-        info("The panel should not open on the page by default");
-        await checkDoesNotOpenOnFocus(win);
+        if (!Services.prefs.getBoolPref("browser.urlbar.openViewOnFocus")) {
+          info("The panel should not open on the page by default");
+          await checkDoesNotOpenOnFocus(win);
+        }
 
         // In one case use a value that triggers autofill.
         let autofill = url == "http://example.com/";
@@ -366,7 +368,9 @@ add_task(async function test_pageproxystate_valid() {
   info("Focus the urlbar");
   win.document.getElementById("Browser:OpenLocation").doCommand();
 
-  await checkPanelRemainsClosed(win);
+  if (!Services.prefs.getBoolPref("browser.urlbar.openViewOnFocus")) {
+    await checkPanelRemainsClosed(win);
+  }
 
   await BrowserTestUtils.closeWindow(win);
 });
