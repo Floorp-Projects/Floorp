@@ -9338,7 +9338,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
   }
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      SchemeUsesDocChannel(aLoadState->URI()) && !isSrcdoc) {
+      SchemeUsesDocChannel(aLoadState->URI())) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
         aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);

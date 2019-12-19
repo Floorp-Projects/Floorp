@@ -340,6 +340,8 @@ bool DocumentLoadListener::Open(
 
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
+  mSrcdocData = aLoadState->SrcdocData();
+  mBaseURI = aLoadState->BaseURI();
   return true;
 }
 
@@ -722,6 +724,8 @@ void DocumentLoadListener::SerializeRedirectData(
   nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
                                &previousFlags);
   aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
+  aArgs.srcdocData() = mSrcdocData;
+  aArgs.baseUri() = mBaseURI;
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {
