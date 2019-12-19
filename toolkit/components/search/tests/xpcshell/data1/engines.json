@@ -1,7 +1,6 @@
 {
   "data": [
     {
-      "engineName": "engine1",
       "webExtension": {
         "id": "engine1@search.mozilla.org",
         "version": "1.0"
@@ -13,7 +12,6 @@
       }]
     },
     {
-      "engineName": "engine2",
       "webExtension": {
         "id": "engine2@search.mozilla.org",
         "version": "1.0"
