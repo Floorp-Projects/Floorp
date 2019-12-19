@@ -162,14 +162,20 @@ var AddonStudies = {
   },
 
   async init() {
-    // If an active study's add-on has been removed since we last ran, stop the
-    // study.
-    const activeStudies = (await this.getAll()).filter(study => study.active);
-    for (const study of activeStudies) {
+    for (const study of await this.getAllActive()) {
+      // If an active study's add-on has been removed since we last ran, stop it.
       const addon = await AddonManager.getAddonByID(study.addonId);
       if (!addon) {
         await this.markAsEnded(study, "uninstalled-sideload");
+        continue;
       }
+
+      // Otherwise mark that study as active in Telemetry
+      TelemetryEnvironment.setExperimentActive(study.slug, study.branch, {
+        type: "normandy-addonstudy",
+        enrollmentId:
+          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      });
     }
 
     // Listen for add-on uninstalls so we can stop the corresponding studies.
