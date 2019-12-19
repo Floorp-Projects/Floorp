@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
@@ -29,7 +30,11 @@ internal sealed class LoginsMigrationResult {
     internal sealed class Success : LoginsMigrationResult() {
         internal object MasterPasswordIsSet : Success()
 
-        internal data class LoginRecords(val records: List<ServerPassword>, val recordsDetected: Int) : Success()
+        internal data class ImportedLoginRecords(
+            val totalRecordsDetected: Long,
+            val failedToProcess: Long,
+            val failedToImport: Long
+        ) : Success()
     }
 
     internal sealed class Failure {
@@ -56,8 +61,28 @@ internal sealed class LoginsMigrationResult {
                 return "Unexpected metadata key material encryption alg oid: $berDecoded"
             }
         }
+
+        internal data class GetLoginsThrew(val e: Exception) : Failure() {
+            override fun toString(): String {
+                return "getLogins unexpectedly threw: $e"
+            }
+        }
+
+        internal data class RustImportThrew(val e: Exception) : Failure() {
+            override fun toString(): String {
+                return "Rust import unexpectedly threw: $e"
+            }
+        }
     }
 }
+
+@VisibleForTesting
+internal data class FennecLoginRecords(
+    // Records that we were able to process.
+    val records: List<ServerPassword>,
+    // Total number of records that we saw in the database.
+    val totalRecordsDetected: Int
+)
 
 @Suppress("TooManyFunctions", "LargeClass")
 internal object FennecLoginsMigration {
@@ -67,11 +92,13 @@ internal object FennecLoginsMigration {
     private val logger = Logger("FennecLoginsMigration")
     private val keyForId: MutableMap<String, ByteArray> = mutableMapOf()
 
-    @Suppress("TooGenericExceptionCaught", "ReturnCount")
-    internal fun migrate(
+    @Suppress("TooGenericExceptionCaught", "ReturnCount", "LongParameterList")
+    internal suspend fun migrate(
         crashReporter: CrashReporter,
         signonsDbPath: String,
         key4DbPath: String,
+        loginsStorage: AsyncLoginsStorage,
+        loginsStorageKey: String,
         masterPassword: String = DEFAULT_MASTER_PASSWORD
     ): Result<LoginsMigrationResult> {
         val noMasterPassword = try {
@@ -85,13 +112,26 @@ internal object FennecLoginsMigration {
             return Result.Success(LoginsMigrationResult.Success.MasterPasswordIsSet)
         }
 
-        val loginRecords = try {
+        val fennecRecords = try {
             getLogins(crashReporter, masterPassword, signonsDbPath = signonsDbPath, key4DbPath = key4DbPath)
         } catch (e: Exception) {
-            return Result.Failure(e)
+            return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.GetLoginsThrew(e)))
         }
 
-        return Result.Success(loginRecords)
+        loginsStorage.ensureUnlocked(loginsStorageKey).await()
+        val failedToImport = try {
+            loginsStorage.importLoginsAsync(fennecRecords.records).await()
+        } catch (e: Exception) {
+            return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
+        } finally {
+            loginsStorage.ensureLocked().await()
+        }
+
+        return Result.Success(LoginsMigrationResult.Success.ImportedLoginRecords(
+            totalRecordsDetected = fennecRecords.totalRecordsDetected.toLong(),
+            failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size).toLong(),
+            failedToImport = failedToImport
+        ))
     }
 
     /**
@@ -123,12 +163,13 @@ internal object FennecLoginsMigration {
     }
 
     @Suppress("LongMethod")
-    private fun getLogins(
+    @VisibleForTesting
+    internal fun getLogins(
         crashReporter: CrashReporter,
         masterPassword: String,
         signonsDbPath: String,
         key4DbPath: String
-    ): LoginsMigrationResult.Success.LoginRecords {
+    ): FennecLoginRecords {
         val db = SQLiteDatabase.openDatabase(signonsDbPath, null, OPEN_READONLY)
         val records: MutableList<ServerPassword> = mutableListOf()
 
@@ -216,7 +257,7 @@ internal object FennecLoginsMigration {
             crashReporter.submitCaughtException(it.value)
         }
 
-        return LoginsMigrationResult.Success.LoginRecords(records = records, recordsDetected = totalRecordCount)
+        return FennecLoginRecords(records = records, totalRecordsDetected = totalRecordCount)
     }
 
     private fun SignonsEntry.decrypt(masterPassword: String, key4DbPath: String): ByteArray {

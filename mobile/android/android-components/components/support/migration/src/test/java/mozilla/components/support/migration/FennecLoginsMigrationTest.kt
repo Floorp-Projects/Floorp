@@ -53,14 +53,13 @@ class FennecLoginsMigrationTest {
     @Test
     fun `decrypted records without a set master password`() {
         val crashReporter: CrashReporter = mock()
-        with(FennecLoginsMigration.migrate(
+        with(FennecLoginsMigration.getLogins(
             crashReporter,
+            masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD,
             signonsDbPath = File(getTestPath("logins"), "basic/signons.sqlite").absolutePath,
             key4DbPath = File(getTestPath("logins"), "basic/key4.db").absolutePath
-        ) as Result.Success) {
-            assertEquals(LoginsMigrationResult.Success.LoginRecords::class, this.value::class)
-            val successResult = (this.value as LoginsMigrationResult.Success.LoginRecords)
-            assertEquals(2, successResult.recordsDetected)
+        )) {
+            assertEquals(2, this.totalRecordsDetected)
             assertEquals(listOf(
                 ServerPassword(
                     id = "{cf7cabe4-ec82-4800-b077-c6d97ffcd63a}",
@@ -90,7 +89,7 @@ class FennecLoginsMigrationTest {
                     usernameField = "",
                     passwordField = ""
                 )
-            ), successResult.records)
+            ), this.records)
         }
         verifyZeroInteractions(crashReporter)
     }
@@ -98,14 +97,13 @@ class FennecLoginsMigrationTest {
     @Test
     fun `decrypted record with long encoded strings without a set master password`() {
         val crashReporter: CrashReporter = mock()
-        with(FennecLoginsMigration.migrate(
+        with(FennecLoginsMigration.getLogins(
             crashReporter,
+            masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD,
             signonsDbPath = File(getTestPath("logins"), "basic/longPass-signons.sqlite").absolutePath,
             key4DbPath = File(getTestPath("logins"), "basic/longPass-key4.db").absolutePath
-        ) as Result.Success) {
-            assertEquals(LoginsMigrationResult.Success.LoginRecords::class, this.value::class)
-            val successResult = (this.value as LoginsMigrationResult.Success.LoginRecords)
-            assertEquals(2, successResult.recordsDetected)
+        )) {
+            assertEquals(2, this.totalRecordsDetected)
             assertEquals(listOf(
                 ServerPassword(
                     id = "{0a5e8c6c-11bd-49e4-a09f-cf33c3b65498}",
@@ -138,7 +136,7 @@ class FennecLoginsMigrationTest {
                     usernameField = "",
                     passwordField = ""
                 )
-            ), successResult.records)
+            ), this.records)
         }
         verifyZeroInteractions(crashReporter)
     }
@@ -146,15 +144,13 @@ class FennecLoginsMigrationTest {
     @Test
     fun `decrypted records with a master password`() {
         val crashReporter: CrashReporter = mock()
-        with(FennecLoginsMigration.migrate(
+        with(FennecLoginsMigration.getLogins(
             crashReporter,
+            masterPassword = "my secret pass",
             signonsDbPath = File(getTestPath("logins"), "with-mp/signons.sqlite").absolutePath,
-            key4DbPath = File(getTestPath("logins"), "with-mp/key4.db").absolutePath,
-            masterPassword = "my secret pass"
-        ) as Result.Success) {
-            assertEquals(LoginsMigrationResult.Success.LoginRecords::class, this.value::class)
-            val successResult = (this.value as LoginsMigrationResult.Success.LoginRecords)
-            assertEquals(2, successResult.recordsDetected)
+            key4DbPath = File(getTestPath("logins"), "with-mp/key4.db").absolutePath
+        )) {
+            assertEquals(2, this.totalRecordsDetected)
             assertEquals(listOf(
                 ServerPassword(
                     id = "{cf7cabe4-ec82-4800-b077-c6d97ffcd63a}",
@@ -184,7 +180,7 @@ class FennecLoginsMigrationTest {
                     usernameField = "",
                     passwordField = ""
                 )
-            ), successResult.records)
+            ), this.records)
         }
         verifyZeroInteractions(crashReporter)
     }
