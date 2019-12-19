@@ -40,7 +40,9 @@
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/Symbol.h"
-#include "builtin/TypedObject.h"
+#ifdef JS_HAS_TYPED_OBJECTS
+#  include "builtin/TypedObject.h"
+#endif
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakRefObject.h"
 #include "builtin/WeakSetObject.h"
@@ -103,8 +105,84 @@ TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
 /* static */
 bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
   switch (key) {
+    case JSProto_Null:
+    case JSProto_Object:
+    case JSProto_Function:
+    case JSProto_Array:
+    case JSProto_Boolean:
+    case JSProto_JSON:
+    case JSProto_Date:
+    case JSProto_Math:
+    case JSProto_Number:
+    case JSProto_String:
+    case JSProto_RegExp:
+    case JSProto_Error:
+    case JSProto_InternalError:
+    case JSProto_EvalError:
+    case JSProto_RangeError:
+    case JSProto_ReferenceError:
+    case JSProto_SyntaxError:
+    case JSProto_TypeError:
+    case JSProto_URIError:
+    case JSProto_DebuggeeWouldRun:
+    case JSProto_CompileError:
+    case JSProto_LinkError:
+    case JSProto_RuntimeError:
+    case JSProto_ArrayBuffer:
+    case JSProto_Int8Array:
+    case JSProto_Uint8Array:
+    case JSProto_Int16Array:
+    case JSProto_Uint16Array:
+    case JSProto_Int32Array:
+    case JSProto_Uint32Array:
+    case JSProto_Float32Array:
+    case JSProto_Float64Array:
+    case JSProto_Uint8ClampedArray:
+    case JSProto_BigInt64Array:
+    case JSProto_BigUint64Array:
+    case JSProto_BigInt:
+    case JSProto_Proxy:
+    case JSProto_WeakMap:
+    case JSProto_Map:
+    case JSProto_Set:
+    case JSProto_DataView:
+    case JSProto_Symbol:
+    case JSProto_Reflect:
+    case JSProto_WeakSet:
+    case JSProto_TypedArray:
+    case JSProto_SavedFrame:
+    case JSProto_Promise:
+    case JSProto_AsyncFunction:
+    case JSProto_GeneratorFunction:
+    case JSProto_AsyncGeneratorFunction:
+      return false;
+
     case JSProto_WebAssembly:
       return !wasm::HasSupport(cx);
+
+    case JSProto_WasmModule:
+    case JSProto_WasmInstance:
+    case JSProto_WasmMemory:
+    case JSProto_WasmTable:
+    case JSProto_WasmGlobal:
+      return false;
+
+#ifdef JS_HAS_INTL_API
+    case JSProto_Intl:
+    case JSProto_Collator:
+    case JSProto_DateTimeFormat:
+    case JSProto_Locale:
+    case JSProto_ListFormat:
+    case JSProto_NumberFormat:
+    case JSProto_PluralRules:
+    case JSProto_RelativeTimeFormat:
+      return false;
+#endif
+
+#ifdef JS_HAS_TYPED_OBJECTS
+    case JSProto_TypedObject:
+      return false;
+#endif
 
     case JSProto_ReadableStream:
     case JSProto_ReadableStreamDefaultReader:
@@ -131,13 +209,15 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_FinalizationGroup:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
 
-#ifndef NIGHTLY_BUILD
     case JSProto_AggregateError:
+#ifndef NIGHTLY_BUILD
       return true;
+#else
+      return false;
 #endif
 
     default:
-      return false;
+      MOZ_CRASH("unexpected JSProtoKey");
   }
 }
 
