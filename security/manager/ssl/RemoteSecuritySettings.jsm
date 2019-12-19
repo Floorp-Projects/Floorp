@@ -424,18 +424,57 @@ class IntermediatePreloads {
         }
       );
     });
-    const col = await this.client.openCollection();
+    let col;
+    try {
+      col = await this.client.openCollection();
+    } catch (err) {
+      log.warn(`Unable to open intermediate preloading collection: ${err}`);
+      // Re-purpose the "emptyAttachment" category to indicate opening the collection failed.
+      Services.telemetry
+        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+        .add("emptyAttachment");
+      return;
+    }
     // If we don't have prior data, make it so we re-load everything.
     if (!hasPriorCertData) {
-      const { data: current } = await col.list({ order: "" }); // no sort needed.
+      let current;
+      try {
+        current = (await col.list({ order: "" })).data; // no sort needed.
+      } catch (err) {
+        log.warn(`Unable to list intermediate preloading collection: ${err}`);
+        // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
+        Services.telemetry
+          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("failedToFetch");
+        return;
+      }
       const toReset = current.filter(record => record.cert_import_complete);
-      await col.db.execute(transaction => {
-        toReset.forEach(record => {
-          transaction.update({ ...record, cert_import_complete: false });
+      try {
+        await col.db.execute(transaction => {
+          toReset.forEach(record => {
+            transaction.update({ ...record, cert_import_complete: false });
+          });
         });
-      });
+      } catch (err) {
+        log.warn(`Unable to update intermediate preloading collection: ${err}`);
+        // Re-purpose the "unexpectedLength" category to indicate updating the collection failed.
+        Services.telemetry
+          .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("unexpectedLength");
+        return;
+      }
     }
-    const { data: current } = await col.list({ order: "" }); // no sort needed.
+    let current;
+    try {
+      current = (await col.list({ order: "" })).data; // no sort needed.
+    } catch (err) {
+      log.warn(`Unable to list intermediate preloading collection: ${err}`);
+      // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
+      Services.telemetry
+        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+        .add("failedToFetch");
+      return;
+    }
     const waiting = current.filter(record => !record.cert_import_complete);
 
     log.debug(`There are ${waiting.length} intermediates awaiting download.`);
@@ -479,13 +518,32 @@ class IntermediatePreloads {
         .add("failedToUpdateDB");
       return;
     }
-    await col.db.execute(transaction => {
-      recordsToUpdate.forEach(record => {
-        transaction.update({ ...record, cert_import_complete: true });
+    try {
+      await col.db.execute(transaction => {
+        recordsToUpdate.forEach(record => {
+          transaction.update({ ...record, cert_import_complete: true });
+        });
       });
-    });
+    } catch (err) {
+      log.warn(`Unable to update intermediate preloading collection: ${err}`);
+      // Re-purpose the "unexpectedLength" category to indicate updating the collection failed.
+      Services.telemetry
+        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+        .add("unexpectedLength");
+      return;
+    }
 
-    const { data: finalCurrent } = await col.list();
+    let finalCurrent;
+    try {
+      finalCurrent = (await col.list({ order: "" })).data; // no sort needed.
+    } catch (err) {
+      log.warn(`Unable to list intermediate preloading collection: ${err}`);
+      // Re-purpose the "failedToFetch" category to indicate listing the collection failed.
+      Services.telemetry
+        .getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+        .add("failedToFetch");
+      return;
+    }
     const finalWaiting = finalCurrent.filter(
       record => !record.cert_import_complete
     );
