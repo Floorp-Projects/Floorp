@@ -1052,10 +1052,10 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
   int32_t rangeStartOffset = mMaintainRange->StartOffset();
   int32_t rangeEndOffset = mMaintainRange->EndOffset();
 
-  int32_t relToStart = nsContentUtils::ComparePoints(
+  int32_t relToStart = nsContentUtils::ComparePoints_Deprecated(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
-  int32_t relToEnd = nsContentUtils::ComparePoints(rangeEndNode, rangeEndOffset,
-                                                   aContent, aOffset);
+  int32_t relToEnd = nsContentUtils::ComparePoints_Deprecated(
+      rangeEndNode, rangeEndOffset, aContent, aOffset);
 
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
@@ -1138,7 +1138,7 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   if (mMaintainRange && mMaintainedAmount != eSelectNoAmount) {
     nsINode* rangenode = mMaintainRange->GetStartContainer();
     int32_t rangeOffset = mMaintainRange->StartOffset();
-    int32_t relativePosition = nsContentUtils::ComparePoints(
+    int32_t relativePosition = nsContentUtils::ComparePoints_Deprecated(
         rangenode, rangeOffset, offsets.content, offsets.offset);
 
     nsDirection direction = relativePosition > 0 ? eDirPrevious : eDirNext;

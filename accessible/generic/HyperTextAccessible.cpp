@@ -1533,8 +1533,8 @@ bool HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
 
   // Make sure start is before end, by swapping DOM points.  This occurs when
   // the user selects backwards in the text.
-  int32_t rangeCompare =
-      nsContentUtils::ComparePoints(endNode, endOffset, startNode, startOffset);
+  int32_t rangeCompare = nsContentUtils::ComparePoints_Deprecated(
+      endNode, endOffset, startNode, startOffset);
   if (rangeCompare < 0) {
     nsINode* tempNode = startNode;
     startNode = endNode;
@@ -2025,8 +2025,8 @@ void HyperTextAccessible::GetSpellTextAttr(
     // case there is another range after this one.
     nsINode* endNode = range->GetEndContainer();
     int32_t endNodeOffset = range->EndOffset();
-    if (nsContentUtils::ComparePoints(aNode, aNodeOffset, endNode,
-                                      endNodeOffset) >= 0)
+    if (nsContentUtils::ComparePoints_Deprecated(aNode, aNodeOffset, endNode,
+                                                 endNodeOffset) >= 0)
       continue;
 
     // At this point our point is either in this range or before it but after
@@ -2035,8 +2035,8 @@ void HyperTextAccessible::GetSpellTextAttr(
     // must be before the range and after the previous one if any.
     nsINode* startNode = range->GetStartContainer();
     int32_t startNodeOffset = range->StartOffset();
-    if (nsContentUtils::ComparePoints(startNode, startNodeOffset, aNode,
-                                      aNodeOffset) <= 0) {
+    if (nsContentUtils::ComparePoints_Deprecated(startNode, startNodeOffset,
+                                                 aNode, aNodeOffset) <= 0) {
       startOffset = DOMPointToOffset(startNode, startNodeOffset);
 
       endOffset = DOMPointToOffset(endNode, endNodeOffset);

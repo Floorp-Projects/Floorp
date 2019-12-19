@@ -134,7 +134,8 @@ nsresult AbstractRange::SetStartAndEndInternal(
 
   // If the end point is before the start point, this should be collapsed at
   // the end point.
-  if (nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary) == 1) {
+  if (nsContentUtils::ComparePoints_Deprecated(aStartBoundary, aEndBoundary) ==
+      1) {
     aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
     return NS_OK;
   }

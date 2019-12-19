@@ -716,7 +716,7 @@ RawRangeBoundary TextComposition::GetStartRef() const {
       }
       // Unfortunately, really slow path.
       bool disconnected = false;
-      if (nsContentUtils::ComparePoints(
+      if (nsContentUtils::ComparePoints_Deprecated(
               range->StartRef(), firstRange->StartRef(), &disconnected) == -1) {
         firstRange = range;
       }
@@ -773,8 +773,8 @@ RawRangeBoundary TextComposition::GetEndRef() const {
       }
       // Unfortunately, really slow path.
       bool disconnected = false;
-      if (nsContentUtils::ComparePoints(lastRange->EndRef(), range->EndRef(),
-                                        &disconnected) == -1) {
+      if (nsContentUtils::ComparePoints_Deprecated(
+              lastRange->EndRef(), range->EndRef(), &disconnected) == -1) {
         lastRange = range;
       }
     }

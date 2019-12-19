@@ -332,16 +332,16 @@ mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
 uint32_t nsContentUtils::sInnerOrOuterWindowSerialCounter = 0;
 
-template int32_t nsContentUtils::ComparePoints(
+template int32_t nsContentUtils::ComparePoints_Deprecated(
     const RangeBoundary& aFirstBoundary, const RangeBoundary& aSecondBoundary,
     bool* aDisconnected);
-template int32_t nsContentUtils::ComparePoints(
+template int32_t nsContentUtils::ComparePoints_Deprecated(
     const RangeBoundary& aFirstBoundary,
     const RawRangeBoundary& aSecondBoundary, bool* aDisconnected);
-template int32_t nsContentUtils::ComparePoints(
+template int32_t nsContentUtils::ComparePoints_Deprecated(
     const RawRangeBoundary& aFirstBoundary,
     const RangeBoundary& aSecondBoundary, bool* aDisconnected);
-template int32_t nsContentUtils::ComparePoints(
+template int32_t nsContentUtils::ComparePoints_Deprecated(
     const RawRangeBoundary& aFirstBoundary,
     const RawRangeBoundary& aSecondBoundary, bool* aDisconnected);
 
@@ -2365,10 +2365,9 @@ bool nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
 }
 
 /* static */
-int32_t nsContentUtils::ComparePoints(const nsINode* aParent1, int32_t aOffset1,
-                                      const nsINode* aParent2, int32_t aOffset2,
-                                      bool* aDisconnected,
-                                      ComparePointsCache* aParent1Cache) {
+int32_t nsContentUtils::ComparePoints_Deprecated(
+    const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+    int32_t aOffset2, bool* aDisconnected, ComparePointsCache* aParent1Cache) {
   if (aParent1 == aParent2) {
     // XXX This is odd.  aOffset1 and/or aOffset2 may be -1, e.g., it's result
     //     of nsINode::ComputeIndexOf(), but this compares such invalid
@@ -2487,7 +2486,7 @@ nsINode* nsContentUtils::GetCommonAncestorUnderInteractiveContent(
 
 /* static */
 template <typename FPT, typename FRT, typename SPT, typename SRT>
-int32_t nsContentUtils::ComparePoints(
+int32_t nsContentUtils::ComparePoints_Deprecated(
     const RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
     const RangeBoundaryBase<SPT, SRT>& aSecondBoundary, bool* aDisconnected) {
   if (NS_WARN_IF(!aFirstBoundary.IsSet()) ||
@@ -2496,7 +2495,7 @@ int32_t nsContentUtils::ComparePoints(
   }
   // XXX Re-implement this without calling `Offset()` as far as possible,
   //     and the other overload should be an alias of this.
-  return ComparePoints(
+  return ComparePoints_Deprecated(
       aFirstBoundary.Container(),
       *aFirstBoundary.Offset(
           RangeBoundaryBase<FPT, FRT>::OffsetFilter::kValidOrInvalidOffsets),
