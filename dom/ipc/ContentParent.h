@@ -201,6 +201,11 @@ class ContentParent final
    * 2. remote xul <browser>
    * 3. normal iframe
    */
+  static RefPtr<ContentParent::LaunchPromise> GetNewOrUsedBrowserProcessAsync(
+      Element* aFrameElement, const nsAString& aRemoteType,
+      hal::ProcessPriority aPriority =
+          hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
+      ContentParent* aOpener = nullptr, bool aPreferUsed = false);
   static already_AddRefed<ContentParent> GetNewOrUsedBrowserProcess(
       Element* aFrameElement, const nsAString& aRemoteType,
       hal::ProcessPriority aPriority =
@@ -1254,6 +1259,19 @@ class ContentParent final
   void UpdateNetworkLinkType();
 
   static bool ShouldSyncPreference(const char16_t* aData);
+
+ private:
+  // Determine the recording/replaying state for this frame.
+  // Return `Nothing` in case of error, typically if we need
+  // to create a temporary recording file but could not.
+  static Maybe<RecordReplayState> GetRecordReplayState(
+      Element* aFrameElement, nsAString& aRecordingFile);
+
+  // Return an existing ContentParent if possible. Otherwise, `nullptr`.
+  static already_AddRefed<ContentParent> GetUsedBrowserProcess(
+      ContentParent* aOpener, const nsAString& aRemoteType,
+      nsTArray<ContentParent*>& aContentParents, uint32_t aMaxContentParents,
+      bool aPreferUsed);
 
  private:
   // Released in ActorDealloc; deliberately not exposed to the CC.
