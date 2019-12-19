@@ -572,6 +572,7 @@ class LoginManagerParent extends JSWindowActorParent {
     browser,
     {
       origin,
+      browsingContextId,
       formActionOrigin,
       autoFilledLoginGuid,
       usernameField,
@@ -603,6 +604,11 @@ class LoginManagerParent extends JSWindowActorParent {
       log("(form submission ignored -- saving is disabled for:", origin, ")");
       return;
     }
+
+    let browsingContext = BrowsingContext.get(browsingContextId);
+    let framePrincipalOrigin =
+      browsingContext.currentWindowGlobal.documentPrincipal.origin;
+    log("onFormSubmit, got framePrincipalOrigin: ", framePrincipalOrigin);
 
     let formLogin = new LoginInfo(
       origin,
@@ -636,7 +642,9 @@ class LoginManagerParent extends JSWindowActorParent {
       formActionOrigin,
     });
 
-    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(origin);
+    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
+      framePrincipalOrigin
+    );
     let autoSavedStorageGUID = "";
     if (generatedPW && generatedPW.storageGUID) {
       autoSavedStorageGUID = generatedPW.storageGUID;
