@@ -7038,8 +7038,8 @@ nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI,
 }
 
 bool nsContentUtils::CallOnAllRemoteChildren(
-    MessageBroadcaster* aManager, CallOnRemoteChildFunction aCallback,
-    void* aArg) {
+    MessageBroadcaster* aManager,
+    const std::function<bool(BrowserParent*)>& aCallback) {
   uint32_t browserChildCount = aManager->ChildCount();
   for (uint32_t j = 0; j < browserChildCount; ++j) {
     RefPtr<MessageListenerManager> childMM = aManager->GetChildAt(j);
@@ -7049,7 +7049,7 @@ bool nsContentUtils::CallOnAllRemoteChildren(
 
     RefPtr<MessageBroadcaster> nonLeafMM = MessageBroadcaster::From(childMM);
     if (nonLeafMM) {
-      if (CallOnAllRemoteChildren(nonLeafMM, aCallback, aArg)) {
+      if (CallOnAllRemoteChildren(nonLeafMM, aCallback)) {
         return true;
       }
       continue;
@@ -7060,7 +7060,7 @@ bool nsContentUtils::CallOnAllRemoteChildren(
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
       BrowserParent* remote = BrowserParent::GetFrom(fl);
       if (remote && aCallback) {
-        if (aCallback(remote, aArg)) {
+        if (aCallback(remote)) {
           return true;
         }
       }
@@ -7071,13 +7071,13 @@ bool nsContentUtils::CallOnAllRemoteChildren(
 }
 
 void nsContentUtils::CallOnAllRemoteChildren(
-    nsPIDOMWindowOuter* aWindow, CallOnRemoteChildFunction aCallback,
-    void* aArg) {
+    nsPIDOMWindowOuter* aWindow,
+    const std::function<bool(BrowserParent*)>& aCallback) {
   nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
   if (window->IsChromeWindow()) {
     RefPtr<MessageBroadcaster> windowMM = window->GetMessageManager();
     if (windowMM) {
-      CallOnAllRemoteChildren(windowMM, aCallback, aArg);
+      CallOnAllRemoteChildren(windowMM, aCallback);
     }
   }
 }
@@ -7089,17 +7089,14 @@ struct UIStateChangeInfo {
       : mShowFocusRings(aShowFocusRings) {}
 };
 
-bool SetKeyboardIndicatorsChild(BrowserParent* aParent, void* aArg) {
-  UIStateChangeInfo* stateInfo = static_cast<UIStateChangeInfo*>(aArg);
-  Unused << aParent->SendSetKeyboardIndicators(stateInfo->mShowFocusRings);
-  return false;
-}
-
 void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
     nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings) {
   UIStateChangeInfo stateInfo(aShowFocusRings);
-  CallOnAllRemoteChildren(aWindow, SetKeyboardIndicatorsChild,
-                          (void*)&stateInfo);
+  CallOnAllRemoteChildren(aWindow, [&stateInfo](BrowserParent* aBrowserParent) {
+    Unused << aBrowserParent->SendSetKeyboardIndicators(
+        stateInfo.mShowFocusRings);
+    return false;
+  });
 }
 
 nsresult nsContentUtils::IPCTransferableToTransferable(
