@@ -17,7 +17,7 @@ add_task(async function test_async_distribution() {
 
     // test that the engine from the distribution overrides our jar engine
     return Services.search.getEngines().then(engines => {
-      Assert.equal(engines.length, 1);
+      Assert.equal(engines.length, 2);
 
       let engine = Services.search.getEngineByName("basic");
       Assert.notEqual(engine, null);

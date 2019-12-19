@@ -9,7 +9,7 @@ add_task(async function setup() {
 add_task(async function ignore_cache_files_without_engines() {
   let commitPromise = promiseAfterCache();
   let engineCount = (await Services.search.getEngines()).length;
-  Assert.equal(engineCount, 1);
+  Assert.equal(engineCount, 2);
 
   // Wait for the file to be saved to disk, so that we can mess with it.
   await commitPromise;

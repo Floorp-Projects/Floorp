@@ -1,7 +1,7 @@
 {
   "default": {
       "visibleDefaultEngines": [
-            "basic"
+            "basic", "simple"
         ]
   },
   "hidden": {
