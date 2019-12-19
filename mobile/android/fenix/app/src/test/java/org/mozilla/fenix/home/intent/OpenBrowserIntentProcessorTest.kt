@@ -21,11 +21,12 @@ import org.robolectric.annotation.Config
 @Config(application = TestApplication::class)
 class OpenBrowserIntentProcessorTest {
 
+    private val activity: HomeActivity = mockk(relaxed = true)
+    private val navController: NavController = mockk()
+    private val out: Intent = mockk(relaxed = true)
+
     @Test
     fun `do not process blank intents`() {
-        val activity: HomeActivity = mockk()
-        val navController: NavController = mockk()
-        val out: Intent = mockk()
         val processor = OpenBrowserIntentProcessor(activity) { null }
         processor.process(Intent(), navController, out)
 
@@ -36,9 +37,6 @@ class OpenBrowserIntentProcessorTest {
 
     @Test
     fun `do not process when open extra is false`() {
-        val activity: HomeActivity = mockk()
-        val navController: NavController = mockk()
-        val out: Intent = mockk()
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER, false)
         }
@@ -52,9 +50,6 @@ class OpenBrowserIntentProcessorTest {
 
     @Test
     fun `process when open extra is true`() {
-        val activity: HomeActivity = mockk(relaxed = true)
-        val navController: NavController = mockk()
-        val out: Intent = mockk(relaxed = true)
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER, true)
         }

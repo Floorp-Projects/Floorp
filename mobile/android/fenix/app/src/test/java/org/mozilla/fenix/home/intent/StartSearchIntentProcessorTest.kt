@@ -23,11 +23,12 @@ import org.robolectric.annotation.Config
 @Config(application = TestApplication::class)
 class StartSearchIntentProcessorTest {
 
+    private val metrics: MetricController = mockk(relaxed = true)
+    private val navController: NavController = mockk(relaxed = true)
+    private val out: Intent = mockk(relaxed = true)
+
     @Test
     fun `do not process blank intents`() {
-        val metrics: MetricController = mockk()
-        val navController: NavController = mockk()
-        val out: Intent = mockk()
         StartSearchIntentProcessor(metrics).process(Intent(), navController, out)
 
         verify { metrics wasNot Called }
@@ -37,9 +38,6 @@ class StartSearchIntentProcessorTest {
 
     @Test
     fun `do not process when search extra is false`() {
-        val metrics: MetricController = mockk()
-        val navController: NavController = mockk()
-        val out: Intent = mockk()
         val intent = Intent().apply {
             removeExtra(HomeActivity.OPEN_TO_SEARCH)
         }
@@ -52,9 +50,6 @@ class StartSearchIntentProcessorTest {
 
     @Test
     fun `process search intents`() {
-        val metrics: MetricController = mockk(relaxed = true)
-        val navController: NavController = mockk(relaxed = true)
-        val out: Intent = mockk(relaxed = true)
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_SEARCH, StartSearchIntentProcessor.SEARCH_WIDGET)
         }
