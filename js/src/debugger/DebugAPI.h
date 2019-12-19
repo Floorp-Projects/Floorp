@@ -204,7 +204,8 @@ class DebugAPI {
    * frame, |frame|. Call whatever hooks have been registered to observe new
    * frames.
    */
-  static inline ResumeMode onEnterFrame(JSContext* cx, AbstractFramePtr frame);
+  static inline MOZ_MUST_USE bool onEnterFrame(JSContext* cx,
+                                               AbstractFramePtr frame);
 
   /*
    * Like onEnterFrame, but for resuming execution of a generator or async
@@ -221,7 +222,8 @@ class DebugAPI {
    * JSOP_AFTERYIELD, just after the generator resumes. The difference
    * should not be user-visible.
    */
-  static inline ResumeMode onResumeFrame(JSContext* cx, AbstractFramePtr frame);
+  static inline MOZ_MUST_USE bool onResumeFrame(JSContext* cx,
+                                                AbstractFramePtr frame);
 
   static inline ResumeMode onNativeCall(JSContext* cx, const CallArgs& args,
                                         CallReason reason);
@@ -379,9 +381,10 @@ class DebugAPI {
       Handle<AbstractGeneratorObject*> genObj);
   static MOZ_MUST_USE bool slowPathCheckNoExecute(JSContext* cx,
                                                   HandleScript script);
-  static ResumeMode slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
-  static ResumeMode slowPathOnResumeFrame(JSContext* cx,
-                                          AbstractFramePtr frame);
+  static MOZ_MUST_USE bool slowPathOnEnterFrame(JSContext* cx,
+                                                AbstractFramePtr frame);
+  static MOZ_MUST_USE bool slowPathOnResumeFrame(JSContext* cx,
+                                                 AbstractFramePtr frame);
   static ResumeMode slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
                                          CallReason reason);
   static MOZ_MUST_USE bool slowPathOnDebuggerStatement(JSContext* cx,

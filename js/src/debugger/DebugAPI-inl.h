@@ -114,23 +114,23 @@ bool DebugAPI::checkNoExecute(JSContext* cx, HandleScript script) {
 }
 
 /* static */
-ResumeMode DebugAPI::onEnterFrame(JSContext* cx, AbstractFramePtr frame) {
+bool DebugAPI::onEnterFrame(JSContext* cx, AbstractFramePtr frame) {
   MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(),
                 frame.isDebuggee());
-  if (!frame.isDebuggee()) {
-    return ResumeMode::Continue;
+  if (MOZ_UNLIKELY(frame.isDebuggee())) {
+    return slowPathOnEnterFrame(cx, frame);
   }
-  return slowPathOnEnterFrame(cx, frame);
+  return true;
 }
 
 /* static */
-ResumeMode DebugAPI::onResumeFrame(JSContext* cx, AbstractFramePtr frame) {
+bool DebugAPI::onResumeFrame(JSContext* cx, AbstractFramePtr frame) {
   MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(),
                 frame.isDebuggee());
-  if (!frame.isDebuggee()) {
-    return ResumeMode::Continue;
+  if (MOZ_UNLIKELY(frame.isDebuggee())) {
+    return slowPathOnResumeFrame(cx, frame);
   }
-  return slowPathOnResumeFrame(cx, frame);
+  return true;
 }
 
 /* static */
