@@ -19,7 +19,7 @@ namespace glue {
 class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderObserver final
     : public nt::LoaderObserver {
  public:
-  constexpr LoaderObserver() : mModuleLoads(nullptr) {}
+  constexpr LoaderObserver() : mModuleLoads(nullptr), mEnabled(true) {}
 
   void OnBeginDllLoad(void** aContext,
                       PCUNICODE_STRING aPreliminaryDllName) final;
@@ -31,11 +31,12 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderObserver final
   void OnForward(ModuleLoadInfoVec&& aInfo) final;
 
   void Forward(mozilla::glue::detail::DllServicesBase* aSvc);
-  void Clear();
+  void Disable();
 
  private:
   Win32SRWLock mLock;
   ModuleLoadInfoVec* mModuleLoads;
+  bool mEnabled;
 };
 
 }  // namespace glue
