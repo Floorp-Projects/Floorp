@@ -1877,7 +1877,8 @@ def main(args=sys.argv[1:]):
                           interrupt_handler=SignalHandler(),
                           enable_webrender=args.enable_webrender,
                           extra_prefs=args.extra_prefs or {},
-                          device_name=args.device_name
+                          device_name=args.device_name,
+                          no_conditioned_profile=args.no_conditioned_profile
                           )
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
