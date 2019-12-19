@@ -21,6 +21,12 @@ async refcounted protocol PHttpBackgroundChannel
   manager PBackground;
 
 child:
+  // OnStartRequest is sent over main thread IPC. The following
+  // OnTransportAndData/OnStopRequest/OnProgress/OnStatus/FlushForDiversion/
+  // DivertMessages needs to wait in content process until OnStartRequest
+  // is processed. For synchronizing the event sequence.
+  async OnStartRequestSent();
+
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
   // This is duplicated on PHttpChannel, which gets used for multi-part
