@@ -62,10 +62,10 @@ function startTest() {
     let numberOfPaintsSincePause = 0;
     window.requestAnimationFrame(function draw() {
       numberOfPaintsSincePause++;
-      if (numberOfPaintsSincePause == 2) {
+      if (numberOfPaintsSincePause == 4) {
         canvas.width = canvas.height = new_canvas_size;
         helper.drawColor(canvas, helper.blue);
-      } else if (numberOfPaintsSincePause == 60) {
+      } else if (numberOfPaintsSincePause == 64) {
         canvas.width = canvas.height = canvas_size;
         helper.drawColor(canvas, helper.green);
       } else if (numberOfPaintsSincePause == 62) {
