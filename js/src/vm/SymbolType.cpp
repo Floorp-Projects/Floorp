@@ -116,9 +116,8 @@ bool js::SymbolDescriptiveString(JSContext* cx, Symbol* sym,
   if (!sb.append("Symbol(")) {
     return false;
   }
-  RootedString str(cx, sym->description());
-  if (str) {
-    if (!sb.append(str)) {
+  if (JSAtom* desc = sym->description()) {
+    if (!sb.append(desc)) {
       return false;
     }
   }
@@ -127,7 +126,7 @@ bool js::SymbolDescriptiveString(JSContext* cx, Symbol* sym,
   }
 
   // step 6
-  str = sb.finishString();
+  JSString* str = sb.finishString();
   if (!str) {
     return false;
   }
