@@ -130,7 +130,7 @@ RefPtr<IDBRequest> IDBIndex::GetAllKeys(JSContext* aCx,
 
 void IDBIndex::RefreshMetadata(bool aMayDelete) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mDeletedMetadata, mMetadata == mDeletedMetadata);
+  MOZ_ASSERT_IF(mDeletedMetadata, mMetadata == mDeletedMetadata.get());
 
   const auto& indexes = mObjectStore->Spec().indexes();
   const auto foundIt = std::find_if(
@@ -142,7 +142,7 @@ void IDBIndex::RefreshMetadata(bool aMayDelete) {
 
   if (found) {
     mMetadata = &*foundIt;
-    MOZ_ASSERT(mMetadata != mDeletedMetadata);
+    MOZ_ASSERT(mMetadata != mDeletedMetadata.get());
     mDeletedMetadata = nullptr;
   } else {
     NoteDeletion();
@@ -155,13 +155,13 @@ void IDBIndex::NoteDeletion() {
   MOZ_ASSERT(Id() == mMetadata->id());
 
   if (mDeletedMetadata) {
-    MOZ_ASSERT(mMetadata == mDeletedMetadata);
+    MOZ_ASSERT(mMetadata == mDeletedMetadata.get());
     return;
   }
 
-  mDeletedMetadata = new IndexMetadata(*mMetadata);
+  mDeletedMetadata = MakeUnique<IndexMetadata>(*mMetadata);
 
-  mMetadata = mDeletedMetadata;
+  mMetadata = mDeletedMetadata.get();
 }
 
 const nsString& IDBIndex::Name() const {
