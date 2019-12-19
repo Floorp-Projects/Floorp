@@ -228,10 +228,6 @@ var UrlbarTestUtils = {
     return win.gURLBar.view._rows.children.length;
   },
 
-  getDropMarker(win) {
-    return win.gURLBar.dropmarker;
-  },
-
   /**
    * Ensures at least one search suggestion is present.
    * @param {object} win The window containing the urlbar
