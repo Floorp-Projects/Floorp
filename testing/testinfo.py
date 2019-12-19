@@ -72,6 +72,10 @@ class ActiveDataThread(threading.Thread):
         while attempt < MAX_ACTIVEDATA_RETRIES and not self.response:
             try:
                 self.response = self.ti.activedata_query(self.query)
+                if not self.response:
+                    self.ti.log_verbose("%s: no data received for query" % self.name)
+                    self.response = []
+                    break
             except Exception:
                 self.ti.log_verbose("%s: Exception on attempt #%d:" % (self.name, attempt))
                 traceback.print_exc()
