@@ -29,6 +29,7 @@ devtools:
         - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
         - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux64/ | 'windows10-64/ | 'macosx1014-64"
+        - "'linux64/opt-mochitest-devtools-chrome-fis-e10s"
         - "'xpcshell-e10s 'linux64/"
 
 devtools-linux:
