@@ -519,11 +519,11 @@ class AutoPrintEventDispatcher {
     }
   }
 
-  static CallState CollectDocuments(Document& aDocument, void* aData) {
+  static bool CollectDocuments(Document& aDocument, void* aData) {
     static_cast<nsTArray<nsCOMPtr<Document>>*>(aData)->AppendElement(
         &aDocument);
     aDocument.EnumerateSubDocuments(CollectDocuments, aData);
-    return CallState::Continue;
+    return true;
   }
 
   nsCOMPtr<Document> mTop;
@@ -2661,12 +2661,12 @@ void nsDocumentViewer::PropagateToPresContextsHelper(CallChildFunc aChildFunc,
 
     if (mDocument) {
       mDocument->EnumerateExternalResources(
-          [](Document& aDoc, void* aClosure) -> CallState {
+          [](Document& aDoc, void* aClosure) -> bool {
             auto* closure = static_cast<ResourceDocClosure*>(aClosure);
             if (nsPresContext* pc = aDoc.GetPresContext()) {
               closure->mFunc(pc, closure->mParentClosure);
             }
-            return CallState::Continue;
+            return true;
           },
           &resourceDocClosure);
     }

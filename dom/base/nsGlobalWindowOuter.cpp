@@ -6742,10 +6742,10 @@ void nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate) {
   }
 }
 
-static CallState NotifyDocumentTree(Document& aDocument, void*) {
+static bool NotifyDocumentTree(Document& aDocument, void*) {
   aDocument.EnumerateSubDocuments(NotifyDocumentTree, nullptr);
   aDocument.UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
-  return CallState::Continue;
+  return true;
 }
 
 void nsGlobalWindowOuter::SetActive(bool aActive) {

@@ -263,10 +263,6 @@ nsresult nsLookAndFeel::InitCellHighlightColors() {
 void nsLookAndFeel::NativeInit() { EnsureInit(); }
 
 void nsLookAndFeel::RefreshImpl() {
-  if (mShouldRetainCacheForTest) {
-    return;
-  }
-
   nsXPLookAndFeel::RefreshImpl();
   moz_gtk_refresh();
 
@@ -274,9 +270,6 @@ void nsLookAndFeel::RefreshImpl() {
   mButtonFontCached = false;
   mFieldFontCached = false;
   mMenuFontCached = false;
-  if (XRE_IsParentProcess()) {
-    mPrefersReducedMotionCached = false;
-  }
 
   mInitialized = false;
 }
@@ -285,14 +278,10 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   nsTArray<LookAndFeelInt> lookAndFeelIntCache =
       nsXPLookAndFeel::GetIntCacheImpl();
 
-  LookAndFeelInt lafInt{.id = eIntID_SystemUsesDarkTheme,
-                        .value = GetInt(eIntID_SystemUsesDarkTheme)};
+  LookAndFeelInt lafInt;
+  lafInt.id = eIntID_SystemUsesDarkTheme;
+  lafInt.value = GetInt(eIntID_SystemUsesDarkTheme);
   lookAndFeelIntCache.AppendElement(lafInt);
-
-  LookAndFeelInt prefersReducedMotion{
-      .id = eIntID_PrefersReducedMotion,
-      .value = GetInt(eIntID_PrefersReducedMotion)};
-  lookAndFeelIntCache.AppendElement(prefersReducedMotion);
 
   return lookAndFeelIntCache;
 }
@@ -303,10 +292,6 @@ void nsLookAndFeel::SetIntCacheImpl(
     switch (entry.id) {
       case eIntID_SystemUsesDarkTheme:
         mSystemUsesDarkTheme = entry.value;
-        break;
-      case eIntID_PrefersReducedMotion:
-        mPrefersReducedMotion = entry.value;
-        mPrefersReducedMotionCached = true;
         break;
     }
   }
@@ -740,14 +725,13 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = mCSDReversedPlacement;
       break;
     case eIntID_PrefersReducedMotion: {
-      if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
-        gboolean enableAnimations;
-        GtkSettings* settings = gtk_settings_get_default();
-        g_object_get(settings, "gtk-enable-animations", &enableAnimations,
-                     nullptr);
-        mPrefersReducedMotion = enableAnimations ? 0 : 1;
-      }
-      aResult = mPrefersReducedMotion;
+      GtkSettings* settings;
+      gboolean enableAnimations;
+
+      settings = gtk_settings_get_default();
+      g_object_get(settings, "gtk-enable-animations", &enableAnimations,
+                   nullptr);
+      aResult = enableAnimations ? 0 : 1;
       break;
     }
     case eIntID_SystemUsesDarkTheme: {
