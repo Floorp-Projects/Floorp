@@ -58,8 +58,8 @@ class IDBFileHandle final : public DOMEventTargetHelper,
 #endif
 
  public:
-  static already_AddRefed<IDBFileHandle> Create(IDBMutableFile* aMutableFile,
-                                                FileMode aMode);
+  static MOZ_MUST_USE RefPtr<IDBFileHandle> Create(IDBMutableFile* aMutableFile,
+                                                   FileMode aMode);
 
   static IDBFileHandle* GetCurrent();
 
@@ -151,40 +151,40 @@ class IDBFileHandle final : public DOMEventTargetHelper,
     }
   }
 
-  already_AddRefed<IDBFileRequest> GetMetadata(
+  MOZ_MUST_USE RefPtr<IDBFileRequest> GetMetadata(
       const IDBFileMetadataParameters& aParameters, ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> ReadAsArrayBuffer(uint64_t aSize,
-                                                     ErrorResult& aRv) {
+  MOZ_MUST_USE RefPtr<IDBFileRequest> ReadAsArrayBuffer(uint64_t aSize,
+                                                        ErrorResult& aRv) {
     AssertIsOnOwningThread();
     return Read(aSize, false, VoidString(), aRv);
   }
 
-  already_AddRefed<IDBFileRequest> ReadAsText(uint64_t aSize,
-                                              const nsAString& aEncoding,
-                                              ErrorResult& aRv) {
+  MOZ_MUST_USE RefPtr<IDBFileRequest> ReadAsText(uint64_t aSize,
+                                                 const nsAString& aEncoding,
+                                                 ErrorResult& aRv) {
     AssertIsOnOwningThread();
     return Read(aSize, true, aEncoding, aRv);
   }
 
-  already_AddRefed<IDBFileRequest> Write(
+  MOZ_MUST_USE RefPtr<IDBFileRequest> Write(
       const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue,
       ErrorResult& aRv) {
     AssertIsOnOwningThread();
     return WriteOrAppend(aValue, false, aRv);
   }
 
-  already_AddRefed<IDBFileRequest> Append(
+  MOZ_MUST_USE RefPtr<IDBFileRequest> Append(
       const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue,
       ErrorResult& aRv) {
     AssertIsOnOwningThread();
     return WriteOrAppend(aValue, true, aRv);
   }
 
-  already_AddRefed<IDBFileRequest> Truncate(const Optional<uint64_t>& aSize,
-                                            ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> Truncate(const Optional<uint64_t>& aSize,
+                                               ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> Flush(ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> Flush(ErrorResult& aRv);
 
   void Abort(ErrorResult& aRv);
 
@@ -217,33 +217,31 @@ class IDBFileHandle final : public DOMEventTargetHelper,
 
   bool CheckWindow();
 
-  already_AddRefed<IDBFileRequest> Read(uint64_t aSize, bool aHasEncoding,
-                                        const nsAString& aEncoding,
-                                        ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> Read(uint64_t aSize, bool aHasEncoding,
+                                           const nsAString& aEncoding,
+                                           ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteOrAppend(
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteOrAppend(
       const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue, bool aAppend,
       ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteOrAppend(const nsAString& aValue,
-                                                 bool aAppend,
-                                                 ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteOrAppend(const nsAString& aValue,
+                                                    bool aAppend,
+                                                    ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteOrAppend(const ArrayBuffer& aValue,
-                                                 bool aAppend,
-                                                 ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteOrAppend(const ArrayBuffer& aValue,
+                                                    bool aAppend,
+                                                    ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteOrAppend(const ArrayBufferView& aValue,
-                                                 bool aAppend,
-                                                 ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteOrAppend(
+      const ArrayBufferView& aValue, bool aAppend, ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteOrAppend(Blob& aValue, bool aAppend,
-                                                 ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteOrAppend(Blob& aValue, bool aAppend,
+                                                    ErrorResult& aRv);
 
-  already_AddRefed<IDBFileRequest> WriteInternal(const FileRequestData& aData,
-                                                 uint64_t aDataLength,
-                                                 bool aAppend,
-                                                 ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBFileRequest> WriteInternal(
+      const FileRequestData& aData, uint64_t aDataLength, bool aAppend,
+      ErrorResult& aRv);
 
   void SendFinish();
 
