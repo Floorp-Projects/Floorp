@@ -20,7 +20,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ScopeExit.h"
-#include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
