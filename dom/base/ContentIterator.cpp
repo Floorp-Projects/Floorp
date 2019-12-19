@@ -17,6 +17,64 @@
 
 namespace mozilla {
 
+static bool ComparePostMode(const RawRangeBoundary& aStart,
+                            const RawRangeBoundary& aEnd, nsINode& aNode) {
+  nsINode* parent = aNode.GetParentNode();
+  if (!parent) {
+    return false;
+  }
+
+  // aNode should always be content, as we have a parent, but let's just be
+  // extra careful and check.
+  nsIContent* content =
+      NS_WARN_IF(!aNode.IsContent()) ? nullptr : aNode.AsContent();
+
+  // Post mode: start < node <= end.
+  RawRangeBoundary afterNode(parent, content);
+  const auto isStartLessThanAfterNode = [&]() {
+    const Maybe<int32_t> startComparedToAfterNode =
+        nsContentUtils::ComparePoints(aStart, afterNode);
+    return !NS_WARN_IF(!startComparedToAfterNode) &&
+           (*startComparedToAfterNode < 0);
+  };
+
+  const auto isAfterNodeLessOrEqualToEnd = [&]() {
+    const Maybe<int32_t> afterNodeComparedToEnd =
+        nsContentUtils::ComparePoints(afterNode, aEnd);
+    return !NS_WARN_IF(!afterNodeComparedToEnd) &&
+           (*afterNodeComparedToEnd <= 0);
+  };
+
+  return isStartLessThanAfterNode() && isAfterNodeLessOrEqualToEnd();
+}
+
+static bool ComparePreMode(const RawRangeBoundary& aStart,
+                           const RawRangeBoundary& aEnd, nsINode& aNode) {
+  nsINode* parent = aNode.GetParentNode();
+  if (!parent) {
+    return false;
+  }
+
+  // Pre mode: start <= node < end.
+  RawRangeBoundary beforeNode(parent, aNode.GetPreviousSibling());
+
+  const auto isStartLessOrEqualToBeforeNode = [&]() {
+    const Maybe<int32_t> startComparedToBeforeNode =
+        nsContentUtils::ComparePoints(aStart, beforeNode);
+    return !NS_WARN_IF(!startComparedToBeforeNode) &&
+           (*startComparedToBeforeNode <= 0);
+  };
+
+  const auto isBeforeNodeLessThanEndNode = [&]() {
+    const Maybe<int32_t> beforeNodeComparedToEnd =
+        nsContentUtils::ComparePoints(beforeNode, aEnd);
+    return !NS_WARN_IF(!beforeNodeComparedToEnd) &&
+           (*beforeNodeComparedToEnd < 0);
+  };
+
+  return isStartLessOrEqualToBeforeNode() && isBeforeNodeLessThanEndNode();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // NodeIsInTraversalRange: returns true if content is visited during
 // the traversal of the range in the specified mode.
@@ -47,26 +105,11 @@ static bool NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
     }
   }
 
-  nsINode* parent = aNode->GetParentNode();
-  if (!parent) {
-    return false;
+  if (aIsPreMode) {
+    return ComparePreMode(aStart, aEnd, *aNode);
   }
 
-  if (!aIsPreMode) {
-    // aNode should always be content, as we have a parent, but let's just be
-    // extra careful and check.
-    nsIContent* content =
-        NS_WARN_IF(!aNode->IsContent()) ? nullptr : aNode->AsContent();
-    // Post mode: start < node <= end.
-    RawRangeBoundary afterNode(parent, content);
-    return nsContentUtils::ComparePoints_Deprecated(aStart, afterNode) < 0 &&
-           nsContentUtils::ComparePoints_Deprecated(aEnd, afterNode) >= 0;
-  }
-
-  // Pre mode: start <= node < end.
-  RawRangeBoundary beforeNode(parent, aNode->GetPreviousSibling());
-  return nsContentUtils::ComparePoints_Deprecated(aStart, beforeNode) <= 0 &&
-         nsContentUtils::ComparePoints_Deprecated(aEnd, beforeNode) > 0;
+  return ComparePostMode(aStart, aEnd, *aNode);
 }
 
 ContentIteratorBase::ContentIteratorBase(bool aPre)
