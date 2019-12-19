@@ -550,6 +550,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     const actor = new ObjectActor(
       object,
       {
+        thread: this.parentActor.threadActor,
         getGripDepth: () => this._gripDepth,
         incrementGripDepth: () => this._gripDepth++,
         decrementGripDepth: () => this._gripDepth--,

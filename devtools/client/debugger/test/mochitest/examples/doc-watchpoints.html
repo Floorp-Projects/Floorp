@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
   <script>
+    function getB(obj) {
+      debugger;
+      obj.b;
+    }
+  </script>
+  <script>
     const obj = { a: { b: 2, c: 3 }, b: 2 };
     debugger;
     obj.b = 3;
@@ -13,6 +19,10 @@
     obj.b;
     obj.b;
     debugger;
+
+    getB(obj);
+    debugger;
+    obj.b;
   </script>
 
   <body>
