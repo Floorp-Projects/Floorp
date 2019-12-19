@@ -429,20 +429,22 @@ void IDBFactory::IncrementParentLoggingRequestSerialNumber() {
   mBackgroundActor->SendIncrementLoggingRequestSerialNumber();
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
-                                                    const nsAString& aName,
-                                                    uint64_t aVersion,
-                                                    CallerType aCallerType,
-                                                    ErrorResult& aRv) {
+RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
+                                          const nsAString& aName,
+                                          uint64_t aVersion,
+                                          CallerType aCallerType,
+                                          ErrorResult& aRv) {
   return OpenInternal(aCx,
                       /* aPrincipal */ nullptr, aName,
                       Optional<uint64_t>(aVersion), Optional<StorageType>(),
                       /* aDeleting */ false, aCallerType, aRv);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
-    JSContext* aCx, const nsAString& aName, const IDBOpenDBOptions& aOptions,
-    CallerType aCallerType, ErrorResult& aRv) {
+RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
+                                          const nsAString& aName,
+                                          const IDBOpenDBOptions& aOptions,
+                                          CallerType aCallerType,
+                                          ErrorResult& aRv) {
   if (!IsChrome() && aOptions.mStorage.WasPassed()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
     if (window && window->GetExtantDoc()) {
@@ -472,7 +474,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
                       /* aDeleting */ false, aCallerType, aRv);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
+RefPtr<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
     JSContext* aCx, const nsAString& aName, const IDBOpenDBOptions& aOptions,
     CallerType aCallerType, ErrorResult& aRv) {
   return OpenInternal(aCx,
@@ -508,7 +510,7 @@ int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
   return Key::CompareKeys(first, second);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
+RefPtr<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
     JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
     uint64_t aVersion, SystemCallerGuarantee aGuarantee, ErrorResult& aRv) {
   MOZ_ASSERT(aPrincipal);
@@ -523,7 +525,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
                       /* aDeleting */ false, aGuarantee, aRv);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
+RefPtr<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
     JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
     const IDBOpenDBOptions& aOptions, SystemCallerGuarantee aGuarantee,
     ErrorResult& aRv) {
@@ -539,7 +541,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenForPrincipal(
                       /* aDeleting */ false, aGuarantee, aRv);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::DeleteForPrincipal(
+RefPtr<IDBOpenDBRequest> IDBFactory::DeleteForPrincipal(
     JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
     const IDBOpenDBOptions& aOptions, SystemCallerGuarantee aGuarantee,
     ErrorResult& aRv) {
@@ -555,7 +557,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::DeleteForPrincipal(
                       /* aDeleting */ true, aGuarantee, aRv);
 }
 
-already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
+RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
     const Optional<uint64_t>& aVersion,
     const Optional<StorageType>& aStorageType, bool aDeleting,
@@ -748,7 +750,7 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
     return nullptr;
   }
 
-  return request.forget();
+  return request;
 }
 
 nsresult IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,

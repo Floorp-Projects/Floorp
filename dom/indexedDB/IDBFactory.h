@@ -141,35 +141,35 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   bool IsChrome() const;
 
-  already_AddRefed<IDBOpenDBRequest> Open(JSContext* aCx,
-                                          const nsAString& aName,
-                                          uint64_t aVersion,
-                                          CallerType aCallerType,
-                                          ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> Open(JSContext* aCx,
+                                             const nsAString& aName,
+                                             uint64_t aVersion,
+                                             CallerType aCallerType,
+                                             ErrorResult& aRv);
 
-  already_AddRefed<IDBOpenDBRequest> Open(JSContext* aCx,
-                                          const nsAString& aName,
-                                          const IDBOpenDBOptions& aOptions,
-                                          CallerType aCallerType,
-                                          ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> Open(JSContext* aCx,
+                                             const nsAString& aName,
+                                             const IDBOpenDBOptions& aOptions,
+                                             CallerType aCallerType,
+                                             ErrorResult& aRv);
 
-  already_AddRefed<IDBOpenDBRequest> DeleteDatabase(
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> DeleteDatabase(
       JSContext* aCx, const nsAString& aName, const IDBOpenDBOptions& aOptions,
       CallerType aCallerType, ErrorResult& aRv);
 
   int16_t Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
               JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
 
-  already_AddRefed<IDBOpenDBRequest> OpenForPrincipal(
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> OpenForPrincipal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       uint64_t aVersion, SystemCallerGuarantee, ErrorResult& aRv);
 
-  already_AddRefed<IDBOpenDBRequest> OpenForPrincipal(
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> OpenForPrincipal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       const IDBOpenDBOptions& aOptions, SystemCallerGuarantee,
       ErrorResult& aRv);
 
-  already_AddRefed<IDBOpenDBRequest> DeleteForPrincipal(
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> DeleteForPrincipal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       const IDBOpenDBOptions& aOptions, SystemCallerGuarantee,
       ErrorResult& aRv);
@@ -199,7 +199,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                                            nsIPrincipal** aPrincipal);
 
-  already_AddRefed<IDBOpenDBRequest> OpenInternal(
+  MOZ_MUST_USE RefPtr<IDBOpenDBRequest> OpenInternal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       const Optional<uint64_t>& aVersion,
       const Optional<StorageType>& aStorageType, bool aDeleting,
