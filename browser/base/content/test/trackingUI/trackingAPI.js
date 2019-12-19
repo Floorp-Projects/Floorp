@@ -4,6 +4,15 @@ function createIframe(src) {
   document.body.appendChild(ifr);
 }
 
+function createImage(src) {
+  let img = document.createElement("img");
+  img.src = src;
+  img.onload = () => {
+    parent.postMessage("done", "*");
+  };
+  document.body.appendChild(img);
+}
+
 onmessage = event => {
   switch (event.data) {
     case "tracking":
@@ -39,6 +48,11 @@ onmessage = event => {
     case "third-party-cookie":
       createIframe(
         "https://test1.example.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+      );
+      break;
+    case "image":
+      createImage(
+        "http://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs?type=image-no-cookie"
       );
       break;
     case "window-open":
