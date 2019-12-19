@@ -15,7 +15,18 @@
 <script class="testbody" type="text/javascript">
 /* import-globals-from ../../canvas/test/captureStream_common.js */
 
-function startTest() {
+(async function() {
+  try {
+    SimpleTest.waitForExplicitFinish();
+    await startTest();
+  } catch(e) {
+    ok(false, `Got error msg '${e}'`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+
+async function startTest() {
   let canvas = document.getElementById("video-src-canvas");
 
   let canvas_size = 100;
@@ -24,77 +35,49 @@ function startTest() {
   helper.drawColor(canvas, helper.red);
 
   let stream = canvas.captureStream();
-
-  let numVideoSeekedEvents = 0;
-
-  let blob;
-
   let mediaRecorder = new MediaRecorder(stream);
   is(mediaRecorder.stream, stream,
      "Media recorder stream = canvas stream at the beginning of recording");
-
-  // Not expected events.
-  mediaRecorder.onwarning = () => ok(false, "MediaRecorder: onwarning unexpectedly fired");
-  mediaRecorder.onerror = err => {
-    ok(false, "MediaRecorder: onerror unexpectedly fired. Code " + err.name);
-    SimpleTest.finish();
-  };
-
-  // When recorder is stopped get recorded data.
-  mediaRecorder.ondataavailable = ev => {
-    info("Got 'dataavailable' event");
-    is(blob, undefined, "On dataavailable event blob is undefined");
-    blob = ev.data;
-  };
-
-  mediaRecorder.onstart = () => {
-    info('onstart fired successfully');
-
-    // Feed some more data into the recorder so the output has a non trivial duration.
-    // This avoids the case where we have only 1 frame in the output, which breaks
-    // looping (this is expected as a WebM with 1 video frame has no duration).
-    let counter = 0;
-    let draw = () => {
-      counter++;
-      helper.drawColor(canvas, helper.blue);
-      if(counter > 2) {
-        mediaRecorder.stop();
-        return;
-      }
-      requestAnimationFrame(draw);
-    };
-    requestAnimationFrame(draw);
-  };
-
-  mediaRecorder.onstop = () => {
-    info("Got 'stop' event");
-
-    ok(blob, "Should have gotten a data blob");
-    let video = document.getElementById("recorded-video");
-    video.src = URL.createObjectURL(blob);
-    video.onerror = err => {
-      ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
-      SimpleTest.finish();
-    };
-
-    video.onseeked = () => {
-      // We get a seeked event when the video has restarted.
-      info("Got 'onseeked' event");
-      if(++numVideoSeekedEvents == 2) {
-        // We've looped the video
-        video.pause();
-        SimpleTest.finish();
-      }
-    };
-
-    video.play();
-  };
+  new Promise(r => mediaRecorder.onerror = err => r(err)).then(
+    err => Promise.reject(`MediaRecorder: error unexpectedly fired. Code ${err.name}`));
 
   mediaRecorder.start();
-}
+  await new Promise(r => mediaRecorder.onstart = r);
+  info("Media recorder started");
+  // Feed some more data into the recorder so the output has a non trivial duration.
+  // This avoids the case where we have only 1 frame in the output, which breaks
+  // looping (this is expected as a WebM with 1 video frame has no duration).
+  let counter = 0;
+  let draw = () => {
+    counter++;
+    helper.drawColor(canvas, helper.blue);
+    if(counter > 2) {
+      mediaRecorder.stop();
+      return;
+    }
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
 
-SimpleTest.waitForExplicitFinish();
-startTest();
+  // When recorder is stopped get recorded data.
+  const data = await new Promise(r => mediaRecorder.ondataavailable = ev => r(ev));
+  info(`Media recorder get availiable data`);
+  const blob = data.data;
+
+  await new Promise(r => mediaRecorder.onstop = r);
+  info("Media recorder stopped");
+  ok(blob, "Should have gotten a data blob");
+  const video = document.getElementById("recorded-video");
+  new Promise(r => video.onerror = err => r(err)).then(
+    err => Promise.reject(`Video: error unexpectedly fired. Code ${err.code}`));
+  video.src = URL.createObjectURL(blob);
+  video.play();
+  for (let idx = 0; idx < 2; idx++) {
+    await new Promise(r => video.onseeked = r);
+    ok(true, "video finished seeked");
+  }
+  video.pause();
+}
 
 </script>
 </pre>
