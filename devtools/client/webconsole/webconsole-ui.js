@@ -364,8 +364,8 @@ class WebConsoleUI {
       return;
     }
     // Ignore frame targets, except the top level one, which is handled in the previous
-    // block.
-    if (type == this.hud.targetList.TYPES.FRAME) {
+    // block. Also ignore workers as they are not supported yet. (see bug 1592584)
+    if (type != this.hud.targetList.TYPES.PROCESS) {
       return;
     }
     const proxy = new WebConsoleConnectionProxy(this, targetFront);

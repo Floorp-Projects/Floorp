@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const MAIN_PROCESS_NAME = "Main Process";
+const MAIN_PROCESS_NAME = "Multiprocess Toolbox";
 const RUNTIME_ID = "test-runtime-id";
 const RUNTIME_DEVICE_NAME = "test device name";
 const RUNTIME_APP_NAME = "TestApp";
@@ -39,7 +39,9 @@ add_task(async function() {
   const mainProcessItem = findDebugTargetByText(MAIN_PROCESS_NAME, document);
   ok(mainProcessItem, "Debug target item of the main process should display");
   ok(
-    mainProcessItem.textContent.includes("Main Process for the target browser"),
+    mainProcessItem.textContent.includes(
+      "Main Process and Content Processes for the target browser"
+    ),
     "Debug target item of the main process should contains the description"
   );
 
