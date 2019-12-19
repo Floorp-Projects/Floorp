@@ -23,6 +23,7 @@
 #include "mozilla/dom/PBackgroundFileHandleChild.h"
 #include "mozilla/dom/PBackgroundFileRequestChild.h"
 #include "mozilla/dom/PBackgroundMutableFileChild.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -275,7 +276,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   friend class BackgroundFactoryRequestChild;
   friend IDBDatabase;
 
-  nsAutoPtr<DatabaseSpec> mSpec;
+  UniquePtr<DatabaseSpec> mSpec;
   RefPtr<IDBDatabase> mTemporaryStrongDatabase;
   BackgroundFactoryRequestChild* mOpenRequestActor;
   IDBDatabase* mDatabase;
@@ -291,7 +292,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
 
   const DatabaseSpec* Spec() const {
     AssertIsOnOwningThread();
-    return mSpec;
+    return mSpec.get();
   }
 
   IDBDatabase* GetDOMObject() const {
