@@ -349,46 +349,52 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
   jni::Object::LocalRef infoObj = nullptr;
   if (mType == TrackType::kAudioTrack) {
     infoObj = mParent->mHLSDemuxerWrapper->GetAudioInfo(index);
+    if (!infoObj) {
+      NS_WARNING("Failed to get audio info from Java wrapper");
+      return;
+    }
     auto* audioInfo = mTrackInfo->GetAsAudioInfo();
-    if (infoObj && audioInfo) {
-      HLS_DEBUG("HLSTrackDemuxer", "Update audio info (%d)", index);
-      java::GeckoAudioInfo::LocalRef audioInfoObj(std::move(infoObj));
-      audioInfo->mRate = audioInfoObj->Rate();
-      audioInfo->mChannels = audioInfoObj->Channels();
-      audioInfo->mProfile = audioInfoObj->Profile();
-      audioInfo->mBitDepth = audioInfoObj->BitDepth();
-      audioInfo->mMimeType =
-          NS_ConvertUTF16toUTF8(audioInfoObj->MimeType()->ToString());
-      audioInfo->mDuration =
-          TimeUnit::FromMicroseconds(audioInfoObj->Duration());
-      jni::ByteArray::LocalRef csdBytes = audioInfoObj->CodecSpecificData();
-      if (csdBytes) {
-        auto&& csd = csdBytes->GetElements();
-        audioInfo->mCodecSpecificConfig->Clear();
-        audioInfo->mCodecSpecificConfig->AppendElements(
-            reinterpret_cast<uint8_t*>(&csd[0]), csd.Length());
-      }
+    MOZ_ASSERT(audioInfo != nullptr);
+    HLS_DEBUG("HLSTrackDemuxer", "Update audio info (%d)", index);
+    java::GeckoAudioInfo::LocalRef audioInfoObj(std::move(infoObj));
+    audioInfo->mRate = audioInfoObj->Rate();
+    audioInfo->mChannels = audioInfoObj->Channels();
+    audioInfo->mProfile = audioInfoObj->Profile();
+    audioInfo->mBitDepth = audioInfoObj->BitDepth();
+    audioInfo->mMimeType =
+        NS_ConvertUTF16toUTF8(audioInfoObj->MimeType()->ToString());
+    audioInfo->mDuration =
+        TimeUnit::FromMicroseconds(audioInfoObj->Duration());
+    jni::ByteArray::LocalRef csdBytes = audioInfoObj->CodecSpecificData();
+    if (csdBytes) {
+      auto&& csd = csdBytes->GetElements();
+      audioInfo->mCodecSpecificConfig->Clear();
+      audioInfo->mCodecSpecificConfig->AppendElements(
+          reinterpret_cast<uint8_t*>(&csd[0]), csd.Length());
     }
   } else {
     infoObj = mParent->mHLSDemuxerWrapper->GetVideoInfo(index);
-    auto* videoInfo = mTrackInfo->GetAsVideoInfo();
-    if (infoObj && videoInfo) {
-      java::GeckoVideoInfo::LocalRef videoInfoObj(std::move(infoObj));
-      videoInfo->mStereoMode = getStereoMode(videoInfoObj->StereoMode());
-      videoInfo->mRotation = getVideoInfoRotation(videoInfoObj->Rotation());
-      videoInfo->mImage.width = videoInfoObj->DisplayWidth();
-      videoInfo->mImage.height = videoInfoObj->DisplayHeight();
-      videoInfo->mDisplay.width = videoInfoObj->PictureWidth();
-      videoInfo->mDisplay.height = videoInfoObj->PictureHeight();
-      videoInfo->mMimeType =
-          NS_ConvertUTF16toUTF8(videoInfoObj->MimeType()->ToString());
-      videoInfo->mDuration =
-          TimeUnit::FromMicroseconds(videoInfoObj->Duration());
-      HLS_DEBUG("HLSTrackDemuxer",
-                "Update video info (%d) / I(%dx%d) / D(%dx%d)", index,
-                videoInfo->mImage.width, videoInfo->mImage.height,
-                videoInfo->mDisplay.width, videoInfo->mDisplay.height);
+    if (!infoObj) {
+      NS_WARNING("Failed to get video info from Java wrapper");
+      return;
     }
+    auto* videoInfo = mTrackInfo->GetAsVideoInfo();
+    MOZ_ASSERT(videoInfo != nullptr);
+    java::GeckoVideoInfo::LocalRef videoInfoObj(std::move(infoObj));
+    videoInfo->mStereoMode = getStereoMode(videoInfoObj->StereoMode());
+    videoInfo->mRotation = getVideoInfoRotation(videoInfoObj->Rotation());
+    videoInfo->mImage.width = videoInfoObj->DisplayWidth();
+    videoInfo->mImage.height = videoInfoObj->DisplayHeight();
+    videoInfo->mDisplay.width = videoInfoObj->PictureWidth();
+    videoInfo->mDisplay.height = videoInfoObj->PictureHeight();
+    videoInfo->mMimeType =
+        NS_ConvertUTF16toUTF8(videoInfoObj->MimeType()->ToString());
+    videoInfo->mDuration =
+        TimeUnit::FromMicroseconds(videoInfoObj->Duration());
+    HLS_DEBUG("HLSTrackDemuxer",
+              "Update video info (%d) / I(%dx%d) / D(%dx%d)", index,
+              videoInfo->mImage.width, videoInfo->mImage.height,
+              videoInfo->mDisplay.width, videoInfo->mDisplay.height);
   }
 }
 
