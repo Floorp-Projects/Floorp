@@ -1595,9 +1595,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     let autoFilledLogin = docState.fillsByRootElement.get(form.rootElement);
+    let browsingContextId = win.getWindowGlobalChild().browsingContext.id;
 
     let detail = {
       origin,
+      browsingContextId,
       formActionOrigin,
       autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
       usernameField: mockUsername,
