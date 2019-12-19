@@ -29,8 +29,6 @@
 
 #include "windows.h"
 #include "shellapi.h"
-#include <propvarutil.h>
-#include <propkey.h>
 
 #ifdef _WIN32_WINNT
 #  undef _WIN32_WINNT
@@ -703,9 +701,7 @@ NS_IMETHODIMP
 nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
                                       const nsTArray<nsString>& aArguments,
                                       const nsAString& aDescription,
-                                      nsIFile* aIconFile,
-                                      const nsAString& aAppUserModelId,
-                                      nsIFile* aTarget) {
+                                      nsIFile* aIconFile, nsIFile* aTarget) {
   NS_ENSURE_ARG(aBinary);
   NS_ENSURE_ARG(aTarget);
 
@@ -732,25 +728,6 @@ nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
   if (aIconFile) {
     nsString icon(aIconFile->NativePath());
     link->SetIconLocation(icon.get(), 0);
-  }
-
-  if (!aAppUserModelId.IsEmpty()) {
-    RefPtr<IPropertyStore> propStore;
-    hr = link->QueryInterface(IID_IPropertyStore, getter_AddRefs(propStore));
-    NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
-
-    PROPVARIANT pv;
-    if (FAILED(InitPropVariantFromString(
-            PromiseFlatString(aAppUserModelId).get(), &pv))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    hr = propStore->SetValue(PKEY_AppUserModel_ID, pv);
-    PropVariantClear(&pv);
-    NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
-
-    hr = propStore->Commit();
-    NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
   }
 
   RefPtr<IPersistFile> persist;
