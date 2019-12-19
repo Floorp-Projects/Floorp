@@ -41,7 +41,7 @@ function addThreadEventListeners(thread: ThreadFront) {
 }
 
 function attachAllTargets(currentTarget: Target) {
-  return prefs.fission && currentTarget.chrome && !currentTarget.isAddon;
+  return prefs.fission && currentTarget.isParentProcess;
 }
 
 function setupEvents(dependencies: Dependencies) {
