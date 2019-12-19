@@ -65,16 +65,40 @@ UniquePtr<MozFramebuffer> MozFramebuffer::Create(GLContext* const gl,
     return nullptr;
   }
 
-  return CreateWith(gl, size, samples, depthStencil, colorTarget, colorName);
+  return CreateImpl(
+      gl, size, samples,
+      depthStencil ? DepthAndStencilBuffer::Create(gl, size, samples) : nullptr,
+      colorTarget, colorName);
 }
 
-UniquePtr<MozFramebuffer> MozFramebuffer::CreateWith(
+UniquePtr<MozFramebuffer> MozFramebuffer::CreateForBacking(
     GLContext* const gl, const gfx::IntSize& size, const uint32_t samples,
-    const bool depthStencil, const GLenum colorTarget, const GLuint colorName) {
-  UniquePtr<MozFramebuffer> mozFB(new MozFramebuffer(
-      gl, size, samples, depthStencil, colorTarget, colorName));
+    bool depthStencil, const GLenum colorTarget, const GLuint colorName) {
+  return CreateImpl(
+      gl, size, samples,
+      depthStencil ? DepthAndStencilBuffer::Create(gl, size, samples) : nullptr,
+      colorTarget, colorName);
+}
 
-  const ScopedBindFramebuffer bindFB(gl, mozFB->mFB);
+/* static */ UniquePtr<MozFramebuffer>
+MozFramebuffer::CreateForBackingWithSharedDepthAndStencil(
+    const gfx::IntSize& size, const uint32_t samples, GLenum colorTarget,
+    GLuint colorName,
+    const RefPtr<DepthAndStencilBuffer>& depthAndStencilBuffer) {
+  auto gl = depthAndStencilBuffer->gl();
+  if (!gl || !gl->MakeCurrent()) {
+    return nullptr;
+  }
+  return CreateImpl(gl, size, samples, depthAndStencilBuffer, colorTarget,
+                    colorName);
+}
+
+/* static */ UniquePtr<MozFramebuffer> MozFramebuffer::CreateImpl(
+    GLContext* const gl, const gfx::IntSize& size, const uint32_t samples,
+    const RefPtr<DepthAndStencilBuffer>& depthAndStencilBuffer,
+    const GLenum colorTarget, const GLuint colorName) {
+  GLuint fb = gl->CreateFramebuffer();
+  const ScopedBindFramebuffer bindFB(gl, fb);
 
   if (colorTarget == LOCAL_GL_RENDERBUFFER) {
     gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
@@ -85,7 +109,29 @@ UniquePtr<MozFramebuffer> MozFramebuffer::CreateWith(
                               colorTarget, colorName, 0);
   }
 
-  const auto fnAllocRB = [&](GLuint rb, GLenum format) {
+  if (depthAndStencilBuffer) {
+    gl->fFramebufferRenderbuffer(
+        LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_RENDERBUFFER,
+        depthAndStencilBuffer->mDepthRB);
+    gl->fFramebufferRenderbuffer(
+        LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
+        LOCAL_GL_RENDERBUFFER, depthAndStencilBuffer->mStencilRB);
+  }
+
+  const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+  if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+
+  return UniquePtr<MozFramebuffer>(new MozFramebuffer(
+      gl, size, fb, samples, depthAndStencilBuffer, colorTarget, colorName));
+}
+
+/* static */ RefPtr<DepthAndStencilBuffer> DepthAndStencilBuffer::Create(
+    GLContext* const gl, const gfx::IntSize& size, const uint32_t samples) {
+  const auto fnAllocRB = [&](GLenum format) {
+    GLuint rb = gl->CreateRenderbuffer();
     const ScopedBindRenderbuffer bindRB(gl, rb);
     if (samples) {
       gl->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER, samples,
@@ -97,70 +143,77 @@ UniquePtr<MozFramebuffer> MozFramebuffer::CreateWith(
     return rb;
   };
 
-  if (depthStencil) {
-    GLuint depthRB, stencilRB;
+  GLuint depthRB, stencilRB;
+  {
+    GLContext::LocalErrorScope errorScope(*gl);
 
-    {
-      GLContext::LocalErrorScope errorScope(*gl);
-
-      if (gl->IsSupported(GLFeature::packed_depth_stencil)) {
-        depthRB = fnAllocRB(mozFB->mDepthRB, LOCAL_GL_DEPTH24_STENCIL8);
-        stencilRB = depthRB;  // Ignore unused mStencilRB.
-      } else {
-        depthRB = fnAllocRB(mozFB->mDepthRB, LOCAL_GL_DEPTH_COMPONENT24);
-        stencilRB = fnAllocRB(mozFB->mStencilRB, LOCAL_GL_STENCIL_INDEX8);
-      }
-
-      const auto err = errorScope.GetError();
-      if (err) {
-        MOZ_ASSERT(err == LOCAL_GL_OUT_OF_MEMORY);
-        return nullptr;
-      }
+    if (gl->IsSupported(GLFeature::packed_depth_stencil)) {
+      depthRB = fnAllocRB(LOCAL_GL_DEPTH24_STENCIL8);
+      stencilRB = depthRB;  // Ignore unused mStencilRB.
+    } else {
+      depthRB = fnAllocRB(LOCAL_GL_DEPTH_COMPONENT24);
+      stencilRB = fnAllocRB(LOCAL_GL_STENCIL_INDEX8);
     }
 
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                 LOCAL_GL_DEPTH_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, depthRB);
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                 LOCAL_GL_STENCIL_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, stencilRB);
+    const auto err = errorScope.GetError();
+    if (err) {
+      MOZ_ASSERT(err == LOCAL_GL_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
-  const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-  if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-    MOZ_ASSERT(false);
-    return nullptr;
-  }
-
-  return mozFB;
+  return new DepthAndStencilBuffer(gl, size, depthRB, stencilRB);
 }
 
 ////////////////////
 
-MozFramebuffer::MozFramebuffer(GLContext* const gl, const gfx::IntSize& size,
-                               const uint32_t samples, const bool depthStencil,
-                               const GLenum colorTarget, const GLuint colorName)
+MozFramebuffer::MozFramebuffer(
+    GLContext* const gl, const gfx::IntSize& size, GLuint fb,
+    const uint32_t samples, RefPtr<DepthAndStencilBuffer> depthAndStencilBuffer,
+    const GLenum colorTarget, const GLuint colorName)
     : mWeakGL(gl),
       mSize(size),
       mSamples(samples),
-      mFB(gl->CreateFramebuffer()),
+      mFB(fb),
       mColorTarget(colorTarget),
-      mColorName(colorName),
-      mDepthRB(depthStencil ? gl->CreateRenderbuffer() : 0),
-      mStencilRB(depthStencil ? gl->CreateRenderbuffer() : 0) {
+      mDepthAndStencilBuffer(std::move(depthAndStencilBuffer)),
+      mColorName(colorName) {
   MOZ_ASSERT(mColorTarget);
   MOZ_ASSERT(mColorName);
 }
 
 MozFramebuffer::~MozFramebuffer() {
   GLContext* const gl = mWeakGL;
-  if (!gl || !gl->MakeCurrent()) return;
+  if (!gl || !gl->MakeCurrent()) {
+    return;
+  }
 
   gl->DeleteFramebuffer(mFB);
-  gl->DeleteRenderbuffer(mDepthRB);
-  gl->DeleteRenderbuffer(mStencilRB);
 
   DeleteByTarget(gl, mColorTarget, mColorName);
+}
+
+bool MozFramebuffer::HasDepth() const {
+  return mDepthAndStencilBuffer && mDepthAndStencilBuffer->mDepthRB;
+}
+
+bool MozFramebuffer::HasStencil() const {
+  return mDepthAndStencilBuffer && mDepthAndStencilBuffer->mStencilRB;
+}
+
+DepthAndStencilBuffer::DepthAndStencilBuffer(GLContext* gl,
+                                             const gfx::IntSize& size,
+                                             GLuint depthRB, GLuint stencilRB)
+    : mWeakGL(gl), mSize(size), mDepthRB(depthRB), mStencilRB(stencilRB) {}
+
+DepthAndStencilBuffer::~DepthAndStencilBuffer() {
+  GLContext* const gl = mWeakGL;
+  if (!gl || !gl->MakeCurrent()) {
+    return;
+  }
+
+  gl->DeleteRenderbuffer(mDepthRB);
+  gl->DeleteRenderbuffer(mStencilRB);
 }
 
 }  // namespace gl
