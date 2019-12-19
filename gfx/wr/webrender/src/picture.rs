@@ -878,9 +878,21 @@ impl Tile {
         // Invalidate the tile based on the content changing.
         self.update_content_validity(ctx, state);
 
-        // If there are no primitives there is no need to draw or cache it.
-        if self.current_descriptor.prims.is_empty() {
-            return false;
+        // TODO(gw): This is a hack / temporary bug fix. With the recent changes
+        //           to treat native surfaces as an entire surface, we need to
+        //           skip the optimization that drops empty tiles within the
+        //           surface area. This has some unfortunate performance implications
+        //           in some cases, so we'll need a proper fix for this, but this
+        //           should fix correctness for now, at least.
+        match state.composite_state.compositor_kind {
+            CompositorKind::Draw { .. } => {
+                // If there are no primitives there is no need to draw or cache it.
+                if self.current_descriptor.prims.is_empty() {
+                    return false;
+                }
+            }
+            CompositorKind::Native { .. } => {
+            }
         }
 
         // Check if this tile can be considered opaque. Opacity state must be updated only
@@ -1922,7 +1934,7 @@ impl TileCacheInstance {
         // by the texture cache. For native compositor mode, we need to explicitly
         // invoke a callback to the client to destroy that surface.
         frame_state.composite_state.destroy_native_tiles(
-            self.old_tiles.values(),
+            self.old_tiles.values_mut(),
             frame_state.resource_cache,
         );
 
@@ -5228,7 +5240,7 @@ impl TileNode {
 
 impl CompositeState {
     // A helper function to destroy all native surfaces for a given list of tiles
-    pub fn destroy_native_tiles<'a, I: Iterator<Item = &'a Tile>>(
+    pub fn destroy_native_tiles<'a, I: Iterator<Item = &'a mut Tile>>(
         &mut self,
         tiles_iter: I,
         resource_cache: &mut ResourceCache,
@@ -5242,8 +5254,8 @@ impl CompositeState {
                 // Only destroy native surfaces that have been allocated. It's
                 // possible for display port tiles to be created that never
                 // come on screen, and thus never get a native surface allocated.
-                if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { id, .. }, .. }) = tile.surface {
-                    if let Some(id) = id {
+                if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
+                    if let Some(id) = id.take() {
                         resource_cache.destroy_compositor_tile(id);
                     }
                 }
