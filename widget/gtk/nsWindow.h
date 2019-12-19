@@ -250,7 +250,8 @@ class nsWindow final : public nsBaseWidget {
   void GrabPointer(guint32 aTime);
   void ReleaseGrabs(void);
 
-  void UpdateClientOffset();
+  void UpdateClientOffsetFromFrameExtents();
+  void UpdateClientOffsetFromCSDWindow();
 
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
@@ -487,8 +488,6 @@ class nsWindow final : public nsBaseWidget {
   void UpdateOpaqueRegionWayland(cairo_region_t* aRegion);
 #endif
   void UpdateOpaqueRegionGtk(cairo_region_t* aRegion);
-
-  void UpdateClientOffsetForCSDWindow();
 
   nsWindow* GetTransientForWindowIfPopup();
   bool IsHandlingTouchSequence(GdkEventSequence* aSequence);
