@@ -404,13 +404,15 @@ void* wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter) {
     // Assume ResumeMode::Terminate if no exception is pending --
     // no onExceptionUnwind handlers must be fired.
     if (cx->isExceptionPending()) {
-      ResumeMode mode = DebugAPI::onExceptionUnwind(cx, frame);
-      if (mode == ResumeMode::Return) {
-        // Unexpected trap return -- raising error since throw recovery
-        // is not yet implemented in the wasm baseline.
-        // TODO properly handle ResumeMode::Return and resume wasm execution.
-        JS_ReportErrorASCII(
-            cx, "Unexpected resumption value from onExceptionUnwind");
+      if (!DebugAPI::onExceptionUnwind(cx, frame)) {
+        if (cx->isPropagatingForcedReturn()) {
+          cx->clearPropagatingForcedReturn();
+          // Unexpected trap return -- raising error since throw recovery
+          // is not yet implemented in the wasm baseline.
+          // TODO properly handle forced return and resume wasm execution.
+          JS_ReportErrorASCII(
+              cx, "Unexpected resumption value from onExceptionUnwind");
+        }
       }
     }
 

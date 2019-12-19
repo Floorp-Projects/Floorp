@@ -152,11 +152,11 @@ bool DebugAPI::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame) {
 }
 
 /* static */
-ResumeMode DebugAPI::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame) {
-  if (!cx->realm()->isDebuggee()) {
-    return ResumeMode::Continue;
+bool DebugAPI::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame) {
+  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+    return slowPathOnExceptionUnwind(cx, frame);
   }
-  return slowPathOnExceptionUnwind(cx, frame);
+  return true;
 }
 
 /* static */

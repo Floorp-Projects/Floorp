@@ -1108,14 +1108,6 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
   return pc;
 }
 
-static bool ForcedReturn(JSContext* cx, InterpreterRegs& regs) {
-  bool ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, true);
-  // Point the frame to the end of the script, regardless of error. The
-  // caller must jump to the correct continuation depending on 'ok'.
-  regs.setToEndOfScript();
-  return ok;
-}
-
 static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
                             EnvironmentIter& ei, InterpreterRegs& regs) {
   // Unwind the environment to the beginning of the JSOP_TRY.
@@ -1264,25 +1256,14 @@ again:
   if (cx->isExceptionPending()) {
     /* Call debugger throw hooks. */
     if (!cx->isClosingGenerator()) {
-      ResumeMode mode = DebugAPI::onExceptionUnwind(cx, regs.fp());
-      switch (mode) {
-        case ResumeMode::Terminate:
+      if (!DebugAPI::onExceptionUnwind(cx, regs.fp())) {
+        if (!cx->isExceptionPending()) {
           goto again;
-
-        case ResumeMode::Continue:
-        case ResumeMode::Throw:
-          break;
-
-        case ResumeMode::Return:
-          UnwindIteratorsForUncatchableException(cx, regs);
-          if (!ForcedReturn(cx, regs)) {
-            return ErrorReturnContinuation;
-          }
-          return SuccessfulReturnContinuation;
-
-        default:
-          MOZ_CRASH("bad DebugAPI::onExceptionUnwind resume mode");
+        }
       }
+      // Ensure that the debugger hasn't returned 'true' while clearing the
+      // exception state.
+      MOZ_ASSERT(cx->isExceptionPending());
     }
 
     HandleErrorContinuation res = ProcessTryNotes(cx, ei, regs);
@@ -1301,19 +1282,17 @@ again:
     }
 
     ok = HandleClosingGeneratorReturn(cx, regs.fp(), ok);
-    ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
   } else {
+    UnwindIteratorsForUncatchableException(cx, regs);
+
     // We may be propagating a forced return from a debugger hook function.
     if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
       cx->clearPropagatingForcedReturn();
-      if (!ForcedReturn(cx, regs)) {
-        return ErrorReturnContinuation;
-      }
-      return SuccessfulReturnContinuation;
+      ok = true;
     }
-
-    UnwindIteratorsForUncatchableException(cx, regs);
   }
+
+  ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
 
   // After this point, we will pop the frame regardless. Settle the frame on
   // the end of the script.

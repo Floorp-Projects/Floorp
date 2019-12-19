@@ -255,11 +255,6 @@ static void OnLeaveBaselineFrame(JSContext* cx, const JSJitFrameIter& frame,
   }
 }
 
-static inline void ForcedReturn(JSContext* cx, const JSJitFrameIter& frame,
-                                jsbytecode* pc, ResumeFromException* rfe) {
-  OnLeaveBaselineFrame(cx, frame, pc, rfe, true);
-}
-
 static inline void BaselineFrameAndStackPointersFromTryNote(
     const JSTryNote* tn, const JSJitFrameIter& frame, uint8_t** framePointer,
     uint8_t** stackPointer) {
@@ -474,39 +469,19 @@ static void HandleExceptionBaseline(JSContext* cx, JSJitFrameIter& frame,
     }
   }
 
-  // We may be propagating a forced return from a debugger hook function.
-  if (cx->isPropagatingForcedReturn()) {
-    cx->clearPropagatingForcedReturn();
-    ForcedReturn(cx, frame, pc, rfe);
-    return;
-  }
-
   bool hasTryNotes = !script->trynotes().empty();
 
 again:
   if (cx->isExceptionPending()) {
     if (!cx->isClosingGenerator()) {
-      switch (DebugAPI::onExceptionUnwind(cx, frame.baselineFrame())) {
-        case ResumeMode::Terminate:
-          // Uncatchable exception.
-          MOZ_ASSERT(!cx->isExceptionPending());
+      if (!DebugAPI::onExceptionUnwind(cx, frame.baselineFrame())) {
+        if (!cx->isExceptionPending()) {
           goto again;
-
-        case ResumeMode::Continue:
-        case ResumeMode::Throw:
-          MOZ_ASSERT(cx->isExceptionPending());
-          break;
-
-        case ResumeMode::Return:
-          if (hasTryNotes) {
-            CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
-          }
-          ForcedReturn(cx, frame, pc, rfe);
-          return;
-
-        default:
-          MOZ_CRASH("Invalid onExceptionUnwind resume mode");
+        }
       }
+      // Ensure that the debugger hasn't returned 'true' while clearing the
+      // exception state.
+      MOZ_ASSERT(cx->isExceptionPending());
     }
 
     if (hasTryNotes) {
@@ -523,9 +498,16 @@ again:
     }
 
     frameOk = HandleClosingGeneratorReturn(cx, frame.baselineFrame(), frameOk);
-    frameOk = DebugAPI::onLeaveFrame(cx, frame.baselineFrame(), pc, frameOk);
-  } else if (hasTryNotes) {
-    CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
+  } else {
+    if (hasTryNotes) {
+      CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
+    }
+
+    // We may be propagating a forced return from a debugger hook function.
+    if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
+      cx->clearPropagatingForcedReturn();
+      frameOk = true;
+    }
   }
 
   OnLeaveBaselineFrame(cx, frame, pc, rfe, frameOk);

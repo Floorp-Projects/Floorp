@@ -243,8 +243,8 @@ class DebugAPI {
    * Announce to the debugger that an exception has been thrown and propagated
    * to |frame|. Call whatever hooks have been registered to observe this.
    */
-  static inline ResumeMode onExceptionUnwind(JSContext* cx,
-                                             AbstractFramePtr frame);
+  static inline MOZ_MUST_USE bool onExceptionUnwind(JSContext* cx,
+                                                    AbstractFramePtr frame);
 
   /*
    * Announce to the debugger that the thread has exited a JavaScript frame,
@@ -389,8 +389,8 @@ class DebugAPI {
                                          CallReason reason);
   static MOZ_MUST_USE bool slowPathOnDebuggerStatement(JSContext* cx,
                                                        AbstractFramePtr frame);
-  static ResumeMode slowPathOnExceptionUnwind(JSContext* cx,
-                                              AbstractFramePtr frame);
+  static MOZ_MUST_USE bool slowPathOnExceptionUnwind(JSContext* cx,
+                                                     AbstractFramePtr frame);
   static void slowPathOnNewWasmInstance(
       JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
   static void slowPathOnNewPromise(JSContext* cx,
