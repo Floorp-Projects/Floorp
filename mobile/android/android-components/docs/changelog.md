@@ -39,6 +39,9 @@ permalink: /changelog/
 * **samples-sync**
   * Added support for password synchronization (not reflected in the UI, but demonstrates how to integrate the component).
 
+* **browser-menu**
+  * Added `BrowserMenuHighlightableSwitch` to represent a highlightable item with a toggle switch.
+
 # 26.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...v26.0.0)
@@ -53,7 +56,6 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 72.0
     * `browser-engine-gecko-nightly`: GeckoView 73.0
 
-<<<<<<< HEAD
 * **browser-engine-system** and **browser-engine-gecko-nightly**
   * Added `EngineView.canClearSelection()` and `EngineView.clearSelection()` for clearing the selection.
 
@@ -71,7 +73,7 @@ permalink: /changelog/
 
 * **support-test-libstate**
   * 🆕 New component providing utilities to test functionality that relies on lib-state.
-  
+
 * **browser-errorpages**
   * Removed list items semantics to improve a11y for unordered lists, preventing items being read twice.
 

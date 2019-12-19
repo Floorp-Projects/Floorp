@@ -12,6 +12,7 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuHighlight
+import mozilla.components.browser.menu.HighlightableMenuItem
 import mozilla.components.browser.menu.R
 
 @Suppress("Deprecation")
@@ -34,8 +35,8 @@ class BrowserMenuHighlightableItem(
     @DrawableRes private val startImageResource: Int,
     @ColorRes private val iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
-    val highlight: BrowserMenuHighlight,
-    val isHighlighted: () -> Boolean = { true },
+    override val highlight: BrowserMenuHighlight,
+    override val isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
 ) : BrowserMenuImageText(
     label,
@@ -43,7 +44,7 @@ class BrowserMenuHighlightableItem(
     iconTintColorResource,
     textColorResource,
     listener
-) {
+), HighlightableMenuItem {
 
     @Deprecated("Use the new constructor")
     @Suppress("Deprecation") // Constructor uses old highlight type
