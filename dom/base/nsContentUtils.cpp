@@ -7037,9 +7037,9 @@ nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI,
   return NS_OK;
 }
 
-bool nsContentUtils::CallOnAllRemoteChildren(
+CallState nsContentUtils::CallOnAllRemoteChildren(
     MessageBroadcaster* aManager,
-    const std::function<bool(BrowserParent*)>& aCallback) {
+    const std::function<CallState(BrowserParent*)>& aCallback) {
   uint32_t browserChildCount = aManager->ChildCount();
   for (uint32_t j = 0; j < browserChildCount; ++j) {
     RefPtr<MessageListenerManager> childMM = aManager->GetChildAt(j);
@@ -7049,8 +7049,8 @@ bool nsContentUtils::CallOnAllRemoteChildren(
 
     RefPtr<MessageBroadcaster> nonLeafMM = MessageBroadcaster::From(childMM);
     if (nonLeafMM) {
-      if (CallOnAllRemoteChildren(nonLeafMM, aCallback)) {
-        return true;
+      if (CallOnAllRemoteChildren(nonLeafMM, aCallback) == CallState::Stop) {
+        return CallState::Stop;
       }
       continue;
     }
@@ -7060,19 +7060,19 @@ bool nsContentUtils::CallOnAllRemoteChildren(
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
       BrowserParent* remote = BrowserParent::GetFrom(fl);
       if (remote && aCallback) {
-        if (aCallback(remote)) {
-          return true;
+        if (aCallback(remote) == CallState::Stop) {
+          return CallState::Stop;
         }
       }
     }
   }
 
-  return false;
+  return CallState::Continue;
 }
 
 void nsContentUtils::CallOnAllRemoteChildren(
     nsPIDOMWindowOuter* aWindow,
-    const std::function<bool(BrowserParent*)>& aCallback) {
+    const std::function<CallState(BrowserParent*)>& aCallback) {
   nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
   if (window->IsChromeWindow()) {
     RefPtr<MessageBroadcaster> windowMM = window->GetMessageManager();
@@ -7095,7 +7095,7 @@ void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
   CallOnAllRemoteChildren(aWindow, [&stateInfo](BrowserParent* aBrowserParent) {
     Unused << aBrowserParent->SendSetKeyboardIndicators(
         stateInfo.mShowFocusRings);
-    return false;
+    return CallState::Continue;
   });
 }
 
