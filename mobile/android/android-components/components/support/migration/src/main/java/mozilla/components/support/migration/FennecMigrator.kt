@@ -501,7 +501,9 @@ class FennecMigrator private constructor(
             FennecLoginsMigration.migrate(
                 crashReporter,
                 signonsDbPath = "${profile.path}/$signonsDbName",
-                key4DbPath = "${profile.path}/$key4DbName"
+                key4DbPath = "${profile.path}/$key4DbName",
+                loginsStorage = loginsStorage!!,
+                loginsStorageKey = loginsStorageKey!!
             )
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
@@ -530,6 +532,16 @@ class FennecMigrator private constructor(
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
                 }
+                is LoginsMigrationResult.Failure.GetLoginsThrew -> {
+                    logger.error("getLogins failure: $failure")
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+                is LoginsMigrationResult.Failure.RustImportThrew -> {
+                    logger.error("Rust import failure: $failure")
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
             }
         }
 
@@ -540,22 +552,12 @@ class FennecMigrator private constructor(
                 result
             }
 
-            is LoginsMigrationResult.Success.LoginRecords -> {
-                logger.debug(
-                    "Parsed ${success.records.size} out of ${success.recordsDetected} login records. Importing..."
-                )
-
-                loginsStorage!!.ensureUnlocked(loginsStorageKey!!).await()
-                try {
-                    val failedToImport = loginsStorage.importLoginsAsync(success.records).await()
-                    if (failedToImport > 0L) {
-                        logger.debug("Failed to import $failedToImport")
-                    } else {
-                        logger.debug("Imported all records")
-                    }
-                } finally {
-                    loginsStorage.ensureLocked().await()
-                }
+            is LoginsMigrationResult.Success.ImportedLoginRecords -> {
+                logger.debug("""Imported login records! Details:
+                    Total detected=${success.totalRecordsDetected},
+                    failed to process=${success.failedToProcess},
+                    failed to import=${success.failedToImport}
+                """.trimIndent())
                 result
             }
         }
