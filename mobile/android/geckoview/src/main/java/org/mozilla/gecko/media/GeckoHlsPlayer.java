@@ -710,7 +710,10 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         if (DEBUG) {
             Log.d(LOGTAG, "getVideoInfo");
         }
-        assertTrue(mVRenderer != null);
+        if (mVRenderer == null) {
+            Log.e(LOGTAG, "no render to get video info from. Index : " + index);
+            return null;
+        }
         if (!mTracksInfo.hasVideo()) {
             return null;
         }
@@ -732,7 +735,10 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         if (DEBUG) {
             Log.d(LOGTAG, "getAudioInfo");
         }
-        assertTrue(mARenderer != null);
+        if (mARenderer == null) {
+            Log.e(LOGTAG, "no render to get audio info from. Index : " + index);
+            return null;
+        }
         if (!mTracksInfo.hasAudio()) {
             return null;
         }
