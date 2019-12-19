@@ -9,7 +9,5 @@ interface nsIFile;
 [scriptable, uuid(fb9b59db-5a91-4e67-92b6-35e7d6e6d3fd)]
 interface nsIWindowsShellService : nsISupports
 {
-  void createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
-    in AString aDescription, in nsIFile aIconFile, in AString aAppUserModelId,
-    in nsIFile aTarget);
+  void createShortcut(in nsIFile aBinary, in Array<AString> aArguments, in AString aDescription, in nsIFile aIconFile, in nsIFile aTarget);
 };
