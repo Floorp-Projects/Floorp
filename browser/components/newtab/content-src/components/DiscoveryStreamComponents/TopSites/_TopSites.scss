@@ -2,28 +2,6 @@ $top-sites-vertical-space-with-spoc: 20px;
 
 // ds topsites wraps the original topsites, with a few css changes.
 .ds-top-sites {
-  .top-sites-list {
-    .top-site-outer:nth-child(n+5) {
-      display: none;
-    }
-
-    @media (min-width: $break-point-large) {
-      .top-site-outer:nth-child(n+7) {
-        display: none;
-      }
-
-      .top-site-outer:nth-child(-n+6) {
-        display: inline-block;
-      }
-    }
-
-    @media (min-width: $break-point-widest) {
-      .top-site-outer:nth-child(n) {
-        display: inline-block;
-      }
-    }
-  }
-
   // This is the override layer.
   .top-sites {
     .top-site-outer {
@@ -48,25 +26,6 @@ $top-sites-vertical-space-with-spoc: 20px;
 
     .top-sites-list {
       margin: 0 -12px;
-    }
-  }
-
-  // Only show 6 cards for 2/3 and 1/3
-  // XXX hide-for-narrow is wrapping a previous functionality, can do better.
-  .hide-for-narrow {
-    display: none;
-  }
-}
-
-// Only show 8 cards for the full row.
-// XXX hide-for-narrow is wrapping a previous functionality, can do better.
-.ds-column-9,
-.ds-column-10,
-.ds-column-11,
-.ds-column-12 {
-  .ds-top-sites {
-    .hide-for-narrow {
-      display: inline-block;
     }
   }
 }
