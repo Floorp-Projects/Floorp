@@ -714,8 +714,7 @@ bool Debugger::hasAnyLiveHooks() const {
 }
 
 /* static */
-ResumeMode DebugAPI::slowPathOnEnterFrame(JSContext* cx,
-                                          AbstractFramePtr frame) {
+bool DebugAPI::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame) {
   RootedValue rval(cx);
   ResumeMode resumeMode = Debugger::dispatchHook(
       cx,
@@ -732,26 +731,25 @@ ResumeMode DebugAPI::slowPathOnEnterFrame(JSContext* cx,
 
     case ResumeMode::Throw:
       cx->setPendingExceptionAndCaptureStack(rval);
-      break;
+      return false;
 
     case ResumeMode::Terminate:
       cx->clearPendingException();
-      break;
+      return false;
 
     case ResumeMode::Return:
-      frame.setReturnValue(rval);
-      break;
+      DebugAPI::propagateForcedReturn(cx, frame, rval);
+      return false;
 
     default:
       MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
   }
 
-  return resumeMode;
+  return true;
 }
 
 /* static */
-ResumeMode DebugAPI::slowPathOnResumeFrame(JSContext* cx,
-                                           AbstractFramePtr frame) {
+bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
   // Don't count on this method to be called every time a generator is
   // resumed! This is called only if the frame's debuggee bit is set,
   // i.e. the script has breakpoints or the frame is stepping.
@@ -773,16 +771,16 @@ ResumeMode DebugAPI::slowPathOnResumeFrame(JSContext* cx,
       MOZ_ASSERT(&frameObj->unwrappedGenerator() == genObj);
       if (!dbg->frames.putNew(frame, frameObj)) {
         ReportOutOfMemory(cx);
-        return ResumeMode::Throw;
+        return false;
       }
 
       FrameIter iter(cx);
       MOZ_ASSERT(iter.abstractFramePtr() == frame);
       if (!frameObj->resume(iter)) {
-        return ResumeMode::Throw;
+        return false;
       }
       if (!Debugger::ensureExecutionObservabilityOfFrame(cx, frame)) {
-        return ResumeMode::Throw;
+        return false;
       }
     }
   }

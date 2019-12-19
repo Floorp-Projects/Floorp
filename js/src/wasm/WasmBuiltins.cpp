@@ -312,15 +312,18 @@ static bool WasmHandleDebugTrap() {
     }
     debugFrame->setIsDebuggee();
     debugFrame->observe(cx);
-    ResumeMode mode = DebugAPI::onEnterFrame(cx, debugFrame);
-    if (mode == ResumeMode::Return) {
-      // Ignoring forced return (ResumeMode::Return) -- changing code execution
-      // order is not yet implemented in the wasm baseline.
-      // TODO properly handle ResumeMode::Return and resume wasm execution.
-      JS_ReportErrorASCII(cx, "Unexpected resumption value from onEnterFrame");
+    if (!DebugAPI::onEnterFrame(cx, debugFrame)) {
+      if (cx->isPropagatingForcedReturn()) {
+        cx->clearPropagatingForcedReturn();
+        // Ignoring forced return because changing code execution order is
+        // not yet implemented in the wasm baseline.
+        // TODO properly handle forced return and resume wasm execution.
+        JS_ReportErrorASCII(cx,
+                            "Unexpected resumption value from onEnterFrame");
+      }
       return false;
     }
-    return mode == ResumeMode::Continue;
+    return true;
   }
   if (site->kind() == CallSite::LeaveFrame) {
     if (!debugFrame->updateReturnJSValue()) {

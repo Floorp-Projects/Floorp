@@ -1876,19 +1876,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     goto prologue_error;
   }
 
-  switch (DebugAPI::onEnterFrame(cx, activation.entryFrame())) {
-    case ResumeMode::Continue:
-      break;
-    case ResumeMode::Return:
-      if (!ForcedReturn(cx, REGS)) {
-        goto error;
-      }
-      goto successful_return_continuation;
-    case ResumeMode::Throw:
-    case ResumeMode::Terminate:
-      goto error;
-    default:
-      MOZ_CRASH("bad DebugAPI::onEnterFrame resume mode");
+  if (!DebugAPI::onEnterFrame(cx, activation.entryFrame())) {
+    goto error;
   }
 
   // Increment the coverage for the main entry point.
@@ -3163,19 +3152,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto prologue_error;
       }
 
-      switch (DebugAPI::onEnterFrame(cx, REGS.fp())) {
-        case ResumeMode::Continue:
-          break;
-        case ResumeMode::Return:
-          if (!ForcedReturn(cx, REGS)) {
-            goto error;
-          }
-          goto successful_return_continuation;
-        case ResumeMode::Throw:
-        case ResumeMode::Terminate:
-          goto error;
-        default:
-          MOZ_CRASH("bad DebugAPI::onEnterFrame resume mode");
+      if (!DebugAPI::onEnterFrame(cx, REGS.fp())) {
+        goto error;
       }
 
       // Increment the coverage for the main entry point.
@@ -4090,22 +4068,15 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
-        switch (DebugAPI::onResumeFrame(cx, REGS.fp())) {
-          case ResumeMode::Continue:
-            break;
-          case ResumeMode::Throw:
-          case ResumeMode::Terminate:
-            goto error;
-          case ResumeMode::Return:
+        if (!DebugAPI::onResumeFrame(cx, REGS.fp())) {
+          if (cx->isPropagatingForcedReturn()) {
             MOZ_ASSERT_IF(
                 REGS.fp()
                     ->callee()
                     .isGenerator(),  // as opposed to an async function
                 gen->isClosed());
-            if (!ForcedReturn(cx, REGS)) {
-              goto error;
-            }
-            goto successful_return_continuation;
+          }
+          goto error;
         }
 
         switch (resumeKind) {
