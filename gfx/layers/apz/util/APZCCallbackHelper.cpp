@@ -715,7 +715,10 @@ static bool PrepareForSetTargetAPZCNotification(
       &(guid.mScrollableLayerGuid.mScrollId));
   aTargets->AppendElement(guid);
 
-  if (!guidIsValid || nsLayoutUtils::HasDisplayPort(dpElement)) {
+  if (!guidIsValid) {
+    return false;
+  }
+  if (nsLayoutUtils::HasDisplayPort(dpElement)) {
     // If the element has a displayport but it hasn't been painted yet,
     // we want the caller to wait for the paint to happen, but we don't
     // need to set the displayport here since it's already been set.
