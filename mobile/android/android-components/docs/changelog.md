@@ -25,6 +25,20 @@ permalink: /changelog/
   context.components.appLinksInterceptor.onLaunchIntentRequest(engineSession, uri, hasUserGesture, isSameDomain)
   ```
 
+* **support-telemetry-sync**
+  * Added new telemetry ping, to support password sync: `passwords_sync`.
+
+* **service-firefox-accounts**
+  * 🕵️  **New Telemetry Notice**
+  * Added telemetry for password sync, via the new `passwords_sync` in **support-telemetry-sync**
+
+* **sync-logins**
+  * 🕵️  **New Telemetry Notice**
+  * Added telemetry for password sync, via the new `passwords_sync` in **support-telemetry-sync**
+
+* **samples-sync**
+  * Added support for password synchronization (not reflected in the UI, but demonstrates how to integrate the component).
+
 # 26.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...v26.0.0)
@@ -39,6 +53,7 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 72.0
     * `browser-engine-gecko-nightly`: GeckoView 73.0
 
+<<<<<<< HEAD
 * **browser-engine-system** and **browser-engine-gecko-nightly**
   * Added `EngineView.canClearSelection()` and `EngineView.clearSelection()` for clearing the selection.
 

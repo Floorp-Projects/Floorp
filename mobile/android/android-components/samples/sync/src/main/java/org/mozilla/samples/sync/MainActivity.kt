@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.syncStatus
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,6 +31,8 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
@@ -42,12 +45,16 @@ import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
+import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
+import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
+
+private const val PASSWORDS_ENCRYPTION_KEY_STRENGTH = 256
 
 class MainActivity :
         AppCompatActivity(),
@@ -62,9 +69,26 @@ class MainActivity :
         PlacesBookmarksStorage(this)
     }
 
-    init {
+    private val securePreferences by lazy { SecureAbove22Preferences(this, "key_store") }
+
+    private val passwordsStorage by lazy {
+        val passwordsEncryptionKey = securePreferences.getString(SyncEngine.Passwords.nativeName)
+            ?: generateEncryptionKey(PASSWORDS_ENCRYPTION_KEY_STRENGTH).also {
+                securePreferences.putString(SyncEngine.Passwords.nativeName, it)
+            }
+
+        SyncableLoginsStore(
+            AsyncLoginsStorageAdapter.forDatabase(this.getDatabasePath("logins.sqlite").absolutePath)
+        ) {
+            CompletableDeferred(passwordsEncryptionKey)
+        }
+    }
+
+    private fun initializeSyncProviders() {
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+        GlobalSyncableStoreProvider.configureKeyStorage(securePreferences)
     }
 
     private val accountManager by lazy {
@@ -77,7 +101,10 @@ class MainActivity :
                     capabilities = setOf(DeviceCapability.SEND_TAB),
                     secureStateAtRest = true
                 ),
-                SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 15L)
+                SyncConfig(
+                    setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
+                    syncPeriodInMinutes = 15L
+                )
         )
     }
 
@@ -98,6 +125,8 @@ class MainActivity :
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
+
+        initializeSyncProviders()
 
         setContentView(R.layout.activity_main)
 

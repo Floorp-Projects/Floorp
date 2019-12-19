@@ -2,6 +2,11 @@
 
 A library for integrating with Firefox Sync - Logins.
 
+## Before using this component
+Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
+This component provides data collection using the [Glean SDK](https://mozilla.github.io/glean/book/index.html).
+The list of metrics being collected is available in the [metrics documentation](../../support/sync-telemetry/docs/metrics.md).
+
 ## Motivation
 
 The **Firefox Sync - Logins Component** provides a way for Android applications to do the following:

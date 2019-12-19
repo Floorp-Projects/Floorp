@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.sync.LockableStore
+import mozilla.components.support.sync.telemetry.SyncTelemetry
 
 /**
  * This type contains the set of information required to successfully
@@ -331,7 +332,9 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
 
     override fun sync(syncInfo: SyncUnlockInfo): Deferred<SyncTelemetryPing> {
         return scope.async {
-            wrapped.sync(syncInfo)
+            val ping = wrapped.sync(syncInfo)
+            SyncTelemetry.processPasswordsPing(ping)
+            ping
         }
     }
 
