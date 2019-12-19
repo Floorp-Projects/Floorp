@@ -38,7 +38,8 @@ class AppLinksFeature(
     private val fragmentManager: FragmentManager? = null,
     private val dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
     private val launchInApp: () -> Boolean = { false },
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp)
+    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
+    private val failedToLaunchAction: () -> Unit = {}
 ) : LifecycleAwareFeature {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -53,7 +54,7 @@ class AppLinksFeature(
             }
 
             val doOpenApp = {
-                useCases.openAppLink(appIntent)
+                useCases.openAppLink(appIntent, failedToLaunchAction)
             }
 
             if (!session.private || fragmentManager == null) {

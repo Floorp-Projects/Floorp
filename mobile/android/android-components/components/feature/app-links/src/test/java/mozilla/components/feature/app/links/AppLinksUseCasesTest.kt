@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.app.links
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -63,7 +64,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that matches zero apps is not an app link`() {
         val context = createContext()
-        val subject = AppLinksUseCases(context, { true }, emptySet())
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -72,7 +73,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A web URL that matches more than zero apps is an app link`() {
         val context = createContext(appUrl to appPackage)
-        val subject = AppLinksUseCases(context, { true }, emptySet())
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
 
         // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -82,7 +83,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `Will not redirect app link if browser option set to false`() {
         val context = createContext(appUrl to appPackage)
-        val subject = AppLinksUseCases(context, { false }, emptySet())
+        val subject = AppLinksUseCases(context, { false }, browserPackageNames = emptySet())
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -94,7 +95,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that matches only excluded packages is not an app link`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -106,7 +107,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that also matches excluded packages is an app link`() {
         val context = createContext(appUrl to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
@@ -119,7 +120,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that also matches default activity is not an app link`() {
         val context = createContext(appUrl to appPackage, appUrl to browserPackage, default = true)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
         assertFalse(menuRedirect.hasExternalApp())
@@ -138,7 +139,7 @@ class AppLinksUseCasesTest {
     fun `A intent scheme uri with an installed app`() {
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
         val context = createContext(uri to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertTrue(redirect.hasExternalApp())
@@ -152,7 +153,7 @@ class AppLinksUseCasesTest {
     fun `A market scheme uri is an install link`() {
         val uri = "intent://details/#Intent;scheme=market;package=com.google.play;end"
         val context = createContext(uri to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
 
@@ -163,7 +164,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme uri without an installed app`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
 
@@ -177,7 +178,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme uri with a fallback, but without an installed app`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"
 
@@ -193,10 +194,26 @@ class AppLinksUseCasesTest {
         val context = createContext()
         val appIntent = Intent()
         val redirect = AppLinkRedirect(appIntent, appUrl, null)
-        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
 
         subject.openAppLink(redirect.appIntent)
 
         verify(context).startActivity(any())
+    }
+
+    @Test
+    fun `Start activity fails will perform failure action`() {
+        val context = createContext()
+        val appIntent = Intent()
+        val redirect = AppLinkRedirect(appIntent, appUrl, null)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+
+        var failedToLaunch = false
+        val failedAction = { failedToLaunch = true }
+        `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
+        subject.openAppLink(redirect.appIntent, failedAction)
+
+        verify(context).startActivity(any())
+        assert(failedToLaunch)
     }
 }
