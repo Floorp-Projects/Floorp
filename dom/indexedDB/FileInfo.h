@@ -50,7 +50,7 @@ class FileInfo {
 
   virtual int64_t Id() const = 0;
 
-  static already_AddRefed<nsIFile> GetFileForFileInfo(FileInfo* aFileInfo);
+  static nsCOMPtr<nsIFile> GetFileForFileInfo(FileInfo* aFileInfo);
 
  protected:
   virtual ~FileInfo() = default;
