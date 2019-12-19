@@ -56,7 +56,7 @@ function installDistributionEngine() {
   dir.append("common");
   dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-  do_get_file("data/engine-override.xml").copyTo(dir, "basic.xml");
+  do_get_file("data/engine-override.xml").copyTo(dir, "bug645970.xml");
 
   Services.dirsvc.registerProvider({
     getFile(aProp, aPersistent) {
