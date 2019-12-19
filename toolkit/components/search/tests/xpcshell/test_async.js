@@ -3,7 +3,7 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  await useTestEngines("data", "search-extensions");
+  await useTestEngines("simple-engines");
 });
 
 add_task(async function test_async() {
@@ -18,7 +18,7 @@ add_task(async function test_async() {
   Assert.equal(engines.length, 1);
 
   // test jar engine is loaded ok.
-  let engine = Services.search.getEngineByName("bug645970");
+  let engine = Services.search.getEngineByName("basic");
   Assert.notEqual(engine, null);
 
   // Check the hidden engine is not loaded.

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
-  await useTestEngines("data", "search-extensions");
+  await useTestEngines("simple-engines");
   await AddonTestUtils.promiseStartupManager();
 });
 
