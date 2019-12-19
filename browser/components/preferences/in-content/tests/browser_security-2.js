@@ -95,7 +95,7 @@ add_task(async function() {
     testMalwareTable += ",test-malware-simple";
     if (val1 && val2) {
       testMalwareTable += ",goog-unwanted-" + (isV2 ? "shavar" : "proto");
-      testMalwareTable += ",test-unwanted-simple";
+      testMalwareTable += ",moztest-unwanted-simple";
     }
     Services.prefs.setCharPref("urlclassifier.malwareTable", testMalwareTable);
 
@@ -153,9 +153,9 @@ add_task(async function() {
       );
     }
     is(
-      malwareTable.includes("test-unwanted-simple"),
+      malwareTable.includes("moztest-unwanted-simple"),
       !checked,
-      "malware table doesn't include test-unwanted-simple"
+      "malware table doesn't include moztest-unwanted-simple"
     );
     let sortedMalware = malwareTable.slice(0);
     sortedMalware.sort();
