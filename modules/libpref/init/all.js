@@ -2350,7 +2350,7 @@ pref("extensions.blocklist.enabled", true);
 // please also update security.onecrl.maximum_staleness_in_seconds.
 pref("extensions.blocklist.interval", 86400);
 // Whether to use the XML backend (true) or the remotesettings one (false).
-pref("extensions.blocklist.useXML", false);
+pref("extensions.blocklist.useXML", true);
 // Required blocklist freshness for OneCRL OCSP bypass
 // (default is 1.25x extensions.blocklist.interval, or 30 hours)
 pref("security.onecrl.maximum_staleness_in_seconds", 108000);
