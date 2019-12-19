@@ -19,7 +19,7 @@ class nsIInputStream;
 class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
-class nsIChildChannel;
+class nsIChannel;
 class nsIReferrerInfo;
 class OriginAttibutes;
 namespace mozilla {
@@ -40,7 +40,7 @@ class nsDocShellLoadState final {
   explicit nsDocShellLoadState(
       const mozilla::dom::DocShellLoadStateInit& aLoadState);
 
-  static nsresult CreateFromPendingChannel(nsIChildChannel* aPendingChannel,
+  static nsresult CreateFromPendingChannel(nsIChannel* aPendingChannel,
                                            nsDocShellLoadState** aResult);
 
   static nsresult CreateFromLoadURIOptions(
@@ -200,7 +200,7 @@ class nsDocShellLoadState final {
     return mIsFromProcessingFrameAttributes;
   }
 
-  nsIChildChannel* GetPendingRedirectedChannel() {
+  nsIChannel* GetPendingRedirectedChannel() {
     return mPendingRedirectedChannel;
   }
 
@@ -365,7 +365,7 @@ class nsDocShellLoadState final {
 
   // If set, a pending cross-process redirected channel should be used to
   // perform the load. The channel will be stored in this value.
-  nsCOMPtr<nsIChildChannel> mPendingRedirectedChannel;
+  nsCOMPtr<nsIChannel> mPendingRedirectedChannel;
 
   // An optional string representation of mURI, before any
   // fixups were applied, so that we can send it to a search

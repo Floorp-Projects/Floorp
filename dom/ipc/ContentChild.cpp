@@ -3721,12 +3721,6 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     return IPC_OK();
   }
 
-  RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
-  if (!childChannel) {
-    rv = NS_ERROR_UNEXPECTED;
-    return IPC_OK();
-  }
-
   if (httpChild) {
     rv = httpChild->SetChannelId(aArgs.channelId());
     if (NS_FAILED(rv)) {
@@ -3751,11 +3745,15 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
         HttpBaseChannel::ReplacementReason::DocumentChannel);
   }
 
-  // connect parent.
-  rv = childChannel->ConnectParent(
-      aArgs.registrarId());  // creates parent channel
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
+  if (nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(newChannel)) {
+    // Connect to the parent if this is a remote channel. If it's entirely
+    // handled locally, then we'll call AsyncOpen from the docshell when
+    // we complete the setup
+    rv = childChannel->ConnectParent(
+        aArgs.registrarId());  // creates parent channel
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
   }
 
   // We need to copy the property bag before signaling that the channel
@@ -3766,8 +3764,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
 
   RefPtr<ChildProcessChannelListener> processListener =
       ChildProcessChannelListener::GetSingleton();
-  // The listener will call completeRedirectSetup on the channel.
-  processListener->OnChannelReady(childChannel, aArgs.redirectIdentifier(),
+  // The listener will call completeRedirectSetup or asyncOpen on the channel.
+  processListener->OnChannelReady(newChannel, aArgs.redirectIdentifier(),
                                   std::move(aArgs.redirects()),
                                   aArgs.loadStateLoadFlags());
 
