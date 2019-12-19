@@ -142,30 +142,6 @@ void HttpBackgroundChannelParent::OnChannelClosed() {
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
-bool HttpBackgroundChannelParent::OnStartRequestSent() {
-  LOG(("HttpBackgroundChannelParent::OnStartRequestSent [this=%p]\n", this));
-  AssertIsInMainProcess();
-
-  if (NS_WARN_IF(!mIPCOpened)) {
-    return false;
-  }
-
-  if (!IsOnBackgroundThread()) {
-    MutexAutoLock lock(mBgThreadMutex);
-    nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod(
-            "net::HttpBackgroundChannelParent::OnStartRequestSent", this,
-            &HttpBackgroundChannelParent::OnStartRequestSent),
-        NS_DISPATCH_NORMAL);
-
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return SendOnStartRequestSent();
-}
-
 bool HttpBackgroundChannelParent::OnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
     const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
