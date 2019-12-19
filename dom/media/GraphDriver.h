@@ -99,7 +99,7 @@ struct GraphInterface {
       explicit Stop(RefPtr<Runnable> aStoppedRunnable)
           : mStoppedRunnable(std::move(aStoppedRunnable)) {}
       Stop(const Stop&) = delete;
-      Stop(Stop&& aOther)
+      Stop(Stop&& aOther) noexcept
           : mStoppedRunnable(std::move(aOther.mStoppedRunnable)) {}
       ~Stop() { MOZ_ASSERT(!mStoppedRunnable); }
       RefPtr<Runnable> mStoppedRunnable;
@@ -114,7 +114,7 @@ struct GraphInterface {
           : mDriver(std::move(aDriver)),
             mSwitchedRunnable(std::move(aSwitchedRunnable)) {}
       SwitchDriver(const SwitchDriver&) = delete;
-      SwitchDriver(SwitchDriver&& aOther)
+      SwitchDriver(SwitchDriver&& aOther) noexcept
           : mDriver(std::move(aOther.mDriver)),
             mSwitchedRunnable(std::move(aOther.mSwitchedRunnable)) {}
       ~SwitchDriver() { MOZ_ASSERT(!mSwitchedRunnable); }
@@ -500,7 +500,7 @@ class OfflineClockDriver : public ThreadedDriver {
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
 
  protected:
-  TimeDuration WaitInterval() override { return 0; }
+  TimeDuration WaitInterval() override { return TimeDuration(); }
   MediaTime GetIntervalForIteration() override;
 
  private:
