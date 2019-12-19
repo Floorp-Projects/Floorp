@@ -20,6 +20,7 @@
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsVariant.h"
+#include "mozilla/AssembleCmdLine.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
 #include "mozilla/UrlmonHeaderOnlyUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -41,7 +42,7 @@ nsresult nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile* aFile) {
 
 // Helper routine to call mozilla::ShellExecuteByExplorer
 static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
-                                      const _variant_t& aArgs) {
+                                      const nsString& aArgs) {
   nsresult rv;
 
   nsAutoString execPath;
@@ -51,6 +52,11 @@ static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
   }
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  auto assembledArgs = mozilla::assembleSingleArgument(aArgs);
+  if (!assembledArgs) {
+    return NS_ERROR_FILE_EXECUTION_FAILED;
   }
 
   _bstr_t execPathBStr(execPath.get());
@@ -64,7 +70,7 @@ static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPathBStr, aArgs, verbDefault, workingDir, showCmd);
+      execPathBStr, assembledArgs.get(), verbDefault, workingDir, showCmd);
   if (shellExecuteOk.isErr()) {
     return NS_ERROR_FILE_EXECUTION_FAILED;
   }
@@ -95,9 +101,6 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
     nsCOMPtr<nsIFile> executable;
     rv = localHandler->GetExecutable(getter_AddRefs(executable));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString path;
-    aFile->GetPath(path);
 
     // Deal with local dll based handlers
     nsCString filename;
@@ -162,7 +165,9 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
         return NS_ERROR_FILE_EXECUTION_FAILED;
       }
     }
-    return ShellExecuteWithIFile(executable, _variant_t(path.get()));
+    nsAutoString path;
+    aFile->GetPath(path);
+    return ShellExecuteWithIFile(executable, path);
   }
 
   return NS_ERROR_INVALID_ARG;
