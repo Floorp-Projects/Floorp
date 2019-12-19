@@ -8,7 +8,15 @@
 
 #include "mozilla/rlbox/rlbox_types.hpp"
 
+#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
+namespace rlbox {
+class rlbox_lucet_sandbox;
+}
+using rlbox_gr_sandbox_type = rlbox::rlbox_lucet_sandbox;
+#else
 using rlbox_gr_sandbox_type = rlbox::rlbox_noop_sandbox;
+#endif
+
 using rlbox_sandbox_gr = rlbox::rlbox_sandbox<rlbox_gr_sandbox_type>;
 template <typename T>
 using sandbox_callback_gr = rlbox::sandbox_callback<T, rlbox_gr_sandbox_type>;

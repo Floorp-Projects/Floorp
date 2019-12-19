@@ -1767,8 +1767,7 @@ def has_remote(toolkit):
 set_config('MOZ_HAS_REMOTE', has_remote)
 set_define('MOZ_HAS_REMOTE', has_remote)
 
-
-# wasm sandboxing support
+# RLBox Library Sandboxing wasm support
 # ==============================================================
 
 def wasm_sandboxing_libraries():
@@ -1785,6 +1784,7 @@ def requires_wasm_sandboxing(libraries):
         return True
 
 set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
+set_define('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 
 lucetc = check_prog('LUCETC', ['lucetc'],
                     paths=toolchain_search_path, when=requires_wasm_sandboxing)
