@@ -168,9 +168,9 @@ void FileInfo::Cleanup() {
 }
 
 /* static */
-already_AddRefed<nsIFile> FileInfo::GetFileForFileInfo(FileInfo* aFileInfo) {
-  FileManager* fileManager = aFileInfo->Manager();
-  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+nsCOMPtr<nsIFile> FileInfo::GetFileForFileInfo(FileInfo* aFileInfo) {
+  FileManager* const fileManager = aFileInfo->Manager();
+  const nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return nullptr;
   }
@@ -181,7 +181,7 @@ already_AddRefed<nsIFile> FileInfo::GetFileForFileInfo(FileInfo* aFileInfo) {
     return nullptr;
   }
 
-  return file.forget();
+  return file;
 }
 
 }  // namespace indexedDB
