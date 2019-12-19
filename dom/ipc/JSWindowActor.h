@@ -71,6 +71,11 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
                               ipc::StructuredCloneData&& aStack,
                               ErrorResult& aRv) = 0;
 
+  // Check if a message is so large that IPC will probably crash if we try to
+  // send it. If it is too large, record telemetry about the message.
+  static bool AllowMessage(const JSWindowActorMessageMeta& aMetadata,
+                           size_t aDataLength);
+
   virtual ~JSWindowActor() = default;
 
   void SetName(const nsAString& aName);
