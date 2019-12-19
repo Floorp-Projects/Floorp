@@ -147,10 +147,11 @@ class IDBDatabase::Observer final : public nsIObserver {
 };
 
 IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
-                         BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec)
+                         BackgroundDatabaseChild* aActor,
+                         UniquePtr<DatabaseSpec> aSpec)
     : DOMEventTargetHelper(aRequest),
       mFactory(aFactory),
-      mSpec(aSpec),
+      mSpec(std::move(aSpec)),
       mBackgroundActor(aActor),
       mFileHandleDisabled(aRequest->IsFileHandleDisabled()),
       mClosed(false),
@@ -161,7 +162,7 @@ IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
   MOZ_ASSERT(aFactory);
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aSpec);
+  MOZ_ASSERT(mSpec);
 }
 
 IDBDatabase::~IDBDatabase() {
@@ -174,14 +175,15 @@ IDBDatabase::~IDBDatabase() {
 RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
                                         IDBFactory* aFactory,
                                         BackgroundDatabaseChild* aActor,
-                                        DatabaseSpec* aSpec) {
+                                        UniquePtr<DatabaseSpec> aSpec) {
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aFactory);
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aSpec);
 
-  RefPtr<IDBDatabase> db = new IDBDatabase(aRequest, aFactory, aActor, aSpec);
+  RefPtr<IDBDatabase> db =
+      new IDBDatabase(aRequest, aFactory, aActor, std::move(aSpec));
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window =
