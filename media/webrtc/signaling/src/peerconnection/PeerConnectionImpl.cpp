@@ -2231,6 +2231,17 @@ void PeerConnectionImpl::SetSignalingState_m(RTCSignalingState aSignalingState,
     return;
   }
 
+  // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
+  // Unfortunately, if the WiFi switch happens quickly, we never see
+  // that state change.  We need to detect the ice restart here and
+  // reset the PeerConnectionMedia's stun addresses so they are
+  // regathered when PeerConnectionMedia::GatherIfReady is called.
+  if ((aSignalingState == RTCSignalingState::Have_local_offer ||
+       aSignalingState == RTCSignalingState::Have_remote_offer) &&
+      !rollback && mJsepSession->IsIceRestarting()) {
+    mMedia->ResetStunAddrsForIceRestart();
+  }
+
   if (aSignalingState == RTCSignalingState::Have_local_offer ||
       (aSignalingState == RTCSignalingState::Stable &&
        mSignalingState == RTCSignalingState::Have_remote_offer && !rollback)) {

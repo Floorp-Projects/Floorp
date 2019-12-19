@@ -693,10 +693,6 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
     nr_local_addr default_addrs[2];
     int default_addr_ct = 0;
 
-    if (ctx->local_addrs) {
-      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): local addresses already set, no work to do",ctx->label);
-      ABORT(R_ALREADY);
-    }
     if (!stun_addrs || !stun_addr_ct) {
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): no stun addrs provided",ctx->label);
       ABORT(R_BAD_ARGS);
