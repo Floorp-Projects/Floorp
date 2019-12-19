@@ -5,12 +5,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["AutoScrollChild"];
+var EXPORTED_SYMBOLS = ["AutoScrollController"];
 
-class AutoScrollChild extends JSWindowActorChild {
-  constructor() {
-    super();
-
+class AutoScrollController {
+  constructor(global) {
     this._scrollable = null;
     this._scrolldir = "";
     this._startX = null;
@@ -20,9 +18,10 @@ class AutoScrollChild extends JSWindowActorChild {
     this._lastFrame = null;
     this._autoscrollHandledByApz = false;
     this._scrollId = null;
-
-    this.observer = new AutoScrollObserver(this);
+    this._global = global;
     this.autoscrollLoop = this.autoscrollLoop.bind(this);
+
+    global.addMessageListener("Autoscroll:Stop", this);
   }
 
   isAutoscrollBlocker(node) {
@@ -146,22 +145,16 @@ class AutoScrollChild extends JSWindowActorChild {
         this._scrolldir = direction;
         this._scrollable = aNode.ownerGlobal;
       } else if (aNode.ownerGlobal.frameElement) {
-        // Note, in case of out of process iframes frameElement is null, and
-        // a caller is supposed to communicate to iframe's parent on its own to
-        // support cross process scrolling.
+        // FIXME(emilio): This won't work with Fission.
         this.findNearestScrollableElement(aNode.ownerGlobal.frameElement);
       }
     }
   }
 
-  async startScroll(event) {
+  startScroll(event) {
     this.findNearestScrollableElement(event.originalTarget);
+
     if (!this._scrollable) {
-      this.sendAsyncMessage("Autoscroll:MaybeStartInParent", {
-        browsingContextId: this.browsingContext.id,
-        screenX: event.screenX,
-        screenY: event.screenY,
-      });
       return;
     }
 
@@ -187,23 +180,20 @@ class AutoScrollChild extends JSWindowActorChild {
       // No view ID - leave this._scrollId as null. Receiving side will check.
     }
     let presShellId = domUtils.getPresShellId();
-    let { autoscrollEnabled, usingApz } = await this.sendQuery(
-      "Autoscroll:Start",
-      {
-        scrolldir: this._scrolldir,
-        screenX: event.screenX,
-        screenY: event.screenY,
-        scrollId: this._scrollId,
-        presShellId,
-      }
-    );
-    if (!autoscrollEnabled) {
+    let [result] = this._global.sendSyncMessage("Autoscroll:Start", {
+      scrolldir: this._scrolldir,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      scrollId: this._scrollId,
+      presShellId,
+    });
+    if (!result.autoscrollEnabled) {
       this._scrollable = null;
       return;
     }
 
-    Services.els.addSystemEventListener(this.document, "mousemove", this, true);
-    this.document.addEventListener("pagehide", this, true);
+    Services.els.addSystemEventListener(this._global, "mousemove", this, true);
+    this._global.addEventListener("pagehide", this, true);
 
     this._ignoreMouseEvents = true;
     this._startX = event.screenX;
@@ -212,9 +202,9 @@ class AutoScrollChild extends JSWindowActorChild {
     this._screenY = event.screenY;
     this._scrollErrorX = 0;
     this._scrollErrorY = 0;
-    this._autoscrollHandledByApz = usingApz;
+    this._autoscrollHandledByApz = result.usingApz;
 
-    if (!usingApz) {
+    if (!result.usingApz) {
       // If the browser didn't hand the autoscroll off to APZ,
       // scroll here in the main thread.
       this.startMainThreadScroll();
@@ -222,16 +212,12 @@ class AutoScrollChild extends JSWindowActorChild {
       // Even if the browser did hand the autoscroll to APZ,
       // APZ might reject it in which case it will notify us
       // and we need to take over.
-      Services.obs.addObserver(this.observer, "autoscroll-rejected-by-apz");
-    }
-
-    if (Cu.isInAutomation) {
-      Services.obs.notifyObservers(content, "autoscroll-start");
+      Services.obs.addObserver(this, "autoscroll-rejected-by-apz");
     }
   }
 
   startMainThreadScroll() {
-    let content = this.document.defaultView;
+    let content = this._global.content;
     this._lastFrame = content.performance.now();
     content.requestAnimationFrame(this.autoscrollLoop);
   }
@@ -242,17 +228,14 @@ class AutoScrollChild extends JSWindowActorChild {
       this._scrollable = null;
 
       Services.els.removeSystemEventListener(
-        this.document,
+        this._global,
         "mousemove",
         this,
         true
       );
-      this.document.removeEventListener("pagehide", this, true);
+      this._global.removeEventListener("pagehide", this, true);
       if (this._autoscrollHandledByApz) {
-        Services.obs.removeObserver(
-          this.observer,
-          "autoscroll-rejected-by-apz"
-        );
+        Services.obs.removeObserver(this, "autoscroll-rejected-by-apz");
       }
     }
   }
@@ -323,8 +306,6 @@ class AutoScrollChild extends JSWindowActorChild {
       this._screenY = event.screenY;
     } else if (event.type == "mousedown") {
       if (
-        event.isTrusted & !event.defaultPrevented &&
-        event.button == 1 &&
         !this._scrollable &&
         !this.isAutoscrollBlocker(event.originalTarget)
       ) {
@@ -334,28 +315,14 @@ class AutoScrollChild extends JSWindowActorChild {
       if (this._scrollable) {
         var doc = this._scrollable.ownerDocument || this._scrollable.document;
         if (doc == event.target) {
-          this.sendAsyncMessage("Autoscroll:Cancel");
-          this.stopScroll();
+          this._global.sendAsyncMessage("Autoscroll:Cancel");
         }
       }
     }
   }
 
   receiveMessage(msg) {
-    let data = msg.data;
     switch (msg.name) {
-      case "Autoscroll:MaybeStart":
-        for (let child of this.browsingContext.getChildren()) {
-          if (data.browsingContextId == child.id) {
-            this.startScroll({
-              screenX: data.screenX,
-              screenY: data.screenY,
-              originalTarget: child.embedderElement,
-            });
-            break;
-          }
-        }
-        break;
       case "Autoscroll:Stop": {
         this.stopScroll();
         break;
@@ -363,24 +330,14 @@ class AutoScrollChild extends JSWindowActorChild {
     }
   }
 
-  rejectedByApz(data) {
-    // The caller passes in the scroll id via 'data'.
-    if (data == this._scrollId) {
-      this._autoscrollHandledByApz = false;
-      this.startMainThreadScroll();
-      Services.obs.removeObserver(this.observer, "autoscroll-rejected-by-apz");
-    }
-  }
-}
-
-class AutoScrollObserver {
-  constructor(actor) {
-    this.actor = actor;
-  }
-
   observe(subject, topic, data) {
     if (topic === "autoscroll-rejected-by-apz") {
-      this.actor.rejectedByApz(data);
+      // The caller passes in the scroll id via 'data'.
+      if (data == this._scrollId) {
+        this._autoscrollHandledByApz = false;
+        this.startMainThreadScroll();
+        Services.obs.removeObserver(this, "autoscroll-rejected-by-apz");
+      }
     }
   }
 }
