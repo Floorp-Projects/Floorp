@@ -113,6 +113,7 @@ const PERMISSION_MASKS = {
 const PREF_DISCOVERY_API_URL = "extensions.getAddons.discovery.api_url";
 const PREF_THEME_RECOMMENDATION_URL =
   "extensions.recommendations.themeRecommendationUrl";
+const PREF_RECOMMENDATION_HIDE_NOTICE = "extensions.recommendations.hideNotice";
 const PREF_PRIVACY_POLICY_URL = "extensions.recommendations.privacyPolicyUrl";
 const PREF_RECOMMENDATION_ENABLED = "browser.discovery.enabled";
 const PREF_TELEMETRY_ENABLED = "datareporting.healthreport.uploadEnabled";
@@ -3735,10 +3736,14 @@ customElements.define("recommended-addon-list", RecommendedAddonList);
 
 class TaarMessageBar extends HTMLElement {
   connectedCallback() {
-    this.hidden = !this.hidden && !DiscoveryAPI.clientIdDiscoveryEnabled;
+    this.hidden =
+      Services.prefs.getBoolPref(PREF_RECOMMENDATION_HIDE_NOTICE, false) ||
+      !DiscoveryAPI.clientIdDiscoveryEnabled;
     if (this.childElementCount == 0 && !this.hidden) {
       this.appendChild(importTemplate("taar-notice"));
       this.addEventListener("click", this);
+      this.messageBar = this.querySelector("message-bar");
+      this.messageBar.addEventListener("message-bar:user-dismissed", this);
     }
   }
 
@@ -3759,6 +3764,8 @@ class TaarMessageBar extends HTMLElement {
         SUPPORT_URL + "personalized-addons",
         "tab"
       );
+    } else if (e.type == "message-bar:user-dismissed") {
+      Services.prefs.setBoolPref(PREF_RECOMMENDATION_HIDE_NOTICE, true);
     }
   }
 }

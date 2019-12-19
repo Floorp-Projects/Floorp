@@ -97,8 +97,13 @@ add_task(async function test_create_message_bar_create_and_onclose() {
     "Got the expected button element assigned to the message-bar slot"
   );
 
+  let dismissed = BrowserTestUtils.waitForEvent(
+    messageBar,
+    "message-bar:user-dismissed"
+  );
   info("Click the close icon on the newly created message-bar");
-  clickElement(messageBar.shadowRoot.querySelector("button.close"));
+  clickElement(messageBar.closeButton);
+  await dismissed;
 
   info("Expect the onclose function to be called");
   await onceMessageBarClosed;
@@ -155,7 +160,7 @@ add_task(async function test_max_message_bar_count() {
   );
 
   info("Click on close icon for the second message-bar");
-  clickElement(messageBarStack.firstElementChild._closeIcon);
+  clickElement(messageBarStack.firstElementChild.closeButton);
 
   info("Expect the second message-bar to be closed");
   await allBarsPromises[0];
