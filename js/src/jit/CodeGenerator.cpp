@@ -5942,8 +5942,9 @@ void CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated) {
 }
 
 #ifdef DEBUG
-void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
-                                            const TemporaryTypeSet* typeset) {
+void CodeGenerator::emitAssertGCThingResult(Register input,
+                                            const MDefinition* mir) {
+  MIRType type = mir->type();
   MOZ_ASSERT(type == MIRType::Object || type == MIRType::ObjectOrNull ||
              type == MIRType::String || type == MIRType::Symbol ||
              type == MIRType::BigInt);
@@ -5959,6 +5960,7 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
   Label done;
   branchIfInvalidated(temp, &done);
 
+  const TemporaryTypeSet* typeset = mir->resultTypeSet();
   if ((type == MIRType::Object || type == MIRType::ObjectOrNull) && typeset &&
       !typeset->unknownObject()) {
     // We have a result TypeSet, assert this object is in it.
@@ -5976,8 +5978,15 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
     masm.bind(&miss);
     masm.guardTypeSetMightBeIncomplete(typeset, input, temp, &ok);
 
-    masm.assumeUnreachable(
-        "MIR instruction returned object with unexpected type");
+    switch (mir->op()) {
+#  define MIR_OP(op)                                                \
+    case MDefinition::Opcode::op:                                   \
+      masm.assumeUnreachable(                                       \
+          #op " instruction returned object with unexpected type"); \
+      break;
+      MIR_OPCODE_LIST(MIR_OP)
+#  undef MIR_OP
+    }
 
     masm.bind(&ok);
   }
@@ -6022,7 +6031,7 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
 }
 
 void CodeGenerator::emitAssertResultV(const ValueOperand input,
-                                      const TemporaryTypeSet* typeset) {
+                                      const MDefinition* mir) {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.take(input);
 
@@ -6036,6 +6045,7 @@ void CodeGenerator::emitAssertResultV(const ValueOperand input,
   Label done;
   branchIfInvalidated(temp1, &done);
 
+  const TemporaryTypeSet* typeset = mir->resultTypeSet();
   if (typeset && !typeset->unknown()) {
     // We have a result TypeSet, assert this value is in it.
     Label miss, ok;
@@ -6053,8 +6063,15 @@ void CodeGenerator::emitAssertResultV(const ValueOperand input,
     masm.guardTypeSetMightBeIncomplete(typeset, payload, temp1, &ok);
     masm.bind(&realMiss);
 
-    masm.assumeUnreachable(
-        "MIR instruction returned value with unexpected type");
+    switch (mir->op()) {
+#  define MIR_OP(op)                                               \
+    case MDefinition::Opcode::op:                                  \
+      masm.assumeUnreachable(                                      \
+          #op " instruction returned value with unexpected type"); \
+      break;
+      MIR_OPCODE_LIST(MIR_OP)
+#  undef MIR_OP
+    }
 
     masm.bind(&ok);
   }
@@ -6092,7 +6109,7 @@ void CodeGenerator::emitGCThingResultChecks(LInstruction* lir,
   }
 
   Register output = ToRegister(lir->getDef(0));
-  emitAssertGCThingResult(output, mir->type(), mir->resultTypeSet());
+  emitAssertGCThingResult(output, mir);
 }
 
 void CodeGenerator::emitValueResultChecks(LInstruction* lir, MDefinition* mir) {
@@ -6107,7 +6124,7 @@ void CodeGenerator::emitValueResultChecks(LInstruction* lir, MDefinition* mir) {
 
   ValueOperand output = ToOutValue(lir);
 
-  emitAssertResultV(output, mir->resultTypeSet());
+  emitAssertResultV(output, mir);
 }
 
 void CodeGenerator::emitDebugResultChecks(LInstruction* ins) {
@@ -13240,7 +13257,7 @@ void CodeGenerator::emitAssertRangeD(const Range* r, FloatRegister input,
 void CodeGenerator::visitAssertResultV(LAssertResultV* ins) {
 #ifdef DEBUG
   const ValueOperand value = ToValue(ins, LAssertResultV::Input);
-  emitAssertResultV(value, ins->mirRaw()->resultTypeSet());
+  emitAssertResultV(value, ins->mirRaw());
 #else
   MOZ_CRASH("LAssertResultV is debug only");
 #endif
@@ -13249,8 +13266,7 @@ void CodeGenerator::visitAssertResultV(LAssertResultV* ins) {
 void CodeGenerator::visitAssertResultT(LAssertResultT* ins) {
 #ifdef DEBUG
   Register input = ToRegister(ins->input());
-  MDefinition* mir = ins->mirRaw();
-  emitAssertGCThingResult(input, mir->type(), mir->resultTypeSet());
+  emitAssertGCThingResult(input, ins->mirRaw());
 #else
   MOZ_CRASH("LAssertResultT is debug only");
 #endif
