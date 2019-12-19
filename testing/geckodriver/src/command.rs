@@ -52,6 +52,11 @@ pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
             "/session/{sessionId}/moz/screenshot/full",
             GeckoExtensionRoute::TakeFullScreenshot,
         ),
+        (
+            Method::POST,
+            "/session/{sessionId}/moz/print",
+            GeckoExtensionRoute::Print,
+        ),
     ];
 }
 
@@ -64,6 +69,7 @@ pub enum GeckoExtensionRoute {
     InstallAddon,
     UninstallAddon,
     TakeFullScreenshot,
+    Print,
 }
 
 impl WebDriverExtensionRoute for GeckoExtensionRoute {
@@ -108,6 +114,7 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
                 GeckoExtensionCommand::UninstallAddon(serde_json::from_value(body_data.clone())?)
             }
             TakeFullScreenshot => GeckoExtensionCommand::TakeFullScreenshot,
+            Print => GeckoExtensionCommand::Print(serde_json::from_value(body_data.clone())?),
         };
 
         Ok(WebDriverCommand::Extension(command))
@@ -123,6 +130,7 @@ pub enum GeckoExtensionCommand {
     InstallAddon(AddonInstallParameters),
     UninstallAddon(AddonUninstallParameters),
     TakeFullScreenshot,
+    Print(PrintParameters),
 }
 
 impl WebDriverExtensionCommand for GeckoExtensionCommand {
@@ -136,6 +144,7 @@ impl WebDriverExtensionCommand for GeckoExtensionCommand {
             XblAnonymousByAttribute(_, x) => Some(serde_json::to_value(x).unwrap()),
             XblAnonymousChildren(_) => None,
             TakeFullScreenshot => None,
+            Print(x) => Some(serde_json::to_value(x).unwrap()),
         }
     }
 }
@@ -230,6 +239,113 @@ pub struct XblLocatorParameters {
 #[derive(Default, Debug, PartialEq)]
 pub struct LogOptions {
     pub level: Option<logging::Level>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct PrintParameters {
+    pub orientation: PrintOrientation,
+    #[serde(deserialize_with = "deserialize_to_print_scale_f64")]
+    pub scale: f64,
+    pub background: bool,
+    pub page: PrintPage,
+    pub margin: PrintMargins,
+    pub page_ranges: Vec<String>,
+    pub shrink_to_fit: bool,
+}
+
+impl Default for PrintParameters {
+    fn default() -> Self {
+        PrintParameters {
+            orientation: PrintOrientation::default(),
+            scale: 1.0,
+            background: false,
+            page: PrintPage::default(),
+            margin: PrintMargins::default(),
+            page_ranges: Vec::new(),
+            shrink_to_fit: true,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PrintOrientation {
+    Landscape,
+    Portrait,
+}
+
+impl Default for PrintOrientation {
+    fn default() -> Self {
+        PrintOrientation::Portrait
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PrintPage {
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub width: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub height: f64,
+}
+
+impl Default for PrintPage {
+    fn default() -> Self {
+        PrintPage {
+            width: 21.59,
+            height: 27.94,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PrintMargins {
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub top: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub bottom: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub left: f64,
+    #[serde(deserialize_with = "deserialize_to_positive_f64")]
+    pub right: f64,
+}
+
+impl Default for PrintMargins {
+    fn default() -> Self {
+        PrintMargins {
+            top: 1.0,
+            bottom: 1.0,
+            left: 1.0,
+            right: 1.0,
+        }
+    }
+}
+
+fn deserialize_to_positive_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let val = f64::deserialize(deserializer)?;
+    if val < 0.0 {
+        return Err(de::Error::custom(format!("{} is negative", val)));
+    };
+    Ok(val)
+}
+
+fn deserialize_to_print_scale_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let val = f64::deserialize(deserializer)?;
+    if val < 0.1 || val > 2.0 {
+        return Err(de::Error::custom(format!(
+            "{} is outside range 0.1-2",
+            val
+        )));
+    };
+    Ok(val)
 }
 
 #[cfg(test)]
@@ -389,5 +505,37 @@ mod tests {
         assert!(serde_json::from_value::<P>(json!({"name": null, "value": "bar"})).is_err());
         assert!(serde_json::from_value::<P>(json!({"name": "foo"})).is_err());
         assert!(serde_json::from_value::<P>(json!({"name": "foo", "value": null})).is_err());
+    }
+
+    #[test]
+    fn test_json_gecko_print_defaults() {
+        let params = PrintParameters::default();
+        assert_de(&params, json!({}));
+    }
+
+    #[test]
+    fn test_json_gecko_print() {
+        let params = PrintParameters {
+            orientation: PrintOrientation::Landscape,
+            page: PrintPage {
+                width: 10.0,
+                ..Default::default()
+            },
+            margin: PrintMargins {
+                top: 10.0,
+                ..Default::default()
+            },
+            scale: 1.5,
+            ..Default::default()
+        };
+        assert_de(
+            &params,
+            json!({"orientation": "landscape", "page": {"width": 10}, "margin": {"top": 10}, "scale": 1.5}),
+        );
+    }
+
+    #[test]
+    fn test_json_gecko_scale_invalid() {
+        assert!(serde_json::from_value::<AddonInstallParameters>(json!({"scale": 3})).is_err());
     }
 }
