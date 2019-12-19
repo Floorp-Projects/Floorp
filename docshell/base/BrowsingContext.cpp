@@ -237,7 +237,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mParent(aParent),
       mIsInProcess(false),
       mIsDiscarded(false),
-      mDanglingRemoteOuterProxies(false) {
+      mDanglingRemoteOuterProxies(false),
+      mPendingInitialization(false) {
   MOZ_RELEASE_ASSERT(!mParent || mParent->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
