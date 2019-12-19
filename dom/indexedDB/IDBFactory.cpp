@@ -715,7 +715,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
       MOZ_ASSERT(threadLocal);
       MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
 
-      threadLocal->mIndexedDBThreadLocal = newIDBThreadLocal.forget();
+      threadLocal->mIndexedDBThreadLocal = std::move(newIDBThreadLocal);
     }
   }
 
