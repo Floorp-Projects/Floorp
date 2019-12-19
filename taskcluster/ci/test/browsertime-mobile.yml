@@ -9,7 +9,10 @@ job-defaults:
     run-on-projects:
         by-app:
             fenix: []
-            geckoview: ["mozilla-central", "try"]
+            geckoview:
+                by-test-platform:
+                    android-hw-p2-.*-api-16/.*: []
+                    default: ["mozilla-central", "try"]
             refbrow: []
     tier: 3
     target:
