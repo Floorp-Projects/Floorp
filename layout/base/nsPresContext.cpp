@@ -1324,11 +1324,13 @@ void nsPresContext::ThemeChangedInternal() {
   // Recursively notify all remote leaf descendants that the
   // system theme has changed.
   if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
-    nsContentUtils::CallOnAllRemoteChildren(
-        window, [](BrowserParent* aBrowserParent) -> CallState {
-          aBrowserParent->ThemeChanged();
-          return CallState::Continue;
-        });
+    if (RefPtr<nsPIWindowRoot> topLevelWin = window->GetTopWindowRoot()) {
+      topLevelWin->EnumerateBrowsers(
+          [](nsIRemoteTab* aBrowserParent, void*) {
+            aBrowserParent->NotifyThemeChanged();
+          },
+          nullptr);
+    }
   }
 }
 

@@ -133,4 +133,8 @@ interface nsIRemoteTab : nsISupports
    * Notify the remote tab that the resolution has changed.
    */
   [noscript] void notifyResolutionChanged();
+  /**
+   * Notify the remote tab that system theme has changed.
+   */
+  [noscript] void notifyThemeChanged();
 };

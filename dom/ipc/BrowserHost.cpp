@@ -207,6 +207,16 @@ BrowserHost::NotifyResolutionChanged(void) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BrowserHost::NotifyThemeChanged(void) {
+  if (!mRoot) {
+    return NS_OK;
+  }
+  VisitAll(
+      [](BrowserParent* aBrowserParent) { aBrowserParent->ThemeChanged(); });
+  return NS_OK;
+}
+
 /* void deprioritize (); */
 NS_IMETHODIMP
 BrowserHost::Deprioritize(void) {
