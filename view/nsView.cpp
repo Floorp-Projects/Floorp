@@ -990,9 +990,9 @@ void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   }
 
   nsContentUtils::CallOnAllRemoteChildren(
-      window, [&aHeight](dom::BrowserParent* aBrowserParent) -> bool {
+      window, [&aHeight](dom::BrowserParent* aBrowserParent) -> CallState {
         aBrowserParent->DynamicToolbarMaxHeightChanged(aHeight);
-        return false;
+        return CallState::Continue;
       });
 }
 
@@ -1018,14 +1018,14 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
   }
 
   nsContentUtils::CallOnAllRemoteChildren(
-      window, [&aOffset](dom::BrowserParent* aBrowserParent) -> bool {
+      window, [&aOffset](dom::BrowserParent* aBrowserParent) -> CallState {
         // Skip background tabs.
         if (!aBrowserParent->GetDocShellIsActive()) {
-          return false;
+          return CallState::Continue;
         }
 
         aBrowserParent->DynamicToolbarOffsetChanged(aOffset);
-        return true;
+        return CallState::Stop;
       });
 }
 #endif
