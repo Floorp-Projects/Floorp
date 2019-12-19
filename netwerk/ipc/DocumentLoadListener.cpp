@@ -390,6 +390,7 @@ void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
   if (mDocumentChannelBridge) {
     mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
   }
+  DocumentChannelBridgeDisconnected();
 }
 
 void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
