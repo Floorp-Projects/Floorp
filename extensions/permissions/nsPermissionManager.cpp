@@ -882,7 +882,7 @@ void nsPermissionManager::Startup() {
 // nsPermissionManager Implementation
 
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 11
+#define HOSTS_SCHEMA_VERSION 10
 
 // Default permissions are read from a URL - this is the preference we read
 // to find that URL. If not set, don't use any default permissions.
@@ -1539,25 +1539,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         MOZ_FALLTHROUGH;
 
       case 9: {
-        rv = mDBConn->SetSchemaVersion(10);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-        // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
-
-      case 10: {
-        // Filter out the rows with storage access API permissions with a
-        // granted origin, and remove the granted origin part from the
-        // permission type.
-        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "UPDATE moz_perms "
-            "SET type=SUBSTR(type, 0, INSTR(SUBSTR(type, INSTR(type, '^') + "
-            "1), '^') + INSTR(type, '^')) "
-            "WHERE INSTR(SUBSTR(type, INSTR(type, '^') + 1), '^') AND "
-            "SUBSTR(type, 0, 18) == \"storageAccessAPI^\";"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
         rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, rv);
       }
