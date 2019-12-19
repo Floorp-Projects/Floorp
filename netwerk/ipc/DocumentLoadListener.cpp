@@ -340,8 +340,6 @@ bool DocumentLoadListener::Open(
 
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
-  mSrcdocData = aLoadState->SrcdocData();
-  mBaseURI = aLoadState->BaseURI();
   return true;
 }
 
@@ -424,10 +422,6 @@ DocumentLoadListener::ReadyToVerify(nsresult aResultCode) {
 }
 
 void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
-  LOG(
-      ("DocumentLoadListener FinishReplacementChannelSetup [this=%p, "
-       "aSucceeded=%d]",
-       this, aSucceeded));
   nsresult rv;
 
   if (mDoingProcessSwitch) {
@@ -540,7 +534,6 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
 
 void DocumentLoadListener::ResumeSuspendedChannel(
     nsIStreamListener* aListener) {
-  LOG(("DocumentLoadListener ResumeSuspendedChannel [this=%p]", this));
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (httpChannel) {
     httpChannel->SetApplyConversion(mOldApplyConversion);
@@ -729,9 +722,6 @@ void DocumentLoadListener::SerializeRedirectData(
   nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
                                &previousFlags);
   aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
-  aArgs.srcdocData() = mSrcdocData;
-  aArgs.baseUri() = mBaseURI;
-  aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {

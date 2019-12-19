@@ -22,7 +22,6 @@
 #include "nsContentSecurityManager.h"
 #include "nsDocShellLoadState.h"
 #include "nsHttpHandler.h"
-#include "nsIInputStreamChannel.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsStreamListenerWrapper.h"
@@ -321,26 +320,12 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;
-  nsresult rv;
-  if (aArgs.loadStateLoadFlags() &
-      nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) {
-    rv = NS_NewInputStreamChannelInternal(
-        getter_AddRefs(newChannel), aArgs.uri(), aArgs.srcdocData(),
-        NS_LITERAL_CSTRING("text/html"), loadInfo, true);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(newChannel);
-      MOZ_ASSERT(isc);
-      isc->SetBaseURI(aArgs.baseUri());
-      newChannel->SetLoadGroup(mLoadGroup);
-    }
-  } else {
-    rv =
-        NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo,
-                              nullptr,     // PerformanceStorage
-                              mLoadGroup,  // aLoadGroup
-                              nullptr,     // aCallbacks
-                              aArgs.newLoadFlags());
-  }
+  nsresult rv =
+      NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo,
+                            nullptr,     // PerformanceStorage
+                            mLoadGroup,  // aLoadGroup
+                            nullptr,     // aCallbacks
+                            aArgs.newLoadFlags());
 
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
@@ -429,10 +414,6 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
 NS_IMETHODIMP
 DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
-  LOG(
-      ("DocumentChannelChild OnRedirectVerifyCallback [this=%p, "
-       "aRv=0x%08" PRIx32 " ]",
-       this, static_cast<uint32_t>(aStatusCode)));
   nsCOMPtr<nsIChannel> redirectChannel = std::move(mRedirectChannel);
   RedirectToRealChannelResolver redirectResolver = std::move(mRedirectResolver);
 

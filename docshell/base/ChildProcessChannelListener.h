@@ -11,7 +11,7 @@
 
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsDataHashtable.h"
-#include "nsIChannel.h"
+#include "nsIChildChannel.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,11 +20,11 @@ class ChildProcessChannelListener final {
   NS_INLINE_DECL_REFCOUNTING(ChildProcessChannelListener)
 
   using Callback = std::function<void(
-      nsIChannel*, nsTArray<net::DocumentChannelRedirect>&&, uint32_t)>;
+      nsIChildChannel*, nsTArray<net::DocumentChannelRedirect>&&, uint32_t)>;
 
   void RegisterCallback(uint64_t aIdentifier, Callback&& aCallback);
 
-  void OnChannelReady(nsIChannel* aChannel, uint64_t aIdentifier,
+  void OnChannelReady(nsIChildChannel* aChannel, uint64_t aIdentifier,
                       nsTArray<net::DocumentChannelRedirect>&& aRedirects,
                       uint32_t aLoadStateLoadFlags);
 
@@ -34,7 +34,7 @@ class ChildProcessChannelListener final {
   ChildProcessChannelListener() = default;
   ~ChildProcessChannelListener() = default;
   struct CallbackArgs {
-    nsCOMPtr<nsIChannel> mChannel;
+    nsCOMPtr<nsIChildChannel> mChannel;
     nsTArray<net::DocumentChannelRedirect> mRedirects;
     uint32_t mLoadStateLoadFlags;
   };
