@@ -16,7 +16,7 @@
  */
 
 
-/* @fluent/bundle@0.14.0 */
+/* fluent-bundle@0.14.1 */
 
 /* global Intl */
 
@@ -204,14 +204,17 @@ function DATETIME([arg], opts) {
 }
 
 const builtins = /*#__PURE__*/Object.freeze({
+  __proto__: null,
   NUMBER: NUMBER,
   DATETIME: DATETIME
 });
 
 /* global Intl */
 
-// Prevent expansion of too long placeables.
-const MAX_PLACEABLE_LENGTH = 2500;
+// The maximum number of placeables which can be expanded in a single call to
+// `formatPattern`. The limit protects against the Billion Laughs and Quadratic
+// Blowup attacks. See https://msdn.microsoft.com/en-us/magazine/ee335713.aspx.
+const MAX_PLACEABLES = 100;
 
 // Unicode bidi isolation characters.
 const FSI = "\u2068";
@@ -257,7 +260,7 @@ function getDefault(scope, variants, star) {
 // Helper: resolve arguments to a call expression.
 function getArguments(scope, args) {
   const positional = [];
-  const named = {};
+  const named = Object.create(null);
 
   for (const arg of args) {
     if (arg.type === "narg") {
@@ -267,7 +270,7 @@ function getArguments(scope, args) {
     }
   }
 
-  return [positional, named];
+  return {positional, named};
 }
 
 // Resolve an expression to a Fluent type.
@@ -296,14 +299,25 @@ function resolveExpression(scope, expr) {
 
 // Resolve a reference to a variable.
 function VariableReference(scope, {name}) {
-  if (!scope.args || !scope.args.hasOwnProperty(name)) {
-    if (scope.insideTermReference === false) {
-      scope.reportError(new ReferenceError(`Unknown variable: $${name}`));
+  let arg;
+  if (scope.params) {
+    // We're inside a TermReference. It's OK to reference undefined parameters.
+    if (Object.prototype.hasOwnProperty.call(scope.params, name)) {
+      arg = scope.params[name];
+    } else {
+      return new FluentNone(`$${name}`);
     }
+  } else if (
+    scope.args
+    && Object.prototype.hasOwnProperty.call(scope.args, name)
+  ) {
+    // We're in the top-level Pattern or inside a MessageReference. Missing
+    // variables references produce ReferenceErrors.
+    arg = scope.args[name];
+  } else {
+    scope.reportError(new ReferenceError(`Unknown variable: $${name}`));
     return new FluentNone(`$${name}`);
   }
-
-  const arg = scope.args[name];
 
   // Return early if the argument already is an instance of FluentType.
   if (arg instanceof FluentType) {
@@ -362,20 +376,23 @@ function TermReference(scope, {name, attr, args}) {
     return new FluentNone(id);
   }
 
-  // Every TermReference has its own variables.
-  const [, params] = getArguments(scope, args);
-  const local = scope.cloneForTermReference(params);
-
   if (attr) {
     const attribute = term.attributes[attr];
     if (attribute) {
-      return resolvePattern(local, attribute);
+      // Every TermReference has its own variables.
+      scope.params = getArguments(scope, args).named;
+      const resolved = resolvePattern(scope, attribute);
+      scope.params = null;
+      return resolved;
     }
     scope.reportError(new ReferenceError(`Unknown attribute: ${attr}`));
     return new FluentNone(`${id}.${attr}`);
   }
 
-  return resolvePattern(local, term.value);
+  scope.params = getArguments(scope, args).named;
+  const resolved = resolvePattern(scope, term.value);
+  scope.params = null;
+  return resolved;
 }
 
 // Resolve a call to a Function with positional and key-value arguments.
@@ -394,7 +411,8 @@ function FunctionReference(scope, {name, args}) {
   }
 
   try {
-    return func(...getArguments(scope, args));
+    let resolved = getArguments(scope, args);
+    return func(resolved.positional, resolved.named);
   } catch (err) {
     scope.reportError(err);
     return new FluentNone(`${name}()`);
@@ -440,25 +458,24 @@ function resolveComplexPattern(scope, ptn) {
       continue;
     }
 
-    const part = resolveExpression(scope, elem).toString(scope);
-
-    if (useIsolating) {
-      result.push(FSI);
-    }
-
-    if (part.length > MAX_PLACEABLE_LENGTH) {
+    scope.placeables++;
+    if (scope.placeables > MAX_PLACEABLES) {
       scope.dirty.delete(ptn);
       // This is a fatal error which causes the resolver to instantly bail out
       // on this pattern. The length check protects against excessive memory
       // usage, and throwing protects against eating up the CPU when long
       // placeables are deeply nested.
       throw new RangeError(
-        "Too many characters in placeable " +
-        `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`
+        `Too many placeables expanded: ${scope.placeables}, ` +
+        `max allowed is ${MAX_PLACEABLES}`
       );
     }
 
-    result.push(part);
+    if (useIsolating) {
+      result.push(FSI);
+    }
+
+    result.push(resolveExpression(scope, elem).toString(scope));
 
     if (useIsolating) {
       result.push(PDI);
@@ -481,13 +498,7 @@ function resolvePattern(scope, node) {
 }
 
 class Scope {
-  constructor(
-    bundle,
-    errors,
-    args,
-    insideTermReference = false,
-    dirty = new WeakSet()
-  ) {
+  constructor(bundle, errors, args) {
     /** The bundle for which the given resolution is happening. */
     this.bundle = bundle;
     /** The list of errors collected while resolving. */
@@ -495,15 +506,14 @@ class Scope {
     /** A dict of developer-provided variables. */
     this.args = args;
 
-    /** Term references require different variable lookup logic. */
-    this.insideTermReference = insideTermReference;
     /** The Set of patterns already encountered during this resolution.
       * Used to detect and prevent cyclic resolutions. */
-    this.dirty = dirty;
-  }
-
-  cloneForTermReference(args) {
-    return new Scope(this.bundle, this.errors, args, true, this.dirty);
+    this.dirty = new WeakSet();
+    /** A dict of parameters passed to a TermReference. */
+    this.params = null;
+    /** The running count of placeables resolved so far. Used to detect the
+      * Billion Laughs and Quadratic Blowup attacks. */
+    this.placeables = 0;
   }
 
   reportError(error) {
@@ -759,10 +769,6 @@ const TOKEN_COLON = /\s*:\s*/y;
 const TOKEN_COMMA = /\s*,?\s*/y;
 const TOKEN_BLANK = /\s+/y;
 
-// Maximum number of placeables in a single Pattern to protect against Quadratic
-// Blowup attacks. See https://msdn.microsoft.com/en-us/magazine/ee335713.aspx.
-const MAX_PLACEABLES = 100;
-
 /**
  * Fluent Resource is a structure storing parsed localization entries.
  */
@@ -927,8 +933,6 @@ class FluentResource {
 
     // Parse a complex pattern as an array of elements.
     function parsePatternElements(elements = [], commonIndent) {
-      let placeableCount = 0;
-
       while (true) {
         if (test(RE_TEXT_RUN)) {
           elements.push(match1(RE_TEXT_RUN));
@@ -936,9 +940,6 @@ class FluentResource {
         }
 
         if (source[cursor] === "{") {
-          if (++placeableCount > MAX_PLACEABLES) {
-            throw new FluentError("Too many placeables");
-          }
           elements.push(parsePlaceable());
           continue;
         }
@@ -1208,15 +1209,6 @@ class FluentResource {
     }
   }
 }
-
-/**
- * @module fluent
- * @overview
- *
- * `fluent` is a JavaScript implementation of Project Fluent, a localization
- * framework designed to unleash the expressive power of the natural language.
- *
- */
 
 this.EXPORTED_SYMBOLS = [
   ...Object.keys({
