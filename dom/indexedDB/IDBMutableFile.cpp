@@ -156,8 +156,8 @@ IDBDatabase* IDBMutableFile::Database() const {
   return mDatabase;
 }
 
-already_AddRefed<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
-                                                     ErrorResult& aError) {
+RefPtr<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
+                                           ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (QuotaManager::IsShuttingDown() || mDatabase->IsClosed() || !GetOwner()) {
@@ -165,7 +165,7 @@ already_AddRefed<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
     return nullptr;
   }
 
-  RefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(this, aMode);
+  auto fileHandle = IDBFileHandle::Create(this, aMode);
   if (NS_WARN_IF(!fileHandle)) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
@@ -178,10 +178,10 @@ already_AddRefed<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
 
   fileHandle->SetBackgroundActor(actor);
 
-  return fileHandle.forget();
+  return fileHandle;
 }
 
-already_AddRefed<DOMRequest> IDBMutableFile::GetFile(ErrorResult& aError) {
+RefPtr<DOMRequest> IDBMutableFile::GetFile(ErrorResult& aError) {
   RefPtr<IDBFileHandle> fileHandle = Open(FileMode::Readonly, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
@@ -189,12 +189,12 @@ already_AddRefed<DOMRequest> IDBMutableFile::GetFile(ErrorResult& aError) {
 
   FileRequestGetFileParams params;
 
-  RefPtr<IDBFileRequest> request =
+  auto request =
       IDBFileRequest::Create(fileHandle, /* aWrapAsDOMRequest */ true);
 
   fileHandle->StartRequest(request, params);
 
-  return request.forget();
+  return request;
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBMutableFile, DOMEventTargetHelper)
