@@ -80,6 +80,10 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
 
   // No dll services, save for later
   AutoExclusiveLock lock(mLock);
+  if (!mEnabled) {
+    return;
+  }
+
   if (!mModuleLoads) {
     mModuleLoads = new ModuleLoadInfoVec();
   }
@@ -116,13 +120,14 @@ void LoaderObserver::Forward(detail::DllServicesBase* aNext) {
   delete moduleLoads;
 }
 
-void LoaderObserver::Clear() {
+void LoaderObserver::Disable() {
   ModuleLoadInfoVec* moduleLoads = nullptr;
 
   {  // Scope for lock
     AutoExclusiveLock lock(mLock);
     moduleLoads = mModuleLoads;
     mModuleLoads = nullptr;
+    mEnabled = false;
   }
 
   delete moduleLoads;
