@@ -31,7 +31,7 @@ const char16_t* kCloseEventType = u"close";
 RefPtr<Event> CreateGenericEvent(EventTarget* aOwner,
                                  const nsDependentString& aType,
                                  Bubbles aBubbles, Cancelable aCancelable) {
-  RefPtr<Event> event = new Event(aOwner, nullptr, nullptr);
+  RefPtr<Event> event = MakeAndAddRef<Event>(aOwner, nullptr, nullptr);
 
   event->InitEvent(aType, aBubbles == eDoesBubble, aCancelable == eCancelable);
 
