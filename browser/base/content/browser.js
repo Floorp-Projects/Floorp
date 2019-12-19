@@ -3963,9 +3963,6 @@ var newTabButtonObserver = {
         let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewTabWith(data.url, shiftKey, {
-          // TODO fix allowInheritPrincipal
-          // (this is required by javascript: drop to the new window) Bug 1475201
-          allowInheritPrincipal: true,
           postData: data.postData,
           allowThirdPartyFixup: true,
           triggeringPrincipal,

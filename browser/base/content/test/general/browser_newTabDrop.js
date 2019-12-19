@@ -28,17 +28,8 @@ add_task(async function test_setup() {
 add_task(async function single_url() {
   await dropText("mochi.test/first", ["http://www.mochi.test/first"]);
 });
-add_task(async function single_javascript() {
-  await dropText("javascript:'bad'", ["javascript:'bad'"]);
-});
-add_task(async function single_javascript_capital() {
-  await dropText("jAvascript:'bad'", ["javascript:'bad'"]);
-});
 add_task(async function single_url2() {
   await dropText("mochi.test/second", ["http://www.mochi.test/second"]);
-});
-add_task(async function single_data_url() {
-  await dropText("data:text/html,bad", ["data:text/html,bad"]);
 });
 add_task(async function single_url3() {
   await dropText("mochi.test/third", ["http://www.mochi.test/third"]);
@@ -49,18 +40,6 @@ add_task(async function multiple_urls() {
   await dropText("mochi.test/1\nmochi.test/2", [
     "http://www.mochi.test/1",
     "http://www.mochi.test/2",
-  ]);
-});
-add_task(async function multiple_urls_javascript() {
-  await dropText("javascript:'bad1'\nmochi.test/3", [
-    "javascript:'bad1'",
-    "http://www.mochi.test/3",
-  ]);
-});
-add_task(async function multiple_urls_data() {
-  await dropText("mochi.test/4\ndata:text/html,bad1", [
-    "http://www.mochi.test/4",
-    "data:text/html,bad1",
   ]);
 });
 
@@ -213,7 +192,11 @@ async function drop(dragData, expectedURLs) {
   // that should be visible.
   let dragSrcElement = document.getElementById("sidebar-button");
   ok(dragSrcElement, "Sidebar button exists");
-  let newTabButton = document.getElementById("new-tab-button");
+  let newTabButton = document.getElementById(
+    gBrowser.tabContainer.hasAttribute("overflow")
+      ? "new-tab-button"
+      : "tabs-newtab-button"
+  );
   ok(newTabButton, "New Tab button exists");
 
   let awaitDrop = BrowserTestUtils.waitForEvent(newTabButton, "drop");
