@@ -8283,13 +8283,11 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
 
   void UnregisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
 
-  already_AddRefed<DatabaseMaintenance> GetDatabaseMaintenance(
+  RefPtr<DatabaseMaintenance> GetDatabaseMaintenance(
       const nsAString& aDatabasePath) const {
     AssertIsOnBackgroundThread();
 
-    RefPtr<DatabaseMaintenance> result =
-        mDatabaseMaintenances.Get(aDatabasePath);
-    return result.forget();
+    return mDatabaseMaintenances.Get(aDatabasePath);
   }
 
   void Stringify(nsACString& aResult) const;
