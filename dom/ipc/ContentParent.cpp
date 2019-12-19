@@ -830,94 +830,121 @@ static bool CreateTemporaryRecordingFile(nsAString& aResult) {
 }
 
 /*static*/
+Maybe<ContentParent::RecordReplayState> ContentParent::GetRecordReplayState(
+    Element* aFrameElement, nsAString& aRecordingFile) {
+  if (!aFrameElement) {
+    return Some(eNotRecordingOrReplaying);
+  }
+  aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ReplayExecution,
+                         aRecordingFile);
+  if (!aRecordingFile.IsEmpty()) {
+    return Some(eReplaying);
+  }
+  aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RecordExecution,
+                         aRecordingFile);
+  if (aRecordingFile.IsEmpty() &&
+      recordreplay::parent::SaveAllRecordingsDirectory()) {
+    aRecordingFile.AssignLiteral("*");
+  }
+  if (!aRecordingFile.IsEmpty()) {
+    if (aRecordingFile.EqualsLiteral("*") &&
+        !CreateTemporaryRecordingFile(aRecordingFile)) {
+      return Nothing();
+    }
+    return Some(eRecording);
+  }
+  return Some(eNotRecordingOrReplaying);
+}
+
+/*static*/
+already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
+    ContentParent* aOpener, const nsAString& aRemoteType,
+    nsTArray<ContentParent*>& aContentParents, uint32_t aMaxContentParents,
+    bool aPreferUsed) {
+  uint32_t numberOfParents = aContentParents.Length();
+  nsTArray<RefPtr<nsIContentProcessInfo>> infos(numberOfParents);
+  for (auto* cp : aContentParents) {
+    infos.AppendElement(cp->mScriptableHelper);
+  }
+
+  if (aPreferUsed && numberOfParents) {
+    // For the preloaded browser we don't want to create a new process but
+    // reuse an existing one.
+    aMaxContentParents = numberOfParents;
+  }
+
+  nsCOMPtr<nsIContentProcessProvider> cpp =
+      do_GetService("@mozilla.org/ipc/processselector;1");
+  nsIContentProcessInfo* openerInfo =
+      aOpener ? aOpener->mScriptableHelper.get() : nullptr;
+  int32_t index;
+  if (cpp && NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, openerInfo, infos,
+                                              aMaxContentParents, &index))) {
+    // If the provider returned an existing ContentParent, use that one.
+    if (0 <= index && static_cast<uint32_t>(index) <= aMaxContentParents) {
+      RefPtr<ContentParent> retval = aContentParents[index];
+      return retval.forget();
+    }
+  } else {
+    // If there was a problem with the JS chooser, fall back to a random
+    // selection.
+    NS_WARNING("nsIContentProcessProvider failed to return a process");
+    RefPtr<ContentParent> random;
+    if (aContentParents.Length() >= aMaxContentParents &&
+        (random = MinTabSelect(aContentParents, aOpener, aMaxContentParents))) {
+      return random.forget();
+    }
+  }
+
+  // Try to take the preallocated process only for the default process type.
+  // The preallocated process manager might not had the chance yet to release
+  // the process after a very recent ShutDownProcess, let's make sure we don't
+  // try to reuse a process that is being shut down.
+  RefPtr<ContentParent> p;
+  if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
+      (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
+    // For pre-allocated process we have not set the opener yet.
+    p->mOpener = aOpener;
+    aContentParents.AppendElement(p);
+    p->mActivateTS = TimeStamp::Now();
+    return p.forget();
+  }
+
+  return nullptr;
+}
+
+/*static*/
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
     Element* aFrameElement, const nsAString& aRemoteType,
     ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed) {
   // Figure out if this process will be recording or replaying, and which file
   // to use for the recording.
-  RecordReplayState recordReplayState = eNotRecordingOrReplaying;
   nsAutoString recordingFile;
-  if (aFrameElement) {
-    aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ReplayExecution,
-                           recordingFile);
-    if (!recordingFile.IsEmpty()) {
-      recordReplayState = eReplaying;
-    } else {
-      aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RecordExecution,
-                             recordingFile);
-      if (recordingFile.IsEmpty() &&
-          recordreplay::parent::SaveAllRecordingsDirectory()) {
-        recordingFile.AssignLiteral("*");
-      }
-      if (!recordingFile.IsEmpty()) {
-        if (recordingFile.EqualsLiteral("*") &&
-            !CreateTemporaryRecordingFile(recordingFile)) {
-          return nullptr;
-        }
-        recordReplayState = eRecording;
-      }
-    }
+  Maybe<RecordReplayState> maybeRecordReplayState =
+      GetRecordReplayState(aFrameElement, recordingFile);
+  if (maybeRecordReplayState.isNothing()) {
+    return nullptr;
   }
+  RecordReplayState recordReplayState = maybeRecordReplayState.value();
 
   nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
   uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
-  if (recordReplayState != eNotRecordingOrReplaying) {
-    // Fall through and always create a new process when recording or replaying.
-  } else if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
-    // We never want to re-use Large-Allocation processes.
-    if (contentParents.Length() >= maxContentParents) {
-      return GetNewOrUsedBrowserProcess(aFrameElement,
-                                        NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
-                                        aPriority, aOpener);
-    }
-  } else {
-    uint32_t numberOfParents = contentParents.Length();
-    nsTArray<RefPtr<nsIContentProcessInfo>> infos(numberOfParents);
-    for (auto* cp : contentParents) {
-      infos.AppendElement(cp->mScriptableHelper);
-    }
-
-    if (aPreferUsed && numberOfParents) {
-      // For the preloaded browser we don't want to create a new process but
-      // reuse an existing one.
-      maxContentParents = numberOfParents;
-    }
-
-    nsCOMPtr<nsIContentProcessProvider> cpp =
-        do_GetService("@mozilla.org/ipc/processselector;1");
-    nsIContentProcessInfo* openerInfo =
-        aOpener ? aOpener->mScriptableHelper.get() : nullptr;
-    int32_t index;
-    if (cpp && NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, openerInfo, infos,
-                                                maxContentParents, &index))) {
-      // If the provider returned an existing ContentParent, use that one.
-      if (0 <= index && static_cast<uint32_t>(index) <= maxContentParents) {
-        RefPtr<ContentParent> retval = contentParents[index];
-        return retval.forget();
-      }
-    } else {
-      // If there was a problem with the JS chooser, fall back to a random
-      // selection.
-      NS_WARNING("nsIContentProcessProvider failed to return a process");
-      RefPtr<ContentParent> random;
-      if (contentParents.Length() >= maxContentParents &&
-          (random = MinTabSelect(contentParents, aOpener, maxContentParents))) {
-        return random.forget();
-      }
-    }
-
-    // Try to take the preallocated process only for the default process type.
-    // The preallocated process manager might not had the chance yet to release
-    // the process after a very recent ShutDownProcess, let's make sure we don't
-    // try to reuse a process that is being shut down.
-    RefPtr<ContentParent> p;
-    if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-        (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
-      // For pre-allocated process we have not set the opener yet.
-      p->mOpener = aOpener;
-      contentParents.AppendElement(p);
-      p->mActivateTS = TimeStamp::Now();
-      return p.forget();
+  if (recordReplayState ==
+          eNotRecordingOrReplaying  // Fall through and always create a new
+                                    // process when recording or replaying.
+      && aRemoteType.EqualsLiteral(
+             LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
+                                            // Large-Allocation processes.
+      && contentParents.Length() >= maxContentParents) {
+    return GetNewOrUsedBrowserProcess(aFrameElement,
+                                      NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
+                                      aPriority, aOpener);
+  }
+  {
+    RefPtr<ContentParent> existing = GetUsedBrowserProcess(
+        aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
+    if (existing != nullptr) {
+      return existing.forget();
     }
   }
 
