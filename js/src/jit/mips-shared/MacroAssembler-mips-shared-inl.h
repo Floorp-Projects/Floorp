@@ -472,7 +472,7 @@ void MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs,
 
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
                                                   Register dest, Label* fail) {
-  MOZ_CRASH();
+  convertFloat32ToInt32(src, dest, fail, false);
 }
 
 void MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs,
@@ -482,7 +482,7 @@ void MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs,
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
-  MOZ_CRASH();
+  convertDoubleToInt32(src, dest, fail, false);
 }
 
 template <typename T>
