@@ -715,29 +715,39 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-user-focus: normal;
 }
 
-/* We leave 34ch plus whatever space the download button will need when it
+/* We leave 350px plus whatever space the download button will need when it
  * appears. Normally this should be 16px for the icon, plus 2 * 2px padding
  * plus the toolbarbutton-inner-padding. We're adding 4px to ensure things
  * like rounding on hidpi don't accidentally result in the button going
  * into overflow.
  */
-#urlbar-container {
-  min-width: calc(34ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+ #urlbar-container {
+  min-width: calc(350px + 24px + 2 * var(--toolbarbutton-inner-padding));
 }
 
 #nav-bar[downloadsbuttonshown] #urlbar-container {
-  min-width: 34ch;
+  min-width: 350px;
+}
+
+/* Customize mode is difficult to use at moderate window width if the Urlbar
+   remains 350px wide. */
+:root[customize-entered] #urlbar-container {
+  min-width: 280px;
 }
 
 #identity-icon-labels {
   max-width: 10em;
 }
-@media (max-width: 600px) {
+
+@media (max-width: 770px) {
   #urlbar-container {
-    min-width: calc(29ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(280px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 29ch;
+    min-width: 280px;
+  }
+  :root[customize-entered] #urlbar-container {
+    min-width: 245px;
   }
   #identity-icon-labels {
     max-width: 50px;
@@ -745,10 +755,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 @media (max-width: 500px) {
   #urlbar-container {
-    min-width: calc(22ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(180px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 22ch;
+    min-width: 180px;
   }
   #identity-icon-labels {
     max-width: 40px;
@@ -756,10 +766,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 @media (max-width: 400px) {
   #urlbar-container {
-    min-width: calc(10ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(76px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 10ch;
+    min-width: 76px;
   }
   #identity-icon-labels {
     max-width: 30px;
@@ -778,8 +788,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
   -moz-box-flex: 1;
-  min-width: 28px;
   max-width: 112px;
+}
+
+:root[customize-entered] toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
+:root[customize-entered] toolbarspring {
+  /* At very small window widths, expand the springs slightly so that they
+     can be manipulated with the mouse. */
+  min-width: 10px;
 }
 
 #nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
