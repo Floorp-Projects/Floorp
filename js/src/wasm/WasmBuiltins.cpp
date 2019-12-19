@@ -345,15 +345,13 @@ static bool WasmHandleDebugTrap() {
     }
   }
   if (debug.hasBreakpointSite(site->lineOrBytecode())) {
-    RootedValue result(cx, UndefinedValue());
-    ResumeMode mode = DebugAPI::onTrap(cx, &result);
-    if (mode == ResumeMode::Return) {
-      // TODO properly handle ResumeMode::Return.
-      JS_ReportErrorASCII(
-          cx, "Unexpected resumption value from breakpoint handler");
-      return false;
-    }
-    if (mode != ResumeMode::Continue) {
+    if (!DebugAPI::onTrap(cx)) {
+      if (cx->isPropagatingForcedReturn()) {
+        cx->clearPropagatingForcedReturn();
+        // TODO properly handle forced return.
+        JS_ReportErrorASCII(
+            cx, "Unexpected resumption value from breakpoint handler");
+      }
       return false;
     }
   }
