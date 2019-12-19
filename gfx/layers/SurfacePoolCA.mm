@@ -8,6 +8,7 @@
 #import <CoreVideo/CVPixelBuffer.h>
 
 #include <algorithm>
+#include <unordered_set>
 #include <utility>
 
 #include "mozilla/StaticMutex.h"
@@ -61,6 +62,8 @@ void SurfacePoolCA::LockedPool::DestroyGLResourcesForContext(GLContext* aGL) {
       entry.mGLResources = {};
     }
   });
+  mDepthBuffers.RemoveElementsBy(
+      [&](const DepthBufferEntry& entry) { return entry.mGLContext == aGL; });
 }
 
 template <typename F>
@@ -104,6 +107,7 @@ void SurfacePoolCA::LockedPool::ForEachEntry(F aFn) {
 }
 
 uint64_t SurfacePoolCA::LockedPool::EstimateTotalMemory() {
+  std::unordered_set<const gl::DepthAndStencilBuffer*> depthAndStencilBuffers;
   uint64_t memBytes = 0;
 
   ForEachEntry([&](const SurfacePoolEntry& entry) {
@@ -111,11 +115,15 @@ uint64_t SurfacePoolCA::LockedPool::EstimateTotalMemory() {
     memBytes += size.width * 4 * size.height;
     if (entry.mGLResources) {
       const auto& fb = *entry.mGLResources->mFramebuffer;
-      // Another memory for depth + stencil buffers. (24 bit depth + 8 bit stencil).
-      int32_t bpp = 3 * fb.HasDepth() + 1 * fb.HasStencil();
-      memBytes += size.width * bpp * size.height;
+      if (const auto& buffer = fb.GetDepthAndStencilBuffer()) {
+        depthAndStencilBuffers.insert(buffer.get());
+      }
     }
   });
+
+  for (const auto& buffer : depthAndStencilBuffers) {
+    memBytes += buffer->EstimateMemory();
+  }
 
   return memBytes;
 }
@@ -288,8 +296,7 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
                            LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, entry.mIOSurface.get(), 0);
   }
 
-  auto fb = gl::MozFramebuffer::CreateForBacking(aGL, entry.mSize, 0, aNeedsDepthBuffer,
-                                                 LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  auto fb = CreateFramebufferForTexture(aGL, entry.mSize, tex, aNeedsDepthBuffer);
   if (!fb) {
     // Framebuffer completeness check may have failed.
     return {};
@@ -298,6 +305,40 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
   GLuint fbo = fb->mFB;
   entry.mGLResources = Some(GLResourcesForSurface{aGL, std::move(fb)});
   return Some(fbo);
+}
+
+RefPtr<gl::DepthAndStencilBuffer> SurfacePoolCA::LockedPool::GetDepthBufferForSharing(
+    GLContext* aGL, const IntSize& aSize) {
+  // Clean out entries for which the weak pointer has become null.
+  mDepthBuffers.RemoveElementsBy([&](const DepthBufferEntry& entry) { return !entry.mBuffer; });
+
+  for (const auto& entry : mDepthBuffers) {
+    if (entry.mGLContext == aGL && entry.mSize == aSize) {
+      return entry.mBuffer.get();
+    }
+  }
+  return nullptr;
+}
+
+UniquePtr<gl::MozFramebuffer> SurfacePoolCA::LockedPool::CreateFramebufferForTexture(
+    GLContext* aGL, const IntSize& aSize, GLuint aTexture, bool aNeedsDepthBuffer) {
+  if (aNeedsDepthBuffer) {
+    // Try to find an existing depth buffer of aSize in aGL and create a framebuffer that shares it.
+    if (auto buffer = GetDepthBufferForSharing(aGL, aSize)) {
+      return gl::MozFramebuffer::CreateForBackingWithSharedDepthAndStencil(
+          aSize, 0, LOCAL_GL_TEXTURE_RECTANGLE_ARB, aTexture, buffer);
+    }
+  }
+
+  // No depth buffer needed or we didn't find one. Create a framebuffer with a new depth buffer and
+  // store a weak pointer to the new depth buffer in mDepthBuffers.
+  UniquePtr<gl::MozFramebuffer> fb = gl::MozFramebuffer::CreateForBacking(
+      aGL, aSize, 0, aNeedsDepthBuffer, LOCAL_GL_TEXTURE_RECTANGLE_ARB, aTexture);
+  if (fb && fb->GetDepthAndStencilBuffer()) {
+    mDepthBuffers.AppendElement(DepthBufferEntry{aGL, aSize, fb->GetDepthAndStencilBuffer().get()});
+  }
+
+  return fb;
 }
 
 // SurfacePoolHandleCA
