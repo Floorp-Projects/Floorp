@@ -4617,7 +4617,7 @@ nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
 
 nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
                               uint32_t aTelemetryId,
-                              mozIStorageConnection** aConnection) {
+                              nsCOMPtr<mozIStorageConnection>* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aDatabaseFile);
@@ -4666,13 +4666,13 @@ nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
     return rv;
   }
 
-  connection.forget(aConnection);
+  *aConnection = std::move(connection);
   return NS_OK;
 }
 
 nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
                               int64_t aDirectoryLockId, uint32_t aTelemetryId,
-                              mozIStorageConnection** aConnection) {
+                              nsCOMPtr<mozIStorageConnection>* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
@@ -11221,7 +11221,7 @@ nsresult ConnectionPool::GetOrCreateConnection(
     nsCOMPtr<mozIStorageConnection> storageConnection;
     nsresult rv = GetStorageConnection(
         aDatabase->FilePath(), aDatabase->DirectoryLockId(),
-        aDatabase->TelemetryId(), getter_AddRefs(storageConnection));
+        aDatabase->TelemetryId(), &storageConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -17925,9 +17925,9 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(databaseFile);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = GetStorageConnection(databaseFile, mDirectoryLockId,
-                                     TelemetryIdForFile(databaseFile),
-                                     getter_AddRefs(connection));
+  nsresult rv =
+      GetStorageConnection(databaseFile, mDirectoryLockId,
+                           TelemetryIdForFile(databaseFile), &connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
