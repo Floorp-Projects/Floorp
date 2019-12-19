@@ -294,7 +294,7 @@ mochitest-media:
             android-em-7.*: 1
             windows10-64.*: 1
             macosx.*64.*/.*: 2
-            windows10-aarch64/.*: 2
+            windows10-aarch64/.*: 1
             windows7-32-shippable/.*: 2
             linux64(-shippable|-devedition|-.*qr)/opt: 2
             default: 3
