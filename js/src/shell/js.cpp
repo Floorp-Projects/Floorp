@@ -10195,7 +10195,10 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
       modulePaths.empty() && binASTPaths.empty() &&
       !op->getStringArg("script")) {
-    return Process(cx, nullptr, true, FileScript); /* Interactive. */
+    // Always use the interactive shell when -i is used. Without -i we let
+    // Process figure it out based on isatty.
+    bool forceTTY = op->getBoolOption('i');
+    return Process(cx, nullptr, forceTTY, FileScript);
   }
 
   if (const char* path = op->getStringOption("module-load-path")) {
