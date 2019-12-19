@@ -443,7 +443,7 @@ static inline bool WebIDLCast(JSContext* cx, HandleValue value,
 template <>
 inline bool WebIDLCast<int64_t>(JSContext* cx, HandleValue value,
                                 int64_t* out) {
-  RootedBigInt bi(cx, ToBigInt(cx, value));
+  BigInt* bi = ToBigInt(cx, value);
   if (!bi) {
     return false;
   }
@@ -454,7 +454,7 @@ inline bool WebIDLCast<int64_t>(JSContext* cx, HandleValue value,
 template <>
 inline bool WebIDLCast<uint64_t>(JSContext* cx, HandleValue value,
                                  uint64_t* out) {
-  RootedBigInt bi(cx, ToBigInt(cx, value));
+  BigInt* bi = ToBigInt(cx, value);
   if (!bi) {
     return false;
   }
