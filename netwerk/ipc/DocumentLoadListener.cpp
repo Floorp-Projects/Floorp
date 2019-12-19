@@ -142,10 +142,6 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
   NS_IMETHOD OnStartRequest(nsIRequest* request) override {
     LOG(("ParentProcessDocumentOpenInfo OnStartRequest [this=%p]", this));
-    nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(request);
-    if (multiPartChannel) {
-      mExpectingOnAfterLastPart = true;
-    }
 
     nsresult rv = nsDocumentOpenInfo::OnStartRequest(request);
 
@@ -163,37 +159,22 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
           ("ParentProcessDocumentOpenInfo targeted to non-default listener "
            "[this=%p]",
            this));
-    }
-    return rv;
-  }
-
-  NS_IMETHOD OnStopRequest(nsIRequest* request, nsresult aStatus) override {
-    LOG(("ParentProcessDocumentOpenInfo OnStoptRequest [this=%p]", this));
-    // If we're not a multipart stream (and thus not expecting OnAfterLastPart),
-    // then this is the final OnStopRequest we'll get. If we haven't been
-    // targeting our default listener, then we need to manually notify it that
-    // we're done, and nothing further will be arriving. If we got cloned, then
-    // we don't need to do this, as only the last link needs to do it.
-    bool needToNotifyListener = false;
-    if (!mExpectingOnAfterLastPart && m_targetStreamListener != mListener &&
-        !mCloned) {
-      needToNotifyListener = true;
-    }
-
-    nsresult rv = nsDocumentOpenInfo::OnStopRequest(request, aStatus);
-
-    if (needToNotifyListener) {
-      LOG((
-          "ParentProcessDocumentOpenInfo manually notifying listener [this=%p]",
-          this));
-      // Tell the DocumentLoadListener to notify the content process that it's
-      // been entirely retargeted, and to stop waiting.
-      // Clear mListener's pointer to the DocumentLoadListener to break the
-      // reference cycle.
-      RefPtr<DocumentLoadListener> doc = do_GetInterface(ToSupports(mListener));
-      MOZ_ASSERT(doc);
-      doc->DisconnectChildListeners(NS_BINDING_RETARGETED, NS_OK);
-      mListener->SetListenerAfterRedirect(nullptr);
+      // If this is the only part, then we can immediately tell our listener
+      // that it won't be getting any content and disconnect it. For multipart
+      // channels we have to wait until we've handled all parts before we know.
+      // This does mean that the content process can still Cancel() a multipart
+      // response while the response is being handled externally, but this
+      // matches the single-process behaviour.
+      // If we got cloned, then we don't need to do this, as only the last link
+      // needs to do it.
+      // Multi-part channels are guaranteed to call OnAfterLastPart, which we
+      // forward to the listeners, so it will handle disconnection at that
+      // point.
+      nsCOMPtr<nsIMultiPartChannel> multiPartChannel =
+          do_QueryInterface(request);
+      if (!multiPartChannel && !mCloned) {
+        DisconnectChildListeners();
+      }
     }
     return rv;
   }
@@ -208,16 +189,20 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     LOG(("ParentProcessDocumentOpenInfo dtor [this=%p]", this));
   }
 
+  void DisconnectChildListeners() {
+    // Tell the DocumentLoadListener to notify the content process that it's
+    // been entirely retargeted, and to stop waiting.
+    // Clear mListener's pointer to the DocumentLoadListener to break the
+    // reference cycle.
+    RefPtr<DocumentLoadListener> doc = do_GetInterface(ToSupports(mListener));
+    MOZ_ASSERT(doc);
+    doc->DisconnectChildListeners(NS_BINDING_RETARGETED, NS_OK);
+    mListener->SetListenerAfterRedirect(nullptr);
+  }
+
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   RefPtr<ParentChannelListener> mListener;
   bool mPluginsAllowed;
-
-  /**
-   * Set to true if we got OnStartRequest called with a multipart
-   * channel, and thus expect OnAfterLastPart to be called when
-   * the channel is complete.
-   */
-  bool mExpectingOnAfterLastPart = false;
 
   /**
    * Set to true if we got cloned to create a chained listener.
