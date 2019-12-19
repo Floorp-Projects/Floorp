@@ -2,7 +2,7 @@
 
 # migrateLogins
 
-`fun migrateLogins(storage: `[`AsyncLoginsStorage`](../../../mozilla.components.service.sync.logins/-async-logins-storage/index.md)`, storageKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Logins.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L221)
+`fun migrateLogins(storage: `[`AsyncLoginsStorage`](../../../mozilla.components.service.sync.logins/-async-logins-storage/index.md)`, storageKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Logins.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L222)
 
 Enable logins migration.
 

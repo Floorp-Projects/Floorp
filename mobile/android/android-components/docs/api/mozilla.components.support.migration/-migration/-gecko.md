@@ -2,7 +2,7 @@
 
 # Gecko
 
-`object Gecko : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L63)
+`object Gecko : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L64)
 
 Migrates Gecko(View) internal files.
 
