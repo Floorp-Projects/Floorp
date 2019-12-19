@@ -12,18 +12,18 @@ REPACK_SUFFIX=tar.xz
 case "$1" in
 linux64)
     ARCH=linux-x64
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
-    SHA256SUM=08e2fcfea66746bd966ea3a89f26851f1238d96f86c33eaf6274f67fce58421a
+    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
+    SHA256SUM=b7f6dd77fb173c8c7c30d61d0702eefc236bba74398538aa77bfa2bb47bddce6
     ;;
 macosx64)
     ARCH=darwin-x64
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
-    SHA256SUM=7eac0bf398cb6ecf9f84dfc577ee84eee3d930f7a54b7e50f56d1a358b528792
+    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
+    SHA256SUM=b6ef86df44292ba65f2b9a81b99a7db8de22a313f9c5abcebb6cf17ec24e2c97
     ;;
 win64)
     ARCH=win-x64
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
-    SHA256SUM=91b779def1b21dcd1def7fc9671a869a1e2f989952e76fdc08a5d73570075f31
+    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
+    SHA256SUM=e95a63e81b27e78872c0efb9dd5809403014dbf9896035cc17adf51a350f88fa
     SUFFIX=zip
     UNARCHIVE=unzip
     REPACK_TAR_COMPRESSION_SWITCH=j
@@ -31,8 +31,8 @@ win64)
     ;;
 win32)
     ARCH=win-x86
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
-    SHA256SUM=9482a0ad7aa5cd964cbeb11a605377b5c5aae4eae952c838aecf079de6088dc6
+    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
+    SHA256SUM=3ecc0ab4c6ad957f5dfb9ca22453cd35908029fba86350fc96d070e8e5c213b5
     SUFFIX=zip
     UNARCHIVE=unzip
     REPACK_TAR_COMPRESSION_SWITCH=j
@@ -40,7 +40,7 @@ win32)
     ;;
 esac
 
-VERSION=8.11.3
+VERSION=8.17.0
 # From https://nodejs.org/en/download/
 URL=https://nodejs.org/dist/v$VERSION/node-v$VERSION-$ARCH.$SUFFIX
 ARCHIVE=node-v$VERSION-$ARCH.$SUFFIX
