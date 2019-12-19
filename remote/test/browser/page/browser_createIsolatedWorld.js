@@ -6,50 +6,59 @@
 // Test Page.createIsolatedWorld
 
 const DOC = toDataURL("default-test-page");
-const WORLD_NAME = "testWorld";
+const WORLD_NAME_1 = "testWorld1";
+const WORLD_NAME_2 = "testWorld2";
+const WORLD_NAME_3 = "testWorld3";
+const DESTROYED = "Runtime.executionContextDestroyed";
+const CREATED = "Runtime.executionContextCreated";
+const CLEARED = "Runtime.executionContextsCleared";
 
 add_task(async function createContextNoRuntimeDomain({ Page }) {
   const { frameId } = await Page.navigate({ url: DOC });
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId,
-    worldName: WORLD_NAME,
+    worldName: WORLD_NAME_1,
     grantUniversalAccess: true,
   });
   ok(typeof isolatedId == "number", "Page.createIsolatedWorld returns an id");
 });
 
 add_task(async function createContextRuntimeDisabled({ Runtime, Page }) {
-  const { promises, resolutions } = recordEvents(Runtime, 0);
+  const history = recordEvents(Runtime, 0);
   await Runtime.disable();
   info("Runtime notifications are disabled");
   const { frameId } = await Page.navigate({ url: DOC });
   await Page.createIsolatedWorld({
     frameId,
-    worldName: WORLD_NAME,
+    worldName: WORLD_NAME_2,
     grantUniversalAccess: true,
   });
-  await assertEventOrder(promises, resolutions, []);
+  await assertEventOrder({ history, expectedEvents: [] });
 });
 
 add_task(async function contextCreatedAfterNavigation({ Page, Runtime }) {
-  const { promises, resolutions } = recordEvents(Runtime, 4);
+  const history = recordEvents(Runtime, 4);
   await Runtime.enable();
   info("Runtime notifications are enabled");
   info("Navigating...");
   const { frameId } = await Page.navigate({ url: DOC });
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId,
-    worldName: WORLD_NAME,
+    worldName: WORLD_NAME_3,
     grantUniversalAccess: true,
   });
-  await assertEventOrder(promises, resolutions, [
-    "Runtime.executionContextCreated", // default, about:blank
-    "Runtime.executionContextDestroyed", // default, about:blank
-    "Runtime.executionContextCreated", // default, DOC
-    "Runtime.executionContextCreated", // isolated, DOC
-  ]);
-  const defaultContext = resolutions[2].payload.context;
-  const isolatedContext = resolutions[3].payload.context;
+  await assertEventOrder({
+    history,
+    expectedEvents: [
+      CREATED, // default, about:blank
+      DESTROYED, // default, about:blank
+      CREATED, // default, DOC
+      CREATED, // isolated, DOC
+    ],
+    timeout: 2000,
+  });
+  const defaultContext = history.events[2].payload.context;
+  const isolatedContext = history.events[3].payload.context;
   is(defaultContext.auxData.isDefault, true, "Default context is default");
   is(
     defaultContext.auxData.type,
@@ -57,30 +66,35 @@ add_task(async function contextCreatedAfterNavigation({ Page, Runtime }) {
     "Default context has type 'default'"
   );
   is(defaultContext.origin, DOC, "Default context has expected origin");
-  checkIsolated(isolatedContext, isolatedId);
+  checkIsolated(isolatedContext, isolatedId, WORLD_NAME_3);
   compareContexts(isolatedContext, defaultContext);
 });
 
 add_task(async function contextDestroyedAfterNavigation({ Page, Runtime }) {
   const { isolatedId, defaultContext } = await setupContexts(Page, Runtime);
   is(defaultContext.auxData.isDefault, true, "Default context is default");
-  const { promises, resolutions } = recordEvents(Runtime, 3);
+  const history = recordEvents(Runtime, 4, true);
   info("Navigating...");
   await Page.navigate({ url: DOC });
 
-  await assertEventOrder(promises, resolutions, [
-    "Runtime.executionContextDestroyed", // default, about:blank
-    "Runtime.executionContextDestroyed", // isolated, about:blank
-    "Runtime.executionContextCreated", // default, DOC
-  ]);
+  await assertEventOrder({
+    history,
+    expectedEvents: [
+      DESTROYED, // default, about:blank
+      DESTROYED, // isolated, about:blank
+      CLEARED,
+      CREATED, // default, DOC
+    ],
+    timeout: 2000,
+  });
   const destroyed = [
-    resolutions[0].payload.executionContextId,
-    resolutions[1].payload.executionContextId,
+    history.events[0].payload.executionContextId,
+    history.events[1].payload.executionContextId,
   ];
   ok(destroyed.includes(isolatedId), "Isolated context destroyed");
   ok(destroyed.includes(defaultContext.id), "Default context destroyed");
 
-  const newContext = resolutions[2].payload.context;
+  const newContext = history.events[3].payload.context;
   is(newContext.auxData.isDefault, true, "The new context is a default one");
   ok(!!newContext.id, "The new context has an id");
   ok(
@@ -149,11 +163,11 @@ add_task(async function contextEvaluationIsIsolated({ Page, Runtime }) {
   );
 });
 
-function checkIsolated(context, expectedId) {
+function checkIsolated(context, expectedId, expectedName) {
   ok(!!context.id, "Isolated context has an id");
   ok(!!context.origin, "Isolated context has an origin");
   ok(!!context.auxData.frameId, "Isolated context has a frameId");
-  is(context.name, WORLD_NAME, "Isolated context is named as requested");
+  is(context.name, expectedName, "Isolated context is named as requested");
   is(
     expectedId,
     context.id,
@@ -194,54 +208,54 @@ async function setupContexts(Page, Runtime) {
   const isolatedContextCreated = Runtime.executionContextCreated();
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId: defaultContext.auxData.frameId,
-    worldName: WORLD_NAME,
+    worldName: WORLD_NAME_1,
     grantUniversalAccess: true,
   });
   const isolatedContext = (await isolatedContextCreated).context;
   info("Isolated world created");
-  checkIsolated(isolatedContext, isolatedId);
+  checkIsolated(isolatedContext, isolatedId, WORLD_NAME_1);
   compareContexts(isolatedContext, defaultContext);
   return { isolatedContext, defaultContext, isolatedId };
 }
 
-function recordEvents(Runtime, total) {
-  const resolutions = [];
-  const promises = new Set();
+function recordEvents(Runtime, total, cleared = false) {
+  const history = new RecordEvents(total);
 
-  recordPromises(
-    Runtime.executionContextDestroyed,
-    "Runtime.executionContextDestroyed"
-  );
-  recordPromises(
-    Runtime.executionContextCreated,
-    "Runtime.executionContextCreated",
-    "id"
-  );
-
-  function recordPromises(event, eventName, prop) {
-    const promise = new Promise(resolve => {
-      const unsubscribe = event(payload => {
-        const propSuffix = prop ? ` for ${prop} ${payload.context[prop]}` : "";
-        const message = `Received ${eventName} ${propSuffix}`;
-        info(message);
-        resolutions.push({ eventName, payload });
-
-        if (resolutions.length > total) {
-          unsubscribe();
-          resolve();
-        }
-      });
+  history.addRecorder({
+    event: Runtime.executionContextDestroyed,
+    eventName: DESTROYED,
+    messageFn: payload => {
+      return `Received ${DESTROYED} for id ${payload.executionContextId}`;
+    },
+  });
+  history.addRecorder({
+    event: Runtime.executionContextCreated,
+    eventName: CREATED,
+    messageFn: payload => {
+      return (
+        `Received ${CREATED} for id ${payload.context.id}` +
+        ` type: ${payload.context.auxData.type}` +
+        ` name: ${payload.context.name}` +
+        ` origin: ${payload.context.origin}`
+      );
+    },
+  });
+  if (cleared) {
+    history.addRecorder({
+      event: Runtime.executionContextsCleared,
+      eventName: CLEARED,
     });
-    promises.add(promise);
   }
-  return { promises, resolutions };
+
+  return history;
 }
 
-async function assertEventOrder(promises, resolutions, expectedResolutions) {
-  await Promise.race([Promise.all(promises), timeoutPromise(1000)]);
+async function assertEventOrder(options = {}) {
+  const { history, expectedEvents, timeout = 1000 } = options;
+  const events = await history.record(timeout);
   Assert.deepEqual(
-    resolutions.map(item => item.eventName),
-    expectedResolutions,
+    events.map(item => item.eventName),
+    expectedEvents,
     "Received Runtime context events in expected order"
   );
 }
