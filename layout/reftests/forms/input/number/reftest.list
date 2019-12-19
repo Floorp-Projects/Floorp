@@ -52,4 +52,4 @@ fuzzy(0-128,0-4) == number-reframe-anon-text-field.html number-reframe-anon-text
 == pseudo-classes.html about:blank
 
 # Style inheritance:
-== number-style-inheritance.html number-style-inheritance-ref.html
+fuzzy-if(gtkWidget,0-255,0-502) == number-style-inheritance.html number-style-inheritance-ref.html # permissive due to Bug 1591613
