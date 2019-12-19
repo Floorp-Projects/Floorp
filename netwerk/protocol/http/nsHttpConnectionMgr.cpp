@@ -1241,6 +1241,11 @@ bool nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry* ent,
                                                   uint32_t caps) {
   nsHttpConnectionInfo* ci = ent->mConnInfo;
   uint32_t totalCount = TotalActiveConnections(ent);
+
+  if (ci->IsHttp3()) {
+    return totalCount > 0;
+  }
+
   uint32_t maxPersistConns = MaxPersistConnections(ent);
 
   LOG(
