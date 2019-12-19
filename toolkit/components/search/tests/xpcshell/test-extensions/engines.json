@@ -1,7 +1,6 @@
 {
   "data": [
     {
-      "engineName": "plainengine",
       "webExtension": {
         "id": "plainengine@search.mozilla.org",
         "version": "1.0"
@@ -13,7 +12,6 @@
       }]
     },
     {
-      "engineName": "special-engine",
       "webExtension": {
         "id": "special-engine@search.mozilla.org",
         "version": "1.0"
@@ -24,7 +22,6 @@
       }]
     },
     {
-      "engineName": "multilocale-an",
       "webExtension": {
         "id": "multilocale@search.mozilla.org",
         "version": "1.0",
