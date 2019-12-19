@@ -1363,8 +1363,7 @@ void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym) {
 
   MOZ_ASSERT(sym->zone()->isAtomsZone());
   MOZ_ASSERT(sym->isAligned());
-  if (JSString* desc = sym->description()) {
-    MOZ_ASSERT(desc->isAtom());
+  if (JSAtom* desc = sym->description()) {
     AssertValidStringPtr(cx, desc);
   }
 
