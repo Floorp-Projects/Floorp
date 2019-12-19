@@ -92,6 +92,7 @@ export default class LoginItem extends HTMLElement {
     this._form.addEventListener("submit", this);
     this._originInput.addEventListener("blur", this);
     this._originInput.addEventListener("click", this);
+    this._originInput.addEventListener("mousedown", this, true);
     this._originInput.addEventListener("auxclick", this);
     this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
@@ -438,6 +439,14 @@ export default class LoginItem extends HTMLElement {
 
           this._recordTelemetryEvent({ object: "new_login", method: "save" });
         }
+        break;
+      }
+      case "mousedown": {
+        // No AutoScroll when middle clicking on origin input.
+        if (event.currentTarget == this._originInput && event.button == 1) {
+          event.preventDefault();
+        }
+        break;
       }
     }
   }
