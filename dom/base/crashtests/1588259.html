@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<script>
+document.fonts.onloadingdone = () => {
+  document.forms[1].submit();
+};
+window.onload = () => {
+  document.forms[0].submit();
+  setTimeout(() => {
+    document.documentElement.removeAttribute("class");
+  }, 1000);
+};
+</script>
+<body>
+<form target="x"></form>
+<form target="x"></form>
+</body>
+</html>
