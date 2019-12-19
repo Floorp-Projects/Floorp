@@ -468,6 +468,9 @@ pref("browser.tabs.tabMinWidth", 76);
   pref("browser.tabs.drawInTitlebar", true);
 #endif
 
+//Control the visibility of Tab Manager Menu.
+pref("browser.tabs.tabmanager.enabled", false);
+
 // Offer additional drag space to the user. The drag space
 // will only be shown if browser.tabs.drawInTitlebar is true.
 pref("browser.tabs.extraDragSpace", false);
