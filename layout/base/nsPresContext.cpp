@@ -1325,9 +1325,9 @@ void nsPresContext::ThemeChangedInternal() {
   // system theme has changed.
   if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
     nsContentUtils::CallOnAllRemoteChildren(
-        window, [](BrowserParent* aBrowserParent) -> bool {
+        window, [](BrowserParent* aBrowserParent) -> CallState {
           aBrowserParent->ThemeChanged();
-          return false;
+          return CallState::Continue;
         });
   }
 }
@@ -1598,9 +1598,9 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
 void nsPresContext::SizeModeChanged(nsSizeMode aSizeMode) {
   if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
     nsContentUtils::CallOnAllRemoteChildren(
-        window, [&aSizeMode](BrowserParent* aBrowserParent) -> bool {
+        window, [&aSizeMode](BrowserParent* aBrowserParent) -> CallState {
           aBrowserParent->SizeModeChanged(aSizeMode);
-          return false;
+          return CallState::Continue;
         });
   }
   MediaFeatureValuesChangedAllDocuments(
