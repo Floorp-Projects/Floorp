@@ -437,14 +437,9 @@ MOZ_ALWAYS_INLINE bool CallJSNative(JSContext* cx, Native native,
     return false;
   }
 
-  switch (DebugAPI::onNativeCall(cx, args, reason)) {
-    case ResumeMode::Continue:
-      break;
-    case ResumeMode::Throw:
-    case ResumeMode::Terminate:
-      return false;
-    case ResumeMode::Return:
-      return true;
+  NativeResumeMode resumeMode = DebugAPI::onNativeCall(cx, args, reason);
+  if (resumeMode != NativeResumeMode::Continue) {
+    return resumeMode == NativeResumeMode::Override;
   }
 
 #ifdef DEBUG
@@ -551,14 +546,9 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
 
   // Self-hosted builtins are considered native by the onNativeCall hook.
   if (fun->isSelfHostedBuiltin()) {
-    switch (DebugAPI::onNativeCall(cx, args, reason)) {
-      case ResumeMode::Continue:
-        break;
-      case ResumeMode::Throw:
-      case ResumeMode::Terminate:
-        return false;
-      case ResumeMode::Return:
-        return true;
+    NativeResumeMode resumeMode = DebugAPI::onNativeCall(cx, args, reason);
+    if (resumeMode != NativeResumeMode::Continue) {
+      return resumeMode == NativeResumeMode::Override;
     }
   }
 
