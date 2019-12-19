@@ -1059,15 +1059,6 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
-  if (aParent) {
-    nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
-        nsPIDOMWindowOuter::From(aParent)->GetInProcessTop();
-    if (parentTopWindow) {
-      parentTopInnerWindow = parentTopWindow->GetCurrentInnerWindow();
-    }
-  }
-
   // Set to true when we're ready to return from this function.
   bool ready = false;
 
@@ -1236,12 +1227,15 @@ nsresult ContentChild::ProvideWindowCommon(
     }
   });
 
-  // Suspend our window if we have one to make sure we don't re-enter it.
-  if (parentTopInnerWindow) {
-    parentTopInnerWindow->Suspend();
-  }
-
   {
+    // Suppress event handling for all contexts in our BrowsingContextGroup so
+    // that event handlers cannot target our new window while it's still being
+    // opened. Note that pending events that were suppressed while our blocker
+    // was active will be dispatched asynchronously from a runnable dispatched
+    // to the main event loop after this function returns, not immediately when
+    // we leave this scope.
+    AutoSuppressEventHandlingAndSuspend seh(browsingContext->Group());
+
     AutoNoJSAPI nojsapi;
 
     // Spin the event loop until we get a response. Callers of this function
@@ -1252,10 +1246,6 @@ nsresult ContentChild::ProvideWindowCommon(
     MOZ_RELEASE_ASSERT(ready,
                        "We are on the main thread, so we should not exit this "
                        "loop without ready being true.");
-  }
-
-  if (parentTopInnerWindow) {
-    parentTopInnerWindow->Resume();
   }
 
   // =====================
