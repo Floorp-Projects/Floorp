@@ -2392,7 +2392,7 @@ void DebugAPI::slowPathOnNewWasmInstance(
 }
 
 /* static */
-ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
+bool DebugAPI::onTrap(JSContext* cx) {
   FrameIter iter(cx);
   JS::AutoSaveExceptionState savedExc(cx);
   Rooted<GlobalObject*> global(cx);
@@ -2425,7 +2425,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
   Vector<Breakpoint*> triggered(cx);
   for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
     if (!triggered.append(bp)) {
-      return ResumeMode::Terminate;
+      return false;
     }
   }
 
@@ -2435,7 +2435,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
     // microtasks, and vice versa.
     JS::AutoDebuggerJobQueueInterruption adjqi;
     if (!adjqi.init(cx)) {
-      return ResumeMode::Terminate;
+      return false;
     }
 
     for (Breakpoint* bp : triggered) {
@@ -2462,7 +2462,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         RootedValue scriptFrame(cx);
         if (!dbg->getFrame(cx, iter, &scriptFrame)) {
           dbg->reportUncaughtException(ar);
-          return ResumeMode::Terminate;
+          return false;
         }
 
         // Re-wrap the breakpoint's handler for the Debugger's compartment. When
@@ -2472,19 +2472,28 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         Rooted<JSObject*> handler(cx, bp->handler);
         if (!cx->compartment()->wrap(cx, &handler)) {
           dbg->reportUncaughtException(ar);
-          return ResumeMode::Terminate;
+          return false;
         }
 
         RootedValue rv(cx);
+        RootedValue rval(cx);
         bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
                                       scriptFrame.address(), &rv);
         ResumeMode resumeMode = dbg->processHandlerResult(
-            ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+            ar, ok, rv, iter.abstractFramePtr(), iter.pc(), &rval);
         adjqi.runJobs();
 
         if (resumeMode != ResumeMode::Continue) {
           savedExc.drop();
-          return resumeMode;
+
+          if (resumeMode == ResumeMode::Return) {
+            DebugAPI::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
+          } else if (resumeMode == ResumeMode::Throw) {
+            cx->setPendingExceptionAndCaptureStack(rval);
+          } else {
+            MOZ_ASSERT(resumeMode == ResumeMode::Terminate);
+          }
+          return false;
         }
 
         // Calling JS code invalidates site. Reload it.
@@ -2497,14 +2506,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
     }
   }
 
-  // By convention, return the true op to the interpreter in vp, and return
-  // undefined in vp to the wasm debug trap.
-  if (isJS) {
-    vp.setInt32(JSOp(*pc));
-  } else {
-    vp.set(UndefinedValue());
-  }
-  return ResumeMode::Continue;
+  return true;
 }
 
 /* static */

@@ -1923,25 +1923,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         }
 
         if (DebugAPI::hasBreakpointsAt(script, REGS.pc)) {
-          RootedValue rval(cx);
-          ResumeMode mode = DebugAPI::onTrap(cx, &rval);
-          switch (mode) {
-            case ResumeMode::Terminate:
-              goto error;
-            case ResumeMode::Return:
-              REGS.fp()->setReturnValue(rval);
-              if (!ForcedReturn(cx, REGS)) {
-                goto error;
-              }
-              goto successful_return_continuation;
-            case ResumeMode::Throw:
-              cx->setPendingExceptionAndCaptureStack(rval);
-              goto error;
-            default:
-              break;
+          if (!DebugAPI::onTrap(cx)) {
+            goto error;
           }
-          MOZ_ASSERT(mode == ResumeMode::Continue);
-          MOZ_ASSERT(rval.isInt32() && rval.toInt32() == op);
         }
       }
 
