@@ -39,6 +39,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
@@ -76,7 +77,6 @@
 #include "mozIStorageFunction.h"
 #include "mozIStorageProgressHandler.h"
 #include "mozIStorageService.h"
-#include "nsAutoPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
@@ -4994,7 +4994,7 @@ class ConnectionPool final {
   nsClassHashtable<nsUint64HashKey, TransactionInfo> mTransactions;
   nsTArray<TransactionInfo*> mQueuedTransactions;
 
-  nsTArray<nsAutoPtr<DatabasesCompleteCallback>> mCompleteCallbacks;
+  nsTArray<UniquePtr<DatabasesCompleteCallback>> mCompleteCallbacks;
 
   uint64_t mNextTransactionId;
   uint32_t mTotalThreadCount;
@@ -5166,7 +5166,7 @@ struct ConnectionPool::DatabaseInfo final {
 };
 
 struct ConnectionPool::DatabasesCompleteCallback final {
-  friend class nsAutoPtr<DatabasesCompleteCallback>;
+  friend class DefaultDelete<DatabasesCompleteCallback>;
 
   nsTArray<nsCString> mDatabaseIds;
   nsCOMPtr<nsIRunnable> mCallback;
@@ -11408,8 +11408,8 @@ void ConnectionPool::WaitForDatabasesToComplete(
     return;
   }
 
-  mCompleteCallbacks.EmplaceBack(
-      new DatabasesCompleteCallback(std::move(aDatabaseIds), aCallback));
+  mCompleteCallbacks.EmplaceBack(MakeUnique<DatabasesCompleteCallback>(
+      std::move(aDatabaseIds), aCallback));
 }
 
 void ConnectionPool::Shutdown() {
@@ -11952,7 +11952,7 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
   mCompleteCallbacks.RemoveElementsAt(
       std::remove_if(mCompleteCallbacks.begin(), mCompleteCallbacks.end(),
                      [& me = *this](const auto& completeCallback) {
-                       return me.MaybeFireCallback(completeCallback);
+                       return me.MaybeFireCallback(completeCallback.get());
                      }),
       mCompleteCallbacks.end());
 
