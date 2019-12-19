@@ -1147,15 +1147,14 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
 
   MOZ_ASSERT(frame->isDebuggee());
 
+  if (DebugAPI::stepModeEnabled(script) && !DebugAPI::onSingleStep(cx)) {
+    return false;
+  }
+
   RootedValue rval(cx);
   ResumeMode resumeMode = ResumeMode::Continue;
 
-  if (DebugAPI::stepModeEnabled(script)) {
-    resumeMode = DebugAPI::onSingleStep(cx, &rval);
-  }
-
-  if (resumeMode == ResumeMode::Continue &&
-      DebugAPI::hasBreakpointsAt(script, pc)) {
+  if (DebugAPI::hasBreakpointsAt(script, pc)) {
     resumeMode = DebugAPI::onTrap(cx, &rval);
   }
 

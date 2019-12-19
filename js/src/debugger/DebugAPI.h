@@ -267,7 +267,7 @@ class DebugAPI {
   static ResumeMode onTrap(JSContext* cx, MutableHandleValue vp);
 
   // Call any stepping handlers for the current scripted location.
-  static ResumeMode onSingleStep(JSContext* cx, MutableHandleValue vp);
+  static MOZ_MUST_USE bool onSingleStep(JSContext* cx);
 
   // Notify any Debugger instances observing this promise's global that a new
   // promise was allocated.
