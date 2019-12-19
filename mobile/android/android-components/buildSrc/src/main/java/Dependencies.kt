@@ -37,7 +37,7 @@ object Versions {
     object AndroidX {
         const val annotation = "1.1.0"
         const val appcompat = "1.1.0"
-        const val browser = "1.2.0-alpha07"
+        const val browser = "1.2.0"
         const val cardview = "1.0.0"
         const val constraintlayout = "1.1.3"
         const val core = "1.1.0"

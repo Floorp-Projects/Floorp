@@ -59,12 +59,12 @@ class WebAppShortcutManagerTest {
         initMocks(this)
         context = spy(testContext)
 
-        `when`(context.packageManager).thenReturn(packageManager)
-        `when`(context.getSystemService(ShortcutManager::class.java)).thenReturn(shortcutManager)
-        `when`(context.getString(R.string.mozac_feature_pwa_default_shortcut_label)).thenReturn("")
+        doReturn(packageManager).`when`(context).packageManager
+        doReturn(shortcutManager).`when`(context).getSystemService(ShortcutManager::class.java)
+        doReturn("").`when`(context).getString(R.string.mozac_feature_pwa_default_shortcut_label)
 
         manager = spy(WebAppShortcutManager(context, httpClient, storage))
-        `when`(manager.icons).thenReturn(icons)
+        doReturn(icons).`when`(manager).icons
     }
 
     @After
