@@ -90,7 +90,8 @@ class IDBDatabase final : public DOMEventTargetHelper {
  public:
   static MOZ_MUST_USE RefPtr<IDBDatabase> Create(
       IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
-      indexedDB::BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec);
+      indexedDB::BackgroundDatabaseChild* aActor,
+      UniquePtr<DatabaseSpec> aSpec);
 
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -240,7 +241,8 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
  private:
   IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
-              indexedDB::BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec);
+              indexedDB::BackgroundDatabaseChild* aActor,
+              UniquePtr<DatabaseSpec> aSpec);
 
   ~IDBDatabase();
 
