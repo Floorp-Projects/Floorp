@@ -7079,7 +7079,7 @@ class CreateFileOp final : public DatabaseOp {
  private:
   ~CreateFileOp() override = default;
 
-  nsresult CreateMutableFile(MutableFile** aMutableFile);
+  nsresult CreateMutableFile(RefPtr<MutableFile>* aMutableFile);
 
   nsresult DoDatabaseWork() override;
 
@@ -22750,7 +22750,7 @@ CreateFileOp::CreateFileOp(Database* aDatabase,
   MOZ_ASSERT(aParams.type() == DatabaseRequestParams::TCreateFileParams);
 }
 
-nsresult CreateFileOp::CreateMutableFile(MutableFile** aMutableFile) {
+nsresult CreateFileOp::CreateMutableFile(RefPtr<MutableFile>* aMutableFile) {
   nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(mFileInfo);
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
@@ -22773,7 +22773,7 @@ nsresult CreateFileOp::CreateMutableFile(MutableFile** aMutableFile) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  mutableFile.forget(aMutableFile);
+  *aMutableFile = std::move(mutableFile);
   return NS_OK;
 }
 
@@ -22853,7 +22853,7 @@ void CreateFileOp::SendResults() {
 
     if (!HasFailed()) {
       RefPtr<MutableFile> mutableFile;
-      nsresult rv = CreateMutableFile(getter_AddRefs(mutableFile));
+      nsresult rv = CreateMutableFile(&mutableFile);
       if (NS_SUCCEEDED(rv)) {
         // We successfully created a mutable file so use its actor as the
         // success result for this request.
