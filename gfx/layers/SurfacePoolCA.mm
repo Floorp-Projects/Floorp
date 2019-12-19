@@ -288,8 +288,8 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
                            LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, entry.mIOSurface.get(), 0);
   }
 
-  auto fb = gl::MozFramebuffer::CreateWith(aGL, entry.mSize, 0, aNeedsDepthBuffer,
-                                           LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  auto fb = gl::MozFramebuffer::CreateForBacking(aGL, entry.mSize, 0, aNeedsDepthBuffer,
+                                                 LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
   if (!fb) {
     // Framebuffer completeness check may have failed.
     return {};
