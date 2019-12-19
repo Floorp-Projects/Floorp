@@ -32,12 +32,16 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
   // PDocumentChannelParent
   bool RecvCancel(const nsresult& aStatus) {
-    mParent->Cancel(aStatus);
+    if (mParent) {
+      mParent->Cancel(aStatus);
+    }
     return true;
   }
   void ActorDestroy(ActorDestroyReason aWhy) override {
-    mParent->DocumentChannelBridgeDisconnected();
-    mParent = nullptr;
+    if (mParent) {
+      mParent->DocumentChannelBridgeDisconnected();
+      mParent = nullptr;
+    }
   }
 
  private:
@@ -47,6 +51,7 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
     if (CanSend()) {
       Unused << SendDisconnectChildListeners(aStatus, aLoadGroupStatus);
     }
+    mParent = nullptr;
   }
 
   void Delete() override {
