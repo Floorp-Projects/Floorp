@@ -55,7 +55,10 @@ permalink: /changelog/
     * `FxaPushSupportFeature` is now needed for integrating Firefox Accounts with Push support.
 
 * **support-test-libstate**
-  * 🆕 New component providing utilities to test functionality that relies on lib-state.    
+  * 🆕 New component providing utilities to test functionality that relies on lib-state.
+  
+* **browser-errorpages**
+  * Removed list items semantics to improve a11y for unordered lists, preventing items being read twice.
 
 * **support-locale**
     * Add `resetToSystemDefault` and `getSystemDefault` method to `LocaleManager`

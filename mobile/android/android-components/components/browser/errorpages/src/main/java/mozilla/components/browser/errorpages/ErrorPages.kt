@@ -36,6 +36,7 @@ object ErrorPages {
             .replace("%button%", context.getString(errorType.refreshButtonRes))
             .replace("%messageShort%", context.getString(errorType.titleRes))
             .replace("%messageLong%", context.getString(errorType.messageRes, uri))
+            .replace("<ul>", "<ul role=\"presentation\">")
             .replace("%css%", css)
     }
 }
