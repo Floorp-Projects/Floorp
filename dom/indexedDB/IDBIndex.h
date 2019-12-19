@@ -10,7 +10,7 @@
 #include "js/RootingAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBCursorBinding.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
@@ -46,7 +46,7 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   // it gets deleted then the metadata is copied into mDeletedMetadata and
   // mMetadata is set to point at mDeletedMetadata.
   const indexedDB::IndexMetadata* mMetadata;
-  nsAutoPtr<indexedDB::IndexMetadata> mDeletedMetadata;
+  UniquePtr<indexedDB::IndexMetadata> mDeletedMetadata;
 
   const int64_t mId;
   bool mRooted;
