@@ -2426,7 +2426,7 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
 
 void IDBObjectStore::RefreshSpec(bool aMayDelete) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mDeletedSpec, mSpec == mDeletedSpec);
+  MOZ_ASSERT_IF(mDeletedSpec, mSpec == mDeletedSpec.get());
 
   const DatabaseSpec* dbSpec = mTransaction->Database()->Spec();
   MOZ_ASSERT(dbSpec);
@@ -2453,7 +2453,7 @@ void IDBObjectStore::RefreshSpec(bool aMayDelete) {
   MOZ_ASSERT_IF(!aMayDelete && !mDeletedSpec, found);
 
   if (found) {
-    MOZ_ASSERT(mSpec != mDeletedSpec);
+    MOZ_ASSERT(mSpec != mDeletedSpec.get());
     mDeletedSpec = nullptr;
   } else {
     NoteDeletion();
@@ -2473,15 +2473,15 @@ void IDBObjectStore::NoteDeletion() {
   MOZ_ASSERT(Id() == mSpec->metadata().id());
 
   if (mDeletedSpec) {
-    MOZ_ASSERT(mDeletedSpec == mSpec);
+    MOZ_ASSERT(mDeletedSpec.get() == mSpec);
     return;
   }
 
   // Copy the spec here.
-  mDeletedSpec = new ObjectStoreSpec(*mSpec);
+  mDeletedSpec = MakeUnique<ObjectStoreSpec>(*mSpec);
   mDeletedSpec->indexes().Clear();
 
-  mSpec = mDeletedSpec;
+  mSpec = mDeletedSpec.get();
 
   for (const auto& index : mIndexes) {
     index->NoteDeletion();
