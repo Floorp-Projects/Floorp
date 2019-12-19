@@ -14,7 +14,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
-using JS::Symbol;
 using namespace js;
 
 const JSClass SymbolObject::class_ = {
@@ -77,20 +76,19 @@ const ClassSpec SymbolObject::classSpec_ = {
     properties,
     SymbolClassFinish};
 
-// ES6 rev 24 (2014 Apr 27) 19.4.1.1 and 19.4.1.2
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.1.1 Symbol ( [ description ] )
 bool SymbolObject::construct(JSContext* cx, unsigned argc, Value* vp) {
-  // According to a note in the draft standard, "Symbol has ordinary
-  // [[Construct]] behaviour but the definition of its @@create method causes
-  // `new Symbol` to throw a TypeError exception." We do not support @@create
-  // yet, so just throw a TypeError.
   CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
   if (args.isConstructing()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NOT_CONSTRUCTOR, "Symbol");
     return false;
   }
 
-  // steps 1-3
+  // Steps 2-3.
   RootedString desc(cx);
   if (!args.get(0).isUndefined()) {
     desc = ToString(cx, args.get(0));
@@ -99,9 +97,8 @@ bool SymbolObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // step 4
-  RootedSymbol symbol(cx,
-                      JS::Symbol::new_(cx, JS::SymbolCode::UniqueSymbol, desc));
+  // Step 4.
+  JS::Symbol* symbol = JS::Symbol::new_(cx, JS::SymbolCode::UniqueSymbol, desc);
   if (!symbol) {
     return false;
   }
@@ -109,17 +106,18 @@ bool SymbolObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-// ES6 rev 24 (2014 Apr 27) 19.4.2.2
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.2.2 Symbol.for ( key )
 bool SymbolObject::for_(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // steps 1-2
+  // Step 1.
   RootedString stringKey(cx, ToString(cx, args.get(0)));
   if (!stringKey) {
     return false;
   }
 
-  // steps 3-7
+  // Steps 2-6.
   JS::Symbol* symbol = JS::Symbol::for_(cx, stringKey);
   if (!symbol) {
     return false;
@@ -128,11 +126,12 @@ bool SymbolObject::for_(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-// ES6 rev 25 (2014 May 22) 19.4.2.7
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.2.6 Symbol.keyFor ( sym )
 bool SymbolObject::keyFor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // step 1
+  // Step 1.
   HandleValue arg = args.get(0);
   if (!arg.isSymbol()) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, arg,
@@ -140,36 +139,48 @@ bool SymbolObject::keyFor(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // step 2
+  // Step 2.
   if (arg.toSymbol()->code() == JS::SymbolCode::InSymbolRegistry) {
 #ifdef DEBUG
     RootedString desc(cx, arg.toSymbol()->description());
-    MOZ_ASSERT(Symbol::for_(cx, desc) == arg.toSymbol());
+    MOZ_ASSERT(JS::Symbol::for_(cx, desc) == arg.toSymbol());
 #endif
     args.rval().setString(arg.toSymbol()->description());
     return true;
   }
 
-  // step 3: omitted
-  // step 4
+  // Step 3: omitted.
+  // Step 4.
   args.rval().setUndefined();
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool IsSymbol(HandleValue v) {
+static MOZ_ALWAYS_INLINE bool IsSymbol(HandleValue v) {
   return v.isSymbol() || (v.isObject() && v.toObject().is<SymbolObject>());
 }
 
-// ES6 rev 27 (2014 Aug 24) 19.4.3.2
-bool SymbolObject::toString_impl(JSContext* cx, const CallArgs& args) {
-  // steps 1-3
-  HandleValue thisv = args.thisv();
-  MOZ_ASSERT(IsSymbol(thisv));
-  Rooted<Symbol*> sym(cx, thisv.isSymbol()
-                              ? thisv.toSymbol()
-                              : thisv.toObject().as<SymbolObject>().unbox());
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.3 Properties of the Symbol Prototype Object, thisSymbolValue.
+static MOZ_ALWAYS_INLINE JS::Symbol* ThisSymbolValue(HandleValue val) {
+  // Step 3, the error case, is handled by CallNonGenericMethod.
+  MOZ_ASSERT(IsSymbol(val));
 
-  // step 4
+  // Step 1.
+  if (val.isSymbol()) {
+    return val.toSymbol();
+  }
+
+  // Step 2.
+  return val.toObject().as<SymbolObject>().unbox();
+}
+
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.3.3 Symbol.prototype.toString ( )
+bool SymbolObject::toString_impl(JSContext* cx, const CallArgs& args) {
+  // Step 1.
+  JS::Symbol* sym = ThisSymbolValue(args.thisv());
+
+  // Step 2.
   return SymbolDescriptiveString(cx, sym, args.rval());
 }
 
@@ -178,16 +189,11 @@ bool SymbolObject::toString(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsSymbol, toString_impl>(cx, args);
 }
 
-// ES6 rev 24 (2014 Apr 27) 19.4.3.3
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.3.4 Symbol.prototype.valueOf ( )
 bool SymbolObject::valueOf_impl(JSContext* cx, const CallArgs& args) {
-  // Step 3, the error case, is handled by CallNonGenericMethod.
-  HandleValue thisv = args.thisv();
-  MOZ_ASSERT(IsSymbol(thisv));
-  if (thisv.isSymbol()) {
-    args.rval().set(thisv);
-  } else {
-    args.rval().setSymbol(thisv.toObject().as<SymbolObject>().unbox());
-  }
+  // Step 1.
+  args.rval().setSymbol(ThisSymbolValue(args.thisv()));
   return true;
 }
 
@@ -196,7 +202,8 @@ bool SymbolObject::valueOf(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsSymbol, valueOf_impl>(cx, args);
 }
 
-// ES6 19.4.3.4
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.3.5 Symbol.prototype [ @@toPrimitive ] ( hint )
 bool SymbolObject::toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -205,14 +212,13 @@ bool SymbolObject::toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsSymbol, valueOf_impl>(cx, args);
 }
 
+// ES2020 draft rev ecb4178012d6b4d9abc13fcbd45f5c6394b832ce
+// 19.4.3.2 get Symbol.prototype.description
 bool SymbolObject::descriptionGetter_impl(JSContext* cx, const CallArgs& args) {
-  // Get symbol object pointer.
-  HandleValue thisv = args.thisv();
-  MOZ_ASSERT(IsSymbol(thisv));
-  Rooted<Symbol*> sym(cx, thisv.isSymbol()
-                              ? thisv.toSymbol()
-                              : thisv.toObject().as<SymbolObject>().unbox());
+  // Steps 1-2.
+  JS::Symbol* sym = ThisSymbolValue(args.thisv());
 
+  // Step 3.
   // Return the symbol's description if present, otherwise return undefined.
   if (JSString* str = sym->description()) {
     args.rval().setString(str);
