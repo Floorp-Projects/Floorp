@@ -139,7 +139,7 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aFactory);
 
   nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = AllowedForWindowInternal(aWindow, getter_AddRefs(principal));
+  nsresult rv = AllowedForWindowInternal(aWindow, &principal);
 
   if (rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
     NS_WARNING("IndexedDB is not permitted in a third-party window.");
@@ -238,22 +238,19 @@ nsresult IDBFactory::CreateForWorker(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::T__None);
 
-  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo(aPrincipalInfo));
-
-  nsresult rv =
-      CreateInternal(aGlobal, principalInfo, aInnerWindowID, aFactory);
+  nsresult rv = CreateInternal(
+      aGlobal, nsAutoPtr<PrincipalInfo>(new PrincipalInfo(aPrincipalInfo)),
+      aInnerWindowID, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  MOZ_ASSERT(!principalInfo);
 
   return NS_OK;
 }
 
 // static
 nsresult IDBFactory::CreateForMainThreadJSInternal(
-    nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+    nsIGlobalObject* aGlobal, nsAutoPtr<PrincipalInfo> aPrincipalInfo,
     IDBFactory** aFactory) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGlobal);
@@ -265,8 +262,8 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsresult rv =
-      CreateInternal(aGlobal, aPrincipalInfo, /* aInnerWindowID */ 0, aFactory);
+  nsresult rv = CreateInternal(aGlobal, std::move(aPrincipalInfo),
+                               /* aInnerWindowID */ 0, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -276,7 +273,7 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
 
 // static
 nsresult IDBFactory::CreateInternal(nsIGlobalObject* aGlobal,
-                                    nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+                                    nsAutoPtr<PrincipalInfo> aPrincipalInfo,
                                     uint64_t aInnerWindowID,
                                     IDBFactory** aFactory) {
   MOZ_ASSERT(aGlobal);
@@ -293,7 +290,7 @@ nsresult IDBFactory::CreateInternal(nsIGlobalObject* aGlobal,
   }
 
   RefPtr<IDBFactory> factory = new IDBFactory();
-  factory->mPrincipalInfo = aPrincipalInfo.forget();
+  factory->mPrincipalInfo = std::move(aPrincipalInfo);
   factory->mGlobal = aGlobal;
   factory->mEventTarget = GetCurrentThreadEventTarget();
   factory->mInnerWindowID = aInnerWindowID;
@@ -311,8 +308,8 @@ bool IDBFactory::AllowedForWindow(nsPIDOMWindowInner* aWindow) {
 }
 
 // static
-nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
-                                              nsIPrincipal** aPrincipal) {
+nsresult IDBFactory::AllowedForWindowInternal(
+    nsPIDOMWindowInner* aWindow, nsCOMPtr<nsIPrincipal>* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
@@ -344,7 +341,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   }
 
   if (principal->IsSystemPrincipal()) {
-    principal.forget(aPrincipal);
+    *aPrincipal = std::move(principal);
     return NS_OK;
   }
 
@@ -363,7 +360,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   }
 
   if (aPrincipal) {
-    principal.forget(aPrincipal);
+    *aPrincipal = std::move(principal);
   }
   return NS_OK;
 }
