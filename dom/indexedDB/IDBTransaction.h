@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
