@@ -240,8 +240,8 @@ add_task(async function test_tabs_showhide() {
   for (let win of BrowserWindowIterator()) {
     let allTabsButton = win.document.getElementById("alltabs-button");
     is(
-      getComputedStyle(allTabsButton).visibility,
-      "collapse",
+      getComputedStyle(allTabsButton).display,
+      "none",
       "The all tabs button is hidden"
     );
   }
@@ -271,9 +271,9 @@ add_task(async function test_tabs_showhide() {
     }
 
     let allTabsButton = win.document.getElementById("alltabs-button");
-    is(
-      getComputedStyle(allTabsButton).visibility,
-      "visible",
+    isnot(
+      getComputedStyle(allTabsButton).display,
+      "none",
       "The all tabs button is visible"
     );
   }

@@ -28,7 +28,7 @@ add_task(async function setup() {
 const TEST_FOLDER_NAME = "Test folder";
 
 add_task(async function test_change_location_from_Toolbar() {
-  let newTabButton = document.getElementById("new-tab-button");
+  let newTabButton = document.getElementById("tabs-newtab-button");
 
   let children = [
     {
