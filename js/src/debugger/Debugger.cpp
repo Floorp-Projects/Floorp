@@ -246,6 +246,43 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
   frame.setReturnValue(rval);
 }
 
+static bool ApplyFrameResumeMode(JSContext* cx, AbstractFramePtr frame,
+                                 ResumeMode resumeMode, HandleValue rval,
+                                 HandleSavedFrame exnStack) {
+  switch (resumeMode) {
+    case ResumeMode::Continue:
+      break;
+
+    case ResumeMode::Throw:
+      // If we have a stack from the original throw, use it instead of
+      // associating the throw with the current execution point.
+      if (exnStack) {
+        cx->setPendingException(rval, exnStack);
+      } else {
+        cx->setPendingExceptionAndCaptureStack(rval);
+      }
+      return false;
+
+    case ResumeMode::Terminate:
+      cx->clearPendingException();
+      return false;
+
+    case ResumeMode::Return:
+      PropagateForcedReturn(cx, frame, rval);
+      return false;
+
+    default:
+      MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
+  }
+
+  return true;
+}
+static bool ApplyFrameResumeMode(JSContext* cx, AbstractFramePtr frame,
+                                 ResumeMode resumeMode, HandleValue rval) {
+  RootedSavedFrame nullStack(cx);
+  return ApplyFrameResumeMode(cx, frame, resumeMode, rval, nullStack);
+}
+
 bool js::ValueToStableChars(JSContext* cx, const char* fnname,
                             HandleValue value,
                             AutoStableStringChars& stableChars) {
@@ -740,27 +777,7 @@ bool DebugAPI::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame) {
         return dbg->fireEnterFrame(cx, &rval);
       });
 
-  switch (resumeMode) {
-    case ResumeMode::Continue:
-      break;
-
-    case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(rval);
-      return false;
-
-    case ResumeMode::Terminate:
-      cx->clearPendingException();
-      return false;
-
-    case ResumeMode::Return:
-      PropagateForcedReturn(cx, frame, rval);
-      return false;
-
-    default:
-      MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
-  }
-
-  return true;
+  return ApplyFrameResumeMode(cx, frame, resumeMode, rval);
 }
 
 /* static */
@@ -996,29 +1013,18 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
   RootedSavedFrame exnStack(cx);
   completion.get().toResumeMode(resumeMode, &value, &exnStack);
 
-  switch (resumeMode) {
-    case ResumeMode::Return:
-      frame.setReturnValue(value);
-      success = true;
-      return true;
-
-    case ResumeMode::Throw:
-      // If we have a stack from the original throw, use it instead of
-      // associating the throw with the current execution point.
-      if (exnStack) {
-        cx->setPendingException(value, exnStack);
-      } else {
-        cx->setPendingExceptionAndCaptureStack(value);
-      }
+  if (!ApplyFrameResumeMode(cx, frame, resumeMode, value, exnStack)) {
+    if (!cx->isPropagatingForcedReturn()) {
+      // If this is an exception or termination, we just propagate that along.
       return false;
+    }
 
-    case ResumeMode::Terminate:
-      MOZ_ASSERT(!cx->isExceptionPending());
-      return false;
-
-    default:
-      MOZ_CRASH("bad final onLeaveFrame resume mode");
+    // Since we are leaving the frame here, we can convert a forced return
+    // into a normal return right away.
+    cx->clearPropagatingForcedReturn();
   }
+  success = true;
+  return true;
 }
 
 /* static */
@@ -1065,25 +1071,7 @@ bool DebugAPI::slowPathOnDebuggerStatement(JSContext* cx,
         return dbg->fireDebuggerStatement(cx, &rval);
       });
 
-  switch (resumeMode) {
-    case ResumeMode::Continue:
-      break;
-    case ResumeMode::Terminate:
-      return false;
-
-    case ResumeMode::Return:
-      PropagateForcedReturn(cx, frame, rval);
-      return false;
-
-    case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(rval);
-      return false;
-
-    default:
-      MOZ_CRASH("Invalid onDebuggerStatement resume mode");
-  }
-
-  return true;
+  return ApplyFrameResumeMode(cx, frame, resumeMode, rval);
 }
 
 /* static */
@@ -1110,28 +1098,7 @@ bool DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
         return dbg->fireExceptionUnwind(cx, &rval);
       });
 
-  switch (resumeMode) {
-    case ResumeMode::Continue:
-      break;
-
-    case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(rval);
-      return false;
-
-    case ResumeMode::Terminate:
-      cx->clearPendingException();
-      return false;
-
-    case ResumeMode::Return:
-      cx->clearPendingException();
-      PropagateForcedReturn(cx, frame, rval);
-      return false;
-
-    default:
-      MOZ_CRASH("Invalid onExceptionUnwind resume mode");
-  }
-
-  return true;
+  return ApplyFrameResumeMode(cx, frame, resumeMode, rval);
 }
 
 // TODO: Remove Remove this function when all properties/methods returning a
@@ -2497,16 +2464,9 @@ bool DebugAPI::onTrap(JSContext* cx) {
             ar, ok, rv, iter.abstractFramePtr(), iter.pc(), &rval);
         adjqi.runJobs();
 
-        if (resumeMode != ResumeMode::Continue) {
+        if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode,
+                                  rval)) {
           savedExc.drop();
-
-          if (resumeMode == ResumeMode::Return) {
-            PropagateForcedReturn(cx, iter.abstractFramePtr(), rval);
-          } else if (resumeMode == ResumeMode::Throw) {
-            cx->setPendingExceptionAndCaptureStack(rval);
-          } else {
-            MOZ_ASSERT(resumeMode == ResumeMode::Terminate);
-          }
           return false;
         }
 
@@ -2628,16 +2588,9 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
           ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, &rval);
       adjqi.runJobs();
 
-      if (resumeMode != ResumeMode::Continue) {
+      if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode,
+                                rval)) {
         savedExc.drop();
-
-        if (resumeMode == ResumeMode::Return) {
-          PropagateForcedReturn(cx, iter.abstractFramePtr(), rval);
-        } else if (resumeMode == ResumeMode::Throw) {
-          cx->setPendingExceptionAndCaptureStack(rval);
-        } else {
-          MOZ_ASSERT(resumeMode == ResumeMode::Terminate);
-        }
         return false;
       }
     }
