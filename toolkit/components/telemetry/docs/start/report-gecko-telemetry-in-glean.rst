@@ -244,7 +244,7 @@ At this time, the procedure for testing that metrics are correctly exfiltrated f
 1. After adding your metric as described in the previous section, substitute the locally built GeckoView in your local copy of `Android Components <https://github.com/mozilla-mobile/android-components/>`__ as described in the `GeckoView docs <https://mozilla.github.io/geckoview/contributor/geckoview-quick-start#dependency-substiting-your-local-geckoview-into-a-mozilla-project>`__.
 2. In Android Components, follow the `instructions to enable upload <https://github.com/mozilla-mobile/android-components/tree/master/samples/browser#glean-sdk-support>`__ in the `samples-browser` application.
 3. Build Android Components and the `samples-browser` application.
-4. Use the Glean SDK `debugging features <https://mozilla.github.io/glean/book/user/debugging.html>`__ to either dump the `metrics` ping or send it to the `Glean Debug View <https://docs.telemetry.mozilla.org/concepts/glean/debug_ping_view.html>`__.
+4. Use the Glean SDK `debugging features <https://mozilla.github.io/glean/book/user/debugging/index.html>`__ to either dump the `metrics` ping or send it to the `Glean Debug View <https://docs.telemetry.mozilla.org/concepts/glean/debug_ping_view.html>`__.
 
 .. note::
 
