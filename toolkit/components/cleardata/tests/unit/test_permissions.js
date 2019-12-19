@@ -133,6 +133,16 @@ add_task(async function test_3rdpartystorage_permissions() {
     "cookie",
     Services.perms.ALLOW_ACTION
   );
+  Services.perms.addFromPrincipal(
+    oneMorePrincipal,
+    "3rdPartyStorage^https://example.net^https://example.org",
+    Services.perms.ALLOW_ACTION
+  );
+  Services.perms.addFromPrincipal(
+    oneMorePrincipal,
+    "3rdPartyStorage^https://example.org^https://example.net",
+    Services.perms.ALLOW_ACTION
+  );
 
   Assert.ok(
     Services.perms.getPermissionObject(principal, "cookie", true) != null
@@ -149,6 +159,20 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
   Assert.ok(
     Services.perms.getPermissionObject(oneMorePrincipal, "cookie", true) != null
+  );
+  Assert.ok(
+    Services.perms.getPermissionObject(
+      oneMorePrincipal,
+      "3rdPartyStorage^https://example.net^https://example.org",
+      true
+    ) != null
+  );
+  Assert.ok(
+    Services.perms.getPermissionObject(
+      oneMorePrincipal,
+      "3rdPartyStorage^https://example.org^https://example.net",
+      true
+    ) != null
   );
 
   await new Promise(aResolve => {
@@ -178,6 +202,20 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
   Assert.ok(
     Services.perms.getPermissionObject(oneMorePrincipal, "cookie", true) != null
+  );
+  Assert.ok(
+    Services.perms.getPermissionObject(
+      oneMorePrincipal,
+      "3rdPartyStorage^https://example.net^https://example.org",
+      true
+    ) == null
+  );
+  Assert.ok(
+    Services.perms.getPermissionObject(
+      oneMorePrincipal,
+      "3rdPartyStorage^https://example.org^https://example.net",
+      true
+    ) == null
   );
 
   await new Promise(aResolve => {

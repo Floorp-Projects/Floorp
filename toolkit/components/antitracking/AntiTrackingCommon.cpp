@@ -128,6 +128,27 @@ void CreatePermissionKey(const nsCString& aTrackingOrigin,
   aPermissionKey.Append(aTrackingOrigin);
 }
 
+void CreatePermissionKey(const nsCString& aTrackingOrigin,
+                         const nsCString& aGrantedOrigin,
+                         nsACString& aPermissionKey) {
+  MOZ_ASSERT(aPermissionKey.IsEmpty());
+
+  if (aTrackingOrigin == aGrantedOrigin) {
+    CreatePermissionKey(aTrackingOrigin, aPermissionKey);
+    return;
+  }
+
+  static const nsLiteralCString prefix =
+      NS_LITERAL_CSTRING(ANTITRACKING_PERM_KEY "^");
+
+  aPermissionKey.SetCapacity(prefix.Length() + 1 + aTrackingOrigin.Length() +
+                             aGrantedOrigin.Length());
+  aPermissionKey.Append(prefix);
+  aPermissionKey.Append(aTrackingOrigin);
+  aPermissionKey.AppendLiteral("^");
+  aPermissionKey.Append(aGrantedOrigin);
+}
+
 // This internal method returns ACCESS_DENY if the access is denied,
 // ACCESS_DEFAULT if unknown, some other access code if granted.
 uint32_t CheckCookiePermissionForPrincipal(nsICookieSettings* aCookieSettings,
@@ -443,6 +464,7 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
 
 void ReportUnblockingToConsole(
     nsPIDOMWindowInner* aWindow, const nsAString& aTrackingOrigin,
+    const nsAString& aGrantedOrigin,
     AntiTrackingCommon::StorageAccessGrantedReason aReason) {
   nsCOMPtr<nsIPrincipal> principal =
       nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
@@ -456,6 +478,7 @@ void ReportUnblockingToConsole(
   }
 
   nsAutoString trackingOrigin(aTrackingOrigin);
+  nsAutoString grantedOrigin(aGrantedOrigin);
 
   nsAutoString sourceLine;
   uint32_t lineNumber = 0, columnNumber = 0;
@@ -466,8 +489,8 @@ void ReportUnblockingToConsole(
 
   RefPtr<Runnable> runnable = NS_NewRunnableFunction(
       "ReportUnblockingToConsoleDelayed",
-      [doc, principal, trackingOrigin, sourceLine, lineNumber, columnNumber,
-       aReason]() {
+      [doc, principal, trackingOrigin, grantedOrigin, sourceLine, lineNumber,
+       columnNumber, aReason]() {
         nsAutoString origin;
         nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -476,24 +499,39 @@ void ReportUnblockingToConsole(
 
         // Not adding grantedOrigin yet because we may not want it later.
         AutoTArray<nsString, 3> params = {origin, trackingOrigin};
+        const char* messageWithDifferentOrigin = nullptr;
         const char* messageWithSameOrigin = nullptr;
 
         switch (aReason) {
           case AntiTrackingCommon::eStorageAccessAPI:
+            messageWithDifferentOrigin =
+                "CookieAllowedForOriginOnTrackerByStorageAccessAPI";
             messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
             break;
 
           case AntiTrackingCommon::eOpenerAfterUserInteraction:
             MOZ_FALLTHROUGH;
           case AntiTrackingCommon::eOpener:
+            messageWithDifferentOrigin =
+                "CookieAllowedForOriginOnTrackerByHeuristic";
             messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
             break;
         }
 
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Content Blocking"),
-            doc, nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin,
-            params, nullptr, sourceLine, lineNumber, columnNumber);
+        if (trackingOrigin == grantedOrigin) {
+          nsContentUtils::ReportToConsole(
+              nsIScriptError::warningFlag,
+              NS_LITERAL_CSTRING("Content Blocking"), doc,
+              nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin, params,
+              nullptr, sourceLine, lineNumber, columnNumber);
+        } else {
+          params.AppendElement(grantedOrigin);
+          nsContentUtils::ReportToConsole(
+              nsIScriptError::warningFlag,
+              NS_LITERAL_CSTRING("Content Blocking"), doc,
+              nsContentUtils::eNECKO_PROPERTIES, messageWithDifferentOrigin,
+              params, nullptr, sourceLine, lineNumber, columnNumber);
+        }
       });
 
   RunConsoleReportingRunnable(runnable.forget());
@@ -905,12 +943,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {
-    nsAutoCString origin;
-    Unused << nsContentUtils::GetASCIIOrigin(uri, origin);
-    LOG(("Adding a first-party storage exception for %s...",
-         PromiseFlatCString(origin).get()));
+  nsAutoCString origin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the origin from the URI"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
+
+  LOG(("Adding a first-party storage exception for %s...",
+       PromiseFlatCString(origin).get()));
 
   Document* parentDoc = aParentWindow->GetExtantDoc();
   if (!parentDoc) {
@@ -955,13 +996,6 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
   // We are a first party resource.
   if (outerParentWindow->IsTopLevelWindow()) {
-    nsAutoCString origin;
-    nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Can't get the origin from the URI"));
-      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-    }
-
     trackingOrigin = origin;
     trackingPrincipal = aPrincipal;
     rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
@@ -1064,11 +1098,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   }
 
   auto storePermission =
-      [pwin, parentWindow, trackingOrigin, trackingPrincipal, trackingURI,
-       topInnerWindow, topLevelStoragePrincipal,
+      [pwin, parentWindow, origin, trackingOrigin, trackingPrincipal,
+       trackingURI, topInnerWindow, topLevelStoragePrincipal,
        aReason](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
-    CreatePermissionKey(trackingOrigin, permissionKey);
+    CreatePermissionKey(trackingOrigin, origin, permissionKey);
 
     // Let's store the permission in the current parent window.
     topInnerWindow->SaveStorageAccessGranted(permissionKey);
@@ -1084,14 +1118,16 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
                                      Some(aReason));
 
     ReportUnblockingToConsole(parentWindow,
-                              NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+                              NS_ConvertUTF8toUTF16(trackingOrigin),
+                              NS_ConvertUTF8toUTF16(origin), aReason);
 
     if (XRE_IsParentProcess()) {
-      LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
+      LOG(("Saving the permission: trackingOrigin=%s, grantedOrigin=%s",
+           trackingOrigin.get(), origin.get()));
 
       return SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
                  topLevelStoragePrincipal, trackingPrincipal, trackingOrigin,
-                 aAllowMode)
+                 origin, aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                  [](FirstPartyStorageAccessGrantPromise::ResolveOrRejectValue&&
                         aValue) {
@@ -1109,15 +1145,16 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
     LOG(
         ("Asking the parent process to save the permission for us: "
-         "trackingOrigin=%s",
-         trackingOrigin.get()));
+         "trackingOrigin=%s, grantedOrigin=%s",
+         trackingOrigin.get(), origin.get()));
 
     // This is not really secure, because here we have the content process
     // sending the request of storing a permission.
     return cc
         ->SendFirstPartyStorageAccessGrantedForOrigin(
             IPC::Principal(topLevelStoragePrincipal),
-            IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode)
+            IPC::Principal(trackingPrincipal), trackingOrigin, origin,
+            aAllowMode)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                [](const ContentChild::
                       FirstPartyStorageAccessGrantedForOriginPromise::
@@ -1149,7 +1186,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 RefPtr<mozilla::AntiTrackingCommon::FirstPartyStorageAccessGrantPromise>
 AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
     nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
-    const nsCString& aTrackingOrigin, int aAllowMode) {
+    const nsCString& aTrackingOrigin, const nsCString& aGrantedOrigin,
+    int aAllowMode) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant);
 
@@ -1162,8 +1200,8 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   nsCOMPtr<nsIURI> parentPrincipalURI;
   Unused << aParentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
   LOG_SPEC(("Saving a first-party storage permission on %s for "
-            "trackingOrigin=%s",
-            _spec, aTrackingOrigin.get()),
+            "trackingOrigin=%s grantedOrigin=%s",
+            _spec, aTrackingOrigin.get(), aGrantedOrigin.get()),
            parentPrincipalURI);
 
   if (NS_WARN_IF(!aParentPrincipal)) {
@@ -1198,7 +1236,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   }
 
   nsAutoCString type;
-  CreatePermissionKey(aTrackingOrigin, type);
+  CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
 
   LOG(
       ("Computed permission key: %s, expiry: %u, proceeding to save in the "
@@ -1461,8 +1499,15 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
   Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
 
+  nsAutoCString grantedOrigin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, grantedOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
+    return false;
+  }
+
   nsAutoCString type;
-  CreatePermissionKey(trackingOrigin, type);
+  CreatePermissionKey(trackingOrigin, grantedOrigin, type);
 
   if (topInnerWindow->HasStorageAccessGranted(type)) {
     LOG(("Permission stored in the window. All good."));
@@ -1728,8 +1773,15 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
+  nsAutoCString origin;
+  rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
+    return false;
+  }
+
   nsAutoCString type;
-  CreatePermissionKey(trackingOrigin, type);
+  CreatePermissionKey(trackingOrigin, origin, type);
 
   uint32_t privateBrowsingId = 0;
   rv = channelPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
