@@ -997,11 +997,6 @@ nsresult ContentChild::ProvideWindowCommon(
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
-  browsingContext->SetPendingInitialization(true);
-  auto unsetPending = MakeScopeExit([browsingContext]() {
-    browsingContext->SetPendingInitialization(false);
-  });
-
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
 
   // The initial about:blank document we generate within the nsDocShell will
@@ -1064,6 +1059,15 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
+  nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
+  if (aParent) {
+    nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
+        nsPIDOMWindowOuter::From(aParent)->GetInProcessTop();
+    if (parentTopWindow) {
+      parentTopInnerWindow = parentTopWindow->GetCurrentInnerWindow();
+    }
+  }
+
   // Set to true when we're ready to return from this function.
   bool ready = false;
 
@@ -1074,6 +1078,7 @@ nsresult ContentChild::ProvideWindowCommon(
     rv = info.rv();
     *aWindowIsNew = info.windowOpened();
     nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
+    nsCString urlToLoad = info.urlToLoad();
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = info.dimensions();
     bool hasSiblings = info.hasSiblings();
@@ -1221,7 +1226,6 @@ nsresult ContentChild::ProvideWindowCommon(
   // SendBrowserFrameOpenWindow with information we're going to need to return
   // from this function, So we spin a nested event loop until they get back to
   // us.
-  //
 
   // Prevent the docshell from becoming active while the nested event loop is
   // spinning.
@@ -1232,15 +1236,12 @@ nsresult ContentChild::ProvideWindowCommon(
     }
   });
 
-  {
-    // Suppress event handling for all contexts in our BrowsingContextGroup so
-    // that event handlers cannot target our new window while it's still being
-    // opened. Note that pending events that were suppressed while our blocker
-    // was active will be dispatched asynchronously from a runnable dispatched
-    // to the main event loop after this function returns, not immediately when
-    // we leave this scope.
-    AutoSuppressEventHandlingAndSuspend seh(browsingContext->Group());
+  // Suspend our window if we have one to make sure we don't re-enter it.
+  if (parentTopInnerWindow) {
+    parentTopInnerWindow->Suspend();
+  }
 
+  {
     AutoNoJSAPI nojsapi;
 
     // Spin the event loop until we get a response. Callers of this function
@@ -1251,6 +1252,10 @@ nsresult ContentChild::ProvideWindowCommon(
     MOZ_RELEASE_ASSERT(ready,
                        "We are on the main thread, so we should not exit this "
                        "loop without ready being true.");
+  }
+
+  if (parentTopInnerWindow) {
+    parentTopInnerWindow->Resume();
   }
 
   // =====================
