@@ -804,8 +804,9 @@ bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
 }
 
 /* static */
-ResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
-                                          CallReason reason) {
+NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
+                                                const CallArgs& args,
+                                                CallReason reason) {
   RootedValue rval(cx);
   ResumeMode resumeMode = Debugger::dispatchHook(
       cx,
@@ -823,18 +824,18 @@ ResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
 
     case ResumeMode::Throw:
       cx->setPendingExceptionAndCaptureStack(rval);
-      break;
+      return NativeResumeMode::Abort;
 
     case ResumeMode::Terminate:
       cx->clearPendingException();
-      break;
+      return NativeResumeMode::Abort;
 
     case ResumeMode::Return:
       args.rval().set(rval);
-      break;
+      return NativeResumeMode::Override;
   }
 
-  return resumeMode;
+  return NativeResumeMode::Continue;
 }
 
 /*

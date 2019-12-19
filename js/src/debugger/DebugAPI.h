@@ -21,50 +21,40 @@ class AbstractGeneratorObject;
 class PromiseObject;
 
 /**
- * Tells how the JS engine should resume debuggee execution after firing a
- * debugger hook.  Most debugger hooks get to choose how the debuggee proceeds;
- * see js/src/doc/Debugger/Conventions.md under "Resumption Values".
- *
- * Debugger::processHandlerResult() translates between JavaScript values and
- * this enum.
- *
- * The values `ResumeMode::Throw` and `ResumeMode::Return` are always
- * associated with a value (the exception value or return value). Sometimes
- * this is represented as an explicit `JS::Value` variable or parameter,
- * declared alongside the `ResumeMode`. In other cases, especially when
- * ResumeMode is used as a return type (as in Debugger::onEnterFrame), the
- * value is stashed in `cx`'s pending exception slot or the topmost frame's
- * return value slot.
+ * DebugAPI::onNativeCall allows the debugger to call callbacks just before
+ * some native functions are to be executed. It also allows the hooks
+ * themselves to affect the result of the call. This enum represents the
+ * various affects that DebugAPI::onNativeCall may perform.
  */
-enum class ResumeMode {
+enum class NativeResumeMode {
   /**
-   * The debuggee should continue unchanged.
+   * If the debugger hook did not return a value to manipulate the result of
+   * the native call, execution can continue unchanged.
    *
-   * This corresponds to a resumption value of `undefined`.
+   * Continue indicates that the native function should execute normally.
    */
   Continue,
 
   /**
-   * Throw an exception in the debuggee.
+   * If the debugger hook returned an explicit return value that is meant to
+   * take the place of the native call's result, execution of the native
+   * function needs to be skipped in favor of the explicit result.
    *
-   * This corresponds to a resumption value of `{throw: <value>}`.
+   * Override indicates that the native function should be skipped and that
+   * the debugger has already stored the return value into the CallArgs.
    */
-  Throw,
+  Override,
 
   /**
-   * Terminate the debuggee, as if it had been cancelled via the "slow
-   * script" ribbon.
+   * If the debugger hook returns an explicit termination or an explicit
+   * thrown exception, execution of the native function needs to be skipped
+   * in favor of handling the error condition.
    *
-   * This corresponds to a resumption value of `null`.
+   * Abort indicates that the native function should be skipped and that
+   * execution should be terminated. The debugger may or may not have set a
+   * pending exception.
    */
-  Terminate,
-
-  /**
-   * Force the debuggee to return from the current frame.
-   *
-   * This corresponds to a resumption value of `{return: <value>}`.
-   */
-  Return,
+  Abort,
 };
 
 class DebugScript;
@@ -225,8 +215,9 @@ class DebugAPI {
   static inline MOZ_MUST_USE bool onResumeFrame(JSContext* cx,
                                                 AbstractFramePtr frame);
 
-  static inline ResumeMode onNativeCall(JSContext* cx, const CallArgs& args,
-                                        CallReason reason);
+  static inline NativeResumeMode onNativeCall(JSContext* cx,
+                                              const CallArgs& args,
+                                              CallReason reason);
 
   /*
    * Announce to the debugger a |debugger;| statement on has been
@@ -379,8 +370,9 @@ class DebugAPI {
                                                 AbstractFramePtr frame);
   static MOZ_MUST_USE bool slowPathOnResumeFrame(JSContext* cx,
                                                  AbstractFramePtr frame);
-  static ResumeMode slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
-                                         CallReason reason);
+  static NativeResumeMode slowPathOnNativeCall(JSContext* cx,
+                                               const CallArgs& args,
+                                               CallReason reason);
   static MOZ_MUST_USE bool slowPathOnDebuggerStatement(JSContext* cx,
                                                        AbstractFramePtr frame);
   static MOZ_MUST_USE bool slowPathOnExceptionUnwind(JSContext* cx,
