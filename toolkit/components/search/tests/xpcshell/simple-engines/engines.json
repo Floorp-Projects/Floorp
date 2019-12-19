@@ -5,6 +5,17 @@
         "id":"basic@search.mozilla.org",
         "version": "1.0"
       },
+      "telemetryId": "telemetry",
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    },
+    {
+      "webExtension": {
+        "id":"simple@search.mozilla.org",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": { "everywhere": true },
         "default": "yes"

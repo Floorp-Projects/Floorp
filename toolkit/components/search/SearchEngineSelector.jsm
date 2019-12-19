@@ -98,6 +98,7 @@ class SearchEngineSelector {
         ) {
           for (const webExtensionLocale of baseConfig.webExtension.locales) {
             const engine = { ...baseConfig };
+            engine.webExtension = { ...baseConfig.webExtension };
             engine.webExtension.locales = [
               webExtensionLocale == USER_LOCALE ? locale : webExtensionLocale,
             ];
