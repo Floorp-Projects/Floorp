@@ -659,6 +659,47 @@ already_AddRefed<mozilla::Runnable> NS_NewRunnableFunction(
       aName, std::forward<Function>(aFunction)));
 }
 
+// Creates a new object implementing nsIRunnable and nsICancelableRunnable,
+// which runs a given function on Run and clears the stored function object on a
+// call to `Cancel` (and thus destroys all objects it holds).
+template <typename Function>
+already_AddRefed<mozilla::CancelableRunnable> NS_NewCancelableRunnableFunction(
+    const char* aName, Function&& aFunc) {
+  class FuncCancelableRunnable final : public mozilla::CancelableRunnable {
+   public:
+    static_assert(std::is_void_v<decltype(
+                      std::declval<std::remove_reference_t<Function>>()())>);
+
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(FuncCancelableRunnable,
+                                         CancelableRunnable)
+
+    explicit FuncCancelableRunnable(const char* aName, Function&& aFunc)
+        : CancelableRunnable{aName},
+          mFunc{mozilla::Some(std::forward<Function>(aFunc))} {}
+
+    NS_IMETHOD Run() override {
+      MOZ_ASSERT(mFunc);
+
+      (*mFunc)();
+
+      return NS_OK;
+    }
+
+    nsresult Cancel() override {
+      mFunc.reset();
+      return NS_OK;
+    }
+
+   private:
+    ~FuncCancelableRunnable() = default;
+
+    mozilla::Maybe<std::remove_reference_t<Function>> mFunc;
+  };
+
+  return mozilla::MakeAndAddRef<FuncCancelableRunnable>(
+      aName, std::forward<Function>(aFunc));
+}
+
 namespace mozilla {
 namespace detail {
 
