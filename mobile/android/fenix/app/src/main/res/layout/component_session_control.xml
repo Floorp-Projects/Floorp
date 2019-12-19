@@ -11,4 +11,5 @@
     android:clipToPadding="false"
     android:padding="16dp"
     android:scrollbars="none"
-    android:transitionGroup="false" />
+    android:transitionGroup="false"
+    android:importantForAccessibility="no"/>
