@@ -72,7 +72,10 @@ async function startTest() {
     err => Promise.reject(`Video: error unexpectedly fired. Code ${err.code}`));
   video.src = URL.createObjectURL(blob);
   video.play();
+  await new Promise(r => video.onplaying = r);
   for (let idx = 0; idx < 2; idx++) {
+    await new Promise(r => video.onseeking = r);
+    ok(true, `waiting until video finishes seeking`);
     await new Promise(r => video.onseeked = r);
     ok(true, "video finished seeked");
   }
