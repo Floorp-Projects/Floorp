@@ -64,7 +64,9 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
       : nsDocumentOpenInfo(aFlags, false),
         mBrowsingContext(aBrowsingContext),
         mListener(aListener),
-        mPluginsAllowed(aPluginsAllowed) {}
+        mPluginsAllowed(aPluginsAllowed) {
+    LOG(("ParentProcessDocumentOpenInfo ctor [this=%p]", this));
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -139,6 +141,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
   }
 
   NS_IMETHOD OnStartRequest(nsIRequest* request) override {
+    LOG(("ParentProcessDocumentOpenInfo OnStartRequest [this=%p]", this));
     nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(request);
     if (multiPartChannel) {
       mExpectingOnAfterLastPart = true;
@@ -155,10 +158,17 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
       m_targetStreamListener = mListener;
       return m_targetStreamListener->OnStartRequest(request);
     }
+    if (m_targetStreamListener != mListener) {
+      LOG(
+          ("ParentProcessDocumentOpenInfo targeted to non-default listener "
+           "[this=%p]",
+           this));
+    }
     return rv;
   }
 
   NS_IMETHOD OnStopRequest(nsIRequest* request, nsresult aStatus) override {
+    LOG(("ParentProcessDocumentOpenInfo OnStoptRequest [this=%p]", this));
     // If we're not a multipart stream (and thus not expecting OnAfterLastPart),
     // then this is the final OnStopRequest we'll get. If we haven't been
     // targeting our default listener, then we need to manually notify it that
@@ -173,6 +183,9 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     nsresult rv = nsDocumentOpenInfo::OnStopRequest(request, aStatus);
 
     if (needToNotifyListener) {
+      LOG((
+          "ParentProcessDocumentOpenInfo manually notifying listener [this=%p]",
+          this));
       // Tell the DocumentLoadListener to notify the content process that it's
       // been entirely retargeted, and to stop waiting.
       // Clear mListener's pointer to the DocumentLoadListener to break the
@@ -191,7 +204,9 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
   }
 
  private:
-  virtual ~ParentProcessDocumentOpenInfo() = default;
+  virtual ~ParentProcessDocumentOpenInfo() {
+    LOG(("ParentProcessDocumentOpenInfo dtor [this=%p]", this));
+  }
 
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   RefPtr<ParentChannelListener> mListener;
@@ -356,6 +371,10 @@ void DocumentLoadListener::DocumentChannelBridgeDisconnected() {
 }
 
 void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
+  LOG(
+      ("DocumentLoadListener Cancel [this=%p, "
+       "aStatusCode=%" PRIx32 " ]",
+       this, static_cast<uint32_t>(aStatusCode)));
   if (mChannel && !mDoingProcessSwitch) {
     mChannel->Cancel(aStatusCode);
   }
@@ -370,6 +389,18 @@ void DocumentLoadListener::Suspend() {
 void DocumentLoadListener::Resume() {
   if (mChannel && !mDoingProcessSwitch) {
     mChannel->Resume();
+  }
+}
+
+void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
+                                                    nsresult aLoadGroupStatus) {
+  LOG(
+      ("DocumentLoadListener DisconnectChildListener [this=%p, "
+       "aStatus=%" PRIx32 " aLoadGroupStatus=%" PRIx32 " ]",
+       this, static_cast<uint32_t>(aStatus),
+       static_cast<uint32_t>(aLoadGroupStatus)));
+  if (mDocumentChannelBridge) {
+    mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
   }
 }
 
@@ -419,9 +450,8 @@ DocumentLoadListener::ReadyToVerify(nsresult aResultCode) {
 void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
   nsresult rv;
 
-  if (mDoingProcessSwitch && mDocumentChannelBridge) {
-    mDocumentChannelBridge->DisconnectChildListeners(NS_BINDING_ABORTED,
-                                                     NS_BINDING_ABORTED);
+  if (mDoingProcessSwitch) {
+    DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
   }
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
