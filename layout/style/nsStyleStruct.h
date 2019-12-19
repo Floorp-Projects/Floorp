@@ -1645,15 +1645,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   // Whether display is `inline` or `inline list-item`.
   static bool IsInlineFlow(mozilla::StyleDisplay aDisplay) {
-    return DisplayInside(aDisplay) == mozilla::StyleDisplayInside::Inline;
+    return DisplayOutside(aDisplay) == mozilla::StyleDisplayOutside::Inline &&
+           DisplayInside(aDisplay) == mozilla::StyleDisplayInside::Flow;
   }
 
   bool IsInlineFlow() const { return IsInlineFlow(mDisplay); }
 
   bool IsInlineInsideStyle() const {
     auto inside = DisplayInside();
-    return inside == mozilla::StyleDisplayInside::Inline ||
-           inside == mozilla::StyleDisplayInside::Ruby ||
+    return IsInlineFlow() || inside == mozilla::StyleDisplayInside::Ruby ||
            inside == mozilla::StyleDisplayInside::RubyBase ||
            inside == mozilla::StyleDisplayInside::RubyBaseContainer ||
            inside == mozilla::StyleDisplayInside::RubyText ||
