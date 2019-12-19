@@ -95,6 +95,45 @@ class ScriptedOnPopHandler;
 class DebuggerDebuggeeLink;
 
 /**
+ * Tells how the JS engine should resume debuggee execution after firing a
+ * debugger hook.  Most debugger hooks get to choose how the debuggee proceeds;
+ * see js/src/doc/Debugger/Conventions.md under "Resumption Values".
+ *
+ * Debugger::processHandlerResult() translates between JavaScript values and
+ * this enum.
+ */
+enum class ResumeMode {
+  /**
+   * The debuggee should continue unchanged.
+   *
+   * This corresponds to a resumption value of `undefined`.
+   */
+  Continue,
+
+  /**
+   * Throw an exception in the debuggee.
+   *
+   * This corresponds to a resumption value of `{throw: <value>}`.
+   */
+  Throw,
+
+  /**
+   * Terminate the debuggee, as if it had been cancelled via the "slow
+   * script" ribbon.
+   *
+   * This corresponds to a resumption value of `null`.
+   */
+  Terminate,
+
+  /**
+   * Force the debuggee to return from the current frame.
+   *
+   * This corresponds to a resumption value of `{return: <value>}`.
+   */
+  Return,
+};
+
+/**
  * A completion value, describing how some sort of JavaScript evaluation
  * completed. This is used to tell an onPop handler what's going on with the
  * frame, and to report the outcome of call, apply, setProperty, and getProperty
