@@ -274,6 +274,7 @@ addon-card:not([expanded]) .addon-description {
 
 /* Recommended add-ons on list views */
 .recommended-heading {
+  margin-bottom: 24px;
   margin-top: 48px;
 }
 
