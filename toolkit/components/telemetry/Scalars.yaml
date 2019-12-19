@@ -1352,13 +1352,14 @@ mathml:
     bug_numbers:
       - 1362187
       - 1538985
+      - 1590350
     description: >
       The number of documents that contained enabled MathML elements.
-    expires: "73"
+    expires: never
     kind: uint
     notification_emails:
       - emilio@mozilla.com
-      - fredw@igalia.com
+      - fred.wang@free.fr
       - dev-tech-layout@lists.mozilla.org
     release_channel_collection: opt-out
     products:
