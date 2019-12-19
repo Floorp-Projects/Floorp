@@ -33,7 +33,7 @@ class Input extends Domain {
    *        - keyIdentifier (not supported)
    *        - isSystemKey (not supported)
    */
-  async dispatchKeyEvent(options) {
+  async dispatchKeyEvent(options = {}) {
     // missing code, text, unmodifiedText, autorepeat, location, iskeypad
     const { key, modifiers, type, windowsVirtualKeyCode } = options;
     const { alt, ctrl, meta, shift } = Input.Modifier;
