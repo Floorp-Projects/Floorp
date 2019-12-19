@@ -1,8 +1,7 @@
 use crate::android::{AndroidHandler};
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-    GeckoExtensionCommand, GeckoExtensionRoute, PrintParameters,
-    XblLocatorParameters, CHROME_ELEMENT_KEY,
+    GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
@@ -879,7 +878,6 @@ impl MarionetteSession {
                 InstallAddon(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 UninstallAddon(_) => WebDriverResponse::Void,
                 TakeFullScreenshot => WebDriverResponse::Generic(resp.into_value_response(true)?),
-                Print(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
             },
         })
     }
@@ -1158,7 +1156,6 @@ impl MarionetteCommand {
                 Extension(ref extension) => match extension {
                     GetContext => (Some("Marionette:GetContext"), None),
                     InstallAddon(x) => (Some("Addon:Install"), Some(x.to_marionette())),
-                    Print(x) => (Some("WebDriver:Print"), Some(x.to_marionette())),
                     SetContext(x) => (Some("Marionette:SetContext"), Some(x.to_marionette())),
                     UninstallAddon(x) => (Some("Addon:Uninstall"), Some(x.to_marionette())),
                     XblAnonymousByAttribute(e, x) => {
@@ -1532,16 +1529,6 @@ impl ToMarionette<Map<String, Value>> for GeckoContextParameters {
             serde_json::to_value(self.context.clone())?,
         );
         Ok(data)
-    }
-}
-
-impl ToMarionette<Map<String, Value>> for PrintParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object").clone()
-        )
     }
 }
 
