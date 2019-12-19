@@ -121,7 +121,6 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 EXPORTS.mozilla += [
-    'CallState.h',
     'ContentIterator.h',
     'CORSMode.h',
     'FlushType.h',

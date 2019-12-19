@@ -22,7 +22,6 @@
 #include "js/RootingAPI.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/CallState.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/GuardObjects.h"
@@ -204,6 +203,9 @@ struct EventNameMapping {
   // mMessage is eUnidentifiedEvent. See EventNameList.h
   bool mMaybeSpecialSVGorSMILEvent;
 };
+
+typedef bool (*CallOnRemoteChildFunction)(
+    mozilla::dom::BrowserParent* aBrowserParent, void* aArg);
 
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
@@ -2738,13 +2740,11 @@ class nsContentUtils {
 
   /*
    * Call the given callback on all remote children of the given top-level
-   * window. Return Callstate::Stop from the callback to stop calling further
-   * children.
+   * window. Return true from the callback to stop calling further children.
    */
-  static void CallOnAllRemoteChildren(
-      nsPIDOMWindowOuter* aWindow,
-      const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
-          aCallback);
+  static void CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
+                                      CallOnRemoteChildFunction aCallback,
+                                      void* aArg);
 
   /*
    * Call nsPIDOMWindow::SetKeyboardIndicators all all remote children. This is
@@ -3219,10 +3219,9 @@ class nsContentUtils {
       const nsAttrValue* aAttrVal, mozilla::dom::AutocompleteInfo& aInfo,
       bool aGrantAllValidValue = false);
 
-  static mozilla::CallState CallOnAllRemoteChildren(
+  static bool CallOnAllRemoteChildren(
       mozilla::dom::MessageBroadcaster* aManager,
-      const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
-          aCallback);
+      CallOnRemoteChildFunction aCallback, void* aArg);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(

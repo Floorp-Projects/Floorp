@@ -6325,7 +6325,7 @@ nsIFrame* PresShell::EventHandler::GetNearestFrameContainingPresShell(
   return frame;
 }
 
-static CallState FlushThrottledStyles(Document& aDocument, void* aData) {
+static bool FlushThrottledStyles(Document& aDocument, void* aData) {
   PresShell* presShell = aDocument.GetPresShell();
   if (presShell && presShell->IsVisible()) {
     if (nsPresContext* presContext = presShell->GetPresContext()) {
@@ -6334,7 +6334,7 @@ static CallState FlushThrottledStyles(Document& aDocument, void* aData) {
   }
 
   aDocument.EnumerateSubDocuments(FlushThrottledStyles, nullptr);
-  return CallState::Continue;
+  return true;
 }
 
 bool PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const {
@@ -8836,11 +8836,11 @@ static void FreezeElement(nsISupports* aSupports, void* /* unused */) {
   }
 }
 
-static CallState FreezeSubDocument(Document& aDocument, void*) {
+static bool FreezeSubDocument(Document& aDocument, void*) {
   if (PresShell* presShell = aDocument.GetPresShell()) {
     presShell->Freeze();
   }
-  return CallState::Continue;
+  return true;
 }
 
 void PresShell::Freeze() {
@@ -8906,11 +8906,11 @@ static void ThawElement(nsISupports* aSupports, void* aShell) {
   }
 }
 
-static CallState ThawSubDocument(Document& aDocument, void* aData) {
+static bool ThawSubDocument(Document& aDocument, void* aData) {
   if (PresShell* presShell = aDocument.GetPresShell()) {
     presShell->Thaw();
   }
-  return CallState::Continue;
+  return true;
 }
 
 void PresShell::Thaw() {
@@ -10395,12 +10395,11 @@ void PresShell::QueryIsActive() {
 }
 
 // Helper for propagating mIsActive changes to external resources
-static CallState SetExternalResourceIsActive(Document& aDocument,
-                                             void* aClosure) {
+static bool SetExternalResourceIsActive(Document& aDocument, void* aClosure) {
   if (PresShell* presShell = aDocument.GetPresShell()) {
     presShell->SetIsActive(*static_cast<bool*>(aClosure));
   }
-  return CallState::Continue;
+  return true;
 }
 
 static void SetPluginIsActive(nsISupports* aSupports, void* aClosure) {
@@ -11195,11 +11194,11 @@ PresShell::EventHandler::HandlingTimeAccumulator::~HandlingTimeAccumulator() {
   }
 }
 
-static CallState EndPaintHelper(Document& aDocument, void* aData) {
+static bool EndPaintHelper(Document& aDocument, void* aData) {
   if (PresShell* presShell = aDocument.GetPresShell()) {
     presShell->EndPaint();
   }
-  return CallState::Continue;
+  return true;
 }
 
 void PresShell::EndPaint() {

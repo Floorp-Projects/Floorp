@@ -2262,7 +2262,8 @@ bool nsGlobalWindowInner::HasOpenerForInitialContentBrowser() {
   FORWARD_TO_OUTER(HasOpenerForInitialContentBrowser, (), false);
 }
 
-CallState nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(
+nsGlobalWindowInner::CallState
+nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(
     const nsACString& aScope, bool* aResultOut) {
   MOZ_DIAGNOSTIC_ASSERT(aResultOut);
 
@@ -5341,7 +5342,8 @@ void nsGlobalWindowInner::SyncStateFromParentWindow() {
 }
 
 template <typename Method, typename... Args>
-CallState nsGlobalWindowInner::CallOnChildren(Method aMethod, Args&... aArgs) {
+nsGlobalWindowInner::CallState nsGlobalWindowInner::CallOnChildren(
+    Method aMethod, Args&... aArgs) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsCurrentInnerWindow());
 
