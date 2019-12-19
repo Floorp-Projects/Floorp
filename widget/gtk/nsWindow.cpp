@@ -415,7 +415,7 @@ nsWindow::nsWindow() {
   mRetryPointerGrab = false;
   mWindowType = eWindowType_child;
   mSizeState = nsSizeMode_Normal;
-  mBoundsNeedSizeUpdate = false;
+  mBoundsAreValid = true;
   mAspectRatio = 0.0f;
   mLastSizeMode = nsSizeMode_Normal;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
@@ -984,8 +984,6 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
 }
 
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
-  LOG(("nsWindow::SetSizeConstraints [%p]\n", (void*)this));
-
   mSizeConstraints.mMinSize = GetSafeWindowSize(aConstraints.mMinSize);
   mSizeConstraints.mMaxSize = GetSafeWindowSize(aConstraints.mMaxSize);
 
@@ -1061,23 +1059,26 @@ void nsWindow::Show(bool aState) {
   NativeShow(aState);
 }
 
-void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  LOG(("nsWindow::Resize [%p] %f %f\n", (void*)this, aWidth, aHeight));
+void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
+                         bool aRepaint) {
+  LOG(("nsWindow::ResizeInt [%p] %d %d -> %d %d repaint %d\n", (void*)this, aX,
+       aY, aWidth, aHeight, aRepaint));
 
-  double scale =
-      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  int32_t width = NSToIntRound(scale * aWidth);
-  int32_t height = NSToIntRound(scale * aHeight);
-  ConstrainSize(&width, &height);
+  ConstrainSize(&aWidth, &aHeight);
+
+  if (aMove) {
+    mBounds.x = aX;
+    mBounds.y = aY;
+  }
 
   // For top-level windows, aWidth and aHeight should possibly be
   // interpreted as frame bounds, but NativeResize treats these as window
   // bounds (Bug 581866).
-  mBounds.SizeTo(width, height);
+  mBounds.SizeTo(aWidth, aHeight);
 
-  // We set correct mBounds in advance here. Actual mShell size is going to be
-  // confirmed set later at OnSizeAllocate().
-  mBoundsNeedSizeUpdate = false;
+  // We set correct mBounds in advance here. This can be invalided by state
+  // event.
+  mBoundsAreValid = true;
 
   // Recalculate aspect ratio when resized from DOM
   if (mAspectRatio != 0.0) {
@@ -1086,7 +1087,11 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
   if (!mCreated) return;
 
-  NativeResize();
+  if (aMove) {
+    NativeMoveResize();
+  } else {
+    NativeResize();
+  }
 
   NotifyRollupGeometryChange();
 
@@ -1096,32 +1101,32 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   }
 }
 
-void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
-                      bool aRepaint) {
-  LOG(("nsWindow::Resize [%p] %f %f repaint %d\n", (void*)this, aWidth, aHeight,
-       aRepaint));
+void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
+  LOG(("nsWindow::Resize [%p] %d %d\n", (void*)this, (int)aWidth,
+       (int)aHeight));
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   int32_t width = NSToIntRound(scale * aWidth);
   int32_t height = NSToIntRound(scale * aHeight);
-  ConstrainSize(&width, &height);
+
+  ResizeInt(0, 0, width, height, /* aMove */ false, aRepaint);
+}
+
+void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
+                      bool aRepaint) {
+  LOG(("nsWindow::Resize [%p] %d %d repaint %d\n", (void*)this, (int)aWidth,
+       (int)aHeight, aRepaint));
+
+  double scale =
+      BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
+  int32_t width = NSToIntRound(scale * aWidth);
+  int32_t height = NSToIntRound(scale * aHeight);
 
   int32_t x = NSToIntRound(scale * aX);
   int32_t y = NSToIntRound(scale * aY);
-  mBounds.x = x;
-  mBounds.y = y;
-  mBounds.SizeTo(width, height);
 
-  if (!mCreated) return;
-
-  NativeMoveResize();
-
-  NotifyRollupGeometryChange();
-
-  if (mIsTopLevel || mListenForResizes) {
-    DispatchResized();
-  }
+  ResizeInt(x, y, width, height, /* aMove */ true, aRepaint);
 }
 
 void nsWindow::Enable(bool aState) { mEnabled = aState; }
@@ -1492,21 +1497,26 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   // return if there's no shell or our current state is the same as
   // the mode we were just set to.
   if (!mShell || mSizeState == mSizeMode) {
+    LOG(("    already set"));
     return;
   }
 
   switch (aMode) {
     case nsSizeMode_Maximized:
+      LOG(("    set maximized"));
       gtk_window_maximize(GTK_WINDOW(mShell));
       break;
     case nsSizeMode_Minimized:
+      LOG(("    set minimized"));
       gtk_window_iconify(GTK_WINDOW(mShell));
       break;
     case nsSizeMode_Fullscreen:
+      LOG(("    set fullscreen"));
       MakeFullScreen(true);
       break;
 
     default:
+      LOG(("    set normal"));
       // nsSizeMode_Normal, really.
       if (mSizeState == nsSizeMode_Minimized)
         gtk_window_deiconify(GTK_WINDOW(mShell));
@@ -1514,6 +1524,10 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
         gtk_window_unmaximize(GTK_WINDOW(mShell));
       break;
   }
+
+  // Request mBounds update from configure event as we may not get
+  // OnSizeAllocate for size state changes (Bug 1489463).
+  mBoundsAreValid = false;
 
   mSizeState = mSizeMode;
 }
@@ -1699,9 +1713,9 @@ LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   rect.SizeTo(mBounds.Size());
 #if MOZ_LOGGING
   gint scale = GdkScaleFactor();
-  LOG(("GetScreenBounds %d,%d -> %d x %d, unscaled %d,%d -> %d x %d\n", rect.x,
-       rect.y, rect.width, rect.height, rect.x / scale, rect.y / scale,
-       rect.width / scale, rect.height / scale));
+  LOG(("GetScreenBounds [%p] %d,%d -> %d x %d, unscaled %d,%d -> %d x %d\n",
+       this, rect.x, rect.y, rect.width, rect.height, rect.x / scale,
+       rect.y / scale, rect.width / scale, rect.height / scale));
 #endif
   return rect;
 }
@@ -2583,8 +2597,7 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   // a ConfigureNotify event. mBounds can then be updated here.
   // This seems to also be sufficient to update mBounds when Gecko resizes
   // the window from maximized size and then immediately maximizes again.
-  if (mBoundsNeedSizeUpdate) {
-    mBoundsNeedSizeUpdate = false;
+  if (!mBoundsAreValid) {
     GtkAllocation allocation = {-1, -1, 0, 0};
     gtk_window_get_size(GTK_WINDOW(mShell), &allocation.width,
                         &allocation.height);
@@ -3475,10 +3488,6 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     LOG(("\tNot tiled\n"));
     mIsTiled = false;
   }
-
-  // Request mBounds update from configure event as we may not get
-  // OnSizeAllocate for size state changes (Bug 1489463).
-  mBoundsNeedSizeUpdate = true;
 
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(mSizeState);
@@ -4715,7 +4724,6 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
   if (mIsTransparent == isTransparent) {
     return;
   }
-  LOG(("nsWindow::SetTransparencyMode [%p] mode %d\n", this, (int)aMode));
 
   if (mWindowType != eWindowType_popup) {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1344839 reported

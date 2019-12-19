@@ -492,6 +492,8 @@ class nsWindow final : public nsBaseWidget {
   nsWindow* GetTransientForWindowIfPopup();
   bool IsHandlingTouchSequence(GdkEventSequence* aSequence);
 
+  void ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
+                 bool aRepaint);
   void NativeMoveResizeWaylandPopup(GdkPoint* aPosition, GdkRectangle* aSize);
 
   GtkTextDirection GetTextDirection();
@@ -634,7 +636,7 @@ class nsWindow final : public nsBaseWidget {
   // We can't detect size state changes correctly so set this flag
   // to force update mBounds after a size state change from a configure
   // event.
-  bool mBoundsNeedSizeUpdate;
+  bool mBoundsAreValid;
 
   static bool DragInProgress(void);
 
