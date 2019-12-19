@@ -1237,7 +1237,7 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
       AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes);
       nsContentUtils::CallOnAllRemoteChildren(
           mDocument->GetWindow(),
-          [&accessKeyInfo](BrowserParent* aBrowserParent) -> bool {
+          [&accessKeyInfo](BrowserParent* aBrowserParent) -> CallState {
             // Only forward accesskeys for the active tab.
             if (aBrowserParent->GetDocShellIsActive()) {
               // Even if there is no target for the accesskey in this process,
@@ -1249,10 +1249,10 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
               accessKeyInfo.event->MarkAsWaitingReplyFromRemoteProcess();
               aBrowserParent->HandleAccessKey(*accessKeyInfo.event,
                                               accessKeyInfo.charCodes);
-              return true;
+              return CallState::Stop;
             }
 
-            return false;
+            return CallState::Continue;
           });
     }
   }
