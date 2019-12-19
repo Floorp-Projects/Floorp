@@ -18,5 +18,6 @@ template <typename T>
 using tainted_opaque_gr = rlbox::tainted_opaque<T, rlbox_gr_sandbox_type>;
 template <typename T>
 using tainted_volatile_gr = rlbox::tainted_volatile<T, rlbox_gr_sandbox_type>;
+using rlbox::tainted_boolean_hint;
 
 #endif

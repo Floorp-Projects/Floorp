@@ -37,6 +37,7 @@
 #include "nsFontMetrics.h"
 #include "mozilla/ServoUtils.h"
 #include "TextDrawTarget.h"
+#include "ThebesRLBoxTypes.h"
 
 typedef struct _cairo cairo_t;
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
@@ -1930,7 +1931,10 @@ class gfxFont {
   bool HasSubstitutionRulesWithSpaceLookups(Script aRunScript);
 
   // do spaces participate in shaping rules? if so, can't used word cache
-  bool SpaceMayParticipateInShaping(Script aRunScript);
+  // Note that this function uses HasGraphiteSpaceContextuals, so it can only
+  // return a "hint" to the correct answer. The  calling code must ensure it
+  // performs safe actions independent of the value returned.
+  tainted_boolean_hint SpaceMayParticipateInShaping(Script aRunScript);
 
   // For 8-bit text, expand to 16-bit and then call the following method.
   bool ShapeText(DrawTarget* aContext, const uint8_t* aText,
