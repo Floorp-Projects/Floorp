@@ -231,6 +231,21 @@ static inline void NukeDebuggerWrapper(NativeObject* wrapper) {
   wrapper->setPrivate(nullptr);
 }
 
+static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
+                                  HandleValue rval) {
+  // The Debugger's hooks may return a value that affects the completion
+  // value of the given frame. For example, a hook may return `{ return: 42 }`
+  // to terminate the frame and return `42` as the final frame result.
+  // To accomplish this, the debugger treats these return values as if
+  // execution of the JS function has been terminated without a pending
+  // exception, but with a special flag. When the error is handled by the
+  // interpreter or JIT, the special flag and the error state will be cleared
+  // and execution will continue from the end of the frame.
+  MOZ_ASSERT(!cx->isExceptionPending());
+  cx->setPropagatingForcedReturn();
+  frame.setReturnValue(rval);
+}
+
 bool js::ValueToStableChars(JSContext* cx, const char* fnname,
                             HandleValue value,
                             AutoStableStringChars& stableChars) {
@@ -738,7 +753,7 @@ bool DebugAPI::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame) {
       return false;
 
     case ResumeMode::Return:
-      DebugAPI::propagateForcedReturn(cx, frame, rval);
+      PropagateForcedReturn(cx, frame, rval);
       return false;
 
     default:
@@ -1056,7 +1071,7 @@ bool DebugAPI::slowPathOnDebuggerStatement(JSContext* cx,
       return false;
 
     case ResumeMode::Return:
-      DebugAPI::propagateForcedReturn(cx, frame, rval);
+      PropagateForcedReturn(cx, frame, rval);
       return false;
 
     case ResumeMode::Throw:
@@ -1108,7 +1123,7 @@ bool DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
 
     case ResumeMode::Return:
       cx->clearPendingException();
-      DebugAPI::propagateForcedReturn(cx, frame, rval);
+      PropagateForcedReturn(cx, frame, rval);
       return false;
 
     default:
@@ -2485,7 +2500,7 @@ bool DebugAPI::onTrap(JSContext* cx) {
           savedExc.drop();
 
           if (resumeMode == ResumeMode::Return) {
-            DebugAPI::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
+            PropagateForcedReturn(cx, iter.abstractFramePtr(), rval);
           } else if (resumeMode == ResumeMode::Throw) {
             cx->setPendingExceptionAndCaptureStack(rval);
           } else {
@@ -2616,7 +2631,7 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
         savedExc.drop();
 
         if (resumeMode == ResumeMode::Return) {
-          DebugAPI::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
+          PropagateForcedReturn(cx, iter.abstractFramePtr(), rval);
         } else if (resumeMode == ResumeMode::Throw) {
           cx->setPendingExceptionAndCaptureStack(rval);
         } else {
@@ -6502,22 +6517,6 @@ void DebugAPI::handleUnrecoverableIonBailoutError(
   // honor any further Debugger hooks on the frame, and need to ensure that
   // its Debugger.Frame entry is cleaned up.
   Debugger::removeFromFrameMapsAndClearBreakpointsIn(cx, frame);
-}
-
-/* static */
-void DebugAPI::propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
-                                     HandleValue rval) {
-  // The Debugger's hooks may return a value that affects the completion
-  // value of the given frame. For example, a hook may return `{ return: 42 }`
-  // to terminate the frame and return `42` as the final frame result.
-  // To accomplish this, the debugger treats these return values as if
-  // execution of the JS function has been terminated without a pending
-  // exception, but with a special flag. When the error is handled by the
-  // interpreter or JIT, the special flag and the error state will be cleared
-  // and execution will continue from the end of the frame.
-  MOZ_ASSERT(!cx->isExceptionPending());
-  cx->setPropagatingForcedReturn();
-  frame.setReturnValue(rval);
 }
 
 /*** JS::dbg::Builder *******************************************************/
