@@ -78,7 +78,9 @@ enum nsCSSCounterDesc {
 
 namespace mozilla {
 
-enum class CountedUnknownProperty : uint8_t {
+// FIXME: The underlying type of this enum should be uint8_t, but we can't do
+// that because of https://bugs.llvm.org/show_bug.cgi?id=44228.
+enum class CountedUnknownProperty : uint32_t {
 #define COUNTED_UNKNOWN_PROPERTY(name_, method_) method_,
 #include "mozilla/CountedUnknownProperties.h"
 #undef COUNTED_UNKNOWN_PROPERTY
