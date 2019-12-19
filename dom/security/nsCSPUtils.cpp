@@ -838,10 +838,10 @@ bool nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword,
        mInvalidated ? "yes" : "false"));
 
   if (mInvalidated) {
-    // only 'self' and 'unsafe-inline' are keywords that can be ignored. Please
-    // note that the parser already translates 'self' into a uri (see assertion
-    // in constructor).
-    MOZ_ASSERT(mKeyword == CSP_UNSAFE_INLINE,
+    // only 'self', 'report-sample' and 'unsafe-inline' are keywords that can be
+    // ignored. Please note that the parser already translates 'self' into a uri
+    // (see assertion in constructor).
+    MOZ_ASSERT(mKeyword == CSP_UNSAFE_INLINE || mKeyword == CSP_REPORT_SAMPLE,
                "should only invalidate unsafe-inline");
     return false;
   }
