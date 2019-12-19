@@ -84,8 +84,8 @@ bool RangeUtils::IsValidPoints(
   }
 
   bool disconnected = false;
-  int32_t order = nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary,
-                                                &disconnected);
+  int32_t order = nsContentUtils::ComparePoints_Deprecated(
+      aStartBoundary, aEndBoundary, &disconnected);
   if (NS_WARN_IF(disconnected)) {
     return false;
   }
@@ -154,7 +154,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // is RANGE(start) <= NODE(start) ?
   bool disconnected = false;
   *aNodeIsBeforeRange =
-      nsContentUtils::ComparePoints(
+      nsContentUtils::ComparePoints_Deprecated(
           aAbstractRange->StartRef().Container(),
           *aAbstractRange->StartRef().Offset(
               RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
@@ -165,7 +165,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
 
   // is RANGE(end) >= NODE(end) ?
   *aNodeIsAfterRange =
-      nsContentUtils::ComparePoints(
+      nsContentUtils::ComparePoints_Deprecated(
           aAbstractRange->EndRef().Container(),
           *aAbstractRange->EndRef().Offset(
               RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),

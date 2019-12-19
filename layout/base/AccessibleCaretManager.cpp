@@ -1121,7 +1121,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   // Compare the active caret's new position (aOffsets) to the inactive caret's
   // position.
-  int32_t cmpToInactiveCaretPos = nsContentUtils::ComparePoints(
+  int32_t cmpToInactiveCaretPos = nsContentUtils::ComparePoints_Deprecated(
       aOffsets.content, aOffsets.StartOffset(), content, contentOffset);
 
   // Move one character (in the direction of dir) from the inactive caret's
@@ -1135,9 +1135,9 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   }
 
   // Compare the active caret's new position (aOffsets) to the limit.
-  int32_t cmpToLimit =
-      nsContentUtils::ComparePoints(aOffsets.content, aOffsets.StartOffset(),
-                                    limit.mResultContent, limit.mContentOffset);
+  int32_t cmpToLimit = nsContentUtils::ComparePoints_Deprecated(
+      aOffsets.content, aOffsets.StartOffset(), limit.mResultContent,
+      limit.mContentOffset);
 
   auto SetOffsetsToLimit = [&aOffsets, &limit]() {
     aOffsets.content = limit.mResultContent;

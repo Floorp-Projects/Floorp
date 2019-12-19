@@ -1888,10 +1888,10 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
   uint32_t offset = range->StartOffset();
 
-  int32_t e1s1 = nsContentUtils::ComparePoints(
+  int32_t e1s1 = nsContentUtils::ComparePoints_Deprecated(
       eStart->mNode, eStartOffset, parent, static_cast<int32_t>(offset));
-  int32_t e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset, parent,
-                                               static_cast<int32_t>(offset));
+  int32_t e2s1 = nsContentUtils::ComparePoints_Deprecated(
+      eEnd->mNode, eEndOffset, parent, static_cast<int32_t>(offset));
 
   if (e1s1 > 0 || e2s1 < 0) {
     // We're done if the caret is outside the current text block.
@@ -2094,10 +2094,10 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                         endContainer, endOffset);
-    e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                         startContainer, startOffset);
+    e1s2 = nsContentUtils::ComparePoints_Deprecated(eStart->mNode, eStartOffset,
+                                                    endContainer, endOffset);
+    e2s1 = nsContentUtils::ComparePoints_Deprecated(
+        eEnd->mNode, eEndOffset, startContainer, startOffset);
 
     // Break out of the loop if the text block intersects the current range.
 
@@ -2116,10 +2116,10 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   // Now that we have an intersecting range, find out more info:
 
-  e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                       startContainer, startOffset);
-  e2s2 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset, endContainer,
-                                       endOffset);
+  e1s1 = nsContentUtils::ComparePoints_Deprecated(eStart->mNode, eStartOffset,
+                                                  startContainer, startOffset);
+  e2s2 = nsContentUtils::ComparePoints_Deprecated(eEnd->mNode, eEndOffset,
+                                                  endContainer, endOffset);
 
   if (rangeCount > 1) {
     // There are multiple selection ranges, we only deal

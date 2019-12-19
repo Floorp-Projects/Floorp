@@ -138,11 +138,11 @@ struct IsItemInRangeComparator {
   nsContentUtils::ComparePointsCache* mCache;
 
   int operator()(const nsRange* const aRange) const {
-    int32_t cmp = nsContentUtils::ComparePoints(
+    int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
         mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
         static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
     if (cmp == 1) {
-      cmp = nsContentUtils::ComparePoints(
+      cmp = nsContentUtils::ComparePoints_Deprecated(
           mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
           static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
       if (cmp == -1) {
@@ -212,7 +212,7 @@ bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
           // if node end > start of middle+1, result = 1
           if (middle + 1 < high &&
               (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
-              nsContentUtils::ComparePoints(
+              nsContentUtils::ComparePoints_Deprecated(
                   aNode, static_cast<int32_t>(aEndOffset),
                   middlePlus1->GetStartContainer(),
                   static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
@@ -221,7 +221,7 @@ bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
             // if node start < end of middle - 1, result = -1
           } else if (middle >= 1 &&
                      (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
-                     nsContentUtils::ComparePoints(
+                     nsContentUtils::ComparePoints_Deprecated(
                          aNode, static_cast<int32_t>(aStartOffset),
                          middleMinus1->GetEndContainer(),
                          static_cast<int32_t>(middleMinus1->EndOffset()),
@@ -873,11 +873,11 @@ int16_t nsRange::ComparePoint(nsINode& aContainer, uint32_t aOffset,
 
   MOZ_ASSERT(point.IsSetAndValid());
 
-  const int32_t cmp = nsContentUtils::ComparePoints(point, mStart);
+  const int32_t cmp = nsContentUtils::ComparePoints_Deprecated(point, mStart);
   if (cmp <= 0) {
     return cmp;
   }
-  if (nsContentUtils::ComparePoints(mEnd, point) == -1) {
+  if (nsContentUtils::ComparePoints_Deprecated(mEnd, point) == -1) {
     return 1;
   }
 
@@ -904,11 +904,11 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
   // Steps 6-7.
   // Note: if disconnected is true, ComparePoints returns 1.
   bool disconnected = false;
-  bool result = nsContentUtils::ComparePoints(
+  bool result = nsContentUtils::ComparePoints_Deprecated(
                     mStart.Container(),
                     *mStart.Offset(RangeBoundary::OffsetFilter::kValidOffsets),
                     parent, nodeIndex + 1, &disconnected) < 0 &&
-                nsContentUtils::ComparePoints(
+                nsContentUtils::ComparePoints_Deprecated(
                     parent, nodeIndex, mEnd.Container(),
                     *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets),
                     &disconnected) < 0;
@@ -1123,7 +1123,7 @@ void nsRange::SetStart(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new start is after end.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(aPoint, mEnd) == 1) {
+      nsContentUtils::ComparePoints_Deprecated(aPoint, mEnd) == 1) {
     DoSetRange(aPoint, aPoint, newRoot);
     return;
   }
@@ -1199,7 +1199,7 @@ void nsRange::SetEnd(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new end is before start.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(mStart, aPoint) == 1) {
+      nsContentUtils::ComparePoints_Deprecated(mStart, aPoint) == 1) {
     DoSetRange(aPoint, aPoint, newRoot);
     return;
   }
@@ -1700,11 +1700,11 @@ nsresult nsRange::CutContents(DocumentFragment** aFragment) {
       RefPtr<DocumentType> doctype = commonAncestorDocument->GetDoctype();
 
       if (doctype &&
-          nsContentUtils::ComparePoints(startContainer,
-                                        static_cast<int32_t>(startOffset),
-                                        doctype, 0) < 0 &&
-          nsContentUtils::ComparePoints(doctype, 0, endContainer,
-                                        static_cast<int32_t>(endOffset)) < 0) {
+          nsContentUtils::ComparePoints_Deprecated(
+              startContainer, static_cast<int32_t>(startOffset), doctype, 0) <
+              0 &&
+          nsContentUtils::ComparePoints_Deprecated(
+              doctype, 0, endContainer, static_cast<int32_t>(endOffset)) < 0) {
         return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
       }
     }
@@ -2020,9 +2020,9 @@ int16_t nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
     return 0;
   }
 
-  return nsContentUtils::ComparePoints(ourNode, static_cast<int32_t>(ourOffset),
-                                       otherNode,
-                                       static_cast<int32_t>(otherOffset));
+  return nsContentUtils::ComparePoints_Deprecated(
+      ourNode, static_cast<int32_t>(ourOffset), otherNode,
+      static_cast<int32_t>(otherOffset));
 }
 
 /* static */

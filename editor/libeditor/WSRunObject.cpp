@@ -84,9 +84,9 @@ WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
       mStartRun(nullptr),
       mEndRun(nullptr),
       mHTMLEditor(aHTMLEditor) {
-  MOZ_ASSERT(
-      nsContentUtils::ComparePoints(aScanStartPoint.ToRawRangeBoundary(),
-                                    aScanEndPoint.ToRawRangeBoundary()) <= 0);
+  MOZ_ASSERT(nsContentUtils::ComparePoints_Deprecated(
+                 aScanStartPoint.ToRawRangeBoundary(),
+                 aScanEndPoint.ToRawRangeBoundary()) <= 0);
   GetWSNodes();
   GetRuns();
 }
@@ -1644,7 +1644,7 @@ WSRunScanner::WSFragment* WSRunScanner::FindNearestRun(
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   for (WSFragment* run = mStartRun; run; run = run->mRight) {
-    int32_t comp = run->mStartNode ? nsContentUtils::ComparePoints(
+    int32_t comp = run->mStartNode ? nsContentUtils::ComparePoints_Deprecated(
                                          aPoint.ToRawRangeBoundary(),
                                          run->StartPoint().ToRawRangeBoundary())
                                    : -1;
@@ -1654,7 +1654,7 @@ WSRunScanner::WSFragment* WSRunScanner::FindNearestRun(
       return aForward ? run : nullptr;
     }
 
-    comp = run->mEndNode ? nsContentUtils::ComparePoints(
+    comp = run->mEndNode ? nsContentUtils::ComparePoints_Deprecated(
                                aPoint.ToRawRangeBoundary(),
                                run->EndPoint().ToRawRangeBoundary())
                          : -1;
@@ -1710,8 +1710,8 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPointInternal(
   uint32_t firstNum = 0, curNum = numNodes / 2, lastNum = numNodes;
   while (curNum != lastNum) {
     Text* curNode = mNodeArray[curNum];
-    int16_t cmp = nsContentUtils::ComparePoints(aPoint.ToRawRangeBoundary(),
-                                                RawRangeBoundary(curNode, 0u));
+    int16_t cmp = nsContentUtils::ComparePoints_Deprecated(
+        aPoint.ToRawRangeBoundary(), RawRangeBoundary(curNode, 0u));
     if (cmp < 0) {
       lastNum = curNum;
     } else {
@@ -1760,8 +1760,8 @@ WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPointInternal(
   // ComparePoints(), which is expensive.
   while (curNum != lastNum) {
     Text* curNode = mNodeArray[curNum];
-    cmp = nsContentUtils::ComparePoints(aPoint.ToRawRangeBoundary(),
-                                        RawRangeBoundary(curNode, 0u));
+    cmp = nsContentUtils::ComparePoints_Deprecated(
+        aPoint.ToRawRangeBoundary(), RawRangeBoundary(curNode, 0u));
     if (cmp < 0) {
       lastNum = curNum;
     } else {

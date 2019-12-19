@@ -5628,7 +5628,7 @@ nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
 
   bool disconnected = false;
   int16_t relation = mChangedRange->StartRef().IsSet()
-                         ? nsContentUtils::ComparePoints(
+                         ? nsContentUtils::ComparePoints_Deprecated(
                                mChangedRange->StartRef(),
                                aStart.ToRawRangeBoundary(), &disconnected)
                          : 1;
@@ -5646,9 +5646,9 @@ nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
   }
 
   relation = mChangedRange->EndRef().IsSet()
-                 ? nsContentUtils::ComparePoints(mChangedRange->EndRef(),
-                                                 aEnd.ToRawRangeBoundary(),
-                                                 &disconnected)
+                 ? nsContentUtils::ComparePoints_Deprecated(
+                       mChangedRange->EndRef(), aEnd.ToRawRangeBoundary(),
+                       &disconnected)
                  : 1;
   if (NS_WARN_IF(disconnected)) {
     return NS_ERROR_FAILURE;
