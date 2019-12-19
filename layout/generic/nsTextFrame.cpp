@@ -5116,7 +5116,7 @@ void nsTextFrame::GetTextDecorations(
     // If we're on a ruby frame other than ruby text container, we
     // should continue.
     mozilla::StyleDisplay display = f->GetDisplay();
-    if (nsStyleDisplay::DisplayInside(display) != StyleDisplayInside::Inline &&
+    if (!nsStyleDisplay::IsInlineFlow(display) &&
         (!nsStyleDisplay::IsRubyDisplayType(display) ||
          display == mozilla::StyleDisplay::RubyTextContainer) &&
         nsStyleDisplay::IsDisplayTypeInlineOutside(display)) {

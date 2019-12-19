@@ -39,9 +39,9 @@ enum class StyleDisplay : uint16_t {
   Contents =
       StyleDisplayFrom(StyleDisplayOutside::None, StyleDisplayInside::Contents),
   Inline =
-      StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Inline),
+      StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Flow),
   Block =
-      StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Block),
+      StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Flow),
   FlowRoot = StyleDisplayFrom(StyleDisplayOutside::Block,
                               StyleDisplayInside::FlowRoot),
   Flex = StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Flex),
@@ -51,7 +51,7 @@ enum class StyleDisplay : uint16_t {
   InlineTable =
       StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Table),
   TableCaption = StyleDisplayFrom(StyleDisplayOutside::TableCaption,
-                                  StyleDisplayInside::Block),
+                                  StyleDisplayInside::Flow),
   Ruby =
       StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Ruby),
   WebkitBox = StyleDisplayFrom(StyleDisplayOutside::Block,
