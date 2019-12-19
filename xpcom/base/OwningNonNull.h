@@ -68,21 +68,6 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
   // Don't allow assigning nullptr, it makes no sense
   void operator=(decltype(nullptr)) = delete;
 
-  already_AddRefed<T> forget() {
-#ifdef DEBUG
-    mInited = false;
-#endif
-    return mPtr.forget();
-  }
-
-  template <class U>
-  void forget(U** aOther) {
-#ifdef DEBUG
-    mInited = false;
-#endif
-    mPtr.forget(aOther);
-  }
-
   T& ref() const {
     MOZ_ASSERT(mInited);
     MOZ_ASSERT(mPtr, "OwningNonNull<T> was set to null");
@@ -112,6 +97,18 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
     return mPtr;
   }
 
+ private:
+  void unlinkForCC() {
+#ifdef DEBUG
+    mInited = false;
+#endif
+    mPtr = nullptr;
+  }
+
+  // Allow ImplCycleCollectionUnlink to call unlinkForCC().
+  template<typename U>
+  friend void ImplCycleCollectionUnlink(OwningNonNull<U>& aField);
+
  protected:
   template <typename U>
   void init(U&& aValue) {
@@ -130,8 +127,7 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
 
 template <typename T>
 inline void ImplCycleCollectionUnlink(OwningNonNull<T>& aField) {
-  RefPtr<T> releaser(aField.forget());
-  // Now just let releaser go out of scope.
+  aField.unlinkForCC();
 }
 
 template <typename T>
