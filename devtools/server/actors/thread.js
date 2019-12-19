@@ -2276,34 +2276,6 @@ PauseActor.prototype = {
   actorPrefix: "pause",
 };
 
-/**
- * Creates an actor for handling chrome debugging. ChromeDebuggerActor is a
- * thin wrapper over ThreadActor, slightly changing some of its behavior.
- *
- * @param connection object
- *        The DebuggerServerConnection with which this ChromeDebuggerActor
- *        is associated. (Currently unused, but required to make this
- *        constructor usable with addGlobalActor.)
- *
- * @param parent object
- *        This actor's parent actor. See ThreadActor for a list of expected
- *        properties.
- */
-function ChromeDebuggerActor(connection, parent) {
-  ThreadActor.prototype.initialize.call(this, parent);
-}
-
-ChromeDebuggerActor.prototype = Object.create(ThreadActor.prototype);
-
-Object.assign(ChromeDebuggerActor.prototype, {
-  constructor: ChromeDebuggerActor,
-
-  // A constant prefix that will be used to form the actor ID by the server.
-  actorPrefix: "chromeDebugger",
-});
-
-exports.ChromeDebuggerActor = ChromeDebuggerActor;
-
 // Utility functions.
 
 /**
