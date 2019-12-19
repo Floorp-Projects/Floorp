@@ -215,28 +215,30 @@ add_task(async function test_downloader_is_accessible_via_client() {
 add_task(clear_state);
 
 add_task(async () => {
-  const client = RemoteSettings("some-collection");
+  await withFakeChannel("nightly", async () => {
+    const client = RemoteSettings("some-collection");
 
-  const record = {
-    attachment: {
-      ...RECORD.attachment,
-      location: "404-error.pem",
-    },
-  };
-
-  try {
-    await client.attachments.download(record, { retry: 0 });
-  } catch (e) {}
-
-  TelemetryTestUtils.assertEvents([
-    [
-      "uptake.remotecontent.result",
-      "uptake",
-      "remotesettings",
-      UptakeTelemetry.STATUS.DOWNLOAD_ERROR,
-      {
-        source: client.identifier,
+    const record = {
+      attachment: {
+        ...RECORD.attachment,
+        location: "404-error.pem",
       },
-    ],
-  ]);
+    };
+
+    try {
+      await client.attachments.download(record, { retry: 0 });
+    } catch (e) {}
+
+    TelemetryTestUtils.assertEvents([
+      [
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.DOWNLOAD_ERROR,
+        {
+          source: client.identifier,
+        },
+      ],
+    ]);
+  });
 });
