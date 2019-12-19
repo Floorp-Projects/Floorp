@@ -1976,7 +1976,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Simulate the system setting corresponding to 'prefers-reduced-motion'
    * media queries feature is changed to 'on' or 'off'.
    *
-   * Currently this function is available only on MacOSX.
+   * This function doesn't work on Windows.
    */
   void setPrefersReducedMotionOverrideForTest(in boolean aValue);
   /**
