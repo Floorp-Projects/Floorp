@@ -277,6 +277,7 @@ ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
             // In the fork server process
             // The server has stopped.
             MOZ_LOG(gForkServiceLog, LogLevel::Verbose, ("Terminate the fork server"));
+            NS_LogTerm();
             return true;
         }
         // Now, we are running in a content process just forked from

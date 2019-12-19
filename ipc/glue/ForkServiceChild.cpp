@@ -148,6 +148,9 @@ ForkServerLauncher::Observe(nsISupports* aSubject,
     if (mHaveStartedClient && strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         mHaveStartedClient = false;
         ForkServiceChild::StopForkServer();
+
+        // To make leak checker happy!
+        mSingleton = nullptr;
     }
     return NS_OK;
 }
