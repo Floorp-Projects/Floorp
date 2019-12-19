@@ -1,7 +1,6 @@
 {
   "data": [
     {
-      "engineName": "basic",
       "webExtension": {
         "id":"basic@search.mozilla.org",
         "version": "1.0"
