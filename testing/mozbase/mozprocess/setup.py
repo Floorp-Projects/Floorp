@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = '1.0.0'
+PACKAGE_VERSION = '1.1.0'
 
 setup(name='mozprocess',
       version=PACKAGE_VERSION,
