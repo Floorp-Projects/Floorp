@@ -1506,16 +1506,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
   requestHead->Exit();
 
-  // OnStartRequest is sent to content process successfully.
-  // Notify PHttpBackgroundChannelChild that all following IPC mesasges
-  // should be run after OnStartRequest is handled.
-  if (NS_SUCCEEDED(rv)) {
-    MOZ_ASSERT(mBgParent);
-    if (!mBgParent->OnStartRequestSent()) {
-      rv = NS_ERROR_UNEXPECTED;
-    }
-  }
-
   return rv;
 }
 
