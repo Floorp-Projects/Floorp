@@ -1014,7 +1014,8 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
                                       NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
                                       aPriority, aOpener);
   }
-  {
+
+  if (recordReplayState == eNotRecordingOrReplaying) {
     RefPtr<ContentParent> existing = GetUsedBrowserProcess(
         aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
     if (existing != nullptr) {
