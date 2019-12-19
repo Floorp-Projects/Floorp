@@ -7551,7 +7551,7 @@ class IndexRequestOpBase : public NormalTransactionOp {
   ~IndexRequestOpBase() override = default;
 
  private:
-  static already_AddRefed<FullIndexMetadata> IndexMetadataForParams(
+  static RefPtr<FullIndexMetadata> IndexMetadataForParams(
       const TransactionBase& aTransaction, const RequestParams& aParams);
 };
 
@@ -25484,7 +25484,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
 }
 
 // static
-already_AddRefed<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
+RefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
     const TransactionBase& aTransaction, const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() == RequestParams::TIndexGetParams ||
@@ -25544,7 +25544,7 @@ already_AddRefed<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
       aTransaction.GetMetadataForIndexId(objectStoreMetadata, indexId);
   MOZ_ASSERT(indexMetadata);
 
-  return indexMetadata.forget();
+  return indexMetadata;
 }
 
 IndexGetRequestOp::IndexGetRequestOp(RefPtr<TransactionBase> aTransaction,
