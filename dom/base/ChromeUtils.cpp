@@ -693,6 +693,9 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
     PROCTYPE_TO_WEBIDL_CASE(RDD, Rdd);
     PROCTYPE_TO_WEBIDL_CASE(Socket, Socket);
     PROCTYPE_TO_WEBIDL_CASE(RemoteSandboxBroker, RemoteSandboxBroker);
+#ifdef MOZ_ENABLE_FORKSERVER
+    PROCTYPE_TO_WEBIDL_CASE(ForkServer, ForkServer);
+#endif
     PROCTYPE_TO_WEBIDL_CASE(Unknown, Unknown);
   }
 
@@ -803,6 +806,11 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     case GeckoProcessType::GeckoProcessType_RemoteSandboxBroker:
                       type = mozilla::ProcType::RemoteSandboxBroker;
                       break;
+#ifdef MOZ_ENABLE_FORKSERVER
+                    case GeckoProcessType::GeckoProcessType_ForkServer:
+                      type = mozilla::ProcType::ForkServer;
+                      break;
+#endif
                     default:
                       // Leave the default Unknown value in |type|.
                       break;
