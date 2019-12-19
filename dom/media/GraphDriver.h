@@ -658,7 +658,7 @@ class AudioCallbackDriver : public GraphDriver,
   /* Start the cubeb stream */
   bool StartStream();
   friend class AsyncCubebTask;
-  bool Init();
+  void Init();
   void Stop();
   /**
    *  Fall back to a SystemClockDriver using a normal thread. If needed,
