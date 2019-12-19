@@ -1,18 +1,18 @@
 {
-  "name": "Simple Engine",
+  "name": "bug645970",
   "manifest_version": 2,
   "version": "1.0",
-  "description": "Simple engine with a different name from the WebExtension id prefix",
+  "description": "bug645970",
   "applications": {
     "gecko": {
-      "id": "simple@search.mozilla.org"
+      "id": "bug645970@search.mozilla.org"
     }
   },
   "hidden": true,
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "Simple Engine",
-      "search_url": "https://example.com",
+      "name": "bug645970",
+      "search_url": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
       "params": [
         {
           "name": "search",
@@ -23,7 +23,7 @@
           "value": "Mozilla-search"
         }
       ],
-      "suggest_url": "https://example.com?search={searchTerms}"
+      "suggest_url": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
     }
   }
 }

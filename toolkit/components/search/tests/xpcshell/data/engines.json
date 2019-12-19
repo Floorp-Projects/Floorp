@@ -1,6 +1,7 @@
 {
   "data": [
     {
+      "engineName": "engine",
       "webExtension": {
         "id": "engine@search.mozilla.org",
         "version": "1.0"
@@ -12,6 +13,7 @@
       }]
     },
     {
+      "engineName": "engine-pref",
       "webExtension": {
         "id": "engine-pref@search.mozilla.org",
         "version": "1.0"
@@ -25,6 +27,7 @@
       }]
     },
     {
+      "engineName": "engine-rel-searchform-purpose",
       "webExtension": {
         "id": "engine-rel-searchform-purpose@search.mozilla.org",
         "version": "1.0"
@@ -37,6 +40,7 @@
       }]
     },
     {
+      "engineName": "engine-chromeicon",
       "webExtension": {
         "id": "engine-chromeicon@search.mozilla.org",
         "version": "1.0"
@@ -52,6 +56,7 @@
       }]
     },
     {
+      "engineName": "engine-resourceicon",
       "webExtension": {
         "id": "engine-resourceicon@search.mozilla.org",
         "version": "1.0"
@@ -66,6 +71,7 @@
       }]
     },
     {
+      "engineName": "engine-reordered",
       "webExtension": {
         "id": "engine-reordered@search.mozilla.org",
         "version": "1.0"

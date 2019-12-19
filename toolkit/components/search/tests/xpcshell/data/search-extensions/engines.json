@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "engineName": "bug645970",
+      "webExtension": {
+        "id":"bug645970@search.mozilla.org",
+        "version": "1.0"
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true },
+        "default": "yes"
+      }]
+    }
+  ]
+}
