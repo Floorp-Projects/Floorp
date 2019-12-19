@@ -18,6 +18,7 @@ const createDummyRecommendation = ({
 }) => {
   let recommendation = {
     template,
+    groups: ["mochitest-group"],
     content: {
       layout: layout || "addon_recommendation",
       category,
@@ -930,4 +931,15 @@ add_task(async function test_cfr_notification_keyboard() {
   EventUtils.synthesizeKey("KEY_Escape");
   await hidden;
   Assert.ok(true, "Panel hidden after Escape pressed");
+});
+
+add_task(function test_updateCycleForProviders() {
+  Services.prefs
+    .getChildList("browser.newtabpage.activity-stream.asrouter.providers.")
+    .forEach(provider => {
+      const prefValue = JSON.parse(Services.prefs.getStringPref(provider, ""));
+      if (prefValue.type === "remote-settings") {
+        Assert.ok(prefValue.updateCycleInMs);
+      }
+    });
 });

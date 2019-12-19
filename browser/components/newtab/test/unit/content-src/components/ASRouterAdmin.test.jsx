@@ -195,11 +195,19 @@ describe("ASRouterAdmin", () => {
           messageFilter: "all",
           messageBlockList: [],
           messageImpressions: { foo: 2 },
+          groups: [{ id: "messageProvider", enabled: true }],
+          providers: [{ id: "messageProvider", enabled: true }],
         });
       });
       it("should render a message when no filtering is applied", () => {
         wrapper.setState({
-          messages: [{ id: "foo" }],
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
         });
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
@@ -218,7 +226,13 @@ describe("ASRouterAdmin", () => {
       });
       it("should render a blocked message", () => {
         wrapper.setState({
-          messages: [{ id: "foo" }],
+          messages: [
+            {
+              id: "foo",
+              groups: ["messageProvider"],
+              provider: "messageProvider",
+            },
+          ],
           messageBlockList: ["foo"],
         });
         assert.lengthOf(wrapper.find(".message-item.blocked"), 1);
@@ -238,7 +252,13 @@ describe("ASRouterAdmin", () => {
       it("should render a message if provider matches filter", () => {
         wrapper.setState({
           messageFilter: "messageProvider",
-          messages: [{ id: "foo", provider: "messageProvider" }],
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
         });
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
@@ -246,7 +266,13 @@ describe("ASRouterAdmin", () => {
       it("should override with the selected message", () => {
         wrapper.setState({
           messageFilter: "messageProvider",
-          messages: [{ id: "foo", provider: "messageProvider" }],
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
         });
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
@@ -266,7 +292,13 @@ describe("ASRouterAdmin", () => {
       it("should hide message if provider filter changes", () => {
         wrapper.setState({
           messageFilter: "messageProvider",
-          messages: [{ id: "foo", provider: "messageProvider" }],
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
         });
 
         assert.lengthOf(wrapper.find(".message-id"), 1);

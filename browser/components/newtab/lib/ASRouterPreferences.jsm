@@ -195,11 +195,9 @@ class _ASRouterPreferences {
     this._callbacks.forEach(cb => cb(aPrefName));
   }
 
-  getUserPreference(providerId) {
-    if (!USER_PREFERENCES[providerId]) {
-      return null;
-    }
-    return Services.prefs.getBoolPref(USER_PREFERENCES[providerId], true);
+  getUserPreference(name) {
+    const prefName = USER_PREFERENCES[name] || name;
+    return Services.prefs.getBoolPref(prefName, true);
   }
 
   getAllUserPreferences() {
