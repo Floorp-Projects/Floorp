@@ -659,6 +659,37 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
+  renderWNMessageItem(msg) {
+    const isBlocked =
+      this.state.messageBlockList.includes(msg.id) ||
+      this.state.messageBlockList.includes(msg.campaign);
+    const impressions = this.state.messageImpressions[msg.id]
+      ? this.state.messageImpressions[msg.id].length
+      : 0;
+
+    let itemClassName = "message-item";
+    if (isBlocked) {
+      itemClassName += " blocked";
+    }
+
+    return (
+      <tr className={itemClassName} key={`${msg.id}-${msg.provider}`}>
+        <td className="message-id">
+          <span>
+            {msg.id} <br />
+            <br />({impressions} impressions)
+          </span>
+        </td>
+        <td>
+          <input type="checkbox" value="Show" />
+        </td>
+        <td className="message-summary">
+          <pre>{JSON.stringify(msg, null, 2)}</pre>
+        </td>
+      </tr>
+    );
+  }
+
   renderMessages() {
     if (!this.state.messages) {
       return null;
@@ -676,6 +707,22 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
+  renderWNMessages() {
+    if (!this.state.messages) {
+      return null;
+    }
+    const messagesToShow = this.state.messages.filter(
+      message => message.provider === "whats-new-panel"
+    );
+    return (
+      <table>
+        <tbody>
+          {messagesToShow.map(msg => this.renderWNMessageItem(msg))}
+        </tbody>
+      </table>
+    );
+  }
+
   renderMessageFilter() {
     if (!this.state.providers) {
       return null;
@@ -683,8 +730,8 @@ export class ASRouterAdminInner extends React.PureComponent {
     return (
       <p>
         {/* eslint-disable-next-line prettier/prettier */}
-      Show messages from{" "}
-      {/* eslint-disable-next-line jsx-a11y/no-onchange */}
+        Show messages from{" "}
+        {/* eslint-disable-next-line jsx-a11y/no-onchange */}
         <select
           value={this.state.messageFilter}
           onChange={this.onChangeMessageFilter}
@@ -1151,9 +1198,26 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
+  renderWNPTests() {
+    return (
+      <div>
+        <button>Force What's New Panel</button>
+        <h2>Messages</h2>
+        {this.renderWNMessages()}
+      </div>
+    );
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
+      case "wnpanel":
+        return (
+          <React.Fragment>
+            <h2>What's New Panel</h2>
+            {this.renderWNPTests()}
+          </React.Fragment>
+        );
       case "targeting":
         return (
           <React.Fragment>
@@ -1257,6 +1321,9 @@ export class ASRouterAdminInner extends React.PureComponent {
           <ul>
             <li>
               <a href="#devtools">General</a>
+            </li>
+            <li>
+              <a href="#devtools-wnpanel">What's New Panel</a>
             </li>
             <li>
               <a href="#devtools-targeting">Targeting</a>
