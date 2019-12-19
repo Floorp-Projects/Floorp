@@ -60,8 +60,8 @@ using namespace mozilla::ipc;
 
 class FileManagerInfo {
  public:
-  already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
-                                               const nsAString& aName) const;
+  MOZ_MUST_USE RefPtr<FileManager> GetFileManager(
+      PersistenceType aPersistenceType, const nsAString& aName) const;
 
   void AddFileManager(FileManager* aFileManager);
 
@@ -683,7 +683,7 @@ void IndexedDatabaseManager::ClearBackgroundActor() {
   mBackgroundActor = nullptr;
 }
 
-already_AddRefed<FileManager> IndexedDatabaseManager::GetFileManager(
+RefPtr<FileManager> IndexedDatabaseManager::GetFileManager(
     PersistenceType aPersistenceType, const nsACString& aOrigin,
     const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
@@ -693,10 +693,7 @@ already_AddRefed<FileManager> IndexedDatabaseManager::GetFileManager(
     return nullptr;
   }
 
-  RefPtr<FileManager> fileManager =
-      info->GetFileManager(aPersistenceType, aDatabaseName);
-
-  return fileManager.forget();
+  return info->GetFileManager(aPersistenceType, aDatabaseName);
 }
 
 void IndexedDatabaseManager::AddFileManager(FileManager* aFileManager) {
@@ -862,7 +859,7 @@ const nsCString& IndexedDatabaseManager::GetLocale() {
   return idbManager->mLocale;
 }
 
-already_AddRefed<FileManager> FileManagerInfo::GetFileManager(
+RefPtr<FileManager> FileManagerInfo::GetFileManager(
     PersistenceType aPersistenceType, const nsAString& aName) const {
   AssertIsOnIOThread();
 
@@ -872,7 +869,7 @@ already_AddRefed<FileManager> FileManagerInfo::GetFileManager(
   const auto foundIt =
       std::find_if(managers.cbegin(), end, DatabaseNameMatchPredicate(&aName));
 
-  return foundIt != end ? RefPtr<FileManager>{*foundIt}.forget() : nullptr;
+  return foundIt != end ? *foundIt : nullptr;
 }
 
 void FileManagerInfo::AddFileManager(FileManager* aFileManager) {

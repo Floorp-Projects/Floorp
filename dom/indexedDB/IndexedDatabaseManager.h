@@ -103,9 +103,9 @@ class IndexedDatabaseManager final {
 
   void ClearBackgroundActor();
 
-  already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
-                                               const nsACString& aOrigin,
-                                               const nsAString& aDatabaseName);
+  MOZ_MUST_USE RefPtr<FileManager> GetFileManager(
+      PersistenceType aPersistenceType, const nsACString& aOrigin,
+      const nsAString& aDatabaseName);
 
   void AddFileManager(FileManager* aFileManager);
 
