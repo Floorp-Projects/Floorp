@@ -198,7 +198,7 @@ class Page extends ContentProcessDomain {
    * @param {boolean} options.enabled
    *     If true, starts emitting lifecycle events.
    */
-  setLifecycleEventsEnabled(options) {
+  setLifecycleEventsEnabled(options = {}) {
     const { enabled } = options;
 
     this.lifecycleEnabled = enabled;

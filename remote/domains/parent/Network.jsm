@@ -80,7 +80,7 @@ class Network extends Domain {
    *
    * Redirected to Emulation.setUserAgentOverride.
    */
-  setUserAgentOverride(options) {
+  setUserAgentOverride(options = {}) {
     const { id } = this.session;
     this.session.execute(id, "Emulation", "setUserAgentOverride", options);
   }
