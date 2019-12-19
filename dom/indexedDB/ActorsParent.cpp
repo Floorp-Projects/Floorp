@@ -5839,13 +5839,13 @@ class Database final
 
  public:
   // Created by OpenDatabaseOp.
-  Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
+  Database(RefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
            const Maybe<ContentParentId>& aOptionalContentParentId,
            const nsACString& aGroup, const nsACString& aOrigin,
-           uint32_t aTelemetryId, FullDatabaseMetadata* aMetadata,
-           FileManager* aFileManager,
-           already_AddRefed<DirectoryLock> aDirectoryLock,
-           bool aFileHandleDisabled, bool aChromeWriteAccessAllowed);
+           uint32_t aTelemetryId, RefPtr<FullDatabaseMetadata> aMetadata,
+           RefPtr<FileManager> aFileManager,
+           RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
+           bool aChromeWriteAccessAllowed);
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -12859,27 +12859,29 @@ WaitForTransactionsHelper::Run() {
  * Database
  ******************************************************************************/
 
-Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
+Database::Database(RefPtr<Factory> aFactory,
+                   const PrincipalInfo& aPrincipalInfo,
                    const Maybe<ContentParentId>& aOptionalContentParentId,
                    const nsACString& aGroup, const nsACString& aOrigin,
-                   uint32_t aTelemetryId, FullDatabaseMetadata* aMetadata,
-                   FileManager* aFileManager,
-                   already_AddRefed<DirectoryLock> aDirectoryLock,
+                   uint32_t aTelemetryId,
+                   RefPtr<FullDatabaseMetadata> aMetadata,
+                   RefPtr<FileManager> aFileManager,
+                   RefPtr<DirectoryLock> aDirectoryLock,
                    bool aFileHandleDisabled, bool aChromeWriteAccessAllowed)
-    : mFactory(aFactory),
-      mMetadata(aMetadata),
-      mFileManager(aFileManager),
+    : mFactory(std::move(aFactory)),
+      mMetadata(std::move(aMetadata)),
+      mFileManager(std::move(aFileManager)),
       mDirectoryLock(std::move(aDirectoryLock)),
       mPrincipalInfo(aPrincipalInfo),
       mOptionalContentParentId(aOptionalContentParentId),
       mGroup(aGroup),
       mOrigin(aOrigin),
-      mId(aMetadata->mDatabaseId),
-      mFilePath(aMetadata->mFilePath),
+      mId(mMetadata->mDatabaseId),
+      mFilePath(mMetadata->mFilePath),
       mActiveMutableFileCount(0),
       mPendingCreateFileOpCount(0),
       mTelemetryId(aTelemetryId),
-      mPersistenceType(aMetadata->mCommonMetadata.persistenceType()),
+      mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
       mFileHandleDisabled(aFileHandleDisabled),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
       mBackgroundThread(GetCurrentThreadEventTarget())
@@ -12889,9 +12891,9 @@ Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
 #endif
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aFactory);
-  MOZ_ASSERT(aMetadata);
-  MOZ_ASSERT(aFileManager);
+  MOZ_ASSERT(mFactory);
+  MOZ_ASSERT(mMetadata);
+  MOZ_ASSERT(mFileManager);
   MOZ_ASSERT_IF(aChromeWriteAccessAllowed,
                 aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo);
 
@@ -21428,12 +21430,11 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     mMetadata = info->mMetadata;
   }
 
-  auto factory = static_cast<Factory*>(Manager());
-
   mDatabase = MakeRefPtr<Database>(
-      factory, mCommonParams.principalInfo(), mOptionalContentParentId, mGroup,
-      mOrigin, mTelemetryId, mMetadata, mFileManager, mDirectoryLock.forget(),
-      mFileHandleDisabled, mChromeWriteAccessAllowed);
+      static_cast<Factory*>(Manager()), mCommonParams.principalInfo(),
+      mOptionalContentParentId, mGroup, mOrigin, mTelemetryId, mMetadata,
+      mFileManager, std::move(mDirectoryLock), mFileHandleDisabled,
+      mChromeWriteAccessAllowed);
 
   if (info) {
     info->mLiveDatabases.AppendElement(mDatabase);
