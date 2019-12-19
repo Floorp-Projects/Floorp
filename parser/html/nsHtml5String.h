@@ -53,7 +53,7 @@ class nsHtml5String final {
       case eAtom:
         return AsAtom()->GetUTF16String();
       default:
-        return nullptr;
+        return nsCharTraits<char16_t>::sEmptyBuffer;
     }
   }
 
