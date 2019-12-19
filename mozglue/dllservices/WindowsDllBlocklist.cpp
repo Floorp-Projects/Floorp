@@ -769,5 +769,5 @@ MFBT_API void DllBlocklist_SetBasicDllServices(
   }
 
   aSvc->SetAuthenticodeImpl(GetAuthenticode());
-  gMozglueLoaderObserver.Clear();
+  gMozglueLoaderObserver.Disable();
 }
