@@ -204,9 +204,6 @@ struct EventNameMapping {
   bool mMaybeSpecialSVGorSMILEvent;
 };
 
-typedef bool (*CallOnRemoteChildFunction)(
-    mozilla::dom::BrowserParent* aBrowserParent, void* aArg);
-
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
   typedef mozilla::dom::Element Element;
@@ -2742,9 +2739,9 @@ class nsContentUtils {
    * Call the given callback on all remote children of the given top-level
    * window. Return true from the callback to stop calling further children.
    */
-  static void CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
-                                      CallOnRemoteChildFunction aCallback,
-                                      void* aArg);
+  static void CallOnAllRemoteChildren(
+      nsPIDOMWindowOuter* aWindow,
+      const std::function<bool(mozilla::dom::BrowserParent*)>& aCallback);
 
   /*
    * Call nsPIDOMWindow::SetKeyboardIndicators all all remote children. This is
@@ -3221,7 +3218,7 @@ class nsContentUtils {
 
   static bool CallOnAllRemoteChildren(
       mozilla::dom::MessageBroadcaster* aManager,
-      CallOnRemoteChildFunction aCallback, void* aArg);
+      const std::function<bool(mozilla::dom::BrowserParent*)>& aCallback);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(

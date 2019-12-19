@@ -1104,12 +1104,6 @@ void nsFocusManager::EnsureCurrentWidgetFocused() {
   widget->SetFocus(nsIWidget::Raise::No);
 }
 
-bool ActivateOrDeactivateChild(BrowserParent* aParent, void* aArg) {
-  bool active = static_cast<bool>(aArg);
-  Unused << aParent->SendParentActivated(active);
-  return false;
-}
-
 void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
                                           bool aActive) {
   if (!aWindow) {
@@ -1131,8 +1125,11 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
 
   // Look for any remote child frames, iterate over them and send the activation
   // notification.
-  nsContentUtils::CallOnAllRemoteChildren(aWindow, ActivateOrDeactivateChild,
-                                          (void*)aActive);
+  nsContentUtils::CallOnAllRemoteChildren(
+      aWindow, [&aActive](BrowserParent* aBrowserParent) -> bool {
+        Unused << aBrowserParent->SendParentActivated(aActive);
+        return false;
+      });
 }
 
 void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,

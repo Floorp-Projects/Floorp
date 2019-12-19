@@ -968,13 +968,6 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-static bool NotifyDynamicToolbarMaxHeightChanged(
-    dom::BrowserParent* aBrowserParent, void* aArg) {
-  ScreenIntCoord* height = static_cast<ScreenIntCoord*>(aArg);
-  aBrowserParent->DynamicToolbarMaxHeightChanged(*height);
-  return false;
-}
-
 void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
@@ -997,19 +990,10 @@ void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   }
 
   nsContentUtils::CallOnAllRemoteChildren(
-      window, NotifyDynamicToolbarMaxHeightChanged, &aHeight);
-}
-
-static bool NotifyDynamicToolbarOffsetChanged(
-    dom::BrowserParent* aBrowserParent, void* aArg) {
-  // Skip background tabs.
-  if (!aBrowserParent->GetDocShellIsActive()) {
-    return false;
-  }
-
-  ScreenIntCoord* offset = static_cast<ScreenIntCoord*>(aArg);
-  aBrowserParent->DynamicToolbarOffsetChanged(*offset);
-  return true;
+      window, [&aHeight](dom::BrowserParent* aBrowserParent) -> bool {
+        aBrowserParent->DynamicToolbarMaxHeightChanged(aHeight);
+        return false;
+      });
 }
 
 void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
@@ -1034,7 +1018,15 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
   }
 
   nsContentUtils::CallOnAllRemoteChildren(
-      window, NotifyDynamicToolbarOffsetChanged, &aOffset);
+      window, [&aOffset](dom::BrowserParent* aBrowserParent) -> bool {
+        // Skip background tabs.
+        if (!aBrowserParent->GetDocShellIsActive()) {
+          return false;
+        }
+
+        aBrowserParent->DynamicToolbarOffsetChanged(aOffset);
+        return true;
+      });
 }
 #endif
 
