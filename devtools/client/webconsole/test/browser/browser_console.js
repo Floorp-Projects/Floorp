@@ -24,6 +24,9 @@ add_task(async function() {
   // Needed for the execute() function below
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
   await pushPref("devtools.browserconsole.contentMessages", true);
+  // Bug 1605036: Disable Multiprocess Browser Toolbox for now as it introduces intermittent failure in this test
+  await pushPref("devtools.browsertoolbox.fission", false);
+
   await addTab(TEST_URI);
 
   const opened = waitForBrowserConsole();
