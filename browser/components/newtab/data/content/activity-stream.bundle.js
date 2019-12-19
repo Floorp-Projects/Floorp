@@ -1339,6 +1339,28 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, isBlocked && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", null, JSON.stringify(msg, null, 2)))));
   }
 
+  renderWNMessageItem(msg) {
+    const isBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
+    const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
+    let itemClassName = "message-item";
+
+    if (isBlocked) {
+      itemClassName += " blocked";
+    }
+
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", {
+      className: itemClassName,
+      key: `${msg.id}-${msg.provider}`
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+      className: "message-id"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, msg.id, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "(", impressions, " impressions)")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      type: "checkbox",
+      value: "Show"
+    })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+      className: "message-summary"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", null, JSON.stringify(msg, null, 2))));
+  }
+
   renderMessages() {
     if (!this.state.messages) {
       return null;
@@ -1346,6 +1368,15 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
     const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter);
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg))));
+  }
+
+  renderWNMessages() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    const messagesToShow = this.state.messages.filter(message => message.provider === "whats-new-panel");
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderWNMessageItem(msg))));
   }
 
   renderMessageFilter() {
@@ -1633,10 +1664,17 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Interrupt branch"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, trailheadInterrupt)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Triplet branch"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, trailheadTriplet))));
   }
 
+  renderWNPTests() {
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", null, "Force What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), this.renderWNMessages());
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
 
     switch (section) {
+      case "wnpanel":
+        return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "What's New Panel"), this.renderWNPTests());
+
       case "targeting":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Targeting Utilities"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
           className: "button",
@@ -1688,6 +1726,8 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("ul", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools"
     }, "General")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
+      href: "#devtools-wnpanel"
+    }, "What's New Panel")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools-targeting"
     }, "Targeting")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools-groups"
