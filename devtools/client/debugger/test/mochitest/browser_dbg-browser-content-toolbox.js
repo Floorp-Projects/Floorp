@@ -30,6 +30,9 @@ async function enableBreakpoint(dbg, index) {
 }
 
 add_task(async function() {
+  // Disable Multiprocess Browser Toolbox for now as it introduces exceptions
+  await pushPref("devtools.browsertoolbox.fission", false);
+
   clearDebuggerPreferences();
 
   info("Open a tab pointing to doc-scripts.html");

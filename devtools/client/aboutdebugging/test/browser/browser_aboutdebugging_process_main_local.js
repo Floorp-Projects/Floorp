@@ -17,6 +17,8 @@ Services.scriptloader.loadSubScript(
 add_task(async function() {
   await pushPref("devtools.aboutdebugging.process-debugging", true);
   await pushPref("devtools.aboutdebugging.test-local-process-debugging", true);
+  // Disable Multiprocess Browser Toolbox for now as it introduces exceptions
+  await pushPref("devtools.browsertoolbox.fission", false);
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
