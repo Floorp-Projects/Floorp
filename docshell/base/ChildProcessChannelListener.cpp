@@ -22,7 +22,7 @@ void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
 }
 
 void ChildProcessChannelListener::OnChannelReady(
-    nsIChannel* aChannel, uint64_t aIdentifier,
+    nsIChildChannel* aChannel, uint64_t aIdentifier,
     nsTArray<net::DocumentChannelRedirect>&& aRedirects,
     uint32_t aLoadStateLoadFlags) {
   if (auto callback = mCallbacks.GetAndRemove(aIdentifier)) {
