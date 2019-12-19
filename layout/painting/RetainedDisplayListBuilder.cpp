@@ -922,7 +922,7 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
   return presShell ? presShell->GetRootFrame() : nullptr;
 }
 
-static bool SubDocEnumCb(Document& aDocument, void* aData) {
+static CallState SubDocEnumCb(Document& aDocument, void* aData) {
   MOZ_ASSERT(aData);
 
   auto* data = static_cast<CbData*>(aData);
@@ -935,7 +935,7 @@ static bool SubDocEnumCb(Document& aDocument, void* aData) {
       innerDoc->EnumerateSubDocuments(SubDocEnumCb, aData);
     }
   }
-  return true;
+  return CallState::Continue;
 }
 
 static void GetModifiedAndFramesWithProps(

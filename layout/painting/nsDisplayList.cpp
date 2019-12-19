@@ -2924,8 +2924,8 @@ bool nsDisplayList::ComputeVisibilityForSublist(
   return anyVisible;
 }
 
-static bool TriggerPendingAnimationsOnSubDocuments(Document& aDoc,
-                                                   void* aReadyTime) {
+static CallState TriggerPendingAnimationsOnSubDocuments(Document& aDoc,
+                                                        void* aReadyTime) {
   if (PendingAnimationTracker* tracker = aDoc.GetPendingAnimationTracker()) {
     PresShell* presShell = aDoc.GetPresShell();
     // If paint-suppression is in effect then we haven't finished painting
@@ -2937,7 +2937,7 @@ static bool TriggerPendingAnimationsOnSubDocuments(Document& aDoc,
   }
   aDoc.EnumerateSubDocuments(TriggerPendingAnimationsOnSubDocuments,
                              aReadyTime);
-  return true;
+  return CallState::Continue;
 }
 
 static void TriggerPendingAnimations(Document& aDocument,
