@@ -65,7 +65,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         }
     }
 
-    override fun requestPostMessageChannel(sessionToken: CustomTabsSessionToken, postMessageOrigin: Uri?): Boolean {
+    override fun requestPostMessageChannel(sessionToken: CustomTabsSessionToken, postMessageOrigin: Uri): Boolean {
         return false
     }
 
@@ -84,20 +84,18 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         return true
     }
 
-    override fun extraCommand(commandName: String?, args: Bundle?): Bundle? {
-        return null
-    }
+    override fun extraCommand(commandName: String, args: Bundle?): Bundle? = null
 
     override fun mayLaunchUrl(
         sessionToken: CustomTabsSessionToken,
-        url: Uri?,
+        url: Uri,
         extras: Bundle?,
-        otherLikelyBundles: MutableList<Bundle>?
+        otherLikelyBundles: List<Bundle>?
     ): Boolean {
         logger.debug("Opening speculative connections")
 
         // Most likely URL for a future navigation: Open a speculative connection.
-        url?.let { engine.speculativeConnect(it.toString()) }
+        engine.speculativeConnect(url.toString())
 
         // A list of other likely URLs. Let's open a speculative connection for them up to a limit.
         otherLikelyBundles?.take(MAX_SPECULATIVE_URLS)?.forEach { bundle ->
@@ -109,9 +107,8 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         return true
     }
 
-    override fun postMessage(sessionToken: CustomTabsSessionToken, message: String?, extras: Bundle?): Int {
-        return RESULT_FAILURE_DISALLOWED
-    }
+    override fun postMessage(sessionToken: CustomTabsSessionToken, message: String, extras: Bundle?) =
+        RESULT_FAILURE_DISALLOWED
 
     override fun validateRelationship(
         sessionToken: CustomTabsSessionToken,

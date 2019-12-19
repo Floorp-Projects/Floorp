@@ -12,9 +12,9 @@ import android.graphics.Color
 import android.os.Binder
 import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR
 import androidx.browser.customtabs.TrustedWebUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -23,12 +23,23 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabConfigHelperTest {
+
+    private lateinit var resources: Resources
+
+    @Before
+    fun setup() {
+        resources = spy(testContext.resources)
+        doReturn(24f).`when`(resources).getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size)
+    }
 
     @Test
     fun isCustomTabIntent() {

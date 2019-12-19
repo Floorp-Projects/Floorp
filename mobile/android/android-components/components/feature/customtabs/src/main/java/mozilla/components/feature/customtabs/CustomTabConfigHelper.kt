@@ -17,6 +17,7 @@ import androidx.browser.customtabs.CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITE
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_ENABLE_URLBAR_HIDING
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_MENU_ITEMS
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_SESSION
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_TINT_ACTION_BUTTON
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_TITLE_VISIBILITY_STATE
@@ -33,7 +34,6 @@ import androidx.browser.customtabs.CustomTabsSessionToken
 import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
-import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.support.utils.SafeIntent

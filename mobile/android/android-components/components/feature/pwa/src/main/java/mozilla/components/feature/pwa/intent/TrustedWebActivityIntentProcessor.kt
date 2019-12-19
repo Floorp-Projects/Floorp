@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsService.RELATION_HANDLE_ALL_URLS
 import androidx.browser.customtabs.CustomTabsSessionToken
+import androidx.browser.trusted.TrustedWebActivityIntentBuilder.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
 import androidx.core.net.toUri
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
@@ -17,7 +18,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.fetch.Client

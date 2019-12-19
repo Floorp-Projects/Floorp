@@ -43,13 +43,7 @@ data class CustomTabConfig(
     val titleVisible: Boolean = false,
     val sessionToken: CustomTabsSessionToken? = null,
     val externalAppType: ExternalAppType = ExternalAppType.CUSTOM_TAB
-) {
-
-    companion object {
-        const val EXTRA_NAVIGATION_BAR_COLOR = "androidx.browser.customtabs.extra.NAVIGATION_BAR_COLOR"
-        const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS = "android.support.customtabs.extra.ADDITIONAL_TRUSTED_ORIGINS"
-    }
-}
+)
 
 /**
  * Represents different contexts that a custom tab session can be displayed in.
