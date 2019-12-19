@@ -1365,6 +1365,8 @@
           "PopupBlocking:UpdateBlockedPopups",
           this
         );
+        this.messageManager.addMessageListener("Autoscroll:Start", this);
+        this.messageManager.addMessageListener("Autoscroll:Cancel", this);
         this.messageManager.addMessageListener(
           "UnselectedTabHover:Toggle",
           this
@@ -1437,6 +1439,41 @@
           this.updateBlockedPopups();
           break;
         }
+        case "Autoscroll:Start": {
+          if (!this.autoscrollEnabled) {
+            return { autoscrollEnabled: false, usingApz: false };
+          }
+          this.startScroll(data.scrolldir, data.screenX, data.screenY);
+          let usingApz = false;
+          if (
+            this.isRemoteBrowser &&
+            data.scrollId != null &&
+            this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)
+          ) {
+            let { remoteTab } = this.frameLoader;
+            if (remoteTab) {
+              // If APZ is handling the autoscroll, it may decide to cancel
+              // it of its own accord, so register an observer to allow it
+              // to notify us of that.
+              var os = Services.obs;
+              os.addObserver(this.observer, "apz:cancel-autoscroll", true);
+
+              usingApz = remoteTab.startApzAutoscroll(
+                data.screenX,
+                data.screenY,
+                data.scrollId,
+                data.presShellId
+              );
+            }
+            // Save the IDs for later
+            this._autoScrollScrollId = data.scrollId;
+            this._autoScrollPresShellId = data.presShellId;
+          }
+          return { autoscrollEnabled: true, usingApz };
+        }
+        case "Autoscroll:Cancel":
+          this._autoScrollPopup.hidePopup();
+          break;
         case "UnselectedTabHover:Toggle":
           this._shouldSendUnselectedTabHover = data.enable
             ? ++this._unselectedTabHoverMessageListenerCount > 0
@@ -1650,8 +1687,7 @@
         window.removeEventListener("keydown", this, true);
         window.removeEventListener("keypress", this, true);
         window.removeEventListener("keyup", this, true);
-
-        this.sendMessageToActor("Autoscroll:Stop", {}, "AutoScroll", true);
+        this.messageManager.sendAsyncMessage("Autoscroll:Stop");
 
         try {
           Services.obs.removeObserver(this.observer, "apz:cancel-autoscroll");
@@ -1682,11 +1718,7 @@
       return popup;
     }
 
-    startScroll({ scrolldir, screenX, screenY, scrollId, presShellId }) {
-      if (!this.autoscrollEnabled) {
-        return { autoscrollEnabled: false, usingApz: false };
-      }
-
+    startScroll(scrolldir, screenX, screenY) {
       const POPUP_SIZE = 32;
       if (!this._autoScrollPopup) {
         if (this.hasAttribute("autoscrollpopup")) {
@@ -1768,40 +1800,6 @@
       window.addEventListener("keydown", this, true);
       window.addEventListener("keypress", this, true);
       window.addEventListener("keyup", this, true);
-
-      let usingApz = false;
-      if (
-        this.isRemoteBrowser &&
-        scrollId != null &&
-        this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)
-      ) {
-        let { remoteTab } = this.frameLoader;
-        if (remoteTab) {
-          // If APZ is handling the autoscroll, it may decide to cancel
-          // it of its own accord, so register an observer to allow it
-          // to notify us of that.
-          Services.obs.addObserver(
-            this.observer,
-            "apz:cancel-autoscroll",
-            true
-          );
-
-          usingApz = remoteTab.startApzAutoscroll(
-            screenX,
-            screenY,
-            scrollId,
-            presShellId
-          );
-        }
-        // Save the IDs for later
-        this._autoScrollScrollId = scrollId;
-        this._autoScrollPresShellId = presShellId;
-      }
-      return { autoscrollEnabled: true, usingApz };
-    }
-
-    cancelScroll() {
-      this._autoScrollPopup.hidePopup();
     }
 
     handleEvent(aEvent) {

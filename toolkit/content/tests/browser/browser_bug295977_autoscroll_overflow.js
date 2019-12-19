@@ -160,26 +160,6 @@ body > div > div {width: 1000px;height: 1000px;}\
       expected: expectScrollNone,
       testwindow: true,
     },
-    {
-      // Test: scroll is initiated in out of process iframe having no scrollable area
-      dataUri:
-        "data:text/html," +
-        encodeURIComponent(`
-<!doctype html>
-<head><meta content="text/html;charset=utf-8"></head><body>
-<div id="scroller" style="width: 300px; height: 300px; overflow-y: scroll; overflow-x: hidden; border: solid 1px blue;">
-  <iframe id="noscroll-outofprocess-iframe" src="https://example.com/browser/toolkit/content/tests/browser/file_contentTitle.html"
-          style="border: solid 1px green; margin: 2px;"></iframe>
-  <div style="width: 100%; height: 200px;"></div>
-</div></body>
-        `),
-    },
-    {
-      elem: "noscroll-outofprocess-iframe",
-      // We expect the div to scroll vertically, not the iframe's window.
-      expected: expectScrollVert,
-      scrollable: "scroller",
-    },
   ];
 
   for (let test of allTests) {
@@ -207,28 +187,19 @@ body > div > div {width: 1000px;height: 1000px;}\
 
     // This ensures bug 605127 is fixed: pagehide in an unrelated document
     // should not cancel the autoscroll.
-    await ContentTask.spawn(
-      gBrowser.selectedBrowser,
-      { waitForAutoScrollStart: test.expected != expectScrollNone },
-      async ({ waitForAutoScrollStart }) => {
-        var iframe = content.document.getElementById("iframe");
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+      var iframe = content.document.getElementById("iframe");
 
-        if (iframe) {
-          var e = new iframe.contentWindow.PageTransitionEvent("pagehide", {
-            bubbles: true,
-            cancelable: true,
-            persisted: false,
-          });
-          iframe.contentDocument.dispatchEvent(e);
-          iframe.contentDocument.documentElement.dispatchEvent(e);
-        }
-        if (waitForAutoScrollStart) {
-          await new Promise(resolve =>
-            Services.obs.addObserver(resolve, "autoscroll-start")
-          );
-        }
+      if (iframe) {
+        var e = new iframe.contentWindow.PageTransitionEvent("pagehide", {
+          bubbles: true,
+          cancelable: true,
+          persisted: false,
+        });
+        iframe.contentDocument.dispatchEvent(e);
+        iframe.contentDocument.documentElement.dispatchEvent(e);
       }
-    );
+    });
 
     is(
       document.activeElement,
@@ -294,7 +265,7 @@ body > div > div {width: 1000px;height: 1000px;}\
         {
           scrollVert,
           scrollHori,
-          elemid: test.scrollable || test.elem,
+          elemid: test.elem,
           checkWindow: test.testwindow,
         },
       ],
