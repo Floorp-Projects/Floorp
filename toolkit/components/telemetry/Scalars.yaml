@@ -4594,9 +4594,10 @@ encoding:
       - 840476
       - 1513473
       - 1554592
+      - 1603047
     description: >-
       Whether the Text Encoding menu was used to override an encoding in this subsession.
-    expires: "72"
+    expires: "79"
     kind: boolean
     notification_emails:
       - hsivonen@mozilla.com
