@@ -1,0 +1,63 @@
+From 5c5e860535d8924a3d6eb950bb8a4945df01e9b7 Mon Sep 17 00:00:00 2001
+From: Gabor Horvath <xazax@google.com>
+Date: Wed, 27 Nov 2019 10:56:36 -0800
+Subject: [PATCH] [clang-tidy] Fix PR35824
+
+Differential Revision: https://reviews.llvm.org/D46027
+---
+ .../bugprone/SuspiciousSemicolonCheck.cpp     |  3 +-
+ ...ugprone-suspicious-semicolon-constexpr.cpp | 31 +++++++++++++++++++
+ 2 files changed, 33 insertions(+), 1 deletion(-)
+ create mode 100644 clang-tools-extra/test/clang-tidy/bugprone-suspicious-semicolon-constexpr.cpp
+
+diff --git a/clang-tools-extra/clang-tidy/bugprone/SuspiciousSemicolonCheck.cpp b/clang-tools-extra/clang-tidy/bugprone/SuspiciousSemicolonCheck.cpp
+index d94731beba94..9b34f5ab55a7 100644
+--- a/clang-tools-extra/clang-tidy/bugprone/SuspiciousSemicolonCheck.cpp
++++ b/clang-tools-extra/clang-tidy/bugprone/SuspiciousSemicolonCheck.cpp
+@@ -20,7 +20,8 @@ namespace bugprone {
+ void SuspiciousSemicolonCheck::registerMatchers(MatchFinder *Finder) {
+   Finder->addMatcher(
+       stmt(anyOf(ifStmt(hasThen(nullStmt().bind("semi")),
+-                        unless(hasElse(stmt()))),
++                        unless(hasElse(stmt())),
++                        unless(isConstexpr())),
+                  forStmt(hasBody(nullStmt().bind("semi"))),
+                  cxxForRangeStmt(hasBody(nullStmt().bind("semi"))),
+                  whileStmt(hasBody(nullStmt().bind("semi")))))
+diff --git a/clang-tools-extra/test/clang-tidy/bugprone-suspicious-semicolon-constexpr.cpp b/clang-tools-extra/test/clang-tidy/bugprone-suspicious-semicolon-constexpr.cpp
+new file mode 100644
+index 000000000000..c18dd7bd1e93
+--- /dev/null
++++ b/clang-tools-extra/test/clang-tidy/bugprone-suspicious-semicolon-constexpr.cpp
+@@ -0,0 +1,31 @@
++// RUN: %check_clang_tidy %s bugprone-suspicious-semicolon %t -- -- -std=c++17
++
++void fail()
++{
++  int x = 0;
++  if(x > 5); (void)x;
++  // CHECK-MESSAGES: :[[@LINE-1]]:12: warning: potentially unintended semicolon [bugprone-suspicious-semicolon]
++  // CHECK-FIXES: if(x > 5) (void)x;
++}
++
++template <int X>
++int foo(int a) {
++    if constexpr(X > 0) {
++        return a;
++    }
++    return a + 1;
++}
++
++template <int X>
++int foo2(int a) {
++    // FIXME: diagnose the case below. See https://reviews.llvm.org/D46234
++    // for details.
++    if constexpr(X > 0);
++        return a;
++    return a + 1;
++}
++
++int main(void) {
++    foo2<0>(1);
++    return foo<0>(1);
++}
