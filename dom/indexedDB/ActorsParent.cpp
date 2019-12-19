@@ -3887,7 +3887,8 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection) {
 }
 
 nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
-                            uint32_t aTelemetryId, nsIFileURL** aResult) {
+                            uint32_t aTelemetryId,
+                            nsCOMPtr<nsIFileURL>* aResult) {
   MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aDirectoryLockId >= -1);
   MOZ_ASSERT(aResult);
@@ -3912,8 +3913,6 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
     return rv;
   }
 
-  nsCOMPtr<nsIFileURL> fileUrl;
-
   // aDirectoryLockId should only be -1 when we are called from
   // FileManager::InitDirectory when the temporary storage hasn't been
   // initialized yet. At that time, the in-memory objects (e.g. OriginInfo) are
@@ -3934,12 +3933,11 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
   rv = NS_MutateURI(mutator)
            .SetQuery(NS_LITERAL_CSTRING("cache=private") +
                      directoryLockIdClause + telemetryFilenameClause)
-           .Finalize(fileUrl);
+           .Finalize(*aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  fileUrl.forget(aResult);
   return NS_OK;
 }
 
@@ -4170,8 +4168,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
   bool exists;
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId,
-                          getter_AddRefs(dbFileUrl));
+  rv = GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId, &dbFileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4640,7 +4637,7 @@ nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
   rv = GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId,
-                          getter_AddRefs(dbFileUrl));
+                          &dbFileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
