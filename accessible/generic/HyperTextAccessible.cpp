@@ -19,6 +19,7 @@
 
 #include "nsCaret.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
 #include "nsFocusManager.h"
 #include "nsIEditingSession.h"
 #include "nsContainerFrame.h"
@@ -30,6 +31,7 @@
 #include "nsIMathMLFrame.h"
 #include "nsRange.h"
 #include "nsTextFragment.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MathAlgorithms.h"
@@ -1533,9 +1535,15 @@ bool HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
 
   // Make sure start is before end, by swapping DOM points.  This occurs when
   // the user selects backwards in the text.
-  int32_t rangeCompare = nsContentUtils::ComparePoints_Deprecated(
-      endNode, endOffset, startNode, startOffset);
-  if (rangeCompare < 0) {
+  const Maybe<int32_t> order =
+      nsContentUtils::ComparePoints(endNode, endOffset, startNode, startOffset);
+
+  if (!order) {
+    MOZ_ASSERT_UNREACHABLE();
+    return false;
+  }
+
+  if (*order < 0) {
     nsINode* tempNode = startNode;
     startNode = endNode;
     endNode = tempNode;
@@ -2025,9 +2033,15 @@ void HyperTextAccessible::GetSpellTextAttr(
     // case there is another range after this one.
     nsINode* endNode = range->GetEndContainer();
     int32_t endNodeOffset = range->EndOffset();
-    if (nsContentUtils::ComparePoints_Deprecated(aNode, aNodeOffset, endNode,
-                                                 endNodeOffset) >= 0)
+    Maybe<int32_t> order = nsContentUtils::ComparePoints(
+        aNode, aNodeOffset, endNode, endNodeOffset);
+    if (NS_WARN_IF(!order)) {
       continue;
+    }
+
+    if (*order >= 0) {
+      continue;
+    }
 
     // At this point our point is either in this range or before it but after
     // the previous range.  So we check to see if the range starts before the
@@ -2035,8 +2049,17 @@ void HyperTextAccessible::GetSpellTextAttr(
     // must be before the range and after the previous one if any.
     nsINode* startNode = range->GetStartContainer();
     int32_t startNodeOffset = range->StartOffset();
-    if (nsContentUtils::ComparePoints_Deprecated(startNode, startNodeOffset,
-                                                 aNode, aNodeOffset) <= 0) {
+    order = nsContentUtils::ComparePoints(startNode, startNodeOffset, aNode,
+                                          aNodeOffset);
+    if (!order) {
+      // As (`aNode`, `aNodeOffset`) is comparable to the end of the range, it
+      // should also be comparable to the range's start. Returning here
+      // prevents crashes in release builds.
+      MOZ_ASSERT_UNREACHABLE();
+      return;
+    }
+
+    if (*order <= 0) {
       startOffset = DOMPointToOffset(startNode, startNodeOffset);
 
       endOffset = DOMPointToOffset(endNode, endNodeOffset);
