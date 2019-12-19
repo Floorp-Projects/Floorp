@@ -102,3 +102,21 @@ add_task(async function basic_multilocale_test() {
     { visibleDefaultEngines: ["multilocale-an"] }
   );
 });
+
+add_task(async function complex_multilocale_test() {
+  await forceExpiration();
+  Services.prefs.setCharPref("browser.search.region", "af");
+
+  await withGeoServer(
+    async function cont(requests) {
+      await restart();
+      Assert.deepEqual(await getEngineNames(), [
+        "Plain",
+        "Special",
+        "Multilocale AF",
+        "Multilocale AN",
+      ]);
+    },
+    { visibleDefaultEngines: ["multilocale-af", "multilocale-an"] }
+  );
+});
