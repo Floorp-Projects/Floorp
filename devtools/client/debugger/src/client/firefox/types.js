@@ -201,7 +201,7 @@ export type Target = {
   traits: Object,
   chrome: Boolean,
   url: string,
-  isAddon: Boolean,
+  isParentProcess: Boolean,
   isServiceWorker: boolean,
 
   // Property installed by the debugger itself.
