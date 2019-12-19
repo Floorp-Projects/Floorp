@@ -914,6 +914,78 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
 }
 
 /*static*/
+RefPtr<ContentParent::LaunchPromise>
+ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
+                                               const nsAString& aRemoteType,
+                                               ProcessPriority aPriority,
+                                               ContentParent* aOpener,
+                                               bool aPreferUsed) {
+  // Figure out if this process will be recording or replaying, and which file
+  // to use for the recording.
+  nsAutoString recordingFile;
+  Maybe<RecordReplayState> maybeRecordReplayState =
+      GetRecordReplayState(aFrameElement, recordingFile);
+  if (maybeRecordReplayState.isNothing()) {
+    // Error, cannot fulfill this record/replay request.
+    return nullptr;
+  }
+  RecordReplayState recordReplayState = maybeRecordReplayState.value();
+
+  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
+  uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
+  if (recordReplayState ==
+          eNotRecordingOrReplaying  // Fall through and always create a new
+                                    // process when recording or replaying.
+      && aRemoteType.EqualsLiteral(
+             LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
+                                            // Large-Allocation processes.
+      && contentParents.Length() >= maxContentParents) {
+    return GetNewOrUsedBrowserProcessAsync(
+        aFrameElement, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority,
+        aOpener);
+  }
+  {
+    RefPtr<ContentParent> existing = GetUsedBrowserProcess(
+        aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
+    if (existing != nullptr) {
+      return LaunchPromise::CreateAndResolve(existing, __func__);
+    }
+  }
+
+  // Create a new process from scratch.
+  RefPtr<ContentParent> p =
+      new ContentParent(aOpener, aRemoteType, recordReplayState, recordingFile);
+
+  RefPtr<LaunchPromise> launchPromise = p->LaunchSubprocessAsync(aPriority);
+  MOZ_ASSERT(launchPromise);
+
+  return launchPromise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      // on resolve
+      [&p, &recordReplayState, &aRemoteType,
+       launchPromise =
+           std::move(launchPromise)](const RefPtr<ContentParent>& subProcess) {
+        // Until the new process is ready let's not allow to start up any
+        // preallocated processes.
+        PreallocatedProcessManager::AddBlocker(p);
+
+        if (recordReplayState == eNotRecordingOrReplaying) {
+          // We cannot reuse `contentParents` as it may have been
+          // overwritten or otherwise altered by another process launch.
+          nsTArray<ContentParent*>& contentParents =
+              GetOrCreatePool(aRemoteType);
+          contentParents.AppendElement(p);
+        }
+
+        p->mActivateTS = TimeStamp::Now();
+        return launchPromise;
+      },
+      [launchPromise = std::move(launchPromise)]() { return launchPromise; }
+      // on reject, propagate LaunchError
+  );
+}
+
+/*static*/
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
     Element* aFrameElement, const nsAString& aRemoteType,
     ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed) {
@@ -923,6 +995,7 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
   Maybe<RecordReplayState> maybeRecordReplayState =
       GetRecordReplayState(aFrameElement, recordingFile);
   if (maybeRecordReplayState.isNothing()) {
+    // Error, cannot fulfill this record/replay request.
     return nullptr;
   }
   RecordReplayState recordReplayState = maybeRecordReplayState.value();
