@@ -439,26 +439,10 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
       ScriptFrameIter iter(cx);
       if (!iter.done() && cx->compartment() == iter.compartment() &&
           DebugAPI::stepModeEnabled(iter.script())) {
-        RootedValue rval(cx);
-        switch (DebugAPI::onSingleStep(cx, &rval)) {
-          case ResumeMode::Terminate:
-            mozilla::recordreplay::InvalidateRecording(
-                "Debugger single-step produced an error");
-            return false;
-          case ResumeMode::Continue:
-            return true;
-          case ResumeMode::Return:
-            // See note in DebugAPI::propagateForcedReturn.
-            DebugAPI::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
-            mozilla::recordreplay::InvalidateRecording(
-                "Debugger single-step forced return");
-            return false;
-          case ResumeMode::Throw:
-            cx->setPendingExceptionAndCaptureStack(rval);
-            mozilla::recordreplay::InvalidateRecording(
-                "Debugger single-step threw an exception");
-            return false;
-          default:;
+        if (!DebugAPI::onSingleStep(cx)) {
+          mozilla::recordreplay::InvalidateRecording(
+              "Debugger single-step tried to change recorded behavior");
+          return false;
         }
       }
     }
