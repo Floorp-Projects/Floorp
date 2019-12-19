@@ -380,18 +380,6 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
   }
 }
 
-void DocumentLoadListener::Suspend() {
-  if (mChannel && !mDoingProcessSwitch) {
-    mChannel->Suspend();
-  }
-}
-
-void DocumentLoadListener::Resume() {
-  if (mChannel && !mDoingProcessSwitch) {
-    mChannel->Resume();
-  }
-}
-
 void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
                                                     nsresult aLoadGroupStatus) {
   LOG(
