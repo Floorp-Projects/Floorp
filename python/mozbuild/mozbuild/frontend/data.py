@@ -679,6 +679,18 @@ class SandboxedWasmLibrary(Library):
     def __init__(self, context, basename, real_name=None):
         Library.__init__(self, context, basename, real_name)
 
+        # TODO: WASM sandboxed libraries are in a weird place: they are
+        # built in a different way, but they should share some code with
+        # SharedLibrary.  This is the minimal configuration needed to work
+        # with Linux, but it would need to be extended for other platforms.
+        assert context.config.substs['OS_TARGET'] == 'Linux'
+
+        self.lib_name = '%s%s%s' % (
+            context.config.dll_prefix,
+            real_name or basename,
+            context.config.dll_suffix,
+        )
+
     def _obj_suffix(self):
         """Can be overridden by a base class for custom behavior."""
         return self.config.substs.get('WASM_OBJ_SUFFIX', '')
