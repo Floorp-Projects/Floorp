@@ -1151,31 +1151,8 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
     return false;
   }
 
-  RootedValue rval(cx);
-  ResumeMode resumeMode = ResumeMode::Continue;
-
-  if (DebugAPI::hasBreakpointsAt(script, pc)) {
-    resumeMode = DebugAPI::onTrap(cx, &rval);
-  }
-
-  switch (resumeMode) {
-    case ResumeMode::Continue:
-      break;
-
-    case ResumeMode::Terminate:
-      return false;
-
-    case ResumeMode::Return:
-      *mustReturn = true;
-      frame->setReturnValue(rval);
-      return jit::DebugEpilogue(cx, frame, pc, true);
-
-    case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(rval);
-      return false;
-
-    default:
-      MOZ_CRASH("Invalid step/breakpoint resume mode");
+  if (DebugAPI::hasBreakpointsAt(script, pc) && !DebugAPI::onTrap(cx)) {
+    return false;
   }
 
   return true;

@@ -264,7 +264,7 @@ class DebugAPI {
                                                jsbytecode* pc, bool ok);
 
   // Call any breakpoint handlers for the current scripted location.
-  static ResumeMode onTrap(JSContext* cx, MutableHandleValue vp);
+  static MOZ_MUST_USE bool onTrap(JSContext* cx);
 
   // Call any stepping handlers for the current scripted location.
   static MOZ_MUST_USE bool onSingleStep(JSContext* cx);
