@@ -225,11 +225,12 @@ static bool ContentIsInTraversalRange(nsIContent* aContent, bool aIsPreMode,
 
   if (!aIsPreMode) ++indx;
 
-  int32_t startRes = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> startRes = nsContentUtils::ComparePoints(
       aStartContainer, aStartOffset, parentNode, indx);
-  int32_t endRes = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> endRes = nsContentUtils::ComparePoints(
       aEndContainer, aEndOffset, parentNode, indx);
-  return (startRes <= 0) && (endRes >= 0);
+  return !NS_WARN_IF(!startRes || !endRes) && (*startRes <= 0) &&
+         (*endRes >= 0);
 }
 
 static bool ContentIsInTraversalRange(nsRange* aRange, nsIContent* aNextContent,
