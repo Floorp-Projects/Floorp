@@ -1126,6 +1126,27 @@ struct MOZ_STACK_CLASS AccessKeyInfo {
       : event(aEvent), charCodes(aCharCodes) {}
 };
 
+static bool HandleAccessKeyInRemoteChild(BrowserParent* aBrowserParent,
+                                         void* aArg) {
+  AccessKeyInfo* accessKeyInfo = static_cast<AccessKeyInfo*>(aArg);
+
+  // Only forward accesskeys for the active tab.
+  if (aBrowserParent->GetDocShellIsActive()) {
+    // Even if there is no target for the accesskey in this process,
+    // the event may match with a content accesskey.  If so, the keyboard
+    // event should be handled with reply event for preventing double action.
+    // (e.g., Alt+Shift+F on Windows may focus a content in remote and open
+    // "File" menu.)
+    accessKeyInfo->event->StopPropagation();
+    accessKeyInfo->event->MarkAsWaitingReplyFromRemoteProcess();
+    aBrowserParent->HandleAccessKey(*accessKeyInfo->event,
+                                    accessKeyInfo->charCodes);
+    return true;
+  }
+
+  return false;
+}
+
 bool EventStateManager::WalkESMTreeToHandleAccessKey(
     WidgetKeyboardEvent* aEvent, nsPresContext* aPresContext,
     nsTArray<uint32_t>& aAccessCharCodes, nsIDocShellTreeItem* aBubbledFrom,
@@ -1236,24 +1257,7 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
     else if (!aEvent->IsHandledInRemoteProcess()) {
       AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes);
       nsContentUtils::CallOnAllRemoteChildren(
-          mDocument->GetWindow(),
-          [&accessKeyInfo](BrowserParent* aBrowserParent) -> CallState {
-            // Only forward accesskeys for the active tab.
-            if (aBrowserParent->GetDocShellIsActive()) {
-              // Even if there is no target for the accesskey in this process,
-              // the event may match with a content accesskey.  If so, the
-              // keyboard event should be handled with reply event for
-              // preventing double action. (e.g., Alt+Shift+F on Windows may
-              // focus a content in remote and open "File" menu.)
-              accessKeyInfo.event->StopPropagation();
-              accessKeyInfo.event->MarkAsWaitingReplyFromRemoteProcess();
-              aBrowserParent->HandleAccessKey(*accessKeyInfo.event,
-                                              accessKeyInfo.charCodes);
-              return CallState::Stop;
-            }
-
-            return CallState::Continue;
-          });
+          mDocument->GetWindow(), HandleAccessKeyInRemoteChild, &accessKeyInfo);
     }
   }
 
