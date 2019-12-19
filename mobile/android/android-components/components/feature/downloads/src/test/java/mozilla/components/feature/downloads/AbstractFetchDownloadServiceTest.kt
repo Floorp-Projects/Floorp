@@ -68,6 +68,9 @@ class AbstractFetchDownloadServiceTest {
 
         doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
+        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
+        doNothing().`when`(service).copyInChunks(any(), any(), any())
+        service.downloadJobs.values.forEach { it.job?.cancel() }
     }
 
     @Test
@@ -80,7 +83,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -224,7 +226,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -249,7 +250,6 @@ class AbstractFetchDownloadServiceTest {
             assertEquals(NOTIFICATION, pauseFact.item)
         }
 
-        service.downloadJobs[providedDownload.value.id]?.job?.join()
         assertEquals(PAUSED, service.downloadJobs[providedDownload.value.id]?.status)
     }
 
@@ -263,7 +263,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -316,7 +315,6 @@ class AbstractFetchDownloadServiceTest {
             .fetch(Request("https://example.com/file.txt"))
         doReturn(resumeResponse).`when`(client)
             .fetch(Request("https://example.com/file.txt", headers = MutableHeaders("Range" to "bytes=1-")))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -343,8 +341,6 @@ class AbstractFetchDownloadServiceTest {
             assertEquals(NOTIFICATION, resumeFact.item)
         }
 
-        service.downloadJobs[providedDownload.value.id]?.job?.join()
-
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
         verify(service).startDownloadJob(providedDownload.value.id)
     }
@@ -359,7 +355,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -386,8 +381,6 @@ class AbstractFetchDownloadServiceTest {
             assertEquals(NOTIFICATION, tryAgainFact.item)
         }
 
-        service.downloadJobs[providedDownload.value.id]?.job?.join()
-
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
         verify(service).startDownloadJob(providedDownload.value.id)
     }
@@ -402,7 +395,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
