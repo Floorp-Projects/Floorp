@@ -294,11 +294,7 @@ AsyncCubebTask::Run() {
     case AsyncCubebOperation::INIT: {
       LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::INIT driver=%p",
                             mDriver->Graph(), mDriver.get()));
-      if (!mDriver->Init()) {
-        LOG(LogLevel::Warning,
-            ("AsyncCubebOperation::INIT failed for driver=%p", mDriver.get()));
-        return NS_ERROR_FAILURE;
-      }
+      mDriver->Init();
       mDriver->CompleteAudioContextOperations(mOperation);
       break;
     }
@@ -306,9 +302,7 @@ AsyncCubebTask::Run() {
       LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::SHUTDOWN driver=%p",
                             mDriver->Graph(), mDriver.get()));
       mDriver->Stop();
-
       mDriver->CompleteAudioContextOperations(mOperation);
-
       mDriver = nullptr;
       mShutdownGrip = nullptr;
       break;
@@ -565,14 +559,13 @@ bool IsMacbookOrMacbookAir() {
   return false;
 }
 
-bool AudioCallbackDriver::Init() {
+void AudioCallbackDriver::Init() {
   MOZ_ASSERT(OnCubebOperationThread());
   MOZ_ASSERT(mAudioStreamState == AudioStreamState::Pending);
   FallbackDriverState fallbackState = mFallbackDriverState;
   if (fallbackState == FallbackDriverState::Stopped) {
-    // The graph has already stopped us. We return true here because this was
-    // not an actual failure.
-    return true;
+    // The graph has already stopped us.
+    return;
   }
   bool fromFallback = fallbackState == FallbackDriverState::Running;
   cubeb* cubebContext = CubebUtils::GetCubebContext();
@@ -583,9 +576,8 @@ bool AudioCallbackDriver::Init() {
     if (!fromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(true);
       FallbackToSystemClockDriver();
-      return true;
     }
-    return false;
+    return;
   }
 
   cubeb_stream_params output;
@@ -609,9 +601,8 @@ bool AudioCallbackDriver::Init() {
     if (!fromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(firstStream);
       FallbackToSystemClockDriver();
-      return true;
     }
-    return false;
+    return;
   }
 
   CubebUtils::AudioDeviceID forcedOutputDeviceId = nullptr;
@@ -697,9 +688,8 @@ bool AudioCallbackDriver::Init() {
     if (!fromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(firstStream);
       FallbackToSystemClockDriver();
-      return true;
     }
-    return false;
+    return;
   }
 
 #ifdef XP_MACOSX
@@ -709,14 +699,13 @@ bool AudioCallbackDriver::Init() {
   cubeb_stream_register_device_changed_callback(
       mAudioStream, AudioCallbackDriver::DeviceChangedCallback_s);
 
-  if (!StartStream()) {
+  if (NS_WARN_IF(!StartStream())) {
     LOG(LogLevel::Warning,
         ("%p: AudioCallbackDriver couldn't start a cubeb stream.", Graph()));
-    return false;
+    return;
   }
 
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver started.", Graph()));
-  return true;
 }
 
 void AudioCallbackDriver::Start() {
