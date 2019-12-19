@@ -10,4 +10,9 @@ UNIFIED_SOURCES = [
     'TestCompatVersionCompare.cpp',
 ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'TestAssembleCommandLineWin.cpp',
+    ]
+
 FINAL_LIBRARY = 'xul-gtest'
