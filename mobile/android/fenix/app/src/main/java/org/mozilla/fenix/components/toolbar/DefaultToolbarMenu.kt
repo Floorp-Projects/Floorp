@@ -5,11 +5,13 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
@@ -177,7 +179,6 @@ class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Help)
     }
 
-    @Suppress("Deprecation")
     private val settings = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_settings),
         startImageResource = R.drawable.ic_settings,
@@ -187,10 +188,9 @@ class DefaultToolbarMenu(
         textColorResource = if (hasAccountProblem)
             R.color.sync_error_text_color else
             primaryTextColor(),
-        highlight = BrowserMenuHighlightableItem.Highlight(
+        highlight = BrowserMenuHighlight.HighPriority(
             endImageResource = R.drawable.ic_alert,
-            backgroundResource = R.drawable.sync_error_background_with_ripple,
-            colorResource = R.color.sync_error_background_color
+            backgroundTint = R.color.sync_error_background_color
         ),
         isHighlighted = { hasAccountProblem }
     ) {
@@ -213,10 +213,18 @@ class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
     }
 
-    private val addToHomescreen = BrowserMenuImageText(
+    private val addToHomescreen = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_add_to_homescreen),
-        imageResource = R.drawable.ic_add_to_homescreen,
-        iconTintColorResource = primaryTextColor()
+        startImageResource = R.drawable.ic_add_to_homescreen,
+        iconTintColorResource = primaryTextColor(),
+        highlight = BrowserMenuHighlight.LowPriority(
+            label = context.getString(R.string.browser_menu_install_on_homescreen),
+            notificationTint = getColor(context, R.color.whats_new_notification_color)
+        ),
+        isHighlighted = {
+            val webAppUseCases = context.components.useCases.webAppUseCases
+            webAppUseCases.isPinningSupported() && webAppUseCases.isInstallable()
+        }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
     }

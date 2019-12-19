@@ -8,6 +8,7 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.engine.manifest.WebAppManifest
 
 class MenuPresenter(
     private val menuToolbar: BrowserToolbar,
@@ -26,6 +27,11 @@ class MenuPresenter(
 
     /** Redraw the back and forward buttons */
     override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
+        menuToolbar.invalidateActions()
+    }
+
+    /** Redraw the install web app button */
+    override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
         menuToolbar.invalidateActions()
     }
 }

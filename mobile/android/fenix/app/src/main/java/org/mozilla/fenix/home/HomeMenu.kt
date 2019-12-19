@@ -5,7 +5,9 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -64,7 +66,6 @@ class HomeMenu(
 
             BrowserMenuDivider(),
 
-            @Suppress("Deprecation")
             BrowserMenuHighlightableItem(
                 label = context.getString(R.string.browser_menu_settings),
                 startImageResource = R.drawable.ic_settings,
@@ -72,27 +73,22 @@ class HomeMenu(
                     if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
                 textColorResource =
                     if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
-                highlight = BrowserMenuHighlightableItem.Highlight(
+
+                highlight = BrowserMenuHighlight.HighPriority(
                     endImageResource = R.drawable.ic_alert,
-                    backgroundResource = R.drawable.sync_error_background_with_ripple,
-                    colorResource = R.color.sync_error_background_color
+                    backgroundTint = getColor(context, R.color.sync_error_background_color)
                 ),
                 isHighlighted = { hasAccountProblem }
             ) {
                 onItemTapped.invoke(Item.Settings)
             },
 
-            @Suppress("Deprecation")
             BrowserMenuHighlightableItem(
                 context.getString(R.string.browser_menu_whats_new),
                 R.drawable.ic_whats_new,
-                highlight = BrowserMenuHighlightableItem.Highlight(
-                    startImageResource = R.drawable.ic_whats_new_notification,
-                    backgroundResource = ThemeManager.resolveAttribute(
-                        R.attr.selectableItemBackground,
-                        context
-                    ),
-                    colorResource = R.color.whats_new_notification_color
+                iconTintColorResource = primaryTextColor,
+                highlight = BrowserMenuHighlight.LowPriority(
+                    notificationTint = getColor(context, R.color.whats_new_notification_color)
                 ),
                 isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
             ) {
