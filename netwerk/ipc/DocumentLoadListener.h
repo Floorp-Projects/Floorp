@@ -141,12 +141,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // our reference to it.
   void DocumentChannelBridgeDisconnected();
 
-  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus) {
-    if (mDocumentChannelBridge) {
-      mDocumentChannelBridge->DisconnectChildListeners(aStatus,
-                                                       aLoadGroupStatus);
-    }
-  }
+  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus);
 
   base::ProcessId OtherPid() const {
     if (mDocumentChannelBridge) {
