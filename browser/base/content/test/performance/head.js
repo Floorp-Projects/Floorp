@@ -265,21 +265,26 @@ async function prepareSettledWindow() {
 // Use this function to avoid catching a reflow related to calling focus on the
 // urlbar and changed rects for its dropmarker when opening new tabs.
 async function ensureFocusedUrlbar() {
-  // The switchingtabs attribute prevents the historydropmarker opacity
-  // transition, so if we expect a transitionend event when this attribute
-  // is set, we wait forever. (it's removed off a MozAfterPaint event listener)
-  await BrowserTestUtils.waitForCondition(
-    () => !gURLBar.hasAttribute("switchingtabs")
-  );
+  let opacityPromise;
+  if (!gURLBar.dropmarker.hidden) {
+    // The switchingtabs attribute prevents the historydropmarker opacity
+    // transition, so if we expect a transitionend event when this attribute
+    // is set, we wait forever. (it's removed off a MozAfterPaint event listener)
+    await BrowserTestUtils.waitForCondition(
+      () => !gURLBar.hasAttribute("switchingtabs")
+    );
 
-  let opacityPromise = BrowserTestUtils.waitForEvent(
-    gURLBar.dropmarker,
-    "transitionend",
-    false,
-    e => e.propertyName === "opacity"
-  );
+    opacityPromise = BrowserTestUtils.waitForEvent(
+      gURLBar.dropmarker,
+      "transitionend",
+      false,
+      e => e.propertyName === "opacity"
+    );
+  }
   gURLBar.focus();
-  await opacityPromise;
+  if (opacityPromise) {
+    await opacityPromise;
+  }
 }
 
 /**

@@ -4,6 +4,10 @@
 
 "use strict";
 
+SpecialPowers.pushPrefEnv({
+  set: [["browser.urlbar.openViewOnFocus", false]],
+});
+
 add_task(async function basic() {
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     let queryContext = await clickDropmarker();
