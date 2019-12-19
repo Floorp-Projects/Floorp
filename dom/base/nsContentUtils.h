@@ -465,6 +465,30 @@ class nsContentUtils {
   };
 
   /**
+   *  Utility routine to compare two "points", where a point is a node/offset
+   *  pair.
+   *  Pass a cache object as aParent1Cache if you expect to repeatedly
+   *  call this function with the same value as aParent1.
+   *
+   *  XXX aOffset1 and aOffset2 should be uint32_t since valid offset value is
+   *      between 0 - UINT32_MAX.  However, these methods work even with
+   *      negative offset values!  E.g., when aOffset1 is -1 and aOffset is 0,
+   *      these methods return -1.  Some root callers depend on this behavior.
+   *
+   *  @return -1 if point1 < point2,
+   *          1 if point1 > point2,
+   *          0 if point1 == point2.
+   *          `Nothing` if the two nodes aren't in the same connected subtree.
+   */
+  static Maybe<int32_t> ComparePoints(
+      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+      int32_t aOffset2, ComparePointsCache* aParent1Cache = nullptr);
+  template <typename FPT, typename FRT, typename SPT, typename SRT>
+  static Maybe<int32_t> ComparePoints(
+      const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aSecondBoundary);
+
+  /**
    *  Utility routine to compare two "points", where a point is a
    *  node/offset pair
    *  Returns -1 if point1 < point2, 1, if point1 > point2,
