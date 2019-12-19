@@ -70,12 +70,7 @@ class GraphRunner final : public Runnable {
     IterationState(GraphTime aStateEnd, GraphTime aIterationEnd,
                    AudioMixer* aMixer)
         : mStateEnd(aStateEnd), mIterationEnd(aIterationEnd), mMixer(aMixer) {}
-    IterationState& operator=(const IterationState& aOther) {
-      mStateEnd = aOther.mStateEnd;
-      mIterationEnd = aOther.mIterationEnd;
-      mMixer = aOther.mMixer;
-      return *this;
-    }
+    IterationState& operator=(const IterationState& aOther) = default;
     GraphTime StateEnd() const { return mStateEnd; }
     GraphTime IterationEnd() const { return mIterationEnd; }
     AudioMixer* Mixer() const { return mMixer; }
