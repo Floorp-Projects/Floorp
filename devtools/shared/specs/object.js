@@ -212,20 +212,18 @@ const objectSpec = generateActorSpec({
         label: Arg(1, "string"),
         watchpointType: Arg(2, "string"),
       },
-      response: {},
+      oneway: true,
     },
     removeWatchpoint: {
       request: {
         property: Arg(0, "string"),
       },
-      response: {},
+      oneway: true,
     },
-
     removeWatchpoints: {
       request: {},
-      response: {},
+      oneway: true,
     },
-
     release: { release: true },
     scope: {
       request: {},
