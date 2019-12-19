@@ -67,7 +67,7 @@ fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg
 fuzzy-if(skiaContent,0-1,0-365) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-font-1.svg  anim-css-font-1-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(gtkWidget,0-255,0-1520) == anim-css-font-1.svg  anim-css-font-1-ref.svg # Windows: Bug 1392106 Linux: Bug 1599619
 
 # 'font-size' property, from/by/to with pixel values only
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg # Bug 1392106
