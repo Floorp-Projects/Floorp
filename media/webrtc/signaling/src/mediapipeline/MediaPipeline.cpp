@@ -1003,13 +1003,24 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
     mSendPort = nullptr;
   }
 
+  bool wasTransmitting = false;
+  if (aDomTrack && mDomTrack && !aDomTrack->Ended() && !mDomTrack->Ended() &&
+      aDomTrack->Graph() != mDomTrack->Graph() && mSendTrack) {
+    // Recreate the send track if the new stream resides in different MTG.
+    wasTransmitting = mTransmitting;
+    Stop();
+    mSendTrack->Destroy();
+    mSendTrack = nullptr;
+  }
+
   mDomTrack = std::move(aDomTrack);
   SetDescription();
 
   if (mDomTrack) {
     if (!mDomTrack->Ended()) {
       if (!mSendTrack) {
-        // Create the send track only once; when the first live track is set.
+        // Create the send track when the first live track is set or when the
+        // new track resides in different MTG.
         SetSendTrack(mDomTrack->Graph()->CreateForwardedInputTrack(
             mDomTrack->GetTrack()->mType));
       }
@@ -1019,6 +1030,9 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
     if (mConverter) {
       mConverter->SetTrackEnabled(mDomTrack->Enabled());
     }
+  }
+  if (wasTransmitting) {
+    Start();
   }
 
   return NS_OK;
