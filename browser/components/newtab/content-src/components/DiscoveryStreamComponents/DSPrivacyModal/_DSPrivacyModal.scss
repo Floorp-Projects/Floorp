@@ -27,11 +27,11 @@
     }
 
     &.modal-link-privacy::before {
-      background-image: url('chrome://browser/skin/settings.svg');
+      background-image: url('../data/content/assets/glyph-info-16.svg');
     }
 
     &.modal-link-manage::before {
-      background-image: url('../data/content/assets/glyph-info-16.svg');
+      background-image: url('chrome://browser/skin/settings.svg');
     }
   }
 
