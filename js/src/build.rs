@@ -32,7 +32,7 @@ fn main() {
         "plain"
     };
 
-    let python = env::var("PYTHON").unwrap_or("python2.7".into());
+    let python = env::var("PYTHON3").unwrap_or("python3".into());
     let mut cmd = Command::new(&python);
     cmd.args(&["./devtools/automation/autospider.py",
                // Only build SpiderMonkey, don't run all the tests.
