@@ -414,11 +414,12 @@ RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
                                            TenuredObject);
 }
 
-RegExpObject* RegExpLiteral::getOrCreate(JSContext* cx) const {
+RegExpObject* RegExpLiteral::getOrCreate(JSContext* cx,
+                                         ParseInfo& parseInfo) const {
   if (data_.is<ObjectBox*>()) {
     return &objbox()->object()->as<RegExpObject>();
   }
-  return data_.as<RegExpCreationData>().createRegExp(cx);
+  return parseInfo.regExpData[data_.as<RegExpIndex>()].createRegExp(cx);
 }
 
 FunctionBox* ObjectBox::asFunctionBox() {
