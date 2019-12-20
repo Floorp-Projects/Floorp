@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix
 
-import io.sentry.Sentry
-
 enum class ReleaseChannel {
     FenixDebug, FenixNightly, FenixBeta, FenixProduction, FennecProduction;
 
@@ -47,10 +45,15 @@ object Config {
         "fenixNightly" -> ReleaseChannel.FenixNightly
         "debug" -> ReleaseChannel.FenixDebug
         "fennecProduction" -> ReleaseChannel.FennecProduction
+
+        // Builds for local performance analysis, recording benchmarks, automation, etc.
+        // This should be treated like a released channel because we want to test
+        // what users experience and there are performance-impacting changes in debug
+        // release channels (e.g. logging) that are never intended to be shipped.
+        "forPerformanceTest" -> ReleaseChannel.FenixProduction
+
         else -> {
-            Sentry.capture("BuildConfig.BUILD_TYPE ${BuildConfig.BUILD_TYPE} did not match expected channels")
-            // Performance-test builds should test production behaviour
-            ReleaseChannel.FenixProduction
+            throw IllegalStateException("Unknown build type: ${BuildConfig.BUILD_TYPE}")
         }
     }
 }
