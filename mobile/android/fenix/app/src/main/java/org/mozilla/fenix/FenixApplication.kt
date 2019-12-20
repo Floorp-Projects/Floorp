@@ -278,7 +278,7 @@ open class FenixApplication : Application() {
     }
 
     private fun enableStrictMode() {
-        if (BuildConfig.DEBUG) {
+        if (Config.channel.isDebug) {
             StrictMode.setThreadPolicy(
                 StrictMode.ThreadPolicy.Builder()
                     .detectAll()

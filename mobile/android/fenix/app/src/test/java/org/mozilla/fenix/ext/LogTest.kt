@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.ext
 
 import org.mozilla.fenix.TestApplication
@@ -10,14 +14,13 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import android.util.Log
 import org.junit.Before
-import org.mozilla.fenix.BuildConfig
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 
 class LogTest {
 
-    val numCalls = if (BuildConfig.DEBUG) 1 else 0
+    val numCalls = if (org.mozilla.fenix.Config.channel.isDebug) 1 else 0
 
     @Before
     fun setup() {
