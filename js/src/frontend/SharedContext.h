@@ -587,6 +587,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
   bool isMethod() const { return flags_.isMethod(); }
+  bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
   bool isInterpreted() const { return flags_.isInterpreted(); }
   void setIsInterpreted(bool interpreted) {

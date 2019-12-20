@@ -2499,8 +2499,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), funbox);
 
-  MOZ_ASSERT((fieldInitializers_.valid) ==
-             (funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor));
+  MOZ_ASSERT(fieldInitializers_.valid == funbox->isClassConstructor());
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
 
@@ -5614,7 +5613,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   FunctionBox* funbox = funNode->funbox();
 
   MOZ_ASSERT((classContentsIfConstructor != nullptr) ==
-             (funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor));
+             funbox->isClassConstructor());
 
   //                [stack]
 
@@ -8341,7 +8340,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* box = current->sc->asFunctionBox();
-      if (box->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
+      if (box->isClassConstructor()) {
         const FieldInitializers& fieldInitializers =
             current->getFieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
@@ -8353,7 +8352,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (AbstractScopeIter si(innermostScope()); si; si++) {
     if (si.abstractScope().is<FunctionScope>()) {
       JSFunction* fun = si.abstractScope().canonicalFunction();
-      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
+      if (fun->isClassConstructor()) {
         const FieldInitializers& fieldInitializers =
             fun->baseScript()->getFieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
