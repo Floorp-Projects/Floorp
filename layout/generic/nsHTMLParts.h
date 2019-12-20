@@ -29,21 +29,6 @@ class PresShell;
 class ViewportFrame;
 }  // namespace mozilla
 
-// These are all the block specific frame bits, they are copied from
-// the prev-in-flow to a newly created next-in-flow, except for the
-// NS_BLOCK_FLAGS_NON_INHERITED_MASK bits below.
-#define NS_BLOCK_FLAGS_MASK                                                    \
-  (NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS | NS_BLOCK_CLIP_PAGINATED_OVERFLOW | \
-   NS_BLOCK_HAS_FIRST_LETTER_STYLE | NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER |       \
-   NS_BLOCK_HAS_FIRST_LETTER_CHILD | NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
-
-// This is the subset of NS_BLOCK_FLAGS_MASK that is NOT inherited
-// by default.  They should only be set on the first-in-flow.
-// See nsBlockFrame::Init.
-#define NS_BLOCK_FLAGS_NON_INHERITED_MASK                                \
-  (NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER | NS_BLOCK_HAS_FIRST_LETTER_CHILD | \
-   NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
-
 // Factory methods for creating html layout objects
 
 // Create a frame that supports "display: block" layout behavior
