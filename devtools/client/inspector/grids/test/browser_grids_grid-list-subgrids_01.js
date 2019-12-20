@@ -14,7 +14,7 @@ add_task(async function() {
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
 
-  await selectNode("#grid", inspector);
+  await selectNode(".container", inspector);
   const gridListEl = doc.getElementById("grid-list");
   const containerSubgridListEl = gridListEl.children[1];
   const mainSubgridListEl = containerSubgridListEl.querySelector("ul");

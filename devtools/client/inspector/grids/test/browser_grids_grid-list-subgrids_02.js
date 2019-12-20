@@ -13,7 +13,7 @@ add_task(async () => {
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
 
-  await selectNode("#grid", inspector);
+  await selectNode(".container", inspector);
   const parentEl = doc.getElementById("grid-list");
   // Input for .container
   const parentInput = parentEl.children[0].querySelector("input");
