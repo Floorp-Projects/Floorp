@@ -88,7 +88,7 @@ class MediaPipeline : public sigslot::has_slots<> {
                 RefPtr<MediaSessionConduit> aConduit);
 
   virtual void Start() = 0;
-  virtual void Stop() = 0;
+  virtual RefPtr<GenericPromise> Stop() = 0;
   virtual void DetachMedia() {}
 
   void SetLevel(size_t aLevel) { mLevel = aLevel; }
@@ -282,7 +282,7 @@ class MediaPipelineTransmit : public MediaPipeline {
   bool Transmitting() const;
 
   void Start() override;
-  void Stop() override;
+  RefPtr<GenericPromise> Stop() override;
 
   // written and used from MainThread
   bool IsVideo() const override;
@@ -368,7 +368,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   void MakePrincipalPrivate_s() override;
 
   void Start() override;
-  void Stop() override;
+  RefPtr<GenericPromise> Stop() override;
 
   void OnRtpPacketReceived() override;
 
@@ -399,7 +399,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   void MakePrincipalPrivate_s() override;
 
   void Start() override;
-  void Stop() override;
+  RefPtr<GenericPromise> Stop() override;
 
   void OnRtpPacketReceived() override;
 
