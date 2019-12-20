@@ -131,8 +131,8 @@ class FunctionFlags {
     INTERPRETED_SETTER = INTERPRETED | SETTER_KIND,
     INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
 
-    // Flags that XDR ignores.
-    NO_XDR_FLAGS = RESOLVED_LENGTH | RESOLVED_NAME,
+    // Flags that XDR ignores. See also: js::BaseScript::MutableFlags.
+    MUTABLE_FLAGS = RESOLVED_NAME | RESOLVED_LENGTH | NEW_SCRIPT_CLEARED,
 
     // Flags preserved when cloning a function. (Exception:
     // js::MakeDefaultConstructor produces default constructors for ECMAScript
