@@ -1061,22 +1061,18 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   /* NB: Keep this in sync with CopyScript. */
 
   enum XDRScriptFlags {
-    OwnSource,
-    HasLazyScript,
+    OwnSource = 1 << 0,
+    HasLazyScript = 1 << 1,
   };
 
-  uint8_t xdrScriptFlags = 0;
+  uint8_t xdrFlags = 0;
 
-  uint32_t lineno = 0;
-  uint32_t column = 0;
-  uint32_t mainOffset = 0;
-  uint32_t nfixed = 0;
-  uint32_t nslots = 0;
-  uint32_t bodyScopeIndex = 0;
   uint32_t sourceStart = 0;
   uint32_t sourceEnd = 0;
   uint32_t toStringStart = 0;
   uint32_t toStringEnd = 0;
+  uint32_t lineno = 0;
+  uint32_t column = 0;
   uint32_t immutableFlags = 0;
 
   // NOTE: |mutableFlags| are not preserved by XDR.
@@ -1114,42 +1110,32 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (!sourceObjectArg) {
-      xdrScriptFlags |= (1 << OwnSource);
+      xdrFlags |= OwnSource;
     }
     if (script->maybeLazyScript()) {
-      xdrScriptFlags |= (1 << HasLazyScript);
+      xdrFlags |= HasLazyScript;
     }
   }
 
-  MOZ_TRY(xdr->codeUint8(&xdrScriptFlags));
+  MOZ_TRY(xdr->codeUint8(&xdrFlags));
 
   if (mode == XDR_ENCODE) {
-    lineno = script->lineno();
-    column = script->column();
-    mainOffset = script->mainOffset();
-    nfixed = script->nfixed();
-    nslots = script->nslots();
-    bodyScopeIndex = script->bodyScopeIndex();
-
     sourceStart = script->sourceStart();
     sourceEnd = script->sourceEnd();
     toStringStart = script->toStringStart();
     toStringEnd = script->toStringEnd();
-
     immutableFlags = script->immutableFlags();
+    lineno = script->lineno();
+    column = script->column();
   }
 
-  MOZ_TRY(xdr->codeUint32(&lineno));
-  MOZ_TRY(xdr->codeUint32(&column));
-  MOZ_TRY(xdr->codeUint32(&mainOffset));
-  MOZ_TRY(xdr->codeUint32(&nfixed));
-  MOZ_TRY(xdr->codeUint32(&nslots));
-  MOZ_TRY(xdr->codeUint32(&bodyScopeIndex));
   MOZ_TRY(xdr->codeUint32(&sourceStart));
   MOZ_TRY(xdr->codeUint32(&sourceEnd));
   MOZ_TRY(xdr->codeUint32(&toStringStart));
   MOZ_TRY(xdr->codeUint32(&toStringEnd));
   MOZ_TRY(xdr->codeUint32(&immutableFlags));
+  MOZ_TRY(xdr->codeUint32(&lineno));
+  MOZ_TRY(xdr->codeUint32(&column));
 
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
   Maybe<CompileOptions> options;
@@ -1162,7 +1148,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     bool noScriptRval =
         !!(immutableFlags & uint32_t(ImmutableFlags::NoScriptRval));
     bool selfHosted = !!(immutableFlags & uint32_t(ImmutableFlags::SelfHosted));
-    if (xdr->hasOptions() && (xdrScriptFlags & (1 << OwnSource))) {
+    if (xdr->hasOptions() && (xdrFlags & OwnSource)) {
       options.emplace(xdr->cx(), xdr->options());
       if (options->noScriptRval != noScriptRval ||
           options->selfHostingMode != selfHosted) {
@@ -1174,7 +1160,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  if (xdrScriptFlags & (1 << OwnSource)) {
+  if (xdrFlags & OwnSource) {
     Rooted<ScriptSourceHolder> ssHolder(cx);
 
     // We are relying on the script's ScriptSource so the caller should not
@@ -1259,7 +1245,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  if (xdrScriptFlags & (1 << HasLazyScript)) {
+  if (xdrFlags & HasLazyScript) {
     Rooted<LazyScript*> lazy(cx);
     if (mode == XDR_ENCODE) {
       lazy = script->maybeLazyScript();
