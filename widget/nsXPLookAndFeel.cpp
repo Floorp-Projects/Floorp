@@ -22,6 +22,8 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryScalarEnums.h"
 
 #include "gfxPlatform.h"
 
@@ -1002,6 +1004,21 @@ void nsXPLookAndFeel::RefreshImpl() {
 
 nsTArray<LookAndFeelInt> nsXPLookAndFeel::GetIntCacheImpl() {
   return nsTArray<LookAndFeelInt>();
+}
+
+static bool sRecordedLookAndFeelTelemetry = false;
+
+void nsXPLookAndFeel::RecordTelemetry() {
+  if (sRecordedLookAndFeelTelemetry) {
+    return;
+  }
+
+  sRecordedLookAndFeelTelemetry = true;
+
+  int32_t i;
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::WIDGET_DARK_MODE,
+      NS_SUCCEEDED(GetIntImpl(eIntID_SystemUsesDarkTheme, i)) && i != 0);
 }
 
 namespace mozilla {

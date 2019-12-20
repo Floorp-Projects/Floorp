@@ -46,6 +46,7 @@ nsresult nsLookAndFeel::GetSystemColors() {
 void nsLookAndFeel::NativeInit() {
   EnsureInitSystemColors();
   EnsureInitShowPassword();
+  RecordTelemetry();
 }
 
 /* virtual */
