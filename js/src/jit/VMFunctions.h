@@ -854,9 +854,6 @@ MOZ_MUST_USE bool InvokeFunction(JSContext* cx, HandleObject obj0,
                                  bool constructing, bool ignoresReturnValue,
                                  uint32_t argc, Value* argv,
                                  MutableHandleValue rval);
-MOZ_MUST_USE bool InvokeFunctionShuffleNewTarget(
-    JSContext* cx, HandleObject obj, uint32_t numActualArgs,
-    uint32_t numFormalArgs, Value* argv, MutableHandleValue rval);
 
 class InterpreterStubExitFrameLayout;
 bool InvokeFromInterpreterStub(JSContext* cx,
