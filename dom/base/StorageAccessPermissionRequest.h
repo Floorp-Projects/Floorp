@@ -43,7 +43,7 @@ class StorageAccessPermissionRequest final
                                  nsIPrincipal* aNodePrincipal,
                                  AllowCallback&& aAllowCallback,
                                  CancelCallback&& aCancelCallback);
-  ~StorageAccessPermissionRequest();
+  ~StorageAccessPermissionRequest() = default;
 
   unsigned CalculateSimulatedDelay();
 
