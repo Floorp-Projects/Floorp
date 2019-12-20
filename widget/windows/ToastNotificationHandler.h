@@ -45,6 +45,8 @@ class ToastNotificationHandler final
 
   void OnWriteBitmapFinished(nsresult rv);
 
+  void UnregisterHandler();
+
  protected:
   virtual ~ToastNotificationHandler();
 
