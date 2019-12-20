@@ -81,10 +81,12 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
     mListener = aListener;
   }
 
-  void RemoveListener(MediaTrackListener* aListener) override {
+  RefPtr<GenericPromise> RemoveListener(
+      MediaTrackListener* aListener) override {
     mozilla::MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mListener == aListener);
     mListener = nullptr;
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override {}
