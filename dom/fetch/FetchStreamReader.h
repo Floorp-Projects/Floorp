@@ -61,7 +61,7 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
 
   JS::Heap<JSObject*> mReader;
 
-  UniquePtr<FetchReadableStreamReadDataArray> mBuffer;
+  nsTArray<uint8_t> mBuffer;
   uint32_t mBufferRemaining;
   uint32_t mBufferOffset;
 
