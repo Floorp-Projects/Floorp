@@ -160,7 +160,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer}) {
   });
 
   describe('Browser.waitForTarget', () => {
-    it('should wait for a target', async function({browser, server}) {
+    it_fails_ffox('should wait for a target', async function({browser, server}) {
       let resolved = false;
       const targetPromise = browser.waitForTarget(target => target.url() === server.EMPTY_PAGE);
       targetPromise.then(() => resolved = true);

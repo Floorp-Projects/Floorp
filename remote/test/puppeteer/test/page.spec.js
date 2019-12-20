@@ -39,7 +39,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       await newPage.close();
       expect(await browser.pages()).not.toContain(newPage);
     });
-    it('should run beforeunload if asked for', async({context, server}) => {
+    it_fails_ffox('should run beforeunload if asked for', async({context, server}) => {
       const newPage = await context.newPage();
       await newPage.goto(server.PREFIX + '/beforeunload.html');
       // We have to interact with a page so that 'beforeunload' handlers
@@ -1157,7 +1157,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
   });
 
   describe('Page.Events.Close', function() {
-    it('should work with window.close', async function({ page, context, server }) {
+    it_fails_ffox('should work with window.close', async function({ page, context, server }) {
       const newPagePromise = new Promise(fulfill => context.once('targetcreated', target => fulfill(target.page())));
       await page.evaluate(() => window['newPage'] = window.open('about:blank'));
       const newPage = await newPagePromise;
