@@ -64,14 +64,14 @@
       ]
     );
 
-    // Second negotiation should cause the first track to mute...
+    // The first track should mute when the connection is closed.
     test.chain.insertBefore("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
       function PC_REMOTE_SETUP_ONMUTE(test) {
         haveMuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "mute");
       }
-    ], false, 1);
+    ]);
 
-    // ...and a second track to unmute.
+    // Second negotiation should cause the second track to unmute.
     test.chain.insertAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
       function PC_REMOTE_SETUP_ONUNMUTE(test) {
         haveUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[1].track, "unmute");
