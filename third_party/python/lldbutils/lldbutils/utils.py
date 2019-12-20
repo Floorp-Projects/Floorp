@@ -51,7 +51,10 @@ def format_string(lldb_value, length=100):
     i = 0
     terminated = False
     while i < length:
-        c = lldb_value.CreateValueFromAddress("x", ptr + i * size, char_type).GetValueAsUnsigned(0) & mask
+        c = (
+            lldb_value.CreateValueFromAddress("x", ptr + i * size, char_type).GetValueAsUnsigned(0)
+            & mask
+        )
         if c == 0:
             terminated = True
             break

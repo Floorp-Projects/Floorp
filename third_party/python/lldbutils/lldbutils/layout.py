@@ -21,7 +21,9 @@ def pstate(debugger, command, result, dict):
 
 def init(debugger):
     debugger.HandleCommand('command script add -f lldbutils.layout.frametree frametree')
-    debugger.HandleCommand('command script add -f lldbutils.layout.frametreelimited frametreelimited')
+    debugger.HandleCommand(
+        "command script add -f lldbutils.layout.frametreelimited frametreelimited"
+    )
     debugger.HandleCommand('command alias ft frametree')
     debugger.HandleCommand('command alias ftl frametreelimited')
     debugger.HandleCommand('command script add -f lldbutils.layout.pstate pstate')
