@@ -13,15 +13,6 @@
 # of this, an item could have zero <failure-type>, which indicates it
 # is expected to pass, and override failure rule above it.
 
-
-#### Selectors 4 ####################################################
-
-# focus-within
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) selectors/focus-within-0??.html
-
-# Rely on Element.attachShadow which is not implemented yet
-skip selectors/focus-within-shadow-*.html
-
 #### CSS Values 3 ####################################################
 
 # Fuzzy
@@ -191,19 +182,6 @@ skip css-writing-modes/bidi-table-001.html
 skip css-writing-modes/block-plaintext-006.html
 skip css-writing-modes/table-cell-001.html
 skip css-writing-modes/table-cell-002.html
-skip selectors/any-link-dynamic-001.html
-skip selectors/root-siblings.htm
-skip selectors/scope-without-scoping.html
-skip selectors/selector-placeholder-shown-type-change-001.html
-skip selectors/selector-placeholder-shown-type-change-002.html
-skip selectors/selector-placeholder-shown-type-change-003.html
-skip selectors/selector-read-write-type-change-001.html
-skip selectors/selector-read-write-type-change-002.html
-skip selectors/selector-required-type-change-001.html
-skip selectors/selector-required-type-change-002.html
-skip selectors/selectors-attr-white-space-001.html
-skip selectors/selectors-empty-001.xml
-skip selectors/selectors-namespace-001.xml
 
 # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/margin-v??-00?.xht
@@ -218,4 +196,3 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-comb
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-mixed-???-???.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-sideways-v??-1??.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-upright-srl-018.xht
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) selectors/selectors-dir-selector-???-001.html

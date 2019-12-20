@@ -1010,35 +1010,3 @@ fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random
 fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
 fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
 fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
-skip == selectors/any-link-dynamic-001.html selectors/any-link-dynamic-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-001.html selectors/focus-within-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-002.html selectors/focus-within-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-003.html selectors/focus-within-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-004.html selectors/focus-within-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-005.html selectors/focus-within-001-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-006.html selectors/focus-within-006-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-007.html selectors/focus-within-007-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-008.html selectors/focus-within-007-ref.html
-needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-010.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-001.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-002.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-003.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-004.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-005.html selectors/focus-within-shadow-001-ref.html
-skip == selectors/focus-within-shadow-006.html selectors/focus-within-shadow-001-ref.html
-== selectors/of-type-selectors.xhtml selectors/of-type-selectors-ref.xhtml
-skip == selectors/root-siblings.htm CSS2/reference/ref-this-text-should-be-green.xht
-skip == selectors/scope-without-scoping.html reference/ref-filled-green-100px-square.xht
-skip == selectors/selector-placeholder-shown-type-change-001.html selectors/selector-placeholder-shown-type-change-001-ref.html
-skip == selectors/selector-placeholder-shown-type-change-002.html selectors/selector-placeholder-shown-type-change-002-ref.html
-skip == selectors/selector-placeholder-shown-type-change-003.html selectors/selector-placeholder-shown-type-change-003-ref.html
-skip == selectors/selector-read-write-type-change-001.html selectors/selector-read-write-type-change-001-ref.html
-skip == selectors/selector-read-write-type-change-002.html selectors/selector-read-write-type-change-002-ref.html
-skip == selectors/selector-required-type-change-001.html selectors/selector-required-type-change-001-ref.html
-skip == selectors/selector-required-type-change-002.html selectors/selector-required-type-change-002-ref.html
-== selectors/selector-required.html selectors/selector-required-ref.html
-skip == selectors/selectors-attr-white-space-001.html selectors/selectors-attr-white-space-001-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/selectors-dir-selector-ltr-001.html reference/ref-filled-green-100px-square.xht
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/selectors-dir-selector-rtl-001.html reference/ref-filled-green-100px-square.xht
-skip == selectors/selectors-empty-001.xml selectors/selectors-empty-001-ref.xml
-skip == selectors/selectors-namespace-001.xml selectors/selectors-namespace-001-ref.xml
