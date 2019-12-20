@@ -63,10 +63,7 @@ function HistorySidebarInit() {
   window.addEventListener(
     "pageshow",
     e => {
-      window
-        .getWindowGlobalChild()
-        .getActor("LightweightTheme")
-        .handleEvent(e);
+      window.windowGlobalChild.getActor("LightweightTheme").handleEvent(e);
     },
     { once: true }
   );
