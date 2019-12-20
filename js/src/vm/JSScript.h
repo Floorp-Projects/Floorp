@@ -3390,7 +3390,8 @@ class LazyScript : public BaseScript {
   template <XDRMode mode>
   static XDRResult XDRScriptData(XDRState<mode>* xdr,
                                  HandleScriptSourceObject sourceObject,
-                                 Handle<LazyScript*> lazy);
+                                 Handle<LazyScript*> lazy,
+                                 bool hasFieldInitializer);
 
   void initScript(JSScript* script);
 
