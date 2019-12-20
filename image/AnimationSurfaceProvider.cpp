@@ -296,7 +296,7 @@ bool AnimationSurfaceProvider::CheckForNewFrameAtYield() {
     switch (status) {
       case AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE:
         continueDecoding = true;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case AnimationFrameBuffer::InsertStatus::DISCARD_YIELD:
         RequestFrameDiscarding();
         break;

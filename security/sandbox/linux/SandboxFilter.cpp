@@ -908,7 +908,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         if (mUsingRenderDoc) {
           return Some(Allow());
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 #endif
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);

@@ -248,7 +248,7 @@ uint32_t GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState,
         return GREEK_UPPER_ETA_TONOS;  // treat as disjunctive eta for now
       }
       // if not in initial state, fall through to strip the accent
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case GREEK_LOWER_ETA_OXIA:
     case GREEK_UPPER_ETA_OXIA:

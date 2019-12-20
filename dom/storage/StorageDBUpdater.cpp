@@ -419,7 +419,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
       rv = aWorkerConnection->SetSchemaVersion(1);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case 1: {
       nsCOMPtr<mozIStorageFunction> oaStripAddonId(new StripOriginAddonId());
@@ -438,7 +438,7 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
       rv = aWorkerConnection->SetSchemaVersion(2);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case CURRENT_SCHEMA_VERSION:
       // Ensure the tables and indexes are up.  This is mostly a no-op

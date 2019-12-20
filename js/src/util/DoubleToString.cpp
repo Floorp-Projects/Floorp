@@ -138,7 +138,7 @@ char* js_dtostr(DtoaState* state, char* buffer, size_t bufferSize,
       case DTOSTR_EXPONENTIAL:
         MOZ_ASSERT(precision > 0);
         minNDigits = precision;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case DTOSTR_STANDARD_EXPONENTIAL:
         exponentialNotation = true;
         break;

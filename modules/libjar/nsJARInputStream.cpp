@@ -118,7 +118,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
       case ')':
       case '\\':
         escDirName.Append('\\');
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       default:
         escDirName.Append(*curr);
     }

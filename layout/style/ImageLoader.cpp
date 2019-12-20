@@ -532,7 +532,7 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest) {
                   ->UsingSharedSurface(aRequest->GetProducerId())) {
             break;
           }
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
         default:
           invalidateFrame = true;
           break;

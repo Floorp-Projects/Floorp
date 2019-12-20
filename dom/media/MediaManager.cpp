@@ -2405,7 +2405,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           nsPIDOMWindowOuter* outer = aWindow->GetOuterWindow();
           vc.mBrowserWindow.Construct(outer->WindowID());
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case MediaSourceEnum::Screen:
       case MediaSourceEnum::Window:
         // Deny screensharing request if support is disabled, or

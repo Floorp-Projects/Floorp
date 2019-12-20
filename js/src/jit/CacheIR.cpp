@@ -1641,7 +1641,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
       break;
     case ProxyStubType::DOMExpando:
       TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id));
-      MOZ_FALLTHROUGH;  // Fall through to the generic shadowed case.
+      [[fallthrough]];  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
       return tryAttachDOMProxyShadowed(obj, objId, id);
     case ProxyStubType::DOMUnshadowed:
@@ -4210,7 +4210,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
       break;
     case ProxyStubType::DOMExpando:
       TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id, rhsId));
-      MOZ_FALLTHROUGH;  // Fall through to the generic shadowed case.
+      [[fallthrough]];  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
       return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
     case ProxyStubType::DOMUnshadowed:

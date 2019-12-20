@@ -4430,7 +4430,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(NS_NewBoxFrame);
         return &data;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case StyleDisplayInside::Flex:
     case StyleDisplayInside::WebkitBox: {

@@ -1365,7 +1365,7 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
       // GetWidgetBorder to pad up the widget's internals; other menuitems
       // will need to fall through and use the default case as before.
       if (IsRegularMenuItem(aFrame)) break;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default: {
       GetCachedWidgetBorder(aFrame, aAppearance, direction, &result);
     }
@@ -1831,7 +1831,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
         return false;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case StyleAppearance::Button:
     case StyleAppearance::ButtonFocus:

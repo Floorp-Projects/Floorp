@@ -873,7 +873,7 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
           break;
         }
         MOZ_ASSERT(type == TYPE_LONG);
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case 'S':
 #if defined(XP_WIN)
       {

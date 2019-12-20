@@ -10136,7 +10136,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
     case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
       loadFlags |=
           nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FRESH_CONNECTION;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case LOAD_RELOAD_CHARSET_CHANGE: {
       // Use SetAllowStaleCacheContent (not LOAD_FROM_CACHE flag) since we

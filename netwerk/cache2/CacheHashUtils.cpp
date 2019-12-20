@@ -77,35 +77,35 @@ CacheHash::Hash32_t CacheHash::Hash(const char* aData, uint32_t aSize,
   switch (len) { /* all the case statements fall through */
     case 11:
       c += (uint32_t(k[10]) << 24);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 10:
       c += (uint32_t(k[9]) << 16);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 9:
       c += (uint32_t(k[8]) << 8);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     /* the low-order byte of c is reserved for the length */
     case 8:
       b += (uint32_t(k[7]) << 24);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 7:
       b += (uint32_t(k[6]) << 16);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 6:
       b += (uint32_t(k[5]) << 8);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 5:
       b += k[4];
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 4:
       a += (uint32_t(k[3]) << 24);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3:
       a += (uint32_t(k[2]) << 16);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2:
       a += (uint32_t(k[1]) << 8);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 1:
       a += k[0];
       /* case 0: nothing left to add */
@@ -190,10 +190,10 @@ void CacheHash::Update(const char* aData, uint32_t aLen) {
   switch (aLen) {
     case 3:
       mBuf += data[2] << 16;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2:
       mBuf += data[1] << 8;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 1:
       mBuf += data[0];
   }

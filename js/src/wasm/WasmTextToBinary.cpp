@@ -721,7 +721,7 @@ class WasmTokenStream {
           *ref = AstRef(token.index());
           break;
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       default:
         generateError(token, error);
         return false;
@@ -920,7 +920,7 @@ WasmToken WasmTokenStream::next() {
       if (!IsWasmDigit(*cur_)) {
         break;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case '0':
     case '1':
     case '2':

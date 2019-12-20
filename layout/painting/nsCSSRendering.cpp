@@ -3639,7 +3639,7 @@ void nsCSSRendering::GetTableBorderSolidSegments(
         break;
       }
       // else fall through to solid
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case StyleBorderStyle::Solid:
       aSegments.AppendElement(
           SolidBeveledBorderSegment{aBorder,

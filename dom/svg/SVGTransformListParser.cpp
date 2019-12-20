@@ -133,7 +133,7 @@ bool SVGTransformListParser::ParseTranslate() {
   switch (count) {
     case 1:
       t[1] = 0.f;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: {
       SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {
@@ -158,7 +158,7 @@ bool SVGTransformListParser::ParseScale() {
   switch (count) {
     case 1:
       s[1] = s[0];
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: {
       SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {
@@ -183,7 +183,7 @@ bool SVGTransformListParser::ParseRotate() {
   switch (count) {
     case 1:
       r[1] = r[2] = 0.f;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3: {
       SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {

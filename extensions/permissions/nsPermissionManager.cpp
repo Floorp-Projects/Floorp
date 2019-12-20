@@ -1111,7 +1111,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // TODO: we want to make default version as version 2 in order to fix bug
       // 784875.
@@ -1131,7 +1131,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // Version 3->4 is the creation of the modificationTime field.
       case 3: {
@@ -1148,7 +1148,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // In version 5, host appId, and isInBrowserElement were merged into a
       // single origin entry
@@ -1241,7 +1241,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // At this point, the version 5 table has been migrated to a version 6
       // table We are guaranteed to have at least one of moz_hosts and
@@ -1414,7 +1414,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // The version 7-8 migration is the re-migration of localhost and
       // ip-address entries due to errors in the previous version 7 migration
@@ -1507,7 +1507,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // The version 8-9 migration removes the unnecessary backup moz-hosts
       // database contents. as the data no longer needs to be migrated
@@ -1536,7 +1536,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 9: {
         rv = mDBConn->SetSchemaVersion(10);
@@ -1544,7 +1544,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 10: {
         // Filter out the rows with storage access API permissions with a
@@ -1563,7 +1563,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
       }
 
         // fall through to the next upgrade
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // current version.
       case HOSTS_SCHEMA_VERSION:

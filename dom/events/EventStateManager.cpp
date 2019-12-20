@@ -599,7 +599,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           StopTrackingDragGesture(true);
           sNormalLMouseEventInProcess = false;
           // then fall through...
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
         case MouseButton::eRight:
         case MouseButton::eMiddle:
           RefPtr<EventStateManager> esm =
@@ -654,7 +654,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         aEvent->mMessage = eVoidEvent;
         break;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case eMouseMove:
     case ePointerDown:
       if (aEvent->mMessage == ePointerDown) {
@@ -663,7 +663,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           NotifyTargetUserActivation(aEvent, aTargetContent);
         }
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case ePointerMove: {
       // on the Mac, GenerateDragGesture() may not return until the drag
       // has completed and so |aTargetFrame| may have been deleted (moving
@@ -739,12 +739,12 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
     }
       // then fall through...
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case eKeyDown:
       if (aEvent->mMessage == eKeyDown) {
         NotifyTargetUserActivation(aEvent, aTargetContent);
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case eKeyUp: {
       nsIContent* content = GetFocusedContent();
       if (content) mCurrentTargetContent = content;

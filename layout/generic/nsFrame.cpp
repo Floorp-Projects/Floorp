@@ -3149,7 +3149,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
       case nsDisplayTransform::PartialPrerender:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
         // fall through to the NoPrerender case
       case nsDisplayTransform::NoPrerender:
         if (overflow.IsEmpty() && !extend3DContext) {
@@ -8603,7 +8603,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
         aPos->mWordMovementType = eEndWord;
       }
       // Intentionally fall through the eSelectWord case.
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case eSelectWord: {
       // wordSelectEatSpace means "are we looking for a boundary between
       // whitespace and non-whitespace (in the direction we're moving in)". It

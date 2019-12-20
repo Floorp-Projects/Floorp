@@ -4816,7 +4816,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
         MOZ_ASSERT(TSFStaticSink::IsATOKReferringNativeCaretActive());
         return false;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case TextInputProcessorID::eATOK2016:
     case TextInputProcessorID::eATOKUnknown:
       if (!TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString()) {

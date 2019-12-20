@@ -484,7 +484,7 @@ void ReportUnblockingToConsole(
             break;
 
           case AntiTrackingCommon::eOpenerAfterUserInteraction:
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           case AntiTrackingCommon::eOpener:
             messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
             break;

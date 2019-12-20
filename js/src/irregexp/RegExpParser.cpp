@@ -644,7 +644,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
             *code = 0;
             return true;
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case '1': case '2': case '3': case '4': case '5': case '6': case '7':
         if (unicode_) {
             ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
@@ -1682,7 +1682,7 @@ RegExpParser<CharT>::ParseDisjunction()
                     Advance();
                     break;
                 }
-                MOZ_FALLTHROUGH;
+                [[fallthrough]];
               case 'd': case 's': case 'w': {
                 widechar c = Next();
                 Advance(2);
@@ -1724,7 +1724,7 @@ RegExpParser<CharT>::ParseDisjunction()
                     Advance(2);
                     break;
                 }
-                MOZ_FALLTHROUGH;
+                [[fallthrough]];
               }
               case '0': {
                 if (unicode_) {
@@ -1854,7 +1854,7 @@ RegExpParser<CharT>::ParseDisjunction()
             int dummy;
             if (ParseIntervalQuantifier(&dummy, &dummy))
                 return ReportError(JSMSG_NOTHING_TO_REPEAT);
-            MOZ_FALLTHROUGH;
+            [[fallthrough]];
           }
           default:
             if (unicode_) {

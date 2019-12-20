@@ -538,7 +538,7 @@ void GestureEventListener::HandleInputTimeoutLongTap() {
       // just in case MaxTapTime > ContextMenuDelay cancel MaxTap timer
       // and fall through
       CancelMaxTapTimeoutTask();
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN: {
       SetState(GESTURE_LONG_TOUCH_DOWN);
       mAsyncPanZoomController->HandleGestureEvent(

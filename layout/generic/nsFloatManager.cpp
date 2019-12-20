@@ -2442,10 +2442,10 @@ LogicalRect nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
   switch (aShapeOutside.GetReferenceBox()) {
     case StyleGeometryBox::ContentBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedPadding(aWM));
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case StyleGeometryBox::PaddingBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedBorder(aWM));
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case StyleGeometryBox::BorderBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedMargin(aWM));
       break;

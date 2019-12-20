@@ -108,7 +108,7 @@ bool TypeTo_impl(Client::Type aType, T& aData) {
         ClientTypeTraits<Client::Type::LS>::To(aData);
         return true;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case Client::TYPE_MAX:
     default:

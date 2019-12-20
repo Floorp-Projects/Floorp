@@ -424,7 +424,7 @@ void UPowerClient::UpdateSavedInfo(GHashTable* aHashTable) {
       break;
     case eState_FullyCharged:
       isFull = true;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case eState_Charging:
     case eState_PendingCharge:
       mCharging = true;

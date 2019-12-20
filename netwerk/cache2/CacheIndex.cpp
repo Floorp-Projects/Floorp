@@ -146,7 +146,7 @@ class CacheIndexEntryAutoManage {
         if (!mDoNotSearchInUpdates) {
           entry = mIndex->mPendingUpdates.GetEntry(*mHash);
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case CacheIndex::BUILDING:
       case CacheIndex::UPDATING:
       case CacheIndex::READY:
@@ -446,7 +446,7 @@ nsresult CacheIndex::Shutdown() {
   switch (oldState) {
     case WRITING:
       index->FinishWrite(false);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case READY:
       if (index->mIndexOnDiskIsValid && !index->mDontMarkIndexClean) {
         if (!sanitize && NS_FAILED(index->WriteLogToDisk())) {
@@ -1225,7 +1225,7 @@ nsresult CacheIndex::HasEntry(
     case READING:
     case WRITING:
       entry = index->mPendingUpdates.GetEntry(hash);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case BUILDING:
     case UPDATING:
     case READY:

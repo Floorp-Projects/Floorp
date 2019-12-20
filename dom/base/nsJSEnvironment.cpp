@@ -1882,7 +1882,7 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       MOZ_ASSERT(!didDoWork);
 
       sCCRunnerState = CCRunnerState::LateTimer;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case CCRunnerState::LateTimer:
       if (!ShouldTriggerCC(suspected)) {
