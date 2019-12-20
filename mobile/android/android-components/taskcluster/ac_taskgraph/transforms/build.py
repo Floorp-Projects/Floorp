@@ -11,7 +11,7 @@ from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-from ..build_config import get_version, get_path, AAR_EXTENSIONS, CHECKSUMS_EXTENSIONS
+from ..build_config import get_version, get_path, get_extensions
 
 
 transforms = TransformSequence()
@@ -104,11 +104,7 @@ def add_artifacts(config, tasks):
             component = task["attributes"]["component"]
             build_artifact_definitions = task.setdefault("worker", {}).setdefault("artifacts", [])
 
-            all_extensions = [
-                extension + checksum_extension
-                for extension in AAR_EXTENSIONS
-                for checksum_extension in ('',) + CHECKSUMS_EXTENSIONS
-            ]
+            all_extensions = get_extensions(component)
             artifact_file_names_per_extension = {
                 extension: '{component}-{version}{timestamp}{extension}'.format(
                     component=component,
