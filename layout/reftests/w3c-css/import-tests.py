@@ -33,7 +33,6 @@ gSubtrees = [
     os.path.join("css-conditional"),
     os.path.join("css-values"),
     os.path.join("css-writing-modes"),
-    os.path.join("selectors"),
 ]
 
 # Insert the properties which you want to add "-moz" prefix to
