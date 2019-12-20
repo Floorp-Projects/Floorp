@@ -10,6 +10,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  GeckoViewLoginStorage: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewLoginStorage.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -1189,9 +1191,98 @@ ShareDelegate.prototype = {
   },
 };
 
+// Sync with  LoginStoragePrompt.Type in GeckoSession.java.
+const LoginStorageType = { SAVE: 1 };
+// Sync with  LoginStoragePrompt.Hint in GeckoSession.java.
+const LoginStorageHint = { NONE: 0 };
+
+class LoginStorageDelegate {
+  get classID() {
+    return Components.ID("{3d765750-1c3d-11ea-aaef-0800200c9a66}");
+  }
+
+  get QueryInterface() {
+    return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
+  }
+
+  _createMessage(aType, aHint, aLogins) {
+    return {
+      // Sync with GeckoSession.handlePromptEvent.
+      type: "loginStorage",
+      lsType: aType,
+      hint: aHint,
+      logins: aLogins,
+    };
+  }
+
+  promptToSavePassword(
+    aBrowser,
+    aLogin,
+    dismissed = false,
+    notifySaved = false
+  ) {
+    const prompt = new PromptDelegate(aBrowser.ownerGlobal);
+    prompt.asyncShowPrompt(
+      this._createMessage(LoginStorageType.SAVE, LoginStorageHint.NONE, [
+        LoginEntry.fromLoginInfo(aLogin),
+      ]),
+      result => {
+        if (!result || result.login === undefined) {
+          return;
+        }
+
+        const loginInfo = LoginEntry.fromBundle(result.login).toLoginInfo();
+        Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
+      }
+    );
+  }
+
+  promptToChangePassword(
+    aBrowser,
+    aOldLogin,
+    aNewLogin,
+    dismissed = false,
+    notifySaved = false,
+    autoSavedLoginGuid = ""
+  ) {
+    const newLogin = LoginEntry.fromLoginInfo(aOldLogin || aNewLogin);
+    const oldGuid = (aOldLogin && newLogin.guid) || null;
+    newLogin.origin = aNewLogin.origin;
+    newLogin.formActionOrigin = aNewLogin.formActionOrigin;
+    newLogin.password = aNewLogin.password;
+    newLogin.username = aNewLogin.username;
+
+    const prompt = new PromptDelegate(aBrowser.ownerGlobal);
+    prompt.asyncShowPrompt(
+      this._createMessage(LoginStorageType.SAVE, LoginStorageHint.NONE, [
+        newLogin,
+      ]),
+      result => {
+        if (!result || result.login === undefined) {
+          return;
+        }
+
+        GeckoViewLoginStorage.onLoginSave(result.login);
+
+        const loginInfo = LoginEntry.fromBundle(result.login).toLoginInfo();
+        Services.obs.notifyObservers(
+          loginInfo,
+          "passwordmgr-prompt-change",
+          oldGuid
+        );
+      }
+    );
+  }
+
+  promptToChangePasswordWithUsernames(aBrowser, aLogins, aNewLogin) {
+    this.promptToChangePassword(aBrowser, null /* oldLogin */, aNewLogin);
+  }
+}
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
   ColorPickerDelegate,
   FilePickerDelegate,
   PromptFactory,
   ShareDelegate,
+  LoginStorageDelegate,
 ]);
