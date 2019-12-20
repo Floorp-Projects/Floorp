@@ -14,6 +14,7 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/CSPEvalChecker.h"
+#include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/Fetch.h"
@@ -876,16 +877,17 @@ already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
   }
 
   if (ServiceWorkerParentInterceptEnabled()) {
-    mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
-        [promise](bool aOk) {
-          Unused << NS_WARN_IF(!aOk);
-          promise->MaybeResolveWithUndefined();
-        },
-        [promise](nsresult aRv) {
-          MOZ_ASSERT(NS_FAILED(aRv));
-          promise->MaybeResolveWithUndefined();
-        });
+    using MozPromiseType = decltype(
+        mWorkerPrivate->SetServiceWorkerSkipWaitingFlag())::element_type;
+    auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<MozPromiseType>>(this);
+
+    mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()
+        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+               [holder, promise](const MozPromiseType::ResolveOrRejectValue&) {
+                 holder->Complete();
+                 promise->MaybeResolveWithUndefined();
+               })
+        ->Track(*holder);
 
     return promise.forget();
   }
