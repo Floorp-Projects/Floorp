@@ -516,6 +516,10 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  if (!StaticPrefs::browser_cache_offline_storage_enable()) {
+    return NS_OK;
+  }
+
   if (!aPrincipal) return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIURI> uri;
