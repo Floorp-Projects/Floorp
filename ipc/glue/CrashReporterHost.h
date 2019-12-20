@@ -94,17 +94,19 @@ class CrashReporterHost {
     return mExtraAnnotations[CrashReporter::Annotation::additional_minidumps];
   }
 
- private:
-  static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
-                            const nsString& aChildDumpID);
+  // This is a static helper function to notify the crash service that a
+  // crash has occurred and record the crash with telemetry. This can be called
+  // from any thread, and if not called from the main thread, will post a
+  // synchronous message to the main thread.
+  static void RecordCrash(GeckoProcessType aProcessType, int32_t aCrashType,
+                          const nsString& aChildDumpID);
 
+ private:
   // Get the nsICrashService crash type to use for an impending crash.
   int32_t GetCrashType();
 
-  // This is a static helper function to notify the crash service that a
-  // crash has occurred. This can be called from any thread, and if not
-  // called from the main thread, will post a synchronous message to the
-  // main thread.
+  static void RecordCrashWithTelemetry(GeckoProcessType aProcessType,
+                                       int32_t aCrashType);
   static void NotifyCrashService(GeckoProcessType aProcessType,
                                  int32_t aCrashType,
                                  const nsString& aChildDumpID);

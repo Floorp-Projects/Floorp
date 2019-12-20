@@ -310,6 +310,7 @@ class PluginModuleParent : public PPluginModuleParent,
    */
   mozilla::Mutex mCrashReporterMutex;
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
+  nsString mOrphanedDumpId;
 };
 
 class PluginModuleContentParent : public PluginModuleParent {
