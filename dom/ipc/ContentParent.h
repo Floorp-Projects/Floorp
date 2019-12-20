@@ -545,13 +545,14 @@ class ContentParent final
       ContentParent* aIgnoreThisCP = nullptr);
 
   static void BroadcastBlobURLUnregistration(
-      const nsACString& aURI, ContentParent* aIgnoreThisCP = nullptr);
+      const nsACString& aURI, nsIPrincipal* aPrincipal,
+      ContentParent* aIgnoreThisCP = nullptr);
 
   mozilla::ipc::IPCResult RecvStoreAndBroadcastBlobURLRegistration(
       const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal);
 
   mozilla::ipc::IPCResult RecvUnstoreAndBroadcastBlobURLUnregistration(
-      const nsCString& aURI);
+      const nsCString& aURI, const Principal& aPrincipal);
 
   mozilla::ipc::IPCResult RecvGetA11yContentId(uint32_t* aContentId);
 
@@ -1403,6 +1404,11 @@ class ContentParent final
   nsTHashtable<nsCStringHashKey> mActivePermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
+
+  // List of hashes of the loaded origins on the corresponding child process.
+  // The hash is taken from the channel's principal's origin. See
+  // BasePrincipal::GetOriginSuffixHash().
+  nsTArray<uint32_t> mLoadedOriginHashes;
 
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
 

@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
+#include <functional>
 
 #define BLOBURI_SCHEME "blob"
 
@@ -62,8 +63,9 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
   static void Traverse(const nsACString& aUri,
                        nsCycleCollectionTraversalCallback& aCallback);
 
-  static bool GetAllBlobURLEntries(
-      nsTArray<BlobURLRegistrationData>& aRegistrations, ContentParent*);
+  static bool ForEachBlobURL(
+      std::function<bool(BlobImpl*, nsIPrincipal*, const nsACString&,
+                         bool aRevoked)>&& aCb);
 
   // This method returns false if aURI is not a known BlobURL. Otherwise it
   // returns true.
