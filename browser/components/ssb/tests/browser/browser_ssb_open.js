@@ -8,13 +8,12 @@ add_task(async () => {
     url: gHttpsTestRoot + "test_page.html",
   });
 
-  let ssbwin = await openSSBFromBrowserWindow();
+  let ssb = await openSSBFromBrowserWindow();
   Assert.equal(
-    getBrowser(ssbwin).currentURI.spec,
+    getBrowser(ssb).currentURI.spec,
     gHttpsTestRoot + "test_page.html"
   );
 
   Assert.equal(tab.parentNode, null, "The tab should have been closed");
-  await getSSB(ssbwin).uninstall();
-  await BrowserTestUtils.closeWindow(ssbwin);
+  await BrowserTestUtils.closeWindow(ssb);
 });
