@@ -1,3 +1,6 @@
+# This must be the first Python variable set in this file
+script ignore__see_bug_1605268 = True
+
 #filter substitution
 script topsrcdir = "@topsrcdir@"; lldb.debugger.HandleCommand("command source -s true '%s'" % os.path.join(topsrcdir, ".lldbinit"))
 
