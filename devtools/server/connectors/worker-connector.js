@@ -156,7 +156,6 @@ function connectToWorker(connection, dbg, id, options) {
         connection.setForwarding(id, transport);
 
         resolve({
-          workerName: message.workerName,
           threadActor: message.threadActor,
           consoleActor: message.consoleActor,
           transport: transport,
