@@ -486,6 +486,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mVideoStatsTimer(NS_NewTimer()) {
   mCall->RegisterConduit(this);
   mRecvStreamConfig.renderer = this;
+  mRecvStreamConfig.rtcp_event_observer = this;
 }
 
 WebrtcVideoConduit::~WebrtcVideoConduit() {
@@ -1786,7 +1787,10 @@ void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
     // Limit resolution to max-fs
     if (mCurSendCodecConfig->mEncodingConstraints.maxFs) {
       // max-fs is in macroblocks, convert to pixels
-      max_fs = std::min(max_fs, static_cast<int>(mCurSendCodecConfig->mEncodingConstraints.maxFs * (16 * 16)));
+      max_fs = std::min(
+          max_fs,
+          static_cast<int>(mCurSendCodecConfig->mEncodingConstraints.maxFs *
+                           (16 * 16)));
     }
     mVideoAdapter->OnResolutionFramerateRequest(
         rtc::Optional<int>(), max_fs, std::numeric_limits<int>::max());
@@ -1885,7 +1889,8 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
                   this, __FUNCTION__, mSendStreamConfig.rtp.ssrcs.front(),
                   mSendStreamConfig.rtp.ssrcs.front());
 
-    if (mUpdateResolution || frame.width() != mLastWidth || frame.height() != mLastHeight) {
+    if (mUpdateResolution || frame.width() != mLastWidth ||
+        frame.height() != mLastHeight) {
       // See if we need to recalculate what we're sending.
       CSFLogVerbose(LOGTAG, "%s: call SelectSendResolution with %ux%u",
                     __FUNCTION__, frame.width(), frame.height());
@@ -2286,6 +2291,34 @@ uint64_t WebrtcVideoConduit::MozVideoLatencyAvg() {
   mTransportMonitor.AssertCurrentThreadIn();
 
   return mVideoLatencyAvg / sRoundingPadding;
+}
+
+void WebrtcVideoConduit::OnRtcpBye() {
+  RefPtr<WebrtcVideoConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpBye();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcVideoConduit::OnRtcpTimeout() {
+  RefPtr<WebrtcVideoConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpTimeout();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcVideoConduit::SetRtcpEventObserver(
+    mozilla::RtcpEventObserver* observer) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mRtcpEventObserver = observer;
 }
 
 uint64_t WebrtcVideoConduit::CodecPluginID() {

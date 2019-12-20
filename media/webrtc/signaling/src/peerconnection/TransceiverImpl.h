@@ -12,6 +12,7 @@
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
+#include "signaling/src/media-conduit/RtcpEventObserver.h"
 
 class nsIPrincipal;
 
@@ -43,7 +44,7 @@ struct RTCRtpSourceEntry;
  * Audio/VideoConduit for feeding RTP/RTCP into webrtc.org for decoding, and
  * feeding audio/video frames into webrtc.org for encoding into RTP/RTCP.
  */
-class TransceiverImpl : public nsISupports {
+class TransceiverImpl : public nsISupports, public RtcpEventObserver {
  public:
   /**
    * |aReceiveTrack| is always set; this holds even if the remote end has not
@@ -118,6 +119,10 @@ class TransceiverImpl : public nsISupports {
 
   void GetRtpSources(const int64_t aTimeNow,
                      nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
+
+  void OnRtcpBye() override;
+
+  void OnRtcpTimeout() override;
 
   // test-only: insert fake CSRCs and audio levels for testing
   void InsertAudioLevelForContributingSource(const uint32_t aSource,
