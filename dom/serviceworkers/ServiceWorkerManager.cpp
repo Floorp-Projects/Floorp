@@ -257,13 +257,15 @@ bool ServiceWorkersAreCrossProcess() {
   return ServiceWorkerParentInterceptEnabled() && XRE_IsE10sParentProcess();
 }
 
-const char* GetXPCOMShutdownTopic() {
+const char* GetStartShutdownTopic() {
   if (ServiceWorkersAreCrossProcess()) {
     return "profile-change-teardown";
   }
 
   return NS_XPCOM_SHUTDOWN_OBSERVER_ID;
 }
+
+constexpr char kFinishShutdownTopic[] = "profile-before-change-qm";
 
 already_AddRefed<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() {
   AssertIsOnMainThread();
@@ -347,7 +349,7 @@ void ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     DebugOnly<nsresult> rv;
-    rv = obs->AddObserver(this, GetXPCOMShutdownTopic(), false /* ownsWeak */);
+    rv = obs->AddObserver(this, GetStartShutdownTopic(), false /* ownsWeak */);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -498,7 +500,9 @@ void ServiceWorkerManager::MaybeStartShutdown() {
     for (auto& registrationEntry : dataPtr->mInfos) {
       registrationEntry.GetData()->ShutdownWorkers();
     }
-    dataPtr->mInfos.Clear();
+
+    // ServiceWorkerCleanup may try to unregister registrations, so don't clear
+    // mInfos.
   }
 
   for (auto& entry : mControlledClients) {
@@ -515,7 +519,21 @@ void ServiceWorkerManager::MaybeStartShutdown() {
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->RemoveObserver(this, GetXPCOMShutdownTopic());
+    obs->RemoveObserver(this, GetStartShutdownTopic());
+
+    if (ServiceWorkersAreCrossProcess()) {
+      obs->AddObserver(this, kFinishShutdownTopic, false);
+      return;
+    }
+  }
+
+  MaybeFinishShutdown();
+}
+
+void ServiceWorkerManager::MaybeFinishShutdown() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, kFinishShutdownTopic);
   }
 
   if (!mActor) {
@@ -2824,8 +2842,13 @@ ServiceWorkerManager::RemoveListener(
 NS_IMETHODIMP
 ServiceWorkerManager::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData) {
-  if (strcmp(aTopic, GetXPCOMShutdownTopic()) == 0) {
+  if (strcmp(aTopic, GetStartShutdownTopic()) == 0) {
     MaybeStartShutdown();
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, kFinishShutdownTopic) == 0) {
+    MaybeFinishShutdown();
     return NS_OK;
   }
 
