@@ -19,16 +19,19 @@ import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
+import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.Date
+import java.util.UUID
 
 private fun Date.asSeconds() = time / BaseGleanSyncPing.MILLIS_PER_SEC
 
@@ -122,6 +125,7 @@ class SyncTelemetryTest {
                         assertEquals(14, outgoing["uploaded"].testGetValue())
                         assertEquals(7, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(2, outgoingBatches.testGetValue())
+                        assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                     }
                 }
                 1 -> {
@@ -137,6 +141,7 @@ class SyncTelemetryTest {
                             outgoing["failed_to_upload"],
                             outgoingBatches
                         ).none { it.testHasValue() })
+                        assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                     }
                 }
                 else -> fail()
@@ -259,26 +264,31 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 2 -> HistorySync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 3 -> HistorySync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 4 -> HistorySync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 5 -> HistorySync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 else -> fail()
             }
@@ -312,6 +322,7 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
                 }
                 else -> fail()
             }
@@ -327,7 +338,7 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on success`() {
-        val noGlobalError = SyncTelemetry.processPasswordsPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -406,6 +417,7 @@ class SyncTelemetryTest {
                         assertEquals(14, outgoing["uploaded"].testGetValue())
                         assertEquals(7, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(2, outgoingBatches.testGetValue())
+                        assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                     }
                 }
                 1 -> {
@@ -421,6 +433,7 @@ class SyncTelemetryTest {
                             outgoing["failed_to_upload"],
                             outgoingBatches
                         ).none { it.testHasValue() })
+                        assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                     }
                 }
                 else -> fail()
@@ -437,7 +450,7 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on engine failure`() {
-        val noGlobalError = SyncTelemetry.processPasswordsPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -543,26 +556,31 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 2 -> LoginsSync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 3 -> LoginsSync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 4 -> LoginsSync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 5 -> LoginsSync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 else -> fail()
             }
@@ -578,7 +596,7 @@ class SyncTelemetryTest {
 
     @Test
     fun `sends passwords telemetry pings on sync failure`() {
-        val noGlobalError = SyncTelemetry.processPasswordsPing(SyncTelemetryPing(
+        val noGlobalError = SyncTelemetry.processLoginsPing(SyncTelemetryPing(
             version = 1,
             uid = "abc123",
             syncs = listOf(
@@ -596,6 +614,7 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
                 }
                 else -> fail()
             }
@@ -664,6 +683,7 @@ class SyncTelemetryTest {
                         assertEquals(10, outgoing["uploaded"].testGetValue())
                         assertEquals(5, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(1, outgoingBatches.testGetValue())
+                        assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                     }
                 }
                 else -> fail()
@@ -775,26 +795,31 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 2 -> BookmarksSync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 3 -> BookmarksSync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 4 -> BookmarksSync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
                     assertFalse(failureReason["other"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 5 -> BookmarksSync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 else -> fail()
             }
@@ -828,6 +853,7 @@ class SyncTelemetryTest {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
                     assertFalse(failureReason["unexpected"].testHasValue())
                     assertFalse(failureReason["auth"].testHasValue())
+                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
                 }
                 else -> fail()
             }
@@ -839,5 +865,258 @@ class SyncTelemetryTest {
 
         assertEquals(1, pingCount)
         assertFalse(noGlobalError)
+    }
+
+    @Test
+    fun `sends a global sync ping alongside individual data type pings`() {
+        val pings = mutableListOf<MutableMap<String, Int>>(HashMap())
+        var globalPingCount = 0
+        val globalSyncUuids = mutableListOf<UUID>()
+
+        val syncTelemetry = SyncTelemetryPing(
+            version = 1,
+            uid = "abc123",
+            syncs = listOf(
+                SyncInfo(
+                    at = now,
+                    took = 10000,
+                    engines = listOf(
+                        EngineInfo(
+                            name = "passwords",
+                            at = now,
+                            took = 5000,
+                            incoming = IncomingInfo(
+                                applied = 5,
+                                failed = 4,
+                                newFailed = 3,
+                                reconciled = 2
+                            ),
+                            outgoing = listOf(
+                                OutgoingInfo(
+                                    sent = 10,
+                                    failed = 5
+                                ),
+                                OutgoingInfo(
+                                    sent = 4,
+                                    failed = 2
+                                )
+                            ),
+                            failureReason = null,
+                            validation = null
+                        ),
+                        EngineInfo(
+                            name = "history",
+                            at = now,
+                            took = 5000,
+                            incoming = IncomingInfo(
+                                applied = 5,
+                                failed = 4,
+                                newFailed = 3,
+                                reconciled = 2
+                            ),
+                            outgoing = listOf(
+                                OutgoingInfo(
+                                    sent = 10,
+                                    failed = 5
+                                ),
+                                OutgoingInfo(
+                                    sent = 4,
+                                    failed = 2
+                                )
+                            ),
+                            failureReason = null,
+                            validation = null
+                        )
+                    ),
+                    failureReason = FailureReason(FailureName.Unknown, "Synergies not aligned")
+                ),
+                SyncInfo(
+                    at = now + 10,
+                    took = 5000,
+                    engines = listOf(
+                        EngineInfo(
+                            name = "history",
+                            at = now + 10,
+                            took = 5000,
+                            incoming = null,
+                            outgoing = emptyList(),
+                            failureReason = null,
+                            validation = null
+                        )
+                    ),
+                    failureReason = null
+                ),
+                SyncInfo(
+                    at = now + 20,
+                    took = 8000,
+                    engines = listOf(
+                        EngineInfo(
+                            name = "bookmarks",
+                            at = now + 25,
+                            took = 6000,
+                            incoming = null,
+                            outgoing = listOf(
+                                OutgoingInfo(
+                                    sent = 10,
+                                    failed = 5
+                                )
+                            ),
+                            failureReason = null,
+                            validation = ValidationInfo(
+                                version = 2,
+                                problems = listOf(
+                                    ProblemInfo(
+                                        name = "missingParents",
+                                        count = 5
+                                    ),
+                                    ProblemInfo(
+                                        name = "missingChildren",
+                                        count = 7
+                                    )
+                                ),
+                                failureReason = null
+                            )
+                        )
+                    ),
+                    failureReason = null
+                )
+            ),
+            events = emptyList()
+        )
+
+        fun setOrAssertGlobalSyncUuid(currentPingIndex: Int, pingName: String) {
+            if (globalSyncUuids.elementAtOrNull(currentPingIndex) == null) {
+                globalSyncUuids.add(Sync.syncUuid.testGetValue(pingName))
+            } else {
+                assertEquals(globalSyncUuids[currentPingIndex], Sync.syncUuid.testGetValue(pingName))
+            }
+        }
+
+        fun setOrIncrementPingCount(currentPingIndex: Int, pingName: String) {
+            if (pings.elementAtOrNull(currentPingIndex) == null) {
+                pings.add(mutableMapOf(pingName to 1))
+            } else {
+                pings[currentPingIndex].incrementForKey(pingName)
+            }
+        }
+
+        SyncTelemetry.processSyncTelemetry(
+            syncTelemetry,
+            submitGlobalPing = {
+                assertNotNull(globalSyncUuids.elementAtOrNull(globalPingCount))
+                assertTrue(Sync.syncUuid.testHasValue("sync"))
+                assertEquals(globalSyncUuids[globalPingCount], Sync.syncUuid.testGetValue("sync"))
+
+                // Assertions above already assert syncUuid; below, let's make sure that 'failureReason' is processed.
+                when (globalPingCount) {
+                    0 -> {
+                        assertEquals("Synergies not aligned", Sync.failureReason["other"].testGetValue())
+                    }
+                    1 -> {
+                        assertFalse(Sync.failureReason["other"].testHasValue())
+                    }
+                    2 -> {
+                        assertFalse(Sync.failureReason["other"].testHasValue())
+                    }
+                    else -> fail()
+                }
+
+                Pings.sync.submit()
+                globalPingCount++
+            },
+            submitHistoryPing = {
+                when (val currentPingIndex = globalPingCount) {
+                    0 -> {
+                        setOrAssertGlobalSyncUuid(currentPingIndex, "history-sync")
+                        setOrIncrementPingCount(currentPingIndex, "history")
+                        HistorySync.apply {
+                            assertEquals("abc123", uid.testGetValue())
+                            assertEquals(now, startedAt.testGetValue().asSeconds())
+                            assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                            assertEquals(5, incoming["applied"].testGetValue())
+                            assertEquals(7, incoming["failed_to_apply"].testGetValue())
+                            assertEquals(2, incoming["reconciled"].testGetValue())
+                            assertEquals(14, outgoing["uploaded"].testGetValue())
+                            assertEquals(7, outgoing["failed_to_upload"].testGetValue())
+                            assertEquals(2, outgoingBatches.testGetValue())
+                        }
+                        Pings.historySync.submit()
+                    }
+                    1 -> {
+                        setOrAssertGlobalSyncUuid(currentPingIndex, "history-sync")
+                        setOrIncrementPingCount(currentPingIndex, "history")
+                        HistorySync.apply {
+                            assertEquals("abc123", uid.testGetValue())
+                            assertEquals(now + 10, startedAt.testGetValue().asSeconds())
+                            assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
+                            assertTrue(listOf(
+                                incoming["applied"],
+                                incoming["failed_to_apply"],
+                                incoming["reconciled"],
+                                outgoing["uploaded"],
+                                outgoing["failed_to_upload"],
+                                outgoingBatches
+                            ).none { it.testHasValue() })
+                        }
+                        Pings.historySync.submit()
+                    }
+                    else -> fail()
+                }
+            },
+            submitLoginsPing = {
+                when (val currentPingIndex = globalPingCount) {
+                    0 -> {
+                        setOrAssertGlobalSyncUuid(currentPingIndex, "logins-sync")
+                        setOrIncrementPingCount(currentPingIndex, "passwords")
+                        LoginsSync.apply {
+                            assertEquals("abc123", uid.testGetValue())
+                            assertEquals(now, startedAt.testGetValue().asSeconds())
+                            assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                            assertEquals(5, incoming["applied"].testGetValue())
+                            assertEquals(7, incoming["failed_to_apply"].testGetValue())
+                            assertEquals(2, incoming["reconciled"].testGetValue())
+                            assertEquals(14, outgoing["uploaded"].testGetValue())
+                            assertEquals(7, outgoing["failed_to_upload"].testGetValue())
+                            assertEquals(2, outgoingBatches.testGetValue())
+                        }
+                        Pings.loginsSync.submit()
+                    }
+                    else -> fail()
+                }
+            },
+            submitBookmarksPing = {
+                when (val currentPingIndex = globalPingCount) {
+                    2 -> {
+                        setOrAssertGlobalSyncUuid(currentPingIndex, "bookmarks-sync")
+                        setOrIncrementPingCount(currentPingIndex, "bookmarks")
+                        BookmarksSync.apply {
+                            assertEquals("abc123", uid.testGetValue())
+                            assertEquals(now + 25, startedAt.testGetValue().asSeconds())
+                            assertEquals(now + 31, finishedAt.testGetValue().asSeconds())
+                            assertFalse(incoming["applied"].testHasValue())
+                            assertFalse(incoming["failed_to_apply"].testHasValue())
+                            assertFalse(incoming["reconciled"].testHasValue())
+                            assertEquals(10, outgoing["uploaded"].testGetValue())
+                            assertEquals(5, outgoing["failed_to_upload"].testGetValue())
+                            assertEquals(1, outgoingBatches.testGetValue())
+                        }
+                        Pings.bookmarksSync.submit()
+                    }
+                }
+            }
+        )
+
+        assertEquals(
+            listOf(
+                mapOf("history" to 1, "passwords" to 1),
+                mapOf("history" to 1),
+                mapOf("bookmarks" to 1)
+            ),
+            pings
+        )
+    }
+
+    private fun MutableMap<String, Int>.incrementForKey(key: String) {
+        this[key] = 1 + this.getOrElse(key, { 0 })
     }
 }

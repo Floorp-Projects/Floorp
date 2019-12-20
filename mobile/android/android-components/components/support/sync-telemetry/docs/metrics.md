@@ -10,6 +10,7 @@ This means you might have to go searching through the dependency tree to get a f
  - [bookmarks-sync](#bookmarks-sync)
  - [history-sync](#history-sync)
  - [logins-sync](#logins-sync)
+ - [sync](#sync)
 
 
 ## bookmarks-sync
@@ -29,6 +30,7 @@ The following metrics are added to the ping:
 | bookmarks_sync.remote_tree_problems |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records counts for structure problems and divergences in the remote bookmarks tree. These are documented in https://github.com/mozilla/dogear/blob/fbade15f2a4f11215e30b8f428a0a8df3defeaec/src/tree.rs#L1273-L1294.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)|<ul><li>orphans</li><li>misparented_roots</li><li>multiple_parents_by_children</li><li>missing_parent_guids</li><li>non_folder_parent_guids</li><li>parent_child_disagreements</li><li>missing_children</li></ul>|never |
 | bookmarks_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the bookmark sync started.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 | bookmarks_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
+| sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[1](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |
 
 ## history-sync
 
@@ -46,6 +48,7 @@ The following metrics are added to the ping:
 | history_sync.outgoing_batches |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |Records the number of batches needed to upload all outgoing records. The Sync server has a hard limit on the number of records (and request body bytes) on the number of records that can fit into a single batch, and large syncs may require multiple batches.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 | history_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the history sync started.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 | history_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
+| sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[1](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |
 
 ## logins-sync
 
@@ -63,6 +66,19 @@ The following metrics are added to the ping:
 | logins_sync.outgoing_batches |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |Records the number of batches needed to upload all outgoing records. The Sync server has a hard limit on the number of records (and request body bytes) on the number of records that can fit into a single batch, and large syncs may require multiple batches.  |[1](https://github.com/mozilla-mobile/android-components/pull/5294)||never |
 | logins_sync.started_at |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |Records when the passwords sync started.  |[1](https://github.com/mozilla-mobile/android-components/pull/5294)||never |
 | logins_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/5294)||never |
+| sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[1](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |
+
+## sync
+
+A summary ping, sent every time a sync is performed. During each Sync one or more data types could be synchronized, depending on which data types user configured to sync. Alongside with 'sync' ping one or more individual data type specific pings will be sent. For example, if history and bookmarks data types are configured to be synchronized, the following pings will be sent: 'sync', 'history-sync' and 'bookmarks-sync'. Alternatively, if only history is configured to be synchronized then 'sync' and 'history-sync' pings will be sent. In case of a "global failure" where none of the data type syncs could even start, e.g. device is offline, only the 'sync' ping will be sent. This ping doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
+
+The following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration |
+| --- | --- | --- | --- | --- | --- |
+| sync.failure_reason |[labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) |Records a global sync failure: either due to an authentication error, unexpected exception, or other error that caused the sync to fail. Error strings are truncated and sanitized to omit PII, like URLs and file system paths.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)|<ul><li>other</li><li>unexpected</li><li>auth</li></ul>|never |
+| sync.sync_uuid |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |Unique identifier for this sync, used to correlate together individual pings for data types that were synchronized together (history, bookmarks, logins). If a data type is synchronized by itself via the legacy 'sync' API (as opposed to the Sync Manager), then this field will not be set on the corresponding ping.  |[1](https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687)||never |
 
 
 <!-- AUTOGENERATED BY glean_parser.  DO NOT EDIT. -->

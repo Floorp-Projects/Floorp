@@ -410,22 +410,7 @@ class WorkManagerSyncWorker(
         }
 
         // Process telemetry.
-        syncResult.telemetry?.let {
-            // Yes, this is non-ideal...
-            // But, what this does: individual 'process' function will report global sync errors
-            // as part of its corresponding ping. We don't want to report a global sync error multiple times,
-            // so we check for the boolean flag that indicates if this happened or not.
-            // There's a complete mismatch between what Glean supports and what we need it to do here.
-            // Glean doesn't support "nested metrics" and so we resort to these hacks.
-            // It shouldn't matter in which order these 'process' functions are called.
-            var noGlobalErrorsReported = SyncTelemetry.processBookmarksPing(it)
-            if (noGlobalErrorsReported) {
-                noGlobalErrorsReported = SyncTelemetry.processHistoryPing(it)
-            }
-            if (noGlobalErrorsReported) {
-                SyncTelemetry.processPasswordsPing(it)
-            }
-        }
+        syncResult.telemetry?.let { SyncTelemetry.processSyncTelemetry(it) }
 
         // Finally, declare success, failure or request a retry based on 'sync status'.
         return when (syncResult.status) {
