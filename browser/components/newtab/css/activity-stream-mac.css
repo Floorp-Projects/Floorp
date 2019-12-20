@@ -3164,9 +3164,9 @@ main {
     background-repeat: no-repeat;
     background-size: 16px; }
   .ds-privacy-modal .modal-link.modal-link-privacy::before {
-    background-image: url("chrome://browser/skin/settings.svg"); }
-  .ds-privacy-modal .modal-link.modal-link-manage::before {
     background-image: url("../data/content/assets/glyph-info-16.svg"); }
+  .ds-privacy-modal .modal-link.modal-link-manage::before {
+    background-image: url("chrome://browser/skin/settings.svg"); }
 
 .ds-privacy-modal p {
   line-height: 24px; }
