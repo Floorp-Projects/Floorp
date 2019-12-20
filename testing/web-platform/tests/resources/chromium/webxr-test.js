@@ -632,9 +632,11 @@ class MockRuntime {
   }
 
   runtimeSupportsSession(options) {
+
+    let isInlineRequest = (options.mode === device.mojom.XRSessionMode.kInline);
     return Promise.resolve({
       supportsSession:
-          !options.immersive || this.displayInfo_.capabilities.canPresent
+          isInlineRequest || this.displayInfo_.capabilities.canPresent
     });
   };
 }
