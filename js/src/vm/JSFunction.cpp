@@ -524,64 +524,66 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
                                      HandleScriptSourceObject sourceObject,
                                      MutableHandleFunction objp) {
   enum FirstWordFlag {
-    HasAtom = 0x1,
-    IsGenerator = 0x2,
-    IsAsync = 0x4,
-    IsLazy = 0x8,
-    HasSingletonType = 0x10
+    HasAtom = 1 << 0,
+    IsGenerator = 1 << 1,
+    IsAsync = 1 << 2,
+    IsLazy = 1 << 3,
+    HasSingletonType = 1 << 4,
   };
 
   /* NB: Keep this in sync with CloneInnerInterpretedFunction. */
-  RootedAtom atom(xdr->cx());
-  uint32_t firstword = 0; /* bitmask of FirstWordFlag */
-  uint32_t flagsword = 0; /* word for argument count and fun->flags */
 
   JSContext* cx = xdr->cx();
+
+  uint8_t xdrFlags = 0; /* bitmask of FirstWordFlag */
+
+  uint16_t nargs = 0;
+  uint16_t flags = 0;
+
   RootedFunction fun(cx);
+  RootedAtom atom(cx);
   RootedScript script(cx);
   Rooted<LazyScript*> lazy(cx);
 
   if (mode == XDR_ENCODE) {
     fun = objp;
-    if (!fun->isInterpreted()) {
+    if (!fun->isInterpreted() || fun->isBoundFunction()) {
       return xdr->fail(JS::TranscodeResult_Failure_NotInterpretedFun);
     }
 
-    if (fun->explicitName() || fun->hasInferredName() ||
-        fun->hasGuessedAtom()) {
-      firstword |= HasAtom;
+    if (fun->isSingleton()) {
+      xdrFlags |= HasSingletonType;
     }
 
     if (fun->isGenerator()) {
-      firstword |= IsGenerator;
+      xdrFlags |= IsGenerator;
     }
-
     if (fun->isAsync()) {
-      firstword |= IsAsync;
+      xdrFlags |= IsAsync;
     }
 
     if (fun->isInterpretedLazy()) {
       // Encode a lazy script.
-      firstword |= IsLazy;
+      xdrFlags |= IsLazy;
       lazy = fun->lazyScript();
     } else {
       // Encode the script.
       script = fun->nonLazyScript();
     }
 
-    if (fun->isSingleton()) {
-      firstword |= HasSingletonType;
+    if (fun->displayAtom()) {
+      xdrFlags |= HasAtom;
     }
 
+    nargs = fun->nargs();
+    flags = (fun->flags().toRaw() & ~FunctionFlags::MUTABLE_FLAGS);
+
     atom = fun->displayAtom();
-    flagsword = (fun->nargs() << 16) |
-                (fun->flags().toRaw() & ~FunctionFlags::NO_XDR_FLAGS);
 
     // The environment of any function which is not reused will always be
     // null, it is later defined when a function is cloned or reused to
     // mirror the scope chain.
-    MOZ_ASSERT_IF(fun->isSingleton() && !((lazy && lazy->hasBeenCloned()) ||
-                                          (script && script->hasBeenCloned())),
+    MOZ_ASSERT_IF(fun->isSingleton() && !fun->baseScript()->hasBeenCloned(),
                   fun->environment() == nullptr);
   }
 
@@ -589,19 +591,20 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
   // this function later.
   js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
 
-  MOZ_TRY(xdr->codeUint32(&firstword));
+  MOZ_TRY(xdr->codeUint8(&xdrFlags));
 
-  if (firstword & HasAtom) {
+  MOZ_TRY(xdr->codeUint16(&nargs));
+  MOZ_TRY(xdr->codeUint16(&flags));
+
+  if (xdrFlags & HasAtom) {
     MOZ_TRY(XDRAtom(xdr, &atom));
   }
-  MOZ_TRY(xdr->codeUint32(&flagsword));
 
   if (mode == XDR_DECODE) {
-    GeneratorKind generatorKind = (firstword & IsGenerator)
+    GeneratorKind generatorKind = (xdrFlags & IsGenerator)
                                       ? GeneratorKind::Generator
                                       : GeneratorKind::NotGenerator;
-
-    FunctionAsyncKind asyncKind = (firstword & IsAsync)
+    FunctionAsyncKind asyncKind = (xdrFlags & IsAsync)
                                       ? FunctionAsyncKind::AsyncFunction
                                       : FunctionAsyncKind::SyncFunction;
 
@@ -611,40 +614,40 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     }
 
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-    if (uint16_t(flagsword) & FunctionFlags::EXTENDED) {
+    if (flags & FunctionFlags::EXTENDED) {
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
     }
-    fun = NewFunctionWithProto(cx, nullptr, 0, FunctionFlags::INTERPRETED,
-                               /* enclosingDynamicScope = */ nullptr, nullptr,
-                               proto, allocKind, TenuredObject);
+
+    // Sanity check the flags. We should have cleared the mutable flags already
+    // and we never supported bound or wasm functions.
+    constexpr uint16_t UnsupportedFlags = FunctionFlags::MUTABLE_FLAGS |
+                                          FunctionFlags::BOUND_FUN |
+                                          FunctionFlags::WASM_JIT_ENTRY;
+    if ((flags & UnsupportedFlags) != 0) {
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+
+    // Until we attach the script, we do not mark function as lazy.
+    flags &= ~FunctionFlags::INTERPRETED_LAZY;
+    flags |= FunctionFlags::INTERPRETED;
+
+    fun = NewFunctionWithProto(cx, nullptr, nargs, FunctionFlags(flags),
+                               nullptr, atom, proto, allocKind, TenuredObject);
     if (!fun) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    script = nullptr;
-  }
+    objp.set(fun);
 
-  if (firstword & IsLazy) {
-    MOZ_TRY(XDRLazyScript(xdr, enclosingScope, sourceObject, fun, &lazy));
-  } else {
-    MOZ_TRY(XDRScript(xdr, enclosingScope, sourceObject, fun, &script));
-  }
-
-  if (mode == XDR_DECODE) {
-    fun->setArgCount(flagsword >> 16);
-    fun->setFlags(uint16_t(flagsword));
-    fun->initAtom(atom);
-    if (firstword & IsLazy) {
-      MOZ_ASSERT(fun->baseScript() == lazy);
-    } else {
-      MOZ_ASSERT(fun->baseScript() == script);
-      MOZ_ASSERT(fun->nargs() == script->numArgs());
-    }
-
-    bool singleton = firstword & HasSingletonType;
+    bool singleton = (xdrFlags & HasSingletonType);
     if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    objp.set(fun);
+  }
+
+  if (xdrFlags & IsLazy) {
+    MOZ_TRY(XDRLazyScript(xdr, enclosingScope, sourceObject, fun, &lazy));
+  } else {
+    MOZ_TRY(XDRScript(xdr, enclosingScope, sourceObject, fun, &script));
   }
 
   // Verify marker at end of function to detect buffer trunction.
