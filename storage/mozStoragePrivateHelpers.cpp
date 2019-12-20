@@ -205,7 +205,7 @@ Variant_base* convertVariantToStorageVariant(nsIVariant* aVariant) {
         // Take ownership of the data avoiding a further copy.
         return new AdoptedBlobVariant(v);
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY:

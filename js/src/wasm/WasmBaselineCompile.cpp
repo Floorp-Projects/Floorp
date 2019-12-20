@@ -5733,10 +5733,10 @@ class BaseCompiler final : public BaseCompilerInterface {
       switch (access.type()) {
         case Scalar::Float64:
           *temp3 = needI32();
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
         case Scalar::Float32:
           *temp2 = needI32();
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
         default:
           *temp1 = needI32();
           break;

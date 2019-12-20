@@ -64,7 +64,7 @@ void txOutputFormat::setFromDefaults() {
   switch (mMethod) {
     case eMethodNotSet: {
       mMethod = eXMLOutput;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case eXMLOutput: {
       if (mVersion.IsEmpty()) mVersion.AppendLiteral("1.0");

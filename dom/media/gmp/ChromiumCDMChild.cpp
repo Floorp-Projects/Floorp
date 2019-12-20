@@ -748,14 +748,14 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
         Unused << SendDecodeFailed(cdm::kDecodeError);
         break;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case cdm::kSuccess:
       if (frame.FrameBuffer()) {
         ReturnOutput(frame);
         break;
       }
       // CDM didn't set a frame buffer on the sample, report it as an error.
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default:
       Unused << SendDecodeFailed(rv);
       break;

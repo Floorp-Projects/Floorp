@@ -1802,25 +1802,25 @@ static const TextChar* FirstCharMatcherUnrolled(const TextChar* text,
   switch ((textend - t) & 7) {
     case 0:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 7:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 6:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 5:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 4:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2:
       if (*t++ == pat) return t - 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 1:
       if (*t++ == pat) return t - 1;
   }

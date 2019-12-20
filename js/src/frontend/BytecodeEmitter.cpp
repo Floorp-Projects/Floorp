@@ -1233,7 +1233,7 @@ restart:
     // Any subexpression of a comma expression could be effectful.
     case ParseNodeKind::CommaExpr:
       MOZ_ASSERT(!pn->as<ListNode>().empty());
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     // Subcomponents of a literal may be effectful.
     case ParseNodeKind::ArrayExpr:
     case ParseNodeKind::ObjectExpr:
@@ -9573,7 +9573,7 @@ bool BytecodeEmitter::emitTree(
       if (!markStepBreakpoint()) {
         return false;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case ParseNodeKind::VoidExpr:
     case ParseNodeKind::NotExpr:
     case ParseNodeKind::BitNotExpr:

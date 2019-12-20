@@ -328,7 +328,7 @@ static void ConvertPathSegmentData(SVGPathDataAndInfo::const_iterator& aStart,
       aResult[5] = aStart[5];
       aResult[6] = aStart[6];
       AdjustSegmentForRelativeness(adjustmentType, aResult + 5, aState);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case PATHSEG_CURVETO_QUADRATIC_ABS:
     case PATHSEG_CURVETO_QUADRATIC_REL:
     case PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
@@ -336,7 +336,7 @@ static void ConvertPathSegmentData(SVGPathDataAndInfo::const_iterator& aStart,
       aResult[3] = aStart[3];
       aResult[4] = aStart[4];
       AdjustSegmentForRelativeness(adjustmentType, aResult + 3, aState);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case PATHSEG_MOVETO_ABS:
     case PATHSEG_MOVETO_REL:
     case PATHSEG_LINETO_ABS:

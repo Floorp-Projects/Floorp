@@ -2555,7 +2555,7 @@ static inline bool CanProduceNegativeZero(MDefinition* def) {
           def->toConstant()->toDouble() == -0.0) {
         return true;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case MDefinition::Opcode::BitAnd:
     case MDefinition::Opcode::BitOr:
     case MDefinition::Opcode::BitXor:
@@ -2641,7 +2641,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
           return true;
         }
 
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case MDefinition::Opcode::StoreElement:
       case MDefinition::Opcode::LoadElement:
@@ -3587,7 +3587,7 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
         type = JSTYPE_OBJECT;
         break;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default:
       return this;
   }

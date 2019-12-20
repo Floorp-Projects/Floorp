@@ -4067,7 +4067,7 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
         return false;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case StyleAppearance::Listbox:
 

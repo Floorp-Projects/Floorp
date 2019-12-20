@@ -6461,7 +6461,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       incrementalState = State::MarkRoots;
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::MarkRoots:
       if (!beginMarkPhase(reason, session)) {
@@ -6484,7 +6484,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         break;
       }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::Mark:
       AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
@@ -6528,7 +6528,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       lastMarkSlice = false;
       beginSweepPhase(reason, session);
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::Sweep:
       MOZ_ASSERT(nursery().isEmpty());
@@ -6544,7 +6544,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       incrementalState = State::Finalize;
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::Finalize: {
       gcstats::AutoPhase ap(stats(),
@@ -6578,7 +6578,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         break;
       }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::Compact:
       if (isCompacting) {
@@ -6598,7 +6598,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       startDecommit();
       incrementalState = State::Decommit;
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case State::Decommit: {
       gcstats::AutoPhase ap(stats(),
@@ -6613,7 +6613,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       incrementalState = State::Finish;
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
 
     case State::Finish:

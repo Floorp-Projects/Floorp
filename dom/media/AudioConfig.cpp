@@ -280,11 +280,11 @@ uint32_t AudioConfig::SampleSize(AudioConfig::SampleFormat aFormat) {
     case FORMAT_S16:
       return 2;
     case FORMAT_S24:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case FORMAT_S24LSB:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case FORMAT_S32:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case FORMAT_FLT:
       return 4;
     case FORMAT_NONE:
@@ -301,15 +301,15 @@ uint32_t AudioConfig::FormatToBits(AudioConfig::SampleFormat aFormat) {
     case FORMAT_S16:
       return 16;
     case FORMAT_S24LSB:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case FORMAT_S24:
       return 24;
     case FORMAT_S32:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case FORMAT_FLT:
       return 32;
     case FORMAT_NONE:
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default:
       return 0;
   }

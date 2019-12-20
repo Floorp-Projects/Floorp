@@ -2044,7 +2044,7 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
         msgType = kMsgTypeBinaryString;
 
         // no break: fall down into binary string case
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case kMsgTypeBinaryString:
         mOutHeader[0] = kFinalFragBit | nsIWebSocketFrame::OPCODE_BINARY;

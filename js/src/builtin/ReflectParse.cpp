@@ -2307,7 +2307,7 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
       if (!pn->isKind(ParseNodeKind::StatementList)) {
         return statement(pn, dst);
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case ParseNodeKind::StatementList:
       return blockStatement(&pn->as<ListNode>(), dst);

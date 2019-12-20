@@ -3248,7 +3248,7 @@ IonBuilder::InliningResult IonBuilder::inlineIsTypedArrayHelper(
         return InliningStatus_NotInlined;
       }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case TemporaryTypeSet::ForAllResult::EMPTY:
       result = false;

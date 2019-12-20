@@ -71,7 +71,7 @@ nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
   switch (perm) {
     case nsICookiePermission::ACCESS_SESSION:
       *aIsSession = true;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case nsICookiePermission::ACCESS_ALLOW:
       *aResult = true;

@@ -1089,7 +1089,7 @@ nsresult nsFormFillController::KeyPress(Event* aEvent) {
         break;
       }
     }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case KeyboardEvent_Binding::DOM_VK_UP:
     case KeyboardEvent_Binding::DOM_VK_DOWN:
     case KeyboardEvent_Binding::DOM_VK_LEFT:

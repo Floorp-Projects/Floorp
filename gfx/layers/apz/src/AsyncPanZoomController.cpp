@@ -1341,7 +1341,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
       MOZ_ASSERT(GetCurrentTouchBlock());
       GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations(
           ExcludeOverscroll);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case SCROLLBAR_DRAG:
     case NOTHING: {
       ParentLayerPoint point = GetFirstTouchPoint(aEvent);
@@ -1461,7 +1461,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(
     case FLING:
       // Should never happen.
       NS_WARNING("Received impossible touch end in OnTouchEnd.");
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case ANIMATING_ZOOM:
     case SMOOTH_SCROLL:
     case NOTHING:

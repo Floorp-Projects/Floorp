@@ -2825,7 +2825,7 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
           break;
         case rs_cfc1:
           setRegister(rt_reg, alu_out);
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
         case rs_mfc1:
           setRegister(rt_reg, alu_out);
           break;
@@ -2918,7 +2918,7 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
               // Rounding modes are not yet supported.
               MOZ_ASSERT((FCSR_ & 3) == 0);
               // In rounding mode 0 it should behave like ROUND.
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             case ff_round_w_fmt: {  // Round double to word (round half to
                                     // even).
               float rounded = std::floor(fs_value + 0.5);
@@ -2967,7 +2967,7 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
               // Rounding modes are not yet supported.
               MOZ_ASSERT((FCSR_ & 3) == 0);
               // In rounding mode 0 it should behave like ROUND.
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             case ff_round_l_fmt: {  // Mips64r2 instruction.
               float rounded = fs_value > 0 ? std::floor(fs_value + 0.5)
                                            : std::ceil(fs_value - 0.5);
@@ -3091,7 +3091,7 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
               // Rounding modes are not yet supported.
               MOZ_ASSERT((FCSR_ & 3) == 0);
               // In rounding mode 0 it should behave like ROUND.
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             case ff_round_w_fmt: {  // Round double to word (round half to
                                     // even).
               double rounded = std::floor(ds_value + 0.5);
@@ -3145,7 +3145,7 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
               // Rounding modes are not yet supported.
               MOZ_ASSERT((FCSR_ & 3) == 0);
               // In rounding mode 0 it should behave like ROUND.
-              MOZ_FALLTHROUGH;
+              [[fallthrough]];
             case ff_round_l_fmt: {  // Mips64r2 instruction.
               double rounded = ds_value > 0 ? std::floor(ds_value + 0.5)
                                             : std::ceil(ds_value - 0.5);

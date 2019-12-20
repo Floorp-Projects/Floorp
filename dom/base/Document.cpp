@@ -9247,7 +9247,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
         rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
         return nullptr;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case ELEMENT_NODE:
     case PROCESSING_INSTRUCTION_NODE:
@@ -9583,7 +9583,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       mWidthStrEmpty = metaData.mWidth.IsEmpty();
 
       mViewportType = hasValidContents ? Specified : NoValidContent;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case Specified:
     case NoValidContent:

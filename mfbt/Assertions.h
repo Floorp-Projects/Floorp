@@ -629,11 +629,11 @@ struct AssertionConditionType {
  * debug builds, but intentionally fall through in release builds to handle
  * unexpected values.
  *
- * Why do we need MOZ_FALLTHROUGH_ASSERT in addition to MOZ_FALLTHROUGH? In
+ * Why do we need MOZ_FALLTHROUGH_ASSERT in addition to [[fallthrough]]? In
  * release builds, the MOZ_ASSERT(false) will expand to `do { } while (false)`,
- * requiring a MOZ_FALLTHROUGH annotation to suppress a -Wimplicit-fallthrough
+ * requiring a [[fallthrough]] annotation to suppress a -Wimplicit-fallthrough
  * warning. In debug builds, the MOZ_ASSERT(false) will expand to something like
- * `if (true) { MOZ_CRASH(); }` and the MOZ_FALLTHROUGH annotation will cause
+ * `if (true) { MOZ_CRASH(); }` and the [[fallthrough]] annotation will cause
  * a -Wunreachable-code warning. The MOZ_FALLTHROUGH_ASSERT macro breaks this
  * warning stalemate.
  *
@@ -642,7 +642,7 @@ struct AssertionConditionType {
  *   default:
  *     // This case wants to assert in debug builds, fall through in release.
  *     MOZ_ASSERT(false); // -Wimplicit-fallthrough warning in release builds!
- *     MOZ_FALLTHROUGH;   // but -Wunreachable-code warning in debug builds!
+ *     [[fallthrough]];   // but -Wunreachable-code warning in debug builds!
  *   case 5:
  *     return 5;
  * }
@@ -660,7 +660,7 @@ struct AssertionConditionType {
 #  define MOZ_FALLTHROUGH_ASSERT(...) \
     MOZ_CRASH("MOZ_FALLTHROUGH_ASSERT: " __VA_ARGS__)
 #else
-#  define MOZ_FALLTHROUGH_ASSERT(...) MOZ_FALLTHROUGH
+#  define MOZ_FALLTHROUGH_ASSERT(...) [[fallthrough]]
 #endif
 
 /*

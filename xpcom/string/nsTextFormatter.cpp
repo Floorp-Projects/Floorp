@@ -259,14 +259,14 @@ int nsTextFormatter::cvt_f(SprintfStateStr* aState, double aDouble, int aWidth,
       break;
     case 'E':
       exp = 'E';
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 'e':
       numdigits = aPrec + 1;
       mode = 2;
       break;
     case 'G':
       exp = 'E';
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 'g':
       if (aPrec == 0) {
         aPrec = 1;

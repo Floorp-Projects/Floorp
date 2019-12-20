@@ -664,7 +664,7 @@ nsresult nsMultiMixedConv::ConsumeToken(Token const& token) {
         return rv;
       }
       mParserState = BODY;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case BODY: {
       if (!token.Equals(mLFToken) && !token.Equals(mCRLFToken)) {
