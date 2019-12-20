@@ -10,6 +10,7 @@
 #include "gc/AllocKind.h"
 #include "gc/Rooting.h"
 #include "js/RegExpFlags.h"
+#include "vm/BigIntType.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 
@@ -150,6 +151,43 @@ class RegExpCreationData {
 };
 
 using RegExpIndex = TypedIndex<RegExpCreationData>;
+
+// This owns a set of characters guaranteed to parse into a BigInt via
+// ParseBigIntLiteral. Used to avoid allocating the BigInt on the
+// GC heap during parsing.
+class BigIntCreationData {
+  UniqueTwoByteChars buf_;
+  size_t length_ = 0;
+
+ public:
+  BigIntCreationData() = default;
+
+  MOZ_MUST_USE bool init(JSContext* cx, const Vector<char16_t, 32>& buf) {
+#ifdef DEBUG
+    // Assert we have no separators; if we have a separator then the algorithm
+    // used in BigInt::literalIsZero will be incorrect.
+    for (char16_t c : buf) {
+      MOZ_ASSERT(c != '_');
+    }
+#endif
+    length_ = buf.length();
+    buf_ = js::DuplicateString(cx, buf.begin(), buf.length());
+    return buf_ != nullptr;
+  }
+
+  BigInt* createBigInt(JSContext* cx) {
+    mozilla::Range<const char16_t> source(buf_.get(), length_);
+
+    return js::ParseBigIntLiteral(cx, source);
+  }
+
+  bool isZero() {
+    mozilla::Range<const char16_t> source(buf_.get(), length_);
+    return js::BigIntLiteralIsZero(source);
+  }
+};
+
+using BigIntIndex = TypedIndex<BigIntCreationData>;
 
 } /* namespace frontend */
 } /* namespace js */
