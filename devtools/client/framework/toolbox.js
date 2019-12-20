@@ -2064,7 +2064,7 @@ Toolbox.prototype = {
    * Update the buttons.
    */
   updateToolboxButtons() {
-    const inspectorFront = this.target.getCachedFront("inspectorFront");
+    const inspectorFront = this.target.getCachedFront("inspector");
     // two of the buttons have highlighters that need to be cleared
     // on will-navigate, otherwise we hold on to the stale highlighter
     const hasHighlighters =
