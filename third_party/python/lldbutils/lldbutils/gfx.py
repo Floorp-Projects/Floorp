@@ -1,4 +1,8 @@
-import lldb
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+from __future__ import absolute_import
+
 
 def summarize_nscolor(valobj, internal_dict):
     colors = {
@@ -30,9 +34,10 @@ def summarize_nscolor(valobj, internal_dict):
         return colors[color]
     return color
 
+
 class RegionSyntheticChildrenProvider:
 
-    def __init__(self, valobj, internal_dict, rect_type = "nsRect"):
+    def __init__(self, valobj, internal_dict, rect_type="nsRect"):
         self.rect_type = rect_type
         self.valobj = valobj
         self.pixman_region = self.valobj.GetChildMemberWithName("mImpl")
@@ -41,7 +46,8 @@ class RegionSyntheticChildrenProvider:
         self.num_rects = self.pixman_region_num_rects()
         self.box_type = self.pixman_extents.GetType()
         self.box_type_size = self.box_type.GetByteSize()
-        self.box_list_base_ptr = self.pixman_data.GetValueAsUnsigned(0) + self.pixman_data.GetType().GetPointeeType().GetByteSize()
+        self.box_list_base_ptr = self.pixman_data.GetValueAsUnsigned(0) \
+            + self.pixman_data.GetType().GetPointeeType().GetByteSize()
 
     def pixman_region_num_rects(self):
         if self.pixman_data.GetValueAsUnsigned(0):
@@ -81,6 +87,7 @@ class RegionSyntheticChildrenProvider:
         box = self.pixman_data.CreateValueFromAddress('', box_address, self.box_type)
         return self.convert_pixman_box_to_rect(box, "[%d]" % rect_index)
 
+
 class IntRegionSyntheticChildrenProvider:
     def __init__(self, valobj, internal_dict):
         wrapped_region = valobj.GetChildMemberWithName("mImpl")
@@ -95,6 +102,7 @@ class IntRegionSyntheticChildrenProvider:
     def get_child_at_index(self, index):
         return self.wrapped_provider.get_child_at_index(index)
 
+
 def summarize_rect(valobj, internal_dict):
     x = valobj.GetChildMemberWithName("x").GetValue()
     y = valobj.GetChildMemberWithName("y").GetValue()
@@ -102,10 +110,12 @@ def summarize_rect(valobj, internal_dict):
     height = valobj.GetChildMemberWithName("height").GetValue()
     return "%s, %s, %s, %s" % (x, y, width, height)
 
+
 def rect_is_empty(valobj):
     width = valobj.GetChildMemberWithName("width").GetValueAsSigned()
     height = valobj.GetChildMemberWithName("height").GetValueAsSigned()
     return width <= 0 or height <= 0
+
 
 def summarize_region(valobj, internal_dict):
     # This function makes use of the synthetic children generated for ns(Int)Regions.
@@ -118,6 +128,7 @@ def summarize_region(valobj, internal_dict):
         if num_rects == 1:
             return "one rect: " + bounds_summary
     return str(num_rects) + " rects, bounds: " + bounds_summary
+
 
 def init(debugger):
     debugger.HandleCommand("type summary add nscolor -v -F lldbutils.gfx.summarize_nscolor")
