@@ -212,6 +212,10 @@ jobs:
     static-analysis-build:
         symbol: I(static-analysis-build)
         parent: debian9-base
+    gdb-test:
+        symbol: I(gdb)
+        parent: debian7-amd64-build
+        definition: gdb-test
     mingw32-build:
         symbol: I(mingw)
         parent: debian9-base
