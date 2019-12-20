@@ -12769,12 +12769,13 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   if (mode == Callable) {
     masm.move32(Imm32(1), output);
   } else {
-    static_assert(mozilla::IsPowerOfTwo(unsigned(FunctionFlags::CONSTRUCTOR)),
+    static_assert(mozilla::IsPowerOfTwo(uint32_t(FunctionFlags::CONSTRUCTOR)),
                   "FunctionFlags::CONSTRUCTOR has only one bit set");
 
     masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
-    masm.rshift32(Imm32(mozilla::FloorLog2(FunctionFlags::CONSTRUCTOR)),
-                  output);
+    masm.rshift32(
+        Imm32(mozilla::FloorLog2(uint32_t(FunctionFlags::CONSTRUCTOR))),
+        output);
     masm.and32(Imm32(1), output);
   }
   masm.jump(&done);
