@@ -57,6 +57,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/trackingUI/browser.ini',
     'content/test/webextensions/browser.ini',
     'content/test/webrtc/browser.ini',
+    'content/test/zoom/browser.ini',
 ]
 
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']

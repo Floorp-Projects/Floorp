@@ -6,8 +6,12 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["ZoomUI"];
-
+const gLoadContext = Cu.createLoadContext();
+const gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
+  Ci.nsIContentPrefService2
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const gZoomPropertyName = "browser.content.full-zoom";
 
 var ZoomUI = {
   init(aWindow) {
@@ -27,6 +31,45 @@ var ZoomUI = {
       },
       { once: true }
     );
+  },
+
+  /**
+   * Gets the global browser.content.full-zoom content preference.
+   *
+   * @returns Promise<prefValue>
+   *                  Resolves to the preference value (float) when done.
+   */
+  getGlobalValue() {
+    return new Promise(resolve => {
+      let cachedVal = gContentPrefs.getCachedGlobal(
+        gZoomPropertyName,
+        gLoadContext
+      );
+      if (cachedVal) {
+        // We've got cached information, though it may be we've cached
+        // an undefined value, or the cached info is invalid. To ensure
+        // a valid return, we opt to return the default 1.0 in the
+        // undefined and invalid cases.
+        resolve(parseFloat(cachedVal.value) || 1.0);
+        return;
+      }
+      // Otherwise, nothing is cached, so we must do a full lookup
+      // with  `gContentPrefs.getGlobal()`.
+      let value = 1.0;
+      gContentPrefs.getGlobal(gZoomPropertyName, gLoadContext, {
+        handleResult(pref) {
+          if (pref.value) {
+            value = parseFloat(pref.value);
+          }
+        },
+        handleCompletion(reason) {
+          resolve(value);
+        },
+        handleError(error) {
+          Cu.reportError(error);
+        },
+      });
+    });
   },
 };
 
@@ -74,7 +117,7 @@ function onZoomChange(event) {
  * @param {boolean} aAnimate Should be True for all cases unless the zoom
  *   change is related to tab switching. Optional
  */
-function updateZoomUI(aBrowser, aAnimate = false) {
+async function updateZoomUI(aBrowser, aAnimate = false) {
   let win = aBrowser.ownerGlobal;
   if (!win.gBrowser || win.gBrowser.selectedBrowser != aBrowser) {
     return;
@@ -88,10 +131,22 @@ function updateZoomUI(aBrowser, aAnimate = false) {
   let urlbarZoomButton = win.document.getElementById("urlbar-zoom-button");
   let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
 
-  // Hide urlbar zoom button if zoom is at 100% or the customizable control is
-  // in the toolbar.
+  // Hide urlbar zoom button if zoom is at the default zoom level,
+  // or the customizable control is in the toolbar
+
+  let defaultZoom = (await ZoomUI.getGlobalValue()) * 100;
+
+  if (!win.gBrowser || win.gBrowser.selectedBrowser != aBrowser) {
+    // Because the CPS call is async, at this point the selected browser
+    // may have changed. We should re-check whether the browser for which we've
+    // been notified is still the selected browser and bail out if not.
+    // If the selected browser changed (again), we will have been called again
+    // with the "right" browser, and that'll update the zoom level.
+    return;
+  }
+
   urlbarZoomButton.hidden =
-    zoomFactor == 100 ||
+    defaultZoom == zoomFactor ||
     (customizableZoomControls &&
       customizableZoomControls.getAttribute("cui-areatype") == "toolbar");
 
