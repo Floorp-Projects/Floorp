@@ -553,10 +553,11 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
       return false;
     }
 
+    // NB: While bad data integrity might for some reason result in a null
+    // mModule, we do not fail the deserialization; this is a data error,
+    // rather than an IPC error. The error is detected and dealt with in
+    // telemetry.
     aResult->mModule = aModulesMap.Get(resolvedNtName);
-    if (!aResult->mModule) {
-      return false;
-    }
 
     return true;
   }
