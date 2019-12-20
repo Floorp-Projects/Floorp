@@ -139,7 +139,7 @@ mozharness:
         cache-dotcache: true
         cwd: '{checkout}/testing/mozharness'
         command: >
-            /usr/local/bin/tox -e py27-hg4.3
+            /usr/local/bin/tox -e py27-hg5.2
     when:
         files-changed:
             - 'testing/mozharness/**'
@@ -154,7 +154,7 @@ mozharness-py3:
         cache-dotcache: true
         cwd: '{checkout}/testing/mozharness'
         command: >
-            /usr/local/bin/tox -e py35-hg4.3
+            /usr/local/bin/tox -e py35-hg5.2
     run-on-projects: ['mozilla-central', 'try']
     when:
         files-changed:
