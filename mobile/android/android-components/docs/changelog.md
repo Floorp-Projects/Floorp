@@ -12,6 +12,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-remotetabs** was renamed to **feature-syncedtabs**
+  * ⚠️ **This is a breaking change**:
+  * `RemoteTabsFeature` is now `SyncedTabsFeature`, and some method names have corresponding changes.
+  * `RemoteTabsStorageSuggestionProvider` is now `SyncedTabsStorageSuggestionProvider`.
+
 * **service-glean**
   * Glean was updated to v22.1.0 ([Full changelog](https://github.com/mozilla/glean/compare/v21.3.0...v22.1.0))
     * Attempt to re-send the deletion ping on init even if upload is disabled.

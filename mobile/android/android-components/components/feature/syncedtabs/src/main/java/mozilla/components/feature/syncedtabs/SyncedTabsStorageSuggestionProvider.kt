@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.remotetabs
+package mozilla.components.feature.syncedtabs
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.icons.BrowserIcons
@@ -14,11 +14,11 @@ import java.util.UUID
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions for remote tabs
- * based on [RemoteTabsFeature].
+ * based on [SyncedTabsFeature].
  */
 @ExperimentalCoroutinesApi
-class RemoteTabsStorageSuggestionProvider(
-    private val remoteTabs: RemoteTabsFeature,
+class SyncedTabsStorageSuggestionProvider(
+    private val syncedTabs: SyncedTabsFeature,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null
 ) : AwesomeBar.SuggestionProvider {
@@ -31,7 +31,7 @@ class RemoteTabsStorageSuggestionProvider(
         }
 
         val results = mutableListOf<ClientTabPair>()
-        for ((client, tabs) in remoteTabs.getRemoteTabs()) {
+        for ((client, tabs) in syncedTabs.getSyncedTabs()) {
             for (tab in tabs) {
                 val activeTabEntry = tab.active()
                 // This is a fairly naive match implementation, but this is what we do on Desktop 🤷.
@@ -58,7 +58,7 @@ class RemoteTabsStorageSuggestionProvider(
 
         return this.zip(iconRequests) { result, icon ->
             AwesomeBar.Suggestion(
-                provider = this@RemoteTabsStorageSuggestionProvider,
+                provider = this@SyncedTabsStorageSuggestionProvider,
                 icon = icon?.await()?.bitmap,
                 title = result.tab.title,
                 description = result.clientName,

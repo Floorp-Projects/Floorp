@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.remotetabs
+package mozilla.components.feature.syncedtabs
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +25,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * in [RemoteTabsStorage].
  */
 @ExperimentalCoroutinesApi
-class RemoteTabsFeature(
+class SyncedTabsFeature(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
@@ -63,7 +63,7 @@ class RemoteTabsFeature(
     /**
      * Get the list of remote tabs.
      */
-    suspend fun getRemoteTabs(): Map<Device, List<Tab>> {
+    suspend fun getSyncedTabs(): Map<Device, List<Tab>> {
         val otherDevices = syncClients() ?: return emptyMap()
         return tabsStorage.getAll().mapNotNull { (client, tabs) ->
             val fxaDevice = otherDevices.find { it.id == client.id }
