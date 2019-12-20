@@ -1739,6 +1739,15 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
+  // Elide nullptr sentinels from end of binding list. These are inserted for
+  // each scope regardless of if any bindings are actually closed over.
+  {
+    AtomVector& COB = pc_->closedOverBindingsForLazy();
+    while (!COB.empty() && (COB.back() == nullptr)) {
+      COB.popBack();
+    }
+  }
+
   // There are too many bindings or inner functions to be saved into the
   // LazyScript. Do a full parse.
   if (pc_->closedOverBindingsForLazy().length() >=
