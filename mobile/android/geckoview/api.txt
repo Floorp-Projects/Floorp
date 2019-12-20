@@ -851,6 +851,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginStoragePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.LoginStoragePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSharePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.SharePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
@@ -987,6 +988,24 @@ package org.mozilla.geckoview {
     ctor protected Type();
     field public static final int MULTIPLE = 2;
     field public static final int SINGLE = 1;
+  }
+
+  public static class GeckoSession.PromptDelegate.LoginStoragePrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected LoginStoragePrompt(int, int, @NonNull LoginStorage.LoginEntry[]);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull LoginStorage.LoginEntry);
+    field public final int hint;
+    field @NonNull public final LoginStorage.LoginEntry[] logins;
+    field public final int type;
+  }
+
+  public static class GeckoSession.PromptDelegate.LoginStoragePrompt.Hint {
+    ctor protected Hint();
+    field public static final int NONE = 0;
+  }
+
+  public static class GeckoSession.PromptDelegate.LoginStoragePrompt.Type {
+    ctor protected Type();
+    field public static final int SAVE = 1;
   }
 
   public static class GeckoSession.PromptDelegate.PopupPrompt extends GeckoSession.PromptDelegate.BasePrompt {
@@ -1195,6 +1214,7 @@ package org.mozilla.geckoview {
 
   public static interface LoginStorage.Delegate {
     method @UiThread @Nullable default public GeckoResult<LoginStorage.LoginEntry[]> onLoginFetch(@NonNull String);
+    method @UiThread default public void onLoginSave(@NonNull LoginStorage.LoginEntry);
   }
 
   public static class LoginStorage.LoginEntry {
