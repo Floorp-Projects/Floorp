@@ -21,6 +21,7 @@ class nsIRadioVisitor;
 class nsWindowSizes;
 
 namespace mozilla {
+class ErrorResult;
 class StyleSheet;
 class ErrorResult;
 
