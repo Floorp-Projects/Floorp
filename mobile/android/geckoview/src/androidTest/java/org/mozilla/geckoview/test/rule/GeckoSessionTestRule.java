@@ -98,6 +98,7 @@ public class GeckoSessionTestRule implements TestRule {
     private static final Method sOnPageStop;
     private static final Method sOnNewSession;
     private static final Method sOnCrash;
+    private static final Method sOnKill;
 
     static {
         try {
@@ -108,6 +109,8 @@ public class GeckoSessionTestRule implements TestRule {
             sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
                     "onNewSession", GeckoSession.class, String.class);
             sOnCrash = GeckoSession.ContentDelegate.class.getMethod(
+                    "onCrash", GeckoSession.class);
+            sOnKill = GeckoSession.ContentDelegate.class.getMethod(
                     "onKill", GeckoSession.class);
         } catch (final NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -1031,7 +1034,8 @@ public class GeckoSessionTestRule implements TestRule {
                         session = (GeckoSession) args[0];
                     }
 
-                    if (sOnCrash.equals(method) && !mIgnoreCrash && isUsingSession(session)) {
+                    if ((sOnCrash.equals(method) || sOnKill.equals(method))
+                            && !mIgnoreCrash && isUsingSession(session)) {
                         if (env.shouldShutdownOnCrash()) {
                             getRuntime().shutdown();
                         }
