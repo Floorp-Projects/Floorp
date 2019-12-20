@@ -603,30 +603,15 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
                                   JS::GCCellPtr* thingp) {
   JSContext* cx = xdr->cx();
 
-  enum class GCThingTag { Object, Scope, BigInt };
+  JS::TraceKind kind = thingp->kind();
 
-  JS::GCCellPtr thing;
+  MOZ_TRY(xdr->codeEnum32(&kind));
 
-  GCThingTag tag;
-  if (mode == XDR_ENCODE) {
-    thing = *thingp;
-    if (thing.is<JSObject>()) {
-      tag = GCThingTag::Object;
-    } else if (thing.is<Scope>()) {
-      tag = GCThingTag::Scope;
-    } else {
-      MOZ_ASSERT(thing.is<BigInt>());
-      tag = GCThingTag::BigInt;
-    }
-  }
-
-  MOZ_TRY(xdr->codeEnum32(&tag));
-
-  switch (tag) {
-    case GCThingTag::Object: {
+  switch (kind) {
+    case JS::TraceKind::Object: {
       RootedObject obj(cx);
       if (mode == XDR_ENCODE) {
-        obj = &thing.as<JSObject>();
+        obj = &thingp->as<JSObject>();
       }
       MOZ_TRY(XDRInnerObject(xdr, data, sourceObject, &obj));
       if (mode == XDR_DECODE) {
@@ -634,10 +619,11 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
       }
       break;
     }
-    case GCThingTag::Scope: {
+
+    case JS::TraceKind::Scope: {
       RootedScope scope(cx);
       if (mode == XDR_ENCODE) {
-        scope = &thing.as<Scope>();
+        scope = &thingp->as<Scope>();
       }
       MOZ_TRY(XDRScope(xdr, data, scriptEnclosingScope, funOrMod, *isFirstScope,
                        &scope));
@@ -647,10 +633,11 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
       *isFirstScope = false;
       break;
     }
-    case GCThingTag::BigInt: {
+
+    case JS::TraceKind::BigInt: {
       RootedBigInt bi(cx);
       if (mode == XDR_ENCODE) {
-        bi = &thing.as<BigInt>();
+        bi = &thingp->as<BigInt>();
       }
       MOZ_TRY(XDRBigInt(xdr, &bi));
       if (mode == XDR_DECODE) {
@@ -658,9 +645,10 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
       }
       break;
     }
+
     default:
       // Fail in debug, but only soft-fail in release.
-      MOZ_ASSERT(false, "Bad XDR GCThingTag");
+      MOZ_ASSERT(false, "Bad XDR class kind");
       return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
   }
   return Ok();
