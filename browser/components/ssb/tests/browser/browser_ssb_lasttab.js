@@ -23,17 +23,15 @@ add_task(async () => {
     gHttpsTestRoot + "test_page.html"
   );
 
-  let ssbwin = await openSSBFromBrowserWindow(win);
+  let ssb = await openSSBFromBrowserWindow(win);
   Assert.equal(win.gBrowser.tabs.length, 1, "Should still be only one tab.");
   Assert.notEqual(tab, win.gBrowser.selectedTab, "Should be a new tab.");
   Assert.equal(
-    getBrowser(ssbwin).currentURI.spec,
+    getBrowser(ssb).currentURI.spec,
     gHttpsTestRoot + "test_page.html"
   );
 
-  await getSSB(ssbwin).uninstall();
-
   Assert.ok(!windowClosed, "Should not have seen the window close.");
-  await BrowserTestUtils.closeWindow(ssbwin);
+  await BrowserTestUtils.closeWindow(ssb);
   await BrowserTestUtils.closeWindow(win);
 });

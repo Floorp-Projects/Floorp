@@ -7,7 +7,7 @@ function build_task(page, linkId, external, preload) {
   let expectedTarget = linkId + "/final.html";
 
   add_task(async () => {
-    let ssbwin;
+    let ssb;
 
     info(`Loading ${page} (${preload})`);
     if (preload) {
@@ -17,15 +17,15 @@ function build_task(page, linkId, external, preload) {
         url: gHttpsTestRoot + page,
       });
 
-      ssbwin = await openSSBFromBrowserWindow();
+      ssb = await openSSBFromBrowserWindow();
     } else {
       // The manifest will be loaded once the initial page loads.
-      ssbwin = await openSSB(gHttpsTestRoot + page);
+      ssb = await openSSB(gHttpsTestRoot + page);
     }
 
     let promise;
     if (external) {
-      promise = expectTabLoad(ssbwin).then(tab => {
+      promise = expectTabLoad(ssb).then(tab => {
         Assert.equal(
           tab.linkedBrowser.currentURI.spec,
           gHttpsTestRoot + expectedTarget,
@@ -34,9 +34,9 @@ function build_task(page, linkId, external, preload) {
         BrowserTestUtils.removeTab(tab);
       });
     } else {
-      promise = expectSSBLoad(ssbwin).then(() => {
+      promise = expectSSBLoad(ssb).then(() => {
         Assert.equal(
-          getBrowser(ssbwin).currentURI.spec,
+          getBrowser(ssb).currentURI.spec,
           gHttpsTestRoot + expectedTarget,
           "Should have loaded the right uri."
         );
@@ -47,12 +47,11 @@ function build_task(page, linkId, external, preload) {
     await BrowserTestUtils.synthesizeMouseAtCenter(
       `#${linkId}`,
       {},
-      getBrowser(ssbwin)
+      getBrowser(ssb)
     );
 
     await promise;
-    await getSSB(ssbwin).uninstall();
-    await BrowserTestUtils.closeWindow(ssbwin);
+    await BrowserTestUtils.closeWindow(ssb);
   });
 }
 
