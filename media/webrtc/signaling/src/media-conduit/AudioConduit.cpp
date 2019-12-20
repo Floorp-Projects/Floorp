@@ -277,6 +277,34 @@ void WebrtcAudioConduit::OnRtpPacket(const webrtc::RTPHeader& aHeader,
   mRtpSourceObserver.OnRtpPacket(aHeader, aTimestamp, aJitter);
 }
 
+void WebrtcAudioConduit::OnRtcpBye() {
+  RefPtr<WebrtcAudioConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpBye();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcAudioConduit::OnRtcpTimeout() {
+  RefPtr<WebrtcAudioConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpTimeout();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcAudioConduit::SetRtcpEventObserver(
+    mozilla::RtcpEventObserver* observer) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mRtcpEventObserver = observer;
+}
+
 void WebrtcAudioConduit::GetRtpSources(
     const int64_t aTimeNow, nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1080,6 +1108,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateChannels() {
   }
 
   mRecvChannelProxy->SetRtpPacketObserver(this);
+  mRecvChannelProxy->SetRtcpEventObserver(this);
   mRecvChannelProxy->RegisterTransport(this);
 
   mSendChannelProxy = vei->GetChannelProxy(mSendChannel);

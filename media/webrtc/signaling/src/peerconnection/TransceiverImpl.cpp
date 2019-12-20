@@ -59,6 +59,8 @@ TransceiverImpl::TransceiverImpl(
 
   mConduit->SetPCHandle(mPCHandle);
 
+  mConduit->SetRtcpEventObserver(this);
+
   mTransmitPipeline =
       new MediaPipelineTransmit(mPCHandle, mTransportHandler, mMainThread.get(),
                                 mStsThread.get(), IsVideo(), mConduit);
@@ -959,6 +961,7 @@ void TransceiverImpl::Stop() {
 
   if (mConduit) {
     mConduit->DeleteStreams();
+    mConduit->SetRtcpEventObserver(nullptr);
   }
   mConduit = nullptr;
 }
@@ -978,6 +981,10 @@ void TransceiverImpl::GetRtpSources(
       static_cast<WebrtcAudioConduit*>(mConduit.get());
   audio_conduit->GetRtpSources(aTimeNow, outSources);
 }
+
+void TransceiverImpl::OnRtcpBye() { SetReceiveTrackMuted(true); }
+
+void TransceiverImpl::OnRtcpTimeout() { SetReceiveTrackMuted(true); }
 
 void TransceiverImpl::InsertAudioLevelForContributingSource(
     const uint32_t aSource, const int64_t aTimestamp,
