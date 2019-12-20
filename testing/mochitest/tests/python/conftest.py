@@ -65,6 +65,7 @@ def runtests(setup_test_harness, binary, parser, request):
             'path': os.path.join(test_root, test),
             # add a dummy manifest file because mochitest expects it
             'manifest': os.path.join(test_root, 'mochitest.ini'),
+            'manifest_relpath': 'mochitest.ini',
         }
 
     def inner(*tests, **opts):
