@@ -1233,6 +1233,8 @@ class LoginStorageDelegate {
 
         const loginInfo = LoginEntry.fromBundle(result.login).toLoginInfo();
         Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
+
+        GeckoViewLoginStorage.onLoginSave(result.login);
       }
     );
   }
