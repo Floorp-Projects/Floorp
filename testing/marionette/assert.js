@@ -243,6 +243,26 @@ assert.number = function(obj, msg = "") {
 };
 
 /**
+ * Asserts that <var>obj</var> is a positive number.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {number}
+ *     <var>obj</var> is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>obj</var> is not a positive integer.
+ */
+assert.positiveNumber = function(obj, msg = "") {
+  assert.number(obj, msg);
+  msg = msg || pprint`Expected ${obj} to be >= 0`;
+  return assert.that(n => n >= 0, msg)(obj);
+};
+
+/**
  * Asserts that <var>obj</var> is callable.
  *
  * @param {?} obj
