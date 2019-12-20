@@ -15,6 +15,7 @@
 
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "frontend/Stencil.h"
 #include "vm/JSContext.h"
 
 namespace js {
@@ -236,8 +237,8 @@ class FullParseHandler {
     return new_<RegExpLiteral>(objbox, pos);
   }
 
-  RegExpLiteralType newRegExp(const TokenPos& pos) {
-    return new_<RegExpLiteral>(pos);
+  RegExpLiteralType newRegExp(RegExpIndex index, const TokenPos& pos) {
+    return new_<RegExpLiteral>(index, pos);
   }
 
   ConditionalExpressionType newConditional(Node cond, Node thenExpr,

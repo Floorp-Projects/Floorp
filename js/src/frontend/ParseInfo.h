@@ -12,6 +12,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionTree.h"
+#include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
 #include "js/RealmOptions.h"
 #include "js/Vector.h"
@@ -38,6 +39,9 @@ struct MOZ_RAII ParseInfo {
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
   Mode mode;
+  // Hold onto the RegExpCreationData that are allocated during parse to
+  // ensure correct destruction.
+  Vector<RegExpCreationData> regExpData;
 
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
@@ -45,7 +49,8 @@ struct MOZ_RAII ParseInfo {
         treeHolder(cx),
         mode(cx->realm()->behaviors().deferredParserAlloc()
                  ? ParseInfo::Mode::Deferred
-                 : ParseInfo::Mode::Eager) {}
+                 : ParseInfo::Mode::Eager),
+        regExpData(cx) {}
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

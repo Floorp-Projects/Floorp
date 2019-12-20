@@ -16,6 +16,18 @@
 namespace js {
 namespace frontend {
 
+// TypedIndex allows discrimination in variants between different
+// index types. Used as a typesafe index for various stencil arrays.
+template <typename Tag>
+struct TypedIndex {
+  explicit TypedIndex(uint32_t index) : index(index){};
+
+  uint32_t index = 0;
+
+  // For Vector::operator[]
+  operator size_t() const { return index; }
+};
+
 // [SMDOC] Script Stencil (Frontend Representation)
 //
 // Stencils are GC object free representations of artifacts created during
@@ -136,6 +148,8 @@ class RegExpCreationData {
 
   RegExpObject* createRegExp(JSContext* cx) const;
 };
+
+using RegExpIndex = TypedIndex<RegExpCreationData>;
 
 } /* namespace frontend */
 } /* namespace js */

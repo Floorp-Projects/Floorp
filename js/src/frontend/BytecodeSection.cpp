@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"    // PodZero
 #include "mozilla/ReverseIterator.h"  // mozilla::Reversed
 
+#include "frontend/ParseInfo.h"
 #include "frontend/ParseNode.h"      // ObjectBox
 #include "frontend/SharedContext.h"  // FunctionBox
 #include "vm/BytecodeUtil.h"         // INDEX_LIMIT, StackUses, StackDefs
@@ -42,12 +43,14 @@ void GCThingList::finishInnerFunctions() {
   }
 }
 
-bool GCThingList::finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array) {
+bool GCThingList::finish(JSContext* cx, ParseInfo& parseInfo,
+                         mozilla::Span<JS::GCCellPtr> array) {
   MOZ_ASSERT(length() <= INDEX_LIMIT);
   MOZ_ASSERT(length() == array.size());
 
   struct Matcher {
     JSContext* cx;
+    ParseInfo& parseInfo;
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& array;
 
@@ -65,7 +68,8 @@ bool GCThingList::finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array) {
       return true;
     }
 
-    bool operator()(RegExpCreationData& data) {
+    bool operator()(RegExpIndex& rindex) {
+      RegExpCreationData& data = parseInfo.regExpData[rindex];
       RegExpObject* regexp = data.createRegExp(cx);
       if (!regexp) {
         return false;
@@ -85,7 +89,7 @@ bool GCThingList::finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array) {
   };
 
   for (uint32_t i = 0; i < length(); i++) {
-    Matcher m{cx, i, array};
+    Matcher m{cx, parseInfo, i, array};
     if (!vector[i].get().match(m)) {
       return false;
     }
