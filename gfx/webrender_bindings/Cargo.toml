@@ -31,9 +31,6 @@ dwrote = "0.9"
 dirs = "1.0"
 winapi = "0.3"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
-
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
 core-graphics = "0.17.1"
