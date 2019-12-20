@@ -469,10 +469,12 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
                           NS_LITERAL_CSTRING("gmplugin"), 1);
     nsString dumpID;
     if (!GetCrashID(dumpID)) {
-      NS_WARNING("GMP crash without crash report");
-      dumpID = mName;
-      dumpID += '-';
-      AppendUTF8toUTF16(mVersion, dumpID);
+      if (dumpID.IsEmpty()) {
+        NS_WARNING("GMP crash without crash report");
+        dumpID = mName;
+        dumpID += '-';
+        AppendUTF8toUTF16(mVersion, dumpID);
+      }
     }
 
     // NotifyObservers is mainthread-only

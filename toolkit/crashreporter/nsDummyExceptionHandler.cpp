@@ -211,7 +211,8 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   return false;
 }
 
-bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType) {
+bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
+                              nsString* aDumpId) {
   return false;
 }
 

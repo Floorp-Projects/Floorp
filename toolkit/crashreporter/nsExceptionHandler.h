@@ -182,8 +182,10 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
  *
  * @param aChildPid The pid of the crashed child process
  * @param aType The type of the crashed process
+ * @param aDumpId A string that will be filled with the dump ID
  */
-bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType);
+bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
+                              nsString* aDumpId = nullptr);
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
