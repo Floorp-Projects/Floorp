@@ -409,6 +409,11 @@ void ChannelProxy::SetRtpPacketObserver(RtpPacketObserver* observer) {
   channel()->SetRtpPacketObserver(observer);
 }
 
+void ChannelProxy::SetRtcpEventObserver(RtcpEventObserver* observer) {
+  RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
+  channel()->SetRtcpEventObserver(observer);
+}
+
 Channel* ChannelProxy::channel() const {
   RTC_DCHECK(channel_owner_.channel());
   return channel_owner_.channel();

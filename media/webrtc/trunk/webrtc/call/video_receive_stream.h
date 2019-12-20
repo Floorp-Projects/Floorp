@@ -226,6 +226,10 @@ class VideoReceiveStream {
     // Target delay in milliseconds. A positive value indicates this stream is
     // used for streaming instead of a real-time call.
     int target_delay_ms = 0;
+
+    // Called when a RTCP bye or timeout occurs. 'nullptr' disables the
+    // callback.
+    RtcpEventObserver* rtcp_event_observer = nullptr;
   };
 
   // Starts stream activity.
