@@ -1790,6 +1790,7 @@ lucetc = check_prog('LUCETC', ['lucetc'],
                     paths=toolchain_search_path, when=requires_wasm_sandboxing)
 
 option('--with-wasi-sysroot',
+       env='WASI_SYSROOT',
        nargs=1,
        help='Path to wasi sysroot for wasm sandboxing',
        when=requires_wasm_sandboxing)
