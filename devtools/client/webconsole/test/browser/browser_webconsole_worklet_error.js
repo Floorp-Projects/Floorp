@@ -21,7 +21,6 @@ add_task(async function() {
     findMessage(hud, "SyntaxError: duplicate formal argument")
   );
   ok(true, "Received expected SyntaxError");
-
   await checkMessageStack(hud, "addModule", [18, 21]);
   await checkMessageStack(hud, "process", [7, 12]);
 });

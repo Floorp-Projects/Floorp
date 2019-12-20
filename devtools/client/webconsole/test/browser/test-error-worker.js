@@ -1,6 +1,8 @@
 "use strict";
 
-self.addEventListener("message", ({ data }) => foo(data));
+self.addEventListener("message", function onMessage({ data }) {
+  return foo(data);
+});
 
 var w = new Worker("test-error-worker2.js");
 w.postMessage({});

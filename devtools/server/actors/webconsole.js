@@ -1682,8 +1682,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         lineNumber: s.line,
         columnNumber: s.column,
         functionName: s.functionDisplayName,
+        asyncCause: s.asyncCause ? s.asyncCause : undefined,
       });
-      s = s.parent;
+      s = s.parent || s.asyncParent;
     }
     return stack;
   },
