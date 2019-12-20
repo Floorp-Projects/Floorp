@@ -47,15 +47,7 @@ add_task(async function() {
   is(elements.length, 2, "Grid outline is shown.");
 
   info("Changing the grid in the page");
-  const onReflow = new Promise(resolve => {
-    const listener = {
-      callback: () => {
-        inspector.reflowTracker.untrackReflows(listener, listener.callback);
-        resolve();
-      },
-    };
-    inspector.reflowTracker.trackReflows(listener, listener.callback);
-  });
+  const onReflow = inspector.once("reflow-in-selected-target");
   const onGridOutlineChanged = waitForDOM(doc, ".grid-outline-cell", 4);
 
   testActor.eval(`
