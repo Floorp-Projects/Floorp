@@ -4801,6 +4801,11 @@ static bool CodeModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedModuleObject modObject(cx, &args[0].toObject().as<ModuleObject>());
+  if (modObject->status() >= MODULE_STATUS_INSTANTIATING) {
+    JS_ReportErrorASCII(cx, "cannot encode module after instantiation.");
+    return false;
+  }
+
   JS::TranscodeBuffer buf;
   XDREncoder xdrEncoder_(cx, buf);
   XDRResult res = xdrEncoder_.codeModuleObject(&modObject);
