@@ -103,6 +103,10 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
       return nullptr;
     }
     obj = objRoot;
+  } else {
+    // Don't track property types for non-singleton environment objects. The
+    // JITs don't use them anyway.
+    MarkObjectGroupUnknownProperties(cx, group);
   }
 
   return &obj->as<T>();
