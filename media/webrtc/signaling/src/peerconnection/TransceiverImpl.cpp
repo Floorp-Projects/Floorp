@@ -118,17 +118,12 @@ nsresult TransceiverImpl::UpdateSinkIdentity(
 }
 
 void TransceiverImpl::Shutdown_m() {
-  mReceivePipeline->Shutdown_m();
-  mTransmitPipeline->Shutdown_m();
+  Stop();
   mReceivePipeline = nullptr;
   mTransmitPipeline = nullptr;
   mTransportHandler = nullptr;
   mReceiveTrack = nullptr;
   mSendTrack = nullptr;
-  if (mConduit) {
-    mConduit->DeleteStreams();
-  }
-  mConduit = nullptr;
 }
 
 nsresult TransceiverImpl::UpdateSendTrack(dom::MediaStreamTrack* aSendTrack) {
