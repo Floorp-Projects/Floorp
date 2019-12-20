@@ -535,24 +535,40 @@ endif # lcc
 endif # USE_64
 
 ifndef HAVE_INT128_SUPPORT
-    DEFINES += -DKRML_VERIFIED_UINT128
+    DEFINES += -DKRML_NOUINT128
 endif
 
 ifndef NSS_DISABLE_CHACHAPOLY
     ifeq ($(CPU_ARCH),x86_64)
-        EXTRA_SRCS += Hacl_Poly1305_128.c Hacl_Chacha20_Vec128.c Hacl_Chacha20Poly1305_128.c
+        ifdef HAVE_INT128_SUPPORT
+            EXTRA_SRCS += Hacl_Poly1305_64.c
+        else
+            EXTRA_SRCS += Hacl_Poly1305_32.c
+        endif
+    else
+        ifeq ($(CPU_ARCH),aarch64)
+            EXTRA_SRCS += Hacl_Poly1305_64.c
+        else
+            EXTRA_SRCS += Hacl_Poly1305_32.c
+        endif
     endif # x86_64
 
-    VERIFIED_SRCS += Hacl_Poly1305_32.c Hacl_Chacha20.c Hacl_Chacha20Poly1305_32.c
+    VERIFIED_SRCS += Hacl_Chacha20.c
+    VERIFIED_SRCS += Hacl_Chacha20_Vec128.c
 endif # NSS_DISABLE_CHACHAPOLY
 
-ifeq (,$(filter-out x86_64 aarch64,$(CPU_ARCH)))
-    # All 64-bit architectures get the 64 bit version.
+ifeq (,$(filter-out i386 x386 x86 x86_64 aarch64,$(CPU_ARCH)))
+    # All intel architectures get the 64 bit version
+    # With custom uint128 if necessary (faster than generic 32 bit version).
     ECL_SRCS += curve25519_64.c
-    VERIFIED_SRCS += Hacl_Curve25519_51.c
+    VERIFIED_SRCS += Hacl_Curve25519.c
 else
-    # All other architectures get the generic 32 bit implementation
+    # All non intel architectures get the generic 32 bit implementation (slow!)
     ECL_SRCS += curve25519_32.c
+endif
+
+ifndef HAVE_INT128_SUPPORT
+    VERIFIED_SRCS += FStar.c
 endif
 
 #######################################################################
@@ -583,7 +599,7 @@ vpath %.c mpi ecl verified
 vpath %.S mpi ecl
 vpath %.s mpi ecl
 vpath %.asm mpi ecl
-INCLUDES += -Impi -Iecl -Iverified -Iverified/kremlin/include -Iverified/kremlin/kremlib/dist/minimal
+INCLUDES += -Impi -Iecl -Iverified
 
 
 DEFINES += -DMP_API_COMPATIBLE
@@ -776,7 +792,3 @@ endif
 ifeq ($(CPU_ARCH),ppc)
 $(OBJDIR)/$(PROG_PREFIX)gcm-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec
 endif
-
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes 
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes 
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes -mpclmul

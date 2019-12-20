@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ecl-priv.h"
-#include "../verified/Hacl_Curve25519_51.h"
+#include "../verified/Hacl_Curve25519.h"
 
 SECStatus
 ec_Curve25519_mul(uint8_t *mypublic, const uint8_t *secret, const uint8_t *basepoint)
 {
     // Note: this cast is safe because HaCl* state has a post-condition that only "mypublic" changed.
-    Hacl_Curve25519_51_ecdh(mypublic, (uint8_t *)secret, (uint8_t *)basepoint);
+    Hacl_Curve25519_crypto_scalarmult(mypublic, (uint8_t *)secret, (uint8_t *)basepoint);
     return 0;
 }

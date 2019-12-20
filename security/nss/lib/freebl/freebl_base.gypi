@@ -133,16 +133,15 @@
         }],
       ],
     }],
-    ['have_int128_support==1 and \
-      (target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64")', {
+    ['target_arch=="ia32" or target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
       'sources': [
-        # All intel x64 and 64-bit ARM architectures get the 64 bit version.
+        # All intel and 64-bit ARM architectures get the 64 bit version.
         'ecl/curve25519_64.c',
-        'verified/Hacl_Curve25519_51.c',
+        'verified/Hacl_Curve25519.c',
       ],
     }, {
       'sources': [
-        # All other architectures get the generic 32 bit implementation.
+        # All other architectures get the generic 32 bit implementation (slow!)
         'ecl/curve25519_32.c',
       ],
     }],
@@ -152,8 +151,36 @@
       # choose the correct ChaCha implementation at runtime.
       'sources': [
         'verified/Hacl_Chacha20.c',
-        'verified/Hacl_Chacha20Poly1305_32.c',
-        'verified/Hacl_Poly1305_32.c',
+      ],
+      'conditions': [
+        [ 'OS!="win"', {
+          'conditions': [
+            [ 'target_arch=="x64"', {
+              'sources': [
+                'verified/Hacl_Poly1305_64.c',
+              ],
+            }, {
+              # !Windows & !x64
+              'conditions': [
+                [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+                  'sources': [
+                    'verified/Hacl_Poly1305_64.c',
+                  ],
+                }, {
+                  # !Windows & !x64 & !arm64 & !aarch64
+                  'sources': [
+                    'verified/Hacl_Poly1305_32.c',
+                  ],
+                }],
+              ],
+            }],
+          ],
+        }, {
+          # Windows
+          'sources': [
+            'verified/Hacl_Poly1305_32.c',
+          ],
+        }],
       ],
     }],
     [ 'fuzz==1', {
@@ -189,6 +216,9 @@
           ],
         }],
       ],
+    }],
+    [ 'have_int128_support==0', {
+        'sources': [ 'verified/FStar.c' ],
     }],
   ],
  'ldflags': [
