@@ -13,8 +13,8 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await checkMessageStack(hud, "hello", [11, 3]);
-  await checkMessageStack(hud, "there", [14, 3]);
-  await checkMessageStack(hud, "dom", [16, 3]);
-  await checkMessageStack(hud, "worker2", [6, 3]);
+  await checkMessageStack(hud, "hello", [13, 4, 3]);
+  await checkMessageStack(hud, "there", [16, 4, 3]);
+  await checkMessageStack(hud, "dom", [18, 4, 3]);
+  await checkMessageStack(hud, "worker2", [6, 3, 3]);
 });

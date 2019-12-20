@@ -1507,10 +1507,10 @@ function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
  * @param {WebConsole} hud
  * @param {string} text
  *        message substring to look for
- * @param {Array<number>} frameLines
+ * @param {Array<number>} expectedFrameLines
  *        line numbers of the frames expected in the stack
  */
-async function checkMessageStack(hud, text, frameLines) {
+async function checkMessageStack(hud, text, expectedFrameLines) {
   const msgNode = await waitFor(() => findMessage(hud, text));
   ok(!msgNode.classList.contains("open"), `Error logged not expanded`);
 
@@ -1518,20 +1518,24 @@ async function checkMessageStack(hud, text, frameLines) {
   button.click();
 
   const framesNode = await waitFor(() => msgNode.querySelector(".frames"));
-  const frameNodes = framesNode.querySelectorAll(".frame");
-  let frameLinesIndex = 0;
+  const frameNodes = Array.from(framesNode.querySelectorAll(".frame")).filter(
+    el => el.querySelector(".filename").textContent !== "self-hosted"
+  );
+
   for (let i = 0; i < frameNodes.length; i++) {
-    if (frameNodes[i].querySelector(".filename").textContent == "self-hosted") {
-      continue;
-    }
-    ok(
-      frameNodes[i].querySelector(".line").textContent ==
-        "" + frameLines[frameLinesIndex],
-      `Found line ${frameLines[frameLinesIndex]} for frame #${i}`
+    const frameNode = frameNodes[i];
+    is(
+      frameNode.querySelector(".line").textContent,
+      expectedFrameLines[i].toString(),
+      `Found line ${expectedFrameLines[i]} for frame #${i}`
     );
-    frameLinesIndex++;
   }
-  is(frameLines.length, frameLinesIndex, `Found ${frameLines.length} frames`);
+
+  is(
+    frameNodes.length,
+    expectedFrameLines.length,
+    `Found ${frameNodes.length} frames`
+  );
 }
 
 /**
