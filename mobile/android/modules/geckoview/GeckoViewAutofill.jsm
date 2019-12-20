@@ -45,6 +45,11 @@ class GeckoViewAutofill {
   }
 
   _getInfo(aElement, aParent, aRoot, aUsernameField) {
+    if (!this._autofillInfos) {
+      this._autofillInfos = new WeakMap();
+      this._autofillElements = new Map();
+    }
+
     let info = this._autofillInfos.get(aElement);
     if (info) {
       return info;
@@ -107,7 +112,7 @@ class GeckoViewAutofill {
 
   _updateInfoValues(aElements) {
     if (!this._autofillInfos) {
-      return;
+      return [];
     }
 
     const updated = [];
@@ -155,11 +160,6 @@ class GeckoViewAutofill {
     debug`Adding auto-fill ${aFormLike.rootElement.tagName}`;
 
     this._autofillTasks.delete(aFormLike.rootElement);
-
-    if (!this._autofillInfos) {
-      this._autofillInfos = new WeakMap();
-      this._autofillElements = new Map();
-    }
 
     const window = aFormLike.rootElement.ownerGlobal;
     // Get password field to get better form data via LoginManagerChild.
