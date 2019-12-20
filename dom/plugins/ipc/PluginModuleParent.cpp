@@ -29,6 +29,7 @@
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
+#include "nsICrashService.h"
 #include "nsIObserverService.h"
 #include "nsNPAPIPlugin.h"
 #include "nsPrintfCString.h"
@@ -1279,8 +1280,11 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
   mozilla::MutexAutoLock lock(mCrashReporterMutex);
 
   if (!mCrashReporter) {
-    CrashReporter::FinalizeOrphanedMinidump(OtherPid(),
-                                            GeckoProcessType_Plugin);
+    CrashReporter::FinalizeOrphanedMinidump(OtherPid(), GeckoProcessType_Plugin,
+                                            &mOrphanedDumpId);
+    CrashReporterHost::RecordCrash(GeckoProcessType_Plugin,
+                                   nsICrashService::CRASH_TYPE_CRASH,
+                                   mOrphanedDumpId);
     return;
   }
 
@@ -1426,6 +1430,8 @@ void PluginModuleParent::NotifyPluginCrashed() {
   if (mCrashReporter && mCrashReporter->HasMinidump()) {
     dumpID = mCrashReporter->MinidumpID();
     additionalMinidumps = mCrashReporter->AdditionalMinidumps();
+  } else {
+    dumpID = mOrphanedDumpId;
   }
 
   mPlugin->PluginCrashed(dumpID, additionalMinidumps);

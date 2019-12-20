@@ -3341,7 +3341,8 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   return !!*dump;
 }
 
-bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType) {
+bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
+                              nsString* aDumpId) {
   AnnotationTable annotations;
   nsCOMPtr<nsIFile> minidump;
 
@@ -3352,6 +3353,10 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType) {
   nsAutoString id;
   if (!GetIDFromMinidump(minidump, id)) {
     return false;
+  }
+
+  if (aDumpId) {
+    *aDumpId = id;
   }
 
   annotations[Annotation::ProcessType] =
