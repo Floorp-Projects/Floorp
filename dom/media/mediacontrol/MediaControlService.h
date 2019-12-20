@@ -55,6 +55,9 @@ class MediaControlService final : public nsIObserver {
     return mMediaControllerAmountChangedEvent;
   }
 
+  // This is used for testing only, to generate fake media control keys events.
+  void GenerateMediaControlKeysTestEvent(MediaControlKeysEvent aEvent);
+
  private:
   MediaControlService();
   ~MediaControlService();
