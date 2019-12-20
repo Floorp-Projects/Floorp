@@ -161,7 +161,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       if (sessionAcc && newPosition) {
         if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
           sessionAcc->SendHoverEnterEvent(newPosition);
-        } else {
+        } else if (vcEvent->BoundaryType() == nsIAccessiblePivot::NO_BOUNDARY) {
           sessionAcc->SendAccessibilityFocusedEvent(newPosition);
         }
 

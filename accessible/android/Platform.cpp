@@ -132,7 +132,7 @@ void a11y::ProxyVirtualCursorChangeEvent(
 
   if (aReason == nsIAccessiblePivot::REASON_POINT) {
     sessionAcc->SendHoverEnterEvent(WrapperFor(aNewPosition));
-  } else {
+  } else if (aBoundaryType == nsIAccessiblePivot::NO_BOUNDARY) {
     RefPtr<AccessibleWrap> wrapperForNewPosition = WrapperFor(aNewPosition);
     sessionAcc->SendAccessibilityFocusedEvent(wrapperForNewPosition);
   }
