@@ -355,6 +355,12 @@
                        key="key_openAddons"
                        command="Tools:Addons"
                        />
+        <toolbarbutton id="appMenu-ssb-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="Site Browsers"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-SSBView', this)"
+                       hidden="true" persist="hidden"/>
         <toolbarbutton id="appMenu-preferences-button"
                        class="subviewbutton subviewbutton-iconic"
 #ifdef XP_WIN
@@ -696,6 +702,12 @@
                        command="cmd_toggleOfflineStatus"/>
       </vbox>
     </panelview>
+
+    <panelview id="appMenu-SSBView" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+      </vbox>
+    </panelview>
+
     <panelview id="appMenu-libraryView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-library-bookmarks-button"
