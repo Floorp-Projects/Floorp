@@ -1366,6 +1366,9 @@ class BindingIter {
 void DumpBindings(JSContext* cx, Scope* scope);
 JSAtom* FrameSlotName(JSScript* script, jsbytecode* pc);
 
+Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
+                             uint32_t numSlots, uint32_t baseShapeFlags);
+
 //
 // A refinement BindingIter that only iterates over positional formal
 // parameters of a function.
