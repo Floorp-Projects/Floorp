@@ -70,6 +70,10 @@ class CustomTabsIntegration(
         // If in private mode, override toolbar background to use private color
         // See #5334
         if (isPrivate) {
+            sessionManager.findSessionById(sessionId)?.apply {
+                customTabConfig = customTabConfig?.copy(toolbarColor = null)
+            }
+
             toolbar.background = AppCompatResources.getDrawable(
                 activity,
                 R.drawable.toolbar_background
