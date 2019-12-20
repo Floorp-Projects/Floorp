@@ -46,6 +46,7 @@ namespace js {
 namespace frontend {
 
 class ParseContext;
+struct ParseInfo;
 class ParserSharedBase;
 class FullParseHandler;
 class FunctionBox;
@@ -1894,24 +1895,20 @@ class BooleanLiteral : public NullaryNode {
 };
 
 class RegExpLiteral : public ParseNode {
-  mozilla::Variant<mozilla::Nothing, ObjectBox*, RegExpCreationData> data_;
+  mozilla::Variant<ObjectBox*, RegExpIndex> data_;
 
  public:
   RegExpLiteral(ObjectBox* reobj, const TokenPos& pos)
       : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(reobj) {}
 
-  explicit RegExpLiteral(const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(mozilla::Nothing()) {}
+  RegExpLiteral(RegExpIndex dataIndex, const TokenPos& pos)
+      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(dataIndex) {}
 
-  void init(RegExpCreationData data) {
-    data_ = mozilla::AsVariant(std::move(data));
-  }
-
-  bool isDeferred() const { return data_.is<RegExpCreationData>(); }
+  bool isDeferred() const { return data_.is<RegExpIndex>(); }
 
   ObjectBox* objbox() const { return data_.as<ObjectBox*>(); }
 
-  RegExpObject* getOrCreate(JSContext* cx) const;
+  RegExpObject* getOrCreate(JSContext* cx, ParseInfo& parseInfo) const;
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);
@@ -1928,7 +1925,7 @@ class RegExpLiteral : public ParseNode {
     return true;
   }
 
-  RegExpCreationData& creationData() { return data_.as<RegExpCreationData>(); }
+  RegExpIndex index() { return data_.as<RegExpIndex>(); }
 };
 
 class PropertyAccess : public BinaryNode {
