@@ -45,6 +45,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `Context.getDrawableWithTint` extension method to get a drawable resource with a tint applied.
+	* `String.isUrl` is now using a more lenient check for improved performance. Strictly checking whether a string is a URL or not is supported through the new `String.isUrlStrict` method.
 
 * **support-base**
   * ⚠️ **This is a breaking change**:

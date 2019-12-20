@@ -28,6 +28,15 @@ private val re = object {
  */
 fun String.isUrl() = URLStringUtils.isURLLike(this)
 
+/**
+ * Checks if this string is a URL.
+ *
+ * This method performs a strict check to determine whether the string is a URL. It takes longer
+ * to execute than isUrl() but checks whether, e.g., the TLD is ICANN-recognized. Consider
+ * using isUrl() unless these guarantees are required.
+ */
+fun String.isUrlStrict() = URLStringUtils.isURLLikeStrict(this)
+
 fun String.toNormalizedUrl() = URLStringUtils.toNormalizedURL(this)
 
 fun String.isPhone() = re.phoneish.matches(this)
