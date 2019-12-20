@@ -9,10 +9,12 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.lib.crash.handler.ExceptionHandler
 import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.lib.crash.prompt.CrashPrompt
@@ -50,7 +52,8 @@ class CrashReporter(
     private val shouldPrompt: Prompt = Prompt.NEVER,
     var enabled: Boolean = true,
     internal val promptConfiguration: PromptConfiguration = PromptConfiguration(),
-    private val nonFatalCrashIntent: PendingIntent? = null
+    private val nonFatalCrashIntent: PendingIntent? = null,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     internal val logger = Logger("mozac/CrashReporter")
     internal val crashBreadcrumbs = BreadcrumbPriorityQueue(BREADCRUMB_MAX_NUM)
@@ -76,18 +79,21 @@ class CrashReporter(
 
     /**
      * Submit a crash report to all registered services.
-     *
-     * Note: This method may block and perform I/O on the calling thread.
      */
-    fun submitReport(crash: Crash) {
-        services.forEach { service ->
-            when (crash) {
-                is Crash.NativeCodeCrash -> service.report(crash)
-                is Crash.UncaughtExceptionCrash -> service.report(crash)
+    fun submitReport(crash: Crash, then: () -> Unit = {}): Job {
+        return scope.launch {
+            services.forEach { service ->
+                when (crash) {
+                    is Crash.NativeCodeCrash -> service.report(crash)
+                    is Crash.UncaughtExceptionCrash -> service.report(crash)
+                }
+            }
+
+            logger.info("Crash report submitted to ${services.size} services")
+            withContext(Dispatchers.Main) {
+                then()
             }
         }
-
-        logger.info("Crash report submitted to ${services.size} services")
     }
 
     /**
@@ -133,7 +139,6 @@ class CrashReporter(
             }
         } else {
             logger.info("Immediately submitting crash report")
-
             submitReport(crash)
         }
     }

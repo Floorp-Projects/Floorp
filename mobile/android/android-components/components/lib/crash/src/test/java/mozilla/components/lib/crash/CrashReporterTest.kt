@@ -8,6 +8,8 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -15,14 +17,16 @@ import mozilla.components.support.test.expectException
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -32,6 +36,10 @@ import java.lang.reflect.Modifier
 
 @RunWith(AndroidJUnit4::class)
 class CrashReporterTest {
+
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setUp() {
@@ -165,28 +173,32 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter forwards crashes to service`() {
-        var nativeCrash = false
+    fun `CrashReporter submits crashes`() {
+        val crash = mock<Crash>()
+        val service = mock<CrashReporterService>()
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        doReturn(mock<Job>()).`when`(reporter).submitReport(crash)
+        reporter.onCrash(testContext, crash)
+        verify(reporter).submitReport(crash)
+    }
+
+    @Test
+    fun `CrashReporter forwards uncaught exception crashes to service`() {
         var exceptionCrash = false
-        var caughtException = false
 
         val service = object : CrashReporterService {
             override fun report(crash: Crash.UncaughtExceptionCrash) {
                 exceptionCrash = true
-                nativeCrash = false
-                caughtException = false
             }
 
             override fun report(crash: Crash.NativeCodeCrash) {
-                exceptionCrash = false
-                nativeCrash = true
-                caughtException = false
             }
 
             override fun report(throwable: Throwable) {
-                exceptionCrash = false
-                nativeCrash = false
-                caughtException = true
             }
         }
 
@@ -195,28 +207,65 @@ class CrashReporterTest {
             shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
-        reporter.onCrash(
-            mock(),
-            Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf()))
+        reporter.submitReport(
+            Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf())
+        ).joinBlocking()
+        assertTrue(exceptionCrash)
+    }
+
+    @Test
+    fun `CrashReporter forwards native crashes to service`() {
+        var nativeCrash = false
+
+        val service = object : CrashReporterService {
+            override fun report(crash: Crash.UncaughtExceptionCrash) {
+            }
+
+            override fun report(crash: Crash.NativeCodeCrash) {
+                nativeCrash = true
+            }
+
+            override fun report(throwable: Throwable) {
+            }
+        }
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        reporter.submitReport(
+            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+        ).joinBlocking()
+        assertTrue(nativeCrash)
+    }
+
+    @Test
+    fun `CrashReporter forwards caught exception crashes to service`() {
+        var exceptionCrash = false
+
+        val service = object : CrashReporterService {
+            override fun report(crash: Crash.UncaughtExceptionCrash) {
+            }
+
+            override fun report(crash: Crash.NativeCodeCrash) {
+            }
+
+            override fun report(throwable: Throwable) {
+                exceptionCrash = true
+            }
+        }
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        reporter.submitCaughtException(
+            RuntimeException()
+        ).joinBlocking()
 
         assertTrue(exceptionCrash)
-        assertFalse(nativeCrash)
-        assertFalse(caughtException)
-
-        reporter.onCrash(
-            mock(),
-            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
-        )
-
-        assertFalse(exceptionCrash)
-        assertTrue(nativeCrash)
-        assertFalse(caughtException)
-
-        reporter.submitCaughtException(RuntimeException()).joinBlocking()
-
-        assertFalse(exceptionCrash)
-        assertFalse(nativeCrash)
-        assertTrue(caughtException)
     }
 
     @Test

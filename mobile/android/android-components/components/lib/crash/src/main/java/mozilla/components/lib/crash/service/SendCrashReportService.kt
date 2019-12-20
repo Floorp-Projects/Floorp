@@ -9,13 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
@@ -23,12 +18,9 @@ import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.lib.crash.notification.NOTIFICATION_ID
 import mozilla.components.lib.crash.notification.NOTIFICATION_TAG
 import mozilla.components.support.base.ids.SharedIdsHelper
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 class SendCrashReportService : Service() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
-    private var reporterCoroutineContext: CoroutineContext = EmptyCoroutineContext
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -48,21 +40,11 @@ class SendCrashReportService : Service() {
         }
 
         NotificationManagerCompat.from(this).cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
-        crashReporter.submitReport(Crash.fromIntent(intent))
-        stopSelf()
+        crashReporter.submitReport(Crash.fromIntent(intent)) {
+            stopSelf()
+        }
 
         return START_NOT_STICKY
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun sendCrashReport(crash: Crash, then: () -> Unit) {
-        GlobalScope.launch(reporterCoroutineContext) {
-            crashReporter.submitReport(crash)
-
-            withContext(Dispatchers.Main) {
-                then()
-            }
-        }
     }
 
     override fun onBind(intent: Intent): IBinder? {

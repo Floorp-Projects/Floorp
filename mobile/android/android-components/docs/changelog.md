@@ -50,6 +50,14 @@ permalink: /changelog/
 * **browser-menu**
   * Added `BrowserMenuHighlightableSwitch` to represent a highlightable item with a toggle switch.
 
+* **lib-crash**
+  * Now supports performing action after submitting crash report.
+  ```kotlin
+  crashReporter.submitReport(Crash.fromIntent(intent)) {
+      stopSelf()
+  }
+  ```
+
 * **support-ktx**
   * Added `Context.getDrawableWithTint` extension method to get a drawable resource with a tint applied.
 	* `String.isUrl` is now using a more lenient check for improved performance. Strictly checking whether a string is a URL or not is supported through the new `String.isUrlStrict` method.

@@ -16,10 +16,6 @@ import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.messageView
 import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.restartButton
 import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.sendCheckbox
 import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.titleView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
@@ -101,12 +97,8 @@ class CrashReporterActivity : AppCompatActivity() {
             return
         }
 
-        GlobalScope.launch(reporterCoroutineContext) {
-            crashReporter.submitReport(crash)
-
-            withContext(Dispatchers.Main) {
-                then()
-            }
+        crashReporter.submitReport(crash) {
+            then()
         }
     }
 

@@ -7,21 +7,32 @@ package mozilla.components.lib.crash.handler
 import android.content.ComponentName
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashHandlerServiceTest {
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @After
     fun tearDown() {
@@ -32,6 +43,7 @@ class CrashHandlerServiceTest {
     fun `CrashHandlerService will forward GeckoView crash to crash reporter`() {
         var caughtCrash: Crash.NativeCodeCrash? = null
 
+        val scope = TestCoroutineScope(testDispatcher)
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.NEVER,
             services = listOf(object : CrashReporterService {
@@ -46,7 +58,8 @@ class CrashHandlerServiceTest {
                 override fun report(throwable: Throwable) {
                     fail("Didn't expect caught exception")
                 }
-            })
+            }),
+            scope = scope
         ).install(testContext)
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
@@ -67,7 +80,9 @@ class CrashHandlerServiceTest {
 
         val service = spy(CrashHandlerService())
         doNothing().`when`(service).kill()
+
         service.onHandleIntent(intent)
+        scope.advanceUntilIdle()
 
         assertNotNull(caughtCrash)
 
