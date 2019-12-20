@@ -171,9 +171,10 @@ tasks:
                                               - index.project.mobile.${project}.v2.branch.${short_head_branch}.revision.${head_sha}.taskgraph.decision
                                         - $if: 'tasks_for == "cron"'
                                           then:
-                                              - index.project.mobile.${project}.v2.branch.${short_head_branch}.latest.taskgraph.decision-${cron.job_name}
-                                              - index.project.mobile.${project}.v2.branch.${short_head_branch}.revision.${head_sha}.taskgraph.decision-${cron.job_name}
-                                              - index.project.mobile.${project}.v2.branch.${short_head_branch}.revision.${head_sha}.taskgraph.cron.${ownTaskId}
+                                              # cron context provides ${head_branch} as a short one
+                                              - index.project.mobile.${project}.v2.branch.${head_branch}.latest.taskgraph.decision-${cron.job_name}
+                                              - index.project.mobile.${project}.v2.branch.${head_branch}.revision.${head_sha}.taskgraph.decision-${cron.job_name}
+                                              - index.project.mobile.${project}.v2.branch.${head_branch}.revision.${head_sha}.taskgraph.cron.${ownTaskId}
                           scopes:
                               $if: 'tasks_for == "github-push"'
                               then:
