@@ -21,6 +21,56 @@ import org.mozilla.gecko.util.GeckoBundle;
  * The Login Storage API provides a storage-level delegate to leverage Gecko's
  * complete range of heuristics for login forms, autofill and autocomplete
  * scenarios.
+ *
+ * Examples
+ *
+ * Autofill/Fetch API
+ *
+ * GeckoView loads <code>https://example.com</code> which contains (for the
+ * purpose of this example) elements resembling a login form, e.g.,
+ * <pre><code>
+ *   &lt;form&gt;
+ *     &lt;input type=&quot;text&quot; placeholder=&quot;username&quot;&gt;
+ *     &lt;input type=&quot;password&quot; placeholder=&quot;password&quot;&gt;
+ *     &lt;input type=&quot;submit&quot; value=&quot;submit&quot;&gt;
+ *   &lt;/form&gt;
+ * </code></pre>
+ *
+ * With the document parsed and the login input fields identified, GeckoView
+ * dispatches a
+ * <code>LoginStorage.Delegate.onLoginFetch(&quot;example.com&quot;)</code>
+ * request to fetch logins for the given domain.
+ *
+ * Based on the provided login entries, GeckoView will attempt to autofill the
+ * login input fields.
+ *
+ * Save API
+ *
+ * The user enters login credentials in some login input fields and commits
+ * explicitely (submit action) or by navigation.
+ * GeckoView identifies the entered credentials and dispatches a
+ * <code>GeckoSession.PromptDelegate.onLoginStoragePrompt(session, prompt)</code>
+ * with the <code>prompt</code> being of type
+ * <code>LoginStoragePrompt.Type.SAVE</code> and containing the entered
+ * credentials.
+ *
+ * The app may dismiss the prompt request via
+ * <code>return GeckoResult.fromValue(prompt.dismiss())</code>
+ * which terminates this saving request, or confirm it via
+ * <code>return GeckoResult.fromValue(prompt.confirm(login))</code>
+ * where <code>login</code> either holds the credentials originally provided by
+ * the prompt request (<code>prompt.logins[0]</code>) or a new or modified login
+ * entry.
+ *
+ * The login entry returned in a confirmed save prompt is used to request for
+ * saving in the runtime delegate via
+ * <code>LoginStorage.Delegate.onLoginSave(login)</code>.
+ * If the app has already stored the entry during the prompt request handling,
+ * it may ignore this storage saving request.
+ *
+ * @see GeckoRuntime#setLoginStorageDelegate
+ * @see GeckoSession#setPromptDelegate
+ * @see GeckoSession.PromptDelegate#onLoginStoragePrompt
  */
 public class LoginStorage {
     private static final String LOGTAG = "LoginStorage";
@@ -244,12 +294,26 @@ public class LoginStorage {
                 @NonNull String domain) {
             return null;
         }
+
+        /**
+         * Request saving or updating of the given login entry.
+         * This is triggered by confirming a
+         * {@link GeckoSession.PromptDelegate.onLoginStoragePrompt onLoginStoragePrompt}
+         * request of type
+         * {@link GeckoSession.PromptDelegate.LoginStoragePrompt.Type#SAVE Type.SAVE}.
+         *
+         * @param login The {@link LoginEntry} as confirmed by the prompt
+         *              request.
+         */
+        @UiThread
+        default void onLoginSave(@NonNull LoginEntry login) {}
     }
 
     /* package */ final static class Proxy implements BundleEventListener {
         private static final String LOGTAG = "LoginStorageProxy";
 
         private static final String FETCH_EVENT = "GeckoView:LoginStorage:Fetch";
+        private static final String SAVE_EVENT = "GeckoView:LoginStorage:Save";
 
         private @Nullable Delegate mDelegate;
 
@@ -258,13 +322,15 @@ public class LoginStorage {
         private void registerListener() {
             EventDispatcher.getInstance().registerUiThreadListener(
                     this,
-                    FETCH_EVENT);
+                    FETCH_EVENT,
+                    SAVE_EVENT);
         }
 
         private void unregisterListener() {
             EventDispatcher.getInstance().unregisterUiThreadListener(
                     this,
-                    FETCH_EVENT);
+                    FETCH_EVENT,
+                    SAVE_EVENT);
         }
 
         public synchronized void setDelegate(final @Nullable Delegate delegate) {
@@ -291,7 +357,9 @@ public class LoginStorage {
             }
 
             if (mDelegate == null) {
-                callback.sendError("No LoginStorage delegate attached");
+                if (callback != null) {
+                    callback.sendError("No LoginStorage delegate attached");
+                }
                 return;
             }
 
@@ -321,6 +389,11 @@ public class LoginStorage {
                         callback.sendSuccess(loginBundles);
                     },
                     exception -> callback.sendError(exception.getMessage()));
+            } else if (SAVE_EVENT.equals(event)) {
+                final GeckoBundle loginBundle = message.getBundle("login");
+                final LoginEntry login = new LoginEntry(loginBundle);
+
+                mDelegate.onLoginSave(login);
             }
         }
     }
