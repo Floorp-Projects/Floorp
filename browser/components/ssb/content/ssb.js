@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 let gSSBBrowser = null;
-let gSSB = null;
+var gSSB = null;
 
 function init() {
   gSSB = SiteSpecificBrowser.get(window.arguments[0]);

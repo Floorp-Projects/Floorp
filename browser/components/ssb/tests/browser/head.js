@@ -26,6 +26,17 @@ const gHttpsOtherRoot = getRootDirectory(gTestPath).replace(
 // The chrome url for the SSB UI.
 const SSB_WINDOW = "chrome://browser/content/ssb/ssb.html";
 
+// Waits for an SSB window to open.
+async function waitForSSB() {
+  let ssbwin = await BrowserTestUtils.domWindowOpened(null, async domwin => {
+    await BrowserTestUtils.waitForEvent(domwin, "load");
+    return domwin.location.toString() == SSB_WINDOW;
+  });
+
+  await BrowserTestUtils.waitForEvent(getBrowser(ssbwin), "SSBLoad");
+  return ssbwin;
+}
+
 // Directly opens an SSB for the given URI. Resolves to the SSB DOM window after
 // the SSB content has loaded.
 async function openSSB(uri) {
@@ -33,17 +44,10 @@ async function openSSB(uri) {
     uri = Services.io.newURI(uri);
   }
 
-  let openPromise = BrowserTestUtils.domWindowOpened(null, async domwin => {
-    await BrowserTestUtils.waitForEvent(domwin, "load");
-    return domwin.location.toString() == SSB_WINDOW;
-  });
-
+  let openPromise = waitForSSB();
   let ssb = SiteSpecificBrowser.createFromURI(uri);
   ssb.launch();
-
-  let ssbwin = await openPromise;
-  await BrowserTestUtils.waitForEvent(getBrowser(ssbwin), "SSBLoad");
-  return ssbwin;
+  return openPromise;
 }
 
 // Simulates opening a SSB from the main browser window. Resolves to the SSB
@@ -61,20 +65,19 @@ async function openSSBFromBrowserWindow(win = window) {
   Assert.ok(!openItem.disabled, "Open menu item should not be disabled");
   Assert.ok(!openItem.hidden, "Open menu item should not be hidden");
 
-  let openPromise = BrowserTestUtils.domWindowOpened(null, async domwin => {
-    await BrowserTestUtils.waitForEvent(domwin, "DOMContentLoaded");
-    return domwin.location.toString() == SSB_WINDOW;
-  });
-
+  let openPromise = waitForSSB();
   EventUtils.synthesizeMouseAtCenter(openItem, {}, win);
-  let ssbwin = await openPromise;
-  await BrowserTestUtils.waitForEvent(getBrowser(ssbwin), "SSBLoad");
-  return ssbwin;
+  return openPromise;
 }
 
 // Given the SSB UI DOM window gets the browser element showing the content.
 function getBrowser(ssbwin) {
   return ssbwin.document.getElementById("browser");
+}
+
+// Given the SSB UI DOM window gets the ssb instance showing the content.
+function getSSB(ssbwin) {
+  return ssbwin.gSSB;
 }
 
 /**
@@ -204,3 +207,21 @@ function expectTabLoad(ssb, win = window) {
 function expectWindowOpen(ssb, win = window) {
   return expectLoadSomewhere(ssb, "window", win);
 }
+
+add_task(async () => {
+  let list = await SiteSpecificBrowserService.list();
+  Assert.equal(
+    list.length,
+    0,
+    "Should be no installed SSBs at the start of a test."
+  );
+});
+
+registerCleanupFunction(async () => {
+  let list = await SiteSpecificBrowserService.list();
+  Assert.equal(
+    list.length,
+    0,
+    "Should be no installed SSBs at the end of a test."
+  );
+});
