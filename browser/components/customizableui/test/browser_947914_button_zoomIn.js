@@ -4,18 +4,31 @@
 
 "use strict";
 
-var initialPageZoom = ZoomManager.zoom;
-
 add_task(async function() {
   info("Check zoom in button existence and functionality");
 
-  is(initialPageZoom, 1, "Initial zoom factor should be 1");
+  is(ZoomManager.zoom, 1, "Initial zoom factor should be 1");
 
   CustomizableUI.addWidgetToArea(
     "zoom-controls",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
-  registerCleanupFunction(() => CustomizableUI.reset());
+
+  registerCleanupFunction(async () => {
+    CustomizableUI.reset();
+    let gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
+      Ci.nsIContentPrefService2
+    );
+    let gLoadContext = Cu.createLoadContext();
+    await new Promise(resolve => {
+      gContentPrefs.removeByName(window.FullZoom.name, gLoadContext, {
+        handleResult() {},
+        handleCompletion() {
+          resolve();
+        },
+      });
+    });
+  });
 
   await waitForOverflowButtonShown();
 
@@ -27,22 +40,22 @@ add_task(async function() {
 
   zoomInButton.click();
   let pageZoomLevel = parseInt(ZoomManager.zoom * 100);
+  console.log("Page oom level is: ", pageZoomLevel);
+
   let zoomResetButton = document.getElementById("zoom-reset-button");
-  let expectedZoomLevel = parseInt(zoomResetButton.getAttribute("label"), 10);
-  ok(
-    pageZoomLevel > 100 && pageZoomLevel == expectedZoomLevel,
-    "Page zoomed in correctly"
-  );
+  await TestUtils.waitForCondition(() => {
+    console.log(
+      "Current zoom is ",
+      parseInt(zoomResetButton.getAttribute("label"), 10)
+    );
+    return parseInt(zoomResetButton.getAttribute("label"), 10) == pageZoomLevel;
+  });
+
+  ok(pageZoomLevel > 100, "Page zoomed in correctly");
 
   // close the Panel
   let panelHiddenPromise = promiseOverflowHidden(window);
   document.getElementById("widget-overflow").hidePopup();
   await panelHiddenPromise;
   info("Menu panel was closed");
-});
-
-add_task(async function asyncCleanup() {
-  // reset zoom level
-  ZoomManager.zoom = initialPageZoom;
-  info("Zoom level was restored");
 });
