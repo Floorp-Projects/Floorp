@@ -11,7 +11,6 @@
 
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Vector.h"
-#include "nsExceptionHandler.h"
 #include "nsString.h"
 #if defined(MOZ_GECKO_PROFILER)
 #  include "shared-libraries.h"
@@ -88,18 +87,6 @@ class BatchProcessedStackGenerator {
 
 namespace IPC {
 
-#if defined(NIGHTLY_BUILD)
-#  define ANNOTATE_READ_FAILURE()                          \
-    CrashReporter::AnnotateCrashReport(                    \
-        CrashReporter::Annotation::                        \
-            UntrustedModulesDataProcessedStackReadFailure, \
-        __LINE__)
-#else
-#  define ANNOTATE_READ_FAILURE() \
-    do {                          \
-    } while (false)
-#endif  // defined(NIGHTLY_BUILD)
-
 template <>
 struct ParamTraits<mozilla::Telemetry::ProcessedStack::Module> {
   typedef mozilla::Telemetry::ProcessedStack::Module paramType;
@@ -112,12 +99,10 @@ struct ParamTraits<mozilla::Telemetry::ProcessedStack::Module> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mBreakpadId)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -137,20 +122,16 @@ struct ParamTraits<mozilla::Telemetry::ProcessedStack::Frame> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mOffset)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mModIndex)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     return true;
   }
 };
-
-#undef ANNOTATE_READ_FAILURE
 
 }  // namespace IPC
 
