@@ -1095,7 +1095,7 @@ describe("ASRouter", () => {
       const result = await Router.handleMessageRequest({
         provider: "snippets",
       });
-      assert.isUndefined(result);
+      assert.isNull(result);
     });
     it("should not return a message from a blocked campaign", async () => {
       // Block all messages except the first
@@ -1152,7 +1152,16 @@ describe("ASRouter", () => {
       const result = await Router.handleMessageRequest({
         provider: "snippets",
       });
-
+      assert.isNull(result);
+    });
+    it("should not return a message if the frequency cap has been hit", async () => {
+      sandbox.stub(Router, "isBelowFrequencyCaps").returns(false);
+      await Router.setState(() => ({
+        messages: [{ id: "foo", provider: "snippets" }],
+      }));
+      const result = await Router.handleMessageRequest({
+        provider: "snippets",
+      });
       assert.isNull(result);
     });
     it("should get unblocked messages that match the trigger", async () => {
@@ -1219,18 +1228,21 @@ describe("ASRouter", () => {
     });
     it("should return all unblocked messages that match the template, trigger if returnAll=true", async () => {
       const message1 = {
+        provider: "whats_new",
         id: "1",
         template: "whatsnew_panel_message",
         trigger: { id: "whatsNewPanelOpened" },
         groups: ["whats_new"],
       };
       const message2 = {
+        provider: "whats_new",
         id: "2",
         template: "whatsnew_panel_message",
         trigger: { id: "whatsNewPanelOpened" },
         groups: ["whats_new"],
       };
       const message3 = {
+        provider: "whats_new",
         id: "3",
         template: "badge",
         groups: ["whats_new"],
@@ -1238,9 +1250,12 @@ describe("ASRouter", () => {
       sandbox
         .stub(ASRouterTargeting, "findMatchingMessage")
         .callsFake(() => [message2, message1]);
-      await Router.setState({ messages: [message3, message2, message1] });
+      await Router.setState({
+        messages: [message3, message2, message1],
+        providers: [{ id: "whats_new" }],
+      });
       const result = await Router.handleMessageRequest({
-        template: "whatsnew-panel",
+        template: "whatsnew_panel_message",
         triggerId: "whatsNewPanelOpened",
         returnAll: true,
       });
@@ -1793,7 +1808,7 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
 
         assert.isTrue(Router.state.messageBlockList.includes("foocampaign"));
-        assert.isEmpty(Router._getUnblockedMessages());
+        assert.isEmpty(Router.state.messages.filter(Router.isUnblockedMessage));
       });
       it("should not broadcast CLEAR_MESSAGE if preventDismiss is true", async () => {
         const msg = fakeAsyncMessage({
@@ -2093,6 +2108,20 @@ describe("ASRouter", () => {
 
     describe("#onMessage: TRIGGER", () => {
       it("should pass the trigger to ASRouterTargeting on TRIGGER message", async () => {
+        await Router.setState({
+          messages: [
+            {
+              id: "foo1",
+              provider: "onboarding",
+              template: "onboarding",
+              trigger: { id: "firstRun" },
+              content: { title: "Foo1", body: "Foo123-1" },
+              groups: ["onboarding"],
+            },
+          ],
+          providers: [{ id: "onboarding" }],
+        });
+        sandbox.stub(Router, "loadMessagesFromAllProviders").resolves();
         sandbox.stub(ASRouterTargeting, "findMatchingMessage").resolves();
         const msg = fakeAsyncMessage({
           type: "TRIGGER",
