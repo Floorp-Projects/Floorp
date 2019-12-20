@@ -418,51 +418,6 @@
 #ifdef __cplusplus
 
 /**
- * MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
- * cases that fall through without a break or return statement. MOZ_FALLTHROUGH
- * is only needed on cases that have code.
- *
- * MOZ_FALLTHROUGH_ASSERT is an annotation to suppress compiler warnings about
- * switch cases that MOZ_ASSERT(false) (or its alias MOZ_ASSERT_UNREACHABLE) in
- * debug builds, but intentionally fall through in release builds. See comment
- * in Assertions.h for more details.
- *
- * switch (foo) {
- *   case 1: // These cases have no code. No fallthrough annotations are needed.
- *   case 2:
- *   case 3: // This case has code, so a fallthrough annotation is needed!
- *     foo++;
- *     MOZ_FALLTHROUGH;
- *   case 4:
- *     return foo;
- *
- *   default:
- *     // This case asserts in debug builds, falls through in release.
- *     MOZ_FALLTHROUGH_ASSERT("Unexpected foo value?!");
- *   case 5:
- *     return 5;
- * }
- */
-#  ifndef __has_cpp_attribute
-#    define __has_cpp_attribute(x) 0
-#  endif
-
-#  if __has_cpp_attribute(clang::fallthrough)
-#    define MOZ_FALLTHROUGH [[clang::fallthrough]]
-#  elif __has_cpp_attribute(gnu::fallthrough)
-#    define MOZ_FALLTHROUGH [[gnu::fallthrough]]
-#  elif defined(_MSC_VER)
-/*
- * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):
- * https://msdn.microsoft.com/en-us/library/ms235402%28VS.80%29.aspx
- */
-#    include <sal.h>
-#    define MOZ_FALLTHROUGH __fallthrough
-#  else
-#    define MOZ_FALLTHROUGH /* FALLTHROUGH */
-#  endif
-
-/**
  * C++11 lets unions contain members that have non-trivial special member
  * functions (default/copy/move constructor, copy/move assignment operator,
  * destructor) if the user defines the corresponding functions on the union.
