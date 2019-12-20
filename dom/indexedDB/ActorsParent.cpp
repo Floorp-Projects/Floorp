@@ -24324,8 +24324,6 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
       break;
 
     case PreprocessResponse::TObjectStoreGetPreprocessResponse:
-      break;
-
     case PreprocessResponse::TObjectStoreGetAllPreprocessResponse:
       break;
 

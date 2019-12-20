@@ -2864,9 +2864,6 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
         break;
 
       case RequestResponse::TObjectStoreDeleteResponse:
-        HandleResponse(JS::UndefinedHandleValue);
-        break;
-
       case RequestResponse::TObjectStoreClearResponse:
         HandleResponse(JS::UndefinedHandleValue);
         break;
@@ -4055,13 +4052,7 @@ mozilla::ipc::IPCResult BackgroundFileRequestChild::Recv__delete__(
         break;
 
       case FileRequestResponse::TFileRequestWriteResponse:
-        HandleResponse(JS::UndefinedHandleValue);
-        break;
-
       case FileRequestResponse::TFileRequestTruncateResponse:
-        HandleResponse(JS::UndefinedHandleValue);
-        break;
-
       case FileRequestResponse::TFileRequestFlushResponse:
         HandleResponse(JS::UndefinedHandleValue);
         break;
