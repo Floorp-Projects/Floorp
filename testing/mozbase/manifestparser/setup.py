@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = "manifestparser"
-PACKAGE_VERSION = '1.2'
+PACKAGE_VERSION = '2.0.0'
 
 DEPS = [
     'mozlog >= 5.0',
