@@ -403,11 +403,6 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
 
   mDtmfEnabled = codecConfig->mDtmfEnabled;
 
-  condError = StartTransmitting();
-  if (condError != kMediaConduitNoError) {
-    return condError;
-  }
-
   return kMediaConduitNoError;
 }
 
