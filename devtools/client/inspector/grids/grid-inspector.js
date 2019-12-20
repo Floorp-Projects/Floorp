@@ -180,7 +180,7 @@ class GridInspector {
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onNavigate);
 
-    this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
+    this.inspector.off("reflow-in-selected-target", this.onReflow);
 
     this._highlighters = null;
     this.document = null;
@@ -532,7 +532,7 @@ class GridInspector {
   }
 
   /**
-   * Handler for the "reflow" event fired by the inspector's reflow tracker. On reflows,
+   * Handler for reflow events fired by the inspector when a node is selected. On reflows,
    * update the grid panel content, because the shape or number of grids on the page may
    * have changed.
    *
@@ -668,11 +668,11 @@ class GridInspector {
    */
   onSidebarSelect() {
     if (!this.isPanelVisible()) {
-      this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
+      this.inspector.off("reflow-in-selected-target", this.onReflow);
       return;
     }
 
-    this.inspector.reflowTracker.trackReflows(this, this.onReflow);
+    this.inspector.on("reflow-in-selected-target", this.onReflow);
     this.updateGridPanel();
   }
 

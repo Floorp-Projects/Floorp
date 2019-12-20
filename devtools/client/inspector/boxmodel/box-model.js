@@ -139,14 +139,14 @@ BoxModel.prototype = {
    * Starts listening to reflows in the current tab.
    */
   trackReflows() {
-    this.inspector.reflowTracker.trackReflows(this, this.updateBoxModel);
+    this.inspector.on("reflow-in-selected-target", this.updateBoxModel);
   },
 
   /**
    * Stops listening to reflows in the current tab.
    */
   untrackReflows() {
-    this.inspector.reflowTracker.untrackReflows(this, this.updateBoxModel);
+    this.inspector.off("reflow-in-selected-target", this.updateBoxModel);
   },
 
   /**

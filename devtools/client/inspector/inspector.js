@@ -9,7 +9,6 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");
 const { Toolbox } = require("devtools/client/framework/toolbox");
-const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
 const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
 
@@ -208,6 +207,7 @@ function Inspector(toolbox) {
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
   this.handleThreadPaused = this.handleThreadPaused.bind(this);
   this.handleThreadResumed = this.handleThreadResumed.bind(this);
+  this.onReflowInSelection = this.onReflowInSelection.bind(this);
 }
 
 Inspector.prototype = {
@@ -241,7 +241,6 @@ Inspector.prototype = {
     // Store the URL of the target page prior to navigation in order to ensure
     // telemetry counts in the Grid Inspector are not double counted on reload.
     this.previousURL = this.currentTarget.url;
-    this.reflowTracker = new ReflowTracker(this.currentTarget);
     this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
     this._markupBox = this.panelDoc.getElementById("markup-box");
@@ -264,7 +263,6 @@ Inspector.prototype = {
       this._getDefaultSelection(),
       this._getAccessibilityFront(),
     ]);
-    this.reflowTracker = new ReflowTracker(this.currentTarget);
 
     // When we navigate to another process and switch to a new
     // target and the inspector is already ready, we want to
@@ -290,9 +288,6 @@ Inspector.prototype = {
 
     this._defaultNode = null;
     this.selection.setNodeFront(null);
-
-    this.reflowTracker.destroy();
-    this.reflowTracker = null;
   },
 
   async initInspectorFront(targetFront) {
@@ -1581,6 +1576,7 @@ Inspector.prototype = {
 
     this.updateAddElementButton();
     this.updateSelectionCssSelectors();
+    this.trackReflowsInSelection();
 
     const selfUpdate = this.updating("inspector-panel");
     executeSoon(() => {
@@ -1591,6 +1587,41 @@ Inspector.prototype = {
         console.error(ex);
       }
     });
+  },
+
+  /**
+   * Starts listening for reflows in the targetFront of the currently selected nodeFront.
+   */
+  async trackReflowsInSelection() {
+    this.untrackReflowsInSelection();
+    if (!this.selection.nodeFront) {
+      return;
+    }
+
+    const { targetFront } = this.selection.nodeFront;
+    this.reflowFront = await targetFront.getFront("reflow");
+    this.reflowFront.on("reflows", this.onReflowInSelection);
+    this.reflowFront.start();
+  },
+
+  /**
+   * Stops listening for reflows.
+   */
+  untrackReflowsInSelection() {
+    if (!this.reflowFront) {
+      return;
+    }
+
+    this.reflowFront.off("reflows", this.onReflowInSelection);
+    this.reflowFront.stop();
+    this.reflowFront = null;
+  },
+
+  onReflowInSelection() {
+    // This event will be fired whenever a reflow is detected in the target front of the
+    // selected node front (so when a reflow is detected inside any of the windows that
+    // belong to the BrowsingContext when the currently selected node lives).
+    this.emit("reflow-in-selected-target");
   },
 
   /**
@@ -1677,6 +1708,8 @@ Inspector.prototype = {
     }
 
     this.cancelUpdate();
+
+    this.untrackReflowsInSelection();
 
     this.sidebar.destroy();
 
