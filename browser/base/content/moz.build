@@ -106,9 +106,6 @@ with Files("test/webextensions/**"):
 with Files("test/webrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
-with Files("test/zoom/**"):
-    BUG_COMPONENT = ("Firefox", "General")
-
 with Files("aboutNetError.xhtml"):
     BUG_COMPONENT = ("Firefox", "Security")
 
