@@ -400,10 +400,19 @@ class UrlbarInput {
     try {
       new URL(url);
     } catch (ex) {
+      // This is not a URL, so it must be a search or a keyword.
+
+      // TODO (Bug 1604927): If the urlbar results are restricted to a specific
+      // engine, here we must search with that specific engine; indeed the
+      // docshell wouldn't know about our engine restriction.
+      // Also remember to invoke this._recordSearch, after replacing url with
+      // the appropriate engine submission url.
+
       let browser = this.window.gBrowser.selectedBrowser;
       let lastLocationChange = browser.lastLocationChange;
-
       UrlbarUtils.getShortcutOrURIAndPostData(url).then(data => {
+        // Because this happens asynchronously, we must verify that the browser
+        // location did not change in the meanwhile.
         if (
           where != "current" ||
           browser.lastLocationChange == lastLocationChange
@@ -413,6 +422,7 @@ class UrlbarInput {
           this._loadURL(data.url, where, openParams, null, browser);
         }
       });
+      // Bail out, because we will handle the _loadURL call asynchronously.
       return;
     }
 
