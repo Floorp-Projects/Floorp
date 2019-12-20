@@ -7,9 +7,9 @@
 #ifndef frontend_Stencil_h
 #define frontend_Stencil_h
 
-#include "frontend/ParseNode.h"
 #include "gc/AllocKind.h"
 #include "gc/Rooting.h"
+#include "js/RegExpFlags.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 
@@ -24,6 +24,8 @@ namespace frontend {
 // the frontend.
 //
 // Renaming to use the term stencil more broadly is still in progress.
+
+enum class FunctionSyntaxKind : uint8_t;
 
 // Data used to instantiate the lazy script before script emission.
 struct LazyScriptCreationData {
@@ -93,7 +95,7 @@ struct FunctionCreationData {
 
   // The Parser uses KeepAtoms to prevent GC from collecting atoms
   JSAtom* atom = nullptr;
-  FunctionSyntaxKind kind = FunctionSyntaxKind::Expression;
+  FunctionSyntaxKind kind;  // can't field-initialize and forward declare
   GeneratorKind generatorKind = GeneratorKind::NotGenerator;
   FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
 
@@ -109,6 +111,30 @@ struct FunctionCreationData {
   void trace(JSTracer* trc) {
     TraceNullableRoot(trc, &atom, "FunctionCreationData atom");
   }
+};
+
+// This owns a set of characters, previously syntax checked as a RegExp. Used
+// to avoid allocating the RegExp on the GC heap during parsing.
+class RegExpCreationData {
+  UniquePtr<char16_t[], JS::FreePolicy> buf_;
+  size_t length_ = 0;
+  JS::RegExpFlags flags_;
+
+ public:
+  RegExpCreationData() = default;
+
+  MOZ_MUST_USE bool init(JSContext* cx, mozilla::Range<const char16_t> range,
+                         JS::RegExpFlags flags) {
+    length_ = range.length();
+    buf_ = js::DuplicateString(cx, range.begin().get(), range.length());
+    if (!buf_) {
+      return false;
+    }
+    flags_ = flags;
+    return true;
+  }
+
+  RegExpObject* createRegExp(JSContext* cx) const;
 };
 
 } /* namespace frontend */
