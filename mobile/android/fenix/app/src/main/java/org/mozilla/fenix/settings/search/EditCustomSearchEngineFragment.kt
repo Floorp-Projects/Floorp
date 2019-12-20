@@ -137,7 +137,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
             when (result) {
                 SearchStringValidator.Result.CannotReach -> {
                     custom_search_engine_search_string_field.error = resources
-                        .getString(R.string.search_add_custom_engine_error_cannot_reach)
+                        .getString(R.string.search_add_custom_engine_error_cannot_reach, name)
                 }
                 SearchStringValidator.Result.Success -> {
                     CustomSearchEngineStore.updateSearchEngine(
