@@ -73,6 +73,7 @@ class DownloadTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/7303")
     fun testDownloadPrompt() {
         homeScreen { }.dismissOnboarding()
 
