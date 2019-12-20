@@ -13,6 +13,7 @@ import mozilla.prettyprinters
 # Import the pretty-printer modules. As a side effect, loading these
 # modules registers their printers with mozilla.prettyprinters.
 import mozilla.GCCellPtr
+import mozilla.ExecutableAllocator
 import mozilla.Interpreter
 import mozilla.IonGraph
 import mozilla.JSObject
