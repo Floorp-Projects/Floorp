@@ -442,7 +442,7 @@ this.ASRouterTriggerListeners = new Map([
    * on content blocked event
    */
   [
-    "trackingProtection",
+    "contentBlocking",
     {
       _initialized: false,
       _triggerHandler: null,
@@ -504,7 +504,7 @@ this.ASRouterTriggerListeners = new Map([
             const { browser, host, event } = aSubject.wrappedJSObject;
             if (this._events.filter(e => (e & event) === e).length) {
               this._triggerHandler(browser, {
-                id: "trackingProtection",
+                id: "contentBlocking",
                 param: {
                   host,
                   type: event,
@@ -521,7 +521,7 @@ this.ASRouterTriggerListeners = new Map([
                 Services.wm.getMostRecentBrowserWindow().gBrowser
                   .selectedBrowser,
                 {
-                  id: "trackingProtection",
+                  id: "contentBlocking",
                   context: {
                     pageLoad: this._sessionPageLoad,
                   },

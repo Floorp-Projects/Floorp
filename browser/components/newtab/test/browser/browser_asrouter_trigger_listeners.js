@@ -201,7 +201,7 @@ add_task(async function check_newSavedLogin_listener() {
   );
 });
 
-add_task(async function check_trackingProtection_listener() {
+add_task(async function check_contentBlocking_listener() {
   const TEST_URL =
     "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
 
@@ -224,7 +224,7 @@ add_task(async function check_trackingProtection_listener() {
       param: { host, type },
       context: { pageLoad },
     } = trigger;
-    is(id, "trackingProtection", "should match event name");
+    is(id, "contentBlocking", "should match event name");
     is(host, TEST_URL, "should match test URL");
     is(
       bindEvents.filter(e => (type & e) === e).length,
@@ -236,18 +236,18 @@ add_task(async function check_trackingProtection_listener() {
     observerEvent += 1;
     pageLoadSum = pageLoad;
   };
-  const trackingProtectionListener = ASRouterTriggerListeners.get(
-    "trackingProtection"
+  const contentBlockingListener = ASRouterTriggerListeners.get(
+    "contentBlocking"
   );
 
   // Previously initialized by the Router
-  trackingProtectionListener.uninit();
+  contentBlockingListener.uninit();
 
-  await trackingProtectionListener.init(triggerHandler, bindEvents);
+  await contentBlockingListener.init(triggerHandler, bindEvents);
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtection(browser) {
+    async function triggercontentBlocking(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
@@ -266,7 +266,7 @@ add_task(async function check_trackingProtection_listener() {
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtection(browser) {
+    async function triggercontentBlocking(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
@@ -321,11 +321,11 @@ add_task(async function check_trackingProtection_listener() {
   );
 
   // Uninitialise listener
-  trackingProtectionListener.uninit();
+  contentBlockingListener.uninit();
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtectionAfterUninit(browser) {
+    async function triggercontentBlockingAfterUninit(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
@@ -343,7 +343,7 @@ add_task(async function check_trackingProtection_listener() {
   );
 });
 
-add_task(async function check_trackingProtectionMilestone_listener() {
+add_task(async function check_contentBlockingMilestone_listener() {
   const TEST_URL =
     "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
 
@@ -353,23 +353,23 @@ add_task(async function check_trackingProtectionMilestone_listener() {
       id,
       param: { host },
     } = trigger;
-    is(id, "trackingProtection", "should match event name");
+    is(id, "contentBlocking", "should match event name");
     is(host, "ContentBlockingMilestone", "Should be the correct event type");
     observerEvent += 1;
   };
-  const trackingProtectionListener = ASRouterTriggerListeners.get(
-    "trackingProtection"
+  const contentBlockingListener = ASRouterTriggerListeners.get(
+    "contentBlocking"
   );
 
   // Previously initialized by the Router
-  trackingProtectionListener.uninit();
+  contentBlockingListener.uninit();
 
   // Initialise listener
-  trackingProtectionListener.init(triggerHandler, ["ContentBlockingMilestone"]);
+  contentBlockingListener.init(triggerHandler, ["ContentBlockingMilestone"]);
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtection(browser) {
+    async function triggercontentBlocking(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
@@ -386,7 +386,7 @@ add_task(async function check_trackingProtectionMilestone_listener() {
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtection(browser) {
+    async function triggercontentBlocking(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
@@ -406,11 +406,11 @@ add_task(async function check_trackingProtectionMilestone_listener() {
   );
 
   // Uninitialise listener
-  trackingProtectionListener.uninit();
+  contentBlockingListener.uninit();
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
-    async function triggerTrackingProtectionAfterUninit(browser) {
+    async function triggercontentBlockingAfterUninit(browser) {
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
