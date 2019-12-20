@@ -59,7 +59,8 @@ bool GCThingList::finish(JSContext* cx, ParseInfo& parseInfo,
       return true;
     }
 
-    bool operator()(BigIntCreationData& data) {
+    bool operator()(BigIntIndex& index) {
+      BigIntCreationData& data = parseInfo.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);
       if (!bi) {
         return false;
