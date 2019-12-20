@@ -994,21 +994,8 @@ impl<'a> SceneBuilder<'a> {
     fn process_common_properties(
         &mut self,
         common: &CommonItemProperties,
-        apply_pipeline_clip: bool
-    ) -> (LayoutPrimitiveInfo, ScrollNodeAndClipChain) {
-        let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
-            common,
-            &common.clip_rect,
-            apply_pipeline_clip,
-        );
-        (layout, clip_and_scroll)
-    }
-
-    fn process_common_properties_with_bounds(
-        &mut self,
-        common: &CommonItemProperties,
-        bounds: &LayoutRect,
-        apply_pipeline_clip: bool
+        bounds: Option<&LayoutRect>,
+        apply_pipeline_clip: bool,
     ) -> (LayoutPrimitiveInfo, LayoutRect, ScrollNodeAndClipChain) {
         let clip_and_scroll = self.get_clip_and_scroll(
             &common.clip_id,
@@ -1024,17 +1011,35 @@ impl<'a> SceneBuilder<'a> {
             &self.clip_scroll_tree
         );
 
-        let clip_rect = common.clip_rect.translate(current_offset);
-        let rect = bounds.translate(current_offset);
+        let clip_rect = snap_to_device.snap_rect(
+            &common.clip_rect.translate(current_offset)
+        );
+
+        let rect = bounds.map_or(clip_rect, |bounds| {
+            snap_to_device.snap_rect(&bounds.translate(current_offset))
+        });
 
         let layout = LayoutPrimitiveInfo {
-            rect: snap_to_device.snap_rect(&rect),
-            clip_rect: snap_to_device.snap_rect(&clip_rect),
+            rect,
+            clip_rect,
             flags: common.flags,
             hit_info: common.hit_info,
         };
 
         (layout, rect, clip_and_scroll)
+    }
+
+    fn process_common_properties_with_bounds(
+        &mut self,
+        common: &CommonItemProperties,
+        bounds: &LayoutRect,
+        apply_pipeline_clip: bool,
+    ) -> (LayoutPrimitiveInfo, LayoutRect, ScrollNodeAndClipChain) {
+        self.process_common_properties(
+            common,
+            Some(bounds),
+            apply_pipeline_clip,
+        )
     }
 
     pub fn snap_rect(
@@ -1141,8 +1146,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::Rectangle(ref info) => {
-                let (layout, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties(
                     &info.common,
+                    None,
                     apply_pipeline_clip,
                 );
 
@@ -1153,8 +1159,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::HitTest(ref info) => {
-                let (layout, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties(
                     &info.common,
+                    None,
                     apply_pipeline_clip,
                 );
 
@@ -1165,8 +1172,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::ClearRectangle(ref info) => {
-                let (layout, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties(
                     &info.common,
+                    None,
                     apply_pipeline_clip,
                 );
 
@@ -1419,8 +1427,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::BackdropFilter(ref info) => {
-                let (layout, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties(
                     &info.common,
+                    None,
                     apply_pipeline_clip,
                 );
 
