@@ -111,6 +111,15 @@ const GeckoViewLoginStorage = {
       domain: aDomain,
     });
   },
+
+  onLoginSave(aLogin) {
+    debug`onLoginSave ${aLogin}`;
+
+    EventDispatcher.instance.sendRequest({
+      type: "GeckoView:LoginStorage:Save",
+      login: aLogin,
+    });
+  },
 };
 
 const { debug } = GeckoViewUtils.initLogging("GeckoViewLoginStorage");
