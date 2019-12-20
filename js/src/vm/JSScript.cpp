@@ -244,11 +244,23 @@ template <XDRMode mode>
 /* static */
 XDRResult LazyScript::XDRScriptData(XDRState<mode>* xdr,
                                     HandleScriptSourceObject sourceObject,
-                                    Handle<LazyScript*> lazy) {
+                                    Handle<LazyScript*> lazy,
+                                    bool hasFieldInitializers) {
   JSContext* cx = xdr->cx();
 
   RootedAtom atom(cx);
   RootedFunction func(cx);
+
+  if (hasFieldInitializers) {
+    uint32_t numFieldInitializers;
+    if (mode == XDR_ENCODE) {
+      numFieldInitializers = lazy->getFieldInitializers().numFieldInitializers;
+    }
+    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
+    if (mode == XDR_DECODE) {
+      lazy->setFieldInitializers(FieldInitializers(numFieldInitializers));
+    }
+  }
 
   mozilla::Span<JS::GCCellPtr> gcThings =
       lazy->data_ ? lazy->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
@@ -325,7 +337,6 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
     uint32_t toStringEnd = script->toStringEnd();
     uint32_t lineno = script->lineno();
     uint32_t column = script->column();
-    uint32_t numFieldInitializers;
 
     if (mode == XDR_ENCODE) {
       immutableFlags = lazy->immutableFlags();
@@ -336,16 +347,9 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       MOZ_ASSERT(toStringEnd == lazy->toStringEnd());
       MOZ_ASSERT(lineno == lazy->lineno());
       MOZ_ASSERT(column == lazy->column());
-      if (fun->isClassConstructor()) {
-        numFieldInitializers =
-            (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
-      } else {
-        numFieldInitializers = UINT32_MAX;
-      }
     }
 
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
-    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
     if (mode == XDR_DECODE) {
@@ -356,11 +360,6 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
-
-      if (numFieldInitializers != UINT32_MAX) {
-        lazy->setFieldInitializers(
-            FieldInitializers((size_t)numFieldInitializers));
-      }
     }
   }
 
@@ -368,7 +367,10 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
   // with inner functions. See JSFunction::delazifyLazilyInterpretedFunction.
   MOZ_ASSERT(!lazy->hasInnerFunctions());
 
-  MOZ_TRY(LazyScript::XDRScriptData(xdr, sourceObject, lazy));
+  bool hasFieldInitializers = fun->isClassConstructor();
+
+  MOZ_TRY(
+      LazyScript::XDRScriptData(xdr, sourceObject, lazy, hasFieldInitializers));
 
   return Ok();
 }
@@ -712,6 +714,19 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
     }
 
     data = script->data_;
+  }
+
+  // Code the field initilizer data.
+  if (funOrMod && funOrMod->is<JSFunction>() &&
+      funOrMod->as<JSFunction>().isClassConstructor()) {
+    uint32_t numFieldInitializers;
+    if (mode == XDR_ENCODE) {
+      numFieldInitializers = data->getFieldInitializers().numFieldInitializers;
+    }
+    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
+    if (mode == XDR_DECODE) {
+      data->setFieldInitializers(FieldInitializers(numFieldInitializers));
+    }
   }
 
   bool isFirstScope = true;
@@ -1291,7 +1306,6 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     uint32_t lineno;
     uint32_t column;
     uint32_t immutableFlags;
-    uint32_t numFieldInitializers;
     uint32_t ngcthings;
 
     if (mode == XDR_ENCODE) {
@@ -1308,12 +1322,6 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       lineno = lazy->lineno();
       column = lazy->column();
       immutableFlags = lazy->immutableFlags();
-      if (fun->isClassConstructor()) {
-        numFieldInitializers =
-            (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
-      } else {
-        numFieldInitializers = UINT32_MAX;
-      }
       ngcthings = lazy->gcthings().size();
     }
 
@@ -1324,7 +1332,6 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     MOZ_TRY(xdr->codeUint32(&lineno));
     MOZ_TRY(xdr->codeUint32(&column));
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
-    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
     if (mode == XDR_DECODE) {
@@ -1336,16 +1343,14 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
         return xdr->fail(JS::TranscodeResult_Throw);
       }
 
-      if (numFieldInitializers != UINT32_MAX) {
-        lazy->setFieldInitializers(
-            FieldInitializers((size_t)numFieldInitializers));
-      }
-
       fun->initLazyScript(lazy);
     }
   }
 
-  MOZ_TRY(LazyScript::XDRScriptData(xdr, sourceObject, lazy));
+  bool hasFieldInitializers = fun->isClassConstructor();
+
+  MOZ_TRY(
+      LazyScript::XDRScriptData(xdr, sourceObject, lazy, hasFieldInitializers));
 
   return Ok();
 }
