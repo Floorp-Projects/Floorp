@@ -160,10 +160,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitCallInvokeFunction(LInstruction* call, Register callereg,
                               bool isConstructing, bool ignoresReturnValue,
                               uint32_t argc, uint32_t unusedStack);
-  void emitCallInvokeFunctionShuffleNewTarget(LCallKnown* call,
-                                              Register calleeReg,
-                                              uint32_t numFormals,
-                                              uint32_t unusedStack);
   template <typename T>
   void emitApplyGeneric(T* apply);
   template <typename T>

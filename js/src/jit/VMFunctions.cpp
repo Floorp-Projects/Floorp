@@ -261,15 +261,6 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
   return Call(cx, fval, thisv, args, rval);
 }
 
-bool InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj,
-                                    uint32_t numActualArgs,
-                                    uint32_t numFormalArgs, Value* argv,
-                                    MutableHandleValue rval) {
-  MOZ_ASSERT(numFormalArgs > numActualArgs);
-  argv[1 + numActualArgs] = argv[1 + numFormalArgs];
-  return InvokeFunction(cx, obj, true, false, numActualArgs, argv, rval);
-}
-
 bool InvokeFromInterpreterStub(JSContext* cx,
                                InterpreterStubExitFrameLayout* frame) {
   JitFrameLayout* jsFrame = frame->jsFrame();
@@ -281,7 +272,7 @@ bool InvokeFromInterpreterStub(JSContext* cx,
   RootedFunction fun(cx, CalleeTokenToFunction(token));
 
   // Ensure new.target immediately follows the actual arguments (the arguments
-  // rectifier added padding). See also InvokeFunctionShuffleNewTarget.
+  // rectifier added padding).
   if (constructing && numActualArgs < fun->nargs()) {
     argv[1 + numActualArgs] = argv[1 + fun->nargs()];
   }
