@@ -306,7 +306,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   virtual void Resume();
   // Events will be dispatched by calling methods of aListener.
   virtual void AddListener(MediaTrackListener* aListener);
-  virtual void RemoveListener(MediaTrackListener* aListener);
+  virtual RefPtr<GenericPromise> RemoveListener(MediaTrackListener* aListener);
 
   /**
    * Adds aListener to the source track of this track.

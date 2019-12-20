@@ -2118,20 +2118,29 @@ void MediaTrack::RemoveListenerImpl(MediaTrackListener* aListener) {
   }
 }
 
-void MediaTrack::RemoveListener(MediaTrackListener* aListener) {
+RefPtr<GenericPromise> MediaTrack::RemoveListener(
+    MediaTrackListener* aListener) {
   class Message : public ControlMessage {
    public:
     Message(MediaTrack* aTrack, MediaTrackListener* aListener)
         : ControlMessage(aTrack), mListener(aListener) {}
-    void Run() override { mTrack->RemoveListenerImpl(mListener); }
+    void Run() override {
+      mTrack->RemoveListenerImpl(mListener);
+      mRemovedPromise.Resolve(true, __func__);
+    }
     void RunDuringShutdown() override {
       // During shutdown we still want the listener's NotifyRemoved to be
       // called, since not doing that might block shutdown of other modules.
       Run();
     }
     RefPtr<MediaTrackListener> mListener;
+    MozPromiseHolder<GenericPromise> mRemovedPromise;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
+
+  UniquePtr<Message> message = MakeUnique<Message>(this, aListener);
+  RefPtr<GenericPromise> p = message->mRemovedPromise.Ensure(__func__);
+  GraphImpl()->AppendMessage(std::move(message));
+  return p;
 }
 
 void MediaTrack::AddDirectListenerImpl(
