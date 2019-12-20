@@ -54,6 +54,7 @@ function checkInputEvent(aEvent, aDescription) {
   todo(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface on input element whose type is number ${aDescription}`);
   is(aEvent.cancelable, false, `"input" event should be never cancelable on input element whose type is number ${aDescription}`);
   is(aEvent.bubbles, true, `"input" event should always bubble on input element whose type is number ${aDescription}`);
+  info(`Data: ${aEvent.data}, value: ${aEvent.target.value}`);
 }
 
 function test() {
@@ -132,6 +133,10 @@ function runNextSpinTest() {
   nextTest();
 }
 
+function waitForTick() {
+  return new Promise(SimpleTest.executeSoon);
+}
+
 const SETTIMEOUT_DELAY = 500;
 
 var spinTests = [
@@ -140,15 +145,17 @@ var spinTests = [
   function() {
     var inputEventCount = 0;
     input.value = 0;
-    input.addEventListener("input", function(evt) {
+    input.addEventListener("input", async function(evt) {
       ++inputEventCount;
       checkInputEvent(evt, "#1");
       if (inputEventCount == 3) {
         is(input.value, "3", "Testing spin-up button");
+        await waitForTick();
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousemove" });
       } else if (inputEventCount == 6) {
         is(input.value, "0", "Testing spin direction is reversed after mouse moves from spin-up button to spin-down button");
         input.removeEventListener("input", arguments.callee);
+        await waitForTick();
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
         runNextSpinTest();
       }
@@ -161,15 +168,17 @@ var spinTests = [
   function() {
     var inputEventCount = 0;
     input.value = 0;
-    input.addEventListener("input", function(evt) {
+    input.addEventListener("input", async function(evt) {
       ++inputEventCount;
       checkInputEvent(evt, "#2");
       if (inputEventCount == 3) {
         is(input.value, "-3", "Testing spin-down button");
+        await waitForTick();
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousemove" });
       } else if (inputEventCount == 6) {
         is(input.value, "0", "Testing spin direction is reversed after mouse moves from spin-down button to spin-up button");
         input.removeEventListener("input", arguments.callee);
+        await waitForTick();
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
         runNextSpinTest();
       }
@@ -182,10 +191,11 @@ var spinTests = [
   function() {
     var inputEventCount = 0;
     input.value = 0;
-    input.addEventListener("input", function(evt) {
+    input.addEventListener("input", async function(evt) {
       ++inputEventCount;
       checkInputEvent(evt, "#3");
       if (inputEventCount == 3) {
+        await waitForTick();
         synthesizeMouse(input, -1, -1, { type: "mousemove" });
         var eventHandler = arguments.callee;
         setTimeout(function() {
