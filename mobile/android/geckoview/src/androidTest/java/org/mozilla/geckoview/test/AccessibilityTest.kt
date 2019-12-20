@@ -529,6 +529,147 @@ class ZZAccessibilityTest : BaseSessionTest() {
         waitUntilTextTraversed(0, 18, nodeId) // "Lorem ipsum dolor "
     }
 
+    @Test fun testMoveByCharacterAtEdges() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        waitForInitialFocus()
+
+        // Move to the first link containing "anim id".
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "LINK")
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on link", node.text as String, startsWith("anim id"))
+            }
+        })
+
+        var success: Boolean
+        // Navigate forward through "anim id" character by character.
+        for (start in 0..6) {
+            success = provider.performAction(nodeId,
+                    AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                    moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+            assertThat("Next char should succeed", success, equalTo(true))
+            waitUntilTextTraversed(start, start + 1, nodeId)
+        }
+
+        // Try to navigate forward past end.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        assertThat("Next char should fail at end", success, equalTo(false))
+
+        // We're already on "d". Navigate backward through "anim i".
+        for (start in 5 downTo 0) {
+            success = provider.performAction(nodeId,
+                    AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                    moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+            assertThat("Prev char should succeed", success, equalTo(true))
+            waitUntilTextTraversed(start, start + 1, nodeId)
+        }
+
+        // Try to navigate backward past start.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        assertThat("Prev char should fail at start", success, equalTo(false))
+    }
+
+    @Test fun testMoveByWordAtEdges() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        waitForInitialFocus()
+
+        // Move to the first link containing "anim id".
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "LINK")
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on link", node.text as String, startsWith("anim id"))
+            }
+        })
+
+        var success: Boolean
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Next word should succeed", success, equalTo(true))
+        waitUntilTextTraversed(0, 4, nodeId) // "anim"
+
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Next word should succeed", success, equalTo(true))
+        waitUntilTextTraversed(5, 7, nodeId) // "id"
+
+        // Try to navigate forward past end.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Next word should fail at end", success, equalTo(false))
+
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Prev word should succeed", success, equalTo(true))
+        waitUntilTextTraversed(0, 4, nodeId) // "anim"
+
+        // Try to navigate backward past start.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Prev word should fail at start", success, equalTo(false))
+    }
+
+    @Test fun testMoveAtEndOfTextTrailingWhitespace() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        waitForInitialFocus(true)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on first text leaf", node.text as String, startsWith("Lorem ipsum"))
+            }
+        })
+
+        // Initial move backward to move to last word.
+        var success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Prev word should succeed", success, equalTo(true))
+        waitUntilTextTraversed(418, 424, nodeId) // "mollit"
+
+        // Try to move forward past last word.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        assertThat("Next word should fail at last word", success, equalTo(false))
+
+        // Move forward by character (onto trailing space).
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        assertThat("Next char should succeed", success, equalTo(true))
+        waitUntilTextTraversed(424, 425, nodeId) // " "
+
+        // Try to move forward past last character.
+        success = provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        assertThat("Next char should fail at last char", success, equalTo(false))
+    }
+
     @Test fun testHeadings() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
         loadTestPage("test-headings")
