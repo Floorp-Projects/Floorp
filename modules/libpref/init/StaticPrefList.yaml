@@ -6567,6 +6567,11 @@
   value: 0
   mirror: always
 
+- name: media.mediacontrol.testingevents.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
