@@ -7,9 +7,9 @@ use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, Refe
 use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds};
 use api::units::*;
 use crate::clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
-use euclid::{Scale, SideOffsets2D};
+use euclid::{Point2D, Vector2D, SideOffsets2D};
 use crate::scene::SceneProperties;
-use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, VectorHelpers};
+use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, PointHelpers};
 
 #[derive(Clone, Debug)]
 pub enum SpatialNodeType {
@@ -113,14 +113,18 @@ fn compute_offset_from(
 /// where snapping is not important (e.g. has perspective or is not axis
 /// aligned), or an edge case (e.g. SVG filters) which we can accept
 /// imperfection for now.
-fn snap_offset(
-    offset: LayoutVector2D,
+fn snap_offset<OffsetUnits, ScaleUnits>(
+    offset: Vector2D<f32, OffsetUnits>,
+    scale: Vector2D<f32, ScaleUnits>,
     global_device_pixel_scale: DevicePixelScale,
-) -> LayoutVector2D {
-    let world_offset = offset * Scale::new(1.0);
+) -> Vector2D<f32, OffsetUnits> {
+
+    debug_assert!(scale.x != 0.0 && scale.y != 0.0);
+
+    let world_offset = Point2D::new(offset.x * scale.x, offset.y * scale.y);
     let snapped_device_offset = (world_offset * global_device_pixel_scale).snap();
     let snapped_world_offset = snapped_device_offset / global_device_pixel_scale;
-    snapped_world_offset * Scale::new(1.0)
+    Vector2D::new(snapped_world_offset.x / scale.x, snapped_world_offset.y / scale.y)
 }
 
 impl SpatialNode {
@@ -234,8 +238,8 @@ impl SpatialNode {
 
                 let origin = LayoutPoint::new(origin.x.max(0.0), origin.y.max(0.0));
                 LayoutVector2D::new(
-                    (-origin.x).max(-scrollable_width).min(0.0).round(),
-                    (-origin.y).max(-scrollable_height).min(0.0).round(),
+                    (-origin.x).max(-scrollable_width).min(0.0),
+                    (-origin.y).max(-scrollable_height).min(0.0),
                 )
             }
             ScrollClamping::NoClamping => LayoutPoint::zero() - *origin,
@@ -349,7 +353,7 @@ impl SpatialNode {
                     // between our reference frame and this node. Finally, we also include
                     // whatever local transformation this reference frame provides.
                     let relative_transform = resolved_transform
-                        .post_translate(snap_offset(state.parent_accumulated_scroll_offset, global_device_pixel_scale))
+                        .post_translate(snap_offset(state.parent_accumulated_scroll_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale))
                         .to_transform()
                         .with_destination::<LayoutPixel>();
 
@@ -424,13 +428,13 @@ impl SpatialNode {
                 // provided by our own sticky positioning.
                 let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset;
                 self.viewport_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(accumulated_offset, global_device_pixel_scale).to_untyped());
+                    .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale).to_untyped());
 
                 // The transformation for any content inside of us is the viewport transformation, plus
                 // whatever scrolling offset we supply as well.
                 let added_offset = accumulated_offset + self.scroll_offset();
                 self.content_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(added_offset, global_device_pixel_scale).to_untyped());
+                    .offset(snap_offset(added_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale).to_untyped());
 
                 if let SpatialNodeType::StickyFrame(ref mut info) = self.node_type {
                     info.current_offset = sticky_offset;
@@ -631,15 +635,13 @@ impl SpatialNode {
         if scrollable_width > 0. {
             scrolling.offset.x = (scrolling.offset.x + delta.x)
                 .min(0.0)
-                .max(-scrollable_width)
-                .round();
+                .max(-scrollable_width);
         }
 
         if scrollable_height > 0. {
             scrolling.offset.y = (scrolling.offset.y + delta.y)
                 .min(0.0)
-                .max(-scrollable_height)
-                .round();
+                .max(-scrollable_height);
         }
 
         scrolling.offset != original_layer_scroll_offset
