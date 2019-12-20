@@ -278,7 +278,7 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 
 // Once we've committed to shutting down, don't do work in the background
 // thread.
-static bool gShuttingDownThread = false;
+static Atomic<bool> gShuttingDownThread(false);
 
 static uint32_t sGethashNoise = GETHASH_NOISE_DEFAULT;
 
