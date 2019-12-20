@@ -78,6 +78,7 @@ import org.mozilla.fenix.downloads.DownloadNotificationBottomSheetDialog
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
@@ -304,8 +305,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     context,
                     sessionManager = sessionManager,
                     sessionId = customTabSessionId,
-                    interceptLinkClicks = true,
-                    fragmentManager = parentFragmentManager
+                    fragmentManager = parentFragmentManager,
+                    launchInApp = { context.settings().preferences.getBoolean(
+                        context.getPreferenceKey(R.string.pref_key_open_links_in_external_app), false)
+                    }
                 ),
                 owner = this,
                 view = view
@@ -403,9 +406,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     url: String,
                     triggeredByRedirect: Boolean,
                     triggeredByWebContent: Boolean
-                ): Boolean {
+                ) {
                     browserToolbarView.expand()
-                    return false
                 }
             }, owner = viewLifecycleOwner)
 

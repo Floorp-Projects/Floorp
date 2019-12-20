@@ -119,6 +119,7 @@
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>
+    <string name="pref_key_open_links_in_external_app" translatable="false">pref_key_open_links_in_external_app</string>
 
     <!-- Quick Action Sheet -->
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>

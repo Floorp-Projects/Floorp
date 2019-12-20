@@ -233,7 +233,7 @@ class DefaultBrowserToolbarController(
                 sessionManager.selectedSession?.let {
                     val redirect = getRedirect.invoke(it.url)
                     redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    appLinksUseCases.openAppLink.invoke(redirect)
+                    appLinksUseCases.openAppLink.invoke(redirect.appIntent)
                 }
             }
             ToolbarMenu.Item.Bookmark -> {

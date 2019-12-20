@@ -19,16 +19,26 @@ import org.mozilla.fenix.ext.isOnline
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
-        session: EngineSession,
-        uri: String
+        engineSession: EngineSession,
+        uri: String,
+        hasUserGesture: Boolean,
+        isSameDomain: Boolean
     ): RequestInterceptor.InterceptionResponse? {
-        adjustTrackingProtection(context, session)
+        adjustTrackingProtection(context, engineSession)
+        var result: RequestInterceptor.InterceptionResponse? = null
+
         // WebChannel-driven authentication does not require a separate redirect interceptor.
-        return if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
-            context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
-        } else {
-            null
+        if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+            result = context.components.services.accountsAuthFeature.interceptor.onLoadRequest(
+                    engineSession, uri, hasUserGesture, isSameDomain)
         }
+
+        if (result == null) {
+            result = context.components.services.appLinksInterceptor.onLoadRequest(
+                engineSession, uri, hasUserGesture, isSameDomain)
+        }
+
+        return result
     }
 
     private fun adjustTrackingProtection(context: Context, session: EngineSession) {

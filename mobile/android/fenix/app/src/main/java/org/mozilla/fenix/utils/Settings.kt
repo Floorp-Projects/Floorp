@@ -43,6 +43,7 @@ class Settings private constructor(
         const val autoBounceMaximumCount = 2
         const val trackingProtectionOnboardingMaximumCount = 2
         const val FENIX_PREFERENCES = "fenix_preferences"
+
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
         private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
