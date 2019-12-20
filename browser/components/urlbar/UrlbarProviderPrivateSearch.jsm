@@ -125,7 +125,9 @@ class ProviderPrivateSearch extends UrlbarProvider {
     let instance = {};
     this.queries.set(queryContext, instance);
 
-    let engine = await Services.search.getDefaultPrivate();
+    let engine = queryContext.engineName
+      ? Services.search.getEngineByName(queryContext.engineName)
+      : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
       separatePrivateDefault && engine != (await Services.search.getDefault());
     logger.info(`isPrivateEngine: ${isPrivateEngine}`);

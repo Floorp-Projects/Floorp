@@ -72,6 +72,54 @@ add_task(async function test_restrictions() {
     !results.some(r => r.payload.engine != "engine-suggestions.xml"),
     "All the results should be search results"
   );
+
+  info("search restrict should ignore restriction token");
+  results = await get_results({
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+    searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARKS} match`,
+  });
+  Assert.ok(
+    !results.some(r => r.payload.engine != "engine-suggestions.xml"),
+    "All the results should be search results"
+  );
+  Assert.equal(
+    results[0].payload.query,
+    `${UrlbarTokenizer.RESTRICT.BOOKMARKS} match`,
+    "The restriction token should be ignored and not stripped"
+  );
+
+  info("search restrict with alias");
+  let aliasEngine = await Services.search.addEngineWithDetails("Test", {
+    alias: "match",
+    template: "http://example.com/?search={searchTerms}",
+  });
+  registerCleanupFunction(async function() {
+    await Services.search.removeEngine(aliasEngine);
+  });
+  results = await get_results({
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+    searchString: "match this",
+  });
+  Assert.ok(
+    !results.some(r => r.payload.engine != "engine-suggestions.xml"),
+    "All the results should be search results and the alias should be ignored"
+  );
+  Assert.equal(
+    results[0].payload.query,
+    `match this`,
+    "The restriction token should be ignored and not stripped"
+  );
+
+  info("search restrict with other engine");
+  results = await get_results({
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+    searchString: "match",
+    engineName: "Test",
+  });
+  Assert.ok(
+    !results.some(r => r.payload.engine != "Test"),
+    "All the results should be search results from the Test engine"
+  );
 });
 
 async function get_results(test) {
@@ -81,8 +129,8 @@ async function get_results(test) {
     isPrivate: false,
     maxResults: 10,
     sources: test.sources,
+    engineName: test.engineName,
   });
   await controller.startQuery(queryContext);
-  info(JSON.stringify(queryContext.results));
   return queryContext.results;
 }

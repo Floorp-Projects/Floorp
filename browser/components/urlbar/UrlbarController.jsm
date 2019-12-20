@@ -414,7 +414,9 @@ class UrlbarController {
               UrlbarPrefs.get("suggest.searches") &&
               UrlbarPrefs.get("browser.search.suggest.enabled")
             ) {
-              let engine = Services.search.defaultEngine;
+              let engine = Services.search.getEngineByName(
+                result.payload.engine
+              );
               UrlbarUtils.setupSpeculativeConnection(
                 engine,
                 this.browserWindow
