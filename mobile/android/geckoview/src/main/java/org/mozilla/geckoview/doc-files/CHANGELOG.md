@@ -34,6 +34,10 @@ exclude: true
   [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_INAUDIBLE`][73.13]. These control
   autoplay permissions for audible and inaudible videos.
   ([bug 1577596]({{bugzilla}}1577596))
+- Added [`LoginStorage.Delegate.onLoginSave`][73.14] for login storage save
+  requests and [`GeckoSession.PromptDelegate.onLoginStoragePrompt`][73.15] for
+  login storage prompts.
+  ([bug 1599873]({{bugzilla}}1599873))
 
 [73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
 [73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
@@ -48,6 +52,8 @@ exclude: true
 [73.11]: {{javadoc_uri}}/WebExtensionController.html#list--
 [73.12]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE
 [73.13]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE
+[73.14]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginSave-org.mozilla.geckoview.LoginStorage.LoginEntry-
+[73.15]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginStoragePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.LoginStoragePrompt-
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -516,4 +522,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: dc07539d37dfdbe9635af13e435ef6d49d2d68ba
+[api-version]: 2a944df46a5560f6b45f421536fd3051f9c32885
