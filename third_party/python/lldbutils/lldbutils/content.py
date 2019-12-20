@@ -23,5 +23,7 @@ def ptag(debugger, command, result, dict):
 
 
 def init(debugger):
-    debugger.HandleCommand("type summary add nsTextFragment -F lldbutils.content.summarize_text_fragment")
+    debugger.HandleCommand(
+        "type summary add nsTextFragment -F lldbutils.content.summarize_text_fragment"
+    )
     debugger.HandleCommand("command script add -f lldbutils.content.ptag ptag")
