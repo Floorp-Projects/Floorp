@@ -239,7 +239,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         # not using control server with bt
         pass
 
-    def parse_browsertime_json(self, raw_btresults):
+    def parse_browsertime_json(self, raw_btresults, page_cycles, cold, browser_cycles):
         """
         Receive a json blob that contains the results direct from the browsertime tool. Parse
         out the values that we wish to use and add those to our result object. That object will
@@ -388,9 +388,25 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         results = []
 
+        # Do some preliminary results validation. When running cold page-load, the results will
+        # be all in one entry already, as browsertime groups all cold page-load iterations in
+        # one results entry with all replicates within. When running warm page-load, there will
+        # be one results entry for every warm page-load iteration; with one single replicate
+        # inside each.
+        if cold:
+            if len(raw_btresults) == 0:
+                raise MissingResultsError("Missing results for all cold browser cycles.")
+        else:
+            if len(raw_btresults) != int(page_cycles):
+                raise MissingResultsError("Missing results for at least 1 warm page-cycle.")
+
+        # now parse out the values
         for raw_result in raw_btresults:
             if not raw_result['browserScripts']:
-                raise ValueError("Browsertime produced no measurements.")
+                raise MissingResultsError("Browsertime cycle produced no measurements.")
+
+            if raw_result['browserScripts'][0].get('timings') is None:
+                raise MissingResultsError("Browsertime cycle is missing all timings")
 
             # Desktop chrome doesn't have `browser` scripts data available for now
             bt_browser = raw_result['browserScripts'][0].get('browser', None)
@@ -409,8 +425,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             else:
                 # extracting values from browserScripts and statistics
                 for bt, raptor in conversion:
-                    # skip fnbpaint measurement on chrome
-                    if self.app and 'chrome' in self.app.lower() and bt == 'fnbpaint':
+                    # chrome we just measure fcp and loadtime; skip fnbpaint and dcf
+                    if self.app and 'chrome' in self.app.lower() and bt in ('fnbpaint', 'dcf'):
                         continue
 
                     # chrome currently uses different names (and locations) for some metrics
@@ -427,7 +443,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             bt_result['measurements'][bt] = []
                         val = _get_raptor_val(cycle['timings'], raptor)
                         if not val:
-                            continue
+                            raise MissingResultsError("Browsertime cycle missing {} measurement"
+                                                      .format(raptor))
                         bt_result['measurements'][bt].append(val)
 
                     # let's add the browsertime statistics; we'll use those for overall values
@@ -520,7 +537,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 if video_files:
                     video_jobs.extend(video_files)
 
-            for new_result in self.parse_browsertime_json(raw_btresults):
+            for new_result in self.parse_browsertime_json(raw_btresults,
+                                                          test['page_cycles'],
+                                                          test['cold'],
+                                                          test['browser_cycles']):
 
                 def _new_pageload_result(new_result):
                     # add additional info not from the browsertime json
@@ -602,3 +622,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 f.write(json.dumps({"jobs": video_jobs}))
 
         return success and validate_success
+
+
+class MissingResultsError(Exception):
+    pass
