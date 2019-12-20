@@ -37,54 +37,76 @@ class FunctionFlags {
  public:
   enum FunctionKind {
     NormalFunction = 0,
-    Arrow,  /* ES6 '(args) => body' syntax */
-    Method, /* ES6 MethodDefinition */
+    Arrow,   // ES6 '(args) => body' syntax
+    Method,  // ES6 MethodDefinition
     ClassConstructor,
     Getter,
     Setter,
-    AsmJS, /* function is an asm.js module or exported function */
-    Wasm,  /* function is an exported WebAssembly function */
+    AsmJS,  // An asm.js module or exported function
+    Wasm,   // An exported WebAssembly function
     FunctionKindLimit
   };
 
-  // I wish I didn't have to name this enum it makes consumers uglier
-  enum Flags {
-    INTERPRETED = 0x0001, /* function has a JSScript and environment. */
-    CONSTRUCTOR = 0x0002, /* function that can be called as a constructor */
-    EXTENDED = 0x0004,    /* structure is FunctionExtended */
-    BOUND_FUN = 0x0008, /* function was created with Function.prototype.bind. */
-    WASM_JIT_ENTRY = 0x0010,   /* the wasm function has a jit entry */
-    HAS_GUESSED_ATOM = 0x0020, /* function had no explicit name, but a
-                                  name was guessed for it anyway. See
-                                  atom_ for more info about this flag. */
-    HAS_BOUND_FUNCTION_NAME_PREFIX =
-        0x0020,      /* bound functions reuse the HAS_GUESSED_ATOM
-                        flag to track if atom_ already contains the
-                        "bound " function name prefix */
-    LAMBDA = 0x0040, /* function comes from a FunctionExpression, ArrowFunction,
-                        or Function() call (not a FunctionDeclaration or
-                        nonstandard function-statement) */
-    SELF_HOSTED =
-        0x0080, /* On an interpreted function, indicates a self-hosted builtin,
-                   which must not be decompilable nor constructible. On a native
-                   function, indicates an 'intrinsic', intended for use from
-                   self-hosted code only. */
-    HAS_INFERRED_NAME = 0x0100, /* function had no explicit name, but a name was
-                                   set by SetFunctionName at compile time or
-                                   SetFunctionName at runtime. See atom_ for
-                                   more info about this flag. */
-    INTERPRETED_LAZY =
-        0x0200, /* function is interpreted but doesn't have a script yet */
-    RESOLVED_LENGTH =
-        0x0400,             /* f.length has been resolved (see fun_resolve). */
-    RESOLVED_NAME = 0x0800, /* f.name has been resolved (see fun_resolve). */
-    NEW_SCRIPT_CLEARED =
-        0x1000, /* For a function used as an interpreted constructor, whether
-                   a 'new' type had constructor information cleared. */
+  enum Flags : uint16_t {
+    // The general kind of a function. This is used to describe characteristics
+    // of functions that do not merit a dedicated flag bit below.
+    FUNCTION_KIND_SHIFT = 0,
+    FUNCTION_KIND_MASK = 0x0007,
 
-    FUNCTION_KIND_SHIFT = 13,
-    FUNCTION_KIND_MASK = 0x7 << FUNCTION_KIND_SHIFT,
+    // The AllocKind used was FunctionExtended and extra slots were allocated.
+    // These slots may be used by the engine or the embedding so care must be
+    // taken to avoid conflicts.
+    EXTENDED = 1 << 3,
 
+    // Set if function is a self-hosted builtin or intrinsic. An 'intrinsic'
+    // here means a native function used inside self-hosted code. In general, a
+    // self-hosted function should appear to script as though it were a native
+    // builtin.
+    SELF_HOSTED = 1 << 4,
+
+    // An interpreted function has or may-have bytecode and an environment. Only
+    // one of these flags may be used at a time. As a memory optimization, the
+    // SELF_HOSTED and INTERPRETED_LAZY flags together indicate there is no
+    // js::BaseScript at all and we must clone from the self-hosted realm in
+    // order to get bytecode.
+    INTERPRETED = 1 << 5,
+    INTERPRETED_LAZY = 1 << 6,
+
+    // Function may be called as a constructor. This corresponds in the spec as
+    // having a [[Construct]] internal method.
+    CONSTRUCTOR = 1 << 7,
+
+    // A 'Bound Function Exotic Object' created by Function.prototype.bind.
+    BOUND_FUN = 1 << 8,
+
+    // Function comes from a FunctionExpression, ArrowFunction, or Function()
+    // call (not a FunctionDeclaration or nonstandard function-statement).
+    LAMBDA = 1 << 9,
+
+    // The WASM function has a JIT entry which emulates the
+    // js::BaseScript::jitCodeRaw_ mechanism.
+    WASM_JIT_ENTRY = 1 << 10,
+
+    // Function had no explicit name, but a name was set by SetFunctionName at
+    // compile time or SetFunctionName at runtime.
+    HAS_INFERRED_NAME = 1 << 11,
+
+    // Function had no explicit name, but a name was guessed for it anyway. For
+    // a Bound function, tracks if atom_ already contains the "bound " prefix.
+    ATOM_EXTRA_FLAG = 1 << 12,
+    HAS_GUESSED_ATOM = ATOM_EXTRA_FLAG,
+    HAS_BOUND_FUNCTION_NAME_PREFIX = ATOM_EXTRA_FLAG,
+
+    // The 'length' or 'name property has been resolved. See fun_resolve.
+    RESOLVED_NAME = 1 << 13,
+    RESOLVED_LENGTH = 1 << 14,
+
+    // For a function used as an interpreted constructor, whether a 'new' type
+    // had constructor information cleared.
+    NEW_SCRIPT_CLEARED = 1 << 15,
+
+    // Shifted form of FunctionKinds.
+    NORMAL_KIND = NormalFunction << FUNCTION_KIND_SHIFT,
     ASMJS_KIND = AsmJS << FUNCTION_KIND_SHIFT,
     WASM_KIND = Wasm << FUNCTION_KIND_SHIFT,
     ARROW_KIND = Arrow << FUNCTION_KIND_SHIFT,
@@ -93,7 +115,7 @@ class FunctionFlags {
     GETTER_KIND = Getter << FUNCTION_KIND_SHIFT,
     SETTER_KIND = Setter << FUNCTION_KIND_SHIFT,
 
-    /* Derived Flags values for convenience: */
+    // Derived Flags combinations to use when creating functions.
     NATIVE_FUN = 0,
     NATIVE_CTOR = NATIVE_FUN | CONSTRUCTOR,
     NATIVE_CLASS_CTOR = NATIVE_FUN | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
@@ -110,13 +132,15 @@ class FunctionFlags {
     INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC = INTERPRETED | LAMBDA,
     INTERPRETED_NORMAL = INTERPRETED | CONSTRUCTOR,
     INTERPRETED_GENERATOR_OR_ASYNC = INTERPRETED,
+
+    // Flags that XDR ignores.
     NO_XDR_FLAGS = RESOLVED_LENGTH | RESOLVED_NAME,
 
-    /* Flags preserved when cloning a function.
-       (Exception: js::MakeDefaultConstructor produces default constructors for
-       ECMAScript classes by cloning self-hosted functions, and then clearing
-       their SELF_HOSTED bit, setting their CONSTRUCTOR bit, and otherwise
-       munging them to look like they originated with the class definition.) */
+    // Flags preserved when cloning a function. (Exception:
+    // js::MakeDefaultConstructor produces default constructors for ECMAScript
+    // classes by cloning self-hosted functions, and then clearing their
+    // SELF_HOSTED bit, setting their CONSTRUCTOR bit, and otherwise munging
+    // them to look like they originated with the class definition.) */
     STABLE_ACROSS_CLONES =
         CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK
   };
