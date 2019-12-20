@@ -18,8 +18,6 @@ interface XULElement : Element {
   attribute DOMString ordinal;
   [SetterThrows]
   attribute DOMString orient;
-  [SetterThrows]
-  attribute DOMString pack;
 
   // Properties for hiding elements.
   attribute boolean hidden;
