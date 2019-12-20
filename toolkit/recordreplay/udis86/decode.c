@@ -648,12 +648,12 @@ decode_operand(struct ud           *u,
       break;
     case OP_F:
       u->br_far  = 1;
-      MOZ_FALLTHROUGH;
+      /* intended fall through */
     case OP_M:
       if (MODRM_MOD(modrm(u)) == 3) {
         UDERR(u, "expected modrm.mod != 3\n");
       }
-      MOZ_FALLTHROUGH;
+      /* intended fall through */
     case OP_E:
       decode_modrm_rm(u, operand, REGCLASS_GPR, size);
       break;
@@ -672,7 +672,7 @@ decode_operand(struct ud           *u,
       if (MODRM_MOD(modrm(u)) != 3) {
         UDERR(u, "expected modrm.mod == 3\n");
       }
-      MOZ_FALLTHROUGH;
+      /* intended fall through */
     case OP_Q:
       decode_modrm_rm(u, operand, REGCLASS_MMX, size);
       break;
@@ -683,7 +683,7 @@ decode_operand(struct ud           *u,
       if (MODRM_MOD(modrm(u)) != 3) {
         UDERR(u, "expected modrm.mod == 3\n");
       }
-      MOZ_FALLTHROUGH;
+      /* intended fall through */
     case OP_W:
       decode_modrm_rm(u, operand, REGCLASS_XMM, size);
       break;
