@@ -28,7 +28,12 @@ def summarize_nscolor(valobj, internal_dict):
     if value == 0:
         return "transparent"
     if value & 0xff000000 != 0xff000000:
-        return "rgba(%d, %d, %d, %f)" % (value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff, ((value >> 24) & 0xff) / 255.0)
+        return "rgba(%d, %d, %d, %f)" % (
+            value & 0xff,
+            (value >> 8) & 0xff,
+            (value >> 16) & 0xff,
+            ((value >> 24) & 0xff) / 255.0,
+        )
     color = "#%02x%02x%02x" % (value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff)
     if color in colors:
         return colors[color]
@@ -51,7 +56,11 @@ class RegionSyntheticChildrenProvider:
 
     def pixman_region_num_rects(self):
         if self.pixman_data.GetValueAsUnsigned(0):
-            return self.pixman_data.Dereference().GetChildMemberWithName("numRects").GetValueAsUnsigned(0)
+            return (
+                self.pixman_data.Dereference()
+                .GetChildMemberWithName("numRects")
+                .GetValueAsUnsigned(0)
+            )
         return 1
 
     def num_children(self):
@@ -69,12 +78,15 @@ class RegionSyntheticChildrenProvider:
         x2 = valobj.GetChildMemberWithName("x2").GetValueAsSigned()
         y1 = valobj.GetChildMemberWithName("y1").GetValueAsSigned()
         y2 = valobj.GetChildMemberWithName("y2").GetValueAsSigned()
-        return valobj.CreateValueFromExpression(name,
-            '%s(%d, %d, %d, %d)' % (self.rect_type, x1, y1, x2 - x1, y2 - y1))
+        return valobj.CreateValueFromExpression(
+            name, '%s(%d, %d, %d, %d)' % (self.rect_type, x1, y1, x2 - x1, y2 - y1)
+        )
 
     def get_child_at_index(self, index):
         if index == 0:
-            return self.pixman_data.CreateValueFromExpression('numRects', '(uint32_t)%d' % self.num_rects)
+            return self.pixman_data.CreateValueFromExpression(
+                "numRects", "(uint32_t)%d" % self.num_rects
+            )
         if index == 1:
             return self.convert_pixman_box_to_rect(self.pixman_extents, 'bounds')
 
@@ -91,7 +103,9 @@ class RegionSyntheticChildrenProvider:
 class IntRegionSyntheticChildrenProvider:
     def __init__(self, valobj, internal_dict):
         wrapped_region = valobj.GetChildMemberWithName("mImpl")
-        self.wrapped_provider = RegionSyntheticChildrenProvider(wrapped_region, internal_dict, "nsIntRect")
+        self.wrapped_provider = RegionSyntheticChildrenProvider(
+            wrapped_region, internal_dict, "nsIntRect"
+        )
 
     def num_children(self):
         return self.wrapped_provider.num_children()
@@ -135,7 +149,11 @@ def init(debugger):
     debugger.HandleCommand("type summary add nsRect -v -F lldbutils.gfx.summarize_rect")
     debugger.HandleCommand("type summary add nsIntRect -v -F lldbutils.gfx.summarize_rect")
     debugger.HandleCommand("type summary add gfxRect -v -F lldbutils.gfx.summarize_rect")
-    debugger.HandleCommand("type synthetic add nsRegion -l lldbutils.gfx.RegionSyntheticChildrenProvider")
-    debugger.HandleCommand("type synthetic add nsIntRegion -l lldbutils.gfx.IntRegionSyntheticChildrenProvider")
+    debugger.HandleCommand(
+        "type synthetic add nsRegion -l lldbutils.gfx.RegionSyntheticChildrenProvider"
+    )
+    debugger.HandleCommand(
+        "type synthetic add nsIntRegion -l lldbutils.gfx.IntRegionSyntheticChildrenProvider"
+    )
     debugger.HandleCommand("type summary add nsRegion -v -F lldbutils.gfx.summarize_region")
     debugger.HandleCommand("type summary add nsIntRegion -v -F lldbutils.gfx.summarize_region")
