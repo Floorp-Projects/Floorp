@@ -14167,7 +14167,7 @@ bool TransactionBase::VerifyRequestParams(
   if (objMetadata->mCommonMetadata.autoIncrement() &&
       objMetadata->mCommonMetadata.keyPath().IsValid() &&
       aParams.key().IsUnset()) {
-    const SerializedStructuredCloneWriteInfo cloneInfo = aParams.cloneInfo();
+    const SerializedStructuredCloneWriteInfo& cloneInfo = aParams.cloneInfo();
 
     if (NS_WARN_IF(!cloneInfo.offsetToKeyProp())) {
       ASSERT_UNLESS_FUZZING();
