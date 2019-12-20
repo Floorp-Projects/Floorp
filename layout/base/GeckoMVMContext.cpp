@@ -8,6 +8,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
