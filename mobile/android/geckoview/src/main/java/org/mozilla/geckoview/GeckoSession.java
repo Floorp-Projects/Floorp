@@ -1260,6 +1260,9 @@ public class GeckoSession implements Parcelable {
 
         mWebExtensionListener = new WebExtension.Listener(this);
 
+        mAutofillSupport = new Autofill.Support(this);
+        mAutofillSupport.registerListeners();
+
         if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
             throw new AssertionError("Add new handler to handlers list");
         }
@@ -1995,7 +1998,9 @@ public class GeckoSession implements Parcelable {
             mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
         }
 
-        getAutofillSupport().onActiveChanged(active);
+        ThreadUtils.postToUiThread(
+            () -> getAutofillSupport().onActiveChanged(active)
+        );
     }
 
     /**
@@ -5847,10 +5852,6 @@ public class GeckoSession implements Parcelable {
 
 
     private Autofill.Support getAutofillSupport() {
-        if (mAutofillSupport == null) {
-            mAutofillSupport = new Autofill.Support(this);
-        }
-
         return mAutofillSupport;
     }
 
