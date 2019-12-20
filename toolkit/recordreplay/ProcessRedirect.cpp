@@ -694,7 +694,7 @@ static size_t CopyInstruction(const char* aName, uint8_t* aIp,
           UnknownInstruction(aName, aIp, nbytes);
           return nbytes;
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case UD_OP_REG:
         if (op->base == UD_R_RIP) {
           UnknownInstruction(aName, aIp, nbytes);

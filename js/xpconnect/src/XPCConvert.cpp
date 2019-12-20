@@ -193,7 +193,7 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
     case nsXPTType::T_CHAR_STR: {
       const char* p = *static_cast<const char* const*>(s);
       arrlen = p ? strlen(p) : 0;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case nsXPTType::T_PSTRING_SIZE_IS: {
       const char* p = *static_cast<const char* const*>(s);
@@ -224,7 +224,7 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
     case nsXPTType::T_WCHAR_STR: {
       const char16_t* p = *static_cast<const char16_t* const*>(s);
       arrlen = p ? nsCharTraits<char16_t>::length(p) : 0;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case nsXPTType::T_PWSTRING_SIZE_IS: {
       const char16_t* p = *static_cast<const char16_t* const*>(s);

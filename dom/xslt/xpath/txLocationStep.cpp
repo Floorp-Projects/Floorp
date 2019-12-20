@@ -40,7 +40,7 @@ nsresult LocationStep::evaluate(txIEvalContext* aContext,
       if (!walker.moveToParent()) {
         break;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case ANCESTOR_OR_SELF_AXIS: {
       nodes->setReverse();
@@ -66,7 +66,7 @@ nsresult LocationStep::evaluate(txIEvalContext* aContext,
     case DESCENDANT_OR_SELF_AXIS: {
       rv = appendIfMatching(walker, aContext, nodes);
       NS_ENSURE_SUCCESS(rv, rv);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     }
     case DESCENDANT_AXIS: {
       rv = appendMatchingDescendants(walker, aContext, nodes);

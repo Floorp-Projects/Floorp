@@ -794,13 +794,13 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
         return false;
       }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case DeclarationKind::Import:
       // Module code is always strict, so 'let' is always a keyword and never a
       // name.
       MOZ_ASSERT(name != cx_->names().let);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case DeclarationKind::SimpleCatchParameter:
     case DeclarationKind::CatchParameter: {
@@ -6515,7 +6515,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
     case TokenKind::Mul:
       kind = ParseNodeKind::YieldStarExpr;
       tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::SlashIsRegExp);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default:
       exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
       if (!exprNode) {
@@ -8983,7 +8983,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       }
     }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     default: {
       Node expr =

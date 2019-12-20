@@ -292,7 +292,7 @@ bool RangeAnalysis::addBetaNodes() {
           continue;
         }
         // Otherwise fall through to handle JSOP_STRICTEQ the same as JSOP_EQ.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case JSOP_EQ:
         comp.setDouble(bound, bound);
         break;
@@ -302,7 +302,7 @@ bool RangeAnalysis::addBetaNodes() {
           continue;
         }
         // Otherwise fall through to handle JSOP_STRICTNE the same as JSOP_NE.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case JSOP_NE:
         // Negative zero is not not-equal to zero.
         if (bound == 0) {

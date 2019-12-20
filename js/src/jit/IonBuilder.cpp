@@ -1627,7 +1627,7 @@ class MOZ_RAII PoppedValueUseChecker {
           if (current_->peek(-1) == popped_[0]) {
             break;
           }
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
 
         default:
           MOZ_ASSERT(popped_[i]->isImplicitlyUsed() ||
@@ -2248,7 +2248,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
         }
       }
       // Fall through to JSOP_BINDNAME
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case JSOP_BINDNAME:
       return jsop_bindname(info().getName(pc));
 
@@ -2447,7 +2447,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
         return Ok();
       }
       // Fallthrough to IMPLICITTHIS in non-syntactic scope case
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case JSOP_IMPLICITTHIS: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_implicitthis(name);

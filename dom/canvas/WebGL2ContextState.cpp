@@ -118,7 +118,7 @@ JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
         return JS::NumberValue(UINT32_MAX);
 
       /*** fall through to fGetInteger64v ***/
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case LOCAL_GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
     case LOCAL_GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:

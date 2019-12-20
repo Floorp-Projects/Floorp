@@ -2822,7 +2822,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
     case 429:
       // Do not cache 425 and 429.
       CloseCacheEntry(false);
-      MOZ_FALLTHROUGH;  // process normally
+      [[fallthrough]];  // process normally
     default:
       rv = ProcessNormal();
       MaybeInvalidateCacheEntryForSubsequentGet();

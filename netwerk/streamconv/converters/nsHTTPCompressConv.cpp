@@ -293,7 +293,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
         return NS_OK;
       }
 
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
 
     case HTTP_COMPRESS_DEFLATE:
 

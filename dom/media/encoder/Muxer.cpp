@@ -37,7 +37,7 @@ nsresult Muxer::SetMetadata(
         mAudioCodecDelay = static_cast<uint64_t>(
             LittleEndian::readUint16(opusMeta->mIdHeader.Elements() + 10) *
             PR_USEC_PER_SEC / 48000);
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       }
       case TrackMetadataBase::METADATA_VORBIS:
       case TrackMetadataBase::METADATA_AAC:

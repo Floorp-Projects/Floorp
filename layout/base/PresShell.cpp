@@ -7484,7 +7484,7 @@ Element* PresShell::EventHandler::ComputeFocusedEventTargetElement(
       if (aGUIEvent->mMessage == eKeyUp) {
         sLastKeyDownEventTargetElement = nullptr;
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     default:
       return eventTargetElement;
   }
@@ -8007,7 +8007,7 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     case eMouseUp:
       Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_CLICK_MS,
                                      aEvent->mTimeStamp);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case ePointerDown:
     case ePointerUp:
       GetPresContext()->RecordInteractionTime(

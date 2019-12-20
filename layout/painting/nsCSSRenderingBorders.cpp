@@ -1212,7 +1212,7 @@ Color MakeBorderColor(nscolor aColor, BorderColorStyle aBorderColorStyle) {
 
     case BorderColorStyleLight:
       k = 1;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case BorderColorStyleDark:
       NS_GetSpecial3DColors(colors, aColor);
       return Color::FromABGR(colors[k]);

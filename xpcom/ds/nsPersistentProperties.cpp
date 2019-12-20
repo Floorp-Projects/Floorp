@@ -181,7 +181,7 @@ bool nsPropertiesParser::ParseValueCharacter(char16_t aChar,
             aTokenStart = aCur + 1;
             break;
           }
-          MOZ_FALLTHROUGH;
+          [[fallthrough]];
 
         case '\r':
           // we're done! We have a key and value

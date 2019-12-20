@@ -445,7 +445,7 @@ inline nsresult ParseIPv4Number(const nsACString& input, int32_t base,
   switch (base) {
     case 16:
       ++current;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 8:
       ++current;
       break;

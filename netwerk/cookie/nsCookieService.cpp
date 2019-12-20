@@ -844,7 +844,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
         // Fall through to the next upgrade.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 2: {
         // Add the baseDomain column and index to the table.
@@ -902,7 +902,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
         // Fall through to the next upgrade.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 3: {
         // Add the creationTime column to the table, and create a unique index
@@ -998,7 +998,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
         // Fall through to the next upgrade.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 4: {
         // We need to add appId/inBrowserElement, plus change a constraint on
@@ -1046,7 +1046,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
                          ("Upgraded database to schema version 5"));
       }
         // Fall through to the next upgrade.
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 5: {
         // Change in the version: Replace the columns |appId| and
@@ -1113,7 +1113,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         COOKIE_LOGSTRING(LogLevel::Debug,
                          ("Upgraded database to schema version 6"));
       }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 6: {
         // We made a mistake in schema version 6. We cannot remove expected
@@ -1168,7 +1168,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         COOKIE_LOGSTRING(LogLevel::Debug,
                          ("Upgraded database to schema version 7"));
       }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 7: {
         // Remove the appId field from moz_cookies.
@@ -1253,7 +1253,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         COOKIE_LOGSTRING(LogLevel::Debug,
                          ("Upgraded database to schema version 8"));
       }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 8: {
         // Add the sameSite column to the table.
@@ -1264,7 +1264,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         COOKIE_LOGSTRING(LogLevel::Debug,
                          ("Upgraded database to schema version 9"));
       }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case 9: {
         // Add the rawSameSite column to the table.
@@ -1285,7 +1285,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
             mDefaultDBState->syncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       case COOKIES_SCHEMA_VERSION:
         break;
@@ -1303,7 +1303,7 @@ OpenDBResult nsCookieService::TryInitDB(bool aRecreateDB) {
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
         // fall through to downgrade check
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
       // downgrading.
       // if columns have been added to the table, we can still use the ones we
