@@ -2469,7 +2469,7 @@ main {
     .ds-navigation ul li:last-child::after {
       content: none; }
     .ds-navigation ul li a:hover {
-      border-bottom: 1px solid var(--newtab-link-primary-color); }
+      text-decoration: underline; }
       .ds-navigation ul li a:hover:active {
         border-bottom: 1px solid #003EAA; }
     .ds-navigation ul li a:active {

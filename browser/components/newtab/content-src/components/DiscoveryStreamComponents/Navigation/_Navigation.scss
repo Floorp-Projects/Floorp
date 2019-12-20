@@ -32,8 +32,7 @@
 
     a {
       &:hover {
-        // text-decoration: underline; didn't quite match comps.
-        border-bottom: 1px solid var(--newtab-link-primary-color);
+        text-decoration: underline;
 
         &:active {
           border-bottom: 1px solid $blue-70;
