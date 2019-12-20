@@ -1,5 +1,9 @@
-import lldb
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+from __future__ import absolute_import
 from lldbutils import utils
+
 
 def summarize_text_fragment(valobj, internal_dict):
     content_union = valobj.GetChildAtIndex(0)
@@ -12,9 +16,11 @@ def summarize_text_fragment(valobj, internal_dict):
     ptr = content_union.GetChildMemberWithName(field)
     return utils.format_string(ptr, length)
 
+
 def ptag(debugger, command, result, dict):
     """Displays the tag name of a content node."""
     debugger.HandleCommand("expr (" + command + ")->mNodeInfo.mRawPtr->mInner.mName")
+
 
 def init(debugger):
     debugger.HandleCommand("type summary add nsTextFragment -F lldbutils.content.summarize_text_fragment")
