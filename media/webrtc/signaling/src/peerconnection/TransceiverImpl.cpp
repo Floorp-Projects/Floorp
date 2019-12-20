@@ -939,11 +939,8 @@ void TransceiverImpl::UpdateConduitRtpExtmap(
         extmaps.emplace_back(extmap.extensionname, extmap.entry);
       });
 
-  RefPtr<VideoSessionConduit> conduit =
-      static_cast<VideoSessionConduit*>(mConduit.get());
-
   if (!extmaps.empty()) {
-    conduit->SetLocalRTPExtensions(aDirection, extmaps);
+    mConduit->SetLocalRTPExtensions(aDirection, extmaps);
   }
 }
 
