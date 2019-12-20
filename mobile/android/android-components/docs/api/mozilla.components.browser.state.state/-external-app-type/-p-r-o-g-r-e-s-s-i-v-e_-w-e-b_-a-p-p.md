@@ -2,7 +2,7 @@
 
 # PROGRESSIVE_WEB_APP
 
-`PROGRESSIVE_WEB_APP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L65)
+`PROGRESSIVE_WEB_APP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L59)
 
 Custom tab toolbar is hidden inside a Progressive Web App created by the browser.
 

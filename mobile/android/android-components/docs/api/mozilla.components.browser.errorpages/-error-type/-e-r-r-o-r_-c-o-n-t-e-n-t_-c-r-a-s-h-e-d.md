@@ -2,7 +2,7 @@
 
 # ERROR_CONTENT_CRASHED
 
-`ERROR_CONTENT_CRASHED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L103)
+`ERROR_CONTENT_CRASHED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L104)
 
 ### Inherited Properties
 

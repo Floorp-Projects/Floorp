@@ -2,7 +2,7 @@
 
 # ERROR_UNKNOWN_SOCKET_TYPE
 
-`ERROR_UNKNOWN_SOCKET_TYPE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L75)
+`ERROR_UNKNOWN_SOCKET_TYPE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L76)
 
 ### Inherited Properties
 

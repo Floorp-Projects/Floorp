@@ -2,7 +2,7 @@
 
 # ERROR_NO_INTERNET
 
-`ERROR_NO_INTERNET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L115)
+`ERROR_NO_INTERNET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L116)
 
 ### Inherited Properties
 

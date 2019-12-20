@@ -2,7 +2,7 @@
 
 # ERROR_MALFORMED_URI
 
-`ERROR_MALFORMED_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L120)
+`ERROR_MALFORMED_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L121)
 
 ### Inherited Properties
 

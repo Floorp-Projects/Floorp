@@ -2,7 +2,7 @@
 
 # CUSTOM_TAB
 
-`CUSTOM_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L61)
+`CUSTOM_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L55)
 
 Custom tab is displayed as a normal custom tab with toolbar.
 
