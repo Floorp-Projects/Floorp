@@ -16,6 +16,7 @@ permalink: /changelog/
   * Glean was updated to v22.1.0 ([Full changelog](https://github.com/mozilla/glean/compare/v21.3.0...v22.1.0))
     * Attempt to re-send the deletion ping on init even if upload is disabled.
     * Introduce the `InvalidOverflow` error for `TimingDistribution`s.
+  * Glean now provides a Gradle plugin for automating the conversion from `metrics.yaml` and `pings.yaml` files to Kotlin code. This should be used instead of the deprecated Gradle script.  See [integrating with the build system docs](https://mozilla.github.io/glean/book/user/adding-glean-to-your-project.html#integrating-with-the-build-system) for more information.
 
 * **feature-app-links**
   * ⚠️ **This is a breaking change**:
@@ -99,7 +100,6 @@ permalink: /changelog/
 * **service-sync-logins**
   * `AsyncLoginsStorage` interface gained a new method: `importLoginsAsync`, used for bulk-inserting logins (for example, during a migration).
 
-* **service-glean**: Glean now provides a Gradle plugin for automating the conversion from metrics.yaml and pings.yaml files to Kotlin code. This should be used instead of the deprecated Gradle script.  See [integrating with the build system docs](https://mozilla.github.io/glean/book/user/adding-glean-to-your-project.html#integrating-with-the-build-system) for more information.
 
 # 24.0.0
 
