@@ -108,7 +108,7 @@ add_task(async function test_contentscript_async_clipboard_no_permission() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   win.close();
   await extension.unload();
@@ -144,7 +144,7 @@ add_task(async function test_contentscript_clipboard_permission_writetext() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   const actual = SpecialPowers.getClipboardData("text/unicode");
   is(actual, "HI", "right string copied by write");
@@ -189,7 +189,7 @@ add_task(async function test_contentscript_clipboard_permission_readtext() {
   }, "text/unicode");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   win.close();
   await extension.unload();
@@ -227,7 +227,7 @@ add_task(async function test_contentscript_clipboard_permission_write() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   const actual = SpecialPowers.getClipboardData("text/unicode");
   is(actual, "HI", "right string copied by write");
@@ -272,7 +272,7 @@ add_task(async function test_contentscript_clipboard_permission_read() {
   }, "text/unicode");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   win.close();
   await extension.unload();
@@ -314,7 +314,7 @@ add_task(async function test_contentscript_clipboard_nocontents_readtext() {
   }, "text/x-moz-place-empty");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   win.close();
   await extension.unload();
@@ -366,7 +366,7 @@ add_task(async function test_contentscript_clipboard_nocontents_read() {
   }, "text/x-moz-place-empty");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
+  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
   win.close();
   await extension.unload();
