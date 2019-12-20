@@ -1303,6 +1303,8 @@ void nsLookAndFeel::EnsureInit() {
         break;
     }
   }
+
+  RecordTelemetry();
 }
 
 // virtual

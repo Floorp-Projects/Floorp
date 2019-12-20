@@ -910,4 +910,6 @@ void nsLookAndFeel::EnsureInit() {
     DWORD color = ::GetSysColor(i);
     mSysColorTable[i - SYS_COLOR_MIN] = COLOREF_2_NSRGB(color);
   }
+
+  RecordTelemetry();
 }

@@ -404,4 +404,6 @@ void nsLookAndFeel::EnsureInit() {
   }
 
   mColorDarkText = GetColorFromUIColor([UIColor darkTextColor]);
+
+  RecordTelemetry();
 }
