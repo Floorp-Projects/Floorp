@@ -352,7 +352,6 @@ projects:
     path: components/tooling/detekt
     description: 'Custom Detekt rules for internal use.'
     publish: false
-    artifact-type: jar
   tooling-lint:
     path: components/tooling/lint
     description: 'Custom Lint checks for using and writing components.'
@@ -405,3 +404,4 @@ projects:
     path: components/tooling/glean-gradle-plugin
     description: 'A Gradle plugin to generate code for Glean metrics.'
     publish: true
+    artifact-type: jar
