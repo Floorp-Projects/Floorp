@@ -869,3 +869,19 @@ add_task(async function test_preference_select() {
   await three.unload();
   await promiseShutdownManager();
 });
+
+add_task(async function test_preference_select() {
+  let prefNames = await ExtensionPreferencesManager.getManagedPrefDetails();
+  // Just check a subset of settings that are in this test file.
+  Assert.ok(prefNames.size > 0, "some prefs exist");
+  for (let settingName in SETTINGS) {
+    let setting = SETTINGS[settingName];
+    for (let prefName of setting.prefNames) {
+      Assert.equal(
+        prefNames.get(prefName),
+        settingName,
+        "setting retrieved prefNames"
+      );
+    }
+  }
+});
