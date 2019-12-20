@@ -2,7 +2,7 @@
 
 # ExternalAppType
 
-`enum class ExternalAppType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L57)
+`enum class ExternalAppType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L51)
 
 Represents different contexts that a custom tab session can be displayed in.
 

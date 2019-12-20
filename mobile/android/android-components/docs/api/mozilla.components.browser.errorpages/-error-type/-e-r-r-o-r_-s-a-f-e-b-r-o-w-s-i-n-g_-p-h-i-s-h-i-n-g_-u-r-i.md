@@ -2,7 +2,7 @@
 
 # ERROR_SAFEBROWSING_PHISHING_URI
 
-`ERROR_SAFEBROWSING_PHISHING_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L156)
+`ERROR_SAFEBROWSING_PHISHING_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L157)
 
 ### Inherited Properties
 

@@ -129,6 +129,7 @@
 | [mozilla.components.feature.tabs.tabstray](mozilla.components.feature.tabs.tabstray/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar](mozilla.components.feature.tabs.toolbar/index.md) |  |
 | [mozilla.components.feature.toolbar](mozilla.components.feature.toolbar/index.md) |  |
+| [mozilla.components.feature.top.sites](mozilla.components.feature.top.sites/index.md) |  |
 | [mozilla.components.feature.webcompat](mozilla.components.feature.webcompat/index.md) |  |
 | [mozilla.components.feature.webnotifications](mozilla.components.feature.webnotifications/index.md) |  |
 | [mozilla.components.lib.crash](mozilla.components.lib.crash/index.md) |  |

@@ -38,7 +38,7 @@ of security concerns.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AppLinksUseCases(context: <ERROR CLASS>, launchInApp: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, browserPackageNames: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>? = null, unguessableWebUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "https://${UUID.randomUUID()}.net")`<br>These use cases allow for the detection of, and opening of links that other apps have registered an [IntentFilter](#)s to open. |
+| [&lt;init&gt;](-init-.md) | `AppLinksUseCases(context: <ERROR CLASS>, launchInApp: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, failedToLunch: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, browserPackageNames: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>? = null, unguessableWebUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "https://${UUID.randomUUID()}.net")`<br>These use cases allow for the detection of, and opening of links that other apps have registered an [IntentFilter](#)s to open. |
 
 ### Properties
 

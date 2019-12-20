@@ -2,7 +2,7 @@
 
 # ERROR_PORT_BLOCKED
 
-`ERROR_PORT_BLOCKED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L87)
+`ERROR_PORT_BLOCKED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L88)
 
 ### Inherited Properties
 

@@ -30,13 +30,6 @@ Holds configuration data for a Custom Tab.
 | [titleVisible](title-visible.md) | `val titleVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether the title should be shown in the custom tab. |
 | [toolbarColor](toolbar-color.md) | `val toolbarColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>Background color for the toolbar. |
 
-### Companion Object Properties
-
-| Name | Summary |
-|---|---|
-| [EXTRA_ADDITIONAL_TRUSTED_ORIGINS](-e-x-t-r-a_-a-d-d-i-t-i-o-n-a-l_-t-r-u-s-t-e-d_-o-r-i-g-i-n-s.md) | `const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [EXTRA_NAVIGATION_BAR_COLOR](-e-x-t-r-a_-n-a-v-i-g-a-t-i-o-n_-b-a-r_-c-o-l-o-r.md) | `const val EXTRA_NAVIGATION_BAR_COLOR: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-
 ### Extension Functions
 
 | Name | Summary |

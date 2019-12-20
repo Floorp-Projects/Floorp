@@ -2,7 +2,7 @@
 
 # ERROR_UNKNOWN_HOST
 
-`ERROR_UNKNOWN_HOST` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L111)
+`ERROR_UNKNOWN_HOST` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L112)
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # ERROR_UNSAFE_CONTENT_TYPE
 
-`ERROR_UNSAFE_CONTENT_TYPE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L95)
+`ERROR_UNSAFE_CONTENT_TYPE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L96)
 
 ### Inherited Properties
 
