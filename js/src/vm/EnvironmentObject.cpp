@@ -81,21 +81,69 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
 
 /*****************************************************************************/
 
+template <typename T>
+static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
+                                  HandleObjectGroup group, gc::InitialHeap heap,
+                                  IsSingletonEnv isSingleton) {
+  static_assert(std::is_base_of<EnvironmentObject, T>::value,
+                "T must be an EnvironmentObject");
+
+  // All environment objects can be background-finalized.
+  gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &T::class_));
+  allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
+
+  JSObject* obj;
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, obj, NativeObject::create(cx, allocKind, heap, shape, group));
+
+  if (isSingleton == IsSingletonEnv::Yes) {
+    RootedObject objRoot(cx, obj);
+    if (!JSObject::setSingleton(cx, objRoot)) {
+      return nullptr;
+    }
+    obj = objRoot;
+  }
+
+  return &obj->as<T>();
+}
+
+// As above, but the caller does not have to pass the group.
+template <typename T>
+static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
+                                  gc::InitialHeap heap,
+                                  IsSingletonEnv isSingleton) {
+  RootedObjectGroup group(
+      cx, ObjectGroup::defaultNewGroup(cx, &T::class_, TaggedProto(nullptr)));
+  if (!group) {
+    return nullptr;
+  }
+
+  return CreateEnvironmentObject<T>(cx, shape, group, heap, isSingleton);
+}
+
+// Helper function for simple environment objects that don't need the overloads
+// above.
+template <typename T>
+static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
+                                  NewObjectKind newKind = GenericObject) {
+  RootedObjectGroup group(
+      cx, ObjectGroup::defaultNewGroup(cx, &T::class_, TaggedProto(nullptr)));
+  if (!group) {
+    return nullptr;
+  }
+
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  return CreateEnvironmentObject<T>(cx, shape, group, heap, IsSingletonEnv::No);
+}
+
 CallObject* CallObject::create(JSContext* cx, HandleShape shape,
                                HandleObjectGroup group) {
   MOZ_ASSERT(!group->singleton());
 
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &CallObject::class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
-
   gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
-
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                            NativeObject::create(cx, kind, heap, shape, group));
-
-  return &obj->as<CallObject>();
+  return CreateEnvironmentObject<CallObject>(cx, shape, group, heap,
+                                             IsSingletonEnv::No);
 }
 
 /*
@@ -110,24 +158,15 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
   RootedShape shape(cx, scope->environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
-
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
-
   // The JITs assume the result is nursery allocated unless we collected the
   // nursery, so don't change |heap| here.
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                            NativeObject::create(cx, kind, heap, shape, group));
+  auto* callObj =
+      CreateEnvironmentObject<CallObject>(cx, shape, heap, IsSingletonEnv::No);
+  if (!callObj) {
+    return nullptr;
+  }
 
-  CallObject* callObj = &obj->as<CallObject>();
   callObj->initEnclosingEnvironment(enclosing);
 
   if (scope->hasParameterExprs()) {
@@ -248,28 +287,11 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
                                                    gc::InitialHeap heap) {
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
-  if (!group) {
+  auto* env = CreateEnvironmentObject<VarEnvironmentObject>(cx, shape);
+  if (!env) {
     return nullptr;
   }
 
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
-
-  {
-    AutoSweepObjectGroup sweep(group);
-    if (group->shouldPreTenure(sweep)) {
-      heap = gc::TenuredHeap;
-    }
-  }
-
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                            NativeObject::create(cx, kind, heap, shape, group));
-
-  VarEnvironmentObject* env = &obj->as<VarEnvironmentObject>();
   MOZ_ASSERT(!env->inDictionaryMode());
   MOZ_ASSERT(env->isDelegate());
 
@@ -380,21 +402,12 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
                     script->bodyScope()->as<ModuleScope>().environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
-  if (!group) {
+  RootedModuleEnvironmentObject env(
+      cx, CreateEnvironmentObject<ModuleEnvironmentObject>(cx, shape,
+                                                           TenuredObject));
+  if (!env) {
     return nullptr;
   }
-
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
-
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::TenuredHeap, shape, group));
-
-  RootedModuleEnvironmentObject env(cx, &obj->as<ModuleEnvironmentObject>());
 
   env->initReservedSlot(MODULE_SLOT, ObjectValue(*module));
 
@@ -589,31 +602,20 @@ const JSClass WasmInstanceEnvironmentObject::class_ = {
 WasmInstanceEnvironmentObject*
 WasmInstanceEnvironmentObject::createHollowForDebug(
     JSContext* cx, Handle<WasmInstanceScope*> scope) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
-
   RootedShape shape(cx, scope->getEmptyEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
 
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
+  auto* env = CreateEnvironmentObject<WasmInstanceEnvironmentObject>(cx, shape);
+  if (!env) {
+    return nullptr;
+  }
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::DefaultHeap, shape, group));
+  env->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
+  env->initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
 
-  Rooted<WasmInstanceEnvironmentObject*> callobj(
-      cx, &obj->as<WasmInstanceEnvironmentObject>());
-  callobj->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
-  callobj->initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
-
-  return callobj;
+  return env;
 }
 
 /*****************************************************************************/
@@ -625,27 +627,16 @@ const JSClass WasmFunctionCallObject::class_ = {
 /* static */
 WasmFunctionCallObject* WasmFunctionCallObject::createHollowForDebug(
     JSContext* cx, HandleObject enclosing, Handle<WasmFunctionScope*> scope) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
-
   RootedShape shape(cx, scope->getEmptyEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
 
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
-  kind = gc::ForegroundToBackgroundAllocKind(kind);
+  auto* callobj = CreateEnvironmentObject<WasmFunctionCallObject>(cx, shape);
+  if (!callobj) {
+    return nullptr;
+  }
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::DefaultHeap, shape, group));
-
-  Rooted<WasmFunctionCallObject*> callobj(cx,
-                                          &obj->as<WasmFunctionCallObject>());
   callobj->initEnclosingEnvironment(enclosing);
   callobj->initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
 
@@ -658,9 +649,13 @@ WithEnvironmentObject* WithEnvironmentObject::create(JSContext* cx,
                                                      HandleObject object,
                                                      HandleObject enclosing,
                                                      Handle<WithScope*> scope) {
-  Rooted<WithEnvironmentObject*> obj(cx);
-  obj = NewObjectWithNullTaggedProto<WithEnvironmentObject>(
-      cx, GenericObject, BaseShape::DELEGATE);
+  RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
+                                              BaseShape::DELEGATE));
+  if (!shape) {
+    return nullptr;
+  }
+
+  auto* obj = CreateEnvironmentObject<WithEnvironmentObject>(cx, shape);
   if (!obj) {
     return nullptr;
   }
@@ -827,9 +822,15 @@ const JSClass WithEnvironmentObject::class_ = {
 /* static */
 NonSyntacticVariablesObject* NonSyntacticVariablesObject::create(
     JSContext* cx) {
+  RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
+                                              BaseShape::DELEGATE));
+  if (!shape) {
+    return nullptr;
+  }
+
   Rooted<NonSyntacticVariablesObject*> obj(
-      cx, NewObjectWithNullTaggedProto<NonSyntacticVariablesObject>(
-              cx, TenuredObject, BaseShape::DELEGATE));
+      cx, CreateEnvironmentObject<NonSyntacticVariablesObject>(cx, shape,
+                                                               TenuredObject));
   if (!obj) {
     return nullptr;
   }
@@ -898,29 +899,18 @@ bool js::CreateNonSyntacticEnvironmentChain(JSContext* cx,
 /* static */
 LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
     JSContext* cx, HandleShape shape, HandleObject enclosing,
-    gc::InitialHeap heap) {
+    gc::InitialHeap heap, IsSingletonEnv isSingleton) {
   MOZ_ASSERT(shape->getObjectClass() == &LexicalEnvironmentObject::class_);
-
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &LexicalEnvironmentObject::class_,
-                                       TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
 
   // The JITs assume the result is nursery allocated unless we collected the
   // nursery, so don't change |heap| here.
 
-  gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind,
-                                            &LexicalEnvironmentObject::class_));
-  allocKind = ForegroundToBackgroundAllocKind(allocKind);
+  auto* env = CreateEnvironmentObject<LexicalEnvironmentObject>(cx, shape, heap,
+                                                                isSingleton);
+  if (!env) {
+    return nullptr;
+  }
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, allocKind, heap, shape, group));
-
-  LexicalEnvironmentObject* env = &obj->as<LexicalEnvironmentObject>();
   MOZ_ASSERT(!env->inDictionaryMode());
   MOZ_ASSERT(env->isDelegate());
 
@@ -940,7 +930,7 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::create(
 
   RootedShape shape(cx, scope->environmentShape());
   LexicalEnvironmentObject* env =
-      createTemplateObject(cx, shape, enclosing, heap);
+      createTemplateObject(cx, shape, enclosing, heap, IsSingletonEnv::No);
   if (!env) {
     return nullptr;
   }
@@ -973,14 +963,10 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createGlobal(
     return nullptr;
   }
 
-  Rooted<LexicalEnvironmentObject*> env(
-      cx, LexicalEnvironmentObject::createTemplateObject(cx, shape, global,
-                                                         gc::TenuredHeap));
+  LexicalEnvironmentObject* env =
+      LexicalEnvironmentObject::createTemplateObject(
+          cx, shape, global, gc::TenuredHeap, IsSingletonEnv::Yes);
   if (!env) {
-    return nullptr;
-  }
-
-  if (!JSObject::setSingleton(cx, env)) {
     return nullptr;
   }
 
@@ -1000,8 +986,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createNonSyntactic(
   }
 
   LexicalEnvironmentObject* env =
-      LexicalEnvironmentObject::createTemplateObject(cx, shape, enclosing,
-                                                     gc::TenuredHeap);
+      LexicalEnvironmentObject::createTemplateObject(
+          cx, shape, enclosing, gc::TenuredHeap, IsSingletonEnv::No);
   if (!env) {
     return nullptr;
   }
@@ -1027,7 +1013,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createHollowForDebug(
   // Debugger.Environment objects.
   RootedObject enclosingEnv(cx, &cx->global()->lexicalEnvironment());
   Rooted<LexicalEnvironmentObject*> env(
-      cx, createTemplateObject(cx, shape, enclosingEnv, gc::TenuredHeap));
+      cx, createTemplateObject(cx, shape, enclosingEnv, gc::TenuredHeap,
+                               IsSingletonEnv::No));
   if (!env) {
     return nullptr;
   }
@@ -1160,14 +1147,19 @@ size_t NamedLambdaObject::lambdaSlot() {
 /* static */
 RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
     JSContext* cx, HandleObject enclosing, unsigned errorNumber) {
-  RuntimeLexicalErrorObject* obj =
-      NewObjectWithNullTaggedProto<RuntimeLexicalErrorObject>(
-          cx, GenericObject, BaseShape::DELEGATE);
+  RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
+                                              BaseShape::DELEGATE));
+  if (!shape) {
+    return nullptr;
+  }
+
+  auto* obj = CreateEnvironmentObject<RuntimeLexicalErrorObject>(cx, shape);
   if (!obj) {
     return nullptr;
   }
   obj->initEnclosingEnvironment(enclosing);
   obj->initReservedSlot(ERROR_SLOT, Int32Value(int32_t(errorNumber)));
+
   return obj;
 }
 

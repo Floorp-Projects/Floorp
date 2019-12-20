@@ -84,9 +84,8 @@ const char* js::ScopeKindString(ScopeKind kind) {
   MOZ_CRASH("Bad ScopeKind");
 }
 
-static Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
-                                    uint32_t numSlots,
-                                    uint32_t baseShapeFlags) {
+Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
+                                 uint32_t numSlots, uint32_t baseShapeFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
   return EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), numFixed,
