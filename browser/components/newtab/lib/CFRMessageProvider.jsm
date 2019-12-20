@@ -665,7 +665,7 @@ const CFR_MESSAGES = [
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
     },
     trigger: {
-      id: "trackingProtection",
+      id: "contentBlocking",
       params: [
         Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT,
         Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT |
@@ -723,7 +723,7 @@ const CFR_MESSAGES = [
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
     },
     trigger: {
-      id: "trackingProtection",
+      id: "contentBlocking",
       params: [Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT],
     },
   },
@@ -777,7 +777,7 @@ const CFR_MESSAGES = [
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
     },
     trigger: {
-      id: "trackingProtection",
+      id: "contentBlocking",
       params: [Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT],
     },
   },
@@ -803,10 +803,10 @@ const CFR_MESSAGES = [
     },
     targeting: "pageLoad >= 4",
     frequency: {
-      lifetime: 7, // Length of privacy.trackingprotection.cfr-milestone.milestones pref
+      lifetime: 7, // Length of privacy.contentBlocking.cfr-milestone.milestones pref
     },
     trigger: {
-      id: "trackingProtection",
+      id: "contentBlocking",
       params: ["ContentBlockingMilestone"],
     },
   },
