@@ -1074,14 +1074,16 @@ class BuildDriver(MozbuildObject):
 
                 config = self.reload_config_environment()
 
-            active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
+            all_backends = config.substs.get('BUILD_BACKENDS', [None])
+            active_backend = all_backends[0]
 
             status = None
 
             if (not config_rc and
-                self.backend_out_of_date(mozpath.join(self.topobjdir,
-                                                      'backend.%sBackend' %
-                                                      active_backend))):
+                any([self.backend_out_of_date(mozpath.join(self.topobjdir,
+                                                           'backend.%sBackend' %
+                                                           backend))
+                     for backend in all_backends])):
                 print('Build configuration changed. Regenerating backend.')
                 args = [config.substs['PYTHON'],
                         mozpath.join(self.topobjdir, 'config.status')]
