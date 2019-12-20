@@ -120,6 +120,12 @@ public class TestRunnerActivity extends Activity {
     };
 
     private GeckoSession.ContentDelegate mContentDelegate = new GeckoSession.ContentDelegate() {
+        private void onContentProcessGone() {
+            if (System.getenv("MOZ_CRASHREPORTER_SHUTDOWN") != null) {
+                sRuntime.shutdown();
+            }
+        }
+
         @Override
         public void onTitleChange(GeckoSession session, String title) {
 
@@ -152,9 +158,12 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public void onCrash(GeckoSession session) {
-            if (System.getenv("MOZ_CRASHREPORTER_SHUTDOWN") != null) {
-                sRuntime.shutdown();
-            }
+            onContentProcessGone();
+        }
+
+        @Override
+        public void onKill(GeckoSession session) {
+            onContentProcessGone();
         }
 
         @Override
