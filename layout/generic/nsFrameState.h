@@ -28,33 +28,33 @@ enum nsFrameState : nsFrameState_size_t {
 #undef FRAME_STATE_BIT
 };
 
-inline nsFrameState operator|(nsFrameState aLeft, nsFrameState aRight) {
+constexpr nsFrameState operator|(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) | nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState operator&(nsFrameState aLeft, nsFrameState aRight) {
+constexpr nsFrameState operator&(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) & nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState& operator|=(nsFrameState& aLeft, nsFrameState aRight) {
+constexpr nsFrameState& operator|=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft | aRight;
   return aLeft;
 }
 
-inline nsFrameState& operator&=(nsFrameState& aLeft, nsFrameState aRight) {
+constexpr nsFrameState& operator&=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft & aRight;
   return aLeft;
 }
 
-inline nsFrameState operator~(nsFrameState aRight) {
+constexpr nsFrameState operator~(nsFrameState aRight) {
   return nsFrameState(~nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState operator^(nsFrameState aLeft, nsFrameState aRight) {
+constexpr nsFrameState operator^(nsFrameState aLeft, nsFrameState aRight) {
   return nsFrameState(nsFrameState_size_t(aLeft) ^ nsFrameState_size_t(aRight));
 }
 
-inline nsFrameState& operator^=(nsFrameState& aLeft, nsFrameState aRight) {
+constexpr nsFrameState& operator^=(nsFrameState& aLeft, nsFrameState aRight) {
   aLeft = aLeft ^ aRight;
   return aLeft;
 }
