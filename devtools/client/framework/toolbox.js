@@ -649,11 +649,12 @@ Toolbox.prototype = {
       targetFront.watchFronts("inspector", async inspectorFront => {
         registerWalkerListeners(this.store, inspectorFront.walker);
       });
+    }
 
-      this._threadFront = await this._attachTarget(targetFront);
+    await this._attachTarget({ type, targetFront, isTopLevel });
+
+    if (isTopLevel) {
       this.emit("top-target-attached");
-    } else {
-      return this._attachTarget(targetFront);
     }
   },
 
@@ -670,16 +671,24 @@ Toolbox.prototype = {
    * And we listen for thread actor events in order to update toolbox UI when
    * we hit a breakpoint.
    */
-  async _attachTarget(target) {
-    await target.attach();
+  async _attachTarget({ type, targetFront, isTopLevel }) {
+    await targetFront.attach();
 
     // Start tracking network activity on toolbox open for targets such as tabs.
-    const webConsoleFront = await target.getFront("console");
+    const webConsoleFront = await targetFront.getFront("console");
     await webConsoleFront.startListeners(["NetworkActivity"]);
 
-    const threadFront = await this._attachAndResumeThread(target);
-    this._startThreadFrontListeners(threadFront);
-    return threadFront;
+    // Do not attach to the thread of additional Frame targets, as they are
+    // already tracked by the content process targets. At least in the context
+    // of the Browser Toolbox.
+    // We would have to revisit that for the content toolboxes.
+    if (isTopLevel || type != TargetList.TYPES.FRAME) {
+      const threadFront = await this._attachAndResumeThread(targetFront);
+      this._startThreadFrontListeners(threadFront);
+      if (isTopLevel) {
+        this._threadFront = threadFront;
+      }
+    }
   },
 
   _startThreadFrontListeners: function(threadFront) {
