@@ -1038,7 +1038,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // CallState returned by the last child method invocation is returned or
   // CallState::Continue if the method returns void.
   template <typename Method, typename... Args>
-  mozilla::CallState CallOnChildren(Method aMethod, Args&... aArgs);
+  mozilla::CallState CallOnInProcessChildren(Method aMethod, Args&... aArgs);
 
   // Helper to convert a void returning child method into an implicit
   // CallState::Continue value.
