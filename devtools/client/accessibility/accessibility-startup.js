@@ -47,10 +47,13 @@ class AccessibilityStartup {
     try {
       this._walker = await this._accessibility.getWalker();
       this._supports = {};
-      [this._supports.simulation] = await Promise.all([
-        // Added in Firefox 70.
-        this.target.actorHasMethod("accessibility", "getSimulator"),
-      ]);
+      // To add a check for backward compatibility add something similar to the
+      // example below:
+      //
+      // [this._supports.simulation] = await Promise.all([
+      //   // Please specify the version of Firefox when the feature was added.
+      //   this.target.actorHasMethod("accessibility", "getSimulator"),
+      // ]);
 
       await this._accessibility.bootstrap();
 
