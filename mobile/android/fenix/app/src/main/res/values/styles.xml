@@ -17,6 +17,8 @@
         <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
+        <item name="android:windowEnableSplitTouch">false</item>
+        <item name="android:splitMotionEvents">false</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="android:colorControlActivated">@color/accent_high_contrast_normal_theme</item>
@@ -104,6 +106,8 @@
         <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
         <item name="alertDialogStyle">@style/DialogStyleDark</item>
         <item name="alertDialogTheme">@style/DialogStyleDark</item>
+        <item name="android:windowEnableSplitTouch">false</item>
+        <item name="android:splitMotionEvents">false</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
