@@ -830,6 +830,10 @@ class MockXRInputSource {
 
     input_state.primaryInputPressed = this.primary_input_pressed_;
     input_state.primaryInputClicked = this.primary_input_clicked_;
+    // Setting the input source's "clicked" state should generate one "select"
+    // event. Reset the input value to prevent it from continuously generating
+    // events.
+    this.primary_input_clicked_ = false;
 
     input_state.mojoFromInput = this.mojo_from_input_;
 
