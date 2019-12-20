@@ -12,8 +12,8 @@
 
 #include "ds/InlineTable.h"
 #include "frontend/AbstractScope.h"
-#include "frontend/FunctionCreationData.h"
 #include "frontend/ParseNode.h"
+#include "frontend/Stencil.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"

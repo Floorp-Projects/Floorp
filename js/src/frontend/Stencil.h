@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_FunctionCreationData_h
-#define frontend_FunctionCreationData_h
+#ifndef frontend_Stencil_h
+#define frontend_Stencil_h
 
 #include "frontend/ParseNode.h"
 #include "gc/AllocKind.h"
@@ -15,6 +15,15 @@
 
 namespace js {
 namespace frontend {
+
+// [SMDOC] Script Stencil (Frontend Representation)
+//
+// Stencils are GC object free representations of artifacts created during
+// parsing and bytecode emission that are being used as part of Project
+// Stencil (https://bugzilla.mozilla.org/show_bug.cgi?id=stencil) to revamp
+// the frontend.
+//
+// Renaming to use the term stencil more broadly is still in progress.
 
 // Data used to instantiate the lazy script before script emission.
 struct LazyScriptCreationData {
@@ -105,4 +114,4 @@ struct FunctionCreationData {
 } /* namespace frontend */
 } /* namespace js */
 
-#endif /* frontend_FunctionCreationData_h */
+#endif /* frontend_Stencil_h */
