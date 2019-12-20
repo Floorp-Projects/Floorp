@@ -46,7 +46,7 @@ class StorageAccessPermissionRequest final
                                  AllowCallback&& aAllowCallback,
                                  AllowAnySiteCallback&& aAllowAnySiteCallback,
                                  CancelCallback&& aCancelCallback);
-  ~StorageAccessPermissionRequest();
+  ~StorageAccessPermissionRequest() = default;
 
   unsigned CalculateSimulatedDelay();
 
