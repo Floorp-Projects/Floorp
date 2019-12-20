@@ -31,6 +31,7 @@ import android.view.autofill.AutofillValue;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public class Autofill {
     private static final boolean DEBUG = true;
@@ -298,6 +299,8 @@ public class Autofill {
                 @NonNull final View view,
                 @NonNull final ViewStructure structure,
                 final int flags) {
+            ThreadUtils.assertOnUiThread();
+
             getRoot().fillViewStructure(view, structure, flags);
         }
     }
@@ -637,6 +640,8 @@ public class Autofill {
                 @NonNull final View view,
                 @NonNull final ViewStructure structure,
                 final int flags) {
+            ThreadUtils.assertOnUiThread();
+
             Log.d(LOGTAG, "fillViewStructure");
 
             final Node root = getRoot();
@@ -952,44 +957,45 @@ public class Autofill {
                                 @Nullable Node node) {}
     }
 
-    /* package */ static final class Support {
+    /* package */ static final class Support implements BundleEventListener {
         private static final String LOGTAG = "AutofillSupport";
 
         private @NonNull final GeckoSession mGeckoSession;
         private @NonNull final Session mAutofillSession;
         private Delegate mDelegate;
 
-        public Support(final GeckoSession geckoSession) {
+        public Support(@NonNull final GeckoSession geckoSession) {
             mGeckoSession = geckoSession;
+            mAutofillSession = new Session(mGeckoSession);
+        }
 
-            geckoSession.getEventDispatcher().registerUiThreadListener(
-                new BundleEventListener() {
-                    @Override
-                    public void handleMessage(
-                            final String event,
-                            final GeckoBundle message,
-                            final EventCallback callback) {
-                        if ("GeckoView:AddAutofill".equals(event)) {
-                            addNode(message, callback);
-                        } else if ("GeckoView:ClearAutofill".equals(event)) {
-                            clear();
-                        } else if ("GeckoView:OnAutofillFocus".equals(event)) {
-                            onFocusChanged(message);
-                        } else if ("GeckoView:CommitAutofill".equals(event)) {
-                            commit(message);
-                        } else if ("GeckoView:UpdateAutofill".equals(event)) {
-                            update(message);
-                        }
-                    }
-                },
-                "GeckoView:AddAutofill",
-                "GeckoView:ClearAutofill",
-                "GeckoView:CommitAutofill",
-                "GeckoView:OnAutofillFocus",
-                "GeckoView:UpdateAutofill",
-                null);
+        public void registerListeners() {
+            mGeckoSession.getEventDispatcher().registerUiThreadListener(
+                    this,
+                    "GeckoView:AddAutofill",
+                    "GeckoView:ClearAutofill",
+                    "GeckoView:CommitAutofill",
+                    "GeckoView:OnAutofillFocus",
+                    "GeckoView:UpdateAutofill");
 
-            mAutofillSession = new Session(geckoSession);
+        }
+
+        @Override
+        public void handleMessage(
+                final String event,
+                final GeckoBundle message,
+                final EventCallback callback) {
+            if ("GeckoView:AddAutofill".equals(event)) {
+                addNode(message, callback);
+            } else if ("GeckoView:ClearAutofill".equals(event)) {
+                clear();
+            } else if ("GeckoView:OnAutofillFocus".equals(event)) {
+                onFocusChanged(message);
+            } else if ("GeckoView:CommitAutofill".equals(event)) {
+                commit(message);
+            } else if ("GeckoView:UpdateAutofill".equals(event)) {
+                update(message);
+            }
         }
 
         /**
@@ -997,7 +1003,10 @@ public class Autofill {
          *
          * @param values Map of auto-fill IDs to values.
          */
+        @UiThread
         public void autofill(final SparseArray<CharSequence> values) {
+            ThreadUtils.assertOnUiThread();
+
             if (getAutofillSession().isEmpty()) {
                 return;
             }
@@ -1042,15 +1051,24 @@ public class Autofill {
             }
         }
 
+        @UiThread
         public void setDelegate(final @Nullable Delegate delegate) {
+            ThreadUtils.assertOnUiThread();
+
             mDelegate = delegate;
         }
 
+        @UiThread
         public @Nullable Delegate getDelegate() {
+            ThreadUtils.assertOnUiThread();
+
             return mDelegate;
         }
 
+        @UiThread
         public @NonNull Session getAutofillSession() {
+            ThreadUtils.assertOnUiThread();
+
             return mAutofillSession;
         }
 
@@ -1205,7 +1223,10 @@ public class Autofill {
             return rect;
         }
 
+        @UiThread
         public void onActiveChanged(final boolean active) {
+            ThreadUtils.assertOnUiThread();
+
             final int focusedId = getAutofillSession().getFocusedId();
 
             if (focusedId == View.NO_ID) {
