@@ -98,6 +98,7 @@ ModuleRtpRtcpImpl::ModuleRtpRtcpImpl(const Configuration& configuration)
                      configuration.receiver_only,
                      configuration.rtcp_packet_type_counter_observer,
                      configuration.bandwidth_callback,
+                     configuration.event_callback,
                      configuration.intra_frame_callback,
                      configuration.transport_feedback_callback,
                      configuration.bitrate_allocation_observer,
