@@ -1083,7 +1083,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
-  bool isInnerFunction = funOrMod && funOrMod->is<JSFunction>();
+
+  bool isFunctionScript = funOrMod && funOrMod->is<JSFunction>();
 
   // Instrumented scripts cannot be encoded, as they have extra instructions
   // which are not normally present. Globals with instrumentation enabled must
@@ -1097,13 +1098,9 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   if (mode == XDR_ENCODE) {
     script = scriptp.get();
 
-    RootedFunction fun(cx);
-    if (isInnerFunction) {
-      MOZ_ASSERT(script->function() == funOrMod);
-      fun.set(&funOrMod->as<JSFunction>());
-    }
+    MOZ_ASSERT_IF(isFunctionScript, script->function() == funOrMod);
 
-    if (!fun && script->treatAsRunOnce() && script->hasRunOnce()) {
+    if (!isFunctionScript && script->treatAsRunOnce() && script->hasRunOnce()) {
       // This is a toplevel or eval script that's runOnce.  We want to
       // make sure that we're not XDR-saving an object we emitted for
       // JSOP_OBJECT that then got modified.  So throw if we're not
@@ -1215,8 +1212,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   if (mode == XDR_DECODE) {
     RootedObject functionOrGlobal(
-        cx, isInnerFunction ? static_cast<JSObject*>(funOrMod)
-                            : static_cast<JSObject*>(cx->global()));
+        cx, isFunctionScript ? static_cast<JSObject*>(funOrMod)
+                             : static_cast<JSObject*>(cx->global()));
 
     script = JSScript::Create(cx, functionOrGlobal, *options, sourceObject,
                               sourceStart, sourceEnd, toStringStart,
@@ -1236,7 +1233,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     // Set the script in its function now so that inner scripts to be
     // decoded may iterate the static scope chain.
-    if (isInnerFunction) {
+    if (isFunctionScript) {
       funOrMod->as<JSFunction>().initScript(script);
     }
   }
@@ -1256,11 +1253,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                                        scriptEnclosingScope, funOrMod));
   MOZ_TRY(RuntimeScriptData::XDR<mode>(xdr, script));
 
-  RootedFunction fun(cx);
-  if (isInnerFunction) {
-    fun.set(&funOrMod->as<JSFunction>());
-  }
-
   if (mode == XDR_DECODE) {
     if (!script->shareScriptData(cx)) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -1273,6 +1265,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       lazy = script->maybeLazyScript();
     }
 
+    RootedFunction fun(cx, &funOrMod->as<JSFunction>());
     MOZ_TRY(
         XDRRelazificationInfo(xdr, fun, script, scriptEnclosingScope, &lazy));
 
@@ -1289,7 +1282,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
-    if (!fun && !cx->isHelperThreadContext()) {
+    if (!isFunctionScript && !cx->isHelperThreadContext()) {
       DebugAPI::onNewScript(cx, script);
     }
   }
