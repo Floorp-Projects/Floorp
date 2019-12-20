@@ -78,7 +78,7 @@ class SentryService(
 
     override fun report(throwable: Throwable) {
         val eventBuilder = EventBuilder().withMessage(createMessage(throwable))
-                .withLevel(Event.Level.ERROR)
+                .withLevel(Event.Level.INFO)
                 .withSentryInterface(ExceptionInterface(throwable))
         client.sendEvent(eventBuilder)
     }
