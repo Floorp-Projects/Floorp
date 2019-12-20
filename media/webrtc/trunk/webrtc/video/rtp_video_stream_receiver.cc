@@ -51,6 +51,7 @@ constexpr int kPacketBufferMaxSixe = 2048;
 std::unique_ptr<RtpRtcp> CreateRtpRtcpModule(
     ReceiveStatistics* receive_statistics,
     Transport* outgoing_transport,
+    RtcpEventObserver* rtcp_event_observer,
     RtcpRttStats* rtt_stats,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     TransportSequenceNumberAllocator* transport_sequence_number_allocator) {
@@ -59,6 +60,7 @@ std::unique_ptr<RtpRtcp> CreateRtpRtcpModule(
   configuration.receiver_only = true;
   configuration.receive_statistics = receive_statistics;
   configuration.outgoing_transport = outgoing_transport;
+  configuration.event_callback = rtcp_event_observer;
   configuration.intra_frame_callback = nullptr;
   configuration.rtt_stats = rtt_stats;
   configuration.rtcp_packet_type_counter_observer =
@@ -108,6 +110,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
       last_packet_log_ms_(-1),
       rtp_rtcp_(CreateRtpRtcpModule(rtp_receive_statistics_,
                                     transport,
+                                    config->rtcp_event_observer,
                                     rtt_stats,
                                     receive_stats_proxy,
                                     packet_router)),

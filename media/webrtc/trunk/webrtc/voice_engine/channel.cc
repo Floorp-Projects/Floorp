@@ -446,15 +446,20 @@ class RtpPacketSenderProxy : public RtpPacketSender {
   RtpPacketSender* rtp_packet_sender_ RTC_GUARDED_BY(&crit_);
 };
 
-class VoERtcpObserver : public RtcpBandwidthObserver {
+class VoERtcpObserver : public RtcpBandwidthObserver, public RtcpEventObserver {
  public:
   explicit VoERtcpObserver(Channel* owner)
-      : owner_(owner), bandwidth_observer_(nullptr) {}
+      : owner_(owner), bandwidth_observer_(nullptr), event_observer_(nullptr) {}
   virtual ~VoERtcpObserver() {}
 
   void SetBandwidthObserver(RtcpBandwidthObserver* bandwidth_observer) {
     rtc::CritScope lock(&crit_);
     bandwidth_observer_ = bandwidth_observer;
+  }
+
+  void SetEventObserver(RtcpEventObserver* event_observer) {
+    rtc::CritScope lock(&crit_);
+    event_observer_ = event_observer;
   }
 
   void OnReceivedEstimatedBitrate(uint32_t bitrate) override {
@@ -513,12 +518,27 @@ class VoERtcpObserver : public RtcpBandwidthObserver {
     owner_->OnIncomingReceiverReports(report_blocks, rtt, now_ms);
   }
 
+  void OnRtcpBye() override {
+    rtc::CritScope lock(&crit_);
+    if (event_observer_) {
+      event_observer_->OnRtcpBye();
+    }
+  }
+
+  void OnRtcpTimeout() override {
+    rtc::CritScope lock(&crit_);
+    if (event_observer_) {
+      event_observer_->OnRtcpTimeout();
+    }
+  }
+
  private:
   Channel* owner_;
   // Maps remote side ssrc to extended highest sequence number received.
   std::map<uint32_t, uint32_t> extended_max_sequence_number_;
   rtc::CriticalSection crit_;
   RtcpBandwidthObserver* bandwidth_observer_ RTC_GUARDED_BY(crit_);
+  RtcpEventObserver* event_observer_ RTC_GUARDED_BY(crit_);
 };
 
 class Channel::ProcessAndEncodeAudioTask : public rtc::QueuedTask {
@@ -935,6 +955,7 @@ Channel::Channel(int32_t channelId,
   configuration.overhead_observer = this;
   configuration.receive_statistics = rtp_receive_statistics_.get();
   configuration.bandwidth_callback = rtcp_observer_.get();
+  configuration.event_callback = rtcp_observer_.get();
   if (pacing_enabled_) {
     configuration.paced_sender = rtp_packet_sender_proxy_.get();
     configuration.transport_sequence_number_allocator =
@@ -1216,6 +1237,10 @@ void Channel::OnRecoverableUplinkPacketLossRate(
           recoverable_packet_loss_rate);
     }
   });
+}
+
+void Channel::SetRtcpEventObserver(RtcpEventObserver* observer) {
+  rtcp_observer_->SetEventObserver(observer);
 }
 
 void Channel::OnUplinkPacketLossRate(float packet_loss_rate) {
