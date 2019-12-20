@@ -839,6 +839,13 @@
         "searchDefault": "Яндекс"
       }
     },
+    "scn": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
+        ]
+      }
+    },
     "si": {
       "default": {
         "visibleDefaultEngines": [
