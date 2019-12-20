@@ -113,9 +113,11 @@
     <string name="search_shortcuts_button">Scelte rapide</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Impostazioni motori di ricerca</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Cerca con</string>
 
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Adesso cerca con:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Copia il link dagli appunti</string>
 
@@ -978,6 +980,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Librerie OSS</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Supporto</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Informativa sulla privacy</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">I tuoi diritti</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Informazioni sulla licenza</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Librerie utilizzate</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 scheda</string>

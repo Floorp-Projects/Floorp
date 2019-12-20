@@ -4,6 +4,8 @@
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
     <string name="app_name_private_2">Firefox Preview pribatua</string>
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (pribatua)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Aukera gehiago</string>
@@ -14,7 +16,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Bilatu edo idatzi helbidea</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Fitxarik ez irekita</string>
+    <string name="no_open_tabs_header_2">Irekitako fitxarik ez</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Irekitako fitxak hemen erakutsiko dira.</string>
 
@@ -58,6 +60,10 @@
     <string name="browser_menu_refresh">Berritu</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Gelditu</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Egin laster-marka</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Editatu laster-marka</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Laguntza</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -96,6 +102,13 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s nabigatzaileak hornitua</string>
 
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Irakurtzeko ikuspegia</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Ireki aplikazioan</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Itxura</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Eskaneatu</string>
@@ -103,10 +116,23 @@
     <string name="search_shortcuts_button">Lasterbideak</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Bilaketa-motorren ezarpenak</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Bilatu honekin</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Oraingoan, bilatu honekin:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Osatu lotura arbeletik</string>
+
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Baimendu</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Ez baimendu</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Baimendu bilaketa-iradokizunak saio pribatuetan?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">Helbide-barran idazten duzun oro bilaketa-motor lehenetsiarekin partekatuko du %s(e)k.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Argibide gehiago</string>
 
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
@@ -125,6 +151,8 @@
     <string name="preferences_default_search_engine">Bilaketa-motor lehenetsia</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Bilaketa</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Helbide-barra</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Laguntza</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -158,6 +186,8 @@
     <string name="preferences_category_account">Kontua</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Hasi saioa</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Tresna-barra</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Itxura</string>
     <!-- Preference description for banner about signing in -->
@@ -182,6 +212,8 @@
     <string name="preferences_show_search_shortcuts">Erakutsi bilaketarako lasterbideak</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Erakutsi bilaketa-iradokizunak</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Erakutsi saio pribatuetan</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Erakutsi arbeleko gomendioak</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -298,6 +330,12 @@
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Utzi</string>
 
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Goian</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Behean</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">Argia</string>
@@ -308,28 +346,6 @@
     <string name="preference_auto_battery_theme">Bateria-aurrezlea ezarrita</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Jarraitu gailuaren itxura</string>
-
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">Partekatu</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">Deskargatu</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">Egin laster-marka</string>
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">Editatu laster-marka</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">Irakurri</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">Itxi</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">Ireki aplikazioan</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">Itxura</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">Ekintza bizkorrak</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -368,6 +384,8 @@
     <string name="tab_header_label">Irekitako fitxak</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Saio pribatua</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Fitxa pribatuak</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Gehitu fitxa</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -651,6 +669,8 @@
     <string name="notification_pbm_channel_name">Nabigatze pribatuko saioa</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">Ezabatu fitxa pribatuak</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Itxi fitxa pribatuak</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Ireki</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -677,6 +697,10 @@
     <string name="snackbar_private_tabs_deleted">Fitxa pribatuak ezabatuta</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">DESEGIN</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Desegin</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Berretsi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Baimendu %1$s aplikazioari %2$s irekitzea</string>
@@ -880,6 +904,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">Babeserako eta errendimendurako orekatua.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Orriak ohi bezala kargatuko dira baina jarraipen-elementu gutxiago blokeatuko dira.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Jarraipenaren oinarrizko babesak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -890,6 +916,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Zorrotza (gomendatua)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Babes sendoagoa baina zenbait gune edo eduki apurtzea eragin lezake.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Jarraipenaren babes zorrotzak blokeatzen duena</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokeatuta</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -931,6 +959,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Kode irekiko liburutegiak</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Laguntza</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Pribatutasun-oharra</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Ezagutu zure eskubideak</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Lizentziaren informazioa</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Erabiltzen ditugun liburutegiak</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">Fitxa bat</string>
@@ -1039,4 +1078,50 @@
     <string name="logins_warning_dialog_set_up_now">Konfiguratu orain</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Desblokeatu zure gailua</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Egin zooma webgune guztietan</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Gaitu atximurka bidez zoom egitea baimentzeko, bai eta webguneek keinu hau eragozten badute ere.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Gehitu bilaketa-motorra</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Editatu bilaketa-motorra</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Gehitu</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Gorde</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Editatu</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Ezabatu</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label">Pertsonalizatua</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Izena</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Erabili beharreko bilaketa-katea</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Argibide gehiago</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Idatzi bilaketa-motorraren izena</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">&quot;%s&quot; izeneko bilaketa-motorra badago lehendik ere.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Idatzi bilaketa-katea</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Egiaztatu bilaketa-katea adibidearen formatuarekin bat datorrela</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Errorea &quot;%s&quot; helbidera konektatzean</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s sortuta</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s gordeta</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s ezabatuta</string>
 </resources>

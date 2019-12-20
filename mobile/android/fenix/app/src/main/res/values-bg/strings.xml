@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Преглеждайте без да бъдете следени</string>
+  
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Пазете вашите данни само ваши. %s ви предпазва от много от най-разпространените проследявания, които следват вашите действия онлайн.</string>
+  
+    </resources>

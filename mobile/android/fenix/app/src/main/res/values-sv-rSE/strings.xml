@@ -116,9 +116,11 @@
     <string name="search_shortcuts_button">Genvägar</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Inställningar för sökmotor</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Sök med</string>
 
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Denna gång, sök med:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Kopiera länk från urklipp</string>
 
@@ -963,6 +965,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS bibliotek</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Support</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Sekretesspolicy</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Känn till dina rättigheter</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Licensinformation</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Bibliotek som vi använder</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 flik</string>

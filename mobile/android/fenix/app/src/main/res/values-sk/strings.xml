@@ -116,9 +116,11 @@
     <string name="search_shortcuts_button">Skratky</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavenia vyhľadávacieho modulu</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Hľadať pomocou</string>
 
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Vyhľadať pomocou:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Prilepiť odkaz zo schránky</string>
 
@@ -960,6 +962,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS knižnice</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Podpora</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Zásady ochrany súkromia</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Spoznajte svoje práva</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Informácie o licenciách</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Knižnice, ktoré používame</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 karta</string>
