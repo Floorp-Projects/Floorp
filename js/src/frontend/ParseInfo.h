@@ -39,9 +39,10 @@ struct MOZ_RAII ParseInfo {
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
   Mode mode;
-  // Hold onto the RegExpCreationData that are allocated during parse to
-  // ensure correct destruction.
+  // Hold onto the RegExpCreationData and BigIntCreationDatas that are allocated
+  // during parse to ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
+  Vector<BigIntCreationData> bigIntData;
 
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
@@ -50,7 +51,8 @@ struct MOZ_RAII ParseInfo {
         mode(cx->realm()->behaviors().deferredParserAlloc()
                  ? ParseInfo::Mode::Deferred
                  : ParseInfo::Mode::Eager),
-        regExpData(cx) {}
+        regExpData(cx),
+        bigIntData(cx) {}
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

@@ -1526,29 +1526,26 @@ class NumericLiteral : public ParseNode {
 };
 
 class BigIntLiteral : public ParseNode {
-  mozilla::Variant<mozilla::Nothing, BigIntCreationData, BigIntBox*> data_;
+  // BigIntLiterals hold onto a ParseInfo reference to avoid
+  // having to plumb ParseInfo through FoldConstants.
+  struct Deferred {
+    ParseInfo& parseInfo;
+    BigIntIndex index;
+  };
+  mozilla::Variant<Deferred, BigIntBox*> data_;
 
   BigIntBox* box() const { return data_.as<BigIntBox*>(); }
 
  public:
   BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
+      : ParseNode(ParseNodeKind::BigIntExpr, pos), data_(bibox) {}
+
+  explicit BigIntLiteral(BigIntIndex index, ParseInfo& parseInfo,
+                         const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
-        data_(mozilla::AsVariant(bibox)) {}
+        data_(Deferred{parseInfo, index}) {}
 
-  // Used to allocate a BigIntCreationData in two phase initialization to enusre
-  // clear ownership of data in an allocation failure.
-  explicit BigIntLiteral(const TokenPos& pos)
-      : ParseNode(ParseNodeKind::BigIntExpr, pos),
-        data_(AsVariant(mozilla::Nothing())) {}
-
-  void init(BigIntCreationData data) {
-    data_ = mozilla::AsVariant(std::move(data));
-  }
-
-  bool isDeferred() {
-    MOZ_ASSERT(!data_.is<mozilla::Nothing>());
-    return data_.is<BigIntCreationData>();
-  }
+  bool isDeferred() { return data_.is<Deferred>(); }
 
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::BigIntExpr);
@@ -1565,22 +1562,16 @@ class BigIntLiteral : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
+  BigIntIndex index() { return data_.as<Deferred>().index; }
+
   // Get the contained BigInt value: Assumes it was created with one,
   // and cannot be used when deferred allocation mode is enabled.
   BigInt* value();
 
   // Get the contained BigIntValue, or parse it from the creation data
   // Can be used when deferred allocation mode is enabled.
-  BigInt* getOrCreateBigInt(JSContext* cx) {
-    if (data_.is<BigIntBox*>()) {
-      return value();
-    }
-    return data_.as<BigIntCreationData>().createBigInt(cx);
-  }
+  BigInt* getOrCreate(JSContext* cx);
 
-  BigIntCreationData creationData() {
-    return std::move(data_.as<BigIntCreationData>());
-  }
   bool isZero();
 };
 

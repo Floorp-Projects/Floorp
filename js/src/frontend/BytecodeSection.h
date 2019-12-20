@@ -48,7 +48,7 @@ class BigIntLiteral;
 class ObjectBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  using ListType = mozilla::Variant<JS::GCCellPtr, BigIntCreationData,
+  using ListType = mozilla::Variant<JS::GCCellPtr, BigIntIndex,
                                     ObjLiteralCreationData, RegExpIndex>;
   JS::RootedVector<ListType> vector;
 
@@ -73,7 +73,7 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(BigIntLiteral* literal, uint32_t* index) {
     *index = vector.length();
     if (literal->isDeferred()) {
-      return vector.append(mozilla::AsVariant(literal->creationData()));
+      return vector.append(mozilla::AsVariant(literal->index()));
     }
     return vector.append(mozilla::AsVariant(JS::GCCellPtr(literal->value())));
   }
@@ -395,10 +395,6 @@ class PerScriptData {
 } /* namespace js */
 
 namespace JS {
-template <>
-struct GCPolicy<js::frontend::BigIntCreationData>
-    : JS::IgnoreGCPolicy<js::frontend::BigIntCreationData> {};
-
 template <typename T>
 struct GCPolicy<js::frontend::TypedIndex<T>>
     : JS::IgnoreGCPolicy<js::frontend::TypedIndex<T>> {};

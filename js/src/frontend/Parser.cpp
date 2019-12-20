@@ -9690,22 +9690,18 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   const auto& chars = tokenStream.getCharBuffer();
 
   if (this->parseInfo_.isDeferred()) {
-    BigIntCreationData data;
-    if (!data.init(this->cx_, chars)) {
+    BigIntIndex index(this->parseInfo_.bigIntData.length());
+    if (!this->parseInfo_.bigIntData.emplaceBack()) {
+      return null();
+    }
+
+    if (!this->parseInfo_.bigIntData[index].init(this->cx_, chars)) {
       return null();
     }
 
     // Should the operations below fail, the buffer held by data will
-    // be cleaned up by the destructor.
-    BigIntLiteral* lit = handler_.newBigInt(pos());
-    if (!lit) {
-      return null();
-    }
-    // Now that possible OOMs are done, move data into Lit. After this
-    // point responsibility for cleanup lies with the cleanup of the
-    // ParseInfo's deferred allocations list.
-    lit->init(std::move(data));
-    return lit;
+    // be cleaned up by the ParseInfo destructor.
+    return handler_.newBigInt(index, this->parseInfo_, pos());
   }
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
