@@ -490,7 +490,7 @@ class BaseContext {
   }
 
   openConduit(subject, address) {
-    let actor = this.contentWindow.getWindowGlobalChild().getActor("Conduits");
+    let actor = this.contentWindow.windowGlobalChild.getActor("Conduits");
     return actor.openConduit(subject, address);
   }
 

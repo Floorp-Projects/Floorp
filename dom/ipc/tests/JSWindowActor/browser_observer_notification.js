@@ -9,13 +9,13 @@ declTest("test observer triggering actor creation", {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
 
-      let child = content.window.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
       let { subject, topic, data } = actorChild.lastObserved;
 
       is(
-        subject.getWindowGlobalChild().getActor("Test"),
+        subject.windowGlobalChild.getActor("Test"),
         actorChild,
         "Should have been recieved on the right actor"
       );
@@ -31,13 +31,13 @@ declTest("test observers with null data", {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC);
 
-      let child = content.window.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
       let { subject, topic, data } = actorChild.lastObserved;
 
       is(
-        subject.getWindowGlobalChild().getActor("Test"),
+        subject.windowGlobalChild.getActor("Test"),
         actorChild,
         "Should have been recieved on the right actor"
       );
@@ -52,7 +52,7 @@ declTest("observers don't notify with wrong window", {
     await SpecialPowers.spawn(browser, [], async function() {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(null, TOPIC);
-      let child = content.window.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
       is(
@@ -73,7 +73,7 @@ declTest("observers notify with audio-playback", {
       let audio = content.document.querySelector("audio");
       audio.play();
 
-      let child = content.window.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
 

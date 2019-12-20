@@ -545,8 +545,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
 }
 
 function openRemotePrompt(domWin, args) {
-  let windowGlobal = domWin.getWindowGlobalChild();
-  let actor = windowGlobal.getActor("Prompt");
+  let actor = domWin.windowGlobalChild.getActor("Prompt");
 
   let docShell = domWin.docShell;
   let inPermitUnload =

@@ -89,8 +89,8 @@ function getActorFromWindow(contentWindow, name = "FormAutofill") {
     return null;
   }
 
-  return contentWindow.getWindowGlobalChild
-    ? contentWindow.getWindowGlobalChild().getActor(name)
+  return contentWindow.windowGlobalChild
+    ? contentWindow.windowGlobalChild.getActor(name)
     : null;
 }
 
