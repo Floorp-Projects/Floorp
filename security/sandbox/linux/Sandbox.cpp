@@ -284,7 +284,8 @@ static void SetThreadSandboxHandler(int signum) {
 }
 
 static void EnterChroot() {
-  if (!PR_GetEnv(kSandboxChrootEnvFlag)) {
+  const char* env = PR_GetEnv(kSandboxChrootEnvFlag);
+  if (!env || !*env || *env == '0') {
     return;
   }
   char msg = kSandboxChrootRequest;
