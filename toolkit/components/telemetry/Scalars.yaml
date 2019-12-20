@@ -3451,6 +3451,24 @@ widget:
     record_in_processes:
       - 'main'
 
+  dark_mode:
+    bug_numbers:
+      - 1601846
+    description: >
+      Whether the OS theme is dark.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - layout-telemetry-alerts@mozilla.com
+      - cmccormack@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+
   ime_name_on_mac:
     bug_numbers:
       - 1215818

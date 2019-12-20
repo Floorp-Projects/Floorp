@@ -775,5 +775,7 @@ void nsLookAndFeel::EnsureInit() {
   mColorActiveSourceListSelection =
       (color == NSGraphiteControlTint) ? NS_RGB(0xa0, 0xa0, 0xa0) : NS_RGB(0x0a, 0x64, 0xdc);
 
+  RecordTelemetry();
+
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
