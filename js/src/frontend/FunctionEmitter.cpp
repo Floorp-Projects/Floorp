@@ -482,7 +482,7 @@ bool FunctionScriptEmitter::prepareForBody() {
     }
   }
 
-  if (funbox_->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
+  if (funbox_->isClassConstructor()) {
     if (!funbox_->isDerivedClassConstructor()) {
       if (!bce_->emitInitializeInstanceFields()) {
         //          [stack]

@@ -1065,7 +1065,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   FieldInitializers fieldInitializers = FieldInitializers::Invalid();
-  if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
+  if (fun->isClassConstructor()) {
     fieldInitializers = lazy->getFieldInitializers();
   }
 
