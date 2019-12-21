@@ -66,7 +66,7 @@ using js::frontend::IsIdentifier;
 JS_STATIC_ASSERT(sizeof(uint32_t) * CHAR_BIT >= INDEX_LIMIT_LOG2 + 1);
 
 const JSCodeSpec js::CodeSpec[] = {
-#define MAKE_CODESPEC(op, val, name, token, length, nuses, ndefs, format) \
+#define MAKE_CODESPEC(op, name, token, length, nuses, ndefs, format) \
   {length, nuses, ndefs, format},
     FOR_EACH_OPCODE(MAKE_CODESPEC)
 #undef MAKE_CODESPEC
@@ -77,7 +77,7 @@ const JSCodeSpec js::CodeSpec[] = {
  * bytecode or null.
  */
 static const char* const CodeToken[] = {
-#define TOKEN(op, val, name, token, ...) token,
+#define TOKEN(op, name, token, ...) token,
     FOR_EACH_OPCODE(TOKEN)
 #undef TOKEN
 };
@@ -87,7 +87,7 @@ static const char* const CodeToken[] = {
  * and JIT debug spew.
  */
 const char* const js::CodeName[] = {
-#define OPNAME(op, val, name, ...) name,
+#define OPNAME(op, name, ...) name,
     FOR_EACH_OPCODE(OPNAME)
 #undef OPNAME
 };
