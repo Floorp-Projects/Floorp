@@ -69,7 +69,7 @@ async function expectLink(browser, expectedLinks, data, testid, onbody=false) {
 
   function dropOnBrowserSync() {
     let dropEl = onbody ? browser.contentDocument.body : browser;
-    synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerGlobal);
+    synthesizeDrop(dropEl, dropEl, data, null, dropEl.ownerGlobal);
   }
   let links;
   if (browser.isRemoteBrowser) {

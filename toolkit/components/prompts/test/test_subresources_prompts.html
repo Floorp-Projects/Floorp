@@ -195,7 +195,7 @@ async function dispatchMouseEvent(targetID, type) {
   let event = document.createEvent("MouseEvent");
   event.initEvent(type, false, false, content, 0, 1, 1, 1, 1,
                   false, false, false, false, 0, null);
-  content.windowUtils.dispatchDOMEventViaPresShell(element, event);
+  content.windowUtils.dispatchDOMEventViaPresShellForTesting(element, event);
   /* eslint-enable no-undef */
 }
 </script>

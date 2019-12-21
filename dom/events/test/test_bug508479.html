@@ -13,10 +13,10 @@ var gGotNotHandlingDrop = false;
 SimpleTest.waitForExplicitFinish();
 
 function fireEvent(target, event) {
-  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShell(target, event);
+  SpecialPowers.DOMWindowUtils.dispatchDOMEventViaPresShellForTesting(target, event);
 }
 
-function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
+async function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
   var ds = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
     getService(SpecialPowers.Ci.nsIDragService);
 
@@ -31,28 +31,35 @@ function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
 
   // need to use real mouse action
   window.addEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(element, 2, 2, { type: "mousedown" });
-  synthesizeMouse(element, 11, 11, { type: "mousemove" });
-  synthesizeMouse(element, 20, 20, { type: "mousemove" });
+  await synthesizePlainDragAndDrop({
+    srcElement: element,
+    stepX: 9,
+    stepY: 9,
+    expectCancelDragStart: true,
+  });
   window.removeEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(element, 20, 20, { type: "mouseup" });
 
-  ds.startDragSession();
+  ds.startDragSessionForTests(
+    SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  ); // Session for emulating dnd coming from another app.
+  try {
+    var event = document.createEvent("DragEvent");
+    event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    fireEvent(element, event);
 
-  var event = document.createEvent("DragEvent");
-  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  fireEvent(element, event);
+    is(ds.getCurrentSession().canDrop, shouldAllowDrop, "Unexpected .canDrop");
+    is(ds.getCurrentSession().onlyChromeDrop, shouldAllowOnlyChromeDrop,
+       "Unexpected .onlyChromeDrop");
 
-  is(ds.getCurrentSession().canDrop, shouldAllowDrop, "Unexpected .canDrop");
-  is(ds.getCurrentSession().onlyChromeDrop, shouldAllowOnlyChromeDrop,
-     "Unexpected .onlyChromeDrop");
-
-  event = document.createEvent("DragEvent");
-  event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  fireEvent(element, event);
-
-  ds.endDragSession(false);
-  ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+    event = document.createEvent("DragEvent");
+    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    fireEvent(element, event);
+  } finally {
+    ds.endDragSession(false);
+    ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+  }
 }
 
 var chromeGotEvent = false;
@@ -60,10 +67,10 @@ function chromeListener(e) {
   chromeGotEvent = true;
 }
 
-function runTests()
+async function runTests()
 {
   var targetHandling = document.getElementById("handling_target");
-  fireDrop(targetHandling, true, false);
+  await fireDrop(targetHandling, true, false);
 
   is(gGotHandlingDrop, true, "Got drop on accepting element (1)");
   is(gGotNotHandlingDrop, false, "Didn't get drop on unaccepting element (1)");
@@ -74,7 +81,7 @@ function runTests()
 
   SpecialPowers.addChromeEventListener("drop", chromeListener, true, false);
   var targetNotHandling = document.getElementById("nothandling_target");
-  fireDrop(targetNotHandling, true, true);
+  await fireDrop(targetNotHandling, true, true);
   SpecialPowers.removeChromeEventListener("drop", chromeListener, true);
   ok(chromeGotEvent, "Chrome should have got drop event!");
   is(gGotHandlingDrop, false, "Didn't get drop on accepting element (2)");

@@ -39,7 +39,11 @@ add_task(async function() {
     Ci.nsIDragService
   );
 
-  ds.startDragSession();
+  ds.startDragSessionForTests(
+    Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  );
   try {
     var [result, dataTransfer] = EventUtils.synthesizeDragOver(
       identityBox,

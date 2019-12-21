@@ -148,6 +148,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
   bool mCanDrop;
   bool mOnlyChromeDrop;
   bool mDoingDrag;
+  bool mSessionIsSynthesizedForTests;
 
   // true if in EndDragSession
   bool mEndingSession;
@@ -160,6 +161,10 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   uint32_t mDragAction;
   uint32_t mDragActionFromChildProcess;
+
+  // mEffectAllowedForTests stores allowed effects at invoking the drag
+  // for tests.
+  uint32_t mEffectAllowedForTests;
 
   nsCOMPtr<nsINode> mSourceNode;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
