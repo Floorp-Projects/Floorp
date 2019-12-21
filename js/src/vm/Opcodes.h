@@ -376,7 +376,11 @@
      */ \
     MACRO(JSOP_SYMBOL, "symbol", NULL, 2, 0, 1, JOF_UINT8) \
     /*
-     * Pops the top value on the stack and pushes 'undefined'.
+     * Pop the top value on the stack, discard it, and push `undefined`.
+     *
+     * Implements: [The `void` operator][1], step 3.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-void-operator
      *
      *   Category: Operators
      *   Type: Special Operators
@@ -385,7 +389,27 @@
      */ \
     MACRO(JSOP_VOID, js_void_str, NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the value 'val' from the stack, then pushes 'typeof val'.
+     * [The `typeof` operator][1].
+     *
+     * Infallible. The result is always a string that depends on the [type][2]
+     * of `val`.
+     *
+     * `JSOP_TYPEOF` and `JSOP_TYPEOFEXPR` are the same except
+     * that--amazingly--`JSOP_TYPEOF` affects the behavior of an immediately
+     * *preceding* `JSOP_GETNAME` or `JSOP_GETGNAME` instruction! This is how
+     * we implement [`typeof`][1] step 2, making `typeof nonExistingVariable`
+     * return `"undefined"` instead of throwing a ReferenceError.
+     *
+     * In a global scope:
+     *
+     * -   `typeof x` compiles to `GETGNAME "x"; TYPEOF`.
+     * -   `typeof (0, x)` compiles to `GETGNAME "x"; TYPEOFEXPR`.
+     *
+     * Emitting the same bytecode for these two expressions would be a bug.
+     * Per spec, the latter throws a ReferenceError if `x` doesn't exist.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-typeof-operator
+     * [2]: https://tc39.es/ecma262/#sec-ecmascript-language-types
      *
      *   Category: Operators
      *   Type: Special Operators
@@ -393,21 +417,18 @@
      *   Stack: val => (typeof val)
      */ \
     MACRO(JSOP_TYPEOF, js_typeof_str, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    /*
-     * Pops the top stack value as 'val' and pushes 'typeof val'. Note that
-     * this opcode isn't used when, in the original source code, 'val' is a
-     * name -- see 'JSOP_TYPEOF' for that.
-     * (This is because 'typeof undefinedName === "undefined"'.)
-     *
-     *   Category: Operators
-     *   Type: Special Operators
-     *   Operands:
-     *   Stack: val => (typeof val)
-     */ \
     MACRO(JSOP_TYPEOFEXPR, "typeofexpr", NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the value 'val' from the stack, then pushes '+val'.
-     * ('+val' is the value converted to a number.)
+     * [The unary `+` operator][1].
+     *
+     * `+val` doesn't do any actual math. It just calls [ToNumber][2](val).
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can
+     * throw. The result on success is always a Number. (Per spec, unary `-`
+     * supports BigInts, but unary `+` does not.)
+     *
+     * [1]: https://tc39.es/ecma262/#sec-unary-plus-operator
+     * [2]: https://tc39.es/ecma262/#sec-tonumber
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
@@ -416,7 +437,13 @@
      */ \
     MACRO(JSOP_POS, "pos", "+ ", 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the value 'val' from the stack, then pushes '-val'.
+     * [The unary `-` operator][1].
+     *
+     * Convert `val` to a numeric value, then push `-val`. The conversion can
+     * call `.toString()`/`.valueOf()` methods and can throw. The result on
+     * success is always numeric.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-unary-minus-operator
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
@@ -425,7 +452,13 @@
      */ \
     MACRO(JSOP_NEG, "neg", "- ", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the value 'val' from the stack, then pushes '~val'.
+     * [The bitwise NOT operator][1] (`~`).
+     *
+     * `val` is converted to an integer, then bitwise negated. The conversion
+     * can call `.toString()`/`.valueOf()` methods and can throw. The result on
+     * success is always an Int32 or BigInt value.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-bitwise-not-operator
      *
      *   Category: Operators
      *   Type: Bitwise Logical Operators
@@ -434,7 +467,14 @@
      */ \
     MACRO(JSOP_BITNOT, "bitnot", "~", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the value 'val' from the stack, then pushes '!val'.
+     * [The logical NOT operator][1] (`!`).
+     *
+     * `val` is first converted with [ToBoolean][2], then logically
+     * negated. The result is always a boolean value. This does not call
+     * user-defined methods and can't throw.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-logical-not-operator
+     * [2]: https://tc39.es/ecma262/#sec-toboolean
      *
      *   Category: Operators
      *   Type: Logical Operators
@@ -443,9 +483,13 @@
      */ \
     MACRO(JSOP_NOT, "not", "!", 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of the operation applied to the two operands, converting both
-     * to 32-bit signed integers if necessary.
+     * [Binary bitwise operations][1] (`|`, `^`, `&`).
+     *
+     * The arguments are converted to integers first. The conversion can call
+     * `.toString()`/`.valueOf()` methods and can throw. The result on success
+     * is always an Int32 or BigInt Value.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-binary-bitwise-operators
      *
      *   Category: Operators
      *   Type: Bitwise Logical Operators
@@ -456,8 +500,15 @@
     MACRO(JSOP_BITXOR, "bitxor", "^", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_BITAND, "bitand", "&", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values from the stack and pushes the result of
-     * comparing them.
+     * Loose equality operators (`==` and `!=`).
+     *
+     * Pop two values, compare them, and push the boolean result. The
+     * comparison may perform conversions that call `.toString()`/`.valueOf()`
+     * methods and can throw.
+     *
+     * Implements: [Abstract Equality Comparison][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-abstract-equality-comparison
      *
      *   Category: Operators
      *   Type: Comparison Operators
@@ -467,8 +518,15 @@
     MACRO(JSOP_EQ, "eq", "==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     MACRO(JSOP_NE, "ne", "!=", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the top two values from the stack, then pushes the result of
-     * applying the operator to the two values.
+     * Strict equality operators (`===` and `!==`).
+     *
+     * Pop two values, check whether they're equal, and push the boolean
+     * result. This does not call user-defined methods and can't throw
+     * (except possibly due to OOM while flattening a string).
+     *
+     * Implements: [Strict Equality Comparison][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-strict-equality-comparison
      *
      *   Category: Operators
      *   Type: Comparison Operators
@@ -478,8 +536,15 @@
     MACRO(JSOP_STRICTEQ, "stricteq", "===", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     MACRO(JSOP_STRICTNE, "strictne", "!==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the top two values from the stack and pushes the result of
-     * comparing them.
+     * Relative operators (`<`, `>`, `<=`, `>=`).
+     *
+     * Pop two values, compare them, and push the boolean result. The
+     * comparison may perform conversions that call `.toString()`/`.valueOf()`
+     * methods and can throw.
+     *
+     * Implements: [Relational Operators: Evaluation][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Comparison Operators
@@ -491,21 +556,30 @@
     MACRO(JSOP_LE, "le", "<=", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_GE, "ge", ">=", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'obj' and 'ctor' from the stack, then pushes
-     * 'obj instanceof ctor'. This will throw a 'TypeError' if 'obj' is not an
-     * object.
+     * [The `instanceof` operator][1].
+     *
+     * This throws a `TypeError` if `target` is not an object. It calls
+     * `target[Symbol.hasInstance](value)` if the method exists. On success,
+     * the result is always a boolean value.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-instanceofoperator
      *
      *   Category: Operators
      *   Type: Special Operators
      *   Operands:
-     *   Stack: obj, ctor => (obj instanceof ctor)
+     *   Stack: value, target => (value instanceof target)
      */ \
     MACRO(JSOP_INSTANCEOF, js_instanceof_str, js_instanceof_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'id' and 'obj' from the stack, then pushes
-     * 'id in obj'. This will throw a 'TypeError' if 'obj' is not an object.
+     * [The `in` operator][1].
      *
-     * Note that 'obj' is the top value.
+     * Push `true` if `obj` has a property with the key `id`. Otherwise push `false`.
+     *
+     * This throws a `TypeError` if `obj` is not an object. This can fire
+     * proxy hooks and can throw. On success, the result is always a boolean
+     * value.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Special Operators
@@ -514,8 +588,15 @@
      */ \
     MACRO(JSOP_IN, js_in_str, js_in_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of the operation applied to the operands.
+     * [Bitwise shift operators][1] (`<<`, `>>`, `>>>`).
+     *
+     * Pop two values, convert them to integers, perform a bitwise shift, and
+     * push the result.
+     *
+     * Conversion can call `.toString()`/`.valueOf()` methods and can throw.
+     * The result on success is always an Int32 or BigInt Value.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-bitwise-shift-operators
      *
      *   Category: Operators
      *   Type: Bitwise Shift Operators
@@ -524,19 +605,17 @@
      */ \
     MACRO(JSOP_LSH, "lsh", "<<", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_RSH, "rsh", ">>", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * 'lval >>> rval'.
-     *
-     *   Category: Operators
-     *   Type: Bitwise Shift Operators
-     *   Operands:
-     *   Stack: lval, rval => (lval >>> rval)
-     */ \
     MACRO(JSOP_URSH, "ursh", ">>>", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of 'lval + rval'.
+     * [The binary `+` operator][1].
+     *
+     * Pop two values, convert them to primitive values, add them, and push the
+     * result. If both values are numeric, add them; if either is a
+     * string, do string concatenation instead.
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can throw.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
@@ -545,36 +624,49 @@
      */ \
     MACRO(JSOP_ADD, "add", "+", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of applying the arithmetic operation to them.
+     * [The binary `-` operator][1].
+     *
+     * Pop two values, convert them to numeric values, subtract the top value
+     * from the other one, and push the result.
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can
+     * throw. On success, the result is always numeric.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
      *   Operands:
-     *   Stack: lval, rval => (lval OP rval)
+     *   Stack: lval, rval => (lval - rval)
      */ \
     MACRO(JSOP_SUB, "sub", "-", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the numeric value 'val' from the stack, then pushes 'val + 1'.
+     * Add or subtract 1.
+     *
+     * `val` must already be a numeric value, such as the result of
+     * `JSOP_TONUMERIC`.
+     *
+     * Implements: [The `++` and `--` operators][1], step 3 of each algorithm.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-postfix-increment-operator
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
      *   Operands:
-     *   Stack: val => (val + 1)
+     *   Stack: val => (val +/- 1)
      */ \
     MACRO(JSOP_INC, "inc", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
-    /*
-     * Pops the numeric value 'val' from the stack, then pushes 'val - 1'.
-     *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
-     *   Operands:
-     *   Stack: val => (val - 1)
-     */ \
     MACRO(JSOP_DEC, "dec", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of applying the arithmetic operation to them.
+     * [The multiplicative operators][1] (`*`, `/`, `%`).
+     *
+     * Pop two values, convert them to numeric values, do math, and push the
+     * result.
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can
+     * throw. On success, the result is always numeric.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
@@ -585,8 +677,16 @@
     MACRO(JSOP_DIV, "div", "/", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_MOD, "mod", "%", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
-     * the result of 'Math.pow(lval, rval)'.
+     * [The exponentiation operator][1] (`**`).
+     *
+     * Pop two values, convert them to numeric values, do exponentiation, and
+     * push the result. The top value is the exponent.
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can
+     * throw. This throws a RangeError if both values are BigInts and the
+     * exponent is negative.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-exp-operator
      *
      *   Category: Operators
      *   Type: Arithmetic Operators
