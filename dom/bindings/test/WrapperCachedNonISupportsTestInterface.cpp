@@ -23,5 +23,13 @@ JSObject* WrapperCachedNonISupportsTestInterface::WrapObject(
                                                               aGivenProto);
 }
 
+already_AddRefed<WrapperCachedNonISupportsTestInterface>
+WrapperCachedNonISupportsTestInterface::Constructor(
+    const GlobalObject& aGlobalObject) {
+  RefPtr<WrapperCachedNonISupportsTestInterface> result =
+      new WrapperCachedNonISupportsTestInterface();
+  return result.forget();
+}
+
 }  // namespace dom
 }  // namespace mozilla

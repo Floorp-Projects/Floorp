@@ -5488,7 +5488,9 @@ class IDLConstructor(IDLMethod):
             identifier == "ChromeOnly" or
             identifier == "NewObject" or
             identifier == "SecureContext" or
-            identifier == "Throws"):
+            identifier == "Throws" or
+            identifier == "Func" or
+            identifier == "Pref"):
             IDLMethod.handleExtendedAttribute(self, attr)
         elif identifier == "HTMLConstructor":
             if not attr.noArguments():

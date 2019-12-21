@@ -11,6 +11,7 @@ callback PromiseReturner = Promise<any>();
 [Pref="dom.expose_test_interfaces",
  Exposed=Window]
 interface WrapperCachedNonISupportsTestInterface {
+  [Pref="dom.webidl.test1"] constructor();
 };
 
 // The type of string C++ sees.

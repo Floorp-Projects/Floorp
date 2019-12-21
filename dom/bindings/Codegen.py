@@ -1860,15 +1860,17 @@ class CGClassConstructor(CGAbstractStaticMethod):
                 """,
                 name=self.descriptor.name)
 
-        # [ChromeOnly] interfaces may only be constructed by chrome.
-        chromeOnlyCheck = ""
-        if isChromeOnly(self._ctor):
-            chromeOnlyCheck = dedent("""
-                if (!nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
-                  return ThrowingConstructor(cx, argc, vp);
-                }
+        # If the interface is already SecureContext, notify getConditionList to skip that check,
+        # because the constructor won't be exposed in non-secure contexts to start with.
+        alreadySecureContext = self.descriptor.interface.getExtendedAttribute("SecureContext")
 
-                """)
+        # We want to throw if any of the conditions returned by getConditionList are false.
+        conditionsCheck = ""
+        rawConditions = getRawConditionList(self._ctor, "cx", "obj", alreadySecureContext)
+        if len(rawConditions) > 0:
+            notConditions = " ||\n".join("!" + cond for cond in rawConditions)
+            failedCheckAction = CGGeneric("return ThrowingConstructor(cx, argc, vp);\n")
+            conditionsCheck = CGIfWrapper(failedCheckAction, notConditions).define() + "\n"
 
         # Additionally, we want to throw if a caller does a bareword invocation
         # of a constructor without |new|.
@@ -1887,7 +1889,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
             """
             JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
             JS::Rooted<JSObject*> obj(cx, &args.callee());
-            $*{chromeOnlyCheck}
+            $*{conditionsCheck}
             if (!args.isConstructing()) {
               return ThrowConstructorWithoutNew(cx, "${ctorName}");
             }
@@ -1900,7 +1902,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
               return false;
             }
             """,
-            chromeOnlyCheck=chromeOnlyCheck,
+            conditionsCheck=conditionsCheck,
             ctorName=ctorName,
             name=self.descriptor.name)
 
@@ -3444,7 +3446,7 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
             nativeType=self.descriptor.nativeType)
 
 
-def getConditionList(idlobj, cxName, objName):
+def getRawConditionList(idlobj, cxName, objName, ignoreSecureContext = False):
     """
     Get the list of conditions for idlobj (to be used in "is this enabled"
     checks).  This will be returned as a CGList with " &&\n" as the separator,
@@ -3453,22 +3455,33 @@ def getConditionList(idlobj, cxName, objName):
     objName is the name of the object that we're working with, because some of
     our test functions want that.
 
-    The return value is a possibly-empty CGList of conditions.
+    ignoreSecureContext is used only for constructors in which the WebIDL interface
+    itself is already marked as [SecureContext]. There is no need to do the work twice.
     """
     conditions = []
     pref = idlobj.getExtendedAttribute("Pref")
     if pref:
         assert isinstance(pref, list) and len(pref) == 1
         conditions.append("StaticPrefs::%s()" % prefIdentifier(pref[0]))
-    if idlobj.getExtendedAttribute("ChromeOnly"):
+    if isChromeOnly(idlobj):
         conditions.append("nsContentUtils::ThreadsafeIsSystemCaller(%s)" % cxName)
     func = idlobj.getExtendedAttribute("Func")
     if func:
         assert isinstance(func, list) and len(func) == 1
         conditions.append("%s(%s, %s)" % (func[0], cxName, objName))
-    if idlobj.getExtendedAttribute("SecureContext"):
+    if not ignoreSecureContext and idlobj.getExtendedAttribute("SecureContext"):
         conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)" % (cxName, objName))
+    return conditions
 
+
+def getConditionList(idlobj, cxName, objName, ignoreSecureContext = False):
+    """
+    Get the list of conditions from getRawConditionList
+    See comment on getRawConditionList above for more info about arguments.
+
+    The return value is a possibly-empty conjunctive CGList of conditions.
+    """
+    conditions = getRawConditionList(idlobj, cxName, objName, ignoreSecureContext)
     return CGList((CGGeneric(cond) for cond in conditions), " &&\n")
 
 
@@ -15114,9 +15127,10 @@ class CGBindingRoot(CGThing):
             """
             obj might be a dictionary member or an interface.
             """
-            pref = PropertyDefiner.getStringAttr(obj, "Pref")
-            if pref:
-                bindingHeaders[prefHeader(pref)] = True
+            if obj is not None:
+                pref = PropertyDefiner.getStringAttr(obj, "Pref")
+                if pref:
+                    bindingHeaders[prefHeader(pref)] = True
 
         def addPrefHeadersForDictionary(bindingHeaders, dictionary):
             while dictionary:
@@ -15127,7 +15141,9 @@ class CGBindingRoot(CGThing):
         for d in dictionaries:
             addPrefHeadersForDictionary(bindingHeaders, d)
         for d in descriptors:
-            addPrefHeaderForObject(bindingHeaders, d.interface)
+            interface = d.interface
+            addPrefHeaderForObject(bindingHeaders, interface)
+            addPrefHeaderForObject(bindingHeaders, interface.ctor())
 
         bindingHeaders["mozilla/dom/WebIDLPrefs.h"] = any(
             descriptorHasPrefDisabler(d) for d in descriptors)
