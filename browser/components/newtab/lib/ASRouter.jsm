@@ -539,7 +539,6 @@ class _ASRouter {
     this.onPrefChange = this.onPrefChange.bind(this);
     this.dispatch = this.dispatch.bind(this);
     this._onLocaleChanged = this._onLocaleChanged.bind(this);
-    this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
   }
 
   async onPrefChange(prefName) {
@@ -548,7 +547,7 @@ class _ASRouter {
       const invalidMessages = [];
       const context = this._getMessagesContext();
 
-      for (const msg of this.state.messages.filter(this.isUnblockedMessage)) {
+      for (const msg of this._getUnblockedMessages()) {
         if (!msg.targeting) {
           continue;
         }
@@ -1130,18 +1129,6 @@ class _ASRouter {
     return bundle.sort((a, b) => a.order - b.order);
   }
 
-  isUnblockedMessage(message) {
-    let { state } = this;
-    return (
-      !state.messageBlockList.includes(message.id) &&
-      (!message.campaign ||
-        !state.messageBlockList.includes(message.campaign)) &&
-      !state.providerBlockList.includes(message.provider) &&
-      this.hasGroupsEnabled(message.groups) &&
-      !this.isExcludedByProvider(message)
-    );
-  }
-
   // Work out if a message can be shown based on its and its provider's frequency caps.
   isBelowFrequencyCaps(message) {
     const { messageImpressions, groupImpressions } = this.state;
@@ -1210,12 +1197,9 @@ class _ASRouter {
     }
 
     // First, find all messages of same template. These are potential matching targeting candidates
-    let bundledMessagesOfSameTemplate = this.state.messages.filter(
+    let bundledMessagesOfSameTemplate = this._getUnblockedMessages().filter(
       msg =>
-        msg.bundled &&
-        msg.template === bundleTemplate &&
-        msg.id !== originalId &&
-        this.isUnblockedMessage(msg)
+        msg.bundled && msg.template === bundleTemplate && msg.id !== originalId
     );
 
     if (force) {
@@ -1293,6 +1277,18 @@ class _ASRouter {
     return this._localProviders[
       this.state.providers.find(i => i.id === providerID).localProvider
     ];
+  }
+
+  _getUnblockedMessages() {
+    let { state } = this;
+    return state.messages.filter(
+      item =>
+        !state.messageBlockList.includes(item.id) &&
+        (!item.campaign || !state.messageBlockList.includes(item.campaign)) &&
+        !state.providerBlockList.includes(item.provider) &&
+        this.hasGroupsEnabled(item.groups) &&
+        !this.isExcludedByProvider(item)
+    );
   }
 
   /**
@@ -1524,40 +1520,30 @@ class _ASRouter {
     ordered = false,
     returnAll = false,
   }) {
-    let shouldCache;
     const messages =
       candidates ||
-      this.state.messages.filter(m => {
-        if (provider && m.provider !== provider) {
-          return false;
-        }
-        if (template && m.template !== template) {
-          return false;
-        }
-        if (triggerId && !m.trigger) {
-          return false;
-        }
-        if (triggerId && m.trigger.id !== triggerId) {
-          return false;
-        }
-        if (!this.isUnblockedMessage(m)) {
-          return false;
-        }
-        if (!this.isBelowFrequencyCaps(m)) {
-          return false;
-        }
+      this._getUnblockedMessages()
+        .filter(m => {
+          if (provider && m.provider !== provider) {
+            return false;
+          }
+          if (template && m.template !== template) {
+            return false;
+          }
+          if (triggerId && !m.trigger) {
+            return false;
+          }
+          if (triggerId && m.trigger.id !== triggerId) {
+            return false;
+          }
 
-        if (shouldCache !== false) {
-          shouldCache = JEXL_PROVIDER_CACHE.has(m.provider);
-        }
+          return true;
+        })
+        .filter(m => this.isBelowFrequencyCaps(m));
 
-        return true;
-      });
-
-    if (!messages.length) {
-      return null;
-    }
-
+    const shouldCache = messages.every(m =>
+      JEXL_PROVIDER_CACHE.has(m.provider)
+    );
     const context = this._getMessagesContext();
 
     // Find a message that matches the targeting context as well as the trigger context (if one is provided)
