@@ -8,8 +8,13 @@
 using namespace mozilla::dom;
 
 class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(MediaControlKeysEventSourceTestImpl, override)
   bool Open() override { return true; }
   bool IsOpened() const override { return true; }
+
+ private:
+  ~MediaControlKeysEventSourceTestImpl() = default;
 };
 
 TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
