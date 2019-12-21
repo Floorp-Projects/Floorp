@@ -8,6 +8,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
@@ -211,7 +212,6 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Check if dropping into a selected range.  If so and the source comes from
   // same document, jump through some hoops to determine if mouse is over
   // selection (bail) and whether user wants to copy selection or delete it.
-  bool deleteSelection = false;
   if (!SelectionRefPtr()->IsCollapsed() && sourceNode &&
       sourceNode->IsEditable() && srcdoc == document) {
     uint32_t rangeCount = SelectionRefPtr()->RangeCount();
@@ -234,26 +234,46 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
         return NS_OK;
       }
     }
+  }
 
-    // Delete if user doesn't want to copy when user moves selected content
-    // to different place in same editor.
+  // Delete if user doesn't want to copy when user moves selected content
+  // to different place in same editor.
+  // XXX Do we need the check whether it's in same document or not?
+  RefPtr<TextEditor> editorToDeleteSelection;
+  if (sourceNode && sourceNode->IsEditable() && srcdoc == document) {
     if ((dataTransfer->DropEffectInt() &
          nsIDragService::DRAGDROP_ACTION_MOVE) &&
         !(dataTransfer->DropEffectInt() &
           nsIDragService::DRAGDROP_ACTION_COPY)) {
-      if (AsHTMLEditor()) {
-        // The source node is in same document and we're an HTMLEditor,
-        // we can delete the drag source unless in an TextEditor.
-        // TODO: We should delete it with TextEditor.
-        deleteSelection = !sourceNode->IsInNativeAnonymousSubtree();
-      } else if (sourceNode->IsInNativeAnonymousSubtree()) {
-        // The source node is in native anonymous subtree and we're a
-        // TextEditor, we can remove the text only when the source
-        // is in this editor.
-        // TODO: We should delete it with HTMLEditor or TextEditor.
-        Element* rootElement = GetRoot();
-        deleteSelection =
-            rootElement && sourceNode->IsInclusiveDescendantOf(rootElement);
+      // If the source node is in native anonymous tree, it must be in
+      // <input> or <textarea> element.  If so, its TextEditor can remove it.
+      if (sourceNode->IsInNativeAnonymousSubtree()) {
+        if (RefPtr<TextControlElement> textControlElement =
+                TextControlElement::FromNodeOrNull(
+                    sourceNode->GetClosestNativeAnonymousSubtreeRootParent())) {
+          editorToDeleteSelection = textControlElement->GetTextEditor();
+        }
+      }
+      // Otherwise, must be the content is in HTMLEditor.
+      else if (AsHTMLEditor()) {
+        editorToDeleteSelection = this;
+      } else {
+        editorToDeleteSelection =
+            nsContentUtils::GetHTMLEditor(srcdoc->GetPresContext());
+      }
+    }
+    // If the found editor isn't modifiable, we should not try to delete
+    // selection.
+    if (editorToDeleteSelection && !editorToDeleteSelection->IsModifiable()) {
+      editorToDeleteSelection = nullptr;
+    }
+    // If the found editor has collapsed selection, we need to delete nothing
+    // in the editor.
+    if (editorToDeleteSelection) {
+      if (Selection* selection = editorToDeleteSelection->GetSelection()) {
+        if (selection->IsCollapsed()) {
+          editorToDeleteSelection = nullptr;
+        }
       }
     }
   }
@@ -294,8 +314,18 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // "beforeinput" and "input" for deletion and web apps can cancel only
   // this deletion.  Note that callee may handle insertion asynchronously.
   // Therefore, it is the best to remove selected content here.
-  if (deleteSelection && !SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+  if (editorToDeleteSelection) {
+    nsresult rv = editorToDeleteSelection->DeleteSelectionByDragAsAction(
+        mDispatchInputEvent);
+    if (NS_WARN_IF(Destroyed())) {
+      editActionData.Abort();
+      return NS_OK;
+    }
+    // Ignore the editor instance specific error if it's another editor.
+    if (this != editorToDeleteSelection &&
+        (rv == NS_ERROR_NOT_INITIALIZED || rv == NS_ERROR_EDITOR_DESTROYED)) {
+      rv = NS_OK;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       editActionData.Abort();
       return EditorBase::ToGenericNSResult(rv);
@@ -307,22 +337,6 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
     droppedAt = rangeAtDropPoint->StartRef();
     MOZ_ASSERT(droppedAt.IsSetAndValid());
-
-    // Let's fire "input" event for the deletion now.
-    if (mDispatchInputEvent) {
-      DispatchInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
-      if (NS_WARN_IF(Destroyed())) {
-        editActionData.Abort();
-        return NS_OK;
-      }
-      if (NS_WARN_IF(!rangeAtDropPoint->IsPositioned()) ||
-          NS_WARN_IF(!rangeAtDropPoint->GetStartContainer()->IsContent())) {
-        editActionData.Abort();
-        return NS_ERROR_FAILURE;
-      }
-      droppedAt = rangeAtDropPoint->StartRef();
-      MOZ_ASSERT(droppedAt.IsSetAndValid());
-    }
   }
 
   // Before inserting dropping content, we need to move focus for compatibility
@@ -447,6 +461,43 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "ScrollSelectionFocusIntoView() failed");
   return rv;
+}
+
+nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
+  AutoRestore<bool> saveDispatchInputEvent(mDispatchInputEvent);
+  mDispatchInputEvent = aDispatchInputEvent;
+  // If we're handling "deleteByDrag" in same editor of handling drop,
+  // we already have an edit action data for "insertFromDrop".  Therefore,
+  // create edit action data only when the drag source and drop target are
+  // in different editor.
+  Maybe<AutoEditActionDataSetter> editActionData;
+  Maybe<AutoPlaceholderBatch> treatAsOneTransaction;
+  if (GetEditAction() != EditAction::eDrop) {
+    editActionData.emplace(*this, EditAction::eDeleteByDrag);
+    if (NS_WARN_IF(!editActionData->CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    treatAsOneTransaction.emplace(*this);
+  }
+
+  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
+
+  nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mDispatchInputEvent) {
+    return NS_OK;
+  }
+
+  if (editActionData.isNothing()) {
+    DispatchInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
+  }
+  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
 nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
