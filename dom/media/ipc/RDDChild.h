@@ -34,7 +34,7 @@ class RDDChild final : public PRDDChild,
   explicit RDDChild(RDDProcessHost* aHost);
   ~RDDChild();
 
-  bool Init(bool aStartMacSandbox);
+  bool Init();
 
   void OnCompositorUnexpectedShutdown() override;
   void OnVarChanged(const GfxVarUpdate& aVar) override;
