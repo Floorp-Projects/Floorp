@@ -430,6 +430,13 @@ class TextEditor : public EditorBase,
                                       EStripWrappers aStripWrappers);
 
   /**
+   * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
+   * event whose inputType is "deleteByDrag".
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
+
+  /**
    * DeleteSelectionWithTransaction() removes selected content or content
    * around caret with transactions.
    *
