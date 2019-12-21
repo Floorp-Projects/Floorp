@@ -210,7 +210,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // same document, jump through some hoops to determine if mouse is over
   // selection (bail) and whether user wants to copy selection or delete it.
   bool deleteSelection = false;
-  if (!SelectionRefPtr()->IsCollapsed() && srcdoc == destdoc) {
+  if (!SelectionRefPtr()->IsCollapsed() && sourceNode &&
+      sourceNode->IsEditable() && srcdoc == destdoc) {
     uint32_t rangeCount = SelectionRefPtr()->RangeCount();
     for (uint32_t j = 0; j < rangeCount; j++) {
       nsRange* range = SelectionRefPtr()->GetRangeAt(j);
@@ -234,13 +235,25 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
     // Delete if user doesn't want to copy when user moves selected content
     // to different place in same editor.
-    // XXX This is odd when the source comes from outside of this editor since
-    //     the selection is hidden until this gets focus and drag events set
-    //     caret at the nearest insertion point under the cursor.  Therefore,
-    //     once user drops the item, the item inserted at caret position *and*
-    //     selected content is also removed.
-    uint32_t dropEffect = dataTransfer->DropEffectInt();
-    deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
+    if ((dataTransfer->DropEffectInt() &
+         nsIDragService::DRAGDROP_ACTION_MOVE) &&
+        !(dataTransfer->DropEffectInt() &
+          nsIDragService::DRAGDROP_ACTION_COPY)) {
+      if (AsHTMLEditor()) {
+        // The source node is in same document and we're an HTMLEditor,
+        // we can delete the drag source unless in an TextEditor.
+        // TODO: We should delete it with TextEditor.
+        deleteSelection = !sourceNode->IsInNativeAnonymousSubtree();
+      } else if (sourceNode->IsInNativeAnonymousSubtree()) {
+        // The source node is in native anonymous subtree and we're a
+        // TextEditor, we can remove the text only when the source
+        // is in this editor.
+        // TODO: We should delete it with HTMLEditor or TextEditor.
+        Element* rootElement = GetRoot();
+        deleteSelection =
+            rootElement && sourceNode->IsInclusiveDescendantOf(rootElement);
+      }
+    }
   }
 
   if (IsPlaintextEditor()) {

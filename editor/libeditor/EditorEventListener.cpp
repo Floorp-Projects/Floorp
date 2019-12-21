@@ -735,6 +735,23 @@ nsresult EditorEventListener::DragOver(DragEvent* aDragEvent) {
   if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
     aDragEvent->PreventDefault();  // consumed
 
+    // If we handle the dragged item, we need should adjust drop effect here
+    // because once DataTransfer is retrieved, DragEvent has initialized it
+    // with nsContentUtils::SetDataTransferInEvent() but it does not check
+    // whether the content is movable or not.
+    DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+    MOZ_ASSERT(dataTransfer);
+    if (dataTransfer->DropEffectInt() == nsIDragService::DRAGDROP_ACTION_MOVE) {
+      nsCOMPtr<nsINode> dragSource = dataTransfer->GetMozSourceNode();
+      if (dragSource && !dragSource->IsEditable()) {
+        // In this case, we shouldn't allow "move" because the drag source
+        // isn't editable.
+        dataTransfer->SetDropEffectInt(nsContentUtils::FilterDropEffect(
+            nsIDragService::DRAGDROP_ACTION_COPY,
+            dataTransfer->EffectAllowedInt()));
+      }
+    }
+
     if (!mCaret) {
       return NS_OK;
     }
@@ -751,6 +768,9 @@ nsresult EditorEventListener::DragOver(DragEvent* aDragEvent) {
     // This is needed when dropping on an input, to prevent the editor for
     // the editable parent from receiving the event.
     aDragEvent->StopPropagation();
+    DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+    MOZ_ASSERT(dataTransfer);
+    dataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
   }
 
   if (mCaret) {
