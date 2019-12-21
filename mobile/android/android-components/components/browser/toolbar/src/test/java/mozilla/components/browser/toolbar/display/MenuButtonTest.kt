@@ -17,13 +17,14 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -47,13 +48,14 @@ class MenuButtonTest {
     fun `menu button is visible only if menu builder attached`() {
         verify(menuButtonInternal).visibility = View.GONE
 
-        menuButton.menuBuilder = mock()
-        verify(menuButtonInternal).visibility = View.VISIBLE
+        doReturn(mock<BrowserMenuBuilder>()).`when`(menuButtonInternal).menuBuilder
+        assertTrue(menuButton.shouldBeVisible())
 
-        menuButton.menuBuilder = null
-        verify(menuButtonInternal, times(2)).visibility = View.GONE
+        doReturn(null).`when`(menuButtonInternal).menuBuilder
+        assertFalse(menuButton.shouldBeVisible())
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `menu button sets onDismiss action`() {
         val action = {}

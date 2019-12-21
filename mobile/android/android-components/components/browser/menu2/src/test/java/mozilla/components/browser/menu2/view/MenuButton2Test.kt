@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.menu.view
+package mozilla.components.browser.menu2.view
 
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -13,10 +13,9 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.menu.BrowserMenu
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.concept.menu.MenuController
+import mozilla.components.concept.menu.candidate.HighPriorityHighlightEffect
+import mozilla.components.concept.menu.candidate.LowPriorityHighlightEffect
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -29,18 +28,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class MenuButtonTest {
+class MenuButton2Test {
     private lateinit var menuController: MenuController
-    private lateinit var menuBuilder: BrowserMenuBuilder
-    private lateinit var menu: BrowserMenu
-    private lateinit var menuButton: MenuButton
+    private lateinit var menuButton: MenuButton2
     private lateinit var menuIcon: ImageView
     private lateinit var highlightView: ImageView
     private lateinit var notificationIconView: ImageView
@@ -48,11 +41,8 @@ class MenuButtonTest {
     @Before
     fun setup() {
         menuController = mock()
-        menu = mock()
-        menuBuilder = mock()
-        doReturn(menu).`when`(menuBuilder).build(testContext)
+        menuButton = MenuButton2(testContext)
 
-        menuButton = MenuButton(testContext)
         val images = menuButton.children.mapNotNull { it as? AppCompatImageView }.toList()
         highlightView = images[0]
         menuIcon = images[1]
@@ -64,44 +54,24 @@ class MenuButtonTest {
         menuButton.menuController = menuController
         menuButton.performClick()
 
+        verify(menuController).register(any(), eq(menuButton))
         verify(menuController).show(menuButton)
 
         menuButton.menuController = mock()
         verify(menuController).dismiss()
+        verify(menuController).unregister(any())
     }
 
     @Test
-    fun `changing menu builder dismisses old menu`() {
-        menuButton.menuBuilder = menuBuilder
-        menuButton.performClick()
-
-        verify(menu).show(eq(menuButton), any(), anyBoolean(), any())
-
-        menuButton.menuBuilder = mock()
-        verify(menu).dismiss()
-    }
-
-    @Test
-    fun `opening a new menu will prefer using the controller`() {
+    fun `changing menu controller to null dismisses old menu`() {
         menuButton.menuController = menuController
-        menuButton.menuBuilder = menuBuilder
-
         menuButton.performClick()
 
-        verify(menuController).show(menuButton)
-        verify(menuBuilder, never()).build(testContext)
-        verify(menu, never()).show(any(), any(), anyBoolean(), any())
-    }
+        verify(menuController).register(any(), eq(menuButton))
 
-    @Test
-    fun `trying to open a new menu when we already have one will dismiss the current`() {
-        menuButton.menuBuilder = menuBuilder
-
-        menuButton.performClick()
-        menuButton.performClick()
-
-        verify(menu, times(1)).show(eq(menuButton), any(), anyBoolean(), any())
-        verify(menu, times(1)).dismiss()
+        menuButton.menuController = null
+        verify(menuController).dismiss()
+        verify(menuController).unregister(any())
     }
 
     @Test
@@ -119,23 +89,12 @@ class MenuButtonTest {
     }
 
     @Test
-    fun `icon can invalidate menu`() {
-        menuButton.menuBuilder = menuBuilder
-        menuButton.performClick()
-
-        verify(menu).show(eq(menuButton), any(), anyBoolean(), any())
-
-        menuButton.invalidateBrowserMenu()
-        verify(menu).invalidate()
-    }
-
-    @Test
     fun `icon displays high priority highlight`() {
         assertFalse(highlightView.isVisible)
         assertFalse(notificationIconView.isVisible)
 
-        menuButton.setHighlight(
-            BrowserMenuHighlight.HighPriority(Color.RED)
+        menuButton.setEffect(
+            HighPriorityHighlightEffect(Color.RED)
         )
 
         assertTrue(highlightView.isVisible)
@@ -149,24 +108,13 @@ class MenuButtonTest {
         assertFalse(highlightView.isVisible)
         assertFalse(notificationIconView.isVisible)
 
-        menuButton.setHighlight(
-            BrowserMenuHighlight.LowPriority(Color.BLUE)
+        menuButton.setEffect(
+            LowPriorityHighlightEffect(Color.BLUE)
         )
 
         assertFalse(highlightView.isVisible)
         assertTrue(notificationIconView.isVisible)
 
         assertEquals(PorterDuffColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP), notificationIconView.colorFilter)
-    }
-
-    @Test
-    fun `menu can be dismissed`() {
-        menuButton.menuController = menuController
-        menuButton.menu = menu
-
-        menuButton.dismissMenu()
-
-        verify(menuButton.menuController)?.dismiss()
-        verify(menuButton.menu)?.dismiss()
     }
 }

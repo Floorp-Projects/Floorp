@@ -146,9 +146,9 @@ open class BrowserMenu internal constructor(
         }
     }
 
-    enum class Orientation {
-        UP,
-        DOWN
+    enum class Orientation(val concept: mozilla.components.concept.menu.Orientation) {
+        UP(mozilla.components.concept.menu.Orientation.UP),
+        DOWN(mozilla.components.concept.menu.Orientation.DOWN)
     }
 
     override fun onViewDetachedFromWindow(v: View?) {

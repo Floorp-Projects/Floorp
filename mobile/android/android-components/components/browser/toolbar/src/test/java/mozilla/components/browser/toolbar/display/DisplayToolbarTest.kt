@@ -15,6 +15,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
+import mozilla.components.concept.menu.MenuButton
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.support.base.Component
@@ -677,7 +678,11 @@ class DisplayToolbarTest {
         var wasDismissed = false
         val (_, displayToolbar) = createDisplayToolbar()
         val menuView = displayToolbar.views.menu
-        menuView.impl.onDismiss = { wasDismissed = true }
+        menuView.impl.register(object : MenuButton.Observer {
+            override fun onDismiss() {
+                wasDismissed = true
+            }
+        })
         menuView.menuBuilder = BrowserMenuBuilder(emptyList())
         menuView.impl.performClick()
 

@@ -29,18 +29,22 @@ import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
-import mozilla.components.browser.menu.item.BrowserMenuDivider
-import mozilla.components.browser.menu.item.BrowserMenuImageText
+import mozilla.components.browser.menu.ext.asCandidateList
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.menu2.BrowserMenuController
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.concept.menu.Side
+import mozilla.components.concept.menu.candidate.DividerMenuCandidate
+import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.ui.tabcounter.TabCounter
 import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.ui.tabcounter.TabCounter
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
@@ -152,8 +156,8 @@ class ToolbarActivity : AppCompatActivity() {
         val open = SimpleBrowserMenuItem("Open in…") { /* Do nothing */ }
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
-        val builder = BrowserMenuBuilder(listOf(fenix, share, homeScreen, open, settings))
-        toolbar.display.menuBuilder = builder
+        val items = listOf(fenix, share, homeScreen, open, settings)
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
@@ -173,18 +177,19 @@ class ToolbarActivity : AppCompatActivity() {
         // Create a menu with text and icons
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        val share = BrowserMenuImageText(
+        val share = TextMenuCandidate(
             "Share",
-            R.drawable.mozac_ic_share
+            start = DrawableMenuIcon(this, R.drawable.mozac_ic_share)
         ) { /* Do nothing */ }
 
-        val search = BrowserMenuImageText(
+        val search = TextMenuCandidate(
             "Search",
-            R.drawable.mozac_ic_search
+            start = DrawableMenuIcon(this, R.drawable.mozac_ic_search)
         ) { /* Do nothing */ }
 
-        val builder = BrowserMenuBuilder(listOf(share, BrowserMenuDivider(), search))
-        toolbar.display.menuBuilder = builder
+        toolbar.display.menuController = BrowserMenuController(Side.START).apply {
+            submitList(listOf(share, DividerMenuCandidate(), search))
+        }
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
@@ -260,8 +265,9 @@ class ToolbarActivity : AppCompatActivity() {
         val open = SimpleBrowserMenuItem("Open in…") { /* Do nothing */ }
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
-        val builder = BrowserMenuBuilder(listOf(menuToolbar, blocking, share, homeScreen, open, settings))
-        toolbar.display.menuBuilder = builder
+        val items = listOf(menuToolbar, blocking, share, homeScreen, open, settings)
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
+        toolbar.invalidateActions()
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
@@ -316,12 +322,15 @@ class ToolbarActivity : AppCompatActivity() {
             true
         }
 
-        val share = SimpleBrowserMenuItem("Share…") { /* Do nothing */ }
-        val homeScreen = SimpleBrowserMenuItem("Add to Home screen") { /* Do nothing */ }
-        val open = SimpleBrowserMenuItem("Open in…") { /* Do nothing */ }
-        val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
+        val share = TextMenuCandidate("Share…") { /* Do nothing */ }
+        val homeScreen = TextMenuCandidate("Add to Home screen") { /* Do nothing */ }
+        val open = TextMenuCandidate("Open in…") { /* Do nothing */ }
+        val settings = TextMenuCandidate("Settings") { /* Do nothing */ }
 
-        toolbar.display.menuBuilder = BrowserMenuBuilder(listOf(share, homeScreen, open, settings))
+        val items = listOf(share, homeScreen, open, settings)
+        toolbar.display.menuController = BrowserMenuController().apply {
+            submitList(items)
+        }
 
         toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 
@@ -375,7 +384,11 @@ class ToolbarActivity : AppCompatActivity() {
         val open = SimpleBrowserMenuItem("Open in…") { /* Do nothing */ }
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
-        toolbar.display.menuBuilder = BrowserMenuBuilder(listOf(share, homeScreen, open, settings))
+        val items = listOf(share, homeScreen, open, settings)
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
+        toolbar.display.menuController = BrowserMenuController().apply {
+            submitList(items.asCandidateList(this@ToolbarActivity))
+        }
 
         toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 

@@ -84,6 +84,8 @@ High-level components for building browser(-like) apps.
 
 * ⚪ [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
+* ⚪ [**Menu 2**](components/browser/menu2/README.md) - A generic menu with customizable items primarily for browser toolbars.
+
 * 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
 
 * 🔵 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
