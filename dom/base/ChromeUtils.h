@@ -198,6 +198,9 @@ class ChromeUtils {
 
   static void PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
                                           ErrorResult& aError);
+
+  static void GenerateMediaControlKeysTestEvent(
+      const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent);
 };
 
 }  // namespace dom

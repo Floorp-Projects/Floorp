@@ -26,6 +26,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/MediaControlUtils.h"
+#include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -1171,6 +1173,16 @@ void ChromeUtils::PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
     return;
   }
   aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+/* static */
+void ChromeUtils::GenerateMediaControlKeysTestEvent(
+    const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent) {
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  if (service) {
+    service->GenerateMediaControlKeysTestEvent(
+        ConvertMediaControlKeysTestEventToMediaControlKeysEvent(aEvent));
+  }
 }
 
 }  // namespace dom
