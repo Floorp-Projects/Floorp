@@ -16,6 +16,20 @@ ChromeUtils.defineModuleGetter(
   "Services",
   "resource://gre/modules/Services.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "TOGGLE_POLICIES",
+  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TOGGLE_POLICY_STRINGS",
+  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+);
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
@@ -34,6 +48,14 @@ var gWeakPlayerContent = null;
 // WeakSet of all <video> elements that are being tracked for
 // mouseover
 var gWeakIntersectingVideosForTesting = new WeakSet();
+
+// Overrides are expected to stay constant for the lifetime of a
+// content process, so we set this as a lazy process global.
+// See PictureInPictureToggleChild.getToggleOverrides for a sense
+// of what the return type is.
+XPCOMUtils.defineLazyGetter(this, "gToggleOverrides", () => {
+  return PictureInPictureToggleChild.getToggleOverrides();
+});
 
 /**
  * The PictureInPictureToggleChild is responsible for displaying the overlaid
@@ -120,6 +142,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         // then this will be true. If there are no videos worth tracking, then
         // this is false.
         isTrackingVideos: false,
+        togglePolicy: TOGGLE_POLICIES.DEFAULT,
+        hasCheckedPolicy: false,
       };
       this.weakDocStates.set(this.document, state);
     }
@@ -659,8 +683,38 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
+    let state = this.docState;
     let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
     let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+
+    if (!state.hasCheckedPolicy) {
+      // We cache the matchers process-wide. We'll skip this while running tests to make that
+      // easier.
+      let toggleOverrides = this.toggleTesting
+        ? PictureInPictureToggleChild.getToggleOverrides()
+        : gToggleOverrides;
+
+      // Do we have any toggle overrides? If so, try to apply them.
+      for (let [override, policy] of toggleOverrides) {
+        if (override.matches(this.document.documentURI)) {
+          state.togglePolicy = policy;
+          break;
+        }
+      }
+
+      state.hasCheckedPolicy = true;
+    }
+
+    // The built-in <video> controls are along the bottom, which would overlap the
+    // toggle if the override is set to BOTTOM, so we ignore overrides that set
+    // a policy of BOTTOM for <video> elements with controls.
+    if (
+      state.togglePolicy != TOGGLE_POLICIES.DEFAULT &&
+      !(state.togglePolicy == TOGGLE_POLICIES.BOTTOM && video.controls)
+    ) {
+      toggle.setAttribute("policy", TOGGLE_POLICY_STRINGS[state.togglePolicy]);
+    }
+
     controlsOverlay.removeAttribute("hidetoggle");
 
     // The hideToggleDeferredTask we create here is for automatically hiding
@@ -670,7 +724,6 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     //
     // We disable the toggle hiding timeout during testing to reduce
     // non-determinism from timers when testing the toggle.
-    let state = this.docState;
     if (!state.hideToggleDeferredTask && !this.toggleTesting) {
       state.hideToggleDeferredTask = new DeferredTask(() => {
         controlsOverlay.setAttribute("hidetoggle", true);
@@ -803,6 +856,27 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    */
   static isTracking(video) {
     return gWeakIntersectingVideosForTesting.has(video);
+  }
+
+  /**
+   * Gets any Picture-in-Picture toggle overrides stored in the sharedData
+   * struct, and returns them as an Array of two-element Arrays, where the first
+   * element is a MatchPattern and the second element is a policy.
+   *
+   * @returns {Array<Array<2>>} Array of 2-element Arrays where the first element
+   * is a MatchPattern and the second element is a Number representing a toggle
+   * policy.
+   */
+  static getToggleOverrides() {
+    let result = [];
+    let patterns = Services.cpmm.sharedData.get(
+      "PictureInPicture:ToggleOverrides"
+    );
+    for (let pattern in patterns) {
+      let matcher = new MatchPattern(pattern);
+      result.push([matcher, patterns[pattern]]);
+    }
+    return result;
   }
 }
 
