@@ -7,9 +7,10 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 
-#include "mozilla/Logging.h"
 #include "MediaController.h"
 #include "MediaControlKeysEvent.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/Logging.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -37,6 +38,30 @@ inline const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid action.");
       return "Unknown";
+  }
+}
+
+inline MediaControlKeysEvent
+ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
+    MediaControlKeysTestEvent aEvent) {
+  switch (aEvent) {
+    case MediaControlKeysTestEvent::Play:
+      return MediaControlKeysEvent::ePlay;
+    case MediaControlKeysTestEvent::Pause:
+      return MediaControlKeysEvent::ePause;
+    case MediaControlKeysTestEvent::PlayPause:
+      return MediaControlKeysEvent::ePlayPause;
+    case MediaControlKeysTestEvent::PrevTrack:
+      return MediaControlKeysEvent::ePrevTrack;
+    case MediaControlKeysTestEvent::NextTrack:
+      return MediaControlKeysEvent::eNextTrack;
+    case MediaControlKeysTestEvent::SeekBackward:
+      return MediaControlKeysEvent::eSeekBackward;
+    case MediaControlKeysTestEvent::SeekForward:
+      return MediaControlKeysEvent::eSeekForward;
+    default:
+      MOZ_ASSERT(aEvent == MediaControlKeysTestEvent::Stop);
+      return MediaControlKeysEvent::eStop;
   }
 }
 

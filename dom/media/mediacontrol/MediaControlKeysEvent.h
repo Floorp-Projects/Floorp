@@ -15,6 +15,7 @@ namespace dom {
  * MediaControlKeysEvent represents all possible control buttons in controller
  * interface, no matter it's physical one, such as keyboard, headset, or a
  * virtual one, such as the interface provided by Android MediaController.
+ * Note. keep this sync with `MediaControlKeysTestEvent` in ChromeUtils.webidl.
  */
 enum class MediaControlKeysEvent : uint32_t {
   ePlay,
