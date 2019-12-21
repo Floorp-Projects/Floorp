@@ -925,10 +925,10 @@
 # If set, use DocumentChannel with nsDocShell in place of HttpChannel.
 - name: browser.tabs.documentchannel
   type: bool
-#if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#else
+#if defined(ANDROID)
   value: false  # See bug 1589982.
+#else
+  value: true
 #endif
   mirror: always
 
