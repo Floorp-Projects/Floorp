@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>WebExtension test</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
@@ -238,7 +239,99 @@ add_task(async function test_webext_background_remote_subframe_privileges() {
   await extension.awaitFinish("webext-background-subframe-privileges");
   await extension.unload();
 });
-</script>
 
+// Test a moz-extension:// iframe inside a content iframe in an extension page.
+add_task(async function test_sub_subframe_conduit_verified_env() {
+  let manifest = {
+    content_scripts: [{
+      matches: ["http://mochi.test/*/file_sample.html"],
+      all_frames: true,
+      js: ["cs.js"],
+    }],
+    background: {
+      page: "background.html",
+    },
+    web_accessible_resources: ["iframe.html"],
+  };
+
+  let files = {
+    "iframe.html": `<!DOCTYPE html><meta charset=utf-8> iframe`,
+    "cs.js"() {
+      // A compromised content sandbox shouldn't be able to trick the parent
+      // process into giving it extension privileges by sending false metadata.
+      async function faker(extensionId, envType) {
+        try {
+          let id = envType + "-xyz1234";
+          let wgc = this.content.getWindowGlobalChild();
+
+          let conduit = wgc.getActor("Conduits").openConduit({}, {
+            id,
+            envType,
+            extensionId,
+            query: ["CreateProxyContext"],
+          });
+
+          return await conduit.queryCreateProxyContext({
+            childId: id,
+            extensionId,
+            envType: "addon_parent",
+            url: this.content.location.href,
+            viewType: "tab",
+          });
+        } catch (e) {
+          return e.message;
+        }
+      }
+
+      let iframe = document.createElement("iframe");
+      iframe.src = browser.runtime.getURL("iframe.html");
+
+      iframe.onload = async () => {
+        for (let envType of ["content_child", "addon_child"]) {
+          let msg = await this.wrappedJSObject.SpecialPowers.spawn(
+              iframe, [browser.runtime.id, envType], faker);
+          browser.test.sendMessage(envType, msg);
+        }
+      };
+      document.body.appendChild(iframe);
+    },
+    "background.html": `<!DOCTYPE html>
+      <meta charset=utf-8>
+      <iframe src="${SimpleTest.getTestFileURL("file_sample.html")}">
+      </iframe>
+      page
+    `,
+  };
+
+  async function expectErrors(ext, log) {
+    consoleMonitor.start([{message: log}]);
+
+    let err = await ext.awaitMessage("content_child");
+    is(err, "Bad sender context envType: content_child");
+  
+    err = await ext.awaitMessage("addon_child");
+    is(err, "Unknown sender or wrong actor for recvCreateProxyContext");
+
+    await consoleMonitor.finished();
+    info("Conduit creation logged correct exception.");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({ manifest, files });
+  await extension.startup();
+  
+  if (SpecialPowers.getBoolPref("extensions.webextensions.remote", true)) {
+    info("Need OOP to spoof from web iframe inside background page.");
+    await expectErrors(extension, /Bad {[\w-]+} principal: http/);
+  }
+
+  info("Try spoofing from the web process.");
+  let win = window.open("./file_sample.html");
+  await expectErrors(extension, /Bad {[\w-]+} process: web/);
+  win.close();
+
+  await extension.unload();
+});
+
+</script>
 </body>
 </html>
