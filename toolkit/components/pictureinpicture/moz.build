@@ -8,6 +8,7 @@ JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES += [
     'PictureInPicture.jsm',
+    'PictureInPictureTogglePolicy.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += [

@@ -21,7 +21,7 @@ add_task(async () => {
       await ensureVideosReady(browser);
       let videoID = "no-controls";
 
-      let { toggleClientRect } = await prepareForToggleClick(browser, videoID);
+      await prepareForToggleClick(browser, videoID);
 
       // Hover the mouse over the video to reveal the toggle, which is necessary
       // if we want to click on the toggle.
@@ -46,6 +46,8 @@ add_task(async () => {
         videoID,
         HOVER_VIDEO_OPACITY
       );
+
+      let toggleClientRect = await getToggleClientRect(browser, videoID);
 
       // The toggle center, because of how it slides out, is actually outside
       // of the bounds of a click event. For now, we move the mouse in by a
