@@ -399,10 +399,6 @@ class nsXULElement : public nsStyledElement {
   void SetOrient(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::orient, aValue, rv);
   }
-  void GetPack(DOMString& aValue) const { GetXULAttr(nsGkAtoms::pack, aValue); }
-  void SetPack(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::pack, aValue, rv);
-  }
   bool Hidden() const { return BoolAttrIsTrue(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden) { SetXULBoolAttr(nsGkAtoms::hidden, aHidden); }
   bool Collapsed() const { return BoolAttrIsTrue(nsGkAtoms::collapsed); }

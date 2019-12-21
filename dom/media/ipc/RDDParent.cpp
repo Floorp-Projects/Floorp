@@ -32,7 +32,6 @@
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
 #  include "nsMacUtilsImpl.h"
-#  include <Carbon/Carbon.h>  // for CGSSetDenyWindowServerConnections
 #  include "RDDProcessHost.h"
 #endif
 
@@ -99,34 +98,12 @@ bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 extern "C" {
-CGError CGSSetDenyWindowServerConnections(bool);
 void CGSShutdownServerConnections();
 };
-
-static void StartRDDMacSandbox() {
-  // Actual security benefits are only acheived when we additionally deny
-  // future connections.
-  CGError result = CGSSetDenyWindowServerConnections(true);
-  MOZ_DIAGNOSTIC_ASSERT(result == kCGErrorSuccess);
-#  if !MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  Unused << result;
-#  endif
-
-  MacSandboxInfo info;
-  RDDProcessHost::StaticFillMacSandboxInfo(info);
-
-  std::string err;
-  bool rv = mozilla::StartMacSandbox(info, err);
-  if (!rv) {
-    NS_WARNING(err.c_str());
-    MOZ_CRASH("mozilla::StartMacSandbox failed");
-  }
-}
 #endif
 
 mozilla::ipc::IPCResult RDDParent::RecvInit(
-    nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd,
-    bool aStartMacSandbox) {
+    nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -138,13 +115,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
   // because it's not running a native event loop. See bug 1384336.
   CGSShutdownServerConnections();
 
-  if (aStartMacSandbox) {
-    StartRDDMacSandbox();
-  } else {
-#    ifdef DEBUG
-    AssertMacSandboxEnabled();
-#    endif
-  }
 #  elif defined(XP_LINUX)
   int fd = -1;
   if (aBrokerFd.isSome()) {

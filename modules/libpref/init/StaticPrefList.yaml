@@ -925,10 +925,10 @@
 # If set, use DocumentChannel with nsDocShell in place of HttpChannel.
 - name: browser.tabs.documentchannel
   type: bool
-#if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#else
+#if defined(ANDROID)
   value: false  # See bug 1589982.
+#else
+  value: true
 #endif
   mirror: always
 
@@ -6565,6 +6565,11 @@
 - name: media.geckoview.autoplay.request.testing
   type: uint32_t
   value: 0
+  mirror: always
+
+- name: media.mediacontrol.testingevents.enabled
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

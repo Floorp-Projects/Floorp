@@ -8,6 +8,7 @@
 #define mozilla_dom_localstorage_LSWriteOptimizer_h
 
 #include "mozilla/CheckedInt.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 namespace dom {

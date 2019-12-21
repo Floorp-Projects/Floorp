@@ -1570,12 +1570,6 @@ class TreeMetadataEmitter(LoggingMixin):
                                                  path, ', '.join(missing)), context)
 
             out_dir = mozpath.join(install_prefix, manifest_reldir)
-            if 'install-to-subdir' in defaults:
-                # This is terrible, but what are you going to do?
-                out_dir = mozpath.join(out_dir, defaults['install-to-subdir'])
-                obj.manifest_obj_relpath = mozpath.join(manifest_reldir,
-                                                        defaults['install-to-subdir'],
-                                                        mozpath.basename(path))
 
             def process_support_files(test):
                 install_info = self._test_files_converter.convert_support_files(

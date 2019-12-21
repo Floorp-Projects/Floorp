@@ -19,7 +19,7 @@ static const int kSystemDefinedEventMediaKeysSubtype = 8;
 
 class MediaHardwareKeysEventListenerTest : public MediaControlKeysEventListener {
  public:
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventListenerTest, override)
 
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override {
     mReceivedEvent = mozilla::Some(aKeyEvent);
@@ -36,8 +36,6 @@ class MediaHardwareKeysEventListenerTest : public MediaControlKeysEventListener 
   ~MediaHardwareKeysEventListenerTest() = default;
   mozilla::Maybe<MediaControlKeysEvent> mReceivedEvent;
 };
-
-NS_IMPL_ISUPPORTS0(MediaHardwareKeysEventListenerTest)
 
 static void SendFakeEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource, int aKeyData) {
   NSEvent* event = [NSEvent otherEventWithType:NSSystemDefined

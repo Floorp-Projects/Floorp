@@ -26,9 +26,7 @@ protocol PRDD
 {
 parent:
 
-  async Init(GfxVarUpdate[] vars,
-             FileDescriptor? sandboxBroker,
-             bool startMacSandbox);
+  async Init(GfxVarUpdate[] vars, FileDescriptor? sandboxBroker);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 

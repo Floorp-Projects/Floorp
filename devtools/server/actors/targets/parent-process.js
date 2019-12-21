@@ -59,7 +59,7 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
   });
 
   // Ensure catching the creation of any new content docshell
-  this.listenForNewDocShells = true;
+  this.watchNewDocShells = true;
 
   // Defines the default docshell selected for the target actor
   if (!window) {

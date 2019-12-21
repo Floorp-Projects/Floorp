@@ -76,10 +76,9 @@ git cinnabar download
 ```bash
 git clone https://github.com/glandium/git-cinnabar.git && cd git-cinnabar
 make
-export PATH="$PATH:/somewhere/git-cinnabar/"
-echo PATH="$PATH:/somewhere/git-cinnabar/" >> ~/.bash_profile
-export PATH="$PATH:/somewhere/git-cinnabar/git-core/bin-wrappers"
-echo PATH="$PATH:/somewhere/git-cinnabar/git-core/bin-wrappers" >> ~/.bash_profile
+export PATH="$PATH:/somewhere/git-cinnabar"
+echo 'export PATH="$PATH:/somewhere/git-cinnabar"' >> ~/.bash_profile
+git cinnabar download
 ```
 
 `git-cinnabar`'s creator, [glandium](https://glandium.org/), has written a number of posts about setting up for Firefox Development with git. This [post](https://glandium.org/blog/?page_id=3438) is the one that has formed the basis for this walkthrough.

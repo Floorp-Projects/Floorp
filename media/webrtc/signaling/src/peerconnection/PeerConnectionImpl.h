@@ -40,6 +40,7 @@
 #include "VideoSegment.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/PeerIdentity.h"
+#include "RTCStatsIdGenerator.h"
 #include "RTCStatsReport.h"
 
 namespace test {
@@ -664,6 +665,8 @@ class PeerConnectionImpl final
   std::vector<std::string> mRawTrickledCandidates;
 
   dom::RTCStatsTimestampMaker mTimestampMaker;
+
+  RefPtr<RTCStatsIdGenerator> mIdGenerator;
 
  public:
   // these are temporary until the DataChannel Listen/Connect API is removed

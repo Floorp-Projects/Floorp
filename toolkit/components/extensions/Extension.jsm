@@ -50,6 +50,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
@@ -1659,6 +1660,7 @@ class Extension extends ExtensionData {
     }
 
     this.remote = !WebExtensionPolicy.isExtensionProcess;
+    this.remoteType = this.remote ? E10SUtils.EXTENSION_REMOTE_TYPE : null;
 
     if (this.remote && processCount !== 1) {
       throw new Error(

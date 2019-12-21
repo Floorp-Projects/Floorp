@@ -122,8 +122,8 @@ class SupportFilesConverter(object):
         #  manifest_dir - Absoulute path to the (srcdir) directory containing the
         #                 manifest that included this test
         #  out_dir - The path relative to $objdir/_tests used as the destination for the
-        #            test, based on the relative path to the manifest in the srcdir,
-        #            the install_root, and 'install-to-subdir', if present in the manifest.
+        #            test, based on the relative path to the manifest in the srcdir and
+        #            the install_root.
         info = TestInstallInfo()
         for field, seen in self._fields:
             value = test.get(field, '')
@@ -133,8 +133,6 @@ class SupportFilesConverter(object):
                 # and globally, where they are permitted. If a support file appears multiple
                 # times for a single test, there are unnecessary entries in the manifest. But
                 # many entries will be shared across tests that share defaults.
-                # We need to memoize on the basis of both the path and the output
-                # directory for the benefit of tests specifying 'install-to-subdir'.
                 key = field, pattern, out_dir
                 if key in info.seen:
                     raise ValueError(
@@ -242,11 +240,6 @@ def _make_install_manifest(topsrcdir, topobjdir, test_objs):
         file_relpath = o['file_relpath']
         source = mozpath.join(topsrcdir, file_relpath)
         dest = mozpath.join(root, prefix, file_relpath)
-        if 'install-to-subdir' in o:
-            out_dir = mozpath.join(out_dir, o['install-to-subdir'])
-            manifest_relpath = mozpath.relpath(source, mozpath.dirname(manifest_path))
-            dest = mozpath.join(out_dir, manifest_relpath)
-
         install_info.installs.append((source, dest))
         install_info |= converter.convert_support_files(o, root,
                                                         manifest_dir,

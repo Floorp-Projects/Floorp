@@ -21,65 +21,40 @@ import re
 import socket
 import ssl
 import time
-import urllib2
-import urlparse
 
 from mercurial.i18n import _
 from mercurial.node import hex, nullid
 from mercurial import (
     commands,
+    configitems,
     error,
     exchange,
     extensions,
     cmdutil,
     hg,
     match as matchmod,
-    phases,
+    pycompat,
     registrar,
     scmutil,
+    urllibcompat,
     util,
+    vfs,
 )
-
-# TRACKING hg43
-try:
-    from mercurial import configitems
-    configitems.dynamicdefault
-except ImportError:
-    configitems = None
 
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = '4.3 4.4 4.5 4.6 4.7 4.8 4.9'
-minimumhgversion = '4.3'
+testedwith = b'4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2'
+minimumhgversion = b'4.5'
 
 cmdtable = {}
+command = registrar.command(cmdtable)
 
-# TRACKING hg43 Mercurial 4.3 introduced registrar.command as a replacement for
-# cmdutil.command.
-if util.safehasattr(registrar, 'command'):
-    command = registrar.command(cmdtable)
-else:
-    command = cmdutil.command(cmdtable)
+configtable = {}
+configitem = registrar.configitem(configtable)
 
-# TRACKING hg43 Mercurial 4.3 introduced the config registrar. 4.4 requires
-# config items to be registered to avoid a devel warning
-if util.safehasattr(registrar, 'configitem'):
-    configtable = {}
-    configitem = registrar.configitem(configtable)
-
-    configitem('robustcheckout', 'retryjittermin', default=configitems.dynamicdefault)
-    configitem('robustcheckout', 'retryjittermax', default=configitems.dynamicdefault)
-
-
-# Mercurial 4.2 introduced the vfs module and deprecated the symbol in
-# scmutil.
-def getvfs():
-    try:
-        from mercurial.vfs import vfs
-        return vfs
-    except ImportError:
-        return scmutil.vfs
+configitem(b'robustcheckout', b'retryjittermin', default=configitems.dynamicdefault)
+configitem(b'robustcheckout', b'retryjittermax', default=configitems.dynamicdefault)
 
 
 def getsparse():
@@ -89,104 +64,31 @@ def getsparse():
 
 def supported_hg():
     '''Returns True if the Mercurial version is supported for robustcheckout'''
-    return '.'.join(
-        str(v) for v in util.versiontuple(n=2)
+    return b'.'.join(
+        pycompat.bytestr(v) for v in util.versiontuple(n=2)
     ) in testedwith.split()
-
-
-if os.name == 'nt':
-    import ctypes
-
-    # Get a reference to the DeleteFileW function
-    # DeleteFileW accepts filenames encoded as a null terminated sequence of
-    # wide chars (UTF-16). Python's ctypes.c_wchar_p correctly encodes unicode
-    # strings to null terminated UTF-16 strings.
-    # However, we receive (byte) strings from mercurial. When these are passed
-    # to DeleteFileW via the c_wchar_p type, they are implicitly decoded via
-    # the 'mbcs' encoding on windows.
-    kernel32 = ctypes.windll.kernel32
-    DeleteFile = kernel32.DeleteFileW
-    DeleteFile.argtypes = [ctypes.c_wchar_p]
-    DeleteFile.restype = ctypes.c_bool
-
-    def unlinklong(fn):
-        normalized_path = '\\\\?\\' + os.path.normpath(fn)
-        if not DeleteFile(normalized_path):
-            raise OSError(errno.EPERM, "couldn't remove long path", fn)
-
-# Not needed on other platforms, but is handy for testing
-else:
-    def unlinklong(fn):
-        os.unlink(fn)
-
-
-def unlinkwrapper(unlinkorig, fn, ui):
-    '''Calls unlink_long if original unlink function fails.'''
-    try:
-        ui.debug('calling unlink_orig %s\n' % fn)
-        return unlinkorig(fn)
-    except WindowsError as e:
-        # Windows error 3 corresponds to ERROR_PATH_NOT_FOUND
-        # only handle this case; re-raise the exception for other kinds of
-        # failures.
-        if e.winerror != 3:
-            raise
-        ui.debug('caught WindowsError ERROR_PATH_NOT_FOUND; '
-                 'calling unlink_long %s\n' % fn)
-        return unlinklong(fn)
-
-
-@contextlib.contextmanager
-def wrapunlink(ui):
-    '''Context manager that temporarily monkeypatches unlink functions.'''
-    purgemod = extensions.find('purge')
-    to_wrap = [(purgemod.util, 'unlink')]
-
-    # Pass along the ui object to the unlink_wrapper so we can get logging out
-    # of it.
-    wrapped = functools.partial(unlinkwrapper, ui=ui)
-
-    # Wrap the original function(s) with our unlink wrapper.
-    originals = {}
-    for mod, func in to_wrap:
-        ui.debug('wrapping %s %s\n' % (mod, func))
-        originals[mod, func] = extensions.wrapfunction(mod, func, wrapped)
-
-    try:
-        yield
-    finally:
-        # Restore the originals.
-        for mod, func in to_wrap:
-            ui.debug('restoring %s %s\n' % (mod, func))
-            setattr(mod, func, originals[mod, func])
-
-
-def purgewrapper(orig, ui, *args, **kwargs):
-    '''Runs original purge() command with unlink monkeypatched.'''
-    with wrapunlink(ui):
-        return orig(ui, *args, **kwargs)
 
 
 def peerlookup(remote, v):
     # TRACKING hg46 4.6 added commandexecutor API.
     if util.safehasattr(remote, 'commandexecutor'):
         with remote.commandexecutor() as e:
-            return e.callcommand('lookup', {'key': v}).result()
+            return e.callcommand(b'lookup', {b'key': v}).result()
     else:
         return remote.lookup(v)
 
 
-@command('robustcheckout', [
-    ('', 'upstream', '', 'URL of upstream repo to clone from'),
-    ('r', 'revision', '', 'Revision to check out'),
-    ('b', 'branch', '', 'Branch to check out'),
-    ('', 'purge', False, 'Whether to purge the working directory'),
-    ('', 'sharebase', '', 'Directory where shared repos should be placed'),
-    ('', 'networkattempts', 3, 'Maximum number of attempts for network '
-                               'operations'),
-    ('', 'sparseprofile', '', 'Sparse checkout profile to use (path in repo)'),
+@command(b'robustcheckout', [
+    (b'', b'upstream', b'', b'URL of upstream repo to clone from'),
+    (b'r', b'revision', b'', b'Revision to check out'),
+    (b'b', b'branch', b'', b'Branch to check out'),
+    (b'', b'purge', False, b'Whether to purge the working directory'),
+    (b'', b'sharebase', b'', b'Directory where shared repos should be placed'),
+    (b'', b'networkattempts', 3, b'Maximum number of attempts for network '
+                                 b'operations'),
+    (b'', b'sparseprofile', b'', b'Sparse checkout profile to use (path in repo)'),
     ],
-    '[OPTION]... URL DEST',
+    b'[OPTION]... URL DEST',
     norepo=True)
 def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
                    purge=False, sharebase=None, networkattempts=None,
@@ -222,21 +124,21 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     4.3 or newer and the ``sparse`` extension must be enabled.
     """
     if not revision and not branch:
-        raise error.Abort('must specify one of --revision or --branch')
+        raise error.Abort(b'must specify one of --revision or --branch')
 
     if revision and branch:
-        raise error.Abort('cannot specify both --revision and --branch')
+        raise error.Abort(b'cannot specify both --revision and --branch')
 
     # Require revision to look like a SHA-1.
     if revision:
-        if len(revision) < 12 or len(revision) > 40 or not re.match('^[a-f0-9]+$', revision):
-            raise error.Abort('--revision must be a SHA-1 fragment 12-40 '
-                              'characters long')
+        if len(revision) < 12 or len(revision) > 40 or not re.match(b'^[a-f0-9]+$', revision):
+            raise error.Abort(b'--revision must be a SHA-1 fragment 12-40 '
+                              b'characters long')
 
-    sharebase = sharebase or ui.config('share', 'pool')
+    sharebase = sharebase or ui.config(b'share', b'pool')
     if not sharebase:
-        raise error.Abort('share base directory not defined; refusing to operate',
-                          hint='define share.pool config option or pass --sharebase')
+        raise error.Abort(b'share base directory not defined; refusing to operate',
+                          hint=b'define share.pool config option or pass --sharebase')
 
     # Sparse profile support was added in Mercurial 4.3, where it was highly
     # experimental. Because of the fragility of it, we only support sparse
@@ -246,20 +148,20 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     # fast if we can't satisfy the desired checkout request.
     if sparseprofile:
         if not supported_hg():
-            raise error.Abort('sparse profile support only available for '
-                              'Mercurial versions greater than 4.3 (using %s)' % util.version())
+            raise error.Abort(b'sparse profile support only available for '
+                              b'Mercurial versions greater than 4.3 (using %s)' % util.version())
 
         try:
-            extensions.find('sparse')
+            extensions.find(b'sparse')
         except KeyError:
-            raise error.Abort('sparse extension must be enabled to use '
-                              '--sparseprofile')
+            raise error.Abort(b'sparse extension must be enabled to use '
+                              b'--sparseprofile')
 
-    ui.warn('(using Mercurial %s)\n' % util.version())
+    ui.warn(b'(using Mercurial %s)\n' % util.version())
 
     # worker.backgroundclose only makes things faster if running anti-virus,
     # which our automation doesn't. Disable it.
-    ui.setconfig('worker', 'backgroundclose', False)
+    ui.setconfig(b'worker', b'backgroundclose', False)
 
     # By default the progress bar starts after 3s and updates every 0.1s. We
     # change this so it shows and updates every 1.0s.
@@ -267,9 +169,9 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     # even if there is no known TTY.
     # We make the config change here instead of in a config file because
     # otherwise we're at the whim of whatever configs are used in automation.
-    ui.setconfig('progress', 'delay', 1.0)
-    ui.setconfig('progress', 'refresh', 1.0)
-    ui.setconfig('progress', 'assume-tty', True)
+    ui.setconfig(b'progress', b'delay', 1.0)
+    ui.setconfig(b'progress', b'refresh', 1.0)
+    ui.setconfig(b'progress', b'assume-tty', True)
 
     sharebase = os.path.realpath(sharebase)
 
@@ -336,7 +238,7 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
             else:
                 record_op('overall_nopull_populatedwdir')
 
-        server_url = urlparse.urlparse(url).netloc
+        server_url = urllibcompat.urlreq.urlparse(url).netloc
 
         if 'TASKCLUSTER_INSTANCE_TYPE' in os.environ:
             perfherder = {
@@ -351,13 +253,13 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
                     'value': duration,
                     'lowerIsBetter': True,
                     'shouldAlert': False,
-                    'serverUrl': server_url,
+                    'serverUrl': server_url.decode('utf-8'),
+                    'hgVersion': util.version().decode('utf-8'),
                     'extraOptions': [os.environ['TASKCLUSTER_INSTANCE_TYPE']],
                     'subtests': [],
                 })
-
-            ui.write('PERFHERDER_DATA: %s\n' % json.dumps(perfherder,
-                                                          sort_keys=True))
+            ui.write(b'PERFHERDER_DATA: %s\n' %
+                     pycompat.bytestr(json.dumps(perfherder, sort_keys=True)))
 
 def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 optimes, behaviors, networkattemptlimit, networkattempts=None,
@@ -389,7 +291,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
             optimes.append((op, elapsed))
 
-    ui.write('ensuring %s@%s is available at %s\n' % (url, revision or branch,
+    ui.write(b'ensuring %s@%s is available at %s\n' % (url, revision or branch,
                                                       dest))
 
     # We assume that we're the only process on the machine touching the
@@ -400,73 +302,73 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     # potential repo corruption), it is probably faster, since verifying
     # repos can take a while.
 
-    destvfs = getvfs()(dest, audit=False, realpath=True)
+    destvfs = vfs.vfs(dest, audit=False, realpath=True)
 
     def deletesharedstore(path=None):
-        storepath = path or destvfs.read('.hg/sharedpath').strip()
-        if storepath.endswith('.hg'):
+        storepath = path or destvfs.read(b'.hg/sharedpath').strip()
+        if storepath.endswith(b'.hg'):
             storepath = os.path.dirname(storepath)
 
-        storevfs = getvfs()(storepath, audit=False)
+        storevfs = vfs.vfs(storepath, audit=False)
         storevfs.rmtree(forcibly=True)
 
-    if destvfs.exists() and not destvfs.exists('.hg'):
-        raise error.Abort('destination exists but no .hg directory')
+    if destvfs.exists() and not destvfs.exists(b'.hg'):
+        raise error.Abort(b'destination exists but no .hg directory')
 
     # Refuse to enable sparse checkouts on existing checkouts. The reasoning
     # here is that another consumer of this repo may not be sparse aware. If we
     # enabled sparse, we would lock them out.
-    if destvfs.exists() and sparse_profile and not destvfs.exists('.hg/sparse'):
-        raise error.Abort('cannot enable sparse profile on existing '
-                          'non-sparse checkout',
-                          hint='use a separate working directory to use sparse')
+    if destvfs.exists() and sparse_profile and not destvfs.exists(b'.hg/sparse'):
+        raise error.Abort(b'cannot enable sparse profile on existing '
+                          b'non-sparse checkout',
+                          hint=b'use a separate working directory to use sparse')
 
     # And the other direction for symmetry.
-    if not sparse_profile and destvfs.exists('.hg/sparse'):
-        raise error.Abort('cannot use non-sparse checkout on existing sparse '
-                          'checkout',
-                          hint='use a separate working directory to use sparse')
+    if not sparse_profile and destvfs.exists(b'.hg/sparse'):
+        raise error.Abort(b'cannot use non-sparse checkout on existing sparse '
+                          b'checkout',
+                          hint=b'use a separate working directory to use sparse')
 
     # Require checkouts to be tied to shared storage because efficiency.
-    if destvfs.exists('.hg') and not destvfs.exists('.hg/sharedpath'):
-        ui.warn('(destination is not shared; deleting)\n')
+    if destvfs.exists(b'.hg') and not destvfs.exists(b'.hg/sharedpath'):
+        ui.warn(b'(destination is not shared; deleting)\n')
         with timeit('remove_unshared_dest', 'remove-wdir'):
             destvfs.rmtree(forcibly=True)
 
     # Verify the shared path exists and is using modern pooled storage.
-    if destvfs.exists('.hg/sharedpath'):
-        storepath = destvfs.read('.hg/sharedpath').strip()
+    if destvfs.exists(b'.hg/sharedpath'):
+        storepath = destvfs.read(b'.hg/sharedpath').strip()
 
-        ui.write('(existing repository shared store: %s)\n' % storepath)
+        ui.write(b'(existing repository shared store: %s)\n' % storepath)
 
         if not os.path.exists(storepath):
-            ui.warn('(shared store does not exist; deleting destination)\n')
+            ui.warn(b'(shared store does not exist; deleting destination)\n')
             with timeit('removed_missing_shared_store', 'remove-wdir'):
                 destvfs.rmtree(forcibly=True)
-        elif not re.search('[a-f0-9]{40}/\.hg$', storepath.replace('\\', '/')):
-            ui.warn('(shared store does not belong to pooled storage; '
-                    'deleting destination to improve efficiency)\n')
+        elif not re.search(b'[a-f0-9]{40}/\.hg$', storepath.replace(b'\\', b'/')):
+            ui.warn(b'(shared store does not belong to pooled storage; '
+                    b'deleting destination to improve efficiency)\n')
             with timeit('remove_unpooled_store', 'remove-wdir'):
                 destvfs.rmtree(forcibly=True)
 
-    if destvfs.isfileorlink('.hg/wlock'):
-        ui.warn('(dest has an active working directory lock; assuming it is '
-                'left over from a previous process and that the destination '
-                'is corrupt; deleting it just to be sure)\n')
+    if destvfs.isfileorlink(b'.hg/wlock'):
+        ui.warn(b'(dest has an active working directory lock; assuming it is '
+                b'left over from a previous process and that the destination '
+                b'is corrupt; deleting it just to be sure)\n')
         with timeit('remove_locked_wdir', 'remove-wdir'):
             destvfs.rmtree(forcibly=True)
 
     def handlerepoerror(e):
-        if e.message == _('abandoned transaction found'):
-            ui.warn('(abandoned transaction found; trying to recover)\n')
+        if pycompat.bytestr(e) == _(b'abandoned transaction found'):
+            ui.warn(b'(abandoned transaction found; trying to recover)\n')
             repo = hg.repository(ui, dest)
             if not repo.recover():
-                ui.warn('(could not recover repo state; '
-                        'deleting shared store)\n')
+                ui.warn(b'(could not recover repo state; '
+                        b'deleting shared store)\n')
                 with timeit('remove_unrecovered_shared_store', 'remove-store'):
                     deletesharedstore()
 
-            ui.warn('(attempting checkout from beginning)\n')
+            ui.warn(b'(attempting checkout from beginning)\n')
             return callself()
 
         raise
@@ -476,10 +378,10 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
     def handlenetworkfailure():
         if networkattempts[0] >= networkattemptlimit:
-            raise error.Abort('reached maximum number of network attempts; '
-                              'giving up\n')
+            raise error.Abort(b'reached maximum number of network attempts; '
+                              b'giving up\n')
 
-        ui.warn('(retrying after network failure on attempt %d of %d)\n' %
+        ui.warn(b'(retrying after network failure on attempt %d of %d)\n' %
                 (networkattempts[0], networkattemptlimit))
 
         # Do a backoff on retries to mitigate the thundering herd
@@ -490,10 +392,10 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         # 2) 5.5 - 9.5
         # 3) 11.5 - 15.5
         backoff = (2 ** networkattempts[0] - 1) * 1.5
-        jittermin = ui.configint('robustcheckout', 'retryjittermin', 1000)
-        jittermax = ui.configint('robustcheckout', 'retryjittermax', 5000)
+        jittermin = ui.configint(b'robustcheckout', b'retryjittermin', 1000)
+        jittermax = ui.configint(b'robustcheckout', b'retryjittermax', 5000)
         backoff += float(random.randint(jittermin, jittermax)) / 1000.0
-        ui.warn('(waiting %.2fs before retry)\n' % backoff)
+        ui.warn(b'(waiting %.2fs before retry)\n' % backoff)
         time.sleep(backoff)
 
         networkattempts[0] += 1
@@ -504,12 +406,20 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         Returns True if caller should call ``callself()`` to retry.
         """
         if isinstance(e, error.Abort):
-            if e.args[0] == _('repository is unrelated'):
-                ui.warn('(repository is unrelated; deleting)\n')
+            if e.args[0] == _(b'repository is unrelated'):
+                ui.warn(b'(repository is unrelated; deleting)\n')
                 destvfs.rmtree(forcibly=True)
                 return True
-            elif e.args[0].startswith(_('stream ended unexpectedly')):
-                ui.warn('%s\n' % e.args[0])
+            elif e.args[0].startswith(_(b'stream ended unexpectedly')):
+                ui.warn(b'%s\n' % e.args[0])
+                # Will raise if failure limit reached.
+                handlenetworkfailure()
+                return True
+        # TODO test this branch
+        elif isinstance(e, error.ResponseError):
+            if e.args[0].startswith(_(b'unexpected response from remote server:')):
+                ui.warn(b'(unexpected response from remote server; retrying)\n')
+                destvfs.rmtree(forcibly=True)
                 # Will raise if failure limit reached.
                 handlenetworkfailure()
                 return True
@@ -517,20 +427,20 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             # Assume all SSL errors are due to the network, as Mercurial
             # should convert non-transport errors like cert validation failures
             # to error.Abort.
-            ui.warn('ssl error: %s\n' % e)
+            ui.warn(b'ssl error: %s\n' % e)
             handlenetworkfailure()
             return True
-        elif isinstance(e, urllib2.URLError):
+        elif isinstance(e, urllibcompat.urlerr.urlerror):
             if isinstance(e.reason, socket.error):
-                ui.warn('socket error: %s\n' % e.reason)
+                ui.warn(b'socket error: %s\n' % pycompat.bytestr(e.reason))
                 handlenetworkfailure()
                 return True
             else:
-                ui.warn('unhandled URLError; reason type: %s; value: %s' % (
+                ui.warn(b'unhandled URLError; reason type: %s; value: %s\n' % (
                     e.reason.__class__.__name__, e.reason))
         else:
-            ui.warn('unhandled exception during network operation; type: %s; '
-                    'value: %s' % (e.__class__.__name__, e))
+            ui.warn(b'unhandled exception during network operation; type: %s; '
+                    b'value: %s\n' % (e.__class__.__name__, e))
 
         return False
 
@@ -542,26 +452,26 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
     try:
         clonepeer = hg.peer(ui, {}, cloneurl)
-        rootnode = peerlookup(clonepeer, '0')
+        rootnode = peerlookup(clonepeer, b'0')
     except error.RepoLookupError:
-        raise error.Abort('unable to resolve root revision from clone '
-                          'source')
-    except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
+        raise error.Abort(b'unable to resolve root revision from clone '
+                          b'source')
+    except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
         if handlepullerror(e):
             return callself()
         raise
 
     if rootnode == nullid:
-        raise error.Abort('source repo appears to be empty')
+        raise error.Abort(b'source repo appears to be empty')
 
     storepath = os.path.join(sharebase, hex(rootnode))
-    storevfs = getvfs()(storepath, audit=False)
+    storevfs = vfs.vfs(storepath, audit=False)
 
-    if storevfs.isfileorlink('.hg/store/lock'):
-        ui.warn('(shared store has an active lock; assuming it is left '
-                'over from a previous process and that the store is '
-                'corrupt; deleting store and destination just to be '
-                'sure)\n')
+    if storevfs.isfileorlink(b'.hg/store/lock'):
+        ui.warn(b'(shared store has an active lock; assuming it is left '
+                b'over from a previous process and that the store is '
+                b'corrupt; deleting store and destination just to be '
+                b'sure)\n')
         if destvfs.exists():
             with timeit('remove_dest_active_lock', 'remove-wdir'):
                 destvfs.rmtree(forcibly=True)
@@ -569,9 +479,9 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         with timeit('remove_shared_store_active_lock', 'remove-store'):
             storevfs.rmtree(forcibly=True)
 
-    if storevfs.exists() and not storevfs.exists('.hg/requires'):
-        ui.warn('(shared store missing requires file; this is a really '
-                'odd failure; deleting store and destination)\n')
+    if storevfs.exists() and not storevfs.exists(b'.hg/requires'):
+        ui.warn(b'(shared store missing requires file; this is a really '
+                b'odd failure; deleting store and destination)\n')
         if destvfs.exists():
             with timeit('remove_dest_no_requires', 'remove-wdir'):
                 destvfs.rmtree(forcibly=True)
@@ -579,17 +489,17 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         with timeit('remove_shared_store_no_requires', 'remove-store'):
             storevfs.rmtree(forcibly=True)
 
-    if storevfs.exists('.hg/requires'):
-        requires = set(storevfs.read('.hg/requires').splitlines())
+    if storevfs.exists(b'.hg/requires'):
+        requires = set(storevfs.read(b'.hg/requires').splitlines())
         # FUTURE when we require generaldelta, this is where we can check
         # for that.
-        required = {'dotencode', 'fncache'}
+        required = {b'dotencode', b'fncache'}
 
         missing = required - requires
         if missing:
-            ui.warn('(shared store missing requirements: %s; deleting '
-                    'store and destination to ensure optimal behavior)\n' %
-                    ', '.join(sorted(missing)))
+            ui.warn(b'(shared store missing requirements: %s; deleting '
+                    b'store and destination to ensure optimal behavior)\n' %
+                    b', '.join(sorted(missing)))
             if destvfs.exists():
                 with timeit('remove_dest_missing_requires', 'remove-wdir'):
                     destvfs.rmtree(forcibly=True)
@@ -611,35 +521,35 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         makedirs(sharebase, notindexed=True)
 
         if upstream:
-            ui.write('(cloning from upstream repo %s)\n' % upstream)
+            ui.write(b'(cloning from upstream repo %s)\n' % upstream)
 
         if not storevfs.exists():
-            behaviors.add('create-store')
+            behaviors.add(b'create-store')
 
         try:
             with timeit('clone', 'clone'):
-                shareopts = {'pool': sharebase, 'mode': 'identity'}
+                shareopts = {b'pool': sharebase, b'mode': b'identity'}
                 res = hg.clone(ui, {}, clonepeer, dest=dest, update=False,
                                shareopts=shareopts)
-        except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
+        except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
             if handlepullerror(e):
                 return callself()
             raise
         except error.RepoError as e:
             return handlerepoerror(e)
         except error.RevlogError as e:
-            ui.warn('(repo corruption: %s; deleting shared store)\n' % e.message)
+            ui.warn(b'(repo corruption: %s; deleting shared store)\n' % e)
             with timeit('remove_shared_store_revlogerror', 'remote-store'):
                 deletesharedstore()
             return callself()
 
         # TODO retry here.
         if res is None:
-            raise error.Abort('clone failed')
+            raise error.Abort(b'clone failed')
 
         # Verify it is using shared pool storage.
-        if not destvfs.exists('.hg/sharedpath'):
-            raise error.Abort('clone did not create a shared repo')
+        if not destvfs.exists(b'.hg/sharedpath'):
+            raise error.Abort(b'clone did not create a shared repo')
 
         created = True
 
@@ -660,15 +570,15 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
         if ctx:
             if not ctx.hex().startswith(revision):
-                raise error.Abort('--revision argument is ambiguous',
-                                  hint='must be the first 12+ characters of a '
-                                       'SHA-1 fragment')
+                raise error.Abort(b'--revision argument is ambiguous',
+                                  hint=b'must be the first 12+ characters of a '
+                                       b'SHA-1 fragment')
 
             checkoutrevision = ctx.hex()
             havewantedrev = True
 
     if not havewantedrev:
-        ui.write('(pulling to obtain %s)\n' % (revision or branch,))
+        ui.write(b'(pulling to obtain %s)\n' % (revision or branch,))
 
         remote = None
         try:
@@ -676,25 +586,25 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             pullrevs = [peerlookup(remote, revision or branch)]
             checkoutrevision = hex(pullrevs[0])
             if branch:
-                ui.warn('(remote resolved %s to %s; '
-                        'result is not deterministic)\n' %
+                ui.warn(b'(remote resolved %s to %s; '
+                        b'result is not deterministic)\n' %
                         (branch, checkoutrevision))
 
             if checkoutrevision in repo:
-                ui.warn('(revision already present locally; not pulling)\n')
+                ui.warn(b'(revision already present locally; not pulling)\n')
             else:
                 with timeit('pull', 'pull'):
                     pullop = exchange.pull(repo, remote, heads=pullrevs)
                     if not pullop.rheads:
-                        raise error.Abort('unable to pull requested revision')
-        except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
+                        raise error.Abort(b'unable to pull requested revision')
+        except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
             if handlepullerror(e):
                 return callself()
             raise
         except error.RepoError as e:
             return handlerepoerror(e)
         except error.RevlogError as e:
-            ui.warn('(repo corruption: %s; deleting shared store)\n' % e.message)
+            ui.warn(b'(repo corruption: %s; deleting shared store)\n' % e)
             deletesharedstore()
             return callself()
         finally:
@@ -707,8 +617,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     # Purge if requested. We purge before update because this way we're
     # guaranteed to not have conflicts on `hg update`.
     if purge and not created:
-        ui.write('(purging working directory)\n')
-        purgeext = extensions.find('purge')
+        ui.write(b'(purging working directory)\n')
+        purgeext = extensions.find(b'purge')
 
         # Mercurial 4.3 doesn't purge files outside the sparse checkout.
         # See https://bz.mercurial-scm.org/show_bug.cgi?id=5626. Force
@@ -717,7 +627,12 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             old_sparse_fn = getattr(repo.dirstate, '_sparsematchfn', None)
             if old_sparse_fn is not None:
                 assert supported_hg(), 'Mercurial version not supported (must be 4.3+)'
-                repo.dirstate._sparsematchfn = lambda: matchmod.always(repo.root, '')
+                # TRACKING hg50
+                # Arguments passed to `matchmod.always` were unused and have been removed
+                if util.versiontuple(n=2) >= (5, 0):
+                    repo.dirstate._sparsematchfn = lambda: matchmod.always()
+                else:
+                    repo.dirstate._sparsematchfn = lambda: matchmod.always(repo.root, '')
 
             with timeit('purge', 'purge'):
                 if purgeext.purge(ui, repo, all=True, abort_on_err=True,
@@ -727,14 +642,14 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                                      'print0': None,
                                      'dirs': None,
                                      'files': None}):
-                    raise error.Abort('error purging')
+                    raise error.Abort(b'error purging')
         finally:
             if old_sparse_fn is not None:
                 repo.dirstate._sparsematchfn = old_sparse_fn
 
     # Update the working directory.
 
-    if repo['.'].node() == nullid:
+    if repo[b'.'].node() == nullid:
         behaviors.add('empty-wdir')
     else:
         behaviors.add('populated-wdir')
@@ -747,27 +662,27 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             repo.filectx(sparse_profile, changeid=checkoutrevision).data()
         except error.ManifestLookupError:
-            raise error.Abort('sparse profile %s does not exist at revision '
-                              '%s' % (sparse_profile, checkoutrevision))
+            raise error.Abort(b'sparse profile %s does not exist at revision '
+                              b'%s' % (sparse_profile, checkoutrevision))
 
         # TRACKING hg48 - parseconfig takes `action` param
         if util.versiontuple(n=2) >= (4, 8):
-            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread('sparse'), 'sparse')
+            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread(b'sparse'), b'sparse')
         else:
-            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread('sparse'))
+            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread(b'sparse'))
 
         old_includes, old_excludes, old_profiles = old_config
 
         if old_profiles == {sparse_profile} and not old_includes and not \
                 old_excludes:
-            ui.write('(sparse profile %s already set; no need to update '
-                     'sparse config)\n' % sparse_profile)
+            ui.write(b'(sparse profile %s already set; no need to update '
+                     b'sparse config)\n' % sparse_profile)
         else:
             if old_includes or old_excludes or old_profiles:
-                ui.write('(replacing existing sparse config with profile '
-                         '%s)\n' % sparse_profile)
+                ui.write(b'(replacing existing sparse config with profile '
+                         b'%s)\n' % sparse_profile)
             else:
-                ui.write('(setting sparse config to profile %s)\n' %
+                ui.write(b'(setting sparse config to profile %s)\n' %
                          sparse_profile)
 
             # If doing an incremental update, this will perform two updates:
@@ -779,30 +694,27 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 fcounts = map(len, sparsemod._updateconfigandrefreshwdir(
                     repo, [], [], [sparse_profile], force=True))
 
-                repo.ui.status('%d files added, %d files dropped, '
-                               '%d files conflicting\n' % tuple(fcounts))
+                repo.ui.status(b'%d files added, %d files dropped, '
+                               b'%d files conflicting\n' % tuple(fcounts))
 
-            ui.write('(sparse refresh complete)\n')
+            ui.write(b'(sparse refresh complete)\n')
 
     op = 'update_sparse' if sparse_profile else 'update'
     behavior = 'update-sparse' if sparse_profile else 'update'
 
     with timeit(op, behavior):
         if commands.update(ui, repo, rev=checkoutrevision, clean=True):
-            raise error.Abort('error updating')
+            raise error.Abort(b'error updating')
 
-    ui.write('updated to %s\n' % checkoutrevision)
+    ui.write(b'updated to %s\n' % checkoutrevision)
 
     return None
 
 
 def extsetup(ui):
     # Ensure required extensions are loaded.
-    for ext in ('purge', 'share'):
+    for ext in (b'purge', b'share'):
         try:
             extensions.find(ext)
         except KeyError:
             extensions.load(ui, ext, None)
-
-    purgemod = extensions.find('purge')
-    extensions.wrapcommand(purgemod.cmdtable, 'purge', purgewrapper)

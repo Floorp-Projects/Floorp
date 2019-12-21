@@ -20,7 +20,6 @@
 #  include "mozilla/Vector.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "nsCOMPtr.h"
-#  include "nsExceptionHandler.h"
 #  include "nsHashKeys.h"
 #  include "nsIFile.h"
 #  include "nsISupportsImpl.h"
@@ -219,17 +218,6 @@ class ModulesMapResult final {
 
 namespace IPC {
 
-#  if defined(NIGHTLY_BUILD)
-#    define ANNOTATE_READ_FAILURE()                                   \
-      CrashReporter::AnnotateCrashReport(                             \
-          CrashReporter::Annotation::UntrustedModulesDataReadFailure, \
-          __LINE__)
-#  else
-#    define ANNOTATE_READ_FAILURE() \
-      do {                          \
-      } while (false)
-#  endif  // defined(NIGHTLY_BUILD)
-
 template <>
 struct ParamTraits<mozilla::ModuleVersion> {
   typedef mozilla::ModuleVersion paramType;
@@ -242,7 +230,6 @@ struct ParamTraits<mozilla::ModuleVersion> {
                    paramType* aResult) {
     uint64_t ver;
     if (!aMsg->ReadUInt64(aIter, &ver)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -264,14 +251,12 @@ struct ParamTraits<mozilla::VendorInfo> {
                    paramType* aResult) {
     uint32_t source;
     if (!aMsg->ReadUInt32(aIter, &source)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     aResult->mSource = static_cast<mozilla::VendorInfo::Source>(source);
 
     if (!ReadParam(aMsg, aIter, &aResult->mVendor)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -308,7 +293,6 @@ struct ParamTraits<mozilla::ModuleRecord> {
 
     nsAutoString resolvedDosName;
     if (!ReadParam(aMsg, aIter, &resolvedDosName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -317,28 +301,23 @@ struct ParamTraits<mozilla::ModuleRecord> {
     } else if (NS_FAILED(NS_NewLocalFile(
                    resolvedDosName, false,
                    getter_AddRefs(aResult->mResolvedDosName)))) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mSanitizedDllName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mVersion)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mVendorInfo)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     uint32_t trustFlags;
     if (!aMsg->ReadUInt32(aIter, &trustFlags)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -365,20 +344,17 @@ struct ParamTraits<mozilla::ModulesMap> {
                    paramType* aResult) {
     uint32_t count;
     if (!ReadParam(aMsg, aIter, &count)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     for (uint32_t current = 0; current < count; ++current) {
       nsAutoString key;
       if (!ReadParam(aMsg, aIter, &key) || key.IsEmpty()) {
-        ANNOTATE_READ_FAILURE();
         return false;
       }
 
       RefPtr<mozilla::ModuleRecord> rec(new mozilla::ModuleRecord());
       if (!ReadParam(aMsg, aIter, rec.get())) {
-        ANNOTATE_READ_FAILURE();
         return false;
       }
 
@@ -403,7 +379,6 @@ struct ParamTraits<mozilla::ModulePaths> {
                    paramType* aResult) {
     uint32_t len;
     if (!aMsg->ReadUInt32(aIter, &len)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -411,19 +386,16 @@ struct ParamTraits<mozilla::ModulePaths> {
     // Vector representation.
     auto& vec = aResult->mModuleNtPaths.as<paramType::VecType>();
     if (!vec.reserve(len)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     for (uint32_t idx = 0; idx < len; ++idx) {
       nsString str;
       if (!ReadParam(aMsg, aIter, &str)) {
-        ANNOTATE_READ_FAILURE();
         return false;
       }
 
       if (!vec.emplaceBack(std::move(str))) {
-        ANNOTATE_READ_FAILURE();
         return false;
       }
     }
@@ -474,36 +446,30 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
                    paramType* aResult) {
     uint32_t processType;
     if (!aMsg->ReadUInt32(aIter, &processType)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     aResult->mProcessType = static_cast<GeckoProcessType>(processType);
 
     if (!aMsg->ReadULong(aIter, &aResult->mPid)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mElapsed)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     // We read mEvents manually so that we can use ReadEvent defined below.
     uint32_t eventsLen;
     if (!ReadParam(aMsg, aIter, &eventsLen)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!aResult->mEvents.resize(eventsLen)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -515,22 +481,18 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mStacks)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mXULLoadDurationMS)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!aMsg->ReadUInt32(aIter, &aResult->mSanitizationFailures)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!aMsg->ReadUInt32(aIter, &aResult->mTrustTestFailures)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
@@ -563,46 +525,39 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
                         mozilla::ProcessedModuleLoadEvent* aResult,
                         const mozilla::ModulesMap& aModulesMap) {
     if (!aMsg->ReadUInt64(aIter, &aResult->mProcessUptimeMS)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mLoadDurationMS)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!aMsg->ReadULong(aIter, &aResult->mThreadId)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mThreadName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mRequestedDllName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mBaseAddress)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     nsAutoString resolvedNtName;
     if (!ReadParam(aMsg, aIter, &resolvedNtName)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
+    // NB: While bad data integrity might for some reason result in a null
+    // mModule, we do not fail the deserialization; this is a data error,
+    // rather than an IPC error. The error is detected and dealt with in
+    // telemetry.
     aResult->mModule = aModulesMap.Get(resolvedNtName);
-    if (!aResult->mModule) {
-      ANNOTATE_READ_FAILURE();
-      return false;
-    }
 
     return true;
   }
@@ -620,20 +575,16 @@ struct ParamTraits<mozilla::ModulesMapResult> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mModules)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     if (!aMsg->ReadUInt32(aIter, &aResult->mTrustTestFailures)) {
-      ANNOTATE_READ_FAILURE();
       return false;
     }
 
     return true;
   }
 };
-
-#  undef ANNOTATE_READ_FAILURE
 
 }  // namespace IPC
 

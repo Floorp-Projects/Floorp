@@ -34,12 +34,8 @@ RUN apt-get update \
     pkg-config \
     valgrind \
     zlib1g-dev \
-    clang-format-3.9 \
  && rm -rf /var/lib/apt/lists/* \
  && apt-get autoremove -y && apt-get clean -y
-
-RUN update-alternatives --install /usr/bin/clang-format \
-    clang-format $(which clang-format-3.9) 10
 
 # Latest version of abigail-tools
 RUN apt-get update \

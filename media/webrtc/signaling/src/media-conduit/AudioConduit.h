@@ -35,6 +35,7 @@ DOMHighResTimeStamp NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
  */
 class WebrtcAudioConduit : public AudioSessionConduit,
                            public webrtc::Transport,
+                           public webrtc::RtcpEventObserver,
                            public webrtc::RtpPacketObserver {
  public:
   // VoiceEngine defined constant for Payload Name Size.
@@ -246,6 +247,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
                    const int64_t aTimestamp, const uint32_t aJitter) override;
 
+  void OnRtcpBye() override;
+  void OnRtcpTimeout() override;
+
+  void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
+
   // test-only: inserts fake CSRCs and audio level data
   void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,
                                              const int64_t aTimestamp,
@@ -362,6 +368,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed only on mStsThread
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
+
+  // Accessed only on main thread.
+  mozilla::RtcpEventObserver* mRtcpEventObserver = nullptr;
 };
 
 }  // namespace mozilla
