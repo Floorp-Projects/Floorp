@@ -366,6 +366,14 @@ class WidgetDragEvent : public WidgetMouseEvent {
     mUserCancelled = false;
     mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
   }
+
+  /**
+   * Should be called before dispatching the DOM tree if this event is
+   * synthesized for tests because drop effect is initialized before
+   * dispatching from widget if it's not synthesized event, but synthesized
+   * events are not initialized in the path.
+   */
+  void InitDropEffectForTests();
 };
 
 /******************************************************************************

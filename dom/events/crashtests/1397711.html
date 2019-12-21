@@ -7,5 +7,5 @@
     bubbles: true
   });
   let utils = SpecialPowers.getDOMWindowUtils(window);
-  utils.dispatchDOMEventViaPresShell(document.documentElement, e);
+  utils.dispatchDOMEventViaPresShellForTesting(document.documentElement, e);
 </script>

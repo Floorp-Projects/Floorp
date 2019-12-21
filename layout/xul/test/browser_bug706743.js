@@ -62,19 +62,26 @@ add_task(async function() {
   let dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(
     Ci.nsIDragService
   );
-  dragService.startDragSession();
-  await BrowserTestUtils.synthesizeMouse(
-    "#target",
-    5,
-    15,
-    { type: "mousemove" },
-    browser
+  dragService.startDragSessionForTests(
+    Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      Ci.nsIDragService.DRAGDROP_ACTION_LINK
   );
+  try {
+    await BrowserTestUtils.synthesizeMouse(
+      "#target",
+      5,
+      15,
+      { type: "mousemove" },
+      browser
+    );
 
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 100));
-  removeEventListener("popupshown", tooltipNotExpected, true);
-  dragService.endDragSession(true);
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } finally {
+    removeEventListener("popupshown", tooltipNotExpected, true);
+    dragService.endDragSession(true);
+  }
 
   await BrowserTestUtils.synthesizeMouse(
     "#target",
