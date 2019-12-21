@@ -304,6 +304,15 @@
      */ \
     MACRO(JSOP_STRICTEQ, "stricteq", "===", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     MACRO(JSOP_STRICTNE, "strictne", "!==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    /*
+     * Pops the top two values from the stack and pushes the result of
+     * comparing them.
+     *
+     *   Category: Operators
+     *   Type: Comparison Operators
+     *   Operands:
+     *   Stack: lval, rval => (lval OP rval)
+     */ \
     MACRO(JSOP_LT, "lt", "<",  1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_GT, "gt", ">",  1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_LE, "le", "<=", 1, 2, 1, JOF_BYTE|JOF_IC) \
@@ -390,6 +399,15 @@
      *   Stack: val => (val - 1)
      */ \
     MACRO(JSOP_DEC, "dec", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    /*
+     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
+     * the result of applying the arithmetic operation to them.
+     *
+     *   Category: Operators
+     *   Type: Arithmetic Operators
+     *   Operands:
+     *   Stack: lval, rval => (lval OP rval)
+     */ \
     MACRO(JSOP_MUL, "mul", "*", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_DIV, "div", "/", 1, 2, 1, JOF_BYTE|JOF_IC) \
     MACRO(JSOP_MOD, "mod", "%", 1, 2, 1, JOF_BYTE|JOF_IC) \
