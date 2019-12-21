@@ -489,9 +489,22 @@ class BaseContext {
     return this.extension.canAccessWindow(window);
   }
 
+  /**
+   * Opens a conduit linked to this context, populating related address fields.
+   * Only available in child contexts with an associated contentWindow.
+   * @param {object} subject
+   * @param {ConduitAddress} address
+   * @returns {PointConduit}
+   */
   openConduit(subject, address) {
-    let actor = this.contentWindow.getWindowGlobalChild().getActor("Conduits");
-    return actor.openConduit(subject, address);
+    let wgc = this.contentWindow.getWindowGlobalChild();
+    let conduit = wgc.getActor("Conduits").openConduit(subject, {
+      extensionId: this.extension.id,
+      envType: this.envType,
+      ...address,
+    });
+    this.callOnClose(conduit);
+    return conduit;
   }
 
   setContentWindow(contentWindow) {
