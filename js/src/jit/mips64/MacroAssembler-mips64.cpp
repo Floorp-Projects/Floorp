@@ -1534,6 +1534,9 @@ void MacroAssemblerMIPS64Compat::tagValue(JSValueType type, Register payload,
   ma_li(ScratchRegister, ImmTag(JSVAL_TYPE_TO_TAG(type)));
   ma_dins(dest.valueReg(), ScratchRegister, Imm32(JSVAL_TAG_SHIFT),
           Imm32(64 - JSVAL_TAG_SHIFT));
+  if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+    ma_dins(dest.valueReg(), zero, Imm32(32), Imm32(JSVAL_TAG_SHIFT - 32));
+  }
 }
 
 void MacroAssemblerMIPS64Compat::pushValue(ValueOperand val) {
