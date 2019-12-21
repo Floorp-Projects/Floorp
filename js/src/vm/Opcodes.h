@@ -695,8 +695,22 @@
      */ \
     MACRO(JSOP_POW, "pow", "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Replace the top-of-stack value propertyNameValue with
-     * ToPropertyKey(propertyNameValue).
+     * Convert a value to a property key.
+     *
+     * Implements: [ToPropertyKey][1], except that if the result would be the
+     * string representation of some integer in the range 0..2^31, we push the
+     * corresponding Int32 value instead. This is because the spec insists that
+     * array indices are strings, whereas for us they are integers.
+     *
+     * This is used for code like `++obj[index]`, which must do both a
+     * `JSOP_GETELEM` and a `JSOP_SETELEM` with the same property key. Both
+     * instructions would convert `index` to a property key for us, but the
+     * spec says to convert it only once.
+     *
+     * The conversion can call `.toString()`/`.valueOf()` methods and can
+     * throw.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-topropertykey
      *
      *   Category: Literals
      *   Type: Object
@@ -705,7 +719,20 @@
      */ \
     MACRO(JSOP_TOID, "toid", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pop 'val' from the stack, then push the result of 'ToNumeric(val)'.
+     * Convert a value to a numeric value (a Number or BigInt).
+     *
+     * Implements: [ToNumeric][1](val).
+     *
+     * Note: This is used to implement [`++` and `--`][2]. Surprisingly, it's
+     * not possible to get the right behavior using `JSOP_ADD` and `JSOP_SUB`
+     * alone. For one thing, `JSOP_ADD` sometimes does string concatenation,
+     * while `++` always does numeric addition. More fundamentally, the result
+     * of evaluating `--x` is ToNumeric(old value of `x`), a value that the
+     * sequence `GETLOCAL "x"; ONE; SUB; SETLOCAL "x"` does not give us.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-tonumeric
+     * [2]: https://tc39.es/ecma262/#sec-postfix-increment-operator
+     *
      *   Category: Operators
      *   Type: Arithmetic Operators
      *   Operands:
@@ -713,7 +740,16 @@
      */ \
     MACRO(JSOP_TONUMERIC, "tonumeric", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Converts the value on the top of the stack to a String.
+     * Convert a value to a string.
+     *
+     * Implements: [ToString][1](val).
+     *
+     * Note: This is used in code for template literals, like `${x}${y}`. Each
+     * substituted value must be converted using ToString. `JSOP_ADD` by itself
+     * would do a slightly wrong kind of conversion (hint="number" rather than
+     * hint="string").
+     *
+     * [1]: https://tc39.es/ecma262/#sec-tostring
      *
      *   Category: Other
      *   Operands:
@@ -721,8 +757,11 @@
      */ \
     MACRO(JSOP_TOSTRING, "tostring", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pushes 'this' value for current stack frame onto the stack. Emitted when
-     * 'this' refers to the global 'this'.
+     * Push the global `this` value. Not to be confused with the `globalThis`
+     * property on the global.
+     *
+     * This must be used only in scopes where `this` refers to the global
+     * `this`.
      *
      *   Category: Variables and Scopes
      *   Type: This
@@ -731,7 +770,17 @@
      */ \
     MACRO(JSOP_GLOBALTHIS, "globalthis", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Push "new.target"
+     * Push the value of `new.target`.
+     *
+     * The result is a constructor or `undefined`.
+     *
+     * This must be used only in scripts where `new.target` is allowed:
+     * non-arrow function scripts and other scripts that have a non-arrow
+     * function script on the scope chain.
+     *
+     * Implements: [GetNewTarget][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getnewtarget
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
@@ -743,14 +792,20 @@
      * Dynamic import of the module specified by the string value on the top of
      * the stack.
      *
+     * Implements: [Import Calls][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-import-calls
+     *
      *   Category: Variables and Scopes
      *   Type: Modules
      *   Operands:
-     *   Stack: arg => rval
+     *   Stack: moduleId => promise
      */ \
-    MACRO(JSOP_DYNAMIC_IMPORT, "call-import", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(JSOP_DYNAMIC_IMPORT, "dynamic-import", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Push "import.meta"
+     * Push the `import.meta` object.
+     *
+     * This must be used only in module code.
      *
      *   Category: Variables and Scopes
      *   Type: Modules
