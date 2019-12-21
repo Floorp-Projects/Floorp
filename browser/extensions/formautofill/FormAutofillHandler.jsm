@@ -919,7 +919,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return null;
     }
 
-    let actor = window.windowGlobalChild.getActor("FormAutofill");
+    let actor = window.getWindowGlobalChild().getActor("FormAutofill");
     return actor.sendQuery("FormAutofill:GetDecryptedString", {
       cipherText,
       reauth,

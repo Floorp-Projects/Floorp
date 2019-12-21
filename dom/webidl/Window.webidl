@@ -548,8 +548,8 @@ partial interface Window {
   [ChromeOnly]
   readonly attribute boolean hasOpenerForInitialContentBrowser;
 
-  [Pure, ChromeOnly]
-  readonly attribute WindowGlobalChild? windowGlobalChild;
+  [ChromeOnly]
+  WindowGlobalChild? getWindowGlobalChild();
 };
 
 Window includes TouchEventHandlers;

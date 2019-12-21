@@ -40,7 +40,6 @@ const extraDefinitions = [
   // single) variable.
   { name: "XPCOMUtils", writable: false },
   { name: "Task", writable: false },
-  { name: "windowGlobalChild", writable: false },
 ];
 
 // Some files in global-scripts.inc need mapping to specific locations.
