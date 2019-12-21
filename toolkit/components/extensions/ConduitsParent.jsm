@@ -53,6 +53,7 @@ const { BaseConduit } = ChromeUtils.import(
 );
 
 const BATCH_TIMEOUT_MS = 250;
+const ADDON_ENV = new Set(["addon_child", "devtools_child"]);
 
 /**
  * Internal, keeps track of all parent and remote (child) conduits.
@@ -100,12 +101,43 @@ const Hub = {
   },
 
   /**
+   * Confirm that a remote conduit comes from an extension page.
+   * @see ExtensionPolicyService::CheckParentFrames
+   * @param {ConduitAddress} remote
+   * @returns {boolean}
+   */
+  verifyEnv({ actor, envType, extensionId }) {
+    if (!extensionId || !ADDON_ENV.has(envType)) {
+      return false;
+    }
+    let windowGlobal = actor.manager;
+
+    while (windowGlobal) {
+      let { browsingContext: bc, documentPrincipal: prin } = windowGlobal;
+
+      if (prin.addonId !== extensionId) {
+        throw new Error(`Bad ${extensionId} principal: ${prin.URI.spec}`);
+      }
+      if (bc.currentRemoteType !== prin.addonPolicy.extension.remoteType) {
+        throw new Error(`Bad ${extensionId} process: ${bc.currentRemoteType}`);
+      }
+
+      if (!bc.parent) {
+        return true;
+      }
+      windowGlobal = bc.embedderWindowGlobal;
+    }
+    throw new Error(`Missing WindowGlobalParent for ${extensionId}`);
+  },
+
+  /**
    * Save info about a new remote conduit.
    * @param {ConduitAddress} address
    * @param {ConduitsParent} actor
    */
   recvConduitOpened(address, actor) {
     address.actor = actor;
+    address.verified = this.verifyEnv(address);
     this.remotes.set(address.id, address);
     this.byActor.get(actor).add(address);
   },
@@ -229,12 +261,18 @@ class ConduitsParent extends JSWindowActorParent {
    * @param {MessageData} data
    * @returns {Promise?}
    */
-  receiveMessage({ name, data: { arg, query, sender } }) {
-    switch (name) {
-      case "ConduitOpened":
-        return Hub.recvConduitOpened(arg, this);
-      case "ConduitClosed":
-        return Hub.recvConduitClosed(Hub.remotes.get(arg));
+  async receiveMessage({ name, data: { arg, query, sender } }) {
+    if (name === "ConduitOpened") {
+      return Hub.recvConduitOpened(arg, this);
+    }
+
+    sender = Hub.remotes.get(sender);
+    if (!sender || sender.actor !== this) {
+      throw new Error(`Unknown sender or wrong actor for recv${name}`);
+    }
+
+    if (name === "ConduitClosed") {
+      return Hub.recvConduitClosed(sender);
     }
 
     let conduit = Hub.byMethod.get(name);
@@ -242,7 +280,6 @@ class ConduitsParent extends JSWindowActorParent {
       throw new Error(`Parent conduit for recv${name} not found`);
     }
 
-    sender = Hub.remotes.get(sender);
     return conduit._recv(name, arg, { actor: this, query, sender });
   }
 

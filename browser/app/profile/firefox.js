@@ -1047,10 +1047,6 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // Start the Mac sandbox early during child process startup instead
   // of when messaged by the parent after the message loop is running.
   pref("security.sandbox.content.mac.earlyinit", true);
-  // Remove this pref once RDD early init is stable on Release.
-  pref("security.sandbox.rdd.mac.earlyinit", true);
-  // Remove this pref once GMP early init is stable on Release.
-  pref("security.sandbox.gmp.mac.earlyinit", true);
 
   // This pref is discussed in bug 1083344, the naming is inspired from its
   // Windows counterpart, but on Mac it's an integer which means:

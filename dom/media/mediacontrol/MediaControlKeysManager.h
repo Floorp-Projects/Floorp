@@ -22,7 +22,8 @@ namespace dom {
 class MediaControlKeysManager final : public MediaControlKeysEventSource,
                                       public MediaControlKeysEventListener {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING(MediaControlKeysManager, override)
+
   MediaControlKeysManager() = default;
 
   // MediaControlKeysEventSource methods

@@ -123,7 +123,6 @@ class ChildDevToolsPanel extends ExtensionCommon.EventEmitter {
   }
 
   close() {
-    this.conduit.close();
     this._panelContext = null;
     this.context = null;
   }
@@ -154,8 +153,7 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
   }
 
   close() {
-    this.conduit.close();
-    this.content = null;
+    this.context = null;
   }
 
   recvInspectorSidebarShown() {

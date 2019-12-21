@@ -17,6 +17,7 @@ namespace widget {
 class MediaHardwareKeysEventSourceMac final
     : public mozilla::dom::MediaControlKeysEventSource {
  public:
+  NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventSourceMac, override)
   MediaHardwareKeysEventSourceMac() = default;
 
   static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type,

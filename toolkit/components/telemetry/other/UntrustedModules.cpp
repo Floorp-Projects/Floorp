@@ -211,6 +211,10 @@ static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
                            const IndexMap& aModuleIndices) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (!aEvent) {
+    return false;
+  }
+
   JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {
     return false;

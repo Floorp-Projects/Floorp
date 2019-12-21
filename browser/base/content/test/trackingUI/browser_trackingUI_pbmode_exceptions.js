@@ -99,11 +99,7 @@ add_task(async function testExceptionAddition() {
     private: true,
   });
   browser = privateWin.gBrowser;
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser: browser,
-    waitForLoad: true,
-    waitForStateStop: true,
-  });
+  let tab = await BrowserTestUtils.openNewForegroundTab(browser);
 
   gProtectionsHandler = browser.ownerGlobal.gProtectionsHandler;
   ok(gProtectionsHandler, "CB is attached to the private window");
@@ -147,11 +143,7 @@ add_task(async function testExceptionPersistence() {
     private: true,
   });
   browser = privateWin.gBrowser;
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser: browser,
-    waitForLoad: true,
-    waitForStateStop: true,
-  });
+  let tab = await BrowserTestUtils.openNewForegroundTab(browser);
 
   gProtectionsHandler = browser.ownerGlobal.gProtectionsHandler;
   ok(gProtectionsHandler, "CB is attached to the private window");

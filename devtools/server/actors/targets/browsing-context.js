@@ -259,7 +259,7 @@ const browsingContextTargetPrototype = {
 
     // Flag eventually overloaded by sub classes in order to watch new docshells
     // Used by the ParentProcessTargetActor to list all frames in the Browser Toolbox
-    this.listenForNewDocShells = false;
+    this.watchNewDocShells = false;
 
     let canRewind = false;
     if (isReplaying) {
@@ -626,9 +626,7 @@ const browsingContextTargetPrototype = {
 
   _watchDocshells() {
     // In child processes, we watch all docshells living in the process.
-    if (this.listenForNewDocShells) {
-      Services.obs.addObserver(this, "webnavigation-create");
-    }
+    Services.obs.addObserver(this, "webnavigation-create");
     Services.obs.addObserver(this, "webnavigation-destroy");
 
     // We watch for all child docshells under the current document,
@@ -775,7 +773,11 @@ const browsingContextTargetPrototype = {
       // In child processes, we have new root docshells,
       // let's watch them and all their child docshells.
       if (this._isRootDocShell(docShell)) {
-        this._progressListener.watch(docShell);
+        if (this.watchNewDocShells) {
+          this._progressListener.watch(docShell);
+        }
+      } else if (this._progressListener.isParentWatched(docShell)) {
+        docShell.watchedByDevtools = true;
       }
       this._notifyDocShellsUpdate([docShell]);
     });
@@ -945,9 +947,7 @@ const browsingContextTargetPrototype = {
       this._originalWindow = null;
 
       // Removes the observers being set in _watchDocShells
-      if (this.listenForNewDocShells) {
-        Services.obs.removeObserver(this, "webnavigation-create");
-      }
+      Services.obs.removeObserver(this, "webnavigation-create");
       Services.obs.removeObserver(this, "webnavigation-destroy");
     }
 
@@ -1556,7 +1556,12 @@ DebuggerProgressListener.prototype = {
       this._knownWindowIDs.set(getWindowID(win), win);
     }
 
+    // The watchedByDevtools flag is set on each docshell this target is
+    // associated with. This enables Gecko behavior tied to this flag, such as
+    // reporting the contents of HTML loaded in the docshells, or capturing
+    // stacks for the network monitor.
     docShell.watchedByDevtools = true;
+    getChildDocShells(docShell).forEach(d => (d.watchedByDevtools = true));
   },
 
   unwatch(docShell) {
@@ -1564,6 +1569,7 @@ DebuggerProgressListener.prototype = {
     if (!this._watchedDocShells.has(docShellWindow)) {
       return;
     }
+    this._watchedDocShells.delete(docShellWindow);
 
     const webProgress = docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1589,6 +1595,18 @@ DebuggerProgressListener.prototype = {
     }
 
     docShell.watchedByDevtools = false;
+    getChildDocShells(docShell).forEach(d => (d.watchedByDevtools = false));
+  },
+
+  isParentWatched(docShell) {
+    let parent = docShell.parent;
+    while (parent) {
+      if (this._watchedDocShells.has(parent.domWindow)) {
+        return true;
+      }
+      parent = parent.parent;
+    }
+    return false;
   },
 
   _getWindowsInDocShell(docShell) {

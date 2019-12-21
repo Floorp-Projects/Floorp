@@ -613,7 +613,7 @@ class Messenger {
             "Extension:Message",
             listener
           );
-          if (childManager) {
+          if (childManager && !this.context.unloaded) {
             childManager.callParentFunctionNoReturn(
               "runtime.removeMessagingListener",
               ["onMessage"]
@@ -775,7 +775,7 @@ class Messenger {
             "Extension:Connect",
             listener
           );
-          if (childManager) {
+          if (childManager && !this.context.unloaded) {
             childManager.callParentFunctionNoReturn(
               "runtime.removeMessagingListener",
               ["onConnect"]
@@ -1294,7 +1294,6 @@ class ChildAPIManager {
       args,
       options: { alreadyLogged },
     });
-
     return this.context.wrapPromise(deferred.promise, callback);
   }
 

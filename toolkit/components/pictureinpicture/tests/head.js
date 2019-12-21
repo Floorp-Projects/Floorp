@@ -12,6 +12,7 @@ const TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
   "http://example.org"
 );
 const TEST_PAGE = TEST_ROOT + "test-page.html";
+const TEST_PAGE_2 = TEST_ROOT_2 + "test-page.html";
 const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ID = "pictureInPictureToggleButton";
@@ -129,6 +130,7 @@ async function toggleOpacityReachesThreshold(
   let args = { videoID, TOGGLE_ID, opacityThreshold };
   await SpecialPowers.spawn(browser, [args], async args => {
     let { videoID, TOGGLE_ID, opacityThreshold } = args;
+
     let video = content.document.getElementById(videoID);
     let shadowRoot = video.openOrClosedShadowRoot;
     let toggle = shadowRoot.getElementById(TOGGLE_ID);
@@ -144,6 +146,54 @@ async function toggleOpacityReachesThreshold(
     );
 
     ok(true, "Toggle reached target opacity.");
+  });
+}
+
+/**
+ * Tests that the toggle has the correct policy attribute set. This should be called
+ * either when the toggle is visible, or events have been queued such that the toggle
+ * will soon be visible.
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> in it.
+ * @param {String} videoID The ID of the video element that we expect the toggle
+ * to appear on.
+ * @param {Number} policy Optional argument. If policy is defined, then it should
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
+ * If undefined, this function will ensure no policy attribute is set.
+ *
+ * @return Promise
+ * @resolves When the check has completed.
+ */
+async function assertTogglePolicy(browser, videoID, policy) {
+  let args = { videoID, TOGGLE_ID, policy };
+  await SpecialPowers.spawn(browser, [args], async args => {
+    let { videoID, TOGGLE_ID, policy } = args;
+
+    let video = content.document.getElementById(videoID);
+    let shadowRoot = video.openOrClosedShadowRoot;
+    let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+    let toggle = shadowRoot.getElementById(TOGGLE_ID);
+
+    await ContentTaskUtils.waitForCondition(() => {
+      return controlsOverlay.classList.contains("hovering");
+    }, "Waiting for the hovering state to be set on the video.");
+
+    if (policy) {
+      const { TOGGLE_POLICY_STRINGS } = ChromeUtils.import(
+        "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+      );
+      let policyAttr = toggle.getAttribute("policy");
+      Assert.equal(
+        policyAttr,
+        TOGGLE_POLICY_STRINGS[policy],
+        "The correct toggle policy is set."
+      );
+    } else {
+      Assert.ok(
+        !toggle.hasAttribute("policy"),
+        "No toggle policy should be set."
+      );
+    }
   });
 }
 
@@ -202,29 +252,21 @@ async function assertSawMouseEvents(
  * @return Promise
  * @resolves With the following Object structure:
  *   {
- *     toggleClientRect: {
- *       top: <Number>,
- *       right: <Number>,
- *       left: <Number>,
- *       bottom: <Number>,
- *     },
  *     controls: <Boolean>,
  *   }
  *
- * Where toggleClientRect represents the client rectangle that the toggle is
- * positioned in, and controls represents whether or not the video has the
- * default control set displayed.
+ * Where controls represents whether or not the video has the default control set
+ * displayed.
  */
 async function prepareForToggleClick(browser, videoID) {
   // For each video, make sure it's scrolled into view, and get the rect for
   // the toggle while we're at it.
-  let args = { videoID, TOGGLE_ID };
+  let args = { videoID };
   return SpecialPowers.spawn(browser, [args], async args => {
-    let { videoID, TOGGLE_ID } = args;
+    let { videoID } = args;
+
     let video = content.document.getElementById(videoID);
     video.scrollIntoView({ behaviour: "instant" });
-    let shadowRoot = video.openOrClosedShadowRoot;
-    let toggle = shadowRoot.getElementById(TOGGLE_ID);
 
     if (!video.controls) {
       // For no-controls <video> elements, an IntersectionObserver is used
@@ -244,15 +286,48 @@ async function prepareForToggleClick(browser, videoID) {
         100
       );
     }
-    let rect = toggle.getBoundingClientRect();
+
     return {
-      toggleClientRect: {
-        top: rect.top,
-        right: rect.right,
-        left: rect.left,
-        bottom: rect.bottom,
-      },
       controls: video.controls,
+    };
+  });
+}
+
+/**
+ * Returns the client rect for the toggle if it's supposed to be visible
+ * on hover. Otherwise, returns the client rect for the video with the
+ * associated ID.
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> loaded in it.
+ * @param {String} videoID The ID of the video that has the toggle.
+ *
+ * @return Promise
+ * @resolves With the following Object structure:
+ *   {
+ *     top: <Number>,
+ *     right: <Number>,
+ *     left: <Number>,
+ *     bottom: <Number>,
+ *   }
+ */
+async function getToggleClientRect(browser, videoID) {
+  let args = { videoID, TOGGLE_ID };
+  return ContentTask.spawn(browser, args, async args => {
+    let { videoID, TOGGLE_ID } = args;
+    let video = content.document.getElementById(videoID);
+    let shadowRoot = video.openOrClosedShadowRoot;
+    let toggle = shadowRoot.getElementById(TOGGLE_ID);
+    let rect = toggle.getBoundingClientRect();
+
+    if (!rect.width && !rect.height) {
+      rect = video.getBoundingClientRect();
+    }
+
+    return {
+      top: rect.top,
+      right: rect.right,
+      left: rect.left,
+      bottom: rect.bottom,
     };
   });
 }
@@ -266,11 +341,16 @@ async function prepareForToggleClick(browser, videoID) {
  * @param {Object} expectations An object with the following schema:
  *   <video-element-id>: {
  *     canToggle: Boolean
+ *     policy: Number (optional)
  *   }
  * If canToggle is true, then it's expected that moving the mouse over the
  * video and then clicking in the toggle region should open a
  * Picture-in-Picture window. If canToggle is false, we expect that a click
  * in this region will not result in the window opening.
+ *
+ * If policy is defined, then it should be one of the values in the
+ * TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
+ *
  * @param {async Function} prepFn An optional asynchronous function to run
  * before running the toggle test. The function is passed the opened
  * <xul:browser> as its only argument once the testURL has finished loading.
@@ -289,11 +369,13 @@ async function testToggle(testURL, expectations, prepFn = async () => {}) {
       await prepFn(browser);
       await ensureVideosReady(browser);
 
-      for (let [videoID, { canToggle }] of Object.entries(expectations)) {
+      for (let [videoID, { canToggle, policy }] of Object.entries(
+        expectations
+      )) {
         await SimpleTest.promiseFocus(browser);
         info(`Testing video with id: ${videoID}`);
 
-        await testToggleHelper(browser, videoID, canToggle);
+        await testToggleHelper(browser, videoID, canToggle, policy);
       }
     }
   );
@@ -308,15 +390,14 @@ async function testToggle(testURL, expectations, prepFn = async () => {}) {
  * @param {String} videoID The ID of the video that has the toggle.
  * @param {Boolean} canToggle True if we expect the toggle to be visible and
  * clickable by the mouse for the associated video.
+ * @param {Number} policy Optional argument. If policy is defined, then it should
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
  *
  * @return Promise
  * @resolves When the check for the toggle is complete.
  */
-async function testToggleHelper(browser, videoID, canToggle) {
-  let { toggleClientRect, controls } = await prepareForToggleClick(
-    browser,
-    videoID
-  );
+async function testToggleHelper(browser, videoID, canToggle, policy) {
+  let { controls } = await prepareForToggleClick(browser, videoID);
 
   // Hover the mouse over the video to reveal the toggle.
   await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -334,10 +415,20 @@ async function testToggleHelper(browser, videoID, canToggle) {
     browser
   );
 
+  info("Checking toggle policy");
+  await assertTogglePolicy(browser, videoID, policy);
+
   if (canToggle) {
     info("Waiting for toggle to become visible");
-    await toggleOpacityReachesThreshold(browser, videoID, HOVER_VIDEO_OPACITY);
+    await toggleOpacityReachesThreshold(
+      browser,
+      videoID,
+      HOVER_VIDEO_OPACITY,
+      policy
+    );
   }
+
+  let toggleClientRect = await getToggleClientRect(browser, videoID);
 
   info("Hovering the toggle rect now.");
   // The toggle center, because of how it slides out, is actually outside
@@ -364,7 +455,12 @@ async function testToggleHelper(browser, videoID, canToggle) {
 
   if (canToggle) {
     info("Waiting for toggle to reach full opacity");
-    await toggleOpacityReachesThreshold(browser, videoID, HOVER_TOGGLE_OPACITY);
+    await toggleOpacityReachesThreshold(
+      browser,
+      videoID,
+      HOVER_TOGGLE_OPACITY,
+      policy
+    );
   }
 
   // First, ensure that a non-primary mouse click is ignored.
@@ -377,16 +473,13 @@ async function testToggleHelper(browser, videoID, canToggle) {
     browser
   );
 
-  if (canToggle) {
-    // For videos without the built-in controls, we expect that all mouse events
-    // should have fired - otherwise, the events are all suppressed.
-    // Note that the right-click does not result in a "click" event firing.
-    await assertSawMouseEvents(browser, !controls, false);
-  } else {
-    // If we aren't showing the toggle, we expect all mouse events to be seen.
-    // Note that the right-click does not result in a "click" event firing.
-    await assertSawMouseEvents(browser, true, false);
-  }
+  // For videos without the built-in controls, we expect that all mouse events
+  // should have fired - otherwise, the events are all suppressed. For videos
+  // with controls, none of the events should be fired, as the controls overlay
+  // absorbs them all.
+  //
+  // Note that the right-click does not result in a "click" event firing.
+  await assertSawMouseEvents(browser, !controls, false);
 
   // The message to open the Picture-in-Picture window would normally be sent
   // immediately before this Promise resolved, so the window should have opened
@@ -432,7 +525,7 @@ async function testToggleHelper(browser, videoID, canToggle) {
     );
 
     // If we aren't showing the toggle, we expect all mouse events to be seen.
-    await assertSawMouseEvents(browser, true);
+    await assertSawMouseEvents(browser, !controls);
 
     // The message to open the Picture-in-Picture window would normally be sent
     // immediately before this Promise resolved, so the window should have opened

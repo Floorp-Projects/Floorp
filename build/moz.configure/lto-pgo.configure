@@ -243,8 +243,7 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
         if target.os == 'WINNT':
             ldflags.append('-mllvm:-import-instr-limit=10');
         elif target.os == 'OSX':
-            # Until OSX gets PGO, too small of a limit will cause slowdowns.
-            ldflags.append('-Wl,-mllvm,-import-instr-limit=40');
+            ldflags.append('-Wl,-mllvm,-import-instr-limit=10');
         elif c_compiler.type == 'clang':
             ldflags.append('-Wl,-plugin-opt=-import-instr-limit=10');
 

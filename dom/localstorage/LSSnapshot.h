@@ -9,6 +9,15 @@
 
 #include "LSValue.h"
 
+#include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
+#include "nsIRunnable.h"
+#include "nsHashKeys.h"
+#include "nsIRunnable.h"
+#include "nsTHashtable.h"
+
+class nsITimer;
+
 namespace mozilla {
 namespace dom {
 
@@ -18,6 +27,9 @@ class LSSnapshotChild;
 class LSSnapshotInitInfo;
 class LSWriteAndNotifyInfo;
 class SnapshotWriteOptimizer;
+
+template <typename> class Optional;
+
 
 class LSSnapshot final : public nsIRunnable {
  public:

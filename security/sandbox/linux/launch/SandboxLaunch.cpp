@@ -335,7 +335,7 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
     aOptions->fork_delegate = std::move(forker);
     // Pass to |SandboxLaunchForkServerPrepare()| in the fork server.
     aOptions->env_map[kSandboxChrootEnvFlag] =
-      std::to_string(canChroot? 1 : 0) + std::to_string(flags);
+      std::to_string(canChroot ? 1 : 0) + std::to_string(flags);
   }
 }
 

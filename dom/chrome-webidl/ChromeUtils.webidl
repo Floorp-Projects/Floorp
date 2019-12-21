@@ -441,6 +441,10 @@ partial namespace ChromeUtils {
    */
   [ChromeOnly, Throws]
   void privateNoteIntentionalCrash();
+
+  // This is used to generate fake media control keys event in testing.
+  [ChromeOnly]
+  void generateMediaControlKeysTestEvent(MediaControlKeysTestEvent aEvent);
 };
 
 /*
@@ -674,4 +678,16 @@ enum PopupBlockerState {
   "openBlocked",
   "openAbused",
   "openOverridden",
+};
+
+// Keep this in sync with MediaControlKeysEvent in MediaControlKeysEvent.h!
+enum MediaControlKeysTestEvent {
+  "play",
+  "pause",
+  "playPause",
+  "prevTrack",
+  "nextTrack",
+  "seekBackward",
+  "seekForward",
+  "stop",
 };
