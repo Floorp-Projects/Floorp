@@ -17,6 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsFocusManager.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
@@ -188,8 +189,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   }
 
   // Current doc is destination
-  Document* destdoc = GetDocument();
-  if (NS_WARN_IF(!destdoc)) {
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -202,7 +203,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Parent and offset are under the mouse cursor.
   EditorDOMPoint droppedAt(aDropEvent->GetRangeParent(),
                            aDropEvent->RangeOffset());
-  if (NS_WARN_IF(!droppedAt.IsSet())) {
+  if (NS_WARN_IF(!droppedAt.IsSet()) ||
+      NS_WARN_IF(!droppedAt.GetContainerAsContent())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -211,7 +213,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // selection (bail) and whether user wants to copy selection or delete it.
   bool deleteSelection = false;
   if (!SelectionRefPtr()->IsCollapsed() && sourceNode &&
-      sourceNode->IsEditable() && srcdoc == destdoc) {
+      sourceNode->IsEditable() && srcdoc == document) {
     uint32_t rangeCount = SelectionRefPtr()->RangeCount();
     for (uint32_t j = 0; j < rangeCount; j++) {
       nsRange* range = SelectionRefPtr()->GetRangeAt(j);
@@ -274,41 +276,120 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Don't dispatch "selectionchange" event until inserting all contents.
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
+  // Track dropped point with nsRange because we shouldn't insert the
+  // dropped content into different position even if some event listeners
+  // modify selection.  Note that Chrome's behavior is really odd.  So,
+  // we don't need to worry about web-compat about this.
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> rangeAtDropPoint =
+      nsRange::Create(droppedAt.ToRawRangeBoundary(),
+                      droppedAt.ToRawRangeBoundary(), ignoredError);
+  if (NS_WARN_IF(ignoredError.Failed()) ||
+      NS_WARN_IF(!rangeAtDropPoint->IsPositioned())) {
+    editActionData.Abort();
+    return NS_ERROR_FAILURE;
+  }
+
   // Remove selected contents first here because we need to fire a pair of
   // "beforeinput" and "input" for deletion and web apps can cancel only
   // this deletion.  Note that callee may handle insertion asynchronously.
   // Therefore, it is the best to remove selected content here.
   if (deleteSelection && !SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = PrepareToInsertContent(droppedAt, true);
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      editActionData.Abort();
       return EditorBase::ToGenericNSResult(rv);
     }
-    // Now, Selection should be collapsed at dropped point.  If somebody
-    // changed Selection, we should think what should do it in such case
-    // later.
-    if (NS_WARN_IF(!SelectionRefPtr()->IsCollapsed()) ||
-        NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    if (NS_WARN_IF(!rangeAtDropPoint->IsPositioned()) ||
+        NS_WARN_IF(!rangeAtDropPoint->GetStartContainer()->IsContent())) {
+      editActionData.Abort();
       return NS_ERROR_FAILURE;
     }
-    droppedAt = SelectionRefPtr()->FocusRef();
-    if (NS_WARN_IF(!droppedAt.IsSet())) {
-      return NS_ERROR_FAILURE;
-    }
+    droppedAt = rangeAtDropPoint->StartRef();
+    MOZ_ASSERT(droppedAt.IsSetAndValid());
 
     // Let's fire "input" event for the deletion now.
     if (mDispatchInputEvent) {
-      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
+      DispatchInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
       if (NS_WARN_IF(Destroyed())) {
+        editActionData.Abort();
         return NS_OK;
       }
+      if (NS_WARN_IF(!rangeAtDropPoint->IsPositioned()) ||
+          NS_WARN_IF(!rangeAtDropPoint->GetStartContainer()->IsContent())) {
+        editActionData.Abort();
+        return NS_ERROR_FAILURE;
+      }
+      droppedAt = rangeAtDropPoint->StartRef();
+      MOZ_ASSERT(droppedAt.IsSetAndValid());
     }
+  }
 
-    // XXX Now, Selection may be changed by input event listeners.  If so,
-    //     should we update |droppedAt|?
+  // Before inserting dropping content, we need to move focus for compatibility
+  // with Chrome and firing "beforeinput" event on new editing host.
+  RefPtr<Element> focusedElement, newFocusedElement;
+  if (!AsHTMLEditor()) {
+    newFocusedElement = GetExposedRoot();
+    focusedElement = IsActiveInDOMWindow() ? newFocusedElement : nullptr;
+  } else if (!AsHTMLEditor()->IsInDesignMode()) {
+    focusedElement = AsHTMLEditor()->GetActiveEditingHost();
+    if (focusedElement &&
+        droppedAt.GetContainerAsContent()->IsInclusiveDescendantOf(
+            focusedElement)) {
+      newFocusedElement = focusedElement;
+    } else {
+      newFocusedElement = droppedAt.GetContainerAsContent()->GetEditingHost();
+    }
+  }
+  // Move selection right now.  Note that this does not move focus because
+  // `Selection` moves focus with selection change only when the API caller is
+  // JS.  And also this does not notify selection listeners (nor
+  // "selectionchange") since we created SelectionBatcher above.
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetStartAndEnd(droppedAt.ToRawRangeBoundary(),
+                       droppedAt.ToRawRangeBoundary(), error);
+  if (NS_WARN_IF(error.Failed())) {
+    editActionData.Abort();
+    return error.StealNSResult();
+  }
+  if (NS_WARN_IF(Destroyed())) {
+    editActionData.Abort();
+    return NS_OK;
+  }
+  // Then, move focus if necessary.  This must cause dispatching "blur" event
+  // and "focus" event.
+  if (newFocusedElement && focusedElement != newFocusedElement) {
+    DebugOnly<nsresult> rvIgnored =
+        nsFocusManager::GetFocusManager()->SetFocus(newFocusedElement, 0);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "nsFocusManager::SetFocus() failed to set focus "
+                         "to the element, but ignored");
+    if (NS_WARN_IF(Destroyed())) {
+      editActionData.Abort();
+      return NS_OK;
+    }
+    // "blur" or "focus" event listener may have changed the value.
+    // Let's keep using the original point.
+    if (NS_WARN_IF(!rangeAtDropPoint->IsPositioned()) ||
+        NS_WARN_IF(!rangeAtDropPoint->GetStartContainer()->IsContent())) {
+      return NS_ERROR_FAILURE;
+    }
+    droppedAt = rangeAtDropPoint->StartRef();
+    MOZ_ASSERT(droppedAt.IsSetAndValid());
+  }
+
+  // If focus is changed to different element and we're handling drop in
+  // contenteditable, we cannot handle it without focus.  So, we should give
+  // it up.
+  if (NS_WARN_IF(newFocusedElement !=
+                     nsFocusManager::GetFocusManager()->GetFocusedElement() &&
+                 AsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode())) {
+    editActionData.Abort();
+    return NS_OK;
   }
 
   if (!AsHTMLEditor()) {
-    // For "beforeinput", we need to create data first.
     AutoTArray<nsString, 5> textArray;
     textArray.SetCapacity(numItems);
     uint32_t textLength = 0;

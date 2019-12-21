@@ -559,50 +559,39 @@ async function doTest() {
   document.removeEventListener("drop", onDrop);
 
   // -------- Test dragging contenteditable to other contenteditable
-  if (!SpecialPowers.isDebugBuild) { // Due to hitting MOZ_ASSERT on debug build
-    description = "dragging text in contenteditable to other contenteditable";
-    container.innerHTML = '<div contenteditable><b>bold</b></div><hr><div contenteditable style="min-height: 3em;"></div>';
-    contenteditable = document.querySelector("div#container > div");
-    b = document.querySelector("div#container > div > b");
-    otherContenteditable = document.querySelector("div#container > div ~ div");
-    selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
-    inputEvents = [];
-    dragEvents = [];
-    onDrop = aEvent => {
-      dragEvents.push(aEvent);
-      is(aEvent.dataTransfer.getData("text/plain"), "ol",
-         `${description}: dataTransfer should have selected text as "text/plain"`);
-      is(aEvent.dataTransfer.getData("text/html"), "<b>ol</b>",
-         `${description}: dataTransfer should have selected nodes as "text/html"`);
-    };
-    document.addEventListener("drop", onDrop);
-    await synthesizePlainDragAndDrop({
-      srcSelection: selection,
-      destElement: otherContenteditable,
-    });
-    is(contenteditable.innerHTML, "<b>bd</b>",
-       `${description}: dragged range should be removed from contenteditable`);
-    todo_is(otherContenteditable.innerHTML, "<b>ol</b>",
-       `${description}: dragged content should be inserted into other contenteditable`);
-    todo_is(inputEvents.length, 2,
-       `${description}: 2 "input" events should be fired on contenteditable`);
-    if (inputEvents.length == 2) {
-      checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-      checkInputEvent(inputEvents[1], otherContenteditable, "insertFromDrop", null,
-                      [{type: "text/html", data: "<b>ol</b>"},
-                       {type: "text/plain", data: "ol"}], description);
-    } else {
-      checkInputEvent(inputEvents[0],
-                      contenteditable, // TODO: Should be otherContenteditable
-                      "insertFromDrop", null,
-                      null, // TODO: [{type: "text/html", data: "<b>ol</b>"},
-                            //        {type: "text/plain", data: "ol"}],
-                      description);
-    }
-    is(dragEvents.length, 1,
-       `${description}: Only one "drop" event should be fired on other contenteditable`);
-    document.removeEventListener("drop", onDrop);
-  }
+  description = "dragging text in contenteditable to other contenteditable";
+  container.innerHTML = '<div contenteditable><b>bold</b></div><hr><div contenteditable style="min-height: 3em;"></div>';
+  contenteditable = document.querySelector("div#container > div");
+  b = document.querySelector("div#container > div > b");
+  otherContenteditable = document.querySelector("div#container > div ~ div");
+  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  inputEvents = [];
+  dragEvents = [];
+  onDrop = aEvent => {
+    dragEvents.push(aEvent);
+    is(aEvent.dataTransfer.getData("text/plain"), "ol",
+       `${description}: dataTransfer should have selected text as "text/plain"`);
+    is(aEvent.dataTransfer.getData("text/html"), "<b>ol</b>",
+       `${description}: dataTransfer should have selected nodes as "text/html"`);
+  };
+  document.addEventListener("drop", onDrop);
+  await synthesizePlainDragAndDrop({
+    srcSelection: selection,
+    destElement: otherContenteditable,
+  });
+  is(contenteditable.innerHTML, "<b>bd</b>",
+     `${description}: dragged range should be removed from contenteditable`);
+  is(otherContenteditable.innerHTML, "<b>ol</b>",
+     `${description}: dragged content should be inserted into other contenteditable`);
+  is(inputEvents.length, 2,
+     `${description}: 2 "input" events should be fired on contenteditable`);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[1], otherContenteditable, "insertFromDrop", null,
+                  [{type: "text/html", data: "<b>ol</b>"},
+                   {type: "text/plain", data: "ol"}], description);
+  is(dragEvents.length, 1,
+     `${description}: Only one "drop" event should be fired on other contenteditable`);
+  document.removeEventListener("drop", onDrop);
 
   // -------- Test dragging contenteditable to other contenteditable
   description = "copy-dragging text in contenteditable to other contenteditable";
@@ -628,65 +617,50 @@ async function doTest() {
   });
   is(contenteditable.innerHTML, "<b>bold</b>",
      `${description}: dragged range shouldn't be removed from contenteditable`);
-  todo_is(otherContenteditable.innerHTML, "<b>ol</b>",
+  is(otherContenteditable.innerHTML, "<b>ol</b>",
      `${description}: dragged content should be inserted into other contenteditable`);
-  todo_is(inputEvents.length, 1,
+  is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on other contenteditable`);
-  if (inputEvents.length > 0) {
-    checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
-                    [{type: "text/html", data: "<b>ol</b>"},
-                     {type: "text/plain", data: "ol"}], description);
-  }
+  checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
+                  [{type: "text/html", data: "<b>ol</b>"},
+                   {type: "text/plain", data: "ol"}], description);
   is(dragEvents.length, 1,
      `${description}: Only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
 
   // -------- Test dragging nested contenteditable to contenteditable
-  if (!SpecialPowers.isDebugBuild) { // Due to hitting MOZ_ASSERT on debug build
-    description = "dragging text in nested contenteditable to contenteditable";
-    container.innerHTML = '<div contenteditable><p><br></p><div contenteditable="false"><p contenteditable><b>bold</b></p></div></div>';
-    contenteditable = document.querySelector("div#container > div");
-    otherContenteditable = document.querySelector("div#container > div > div > p");
-    b = document.querySelector("div#container > div > div > p > b");
-    contenteditable.focus();
-    selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
-    inputEvents = [];
-    dragEvents = [];
-    onDrop = aEvent => {
-      dragEvents.push(aEvent);
-      is(aEvent.dataTransfer.getData("text/plain"), "ol",
-         `${description}: dataTransfer should have selected text as "text/plain"`);
-      is(aEvent.dataTransfer.getData("text/html"), "<b>ol</b>",
-         `${description}: dataTransfer should have selected nodes as "text/html"`);
-    };
-    document.addEventListener("drop", onDrop);
-    await synthesizePlainDragAndDrop({
-      srcSelection: selection,
-      destElement: contenteditable.firstChild,
-    });
-    todo_is(contenteditable.innerHTML, '<p><b>ol</b></p><div contenteditable="false"><p contenteditable=""><b>bd</b></p></div>',
-       `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
-    todo_isnot(contenteditable.innerHTML, '<p><br></p><div contenteditable="false"><p contenteditable=""><b>bd</b></p></div>',
-       `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
-    todo_is(inputEvents.length, 2,
-       `${description}: 2 "input" events should be fired on contenteditable`);
-    if (inputEvents.length === 2) {
-      checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
-      checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
-                      [{type: "text/html", data: "<b>ol</b>"},
-                       {type: "text/plain", data: "ol"}], description);
-    } else {
-      checkInputEvent(inputEvents[0],
-                      otherContenteditable, // TODO: should be contenteditable
-                      "insertFromDrop", null,
-                      null, // TODO: [{type: "text/html", data: "<b>ol</b>"},
-                            //        {type: "text/plain", data: "ol"}],
-                      description);
-    }
-    is(dragEvents.length, 1,
-       `${description}: Only one "drop" event should be fired on contenteditable`);
-    document.removeEventListener("drop", onDrop);
-  }
+  description = "dragging text in nested contenteditable to contenteditable";
+  container.innerHTML = '<div contenteditable><p><br></p><div contenteditable="false"><p contenteditable><b>bold</b></p></div></div>';
+  contenteditable = document.querySelector("div#container > div");
+  otherContenteditable = document.querySelector("div#container > div > div > p");
+  b = document.querySelector("div#container > div > div > p > b");
+  contenteditable.focus();
+  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  inputEvents = [];
+  dragEvents = [];
+  onDrop = aEvent => {
+    dragEvents.push(aEvent);
+    is(aEvent.dataTransfer.getData("text/plain"), "ol",
+       `${description}: dataTransfer should have selected text as "text/plain"`);
+    is(aEvent.dataTransfer.getData("text/html"), "<b>ol</b>",
+       `${description}: dataTransfer should have selected nodes as "text/html"`);
+  };
+  document.addEventListener("drop", onDrop);
+  await synthesizePlainDragAndDrop({
+    srcSelection: selection,
+    destElement: contenteditable.firstChild,
+  });
+  is(contenteditable.innerHTML, '<p><b>ol</b></p><div contenteditable="false"><p contenteditable=""><b>bd</b></p></div>',
+     `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
+  is(inputEvents.length, 2,
+     `${description}: 2 "input" events should be fired on contenteditable`);
+  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
+                  [{type: "text/html", data: "<b>ol</b>"},
+                   {type: "text/plain", data: "ol"}], description);
+  is(dragEvents.length, 1,
+     `${description}: Only one "drop" event should be fired on contenteditable`);
+  document.removeEventListener("drop", onDrop);
 
   // -------- Test copy-dragging nested contenteditable to contenteditable
   description = "copy-dragging text in nested contenteditable to contenteditable";
@@ -710,17 +684,13 @@ async function doTest() {
     destElement: contenteditable.firstChild,
     dragEvent: kModifiersToCopy,
   });
-  todo_is(contenteditable.innerHTML, '<p><b>ol</b></p><div contenteditable="false"><p contenteditable=""><b>bold</b></p></div>',
+  is(contenteditable.innerHTML, '<p><b>ol</b></p><div contenteditable="false"><p contenteditable=""><b>bold</b></p></div>',
      `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
-  todo_isnot(contenteditable.innerHTML, '<p><br></p><div contenteditable="false"><p contenteditable=""><b>bold</b></p></div>',
-     `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
-  todo_is(inputEvents.length, 1,
+  is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
-  if (inputEvents.length > 0) {
-    checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                    [{type: "text/html", data: "<b>ol</b>"},
-                     {type: "text/plain", data: "ol"}], description);
-  }
+  checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
+                  [{type: "text/html", data: "<b>ol</b>"},
+                   {type: "text/plain", data: "ol"}], description);
   is(dragEvents.length, 1,
      `${description}: Only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -751,7 +721,7 @@ async function doTest() {
      `${description}: dragged range should be moved from contenteditable to nested contenteditable`);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable and nested contenteditable`);
-  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, description); // XXX should be contenteditable
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
   checkInputEvent(inputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
                    {type: "text/plain", data: "ol"}], description);
@@ -816,15 +786,16 @@ async function doTest() {
   });
   todo_is(input.value, "Somt",
      `${description}: dragged range should be removed from <input>`);
-  todo_is(contenteditable.innerHTML, "e Tex<br>",
-     `${description}: dragged content should be inserted into contenteditable`);
-  todo_isnot(contenteditable.innerHTML, "<br>",
+  is(contenteditable.innerHTML, "e Tex<br>",
      `${description}: dragged content should be inserted into contenteditable`);
   todo_is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and contenteditable`);
-  if (inputEvents.length > 0) {
+  if (inputEvents.length == 2) {
     checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
     checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
+                    [{type: "text/plain", data: "e Tex"}], description);
+  } else {
+    checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                     [{type: "text/plain", data: "e Tex"}], description);
   }
   is(dragEvents.length, 1,
@@ -855,16 +826,12 @@ async function doTest() {
   });
   is(input.value, "Some Text",
      `${description}: dragged range shouldn't be removed from <input>`);
-  todo_is(contenteditable.innerHTML, "e Tex<br>",
+  is(contenteditable.innerHTML, "e Tex<br>",
      `${description}: dragged content should be inserted into contenteditable`);
-  todo_isnot(contenteditable.innerHTML, "<br>",
-     `${description}: dragged content should be inserted into contenteditable`);
-  todo_is(inputEvents.length, 1,
+  is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
-  if (inputEvents.length > 0) {
-    checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                    [{type: "text/plain", data: "e Tex"}], description);
-  }
+  checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
+                  [{type: "text/plain", data: "e Tex"}], description);
   is(dragEvents.length, 1,
      `${description}: Only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -894,13 +861,16 @@ async function doTest() {
      `${description}: dragged range should be removed from <textarea>`);
   todo_is(contenteditable.innerHTML, "<div>e1</div><div>Li</div>",
      `${description}: dragged content should be inserted into contenteditable`);
-  todo_isnot(contenteditable.innerHTML, "<br>",
+  todo_isnot(contenteditable.innerHTML, "e1<br>Li<br>",
      `${description}: dragged content should be inserted into contenteditable`);
   todo_is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and contenteditable`);
-  if (inputEvents.length > 0) {
+  if (inputEvents.length === 2) {
     checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
     checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
+                    [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
+  } else {
+    checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                     [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
   }
   is(dragEvents.length, 1,
@@ -933,14 +903,12 @@ async function doTest() {
      `${description}: dragged range should be removed from <textarea>`);
   todo_is(contenteditable.innerHTML, "<div>e1</div><div>Li</div>",
      `${description}: dragged content should be inserted into contenteditable`);
-  todo_isnot(contenteditable.innerHTML, "<br>",
+  todo_isnot(contenteditable.innerHTML, "e1<br>Li<br>",
      `${description}: dragged content should be inserted into contenteditable`);
-  todo_is(inputEvents.length, 1,
+  is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
-  if (inputEvents.length > 0) {
-    checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                    [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
-  }
+  checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
+                  [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
   is(dragEvents.length, 1,
      `${description}: Only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);

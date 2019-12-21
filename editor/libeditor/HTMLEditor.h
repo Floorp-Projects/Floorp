@@ -598,6 +598,14 @@ class HTMLEditor final : public TextEditor,
   Element* GetActiveEditingHost() const;
 
   /**
+   * Retruns true if we're in designMode.
+   */
+  bool IsInDesignMode() const {
+    Document* document = GetDocument();
+    return document && document->HasFlag(NODE_IS_EDITABLE);
+  }
+
+  /**
    * NotifyEditingHostMaybeChanged() is called when new element becomes
    * contenteditable when the document already had contenteditable elements.
    */
