@@ -121,7 +121,7 @@ class PointConduit extends BaseConduit {
       this.actor = null;
       actor.conduits.delete(this.id);
       if (!silent) {
-        actor.sendAsyncMessage("ConduitClosed", { arg: this.id });
+        actor.sendAsyncMessage("ConduitClosed", { sender: this.id });
       }
     }
   }

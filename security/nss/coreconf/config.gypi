@@ -358,6 +358,7 @@
               'linux',
               '_DEFAULT_SOURCE', # for <endian.h> functions, strdup, realpath, and getentropy
               '_BSD_SOURCE', # for the above in glibc <= 2.19
+              '_POSIX_SOURCE', # for <signal.h>
             ],
           }],
           [ 'OS=="dragonfly" or OS=="freebsd"', {

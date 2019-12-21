@@ -25,8 +25,6 @@ namespace dom {
           ("MediaControlKeysHandler=%p, " msg, this, \
            ToMediaControlKeysEventStr(key), ##__VA_ARGS__));
 
-NS_IMPL_ISUPPORTS0(MediaControlKeysHandler)
-
 void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
   LOG_KEY("OnKeyPressed '%s'", aKeyEvent);
 
@@ -70,8 +68,6 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
       return;
   }
 }
-
-NS_IMPL_ISUPPORTS0(MediaControlKeysEventSource)
 
 void MediaControlKeysEventSource::AddListener(
     MediaControlKeysEventListener* aListener) {

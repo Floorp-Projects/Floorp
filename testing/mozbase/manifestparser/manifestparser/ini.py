@@ -155,6 +155,7 @@ def combine_fields(global_vars, local_vars):
     if not local_vars:
         return global_vars.copy()
     field_patterns = {
+        'prefs': '%s %s',
         'skip-if': '(%s) || (%s)',
         'support-files': '%s %s',
     }

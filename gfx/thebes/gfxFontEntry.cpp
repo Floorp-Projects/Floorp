@@ -27,6 +27,9 @@
 #include "nsStyleConsts.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/FloatingPoint.h"
+#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
+#  include "mozilla/ipc/LibrarySandboxPreload.h"
+#endif
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
@@ -610,7 +613,11 @@ struct gfxFontEntry::GrSandboxData {
 
   GrSandboxData() {
 #ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-#  error "Sandboxed graphite not yet implemented"
+    // Firefox preloads the library externally to ensure we won't be stopped by
+    // the content sandbox
+    const bool external_loads_exist = true;
+    sandbox.create_sandbox(mozilla::ipc::GetSandboxedGraphitePath().get(),
+                           external_loads_exist);
 #else
     sandbox.create_sandbox();
 #endif

@@ -173,5 +173,13 @@ MediaControlService::GetLastAddedController() {
   return GetControllerById(mControllerHistory.LastElement()).forget();
 }
 
+void MediaControlService::GenerateMediaControlKeysTestEvent(
+    MediaControlKeysEvent aEvent) {
+  if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    return;
+  }
+  mMediaKeysHandler->OnKeyPressed(aEvent);
+}
+
 }  // namespace dom
 }  // namespace mozilla

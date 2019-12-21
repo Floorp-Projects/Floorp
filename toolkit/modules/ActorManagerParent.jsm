@@ -90,6 +90,21 @@ let ACTORS = {
     allFrames: true,
   },
 
+  AutoScroll: {
+    parent: {
+      moduleURI: "resource://gre/actors/AutoScrollParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/AutoScrollChild.jsm",
+      events: {
+        mousedown: { capture: true, mozSystemGroup: true },
+      },
+    },
+
+    allFrames: true,
+  },
+
   BrowserElement: {
     parent: {
       moduleURI: "resource://gre/actors/BrowserElementParent.jsm",

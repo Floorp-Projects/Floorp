@@ -6,6 +6,11 @@
 
 #include "LSSnapshot.h"
 
+#include "ActorsChild.h"
+#include "LocalStorageCommon.h"
+#include "LSDatabase.h"
+#include "LSWriteOptimizer.h"
+#include "mozilla/dom/PBackgroundLSSnapshot.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {

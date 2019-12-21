@@ -328,28 +328,14 @@ def get_suite_definition(flavor, subsuite=None, strict=False):
     return suite_name, suite
 
 
-def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
+def rewrite_test_base(test, new_base):
     """Rewrite paths in a test to be under a new base path.
 
     This is useful for running tests from a separate location from where they
     were defined.
-
-    honor_install_to_subdir and the underlying install-to-subdir field are a
-    giant hack intended to work around the restriction where the mochitest
-    runner can't handle single test files with multiple configurations. This
-    argument should be removed once the mochitest runner talks manifests
-    (bug 984670).
     """
     test['here'] = mozpath.join(new_base, test['dir_relpath'])
-
-    if honor_install_to_subdir and test.get('install-to-subdir'):
-        manifest_relpath = mozpath.relpath(test['path'],
-                                           mozpath.dirname(test['manifest']))
-        test['path'] = mozpath.join(new_base, test['dir_relpath'],
-                                    test['install-to-subdir'], manifest_relpath)
-    else:
-        test['path'] = mozpath.join(new_base, test['file_relpath'])
-
+    test['path'] = mozpath.join(new_base, test['file_relpath'])
     return test
 
 
@@ -743,8 +729,7 @@ class TestResolver(MozbuildObject):
 
             if rewrite_base:
                 rewrite_base = os.path.join(self.topobjdir, os.path.normpath(rewrite_base))
-                yield rewrite_test_base(test, rewrite_base,
-                                        honor_install_to_subdir=True)
+                yield rewrite_test_base(test, rewrite_base)
             else:
                 yield test
 

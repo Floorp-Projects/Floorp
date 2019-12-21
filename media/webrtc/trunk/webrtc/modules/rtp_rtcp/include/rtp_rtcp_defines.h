@@ -286,6 +286,14 @@ class RtcpBandwidthObserver {
   virtual ~RtcpBandwidthObserver() {}
 };
 
+class RtcpEventObserver {
+ public:
+  virtual void OnRtcpBye() = 0;
+  virtual void OnRtcpTimeout() = 0;
+
+  virtual ~RtcpEventObserver() {}
+};
+
 struct PacketFeedback {
   PacketFeedback(int64_t arrival_time_ms, uint16_t sequence_number)
       : PacketFeedback(-1,

@@ -68,6 +68,9 @@ class RtpRtcp : public Module {
     // stream.
     RtcpBandwidthObserver* bandwidth_callback = nullptr;
 
+    // Called when we receive a RTCP bye or timeout
+    RtcpEventObserver* event_callback = nullptr;
+
     TransportFeedbackObserver* transport_feedback_callback = nullptr;
     VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
     RtcpRttStats* rtt_stats = nullptr;

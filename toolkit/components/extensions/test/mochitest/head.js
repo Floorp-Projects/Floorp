@@ -7,14 +7,7 @@ var { AppConstants } = SpecialPowers.Cu.import(
   {}
 );
 
-// We run tests under two different configurations, from mochitest.ini and
-// mochitest-remote.ini. When running from mochitest-remote.ini, the tests are
-// copied to the sub-directory "test-oop-extensions", which we detect here, and
-// use to select our configuration.
-let remote = location.pathname.includes("test-oop-extensions");
-SpecialPowers.pushPrefEnv({
-  set: [["extensions.webextensions.remote", remote]],
-});
+let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
 if (remote) {
   // We don't want to reset this at the end of the test, so that we don't have
   // to spawn a new extension child process for each test unit.
