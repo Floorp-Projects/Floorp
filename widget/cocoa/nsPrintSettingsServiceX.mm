@@ -88,7 +88,7 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* a
   data->scalingFactor() = scalingFactor;
 
   int32_t orientation;
-  if ([printInfo orientation] == NS_PAPER_ORIENTATION_PORTRAIT) {
+  if ([printInfo orientation] == NSPaperOrientationPortrait) {
     orientation = nsIPrintSettings::kPortraitOrientation;
   } else {
     orientation = nsIPrintSettings::kLandscapeOrientation;
