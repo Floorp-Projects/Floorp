@@ -59,3 +59,17 @@ sealed class BrowserMenuHighlight {
         override val label: String? = null
     }
 }
+
+/**
+ * Indicates that a menu item shows a highlight.
+ */
+interface HighlightableMenuItem {
+    /**
+     * Highlight object representing how the menu item will be displayed when highlighted.
+     */
+    val highlight: BrowserMenuHighlight
+    /**
+     * Whether or not to display the highlight
+     */
+    val isHighlighted: () -> Boolean
+}

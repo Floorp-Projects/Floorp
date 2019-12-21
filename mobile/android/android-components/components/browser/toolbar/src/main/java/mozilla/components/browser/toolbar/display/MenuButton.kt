@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
-import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
+import mozilla.components.browser.menu.HighlightableMenuItem
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
@@ -87,7 +87,8 @@ internal class MenuButton @JvmOverloads constructor(
 
         val highlight = menuBuilder?.items.orEmpty()
             .asSequence()
-            .mapNotNull { it as? BrowserMenuHighlightableItem }
+            .filter { it.visible() }
+            .mapNotNull { it as? HighlightableMenuItem }
             .filter { it.isHighlighted() }
             .map { it.highlight }
             .maxBy {

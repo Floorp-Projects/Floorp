@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -104,7 +105,7 @@ class BrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlight.HighPriority(
                 endImageResource = android.R.drawable.ic_menu_add,
-                backgroundTint = R.color.photonRed50,
+                backgroundTint = Color.RED,
                 label = "highlight"
             ),
             isHighlighted = { shouldHighlight }
@@ -140,7 +141,7 @@ class BrowserMenuHighlightableItemTest {
             iconTintColorResource = android.R.color.black,
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = R.color.photonRed50,
+                notificationTint = Color.RED,
                 label = "highlight"
             ),
             isHighlighted = { shouldHighlight }
@@ -175,7 +176,7 @@ class BrowserMenuHighlightableItemTest {
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.HighPriority(
                 endImageResource = android.R.drawable.ic_menu_report_image,
-                backgroundTint = R.color.photonRed50
+                backgroundTint = Color.RED
             )
         )
 
@@ -192,7 +193,7 @@ class BrowserMenuHighlightableItemTest {
             "label",
             startImageResource = android.R.drawable.ic_menu_report_image,
             highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = R.color.photonRed50
+                backgroundTint = Color.RED
             )
         )
 
