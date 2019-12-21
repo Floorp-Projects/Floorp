@@ -1303,6 +1303,7 @@ CHUNK_SUITES_BLACKLIST = (
     'web-platform-tests',
     'web-platform-tests-reftests',
     'web-platform-tests-wdspec',
+    'xpcshell',
 )
 """These suites will be chunked at test runtime rather than here in the taskgraph."""
 
