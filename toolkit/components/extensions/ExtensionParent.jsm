@@ -26,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.jsm",
   GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
@@ -953,11 +952,10 @@ ParentAPIManager = {
 
   recvCreateProxyContext(data, { actor, sender }) {
     this.conduit.reportOnClosed(sender.id);
-    this.createProxyContext(data, actor.browsingContext.top.embedderElement);
-  },
 
-  createProxyContext(data, target) {
     let { envType, extensionId, childId, principal } = data;
+    let target = actor.browsingContext.top.embedderElement;
+
     if (this.proxyContexts.has(childId)) {
       throw new Error(
         "A WebExtension context with the given ID already exists!"
@@ -971,15 +969,16 @@ ParentAPIManager = {
 
     let context;
     if (envType == "addon_parent" || envType == "devtools_parent") {
+      if (!sender.verified) {
+        throw new Error(`Bad sender context envType: ${sender.envType}`);
+      }
+
       let processMessageManager =
         target.messageManager.processMessageManager ||
         Services.ppmm.getChildAt(0);
 
       if (!extension.parentMessageManager) {
-        let expectedRemoteType = extension.remote
-          ? E10SUtils.EXTENSION_REMOTE_TYPE
-          : null;
-        if (target.remoteType === expectedRemoteType) {
+        if (target.remoteType === extension.remoteType) {
           this.attachMessageManager(extension, processMessageManager);
         }
       }
@@ -1447,9 +1446,7 @@ class HiddenExtensionPage {
         {
           "webextension-view-type": this.viewType,
           remote: this.extension.remote ? "true" : null,
-          remoteType: this.extension.remote
-            ? E10SUtils.EXTENSION_REMOTE_TYPE
-            : null,
+          remoteType: this.extension.remoteType,
         },
         this.extension.groupFrameLoader
       );
@@ -1548,7 +1545,7 @@ const DebugUtils = {
         {
           "webextension-addon-debug-target": extensionId,
           remote: extension.remote ? "true" : null,
-          remoteType: extension.remote ? E10SUtils.EXTENSION_REMOTE_TYPE : null,
+          remoteType: extension.remoteType,
         },
         extension.groupFrameLoader
       );
