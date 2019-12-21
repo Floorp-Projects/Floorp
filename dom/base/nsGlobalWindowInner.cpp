@@ -5341,22 +5341,11 @@ CallState nsGlobalWindowInner::CallOnChildren(Method aMethod, Args&... aArgs) {
     return state;
   }
 
-  int32_t childCount = 0;
-  docShell->GetInProcessChildCount(&childCount);
+  BrowsingContext::Children children;
+  GetBrowsingContext()->GetChildren(children);
 
-  // Take a copy of the current children so that modifications to
-  // the child list don't affect to the iteration.
-  AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> children;
-  for (int32_t i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> childShell;
-    docShell->GetInProcessChildAt(i, getter_AddRefs(childShell));
-    if (childShell) {
-      children.AppendElement(childShell);
-    }
-  }
-
-  for (nsCOMPtr<nsIDocShellTreeItem> childShell : children) {
-    nsCOMPtr<nsPIDOMWindowOuter> pWin = childShell->GetWindow();
+  for (const RefPtr<BrowsingContext>& bc : children) {
+    nsCOMPtr<nsPIDOMWindowOuter> pWin = bc->GetDOMWindow();
     if (!pWin) {
       continue;
     }
