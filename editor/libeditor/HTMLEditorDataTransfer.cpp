@@ -1328,13 +1328,16 @@ nsresult HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
 
 static void GetStringFromDataTransfer(DataTransfer* aDataTransfer,
                                       const nsAString& aType, int32_t aIndex,
-                                      nsAString& aOutputString) {
+                                      nsString& aOutputString) {
   nsCOMPtr<nsIVariant> variant;
   aDataTransfer->GetDataAtNoSecurityCheck(aType, aIndex,
                                           getter_AddRefs(variant));
-  if (variant) {
-    variant->GetAsAString(aOutputString);
+  if (!variant) {
+    MOZ_ASSERT(aOutputString.IsEmpty());
+    return;
   }
+  variant->GetAsAString(aOutputString);
+  nsContentUtils::PlatformToDOMLineBreaks(aOutputString);
 }
 
 nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
