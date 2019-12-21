@@ -6719,6 +6719,18 @@ bool BaselineInterpreterCodeGen::emit_JSOP_INSTRUMENTATION_SCRIPT_ID() {
   return true;
 }
 
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_FORCEINTERPRETER() {
+  // Caller is responsible for checking script->hasForceInterpreterOp().
+  MOZ_CRASH("JSOP_FORCEINTERPRETER in baseline");
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_FORCEINTERPRETER() {
+  masm.assumeUnreachable("JSOP_FORCEINTERPRETER");
+  return true;
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitPrologue() {
 #ifdef JS_USE_LINK_REGISTER
@@ -6881,24 +6893,18 @@ MethodStatus BaselineCompiler::emitBody() {
       return Method_Error;
     }
 
-    switch (op) {
-      case JSOP_FORCEINTERPRETER:
-        // Caller must have checked script->hasForceInterpreterOp().
-      case JSOP_UNUSED71:
-      case JSOP_UNUSED106:
-      case JSOP_UNUSED120:
-      case JSOP_UNUSED149:
-      case JSOP_UNUSED227:
-      case JSOP_LIMIT:
-        MOZ_CRASH("Unexpected op");
-
-#define EMIT_OP(OP)                                            \
+#define EMIT_OP(OP, ...)                                       \
   case OP:                                                     \
     if (MOZ_UNLIKELY(!this->emit_##OP())) return Method_Error; \
     break;
-        OPCODE_LIST(EMIT_OP)
-#undef EMIT_OP
+
+    switch (op) {
+      FOR_EACH_OPCODE(EMIT_OP)
+      default:
+        MOZ_CRASH("Unexpected op");
     }
+
+#undef EMIT_OP
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
@@ -7005,7 +7011,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
   // Emit code for each bytecode op.
   Label opLabels[JSOP_LIMIT];
-#define EMIT_OP(OP)                     \
+#define EMIT_OP(OP, ...)                \
   {                                     \
     masm.bind(&opLabels[OP]);           \
     handler.setCurrentOp(OP);           \
@@ -7017,7 +7023,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
     }                                   \
     handler.resetCurrentOp();           \
   }
-  OPCODE_LIST(EMIT_OP)
+  FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP
 
   // External entry point to start interpreting bytecode ops. This is used for
@@ -7053,11 +7059,6 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
     masm.jump(handlerCode);
   }
 
-  // Emit code for JSOP_UNUSED* ops.
-  Label invalidOp;
-  masm.bind(&invalidOp);
-  masm.assumeUnreachable("Invalid op");
-
   // Emit the table.
   masm.haltingAlign(sizeof(void*));
 
@@ -7069,13 +7070,11 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   tableOffset_ = masm.currentOffset();
 
   for (size_t i = 0; i < JSOP_LIMIT; i++) {
-    // Store a pointer to the code for the current op. If the op's label is not
-    // bound it must be a JSOP_UNUSED* op and we use |invalidOp| instead.
     const Label& opLabel = opLabels[i];
-    uint32_t opOffset = opLabel.bound() ? opLabel.offset() : invalidOp.offset();
+    MOZ_ASSERT(opLabel.bound());
     CodeLabel cl;
     masm.writeCodePointer(&cl);
-    cl.target()->bind(opOffset);
+    cl.target()->bind(opLabel.offset());
     masm.addCodeLabel(cl);
   }
 
