@@ -8,8 +8,13 @@
 #define mozilla_dom_localstorage_LSValue_h
 
 #include "SnappyUtils.h"
+#include "nsString.h"
 
 class mozIStorageStatement;
+
+namespace IPC {
+  template <typename> struct ParamTraits;
+}
 
 namespace mozilla {
 namespace dom {
