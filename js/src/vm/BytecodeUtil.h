@@ -73,13 +73,12 @@ enum {
   JOF_PROPSET = 1 << 7,      /* property/element/name set operation */
   JOF_PROPINIT = 1 << 8,     /* property/element/name init operation */
   JOF_DETECTING = 1 << 9,    /* object detection for warning-quelling */
-  JOF_CHECKSLOPPY = 1 << 10, /* Op can only be generated in sloppy mode */
-  JOF_CHECKSTRICT = 1 << 11, /* Op can only be generated in strict mode */
-  JOF_INVOKE = 1 << 12,      /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
-                                JSOP_NEW, JSOP_EVAL, JSOP_CALLITER */
+  JOF_CHECKSLOPPY = 1 << 10, /* op can only be generated in sloppy mode */
+  JOF_CHECKSTRICT = 1 << 11, /* op can only be generated in strict mode */
+  JOF_INVOKE = 1 << 12,      /* call, construct, or spreadcall instruction */
   JOF_GNAME = 1 << 13,       /* predicted global name */
   JOF_TYPESET = 1 << 14,     /* has an entry in a script's type sets */
-  JOF_IC = 1 << 15,          /* Baseline may use an IC for this op */
+  JOF_IC = 1 << 15,          /* baseline may use an IC for this op */
 };
 
 /* Shorthand for type from format. */
