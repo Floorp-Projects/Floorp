@@ -35,13 +35,8 @@ RDDProcessHost::RDDProcessHost(Listener* aListener)
   MOZ_COUNT_CTOR(RDDProcessHost);
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // sLaunchWithMacSandbox is statically initialized to false.
-  // Once we've set it to true due to the pref, avoid checking the
-  // pref on subsequent calls. As a result, changing the earlyinit
-  // pref requires restarting the browser to take effect.
   if (!sLaunchWithMacSandbox) {
-    sLaunchWithMacSandbox =
-        Preferences::GetBool("security.sandbox.rdd.mac.earlyinit");
+    sLaunchWithMacSandbox = (PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") == nullptr);
   }
   mDisableOSActivityMode = sLaunchWithMacSandbox;
 #endif
@@ -162,15 +157,7 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1555076#c7
     mPrefSerializer = nullptr;
 
-    bool startMacSandbox = false;
-
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-    // If the sandbox was started at launch time,
-    // do not start the sandbox again.
-    startMacSandbox = !sLaunchWithMacSandbox;
-#endif
-
-    if (!mRDDChild->Init(startMacSandbox)) {
+    if (!mRDDChild->Init()) {
       // Can't just kill here because it will create a timing race that
       // will crash the tab. We don't really want to crash the tab just
       // because RDD linux sandbox failed to initialize.  In this case,
