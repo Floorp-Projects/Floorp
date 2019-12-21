@@ -49,25 +49,30 @@ function sendMouseUp(el) {
 
 function fireEvent(target, event) {
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  utils.dispatchDOMEventViaPresShell(target, event);
+  utils.dispatchDOMEventViaPresShellForTesting(target, event);
 }
 
 function fireDrop(element) {
   var ds = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
     getService(SpecialPowers.Ci.nsIDragService);
 
-  ds.startDragSession();
+  ds.startDragSessionForTests(
+    SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      SpecialPowers.Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  ); // Session for getting dataTransfer object.
+  try {
+    var event = document.createEvent("DragEvent");
+    event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
+    fireEvent(element, event);
 
-  var event = document.createEvent("DragEvent");
-  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
-  fireEvent(element, event);
-
-  event = document.createEvent("DragEvent");
-  event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
-  fireEvent(element, event);
-
-  ds.endDragSession(false);
-  ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+    event = document.createEvent("DragEvent");
+    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, null);
+    fireEvent(element, event);
+  } finally {
+    ds.endDragSession(false);
+    ok(!ds.getCurrentSession(), "There shouldn't be a drag session anymore!");
+  }
 }
 
 function runTest() {

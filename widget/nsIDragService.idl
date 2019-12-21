@@ -138,7 +138,20 @@ interface nsIDragService : nsISupports
     * Tells the Drag Service to start a drag session. This is called when
     * an external drag occurs
     */
-  void startDragSession ( ) ;
+  void startDragSession() ;
+
+  /**
+   * Similar to startDragSession(), automated tests may want to start
+   * session for emulating an external drag.  At that time, this should
+   * be used instead of startDragSession().
+   *
+   * @param aAllowedEffect Set default drag action which means allowed effects
+   *                       in the session and every DnD events are initialized
+   *                       with one of specified value.  So, the value can be
+   *                       DRAGDROP_ACTION_NONE, or one or more values of
+   *                       DRAGDROP_ACTION_(MOVE|COPY|LINK).
+   */
+  void startDragSessionForTests(in unsigned long aAllowedEffect);
 
   /**
     * Tells the Drag Service to end a drag session. This is called when

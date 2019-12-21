@@ -8,7 +8,11 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
     Ci.nsIDragService
   );
 
-  ds.startDragSession();
+  ds.startDragSessionForTests(
+    Ci.nsIDragService.DRAGDROP_ACTION_MOVE |
+      Ci.nsIDragService.DRAGDROP_ACTION_COPY |
+      Ci.nsIDragService.DRAGDROP_ACTION_LINK
+  );
   try {
     var [result, dataTransfer] = EventUtils.synthesizeDragOver(
       aToDrag.parentNode,

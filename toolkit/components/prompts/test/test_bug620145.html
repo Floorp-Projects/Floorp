@@ -84,7 +84,7 @@ function dispatchMouseEvent(target, type) {
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
   var utils = SpecialPowers.getDOMWindowUtils(win);
-  utils.dispatchDOMEventViaPresShell(target, e);
+  utils.dispatchDOMEventViaPresShellForTesting(target, e);
   ok(true, type + " sent to " + target.id);
 }
 

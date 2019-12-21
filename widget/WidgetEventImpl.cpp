@@ -18,6 +18,7 @@
 #include "nsCommandParams.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIDragSession.h"
 #include "nsPrintfCString.h"
 
 #if defined(XP_WIN)
@@ -666,6 +667,53 @@ Modifier WidgetInputEvent::AccelModifier() {
 /* static */
 bool WidgetMouseEvent::IsMiddleClickPasteEnabled() {
   return Preferences::GetBool("middlemouse.paste", false);
+}
+
+/******************************************************************************
+ * mozilla::WidgetDragEvent (MouseEvents.h)
+ ******************************************************************************/
+
+void WidgetDragEvent::InitDropEffectForTests() {
+  MOZ_ASSERT(mFlags.mIsSynthesizedForTests);
+
+  nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
+  if (NS_WARN_IF(!session)) {
+    return;
+  }
+
+  uint32_t effectAllowed = session->GetEffectAllowedForTests();
+  uint32_t desiredDropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
+#ifdef XP_MACOSX
+  if (IsAlt()) {
+    desiredDropEffect = IsMeta() ? nsIDragService::DRAGDROP_ACTION_LINK
+                                 : nsIDragService::DRAGDROP_ACTION_COPY;
+  }
+#else
+  // On Linux, we know user's intention from API, but we should use
+  // same modifiers as Windows for tests because GNOME on Ubuntu use
+  // them and that makes each test simpler.
+  if (IsControl()) {
+    desiredDropEffect = IsShift() ? nsIDragService::DRAGDROP_ACTION_LINK
+                                  : nsIDragService::DRAGDROP_ACTION_COPY;
+  } else if (IsShift()) {
+    desiredDropEffect = nsIDragService::DRAGDROP_ACTION_MOVE;
+  }
+#endif  // #ifdef XP_MACOSX #else
+  // First, use modifier state for preferring action which is explicitly
+  // specified by the synthesizer.
+  if (!(desiredDropEffect &= effectAllowed)) {
+    // Otherwise, use an action which is allowed at starting the session.
+    desiredDropEffect = effectAllowed;
+  }
+  if (desiredDropEffect & nsIDragService::DRAGDROP_ACTION_MOVE) {
+    session->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
+  } else if (desiredDropEffect & nsIDragService::DRAGDROP_ACTION_COPY) {
+    session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
+  } else if (desiredDropEffect & nsIDragService::DRAGDROP_ACTION_LINK) {
+    session->SetDragAction(nsIDragService::DRAGDROP_ACTION_LINK);
+  } else {
+    session->SetDragAction(nsIDragService::DRAGDROP_ACTION_NONE);
+  }
 }
 
 /******************************************************************************

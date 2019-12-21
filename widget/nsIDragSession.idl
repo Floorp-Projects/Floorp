@@ -105,9 +105,20 @@ interface nsIDragSession : nsISupports
   // Change the drag image, using similar arguments as
   // nsIDragService::InvokeDragSessionWithImage.
   void updateDragImage(in Node aImage, in long aImageX, in long aImageY);
+
+  /**
+   * Returns effects allowed at starting the session for tests.
+   */
+  [notxpcom, nostdcall] unsigned long getEffectAllowedForTests();
+
+  /**
+   * Returns true if current session was started with synthesized drag start.
+   */
+  [notxpcom, nostdcall] bool isSynthesizedForTests();
+
+  /**
+   * Sets drag end point of synthesized session when the test does not dispatch
+   * "drop" event.
+   */
+  void setDragEndPointForTests(in long aScreenX, in long aScreenY);
 };
-
-
-%{ C++
-
-%}

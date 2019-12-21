@@ -31,7 +31,7 @@ function completeTest(aBox) {
 function fireEvent(target, event) {
   var win = target.ownerGlobal;
   var utils = win.windowUtils;
-  utils.dispatchDOMEventViaPresShell(target, event);
+  utils.dispatchDOMEventViaPresShellForTesting(target, event);
 }
 
 function RunTest() {
