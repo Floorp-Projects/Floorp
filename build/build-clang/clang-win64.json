@@ -10,7 +10,6 @@
     "patches": [
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
-      "r372020-r372182-profiler-linkage.patch",
       "revert-r359260-due-to-bug41817.patch",
       "rG7e18aeba5062.patch",
       "loosen-msvc-detection.patch"
