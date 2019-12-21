@@ -331,7 +331,7 @@ nsPrintSettingsX::GetOrientation(int32_t* aOrientation) {
   // Only use NSPrintInfo data in the parent process. The
   // child process' instance is not needed or used.
   if (XRE_IsParentProcess()) {
-    if ([mPrintInfo orientation] == NS_PAPER_ORIENTATION_PORTRAIT) {
+    if ([mPrintInfo orientation] == NSPaperOrientationPortrait) {
       *aOrientation = nsIPrintSettings::kPortraitOrientation;
     } else {
       *aOrientation = nsIPrintSettings::kLandscapeOrientation;
@@ -351,10 +351,10 @@ nsPrintSettingsX::SetOrientation(int32_t aOrientation) {
   if (XRE_IsParentProcess()) {
     NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
     if (aOrientation == nsIPrintSettings::kPortraitOrientation) {
-      [printInfoDict setObject:[NSNumber numberWithInt:NS_PAPER_ORIENTATION_PORTRAIT]
+      [printInfoDict setObject:[NSNumber numberWithInt:NSPaperOrientationPortrait]
                         forKey:NSPrintOrientation];
     } else {
-      [printInfoDict setObject:[NSNumber numberWithInt:NS_PAPER_ORIENTATION_LANDSCAPE]
+      [printInfoDict setObject:[NSNumber numberWithInt:NSPaperOrientationLandscape]
                         forKey:NSPrintOrientation];
     }
   } else {
@@ -454,7 +454,7 @@ nsresult nsPrintSettingsX::SetCocoaPaperSize(double aWidth, double aHeight) {
 
   NSSize paperSize;
   NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
-  if ([mPrintInfo orientation] == NS_PAPER_ORIENTATION_PORTRAIT) {
+  if ([mPrintInfo orientation] == NSPaperOrientationPortrait) {
     // switch widths and heights
     paperSize = NSMakeSize(aWidth, aHeight);
     [printInfoDict setObject:[NSValue valueWithSize:paperSize] forKey:NSPrintPaperSize];
