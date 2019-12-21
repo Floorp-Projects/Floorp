@@ -409,11 +409,11 @@ clang-8:
         revision: 19a71f6bdf2dddb10764939e7f0ec2b98dba76c9
 
 clang-9:
-    description: clang 9.0.0 source code
+    description: clang 9.0.1 source code
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: 0399d5a9682b3cef71c653373e38890c63c4c365
+        revision: c1a0a213378a458fbea1a5c77b315c7dce08fd05
 
 wasi-sdk:
     description: wasi-sdk source code
