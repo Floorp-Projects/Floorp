@@ -11,8 +11,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
 import kotlinx.android.synthetic.main.switch_with_description.view.*
-import kotlinx.android.synthetic.main.tracking_protection_category.view.switchItemDescription
-import kotlinx.android.synthetic.main.tracking_protection_category.view.switchItemTitle
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
@@ -36,13 +34,13 @@ class SwitchWithDescription @JvmOverloads constructor(
                     id
                 )
             )
-            switchItemTitle.text = resources.getString(
+            trackingProtectionCategoryTitle.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchTitle,
                     R.string.preference_enhanced_tracking_protection
                 )
             )
-            switchItemDescription.text = resources.getString(
+            trackingProtectionCategoryItemDescription.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchDescription,
                     R.string.preference_enhanced_tracking_protection_explanation

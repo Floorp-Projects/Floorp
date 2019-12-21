@@ -30,14 +30,14 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
                 R.styleable.TrackingProtectionCategory_categoryItemIcon,
                 R.drawable.ic_cryptominers
             )
-            switchIcon?.background = resources.getDrawable(id, context.theme)
-            switchItemTitle?.text = resources.getString(
+            trackingProtectionCategoryIcon?.background = resources.getDrawable(id, context.theme)
+            trackingProtectionCategoryTitle?.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemTitle,
                     R.string.etp_cookies_title
                 )
             )
-            switchItemDescription?.text = resources.getString(
+            trackingProtectionCategoryItemDescription?.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemDescription,
                     R.string.etp_cookies_description

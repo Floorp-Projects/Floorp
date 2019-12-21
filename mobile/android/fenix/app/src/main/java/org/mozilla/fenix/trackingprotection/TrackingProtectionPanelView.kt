@@ -162,7 +162,7 @@ class TrackingProtectionPanelView(
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
-        trackingProtectionSwitch.switchItemDescription.text =
+        trackingProtectionSwitch.trackingProtectionCategoryItemDescription.text =
             view.context.getString(if (isTrackingProtectionOn) R.string.etp_panel_on else R.string.etp_panel_off)
         trackingProtectionSwitch.switch_widget.isChecked = isTrackingProtectionOn
         trackingProtectionSwitch.switch_widget.jumpDrawablesToCurrentState()
