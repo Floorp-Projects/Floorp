@@ -1578,6 +1578,114 @@ class TestAttributesOnTypes : public nsISupports, public nsWrapperCache {
   void ArgWithAttr(uint8_t arg1, const Optional<uint8_t>& arg2);
 };
 
+class TestPrefConstructorForInterface : public nsISupports,
+                                        public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since only the constructor is under a pref,
+  // the generated constructor should check for the pref.
+  static already_AddRefed<TestPrefConstructorForInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestConstructorForPrefInterface : public nsISupports,
+                                        public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the interface itself is under a Pref, there should be no
+  // check for the pref in the generated constructor.
+  static already_AddRefed<TestConstructorForPrefInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestPrefConstructorForDifferentPrefInterface : public nsISupports,
+                                                     public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the constructor's pref is different than the interface pref
+  // there should still be a check for the pref in the generated constructor.
+  static already_AddRefed<TestPrefConstructorForDifferentPrefInterface>
+  Constructor(const GlobalObject&);
+};
+
+class TestConstructorForSCInterface : public nsISupports,
+                                      public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the interface itself is SecureContext, there should be no
+  // check for SecureContext in the constructor.
+  static already_AddRefed<TestConstructorForSCInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestSCConstructorForInterface : public nsISupports,
+                                      public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the interface context is unspecified but the constructor is
+  // SecureContext, the generated constructor should check for SecureContext.
+  static already_AddRefed<TestSCConstructorForInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestConstructorForFuncInterface : public nsISupports,
+                                        public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the interface has a Func attribute, but the constructor does not,
+  // the generated constructor should not check for the Func.
+  static already_AddRefed<TestConstructorForFuncInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestFuncConstructorForInterface : public nsISupports,
+                                        public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the constructor has a Func attribute, but the interface does not,
+  // the generated constructor should check for the Func.
+  static already_AddRefed<TestFuncConstructorForInterface> Constructor(
+      const GlobalObject&);
+};
+
+class TestFuncConstructorForDifferentFuncInterface : public nsISupports,
+                                                     public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // Since the constructor has a different Func attribute from the interface,
+  // the generated constructor should still check for its conditional func.
+  static already_AddRefed<TestFuncConstructorForDifferentFuncInterface>
+  Constructor(const GlobalObject&);
+};
+
+class TestPrefChromeOnlySCFuncConstructorForInterface : public nsISupports,
+                                                        public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+  virtual nsISupports* GetParentObject();
+
+  // There should be checks for all Pref/ChromeOnly/SecureContext/Func
+  // in the generated constructor.
+  static already_AddRefed<TestPrefChromeOnlySCFuncConstructorForInterface>
+  Constructor(const GlobalObject&);
+};
+
 }  // namespace dom
 }  // namespace mozilla
 
