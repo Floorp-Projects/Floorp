@@ -2891,11 +2891,18 @@ function synthesizeDrop(
  *
  * @param aParams
  *        {
- *          srcElement:   The element to start dragging
+ *          dragEvent:    The DnD events will be generated with modifiers
+ *                        specified with this.
+ *          srcElement:   The element to start dragging.  If srcSelection is
+ *                        set, this is computed for element at focus node.
+ *          srcSelection: The selection to start to drag, set null if
+ *                        srcElement is set.
  *          destElement:  The element to drop on. Pass null to emulate
  *                        a drop on an invalid target.
- *          srcX:         The initial x coordinate inside srcElement
- *          srcY:         The initial y coordinate inside srcElement
+ *          srcX:         The initial x coordinate inside srcElement or
+ *                        ignored if srcSelection is set.
+ *          srcY:         The initial y coordinate inside srcElement or
+ *                        ignored if srcSelection is set.
  *          stepX:        The x-axis step for mousemove inside srcElement
  *          stepY:        The y-axis step for mousemove inside srcElement
  *          finalX:       The final x coordinate inside srcElement
@@ -2911,7 +2918,9 @@ function synthesizeDrop(
  */
 async function synthesizePlainDragAndDrop(aParams) {
   let {
+    dragEvent = {},
     srcElement,
+    srcSelection,
     destElement,
     srcX = 2,
     srcY = 2,
@@ -2933,6 +2942,59 @@ async function synthesizePlainDragAndDrop(aParams) {
 
   if (logFunc) {
     logFunc("synthesizePlainDragAndDrop() -- START");
+  }
+
+  if (srcSelection) {
+    srcElement = srcSelection.focusNode;
+    while (_EU_maybeWrap(srcElement).isNativeAnonymous) {
+      srcElement = _EU_maybeUnwrap(
+        _EU_maybeWrap(srcElement).flattenedTreeParentNode
+      );
+    }
+    if (srcElement.nodeType !== Node.NODE_TYPE_ELEMENT) {
+      srcElement = srcElement.parentElement;
+    }
+    let srcElementRect = srcElement.getBoundingClientRect();
+    if (logFunc) {
+      logFunc(
+        `srcElement.getBoundingClientRect(): ${rectToString(srcElementRect)}`
+      );
+    }
+    // Use last selection client rect because nsIDragSession.sourceNode is
+    // initialized from focus node which is usually in last rect.
+    let selectionRectList = srcSelection.getRangeAt(0).getClientRects();
+    let lastSelectionRect = selectionRectList[selectionRectList.length - 1];
+    if (logFunc) {
+      logFunc(
+        `srcSelection.getRangeAt(0).getClientRects()[${selectionRectList.length -
+          1}]: ${rectToString(lastSelectionRect)}`
+      );
+    }
+    // Click at center of last selection rect.
+    srcX = Math.floor(
+      lastSelectionRect.left + lastSelectionRect.width / 2
+    );
+    srcY = Math.floor(
+      lastSelectionRect.top + lastSelectionRect.height / 2
+    );
+    // Then, adjust srcX and srcY for making them offset relative to
+    // srcElementRect because they will be used when we call synthesizeMouse()
+    // with srcElement.
+    srcX = Math.floor(
+      srcX - srcElementRect.left
+    );
+    srcY = Math.floor(
+      srcY - srcElementRect.top
+    );
+    // Finally, recalculate finalX and finalY with new srcX and srcY if they
+    // are not specified by the caller.
+    if (aParams.finalX === undefined) {
+      finalX = srcX + stepX * 2;
+    }
+    if (aParams.finalY === undefined) {
+      finalY = srcY + stepY * 2;
+    }
+  } else if (logFunc) {
     logFunc(
       `srcElement.getBoundingClientRect(): ${rectToString(
         srcElement.getBoundingClientRect()
@@ -2945,6 +3007,8 @@ async function synthesizePlainDragAndDrop(aParams) {
   );
 
   try {
+    _getDOMWindowUtils().disableNonTestMouseEvents(true);
+
     await new Promise(r => setTimeout(r, 0));
 
     synthesizeMouse(srcElement, srcX, srcY, { type: "mousedown" }, srcWindow);
@@ -3053,7 +3117,7 @@ async function synthesizePlainDragAndDrop(aParams) {
             destElement,
             destWindow,
             null,
-            {}
+            dragEvent
           );
           sendDragEvent(event, destElement, destWindow);
           if (!dragEnterEvent && !destElement.disabled) {
@@ -3091,7 +3155,7 @@ async function synthesizePlainDragAndDrop(aParams) {
           destElement,
           destWindow,
           null,
-          {}
+          dragEvent
         );
         sendDragEvent(event, destElement, destWindow);
         if (!dragOverEvent && !destElement.disabled) {
@@ -3129,7 +3193,7 @@ async function synthesizePlainDragAndDrop(aParams) {
           destElement,
           destWindow,
           null,
-          {}
+          dragEvent
         );
         sendDragEvent(event, destElement, destWindow);
         if (!dropEvent && session.canDrop) {
@@ -3142,12 +3206,14 @@ async function synthesizePlainDragAndDrop(aParams) {
       // Since we don't synthesize drop event, we need to set drag end point
       // explicitly for "dragEnd" event which will be fired by
       // endDragSession().
+      dragEvent.clientX = finalX;
+      dragEvent.clientY = finalY;
       let event = createDragEventObject(
         "dragend",
         srcElement,
         srcWindow,
         null,
-        { clientX: finalX, clientY: finalY }
+        dragEvent
       );
       session.setDragEndPointForTests(event.screenX, event.screenY);
     }
@@ -3169,7 +3235,7 @@ async function synthesizePlainDragAndDrop(aParams) {
       }
       srcWindow.addEventListener("dragend", onDragEnd, { capture: true });
       try {
-        ds.endDragSession(true, 0);
+        ds.endDragSession(true, _parseModifiers(dragEvent));
         if (!dragEndEvent) {
           // eslint-disable-next-line no-unsafe-finally
           throw new Error(
@@ -3180,6 +3246,7 @@ async function synthesizePlainDragAndDrop(aParams) {
         srcWindow.removeEventListener("dragend", onDragEnd, { capture: true });
       }
     }
+    _getDOMWindowUtils().disableNonTestMouseEvents(false);
     if (logFunc) {
       logFunc("synthesizePlainDragAndDrop() -- END");
     }
