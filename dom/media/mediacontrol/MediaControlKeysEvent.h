@@ -36,8 +36,9 @@ enum class MediaControlKeysEvent : uint32_t {
  * and then everytime when the media key events occur, `OnKeyPressed` will be
  * called so that we can do related handling.
  */
-class MediaControlKeysEventListener : public nsISupports {
+class MediaControlKeysEventListener {
  public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   MediaControlKeysEventListener() = default;
 
   virtual void OnKeyPressed(MediaControlKeysEvent aKeyEvent) = 0;
@@ -52,8 +53,7 @@ class MediaControlKeysEventListener : public nsISupports {
  */
 class MediaControlKeysHandler final : public MediaControlKeysEventListener {
  public:
-  NS_DECL_ISUPPORTS
-
+  NS_INLINE_DECL_REFCOUNTING(MediaControlKeysHandler, override)
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
 
  private:
@@ -61,14 +61,13 @@ class MediaControlKeysHandler final : public MediaControlKeysEventListener {
 };
 
 /**
- * MediaControlKeysEventSource is a base class which is used to implement
+ * MediaControlKeysEventSource is an abstract class which is used to implement
  * transporting media control keys event to all its listeners when media keys
  * event happens.
  */
-class MediaControlKeysEventSource : public nsISupports {
+class MediaControlKeysEventSource {
  public:
-  NS_DECL_ISUPPORTS
-
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   MediaControlKeysEventSource() = default;
 
   virtual void AddListener(MediaControlKeysEventListener* aListener);
