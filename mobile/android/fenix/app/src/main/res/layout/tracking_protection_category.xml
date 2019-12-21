@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
         android:clickable="false"
         android:textAppearance="@style/ListItemTextStyle"
         android:textSize="16sp"
