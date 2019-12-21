@@ -26,11 +26,6 @@
 #include "mozilla/Algorithm.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
-#if defined(MOZ_SANDBOX)
-#  if defined(XP_MACOSX)
-#    include "mozilla/Sandbox.h"
-#  endif
-#endif
 #include "mozilla/TextUtils.h"
 #include "nsDebugImpl.h"
 #include "nsExceptionHandler.h"
@@ -154,73 +149,6 @@ static bool GetPluginPaths(const nsAString& aPluginPath,
   libFile->Normalize();
   aPluginFilePath = GetNativeTarget(libFile);
 
-  return true;
-}
-
-static bool GetAppPaths(nsCString& aAppPath, nsCString& aAppBinaryPath) {
-  nsAutoCString appPath;
-  nsAutoCString appBinaryPath(
-      (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
-
-  nsAutoCString::const_iterator start, end;
-  appBinaryPath.BeginReading(start);
-  appBinaryPath.EndReading(end);
-  if (RFindInReadable(NS_LITERAL_CSTRING(".app/Contents/MacOS/"), start, end)) {
-    end = start;
-    ++end;
-    ++end;
-    ++end;
-    ++end;
-    appBinaryPath.BeginReading(start);
-    appPath.Assign(Substring(start, end));
-  } else {
-    return false;
-  }
-
-  nsCOMPtr<nsIFile> app, appBinary;
-  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath), true,
-                                getter_AddRefs(app));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appBinaryPath), true,
-                       getter_AddRefs(appBinary));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  // Mac sandbox rules expect paths to actual files and directories -- not
-  // soft links.
-  aAppPath = GetNativeTarget(app);
-  appBinaryPath = GetNativeTarget(appBinary);
-
-  return true;
-}
-
-bool GMPChild::SetMacSandboxInfo(bool aAllowWindowServer) {
-  if (!mGMPLoader) {
-    return false;
-  }
-  nsAutoCString pluginDirectoryPath, pluginFilePath;
-  if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
-    return false;
-  }
-  nsAutoCString appPath, appBinaryPath;
-  if (!GetAppPaths(appPath, appBinaryPath)) {
-    return false;
-  }
-
-  MacSandboxInfo info;
-  info.type = MacSandboxType_GMP;
-  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
-                   PR_GetEnv("MOZ_SANDBOX_LOGGING");
-  info.hasWindowServer = aAllowWindowServer;
-  info.pluginPath.assign(pluginDirectoryPath.get());
-  info.pluginBinaryPath.assign(pluginFilePath.get());
-  info.appPath.assign(appPath.get());
-  info.appBinaryPath.assign(appBinaryPath.get());
-
-  mGMPLoader->SetSandboxInfo(&info);
   return true;
 }
 #  endif  // MOZ_SANDBOX
@@ -581,7 +509,7 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   InitPlatformAPI(*platformAPI, this);
 
   mGMPLoader = MakeUnique<GMPLoader>();
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_SANDBOX) && !defined(XP_MACOSX)
   if (!mGMPLoader->CanSandbox()) {
     GMP_CHILD_LOG_DEBUG("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
@@ -589,26 +517,8 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   }
 #endif
 
-  bool isChromium = aAdapter.EqualsLiteral("chromium");
-
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // If we started the sandbox at launch ("earlyinit"), then we don't
-  // need to setup sandbox arguments here with SetMacSandboxInfo().
-  if (!IsMacSandboxStarted()) {
-    // Use of the chromium adapter indicates we are going to be
-    // running the Widevine plugin which requires access to the
-    // WindowServer in the Mac GMP sandbox policy.
-    if (!SetMacSandboxInfo(isChromium /* allow-window-server */)) {
-      NS_WARNING("Failed to set Mac GMP sandbox info");
-      delete platformAPI;
-      return IPC_FAIL(
-          this, nsPrintfCString("Failed to set Mac GMP sandbox info.").get());
-    }
-  }
-#endif
-
   GMPAdapter* adapter = nullptr;
-  if (isChromium) {
+  if (aAdapter.EqualsLiteral("chromium")) {
     auto&& paths = MakeCDMHostVerificationPaths();
     GMP_CHILD_LOG_DEBUG("%s CDM host paths=%s", __func__,
                         ToCString(paths).get());
