@@ -16,6 +16,7 @@
       "critical_section_on_gcov_flush-rG02ce9d8ef5a8.patch",
       "android-mangling-error.patch",
       "revert-r359260-due-to-bug41817.patch",
+      "r372020-r372182-profiler-linkage.patch",
       "rG7e18aeba5062.patch"
     ]
 }
