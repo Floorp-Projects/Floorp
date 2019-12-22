@@ -157,18 +157,16 @@ void BroadcastBlobURLRegistration(const nsACString& aURI, BlobImpl* aBlobImpl,
       nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal)));
 }
 
-void BroadcastBlobURLUnregistration(const nsCString& aURI,
-                                    nsIPrincipal* aPrincipal) {
+void BroadcastBlobURLUnregistration(const nsCString& aURI) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (XRE_IsParentProcess()) {
-    dom::ContentParent::BroadcastBlobURLUnregistration(aURI, aPrincipal);
+    dom::ContentParent::BroadcastBlobURLUnregistration(aURI);
     return;
   }
 
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-  Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(
-      aURI, IPC::Principal(aPrincipal)));
+  Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(aURI));
 }
 
 class BlobURLsReporter final : public nsIMemoryReporter {
@@ -592,13 +590,14 @@ void BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
 }
 
 /* static */
-bool BlobURLProtocolHandler::ForEachBlobURL(
-    std::function<bool(BlobImpl*, nsIPrincipal*, const nsACString&,
-                       bool aRevoked)>&& aCb) {
-  MOZ_ASSERT(NS_IsMainThread());
+bool BlobURLProtocolHandler::GetAllBlobURLEntries(
+    nsTArray<BlobURLRegistrationData>& aRegistrations, ContentParent* aCP) {
+  MOZ_ASSERT(aCP);
+  MOZ_ASSERT(NS_IsMainThread(),
+             "without locking gDataTable is main-thread only");
 
   if (!gDataTable) {
-    return false;
+    return true;
   }
 
   for (auto iter = gDataTable->ConstIter(); !iter.Done(); iter.Next()) {
@@ -610,9 +609,16 @@ bool BlobURLProtocolHandler::ForEachBlobURL(
     }
 
     MOZ_ASSERT(info->mBlobImpl);
-    if (!aCb(info->mBlobImpl, info->mPrincipal, iter.Key(), info->mRevoked)) {
+
+    IPCBlob ipcBlob;
+    nsresult rv = IPCBlobUtils::Serialize(info->mBlobImpl, aCP, ipcBlob);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
+
+    aRegistrations.AppendElement(BlobURLRegistrationData(
+        nsCString(iter.Key()), ipcBlob, IPC::Principal(info->mPrincipal),
+        info->mRevoked));
   }
 
   return true;
@@ -636,7 +642,7 @@ void BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 
   if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
-    BroadcastBlobURLUnregistration(nsCString(aUri), info->mPrincipal);
+    BroadcastBlobURLUnregistration(nsCString(aUri));
   }
 
   // The timer will take care of removing the entry for real after
