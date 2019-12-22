@@ -37,6 +37,7 @@
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSFunction.h"
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
@@ -2319,6 +2320,11 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
     }
 
     return ToString<CanGC>(cx, v);
+  }
+
+  if (obj->is<JSFunction>()) {
+    RootedFunction fun(cx, &obj->as<JSFunction>());
+    return FunctionToString(cx, fun, true);
   }
 
   return ObjectToSource(cx, obj);
