@@ -1440,7 +1440,7 @@ parent:
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
                                                 Principal principal);
 
-     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, Principal principal);
+     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);
 
     /**
      * Messages for communicating child Telemetry to the parent process
