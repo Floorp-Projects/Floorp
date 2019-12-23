@@ -19,7 +19,7 @@ add_task(async function() {
 
   info("Waiting for the manifest to be displayed");
   await waitUntil(() => doc.querySelector(".js-manifest") !== null);
-  ok("Manifest is being displayed");
+  ok(true, "Manifest is being displayed");
 
   // assert manifest members are being properly displayed
   checkManifestMember(doc, "name", "Foo");
@@ -49,7 +49,7 @@ add_task(async function() {
 
   info("Waiting for the manifest to be displayed");
   await waitUntil(() => doc.querySelector(".js-manifest") !== null);
-  ok("Manifest is being displayed");
+  ok(true, "Manifest is being displayed");
 
   // assert manifest members are being properly displayed
   checkManifestMember(doc, "name", "Foo");
@@ -80,7 +80,7 @@ add_task(async function() {
 
   info("Waiting for the manifest to be displayed");
   await waitUntil(() => doc.querySelector(".js-manifest") !== null);
-  ok("Manifest is being displayed");
+  ok(true, "Manifest is being displayed");
 
   const issuesEl = doc.querySelector(".js-manifest-issues");
   ok(issuesEl !== null, "Validation issues are displayed");

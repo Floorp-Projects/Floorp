@@ -14,5 +14,5 @@ add_task(async function() {
   toolbox.target.navigateTo({ url: "doc-debugger-statements.html" });
 
   await hasConsoleMessage({ toolbox }, 'done!')
-  ok('We reached the end');
+  ok(true, 'We reached the end');
 });

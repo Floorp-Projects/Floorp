@@ -41,7 +41,7 @@ async function testToolboxInitialization(tab, inspector, toolbox) {
   info("Destroying toolbox.");
   await toolbox.destroy();
 
-  ok("true", "'destroyed' notification received.");
+  ok(true, "'destroyed' notification received.");
   ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
 }
 

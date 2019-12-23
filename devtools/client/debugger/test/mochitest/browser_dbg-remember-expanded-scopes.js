@@ -37,5 +37,5 @@ add_task(async function() {
   await waitForPaused(dbg);
 
   await waitUntil(() => findNode(dbg, "innerData"));
-  ok("Inner object data automatically expanded after stepping");
+  ok(true, "Inner object data automatically expanded after stepping");
 });
