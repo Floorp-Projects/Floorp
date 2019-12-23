@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
 #include "mozilla/Span.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
@@ -244,18 +245,31 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
     *this = aOther;
   }
 
+  MemorySectionNameBuf(MemorySectionNameBuf&& aOther) {
+    *this = std::move(aOther);
+  }
+
   // We cannot use default copy here because mSectionFileName.Buffer needs to
   // be updated to point to |this->mBuf|, not |aOther.mBuf|.
   MemorySectionNameBuf& operator=(const MemorySectionNameBuf& aOther) {
     mSectionFileName.Length = aOther.mSectionFileName.Length;
     mSectionFileName.MaximumLength = sizeof(mBuf);
+    MOZ_ASSERT(mSectionFileName.Length <= mSectionFileName.MaximumLength);
     mSectionFileName.Buffer = mBuf;
     memcpy(mBuf, aOther.mBuf, aOther.mSectionFileName.Length);
     return *this;
   }
 
-  MemorySectionNameBuf(MemorySectionNameBuf&&) = delete;
-  MemorySectionNameBuf& operator=(MemorySectionNameBuf&&) = delete;
+  MemorySectionNameBuf& operator=(MemorySectionNameBuf&& aOther) {
+    mSectionFileName.Length = aOther.mSectionFileName.Length;
+    aOther.mSectionFileName.Length = 0;
+    mSectionFileName.MaximumLength = sizeof(mBuf);
+    MOZ_ASSERT(mSectionFileName.Length <= mSectionFileName.MaximumLength);
+    aOther.mSectionFileName.MaximumLength = sizeof(aOther.mBuf);
+    mSectionFileName.Buffer = mBuf;
+    memmove(mBuf, aOther.mBuf, mSectionFileName.Length);
+    return *this;
+  }
 
   // Native NT paths, so we can't assume MAX_PATH. Use a larger buffer.
   WCHAR mBuf[2 * MAX_PATH];
