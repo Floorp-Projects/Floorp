@@ -94,3 +94,26 @@ def build_push_apk_payload(config, task, task_def):
             scope_prefix, worker["product"], ":dep" if worker["dep"] else ""
         )
     )
+
+
+@payload_builder(
+    "scriptworker-shipit",
+    schema={
+        Required("upstream-artifacts"): [
+            {
+                Required("taskId"): taskref_or_string,
+                Required("taskType"): text_type,
+                Required("paths"): [text_type],
+            }
+        ],
+        Required("release-name"): text_type,
+    },
+)
+def build_push_apk_payload(config, task, task_def):
+    worker = task["worker"]
+
+    task_def["tags"]["worker-implementation"] = "scriptworker"
+
+    task_def['payload'] = {
+        'release_name': worker['release-name']
+    }

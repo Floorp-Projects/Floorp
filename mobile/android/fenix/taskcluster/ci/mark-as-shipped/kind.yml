@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: fenix_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - fenix_taskgraph.transforms.multi_dep:transforms
+    - fenix_taskgraph.transforms.mark_as_shipped:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - push-apk
+
+primary-dependency: push-apk
+
+group-by: build-type
+
+only-for-build-types:
+    - beta
+    - production
+
+job-template:
+    description: Mark Fenix as shipped in ship-it
+    worker-type: ship-it
+    scopes:
+        - project:releng:ship-it:action:mark-as-shipped
+    worker: {}
+
+    treeherder:
+        job-symbol: mark-shipped
+        kind: build

@@ -54,6 +54,11 @@ workers:
             implementation: scriptworker-pushapk
             os: scriptworker
             worker-type: 'mobile-{level}-pushapk'
+        ship-it:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-shipit
+            os: scriptworker
+            worker-type: 'mobile-{level}-shipit'
         t-bitbar.*:
             provisioner: proj-autophone
             implementation: generic-worker
