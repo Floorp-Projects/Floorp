@@ -40,6 +40,12 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
+      // This promise is exposed to consumers that want to wait until the thread
+      // front is available and attached.
+      this.onThreadAttached = new Promise(
+        r => (this._resolveOnThreadAttached = r)
+      );
+
       // By default, we close the DebuggerClient of local tabs which
       // are instanciated from TargetFactory module.
       // This flag will also be set on local targets opened from about:debugging,
@@ -366,6 +372,10 @@ function TargetMixin(parentClass) {
       const result = await this.threadFront.attach(options);
 
       this.threadFront.on("newSource", this._onNewSource);
+
+      // Resolve the onThreadAttached promise so that consumers that need to
+      // wait for the thread to be attached can resume.
+      this._resolveOnThreadAttached();
 
       return [result, this.threadFront];
     }
