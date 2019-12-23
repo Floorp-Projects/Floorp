@@ -126,6 +126,16 @@ static inline IntSize ToIntSize(const D2D1_SIZE_U& aSize) {
   return IntSize(aSize.width, aSize.height);
 }
 
+static inline SurfaceFormat ToPixelFormat(const DXGI_FORMAT& aFormat) {
+  switch (aFormat) {
+    case DXGI_FORMAT_A8_UNORM:
+    case DXGI_FORMAT_R8_UNORM:
+      return SurfaceFormat::A8;
+    default:
+      return SurfaceFormat::B8G8R8A8;
+  }
+}
+
 static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT& aFormat) {
   switch (aFormat.format) {
     case DXGI_FORMAT_A8_UNORM:
