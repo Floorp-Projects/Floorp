@@ -311,9 +311,9 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
                 assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
 
-                // The color here is "cadetblue" converted to hex.
-                assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
-                assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
+                // The color here is "cadetblue" converted to #aarrggbb.
+                assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#ff5f9ea0"))
+                assertThat("background_color should match", manifest.getString("background_color"), equalTo("#eec0ffee"))
                 assertThat("start_url should match", manifest.getString("start_url"), endsWith("/assets/www/start/index.html"))
 
                 val icon = manifest.getJSONArray("icons").getJSONObject(0);

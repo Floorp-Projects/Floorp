@@ -23,7 +23,7 @@ add_task(async function() {
 
   // assert manifest members are being properly displayed
   checkManifestMember(doc, "name", "Foo");
-  checkManifestMember(doc, "background_color", "#ff0000");
+  checkManifestMember(doc, "background_color", "#ff0000ff");
 
   ok(
     doc.querySelector(".js-manifest-issues") === null,
