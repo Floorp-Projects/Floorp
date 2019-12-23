@@ -22,7 +22,5 @@ add_task(async function() {
   await navigateToAndWaitForStyleSheets(CONTENT_PROCESS_URI, ui);
   is(ui.editors.length, 2, `Two sheets present for ${CONTENT_PROCESS_URI}`);
 
-  const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
-  toolbox.closeToolbox();
-  await onToolboxDestroyed;
+  await toolbox.closeToolbox();
 });
