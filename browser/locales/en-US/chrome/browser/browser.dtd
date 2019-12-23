@@ -84,8 +84,8 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY fxa.menu.account.label "Account">
 <!ENTITY fxa.menu.settings.label "Settings">
 <!ENTITY fxa.menu.accountSettings.label "Account Settings">
+<!ENTITY fxa.menu.manageAccount2.label "Manage Account">
 <!ENTITY fxa.menu.signOut.label "Sign Out…">
-<!ENTITY fxa.menu.deviceSettings.label "Device Settings">
 <!ENTITY fxa.menu.setupSync.label "Set Up &syncBrand.shortName.label;…">
 
 <!-- LOCALIZATION NOTE (fxa.service) Used to define the different FxA services
