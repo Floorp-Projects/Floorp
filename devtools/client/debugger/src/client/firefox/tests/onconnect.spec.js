@@ -6,7 +6,6 @@
 
 import { onConnect } from "../../firefox";
 
-
 const threadFront = {
   on: () => {},
   reconfigure: () => {},

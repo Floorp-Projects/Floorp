@@ -130,7 +130,7 @@ headlessly
 natively
 outputed
 threadFront
-tabTarget
+currentTarget
 bpClients
 originalToGeneratedId
 stopSourceMapWorker

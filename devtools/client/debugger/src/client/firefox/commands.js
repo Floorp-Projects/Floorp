@@ -53,13 +53,13 @@ const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
   threadFront: ThreadFront,
-  tabTarget: Target,
+  currentTarget: Target,
   debuggerClient: DebuggerClient,
 };
 
 function setupCommands(dependencies: Dependencies) {
   currentThreadFront = dependencies.threadFront;
-  currentTarget = dependencies.tabTarget;
+  currentTarget = dependencies.currentTarget;
   debuggerClient = dependencies.debuggerClient;
   targets = {};
   sourceActors = {};
