@@ -10914,6 +10914,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     newSHEntry = mOSHE;
 
     // Since we're not changing which page we have loaded, pass
+    // true for aCloneChildren.
     if (!newSHEntry) {
       nsresult rv = AddToSessionHistory(
           aNewURI, nullptr,
