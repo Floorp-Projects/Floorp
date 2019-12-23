@@ -3137,7 +3137,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool allowAsyncAnimation = false;
   bool inTransform = aBuilder->IsInTransform();
   if (isTransformed) {
-    const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
     nsDisplayTransform::PrerenderDecision decision =
         nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this,
                                                               &dirtyRect);
@@ -3151,7 +3150,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
         visibleRect = dirtyRect;
         [[fallthrough]];
         // fall through to the NoPrerender case
-      case nsDisplayTransform::NoPrerender:
+      case nsDisplayTransform::NoPrerender: {
+        const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
         if (overflow.IsEmpty() && !extend3DContext) {
           return;
         }
@@ -3174,6 +3174,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
           dirtyRect.SetEmpty();
           visibleRect.SetEmpty();
         }
+      }
     }
     inTransform = true;
   } else if (IsFixedPosContainingBlock()) {
