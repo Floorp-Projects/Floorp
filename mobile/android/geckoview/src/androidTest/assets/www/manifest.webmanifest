@@ -3,7 +3,7 @@
   "short_name": "app",
   "start_url": "./start/index.html",
   "display": "standalone",
-  "background_color": "#c0feee",
+  "background_color": "#c0ffeeee",
   "theme_color": "cadetblue",
   "icons": [{
     "src": "images/test.gif",

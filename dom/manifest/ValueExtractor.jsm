@@ -73,7 +73,14 @@ class ValueExtractor {
     let color;
     if (InspectorUtils.isValidCSSColor(value)) {
       const rgba = InspectorUtils.colorToRGBA(value);
-      color = "#" + ((rgba.r << 16) | (rgba.g << 8) | rgba.b).toString(16);
+      color =
+        "#" +
+        rgba.r.toString(16).padStart(2, "0") +
+        rgba.g.toString(16).padStart(2, "0") +
+        rgba.b.toString(16).padStart(2, "0") +
+        Math.round(rgba.a * 255)
+          .toString(16)
+          .padStart(2, "0");
     } else if (value) {
       const warn = this.domBundle.formatStringFromName(
         "ManifestInvalidCSSColor",
