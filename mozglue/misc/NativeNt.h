@@ -579,7 +579,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_IMPORT_DESCRIPTOR
-  GetImportDescriptor(const char* aModuleNameASCII) {
+  GetIATForModule(const char* aModuleNameASCII) {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
          IsValid(curImpDesc); ++curImpDesc) {
       auto curName = mIsImportDirectoryTampered
@@ -602,7 +602,7 @@ class MOZ_RAII PEHeaders final {
 
   Maybe<Span<IMAGE_THUNK_DATA>> GetIATThunksForModule(
       const char* aModuleNameASCII) {
-    PIMAGE_IMPORT_DESCRIPTOR impDesc = GetImportDescriptor(aModuleNameASCII);
+    PIMAGE_IMPORT_DESCRIPTOR impDesc = GetIATForModule(aModuleNameASCII);
     if (!impDesc) {
       return Nothing();
     }
