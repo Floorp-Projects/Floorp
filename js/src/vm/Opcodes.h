@@ -814,25 +814,29 @@
      */ \
     MACRO(JSOP_IMPORTMETA, "importmeta", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes newly created object onto the stack.
+     * Create and push a new object with no properties.
      *
-     * This opcode has four extra bytes so it can be exchanged with
-     * JSOP_NEWOBJECT during emit.
+     * (This opcode has 4 unused bytes so it can be easily turned into
+     * `JSOP_NEWOBJECT` during bytecode generation.)
      *
      *   Category: Literals
      *   Type: Object
-     *   Operands: (uint32_t extra)
+     *   Operands: uint32_t _unused
      *   Stack: => obj
      */ \
     MACRO(JSOP_NEWINIT, "newinit", NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
     /*
-     * Pushes newly created object onto the stack.
+     * Create and push a new object of a predetermined shape.
      *
-     * This opcode takes an object with the final shape, which can be set at
-     * the start and slots then filled in directly. We compute a group based on
-     * allocation site (or new group if the template's group is a singleton);
-     * see JSOP_NEWOBJECT_WITHGROUP for a variant that uses the same group as
-     * the template object.
+     * The new object has the shape of the template object
+     * `script->getObject(baseobjIndex)`. Subsequent `INITPROP` instructions
+     * must fill in all slots of the new object before it is used in any other
+     * way.
+     *
+     * For `JSOP_NEWOBJECT`, the new object has a group based on the allocation
+     * site (or a new group if the template's group is a singleton). For
+     * `JSOP_NEWOBJECT_WITHGROUP`, the new object has the same group as the
+     * template object.
      *
      *   Category: Literals
      *   Type: Object
@@ -840,22 +844,21 @@
      *   Stack: => obj
      */ \
     MACRO(JSOP_NEWOBJECT, "newobject", NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
-    /*
-     * Pushes newly created object onto the stack.
-     *
-     * This opcode takes an object with the final shape, which can be set at
-     * the start and slots then filled in directly. Uses the group from the
-     * template object; see JSOP_NEWOBJECT for a variant with different
-     * heuristics.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands: uint32_t baseobjIndex
-     *   Stack: => obj
-     */ \
     MACRO(JSOP_NEWOBJECT_WITHGROUP, "newobjectwithgroup", NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
     /*
-     * Pushes deep-cloned object literal or singleton onto the stack.
+     * Push a preconstructed object.
+     *
+     * Going one step further than `JSOP_NEWOBJECT`, this instruction doesn't
+     * just reuse the shape--it actually pushes the preconstructed object
+     * `script->getObject(objectIndex)` right onto the stack. The object must
+     * be a singleton `PlainObject` or `ArrayObject`.
+     *
+     * The spec requires that an *ObjectLiteral* or *ArrayLiteral* creates a
+     * new object every time it's evaluated, so this instruction must not be
+     * used anywhere it might be executed more than once.
+     *
+     * There's a shell-only option, `newGlobal({cloneSingletons: true})`, that
+     * makes this instruction do a deep copy of the object. A few tests use it.
      *
      *   Category: Literals
      *   Type: Object
@@ -864,7 +867,9 @@
      */ \
     MACRO(JSOP_OBJECT, "object", NULL, 5, 0, 1, JOF_OBJECT) \
     /*
-     * Pushes newly created object onto the stack with provided [[Prototype]].
+     * Create and push a new ordinary object with the provided [[Prototype]].
+     *
+     * This is used to create the `.prototype` object for derived classes.
      *
      *   Category: Literals
      *   Type: Object
@@ -873,10 +878,16 @@
      */ \
     MACRO(JSOP_OBJWITHPROTO, "objwithproto", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Initialize a named property in an object literal, like '{a: x}'.
+     * Define a data property on an object.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', defines
-     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     * `obj` must be an object.
+     *
+     * Implements: [CreateDataPropertyOrThrow][1] as used in
+     * [PropertyDefinitionEvaluation][2] of regular and shorthand
+     * *PropertyDefinition*s.
+     *
+     *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
+     *    [2]: https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation
      *
      *   Category: Literals
      *   Type: Object
@@ -885,10 +896,14 @@
      */ \
     MACRO(JSOP_INITPROP, "initprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Initialize a non-enumerable data-property on an object.
+     * Like `JSOP_INITPROP`, but define a non-enumerable property.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', defines
-     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     * This is used to define class methods.
+     *
+     * Implements: [PropertyDefinitionEvaluation][1] for methods, steps 3 and
+     * 4, when *enumerable* is false.
+     *
+     *    [1]: https://tc39.es/ecma262/#sec-method-definitions-runtime-semantics-propertydefinitionevaluation
      *
      *   Category: Literals
      *   Type: Object
@@ -897,11 +912,15 @@
      */ \
     MACRO(JSOP_INITHIDDENPROP, "inithiddenprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Initialize a non-configurable, non-writable, non-enumerable
-     * data-property on an object.
+     * Like `JSOP_INITPROP`, but define a non-enumerable, non-writable,
+     * non-configurable property.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', defines
-     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     * This is used to define the `.prototype` property on classes.
+     *
+     * Implements: [MakeConstructor][1], step 8, when *writablePrototype* is
+     * false.
+     *
+     *    [1]: https://tc39.es/ecma262/#sec-makeconstructor
      *
      *   Category: Literals
      *   Type: Object
@@ -910,10 +929,16 @@
      */ \
     MACRO(JSOP_INITLOCKEDPROP, "initlockedprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Initialize a numeric property in an object literal, like '{1: x}'.
+     * Define a data property on `obj` with property key `id` and value `val`.
      *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     * Implements: [CreateDataPropertyOrThrow][1]. This instruction is used for
+     * object literals like `{0: val}` and `{[id]: val}`, and methods like
+     * `*[Symbol.iterator]() {}`.
+     *
+     * `JSOP_INITHIDDENELEM` is the same but defines a non-enumerable property,
+     * for class methods.
+     *
+     *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
      *
      *   Category: Literals
      *   Type: Object
@@ -921,121 +946,79 @@
      *   Stack: obj, id, val => obj
      */ \
     MACRO(JSOP_INITELEM, "initelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
-    /*
-     * Initialize a non-enumerable numeric property in an object literal, like
-     * '{1: x}'.
-     *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' property of 'obj' as 'val', pushes 'obj' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands:
-     *   Stack: obj, id, val => obj
-     */ \
     MACRO(JSOP_INITHIDDENELEM, "inithiddenelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Initialize a getter in an object literal.
+     * Define an accessor property on `obj` with the given `getter`.
+     * `nameIndex` gives the property name.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', defines getter
-     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     * `JSOP_INITHIDDENPROP_GETTER` is the same but defines a non-enumerable
+     * property, for getters in classes.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands: uint32_t nameIndex
-     *   Stack: obj, val => obj
+     *   Stack: obj, getter => obj
      */ \
     MACRO(JSOP_INITPROP_GETTER, "initprop_getter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    /*
-     * Initialize a non-enumerable getter in an object literal.
-     *
-     * Pops the top two values on the stack as 'val' and 'obj', defines getter
-     * of 'obj' as 'val', pushes 'obj' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands: uint32_t nameIndex
-     *   Stack: obj, val => obj
-     */ \
     MACRO(JSOP_INITHIDDENPROP_GETTER, "inithiddenprop_getter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Initialize a numeric getter in an object literal like
-     * '{get 2() {}}'.
+     * Define an accessor property on `obj` with property key `id` and the given `getter`.
      *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' getter of 'obj' as 'val', pushes 'obj' onto the stack.
+     * This is used to implement getters like `get [id]() {}` or `get 0() {}`.
+     *
+     * `JSOP_INITHIDDENELEM_GETTER` is the same but defines a non-enumerable
+     * property, for getters in classes.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, id, val => obj
+     *   Stack: obj, id, getter => obj
      */ \
     MACRO(JSOP_INITELEM_GETTER, "initelem_getter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    /*
-     * Initialize a non-enumerable numeric getter in an object literal like
-     * '{get 2() {}}'.
-     *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' getter of 'obj' as 'val', pushes 'obj' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands:
-     *   Stack: obj, id, val => obj
-     */ \
     MACRO(JSOP_INITHIDDENELEM_GETTER, "inithiddenelem_getter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Initialize a setter in an object literal.
+     * Define an accessor property on `obj` with the given `setter`.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', defines setter
-     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     * This is used to implement ordinary setters like `set foo(v) {}`.
+     *
+     * `JSOP_INITHIDDENPROP_SETTER` is the same but defines a non-enumerable
+     * property, for setters in classes.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands: uint32_t nameIndex
-     *   Stack: obj, val => obj
+     *   Stack: obj, setter => obj
      */ \
     MACRO(JSOP_INITPROP_SETTER, "initprop_setter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    /*
-     * Initialize a non-enumerable setter in an object literal.
-     *
-     * Pops the top two values on the stack as 'val' and 'obj', defines setter
-     * of 'obj' as 'val', pushes 'obj' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands: uint32_t nameIndex
-     *   Stack: obj, val => obj
-     */ \
     MACRO(JSOP_INITHIDDENPROP_SETTER, "inithiddenprop_setter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Initialize a numeric setter in an object literal like
-     * '{set 2(v) {}}'.
+     * Define an accesssor property on `obj` with property key `id` and the
+     * given `setter`.
      *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' setter of 'obj' as 'val', pushes 'obj' onto the stack.
+     * This is used to implement setters with computed property keys or numeric
+     * keys.
+     *
+     * `JSOP_INITHIDDENELEM_SETTER` is the same but defines a non-enumerable
+     * property, for setters in classes.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, id, val => obj
+     *   Stack: obj, id, setter => obj
      */ \
     MACRO(JSOP_INITELEM_SETTER, "initelem_setter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    /*
-     * Initialize a non-enumerable numeric setter in an object literal like
-     * '{set 2(v) {}}'.
-     *
-     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
-     * 'id' setter of 'obj' as 'val', pushes 'obj' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands:
-     *   Stack: obj, id, val => obj
-     */ \
     MACRO(JSOP_INITHIDDENELEM_SETTER, "inithiddenelem_setter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Pops the top of stack value, pushes property of it onto the stack.
+     * Get the value of the property `obj.name`. This can call getters and
+     * proxy traps.
+     *
+     * `JSOP_CALLPROP` is exactly like `JSOP_GETPROP` but hints to the VM that we're
+     * getting a method in order to call it.
+     *
+     * Implements: [GetV][1], [GetValue][2] step 5.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getv
+     * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
      *   Category: Literals
      *   Type: Object
@@ -1043,54 +1026,47 @@
      *   Stack: obj => obj[name]
      */ \
     MACRO(JSOP_GETPROP, "getprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
-    /*
-     * Pops the top of stack value, pushes property of it onto the stack.
-     * Requires the value under 'obj' to be the receiver of the following call.
-     *
-     * Like JSOP_GETPROP but for call context.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands: uint32_t nameIndex
-     *   Stack: obj => obj[name]
-     */ \
     MACRO(JSOP_CALLPROP, "callprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops the top two values on the stack as 'propval' and 'obj', pushes
-     * 'propval' property of 'obj' onto the stack.
+     * Get the value of the property `obj[key]`.
+     *
+     * `JSOP_CALLELEM` is exactly like `JSOP_GETELEM` but hints to the VM that
+     * we're getting a method in order to call it.
+     *
+     * Implements: [GetV][1], [GetValue][2] step 5.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getv
+     * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, propval => obj[propval]
+     *   Stack: obj, key => obj[key]
      */ \
     MACRO(JSOP_GETELEM, "getelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
-    /*
-     * Pops the top two values on the stack as 'propval' and 'obj', pushes
-     * 'propval' property of 'obj' onto the stack. Requires the value under
-     * 'obj' to be the receiver of the following call.
-     *
-     * Like JSOP_GETELEM but for call context.
-     *
-     *   Category: Literals
-     *   Type: Object
-     *   Operands:
-     *   Stack: obj, propval => obj[propval]
-     */ \
     MACRO(JSOP_CALLELEM, "callelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops the top of stack value, pushes the 'length' property of it onto the
-     * stack.
+     * Push the value of `obj.length`.
+     *
+     * `nameIndex` must be the index of the atom `"length"`. This then behaves
+     * exactly like `JSOP_GETPROP`.
      *
      *   Category: Literals
      *   Type: Array
      *   Operands: uint32_t nameIndex
-     *   Stack: obj => obj['length']
+     *   Stack: obj => obj.length
      */ \
     MACRO(JSOP_LENGTH, "length", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops the top two values on the stack as 'val' and 'obj' and performs
-     * 'obj.prop = val', pushing 'val' back onto the stack.
+     * Non-strict assignment to a property, `obj.name = val`.
+     *
+     * This throws a TypeError if `obj` is null or undefined. If it's a
+     * primitive value, the property is set on ToObject(`obj`), typically with
+     * no effect.
+     *
+     * Implements: [PutValue][1] step 6 for non-strict code.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
      *   Category: Literals
      *   Type: Object
@@ -1099,9 +1075,9 @@
      */ \
     MACRO(JSOP_SETPROP, "setprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Pops the top two values on the stack as 'val' and 'obj', and performs
-     * 'obj.prop = val', pushing 'val' back onto the stack. Throws a TypeError
-     * if the set-operation failed (per strict mode semantics).
+     * Like `JSOP_SETPROP`, but for strict mode code. Throw a TypeError if
+     * `obj[key]` exists but is non-writable, if it's an accessor property with
+     * no setter, or if `obj` is a primitive value.
      *
      *   Category: Literals
      *   Type: Object
@@ -1110,29 +1086,39 @@
      */ \
     MACRO(JSOP_STRICTSETPROP, "strict-setprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Pops the top three values on the stack as 'val', 'propval' and 'obj',
-     * sets 'propval' property of 'obj' as 'val', pushes 'val' onto the stack.
+     * Non-strict assignment to a property, `obj[key] = val`.
+     *
+     * Implements: [PutValue][1] step 6 for non-strict code.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, propval, val => val
+     *   Stack: obj, key, val => val
      */ \
     MACRO(JSOP_SETELEM, "setelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Pops the top three values on the stack as 'val', 'propval' and 'obj',
-     * sets 'propval' property of 'obj' as 'val', pushes 'val' onto the stack.
-     * Throws a TypeError if the set fails, per strict mode semantics.
+     * Like `JSOP_SETELEM`, but for strict mode code. Throw a TypeError if
+     * `obj[key]` exists but is non-writable, if it's an accessor property with
+     * no setter, or if `obj` is a primitive value.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, propval, val => val
+     *   Stack: obj, key, val => val
      */ \
     MACRO(JSOP_STRICTSETELEM, "strict-setelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Pops the top of stack value, deletes property from it, pushes 'true'
-     * onto the stack if succeeded, 'false' if not.
+     * Delete a property from `obj`. Push true on success, false if the
+     * property existed but could not be deleted. This implements `delete
+     * obj.name` in non-strict code.
+     *
+     * Throws if `obj` is null or undefined. Can call proxy traps.
+     *
+     * Implements: [`delete obj.propname`][1] step 5 in non-strict code.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Special Operators
@@ -1141,9 +1127,8 @@
      */ \
     MACRO(JSOP_DELPROP, "delprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSLOPPY) \
     /*
-     * Pops the top of stack value and attempts to delete the given property
-     * from it. Pushes 'true' onto success, else throws a TypeError per strict
-     * mode property-deletion requirements.
+     * Like `JSOP_DELPROP`, but for strict mode code. Push `true` on success,
+     * else throw a TypeError.
      *
      *   Category: Operators
      *   Type: Special Operators
@@ -1152,33 +1137,40 @@
      */ \
     MACRO(JSOP_STRICTDELPROP, "strict-delprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSTRICT) \
     /*
-     * Pops the top two values on the stack as 'propval' and 'obj', deletes
-     * 'propval' property from 'obj', pushes 'true'  onto the stack if
-     * succeeded, 'false' if not.
+     * Delete the property `obj[key]` and push `true` on success, `false`
+     * if the property existed but could not be deleted.
+     *
+     * This throws if `obj` is null or undefined. Can call proxy traps.
+     *
+     * Implements: [`delete obj[key]`][1] step 5 in non-strict code.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
      *
      *   Category: Operators
      *   Type: Special Operators
      *   Operands:
-     *   Stack: obj, propval => succeeded
+     *   Stack: obj, key => succeeded
      */ \
     MACRO(JSOP_DELELEM, "delelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSLOPPY) \
     /*
-     * Pops the top two values on the stack as 'propval' and 'obj', and
-     * attempts to delete 'propval' property from 'obj'. Pushes 'true' onto the
-     * stack on success, else throws a TypeError per strict mode property
-     * deletion requirements.
+     * Like `JSOP_DELELEM, but for strict mode code. Push `true` on success,
+     * else throw a TypeError.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, propval => succeeded
+     *   Stack: obj, key => succeeded
      */ \
     MACRO(JSOP_STRICTDELELEM, "strict-delelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSTRICT) \
     /*
-     * Pops the top two values 'id' and 'obj' from the stack, then pushes
-     * obj.hasOwnProperty(id)
+     * Push true if `obj` has an own property `id`.
      *
-     * Note that 'obj' is the top value.
+     * Note that `obj` is the top value, like `JSOP_IN`.
+     *
+     * This opcode is not used for normal JS. Self-hosted code uses it by
+     * calling the intrinsic `hasOwn(id, obj)`. For example,
+     * `Object.prototype.hasOwnProperty` is implemented this way (see
+     * js/src/builtin/Object.js).
      *
      *   Category: Other
      *   Type:
@@ -1187,38 +1179,69 @@
      */ \
     MACRO(JSOP_HASOWN, "hasown", NULL, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pushes the prototype of the home object for |callee| onto the
-     * stack.
+     * Push the SuperBase of the method `callee`. The SuperBase is
+     * `callee`.[[HomeObject]].[[GetPrototypeOf]](), the object where `super`
+     * property lookups should begin.
+     *
+     * `callee` must be a function that has a HomeObject that's an object,
+     * typically produced by `JSOP_CALLEE` or `JSOP_ENVCALLEE`.
+     *
+     * Implements: [GetSuperBase][1], except that instead of the environment,
+     * the argument supplies the callee.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getsuperbase
      *
      *   Category: Variables and Scopes
      *   Type: Super
      *   Operands:
-     *   Stack: callee => homeObjectProto
+     *   Stack: callee => superBase
      */ \
     MACRO(JSOP_SUPERBASE, "superbase", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the top two values, and pushes the property of one, using the other
-     * as the receiver.
+     * Get the value of `receiver.name`, starting the property search at `obj`.
+     * In spec terms, obj.[[Get]](name, receiver).
+     *
+     * Implements: [GetValue][1] for references created by [`super.name`][2].
+     * The `receiver` is `this` and `obj` is the SuperBase of the enclosing
+     * method.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getvalue
+     * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
      *   Category: Literals
      *   Type: Object
      *   Operands: uint32_t nameIndex
-     *   Stack: receiver, obj => obj[name]
+     *   Stack: receiver, obj => super.name
      */ \
     MACRO(JSOP_GETPROP_SUPER, "getprop-super", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
-     * LIKE JSOP_GETELEM but takes receiver on stack, and the propval is
-     * evaluated before the obj.
+     * Get the value of `receiver[key]`, starting the property search at `obj`.
+     * In spec terms, obj.[[Get]](key, receiver).
+     *
+     * Implements: [GetValue][1] for references created by [`super[key]`][2]
+     * (where the `receiver` is `this` and `obj` is the SuperBase of the enclosing
+     * method); [`Reflect.get(obj, key, receiver)`][3].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getvalue
+     * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+     * [3]: https://tc39.es/ecma262/#sec-reflect.get
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: receiver, propval, obj => obj[propval]
+     *   Stack: receiver, key, obj => super[key]
      */ \
     MACRO(JSOP_GETELEM_SUPER, "getelem-super", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops the top three values on the stack as 'val', 'obj' and 'receiver',
-     * and performs 'obj.prop = val', pushing 'val' back onto the stack.
+     * Assign `val` to `receiver.name`, starting the search for an existing
+     * property at `obj`. In spec terms, obj.[[Set]](name, val, receiver).
+     *
+     * Implements: [PutValue][1] for references created by [`super.name`][2] in
+     * non-strict code. The `receiver` is `this` and `obj` is the SuperBase of
+     * the enclosing method.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
+     * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
      *   Category: Literals
      *   Type: Object
@@ -1227,10 +1250,7 @@
      */ \
     MACRO(JSOP_SETPROP_SUPER, "setprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
-     * Pops the top three values on the stack as 'val' and 'obj', and
-     * 'receiver', and performs 'obj.prop = val', pushing 'val' back onto the
-     * stack. Throws a TypeError if the set-operation failed (per strict mode
-     * semantics).
+     * Like `JSOP_SETPROP_SUPER`, but for strict mode code.
      *
      *   Category: Literals
      *   Type: Object
@@ -1239,28 +1259,64 @@
      */ \
     MACRO(JSOP_STRICTSETPROP_SUPER, "strictsetprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
-     * LIKE JSOP_SETELEM, but takes receiver on the stack, and the propval is
-     * evaluated before the base.
+     * Assign `val` to `receiver[key]`, strating the search for an existing
+     * property at `obj`. In spec terms, obj.[[Set]](key, val, receiver).
+     *
+     * Implements: [PutValue][1] for references created by [`super[key]`][2] in
+     * non-strict code. The `receiver` is `this` and `obj` is the SuperBase of
+     * the enclosing method.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
+     * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: receiver, propval, obj, val => val
+     *   Stack: receiver, key, obj, val => val
      */ \
     MACRO(JSOP_SETELEM_SUPER, "setelem-super", NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
-     * LIKE JSOP_STRICTSETELEM, but takes receiver on the stack, and the
-     * propval is evaluated before the base.
+     * Like `JSOP_SETELEM_SUPER`, but for strict mode code.
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: receiver, propval, obj, val => val
+     *   Stack: receiver, key, obj, val => val
      */ \
     MACRO(JSOP_STRICTSETELEM_SUPER, "strict-setelem-super", NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
-     * Sets up a for-in loop. It pops the top of stack value as 'val' and
-     * pushes 'iter' which is an iterator for 'val'.
+     * Set up a for-in loop by pushing a `PropertyIteratorObject` over the
+     * enumerable properties of `val`.
+     *
+     * Implements: [ForIn/OfHeadEvaluation][1] step 6,
+     * [EnumerateObjectProperties][1]. (The spec refers to an "Iterator object"
+     * with a `next` method, but notes that it "is never directly accessible"
+     * to scripts. The object we use for this has no public methods.)
+     *
+     * If `val` is null or undefined, this pushes an empty iterator.
+     *
+     * The `iter` object pushed by this instruction must not be used or removed
+     * from the stack except by `JSOP_MOREITER` and `JSOP_ENDITER`, or by error
+     * handling.
+     *
+     * The script's `JSScript::trynotes()` must mark the body of the `for-in`
+     * loop, i.e. exactly those instructions that begin executing with `iter`
+     * on the stack, starting with the next instruction (always
+     * `JSOP_LOOPHEAD`). Code must not jump into or out of this region: control
+     * can enter only by executing `JSOP_ITER` and can exit only by executing a
+     * `JSOP_ENDITER` or by exception unwinding. (A `JSOP_ENDITER` is always
+     * emitted at the end of the loop, and extra copies are emitted on "exit
+     * slides", where a `break`, `continue`, or `return` statement exits the
+     * loop.)
+     *
+     * Typically a single try note entry marks the contiguous chunk of bytecode
+     * from the instruction after `JSOP_ITER` to `JSOP_ENDITER` (inclusive);
+     * but if that range contains any instructions on exit slides, after a
+     * `JSOP_ENDITER`, then those must be correctly noted as *outside* the
+     * loop.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind
+     * [2]: https://tc39.es/ecma262/#sec-enumerate-object-properties
      *
      *   Category: Statements
      *   Type: For-In Statement
@@ -1351,60 +1407,89 @@
      */ \
     MACRO(JSOP_TOASYNCITER, "toasynciter", NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * '__proto__: v' inside an object initializer.
+     * Set the prototype of `obj`.
      *
-     * Pops the top two values on the stack as 'newProto' and 'obj', sets
-     * prototype of 'obj' as 'newProto', pushes 'true' onto the stack if
-     * succeeded, 'false' if not.
+     * `obj` must be an object. This is used to implement object literals like
+     * `{__proto__: protoVal}`.
+     *
+     * Implements: [B.3.1 __proto__ Property Names in Object Initializers][1], step 7.a.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-__proto__-property-names-in-object-initializers
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: obj, newProto => succeeded
+     *   Stack: obj, protoVal => obj
      */ \
     MACRO(JSOP_MUTATEPROTO, "mutateproto", NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * Pushes newly created array onto the stack.
-     *
-     * This opcode takes the final length, which is preallocated.
+     * Create and push a new Array object with the given `length`,
+     * preallocating enough memory to hold that many elements.
      *
      *   Category: Literals
      *   Type: Array
      *   Operands: uint32_t length
-     *   Stack: => obj
+     *   Stack: => array
      */ \
     MACRO(JSOP_NEWARRAY, "newarray", NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
     /*
-     * Initialize an array element.
+     * Initialize an array element `array[index]` with value `val`.
      *
-     * Pops the top two values on the stack as 'val' and 'obj', sets 'index'
-     * property of 'obj' as 'val', pushes 'obj' onto the stack.
+     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)`. If it is, this does nothing.
+     *
+     * This never calls setters or proxy traps.
+     *
+     * `array` must be an Array object created by `JSOP_NEWARRAY` with length >
+     * `index`, and never used except by `JSOP_INITELEM_ARRAY`.
+     *
+     * Implements: [ArrayAccumulation][1], the third algorithm, step 4, in the
+     * common case where *nextIndex* is known.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
      *
      *   Category: Literals
      *   Type: Array
      *   Operands: uint32_t index
-     *   Stack: obj, val => obj
+     *   Stack: array, val => array
      */ \
     MACRO(JSOP_INITELEM_ARRAY, "initelem_array", NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the top three values on the stack as 'val', 'index' and 'obj', sets
-     * 'index' property of 'obj' as 'val', pushes 'obj' and 'index + 1' onto
-     * the stack.
+     * Initialize an array element `array[index++]` with value `val`.
      *
-     * This opcode is used in Array literals with spread and spreadcall
-     * arguments.
+     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)`. If it is, no element is
+     * defined, but the array length and the stack value `index` are still
+     * incremented.
+     *
+     * This never calls setters or proxy traps.
+     *
+     * `array` must be an Array object created by `JSOP_NEWARRAY` and never used
+     * except by `JSOP_INITELEM_ARRAY` and `JSOP_INITELEM_INC`.
+     *
+     * `index` must be an integer, `0 <= index <= INT32_MAX`. If `index` is
+     * `INT32_MAX`, this throws a RangeError.
+     *
+     * This instruction is used when an array literal contains a
+     * *SpreadElement*. In `[a, ...b, c]`, `INITELEM_ARRAY 0` is used to put
+     * `a` into the array, but `INITELEM_INC` is used for the elements of `b`
+     * and for `c`.
+     *
+     * Implements: Several steps in [ArrayAccumulation][1] that call
+     * CreateDataProperty, set the array length, and/or increment *nextIndex*.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
      *
      *   Category: Literals
      *   Type: Array
      *   Operands:
-     *   Stack: obj, index, val => obj, (index + 1)
+     *   Stack: array, index, val => array, (index + 1)
      */ \
     MACRO(JSOP_INITELEM_INC, "initelem_inc", NULL, 1, 3, 2, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     /*
-     * Pushes a JS_ELEMENTS_HOLE value onto the stack, representing an omitted
-     * property in an array literal (e.g. property 0 in the array '[, 1]').
+     * Push `MagicValue(JS_ELEMENTS_HOLE)`, representing an *Elision* in an
+     * array literal (like the missing property 0 in the array `[, 1]`).
      *
-     * This opcode is used with the JSOP_NEWARRAY opcode.
+     * This magic value must be used only by `JSOP_INITELEM_ARRAY` or
+     * `JSOP_INITELEM_INC`.
      *
      *   Category: Literals
      *   Type: Array
@@ -1413,18 +1498,28 @@
      */ \
     MACRO(JSOP_HOLE, "hole", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes a newly created array onto the stack, whose elements are the same
-     * as that of a template object's copy on write elements.
+     * Create and push a new array that shares the elements of a template
+     * object.
+     *
+     * `script->getObject(objectIndex)` must be a copy-on-write array whose
+     * elements are all primitive values.
+     *
+     * This is an optimization. This single instruction implements an entire
+     * array literal, saving run time, code, and memory compared to
+     * `JSOP_NEWARRAY` and a series of `JSOP_INITELEM` instructions.
      *
      *   Category: Literals
      *   Type: Array
      *   Operands: uint32_t objectIndex
-     *   Stack: => obj
+     *   Stack: => array
      */ \
     MACRO(JSOP_NEWARRAY_COPYONWRITE, "newarray_copyonwrite", NULL, 5, 0, 1, JOF_OBJECT) \
     /*
-     * Pushes a regular expression literal onto the stack. It requires special
-     * "clone on exec" handling.
+     * Clone and push a new RegExp object.
+     *
+     * Implements: [Evaluation for *RegularExpressionLiteral*][1].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
      *
      *   Category: Literals
      *   Type: RegExp
@@ -1698,10 +1793,18 @@
      */ \
     MACRO(JSOP_GIMPLICITTHIS, "gimplicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     * Pushes the call site object specified by objectIndex onto the stack.
-     * Defines the raw property specified by objectIndex + 1 on the call site
-     * object and freezes both the call site object as well as its raw
-     * property.
+     * Push the call site object for a tagged template call.
+     *
+     * `script->getObject(objectIndex)` is the call site object;
+     * `script->getObject(objectIndex + 1)` is the raw object.
+     *
+     * The first time this instruction runs for a given template, it assembles
+     * the final value, defining the `.raw` property on the call site object
+     * and freezing both objects.
+     *
+     * Implements: [GetTemplateObject][1], steps 4 and 12-16.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-gettemplateobject
      *
      *   Category: Literals
      *   Type: Object
@@ -2449,9 +2552,15 @@
      */ \
     MACRO(JSOP_SETNAME, "setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Pops a environment and value from the stack, assigns value to the given
-     * name, and pushes the value back on the stack. If the set failed, then
-     * throw a TypeError, per usual strict mode semantics.
+     * Assign `val` to the binding in `env` with the name given by `nameIndex`,
+     * then push `val` back onto the stack. If assignment failed, throw a
+     * TypeError.
+     *
+     * `env` must be an environment currently on the environment chain.
+     *
+     * Implements: [PutValue][1] step 7 for strict mode code.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
      *   Category: Variables and Scopes
      *   Type: Variables
