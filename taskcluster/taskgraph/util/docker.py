@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import requests
 import requests_unixsocket
 import sys
 import urllib
@@ -44,7 +45,16 @@ def post_to_docker(tar, api_path, **kwargs):
     as data (e.g. iterator or file object).
     The extra keyword arguments are passed as arguments to the docker API.
     """
-    req = requests_unixsocket.Session().post(
+    # requests-unixsocket doesn't honor requests timeouts
+    # See https://github.com/msabramo/requests-unixsocket/issues/44
+    # We have some large docker images that trigger the default timeout,
+    # so we increase the requests-unixsocket timeout here.
+    session = requests.Session()
+    session.mount(
+        requests_unixsocket.DEFAULT_SCHEME,
+        requests_unixsocket.UnixAdapter(timeout=120),
+    )
+    req = session.post(
         docker_url(api_path, **kwargs),
         data=tar,
         stream=True,
