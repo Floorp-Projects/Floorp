@@ -10,23 +10,23 @@ import { features, prefs } from "../utils/prefs";
 
 export async function onConnect(connection: any, actions: Object) {
   const { debuggerClient, targetList } = connection;
-  const tabTarget = targetList.targetFront;
-  const threadFront = tabTarget.threadFront;
+  const currentTarget = targetList.targetFront;
+  const threadFront = currentTarget.threadFront;
 
-  if (!tabTarget || !threadFront || !debuggerClient) {
+  if (!currentTarget || !threadFront || !debuggerClient) {
     return;
   }
 
   setupCommands({
     threadFront,
-    tabTarget,
+    currentTarget,
     debuggerClient,
   });
 
-  setupEvents({ threadFront, tabTarget, actions, debuggerClient });
+  setupEvents({ threadFront, currentTarget, actions, debuggerClient });
 
-  tabTarget.on("will-navigate", actions.willNavigate);
-  tabTarget.on("navigate", actions.navigated);
+  currentTarget.on("will-navigate", actions.willNavigate);
+  currentTarget.on("navigate", actions.navigated);
 
   const wasmBinarySource =
     features.wasm && !!debuggerClient.mainRoot.traits.wasmBinarySource;
@@ -46,12 +46,12 @@ export async function onConnect(connection: any, actions: Object) {
   // they are active once attached.
   actions.addEventListenerBreakpoints([]).catch(e => console.error(e));
 
-  const { traits } = tabTarget;
+  const { traits } = currentTarget;
   await actions.connect(
-    tabTarget.url,
+    currentTarget.url,
     threadFront.actor,
     traits,
-    tabTarget.isWebExtension
+    currentTarget.isWebExtension
   );
 
   // Fetch the sources for all the targets
