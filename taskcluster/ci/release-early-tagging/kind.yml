@@ -29,6 +29,7 @@ job-defaults:
                 maple: true
                 default: false
 
+
 jobs:
     fennec:
         name: fennec-tag-buildN
@@ -37,7 +38,17 @@ jobs:
     firefox:
         name: firefox-tag-buildN
         shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(TagBuild)
+            tier: 1
+            kind: build
 
     devedition:
         name: devedition-tag-buildN
         shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(TagBuild)
+            tier: 1
+            kind: build
