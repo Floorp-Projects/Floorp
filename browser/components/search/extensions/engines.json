@@ -508,7 +508,7 @@
         "included": { "regions": ["default"] }
       }, {
         "included": { "locales": { "matches": ["en-US"] } },
-        "excluded": { "regions": ["ru", "tr", "by", "kz"] }
+        "excluded": { "regions": ["by", "ca", "ch", "gb", "kz", "nl", "ru", "tr"] }
       }, {
         "included": {
           "locales": { "matches": ["en-US"] },
@@ -615,7 +615,7 @@
         }
       }, {
         "included": {
-          "locales": { "matches": ["br", "fr", "wo"] },
+          "locales": { "matches": ["br", "en-US", "fr", "wo"] },
           "regions": ["ca"]
         },
         "webExtension": {
@@ -633,7 +633,7 @@
         }
       }, {
         "included": {
-          "locales": { "matches": ["br", "fr", "wo"] },
+          "locales": { "matches": ["br", "en-US", "fr", "wo"] },
           "regions": ["ch"]
         },
         "webExtension": {
@@ -651,6 +651,24 @@
         }
       }, {
         "included": { "locales": { "matches": ["cy", "en-GB", "gd"] }},
+        "webExtension": {
+          "locales": ["uk"]
+        },
+        "telemetryId": "ebay-uk",
+        "params": {
+          "searchUrlGetParams": [
+            { "name": "ff3", "value": "4" },
+            { "name": "toolid", "value": "20004" },
+            { "name": "campid", "value": "5338192028" },
+            { "name": "customid", "value": "" },
+            { "name": "mpre", "value": "https://www.ebay.co.uk/sch/{searchTerms}" }
+          ]
+        }
+      }, {
+        "included": {
+          "locales": { "matches": ["en-US"] },
+          "regions": ["gb"]
+        },
         "webExtension": {
           "locales": ["uk"]
         },
@@ -750,6 +768,24 @@
         }
       }, {
         "included": { "locales": { "matches": ["fy-NL", "nl"] }},
+        "webExtension": {
+          "locales": ["nl"]
+        },
+        "telemetryId": "ebay-nl",
+        "params": {
+          "searchUrlGetParams": [
+            { "name": "ff3", "value": "4" },
+            { "name": "toolid", "value": "20004" },
+            { "name": "campid", "value": "5338192028" },
+            { "name": "customid", "value": "" },
+            { "name": "mpre", "value": "https://www.ebay.nl/sch/{searchTerms}" }
+          ]
+        }
+      }, {
+        "included": {
+          "locales": { "matches": ["en-US"] },
+          "regions": ["nl"]
+        },
         "webExtension": {
           "locales": ["nl"]
         },

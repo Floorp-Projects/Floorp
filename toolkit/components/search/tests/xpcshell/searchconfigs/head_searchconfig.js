@@ -429,6 +429,11 @@ class SearchConfigTest {
         this._localeRegionInSection(value.excluded, region, locale);
       return included && !excluded;
     });
+    this.assertEqual(
+      details.length,
+      1,
+      `Should have just one details section for region: ${region} locale: ${locale}`
+    );
 
     const engine = this._findEngine(engines, this._config.identifier);
     this.assertOk(engine, "Should have an engine present");
