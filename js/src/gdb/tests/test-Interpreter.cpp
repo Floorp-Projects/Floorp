@@ -52,7 +52,7 @@ FRAGMENT(Interpreter, Regs) {
     JS::Value slot1;
     JS::Value slot2;
   } fakeFrame;
-  uint8_t fakeOpcode = JSOP_IFEQ;
+  uint8_t fakeOpcode = JSOP_TRUE;
 
   js::InterpreterRegs regs;
   js::GDBTestInitInterpreterRegs(regs, &fakeFrame.frame, &fakeFrame.slot2,
