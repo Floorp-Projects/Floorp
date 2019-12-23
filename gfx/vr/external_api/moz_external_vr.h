@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.7"
-static const int32_t kVRExternalVersion = 14;
+#define SHMEM_VERSION "0.0.6"
+static const int32_t kVRExternalVersion = 13;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -543,41 +543,6 @@ struct VRWindowState {
   char signalName[32];
 };
 
-enum class VRTelemetryId : uint8_t {
-  NONE = 0,
-  INSTALLED_FROM = 1,
-  ENTRY_METHOD = 2,
-  FIRST_RUN = 3,
-  TOTAL = 4,
-};
-
-enum class VRTelemetryInstallFrom: uint8_t {
-  User = 0,
-  FxR = 1,
-  HTC = 2,
-  Valve = 3,
-  TOTAL = 4,
-};
-
-enum class VRTelemetryEntryMethod: uint8_t {
-  SystemBtn = 0,
-  Library = 1,
-  Gaze = 2,
-  TOTAL = 3,
-};
-
-struct VRTelemetryState {
-  uint32_t uid;
-
-  bool installedFrom : 1;
-  bool entryMethod : 1;
-  bool firstRun : 1;
-
-  uint8_t installedFromValue : 3;
-  uint8_t entryMethodValue : 3;
-  bool firstRunValue : 1;
-};
-
 struct VRExternalShmem {
   int32_t version;
   int32_t size;
@@ -605,7 +570,6 @@ struct VRExternalShmem {
 #endif  // !defined(__ANDROID__)
 #if defined(XP_WIN)
   VRWindowState windowState;
-  VRTelemetryState telemetryState;
 #endif
 #ifdef MOZILLA_INTERNAL_API
   void Clear() volatile {

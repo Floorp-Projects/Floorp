@@ -83,7 +83,6 @@ class VRManager : nsIObserver {
   uint32_t GetOptimalTaskInterval();
   void PullState(const std::function<bool()>& aWaitCondition = nullptr);
   void PushState(const bool aNotifyCond = false);
-  void ProcessTelemetryEvent();
   static uint32_t AllocateDisplayID();
 
   void DispatchVRDisplayInfoUpdate();
