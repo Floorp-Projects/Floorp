@@ -4,27 +4,31 @@
 
 // @flow
 
-import { setupCommands, clientCommands } from "./firefox/commands";
-import { setupEvents, clientEvents } from "./firefox/events";
+import {
+  setupCommands,
+  setupCommandsTopTarget,
+  clientCommands,
+} from "./firefox/commands";
+import {
+  setupEvents,
+  setupEventsTopTarget,
+  clientEvents,
+} from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
 
 export async function onConnect(connection: any, actions: Object) {
   const { debuggerClient, targetList } = connection;
+  setupCommands({ debuggerClient });
+  setupEvents({ actions, debuggerClient });
+
   const currentTarget = targetList.targetFront;
   const threadFront = currentTarget.threadFront;
 
   if (!currentTarget || !threadFront || !debuggerClient) {
     return;
   }
-
-  setupCommands({
-    threadFront,
-    currentTarget,
-    debuggerClient,
-  });
-
-  setupEvents({ threadFront, currentTarget, actions, debuggerClient });
-
+  setupCommandsTopTarget(currentTarget);
+  setupEventsTopTarget(currentTarget);
   currentTarget.on("will-navigate", actions.willNavigate);
   currentTarget.on("navigate", actions.navigated);
 
