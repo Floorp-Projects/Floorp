@@ -47,7 +47,6 @@ void CParserContext::SetMimeType(const nsACString& aMimeType) {
   else if (mMimeType.EqualsLiteral(TEXT_XML) ||
            mMimeType.EqualsLiteral(APPLICATION_XML) ||
            mMimeType.EqualsLiteral(APPLICATION_XHTML_XML) ||
-           mMimeType.EqualsLiteral(TEXT_XUL) ||
            mMimeType.EqualsLiteral(IMAGE_SVG_XML) ||
            mMimeType.EqualsLiteral(APPLICATION_MATHML_XML) ||
            mMimeType.EqualsLiteral(APPLICATION_RDF_XML) ||

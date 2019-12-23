@@ -405,7 +405,6 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] = {
     {IMAGE_GIF, "gif"},
     {TEXT_XML, "xml"},
     {APPLICATION_RDF, "rdf"},
-    {TEXT_XUL, "xul"},
     {IMAGE_PNG, "png"},
     // -- end extensions used during startup
     {TEXT_CSS, "css"},
@@ -505,7 +504,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
      "Extensible HyperText Markup Language"},
     {APPLICATION_MATHML_XML, "mml", "Mathematical Markup Language"},
     {APPLICATION_RDF, "rdf", "Resource Description Framework"},
-    {TEXT_XUL, "xul", "XML-Based User Interface Language"},
     {TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language"},
     {TEXT_CSS, "css", "Style Sheet"},
     {TEXT_VCARD, "vcf,vcard", "Contact Information"},
