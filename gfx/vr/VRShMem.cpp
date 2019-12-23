@@ -629,7 +629,6 @@ void VRShMem::PushWindowState(VRWindowState& aState) {
   }
 #endif  // defined(XP_WIN)
 }
-
 void VRShMem::PullWindowState(VRWindowState& aState) {
 #if defined(XP_WIN)
   if (!mExternalShmem) {
@@ -642,37 +641,6 @@ void VRShMem::PullWindowState(VRWindowState& aState) {
   if (status) {
     memcpy((void*)&aState, (void*)&(mExternalShmem->windowState),
            sizeof(VRWindowState));
-  }
-#endif  // defined(XP_WIN)
-}
-
-void VRShMem::PushTelemetryState(VRTelemetryState& aState) {
-#if defined(XP_WIN)
-  if (!mExternalShmem) {
-    return;
-  }
-
-  bool status = true;
-  WaitForMutex lock(mMutex);
-  status = lock.GetStatus();
-  if (status) {
-    memcpy((void*)&(mExternalShmem->telemetryState), (void*)&aState,
-           sizeof(VRTelemetryState));
-  }
-#endif  // defined(XP_WIN)
-}
-void VRShMem::PullTelemetryState(VRTelemetryState& aState) {
-#if defined(XP_WIN)
-  if (!mExternalShmem) {
-    return;
-  }
-
-  bool status = true;
-  WaitForMutex lock(mMutex);
-  status = lock.GetStatus();
-  if (status) {
-    memcpy((void*)&aState, (void*)&(mExternalShmem->telemetryState),
-           sizeof(VRTelemetryState));
   }
 #endif  // defined(XP_WIN)
 }

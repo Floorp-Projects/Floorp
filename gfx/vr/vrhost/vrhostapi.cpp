@@ -13,20 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <random>
-#include <queue>
 
 #include "windows.h"
-
-class VRShmemInstance {
- public:
-  VRShmemInstance() = delete;
-  VRShmemInstance(const VRShmemInstance& aRHS) = delete;
-
-  static mozilla::gfx::VRShMem& GetInstance() {
-    static mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    return shmem;
-  }
-};
 
 // VRWindowManager adds a level of indirection so that system HWND isn't exposed
 // outside of these APIs
@@ -97,62 +85,6 @@ class VRWindowManager {
 };
 VRWindowManager* VRWindowManager::Instance = nullptr;
 
-class VRTelemetryManager {
- public:
-  void SendTelemetry(uint32_t aTelemetryId, uint32_t aValue) {
-    if (!aTelemetryId) {
-      return;
-    }
-
-    mozilla::gfx::VRTelemetryState telemetryState = {0};
-    VRShmemInstance::GetInstance().PullTelemetryState(telemetryState);
-
-    if (telemetryState.uid == 0) {
-      telemetryState.uid = sUid;
-    }
-
-    switch (mozilla::gfx::VRTelemetryId(aTelemetryId)) {
-      case mozilla::gfx::VRTelemetryId::INSTALLED_FROM:
-        MOZ_ASSERT(aValue <= 0x07,
-                   "VRTelemetryId::INSTALLED_FROM only allows 3 bits.");
-        telemetryState.installedFrom = true;
-        telemetryState.installedFromValue = aValue;
-        break;
-      case mozilla::gfx::VRTelemetryId::ENTRY_METHOD:
-        MOZ_ASSERT(aValue <= 0x07,
-                   "VRTelemetryId::ENTRY_METHOD only allows 3 bits.");
-        telemetryState.entryMethod = true;
-        telemetryState.entryMethodValue = aValue;
-        break;
-      case mozilla::gfx::VRTelemetryId::FIRST_RUN:
-        MOZ_ASSERT(aValue <= 0x01,
-                   "VRTelemetryId::FIRST_RUN only allows 1 bit.");
-        telemetryState.firstRun = true;
-        telemetryState.firstRunValue = aValue;
-        break;
-      default:
-        MOZ_CRASH("Undefined VR telemetry type.");
-        break;
-    }
-    VRShmemInstance::GetInstance().PushTelemetryState(telemetryState);
-    ++sUid;
-  }
-
-  static VRTelemetryManager* GetManager() {
-    if (Instance == nullptr) {
-      Instance = new VRTelemetryManager();
-    }
-    return Instance;
-  }
-
- private:
-  static VRTelemetryManager* Instance;
-  static uint32_t sUid;  // It starts from 1, Zero means the data is read yet
-                         // from VRManager.
-};
-uint32_t VRTelemetryManager::sUid = 1;
-VRTelemetryManager* VRTelemetryManager::Instance = nullptr;
-
 // Struct to send params to StartFirefoxThreadProc
 struct StartFirefoxParams {
   char* firefoxFolder;
@@ -197,6 +129,17 @@ DWORD StartFirefoxThreadProc(_In_ LPVOID lpParameter) {
 
   return 0;
 }
+
+class VRShmemInstance {
+ public:
+  VRShmemInstance() = delete;
+  VRShmemInstance(const VRShmemInstance& aRHS) = delete;
+
+  static mozilla::gfx::VRShMem& GetInstance() {
+    static mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    return shmem;
+  }
+};
 
 // This export is responsible for starting up a new VR window in Firefox and
 // returning data related to its creation back to the caller.
@@ -362,13 +305,4 @@ void SendUIMessageToVRWindow(uint32_t nVRWindowID, uint32_t msg,
         break;
     }
   }
-}
-
-void SendVRTelemetry(uint32_t nVRWindowID, uint32_t telemetryId,
-                     uint32_t value) {
-  HWND hwnd = VRWindowManager::GetManager()->GetHWND(nVRWindowID);
-  if (hwnd == nullptr) {
-    return;
-  }
-  VRTelemetryManager::GetManager()->SendTelemetry(telemetryId, value);
 }
