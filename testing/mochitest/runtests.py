@@ -2574,10 +2574,10 @@ toolbar#nav-bar {
             # should by synchronized with the default pref value indicated in
             # StaticPrefList.yaml.
             #
-            # Currently for automation, the pref defaults to true in nightly
-            # builds and false otherwise (but can be overridden with --setpref).
+            # Currently for automation, the pref defaults to true (but can be
+            # overridden with --setpref).
             "serviceworker_e10s": self.extraPrefs.get(
-                'dom.serviceWorkers.parent_intercept', mozinfo.info['nightly_build']),
+                'dom.serviceWorkers.parent_intercept', True),
 
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
