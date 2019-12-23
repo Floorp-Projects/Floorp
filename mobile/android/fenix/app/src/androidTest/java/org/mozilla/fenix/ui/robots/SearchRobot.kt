@@ -117,7 +117,7 @@ private fun allowPermissionButton(): UiObject {
 
 private fun scanButton(): ViewInteraction {
     mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/search_scan_button")), TestAssetHelper.waitingTime)
-    return onView(allOf(withId(R.id.searchScanButton)))
+    return onView(allOf(withId(R.id.search_scan_button)))
 }
 
 private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))

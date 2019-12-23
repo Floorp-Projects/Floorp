@@ -176,7 +176,7 @@ class AwesomeBarView(
         }
 
         searchSuggestionProviderMap = HashMap()
-        searchShortcutsButton.setOnClickListener {
+        search_shortcuts_button.setOnClickListener {
             interactor.onSearchShortcutsButtonClicked()
         }
 
@@ -213,11 +213,11 @@ class AwesomeBarView(
     private fun updateSearchShortcutsIcon(searchState: SearchFragmentState) {
         with(container.context) {
             val showShortcuts = searchState.showSearchShortcuts
-            searchShortcutsButton?.isChecked = showShortcuts
+            search_shortcuts_button?.isChecked = showShortcuts
 
             val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
 
-            searchShortcutsButton.compoundDrawables[0]?.setTint(getColorFromAttr(color))
+            search_shortcuts_button.compoundDrawables[0]?.setTint(getColorFromAttr(color))
         }
     }
 

@@ -144,7 +144,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        searchScanButton.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
+        search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
         layoutComponents(view.search_layout)
 
         qrFeature.set(
@@ -155,7 +155,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { result ->
-                    searchScanButton.isChecked = false
+                    search_scan_button.isChecked = false
                     activity?.let {
                         AlertDialog.Builder(it).apply {
                             val spannable = resources.getSpannable(
@@ -189,10 +189,14 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             view = view
         )
 
-        view.searchScanButton.setOnClickListener {
+        view.search_scan_button.setOnClickListener {
             toolbarView.view.clearFocus()
             requireComponents.analytics.metrics.track(Event.QRScannerOpened)
             qrFeature.get()?.scan(R.id.container)
+        }
+
+        view.back_button.setOnClickListener {
+            findNavController().popBackStack()
         }
 
         val stubListener = ViewStub.OnInflateListener { _, inflated ->
@@ -287,7 +291,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
-                view?.searchScanButton?.isChecked = false
+                view?.search_scan_button?.isChecked = false
                 toolbarView.view.requestFocus()
             }
             else -> awesomeBarView.isKeyboardDismissedProgrammatically
@@ -322,7 +326,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
                         permissionDidUpdate = true
                     } else {
-                        view?.searchScanButton?.isChecked = false
+                        view?.search_scan_button?.isChecked = false
                     }
                 }
             }

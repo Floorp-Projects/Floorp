@@ -37,13 +37,13 @@ internal fun SearchFragment.setInExperimentConstraints(layout: ConstraintLayout)
 
         // Move the search bar to the bottom of the layout
         clear(toolbar_wrapper.id, TOP)
-        connect(toolbar_wrapper.id, BOTTOM, pillWrapper.id, TOP)
+        connect(toolbar_wrapper.id, BOTTOM, pill_wrapper.id, TOP)
 
         connect(awesomeBar.id, TOP, PARENT_ID, TOP)
         connect(awesomeBar.id, BOTTOM, toolbar_wrapper.id, TOP)
         (awesomeBar.layoutManager as? LinearLayoutManager)?.reverseLayout = true
 
-        connect(pillWrapper.id, BOTTOM, PARENT_ID, BOTTOM)
+        connect(pill_wrapper.id, BOTTOM, PARENT_ID, BOTTOM)
 
         applyTo(layout)
     }
@@ -63,10 +63,10 @@ internal fun SearchFragment.setOutOfExperimentConstraints(layout: ConstraintLayo
 
         clear(awesomeBar.id, TOP)
         connect(awesomeBar.id, TOP, search_with_shortcuts.id, BOTTOM)
-        connect(awesomeBar.id, BOTTOM, pillWrapper.id, TOP)
+        connect(awesomeBar.id, BOTTOM, pill_wrapper.id, TOP)
         (awesomeBar.layoutManager as? LinearLayoutManager)?.reverseLayout = false
 
-        connect(pillWrapper.id, BOTTOM, PARENT_ID, BOTTOM)
+        connect(pill_wrapper.id, BOTTOM, PARENT_ID, BOTTOM)
 
         applyTo(layout)
     }

@@ -33,6 +33,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:tint="?primaryText"
+        android:src="@drawable/mozac_ic_back"
+        android:background="?selectableItemBackground"
+        android:contentDescription="@string/browser_menu_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/toolbar_wrapper"
+        app:layout_constraintBottom_toBottomOf="@id/toolbar_wrapper"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
         android:layout_width="0dp"
@@ -41,7 +54,7 @@
         android:outlineProvider="paddedBounds"
         android:transitionName="toolbar_wrapper_transition"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/back_button"
         app:layout_constraintTop_toTopOf="parent">
 
         <FrameLayout
@@ -68,7 +81,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
-        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
+        app:layout_constraintStart_toStartOf="@id/back_button"
         app:layout_constraintBottom_toBottomOf="@id/awesomeBar_barrier">
 
         <ImageView
@@ -126,7 +139,7 @@
         android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
         android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:text="@string/search_shortcuts_search_with_2"
-        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
+        app:layout_constraintStart_toStartOf="@id/back_button"
         app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
         tools:text="This time, search with:" />
 
@@ -142,12 +155,12 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?neutralFaded"
-        app:layout_constraintBottom_toTopOf="@id/pillWrapper"
+        app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
-        android:id="@+id/pillWrapper"
+        android:id="@+id/pill_wrapper"
         android:layout_width="0dp"
         android:layout_height="@dimen/search_fragment_pill_height"
         android:background="?foundation"
@@ -161,7 +174,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ToggleButton
-            android:id="@+id/searchScanButton"
+            android:id="@+id/search_scan_button"
             style="@style/search_pill"
             android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
             app:drawableStartCompat="@drawable/ic_qr"
@@ -169,7 +182,7 @@
             android:textOn="@string/search_scan_button" />
 
         <ToggleButton
-            android:id="@+id/searchShortcutsButton"
+            android:id="@+id/search_shortcuts_button"
             style="@style/search_pill"
             app:drawableStartCompat="@drawable/ic_search"
             android:textOff="@string/search_shortcuts_button"
