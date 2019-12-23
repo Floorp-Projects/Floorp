@@ -7,7 +7,6 @@
 GeckoCppUnitTests(
     [
       'TestDllInterceptor',
-      'TestIATPatcher',
     ],
     linkage=None
 )
@@ -24,12 +23,6 @@ if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
 OS_LIBS += [
     'ntdll',
     'ole32',
-    'shlwapi',
-    'user32',
-]
-
-DELAYLOAD_DLLS += [
-    'shlwapi.dll',
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] in ('gcc', 'clang'):
