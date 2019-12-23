@@ -3158,6 +3158,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
         // If we're in preserve-3d then grab the dirty rect that was given to
         // the root and transform using the combined transform.
+        // FIXME: Could we remove this after making transform animations with
+        // preserve-3d run on the compositor?
         if (combines3DTransformWithAncestors) {
           visibleRect = dirtyRect = aBuilder->GetPreserves3DRect();
         }

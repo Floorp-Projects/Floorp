@@ -8511,6 +8511,22 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
+  // Frames participating any preserve-3d rendering context are force to
+  // full prerender here if we failed the previous if-conditions.
+  // If the current frame doesn't have animations and any of its parent has
+  // animations, we still hit this path because
+  // ActiveLayerTracker::IsTransformMaybeAnimated() catches the existing
+  // animations on the parent frames in the preserve-3d rendering context.
+  // FIXME: For now, we force all the frame in the 3D rendering context to use
+  // FullPrerender, so this may have an issue if one of the frame is too large
+  // and it has animations (which may make the calculation of visible and dirty
+  // rects not correct.).
+  if (aFrame->Extend3DContext() || aFrame->Combines3DTransformWithAncestors()) {
+    // Use overflow as dirty and force to use full prerender.
+    *aDirtyRect = overflow;
+    return FullPrerender;
+  }
+
   if (StaticPrefs::layout_animation_prerender_partial()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
                                                              overflow, maxSize);

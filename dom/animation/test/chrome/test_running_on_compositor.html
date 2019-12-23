@@ -1353,5 +1353,33 @@ promise_test(async t => {
    'because the !important rule is overridden by a transition, and the ' +
    'transition property does not have animations');
 
+promise_test(async t => {
+  const container = addDiv(t, { style: 'transform-style: preserve-3d;' });
+  const targetA = addDiv(t, { style: 'transform-style: preserve-3d' });
+  const targetB = addDiv(t, { style: 'transform-style: preserve-3d '});
+  const targetC = addDiv(t);
+  container.appendChild(targetA);
+  targetA.append(targetB);
+  targetB.append(targetC);
+
+  const animation1 = targetA.animate({ rotate: ['0 0 1 0deg', '1 1 1 45deg'] },
+                                     100 * MS_PER_SEC);
+
+  const animation2 = targetC.animate({ rotate: ['0 0 1 0deg', '0 1 1 100deg'] },
+                                     100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation1);
+  await waitForAnimationReadyToRestyle(animation2);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation1,
+    'rotate animation in the 3d rendering context should be running on the ' +
+    'compositor');
+  assert_animation_is_running_on_compositor(animation2,
+    'rotate animation in the 3d rendering context should be running on the ' +
+    'compositor');
+}, 'Transform-like animations in the 3d rendering context should runs on the ' +
+   'compositor');
+
 </script>
 </body>

@@ -535,11 +535,20 @@ bool ActiveLayerTracker::IsStyleAnimated(
       return true;
     }
   }
-  if (aPropertySet.Intersects(transformSet) &&
-      aFrame->Combines3DTransformWithAncestors()) {
-    return IsStyleAnimated(aBuilder, aFrame->GetParent(), aPropertySet);
+
+  if (nsLayoutUtils::HasEffectiveAnimation(aFrame, aPropertySet)) {
+    return true;
   }
-  return nsLayoutUtils::HasEffectiveAnimation(aFrame, aPropertySet);
+
+  if (!aPropertySet.Intersects(transformSet) ||
+      !aFrame->Combines3DTransformWithAncestors()) {
+    return false;
+  }
+
+  // For preserve-3d, we check if there is any transform animation on its parent
+  // frames in the 3d rendering context. If there is one, this function will
+  // return true.
+  return IsStyleAnimated(aBuilder, aFrame->GetParent(), aPropertySet);
 }
 
 /* static */
