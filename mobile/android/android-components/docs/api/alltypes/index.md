@@ -81,6 +81,7 @@
 | [mozilla.components.browser.menu.item.BrowserMenuDivider](../mozilla.components.browser.menu.item/-browser-menu-divider/index.md) | A browser menu item to display a horizontal divider. |
 | [mozilla.components.browser.menu.BrowserMenuHighlight](../mozilla.components.browser.menu/-browser-menu-highlight/index.md) | Describes how to display a [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem](../mozilla.components.browser.menu.item/-browser-menu-highlightable-item/index.md) when it is highlighted. |
 | [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem](../mozilla.components.browser.menu.item/-browser-menu-highlightable-item/index.md) | A menu item for displaying text with an image icon and a highlight state which sets the background of the menu item and a second image icon to the right of the text. |
+| [mozilla.components.browser.menu.item.BrowserMenuHighlightableSwitch](../mozilla.components.browser.menu.item/-browser-menu-highlightable-switch/index.md) | A browser menu switch that can show a highlighted icon. |
 | [mozilla.components.browser.menu.item.BrowserMenuImageSwitch](../mozilla.components.browser.menu.item/-browser-menu-image-switch/index.md) | A simple browser menu switch. |
 | [mozilla.components.browser.menu.item.BrowserMenuImageText](../mozilla.components.browser.menu.item/-browser-menu-image-text/index.md) | A menu item for displaying text with an image icon. |
 | [mozilla.components.browser.menu.BrowserMenuItem](../mozilla.components.browser.menu/-browser-menu-item/index.md) | Interface to be implemented by menu items to be shown in the browser menu. |
@@ -290,6 +291,7 @@
 | [mozilla.components.lib.jexl.grammar.GrammarElement](../mozilla.components.lib.jexl.grammar/-grammar-element/index.md) |  |
 | [mozilla.components.concept.fetch.Header](../mozilla.components.concept.fetch/-header/index.md) | Represents a [Header](../mozilla.components.concept.fetch/-header/index.md) containing of a [name](../mozilla.components.concept.fetch/-header/name.md) and [value](../mozilla.components.concept.fetch/-header/value.md). |
 | [mozilla.components.concept.fetch.Headers](../mozilla.components.concept.fetch/-headers/index.md) | A collection of HTTP [Headers](../mozilla.components.concept.fetch/-headers/index.md) (immutable) of a [Request](../mozilla.components.concept.fetch/-request/index.md) or [Response](../mozilla.components.concept.fetch/-response/index.md). |
+| [mozilla.components.browser.menu.HighlightableMenuItem](../mozilla.components.browser.menu/-highlightable-menu-item/index.md) | Indicates that a menu item shows a highlight. |
 | [mozilla.components.service.glean.private.HistogramMetricBase](../mozilla.components.service.glean.private/-histogram-metric-base.md) |  |
 | [mozilla.components.service.glean.private.HistogramType](../mozilla.components.service.glean.private/-histogram-type.md) |  |
 | [mozilla.components.concept.storage.HistoryAutocompleteResult](../mozilla.components.concept.storage/-history-autocomplete-result/index.md) | Describes an autocompletion result against history storage. |

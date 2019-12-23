@@ -52,5 +52,6 @@ satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.men
 | Name | Summary |
 |---|---|
 | [BrowserMenuCheckbox](../-browser-menu-checkbox/index.md) | `class BrowserMenuCheckbox : `[`BrowserMenuCompoundButton`](./index.md)<br>A simple browser menu checkbox. |
+| [BrowserMenuHighlightableSwitch](../-browser-menu-highlightable-switch/index.md) | `class BrowserMenuHighlightableSwitch : `[`BrowserMenuCompoundButton`](./index.md)`, `[`HighlightableMenuItem`](../../mozilla.components.browser.menu/-highlightable-menu-item/index.md)<br>A browser menu switch that can show a highlighted icon. |
 | [BrowserMenuImageSwitch](../-browser-menu-image-switch/index.md) | `class BrowserMenuImageSwitch : `[`BrowserMenuCompoundButton`](./index.md)<br>A simple browser menu switch. |
 | [BrowserMenuSwitch](../-browser-menu-switch/index.md) | `class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](./index.md)<br>A simple browser menu switch. |

@@ -2,7 +2,7 @@
 
 # Highlight
 
-`class ~~Highlight~~ : `[`ClassicHighlight`](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L147)
+`class ~~Highlight~~ : `[`ClassicHighlight`](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L148)
 **Deprecated:** Replace with BrowserMenuHighlight.LowPriority or BrowserMenuHighlight.HighPriority
 
 Described how to display a [BrowserMenuHighlightableItem](../index.md) when it is highlighted.

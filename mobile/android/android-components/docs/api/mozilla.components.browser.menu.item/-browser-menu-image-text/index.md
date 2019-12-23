@@ -53,4 +53,4 @@ A menu item for displaying text with an image icon.
 
 | Name | Summary |
 |---|---|
-| [BrowserMenuHighlightableItem](../-browser-menu-highlightable-item/index.md) | `class BrowserMenuHighlightableItem : `[`BrowserMenuImageText`](./index.md)<br>A menu item for displaying text with an image icon and a highlight state which sets the background of the menu item and a second image icon to the right of the text. |
+| [BrowserMenuHighlightableItem](../-browser-menu-highlightable-item/index.md) | `class BrowserMenuHighlightableItem : `[`BrowserMenuImageText`](./index.md)`, `[`HighlightableMenuItem`](../../mozilla.components.browser.menu/-highlightable-menu-item/index.md)<br>A menu item for displaying text with an image icon and a highlight state which sets the background of the menu item and a second image icon to the right of the text. |

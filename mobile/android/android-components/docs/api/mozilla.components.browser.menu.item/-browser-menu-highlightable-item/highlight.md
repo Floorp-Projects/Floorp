@@ -2,7 +2,9 @@
 
 # highlight
 
-`val highlight: `[`BrowserMenuHighlight`](../../mozilla.components.browser.menu/-browser-menu-highlight/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L37)
+`val highlight: `[`BrowserMenuHighlight`](../../mozilla.components.browser.menu/-browser-menu-highlight/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L38)
+
+Overrides [HighlightableMenuItem.highlight](../../mozilla.components.browser.menu/-highlightable-menu-item/highlight.md)
 
 Highlight object representing how the menu item will be displayed when highlighted.
 
