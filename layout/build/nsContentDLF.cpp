@@ -42,7 +42,6 @@ static const char* const gHTMLTypes[] = {TEXT_HTML,
                                          APPLICATION_XHTML_XML,
                                          APPLICATION_WAPXHTML_XML,
                                          TEXT_XUL,
-                                         APPLICATION_CACHED_XUL,
                                          0};
 
 static const char* const gXMLTypes[] = {TEXT_XML,
