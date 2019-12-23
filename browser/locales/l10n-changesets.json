@@ -845,14 +845,14 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4244af99a056"
+        "revision": "6eb7315dd730"
     },
     "ja-JP-mac": {
         "platforms": [
             "macosx64",
             "macosx64-devedition"
         ],
-        "revision": "cd4789edf2ba"
+        "revision": "5d9f46fda9b5"
     },
     "ka": {
         "platforms": [
