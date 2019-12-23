@@ -29,7 +29,7 @@
  * JS operation bytecodes.
  */
 enum JSOp : uint8_t {
-#define ENUMERATE_OPCODE(op, val, ...) op = val,
+#define ENUMERATE_OPCODE(op, ...) op,
   FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 #undef ENUMERATE_OPCODE
 
