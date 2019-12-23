@@ -51,7 +51,17 @@ jobs:
     firefox:
         name: firefox-version-bump
         shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(VerBump)
+            tier: 1
+            kind: build
 
     devedition:
         name: devedition-version-bump
         shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(VerBump)
+            tier: 1
+            kind: build
