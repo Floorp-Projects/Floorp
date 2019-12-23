@@ -31,12 +31,25 @@ type Dependencies = {
 
 let actions: typeof Actions;
 let isInterrupted: boolean;
+let threadFrontListeners: WeakMap<ThreadFront, Array<Function>>;
 let workersListener: Object;
 
 function addThreadEventListeners(thread: ThreadFront) {
+  const removeListeners = [];
   Object.keys(clientEvents).forEach(eventName => {
-    thread.on(eventName, clientEvents[eventName].bind(null, thread));
+    // EventEmitter.on returns a function that removes the event listener.
+    removeListeners.push(
+      thread.on(eventName, clientEvents[eventName].bind(null, thread))
+    );
   });
+  threadFrontListeners.set(thread, removeListeners);
+}
+
+function removeThreadEventListeners(thread: ThreadFront) {
+  const removeListeners = threadFrontListeners.get(thread) || [];
+  for (const removeListener of removeListeners) {
+    removeListener();
+  }
 }
 
 function attachAllTargets(currentTarget: Target) {
@@ -48,19 +61,26 @@ function setupEvents(dependencies: Dependencies) {
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
-  debuggerClient.mainRoot.on("processListChanged", () => threadListChanged());
+  debuggerClient.mainRoot.on("processListChanged", threadListChanged);
 
   workersListener = new WorkersListener(debuggerClient.mainRoot);
+
+  threadFrontListeners = new WeakMap();
 }
 
 function setupEventsTopTarget(targetFront: Target) {
-  targetFront.on("workerListChanged", () => threadListChanged());
+  targetFront.on("workerListChanged", threadListChanged);
   addThreadEventListeners(targetFront.threadFront);
 
-  workersListener.removeListener();
   if (features.windowlessServiceWorkers || attachAllTargets(targetFront)) {
-    workersListener.addListener(() => threadListChanged());
+    workersListener.addListener(threadListChanged);
   }
+}
+
+function removeEventsTopTarget(targetFront: Target) {
+  targetFront.off("workerListChanged", threadListChanged);
+  removeThreadEventListeners(targetFront.threadFront);
+  workersListener.removeListener();
 }
 
 async function paused(threadFront: ThreadFront, packet: PausedPacket) {
@@ -135,6 +155,7 @@ const clientEvents = {
 };
 
 export {
+  removeEventsTopTarget,
   setupEvents,
   setupEventsTopTarget,
   clientEvents,
