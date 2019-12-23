@@ -485,9 +485,10 @@ class nsWindow final : public nsBaseWidget {
   nsIWidgetListener* GetListener();
 
 #ifdef MOZ_WAYLAND
-  void UpdateOpaqueRegionWayland(cairo_region_t* aRegion);
+  void UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners);
 #endif
-  void UpdateOpaqueRegionGtk(cairo_region_t* aRegion);
+  void UpdateTopLevelOpaqueRegionGtk(bool aSubtractCorners);
+  void UpdatePopupOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion);
 
   nsWindow* GetTransientForWindowIfPopup();
   bool IsHandlingTouchSequence(GdkEventSequence* aSequence);
