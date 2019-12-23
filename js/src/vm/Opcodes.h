@@ -250,7 +250,7 @@
 // clang-format off
 #define FOR_EACH_OPCODE(MACRO) \
     /*
-     * Pushes 'undefined' onto the stack.
+     * Push `undefined`.
      *
      *   Category: Literals
      *   Type: Constants
@@ -259,7 +259,7 @@
      */ \
     MACRO(JSOP_UNDEFINED, js_undefined_str, "", 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes 'null' onto the stack.
+     * Push `null`.
      *
      *   Category: Literals
      *   Type: Constants
@@ -268,7 +268,7 @@
      */ \
     MACRO(JSOP_NULL, js_null_str, js_null_str, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes boolean value onto the stack.
+     * Push a boolean constant.
      *
      *   Category: Literals
      *   Type: Constants
@@ -278,52 +278,10 @@
     MACRO(JSOP_FALSE, js_false_str, js_false_str, 1, 0, 1, JOF_BYTE) \
     MACRO(JSOP_TRUE, js_true_str, js_true_str, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes '0' onto the stack.
+     * Push the `int32_t` immediate operand as an `Int32Value`.
      *
-     *   Category: Literals
-     *   Type: Constants
-     *   Operands:
-     *   Stack: => 0
-     */ \
-    MACRO(JSOP_ZERO, "zero", "0", 1, 0, 1, JOF_BYTE) \
-    /*
-     * Pushes '1' onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Constants
-     *   Operands:
-     *   Stack: => 1
-     */ \
-    MACRO(JSOP_ONE, "one", "1", 1, 0, 1, JOF_BYTE) \
-    /*
-     * Pushes 8-bit int immediate integer operand onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Constants
-     *   Operands: int8_t val
-     *   Stack: => val
-     */ \
-    MACRO(JSOP_INT8, "int8", NULL, 2, 0, 1, JOF_INT8) \
-    /*
-     * Pushes unsigned 16-bit int immediate integer operand onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Constants
-     *   Operands: uint16_t val
-     *   Stack: => val
-     */ \
-    MACRO(JSOP_UINT16, "uint16", NULL, 3, 0, 1, JOF_UINT16) \
-    /*
-     * Pushes unsigned 24-bit int immediate integer operand onto the stack.
-     *
-     *   Category: Literals
-     *   Type: Constants
-     *   Operands: uint24_t val
-     *   Stack: => val
-     */ \
-    MACRO(JSOP_UINT24, "uint24", NULL, 4, 0, 1, JOF_UINT24) \
-    /*
-     * Pushes 32-bit int immediate integer operand onto the stack.
+     * `JSOP_ZERO`, `JSOP_ONE`, `JSOP_INT8`, `JSOP_UINT16`, and `JSOP_UINT24`
+     * are all compact encodings for `JSOP_INT32`.
      *
      *   Category: Literals
      *   Type: Constants
@@ -332,33 +290,84 @@
      */ \
     MACRO(JSOP_INT32, "int32", NULL, 5, 0, 1, JOF_INT32) \
     /*
-     * Pushes numeric constant onto the stack.
+     * Push the number `0`.
      *
      *   Category: Literals
      *   Type: Constants
-     *   Operands: DoubleValue literal
+     *   Operands:
+     *   Stack: => 0
+     */ \
+    MACRO(JSOP_ZERO, "zero", "0", 1, 0, 1, JOF_BYTE) \
+    /*
+     * Push the number `1`.
+     *
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => 1
+     */ \
+    MACRO(JSOP_ONE, "one", "1", 1, 0, 1, JOF_BYTE) \
+    /*
+     * Push the `int8_t` immediate operand as an `Int32Value`.
+     *
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: int8_t val
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_INT8, "int8", NULL, 2, 0, 1, JOF_INT8) \
+    /*
+     * Push the `uint16_t` immediate operand as an `Int32Value`.
+     *
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint16_t val
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_UINT16, "uint16", NULL, 3, 0, 1, JOF_UINT16) \
+    /*
+     * Push the `uint24_t` immediate operand as an `Int32Value`.
+     *
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint24_t val
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_UINT24, "uint24", NULL, 4, 0, 1, JOF_UINT24) \
+    /*
+     * Push the 64-bit floating-point immediate operand as a `DoubleValue`.
+     *
+     * If the operand is a NaN, it must be the canonical NaN (see
+     * `JS::detail::CanonicalizeNaN`).
+     *
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: double val
      *   Stack: => val
      */ \
     MACRO(JSOP_DOUBLE, "double", NULL, 9, 0, 1, JOF_DOUBLE) \
     /*
-     * Pushes a BigInt constant onto the stack.
+     * Push the BigInt constant `script->getBigInt(bigIntIndex)`.
+     *
      *   Category: Literals
      *   Type: Constants
-     *   Operands: uint32_t constIndex
-     *   Stack: => val
+     *   Operands: uint32_t bigIntIndex
+     *   Stack: => bigint
      */ \
     MACRO(JSOP_BIGINT, "bigint", NULL, 5, 0, 1, JOF_BIGINT) \
     /*
-     * Pushes string constant onto the stack.
+     * Push the string constant `script->getAtom(atomIndex)`.
      *
      *   Category: Literals
      *   Type: Constants
      *   Operands: uint32_t atomIndex
-     *   Stack: => atom
+     *   Stack: => string
      */ \
     MACRO(JSOP_STRING, "string", NULL, 5, 0, 1, JOF_ATOM) \
     /*
-     * Push a well-known symbol onto the operand stack.
+     * Push a well-known symbol.
+     *
+     * `symbol` must be in range for `JS::SymbolCode`.
      *
      *   Category: Literals
      *   Type: Constants
