@@ -426,8 +426,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   bool html = contentType.EqualsLiteral(TEXT_HTML);
   bool xhtml = !html && (contentType.EqualsLiteral(APPLICATION_XHTML_XML) ||
-                         contentType.EqualsLiteral(APPLICATION_WAPXHTML_XML) ||
-                         contentType.EqualsLiteral(TEXT_XUL));
+                         contentType.EqualsLiteral(APPLICATION_WAPXHTML_XML));
   mIsPlainText =
       !html && !xhtml && nsContentUtils::IsPlainTextType(contentType);
   if (!(html || xhtml || mIsPlainText || viewSource)) {
