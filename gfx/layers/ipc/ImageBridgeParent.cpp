@@ -403,11 +403,11 @@ bool ImageBridgeParent::AllocUnsafeShmem(
   return PImageBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-void ImageBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
+bool ImageBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
   if (mClosed) {
-    return;
+    return false;
   }
-  PImageBridgeParent::DeallocShmem(aShmem);
+  return PImageBridgeParent::DeallocShmem(aShmem);
 }
 
 bool ImageBridgeParent::IsSameProcess() const {
