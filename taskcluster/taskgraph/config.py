@@ -82,7 +82,7 @@ graph_config_schema = Schema({
                 Required('provisioner'): optionally_keyed_by('level', text_type),
                 Required('implementation'): text_type,
                 Required('os'): text_type,
-                Required('worker-type'): optionally_keyed_by('level', text_type),
+                Required('worker-type'): optionally_keyed_by('level', 'release-level', text_type),
             }
         },
     },
