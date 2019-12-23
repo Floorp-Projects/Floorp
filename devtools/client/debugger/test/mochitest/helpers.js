@@ -596,8 +596,12 @@ async function clearDebuggerPreferences(prefs = []) {
  */
 
 async function initDebugger(url, ...sources) {
+  return initDebuggerWithAbsoluteURL(EXAMPLE_URL + url, ...sources);
+}
+
+async function initDebuggerWithAbsoluteURL(url, ...sources) {
   await clearDebuggerPreferences();
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(url, "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
 
   await waitForSources(dbg, ...sources);
