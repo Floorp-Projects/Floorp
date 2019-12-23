@@ -25,14 +25,13 @@ const {
 } = require("devtools/client/shared/workers-listener.js");
 
 type Dependencies = {
-  threadFront: ThreadFront,
-  currentTarget: Target,
   actions: typeof Actions,
   debuggerClient: DebuggerClient,
 };
 
 let actions: typeof Actions;
 let isInterrupted: boolean;
+let workersListener: Object;
 
 function addThreadEventListeners(thread: ThreadFront) {
   Object.keys(clientEvents).forEach(eventName => {
@@ -45,16 +44,21 @@ function attachAllTargets(currentTarget: Target) {
 }
 
 function setupEvents(dependencies: Dependencies) {
-  const { currentTarget, threadFront, debuggerClient } = dependencies;
+  const { debuggerClient } = dependencies;
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
-  addThreadEventListeners(threadFront);
-  currentTarget.on("workerListChanged", () => threadListChanged());
   debuggerClient.mainRoot.on("processListChanged", () => threadListChanged());
 
-  if (features.windowlessServiceWorkers || attachAllTargets(currentTarget)) {
-    const workersListener = new WorkersListener(debuggerClient.mainRoot);
+  workersListener = new WorkersListener(debuggerClient.mainRoot);
+}
+
+function setupEventsTopTarget(targetFront: Target) {
+  targetFront.on("workerListChanged", () => threadListChanged());
+  addThreadEventListeners(targetFront.threadFront);
+
+  workersListener.removeListener();
+  if (features.windowlessServiceWorkers || attachAllTargets(targetFront)) {
     workersListener.addListener(() => threadListChanged());
   }
 }
@@ -130,4 +134,10 @@ const clientEvents = {
   replayFramePositions,
 };
 
-export { setupEvents, clientEvents, addThreadEventListeners, attachAllTargets };
+export {
+  setupEvents,
+  setupEventsTopTarget,
+  clientEvents,
+  addThreadEventListeners,
+  attachAllTargets,
+};
