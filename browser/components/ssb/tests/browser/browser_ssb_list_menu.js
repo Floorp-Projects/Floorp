@@ -3,8 +3,12 @@
 
 // Check that the menu is updated correctly and can be used to launch an ssb.
 add_task(async () => {
-  let button = document.getElementById("appMenu-ssb-button");
-  let panel = document.querySelector("#appMenu-SSBView .panel-subview-body");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  let button = win.document.getElementById("appMenu-ssb-button");
+  let panel = win.document.querySelector(
+    "#appMenu-SSBView .panel-subview-body"
+  );
 
   Assert.ok(button.hidden, "Button should be hidden.");
   Assert.equal(panel.firstElementChild, null, "Should be nothing in the list.");
@@ -24,15 +28,16 @@ add_task(async () => {
   Assert.equal(panel.firstElementChild, null, "Should be nothing in the list.");
 
   let appMenuOpened = BrowserTestUtils.waitForEvent(
-    document.getElementById("appMenu-popup"),
+    win.document.getElementById("appMenu-popup"),
     "popupshown"
   );
 
   let buttonShown = BrowserTestUtils.waitForAttributeRemoval("hidden", button);
 
   EventUtils.synthesizeMouseAtCenter(
-    document.getElementById("PanelUI-menu-button"),
-    {}
+    win.document.getElementById("PanelUI-menu-button"),
+    {},
+    win
   );
   await Promise.all([appMenuOpened, buttonShown]);
 
@@ -49,19 +54,19 @@ add_task(async () => {
   );
 
   let panelShown = BrowserTestUtils.waitForEvent(
-    document.getElementById("appMenu-SSBView"),
+    win.document.getElementById("appMenu-SSBView"),
     "ViewShown"
   );
 
   EventUtils.synthesizeMouseAtCenter(
-    document.getElementById("appMenu-ssb-button"),
+    win.document.getElementById("appMenu-ssb-button"),
     {},
-    window
+    win
   );
   await panelShown;
 
   let ssbOpened = waitForSSB();
-  EventUtils.synthesizeMouseAtCenter(panel.firstElementChild, {}, window);
+  EventUtils.synthesizeMouseAtCenter(panel.firstElementChild, {}, win);
   let ssbWin = await ssbOpened;
 
   Assert.equal(getBrowser(ssbWin).currentURI.spec, gHttpsTestRoot);
@@ -72,4 +77,6 @@ add_task(async () => {
   // Menu will be dynamically updating at this point.
   Assert.ok(button.hidden, "Should be no installs.");
   Assert.equal(panel.firstElementChild, null, "Should be nothing in the list.");
+
+  await BrowserTestUtils.closeWindow(win);
 });
