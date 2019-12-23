@@ -40,7 +40,7 @@ add_task(async function() {
   );
 
   await waitUntil(() => recording.getMarkers().length > markersLength);
-  ok("Markers continue after reload.");
+  ok(true, "Markers continue after reload.");
 
   await stopRecording(panel);
   await teardownToolboxAndRemoveTab(panel);
