@@ -1488,16 +1488,6 @@ bool KeyframeEffect::CanAnimateTransformOnCompositor(
   const nsIFrame* primaryFrame =
       nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame);
 
-  // Disallow OMTA for preserve-3d transform. Note that we check the style
-  // property rather than Extend3DContext() since that can recurse back into
-  // this function via HasOpacity(). See bug 779598.
-  if (primaryFrame->Combines3DTransformWithAncestors() ||
-      primaryFrame->StyleDisplay()->mTransformStyle ==
-          NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
-    aPerformanceWarning =
-        AnimationPerformanceWarning::Type::TransformPreserve3D;
-    return false;
-  }
   // Note that testing BackfaceIsHidden() is not a sufficient test for
   // what we need for animating backface-visibility correctly if we
   // remove the above test for Extend3DContext(); that would require
