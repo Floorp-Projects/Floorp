@@ -8682,8 +8682,12 @@ bool nsDisplayTransform::CreateWebRenderCommands(
     position.Round();
   }
 
-  uint64_t animationsId = AddAnimationsForWebRender(
-      this, aManager, aDisplayListBuilder, aBuilder.GetRenderRoot());
+  // We don't send animations for transform separator display items.
+  uint64_t animationsId =
+      mIsTransformSeparator
+          ? 0
+          : AddAnimationsForWebRender(this, aManager, aDisplayListBuilder,
+                                      aBuilder.GetRenderRoot());
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Transform,
       animationsId,
@@ -8700,7 +8704,8 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   }
 
   // Determine if we're possibly animated (= would need an active layer in FLB).
-  bool animated = ActiveLayerTracker::IsTransformMaybeAnimated(Frame());
+  bool animated = !mIsTransformSeparator &&
+                  ActiveLayerTracker::IsTransformMaybeAnimated(Frame());
 
   wr::StackingContextParams params;
   params.mBoundTransform = &newTransformMatrix;
@@ -8792,8 +8797,12 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
     mFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), false);
   }
 
-  nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-      container, aBuilder, this, mFrame, GetType());
+  // We don't send animations for transform separator display items.
+  if (!mIsTransformSeparator) {
+    nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
+        container, aBuilder, this, mFrame, GetType());
+  }
+
   if (mAllowAsyncAnimation && MayBeAnimated(aBuilder)) {
     // Only allow async updates to the transform if we're an animated layer,
     // since that's what triggers us to set the correct AGR in the constructor
