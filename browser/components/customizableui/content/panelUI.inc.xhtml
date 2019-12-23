@@ -810,19 +810,13 @@
       </vbox>
     </panelview>
 
-    <panelview id="PanelUI-fxa-menu-account-panel" flex="1" title="&fxa.menu.settings.label;" class="PanelUI-subView" descriptionheightworkaround="true">
+    <panelview id="PanelUI-fxa-menu-account-panel" flex="1" title="&fxa.menu.accountSettings.label;" class="PanelUI-subView" descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
         <toolbarbutton id="PanelUI-fxa-menu-account-settings-button"
                       class="subviewbutton subviewbutton-iconic"
-                      label="&fxa.menu.accountSettings.label;"
+                      label="&fxa.menu.manageAccount2.label;"
                       type="open-to-new"
                       oncommand="gSync.openFxAManagePageFromFxaMenu(this)"/>
-        <toolbarseparator/>
-        <label id="fxa-menu-device-name-label" class="subview-subheader"/>
-        <toolbarbutton id="PanelUI-fxa-menu-account-devices-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&fxa.menu.deviceSettings.label;"
-                       oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <toolbarseparator/>
         <toolbarbutton id="PanelUI-fxa-menu-account-signout-button"
                 class="subviewbutton subviewbutton-iconic"

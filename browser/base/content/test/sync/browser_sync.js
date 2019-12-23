@@ -52,7 +52,7 @@ add_task(async function test_ui_state_signedin() {
   checkMenuBarItem("sync-syncnowitem");
   checkFxaToolbarButtonPanel({
     headerTitle: "foo@bar.com",
-    headerDescription: "Settings",
+    headerDescription: "Account Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-connect-device-button",
@@ -63,7 +63,6 @@ add_task(async function test_ui_state_signedin() {
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
       "PanelUI-fxa-menu-account-settings-button",
-      "PanelUI-fxa-menu-account-devices-button",
       "PanelUI-fxa-menu-account-signout-button",
     ],
     disabledItems: [],
@@ -152,7 +151,7 @@ add_task(async function test_ui_state_syncdisabled() {
   checkMenuBarItem("sync-enable");
   checkFxaToolbarButtonPanel({
     headerTitle: "foo@bar.com",
-    headerDescription: "Settings",
+    headerDescription: "Account Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-connect-device-button",
@@ -162,7 +161,6 @@ add_task(async function test_ui_state_syncdisabled() {
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
       "PanelUI-fxa-menu-account-settings-button",
-      "PanelUI-fxa-menu-account-devices-button",
       "PanelUI-fxa-menu-account-signout-button",
     ],
     disabledItems: [],

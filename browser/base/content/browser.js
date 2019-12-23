@@ -641,10 +641,6 @@ function updateFxaToolbarMenu(enable, isInitialUpdate = false) {
     let hideSvcs = !gFxaSendLoginUrl && !gFxaMonitorLoginUrl;
     document.getElementById("fxa-menu-service-separator").hidden = hideSvcs;
     document.getElementById("fxa-menu-service-label").hidden = hideSvcs;
-
-    document.getElementById(
-      "fxa-menu-device-name-label"
-    ).value = gFxaDeviceName;
   } else {
     mainWindowEl.removeAttribute("fxatoolbarmenu");
   }
