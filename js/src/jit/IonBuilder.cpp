@@ -2573,6 +2573,11 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       // Intentionally not implemented.
       break;
 
+    case JSOP_UNUSED71:
+    case JSOP_UNUSED106:
+    case JSOP_UNUSED120:
+    case JSOP_UNUSED149:
+    case JSOP_UNUSED227:
     case JSOP_LIMIT:
       break;
   }
