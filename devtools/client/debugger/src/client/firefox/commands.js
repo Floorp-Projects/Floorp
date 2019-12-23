@@ -52,18 +52,19 @@ let eventBreakpoints: ?EventListenerActiveList;
 const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
-  threadFront: ThreadFront,
-  currentTarget: Target,
   debuggerClient: DebuggerClient,
 };
 
 function setupCommands(dependencies: Dependencies) {
-  currentThreadFront = dependencies.threadFront;
-  currentTarget = dependencies.currentTarget;
   debuggerClient = dependencies.debuggerClient;
   targets = {};
   sourceActors = {};
   breakpoints = {};
+}
+
+function setupCommandsTopTarget(targetFront: Target) {
+  currentTarget = targetFront;
+  currentThreadFront = targetFront.threadFront;
 }
 
 function createObjectFront(grip: Grip): ObjectFront {
@@ -598,4 +599,4 @@ const clientCommands = {
   fetchAncestorFramePositions,
 };
 
-export { setupCommands, clientCommands };
+export { setupCommands, setupCommandsTopTarget, clientCommands };
