@@ -15,16 +15,13 @@
 /*
  * [SMDOC] Bytecode Definitions
  *
- * JavaScript operation bytecodes. Add a new bytecode by claiming one of the
- * JSOP_UNUSED* here or by extracting the first unused opcode from
- * FOR_EACH_TRAILING_UNUSED_OPCODE.
+ * SpiderMonkey bytecode instructions.
  *
- * Includers must define a macro with the following form:
+ * To use this header, define a macro of the form:
  *
- * #define MACRO(op, name, token, length, nuses, ndefs, format) ...
+ *     #define MACRO(op, name, token, length, nuses, ndefs, format) ...
  *
- * Then simply use FOR_EACH_OPCODE(MACRO) to invoke MACRO for every opcode.
- * Selected arguments can be expanded in initializers.
+ * Then `FOR_EACH_OPCODE(MACRO)` invokes `MACRO` for every opcode.
  *
  * Field        Description
  * -----        -----------
@@ -33,9 +30,176 @@
  * token        Pretty-printer string, or null if ugly
  * length       Number of bytes including any immediate operands
  * nuses        Number of stack slots consumed by bytecode, -1 if variadic
- * ndefs        Number of stack slots produced by bytecode, -1 if variadic
- * format       Bytecode plus immediate operand encoding format
+ * ndefs        Number of stack slots produced by bytecode
+ * format       JOF_ flags describing instruction operand layout, etc.
  *
+ * For more about `format`, see the comments on the `JOF_` constants defined in
+ * BytecodeUtil.h.
+ *
+ *
+ * [SMDOC] Bytecode Invariants
+ *
+ * Creating scripts that do not follow the rules can lead to undefined
+ * behavior. Bytecode has many consumers, not just the interpreter: JITs,
+ * analyses, the debugger. That's why the rules below apply even to code that
+ * can't be reached in ordinary execution (such as code after an infinite loop
+ * or inside an `if (false)` block).
+ *
+ * The `code()` of a script must be a packed (not aligned) sequence of valid
+ * instructions from start to end. Each instruction has a single byte opcode
+ * followed by a number of operand bytes based on the opcode.
+ *
+ * ## Jump instructions
+ *
+ * Operands named `offset` or `forwardOffset` are jump offsets, the distance in
+ * bytes from the start of the current instruction to the start of another
+ * instruction in the same script. Operands named `forwardOffset` must be
+ * positive.
+ *
+ * Forward jumps must jump to a `JSOP_JUMPTARGET` instruction.  Backward jumps,
+ * indicated by negative offsets, must jump to a `JSOP_LOOPHEAD` instruction.
+ * Jump offsets can't be zero.
+ *
+ * Needless to say, scripts must not contain overlapping instruction sequences
+ * (in the sense of <https://en.wikipedia.org/wiki/Overlapping_gene>).
+ *
+ * A script's `trynotes` and `scopeNotes` impose further constraints. Each try
+ * note and each scope note marks a region of the bytecode where some invariant
+ * holds, or some cleanup behavior is needed--that there's a for-in iterator in
+ * a particular stack slot, for instance, which must be closed on error. All
+ * paths into the span must establish that invariant. In practice, this means
+ * other code never jumps into the span: the only way in is to execute the
+ * bytecode instruction that sets up the invariant (in our example,
+ * `JSOP_ITER`).
+ *
+ * If a script's `trynotes` (see "Try Notes" in JSScript.h) contain a
+ * `JSTRY_CATCH` or `JSTRY_FINALLY` span, there must be a `JSOP_TRY`
+ * instruction immediately before the span and a `JSOP_JUMPTARGET immediately
+ * after it. Instructions must not jump to this `JSOP_JUMPTARGET`. (The VM puts
+ * us there on exception.) Furthermore, the instruction sequence immediately
+ * following a `JSTRY_CATCH` span must read `JUMPTARGET; EXCEPTION` or, in
+ * non-function scripts, `JUMPTARGET; UNDEFINED; SETRVAL; EXCEPTION`. (These
+ * instructions run with an exception pending; other instructions aren't
+ * designed to handle that.)
+ *
+ * Unreachable instructions are allowed, but they have to follow all the rules.
+ *
+ * Control must not reach the end of a script. (Currently, the last instruction
+ * is always JSOP_RETRVAL.)
+ *
+ * ## Other operands
+ *
+ * Operands named `nameIndex` or `atomIndex` (which appear on instructions that
+ * have `JOF_ATOM` in the `format` field) must be valid indexes into
+ * `script->atoms()`.
+ *
+ * Operands named `argc` (`JOF_ARGC`) are argument counts for call
+ * instructions. `argc` must be small enough that the instruction's nuses is <=
+ * the current stack depth (see "Stack depth" below).
+ *
+ * Operands named `argno` (`JOF_QARG`) refer to an argument of the current
+ * function. `argno` must be in the range `0..script->function()->nargs()`.
+ * Instructions with these operands must appear only in function scripts.
+ *
+ * Operands named `localno` (`JOF_LOCAL`) refer to a local variable stored in
+ * the stack frame. `localno` must be in the range `0..script->nfixed()`.
+ *
+ * Operands named `resumeIndex` (`JOF_RESUMEINDEX`) refer to a resume point in
+ * the current script. `resumeIndex` must be a valid index into
+ * `script->resumeOffsets()`.
+ *
+ * Operands named `hops` and `slot` (`JOF_ENVCOORD`) refer a slot in an
+ * `EnvironmentObject`. At run time, they must point to a fixed slot in an
+ * object on the current environment chain. See `EnvironmentCoordinates`.
+ *
+ * Operands with the following names must be valid indexes into
+ * `script->gcthings()`, and the pointer in the vector must point to the right
+ * type of thing:
+ *
+ * -   `objectIndex` (`JOF_OBJECT`): `PlainObject*` or `ArrayObject*`
+ * -   `baseobjIndex` (`JOF_OBJECT`): `PlainObject*`
+ * -   `funcIndex` (`JOF_OBJECT`): `JSFunction*`
+ * -   `regexpIndex` (`JOF_REGEXP`): `RegExpObject*`
+ * -   `scopeIndex` (`JOF_SCOPE`): `Scope*`
+ * -   `lexicalScopeIndex` (`JOF_SCOPE`): `LexicalScope*`
+ * -   `withScopeIndex` (`JOF_SCOPE`): `WithScope*`
+ * -   `bigIntIndex` (`JOF_BIGINT`): `BigInt*`
+ *
+ * Operands named `icIndex` (`JOF_ICINDEX`) must be exactly the number of
+ * preceding instructions in the script that have the JOF_IC flag.
+ * (Rationale: Each JOF_IC instruction has a unique entry in
+ * `script->jitScript()->icEntries()`.  At run time, in the bytecode
+ * interpreter, we have to find that entry. We could store the IC index as an
+ * operand to each JOF_IC instruction, but it's more memory-efficient to use a
+ * counter and reset the counter to `icIndex` after each jump.)
+ *
+ * ## Stack depth
+ *
+ * Each instruction has a compile-time stack depth, the number of values on the
+ * interpreter stack just before executing the instruction. It isn't explicitly
+ * present in the bytecode itself, but (for reachable instructions, anyway)
+ * it's a function of the bytecode.
+ *
+ * -   The first instruction has stack depth 0.
+ *
+ * -   Each successor of an instruction X has a stack depth equal to
+ *
+ *         X's stack depth - `js::StackUses(X)` + `js::StackDefs(X)`
+ *
+ *     except for `JSOP_CASE` (below).
+ *
+ *     X's "successors" are: the next instruction in the script, if
+ *     `js::FlowsIntoNext(op)` is true for X's opcode; one or more
+ *     `JSOP_JUMPTARGET`s elsewhere, if X is a forward jump or
+ *     `JSOP_TABLESWITCH`; and/or a `JSOP_LOOPHEAD` if it's a backward jump.
+ *
+ * -   `JSOP_CASE` is a special case because its stack behavior is eccentric.
+ *     The formula above is correct for the next instruction. The jump target
+ *     has a stack depth that is 1 less.
+ *
+ * -   See `JSOP_GOSUB` for another special case.
+ *
+ * -   The `JSOP_JUMPTARGET` instruction immediately following a `JSTRY_CATCH`
+ *     or `JSTRY_FINALLY` span has the same stack depth as the `JSOP_TRY`
+ *     instruction that precedes the span.
+ *
+ *     Every instruction covered by the `JSTRY_CATCH` or `JSTRY_FINALLY` span
+ *     must have a stack depth >= that value, so that error recovery is
+ *     guaranteed to find enough values on the stack to resume there.
+ *
+ * -   `script->nslots() - script->nfixed()` must be >= the maximum stack
+ *     depth of any instruction in `script`.  (The stack frame must be big
+ *     enough to run the code.)
+ *
+ * `BytecodeParser::parse()` computes stack depths for every reachable
+ * instruction in a script.
+ *
+ * ## Scopes and environments
+ *
+ * As with stack depth, each instruction has a static scope, which is a
+ * compile-time characterization of the eventual run-time environment chain
+ * when that instruction executes. Just as every instruction has a stack budget
+ * (nuses/ndefs), every instruction either pushes a scope, pops a scope, or
+ * neither. The same successor relation applies as above.
+ *
+ * Every scope used in a script is stored in the `JSScript::gcthings()` vector.
+ * They can be accessed using `getScope(index)` if you know what `index` to
+ * pass.
+ *
+ * The scope of every instruction (that's reachable via the successor relation)
+ * is given in two independent ways: by the bytecode itself and by the scope
+ * notes. The two sources must agree.
+ *
+ * ## Further rules
+ *
+ * All reachable instructions must be reachable without taking any backward
+ * edges.
+ *
+ * Instructions with the `JOF_CHECKSLOPPY` flag must not be used in strict mode
+ * code. `JOF_CHECKSTRICT` instructions must not be used in nonstrict code.
+ *
+ * Many instructions have their own additional rules. These are documented on
+ * the various opcodes below (look for the word "must").
  */
 
 // clang-format off
@@ -1174,7 +1338,7 @@
      *
      *   Category: Literals
      *   Type: Class
-     *   Operands: atom className, uint32_t sourceStart, uint32_t sourceEnd
+     *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: => constructor
      */ \
     MACRO(JSOP_CLASSCONSTRUCTOR, "classconstructor", NULL, 13, 0, 1, JOF_CLASS_CTOR) \
@@ -1186,7 +1350,7 @@
      *
      *   Category: Literals
      *   Type: Class
-     *   Operands: atom className, uint32_t sourceStart, uint32_t sourceEnd
+     *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: proto => constructor
      */ \
     MACRO(JSOP_DERIVEDCONSTRUCTOR, "derivedconstructor", NULL, 13, 1, 1, JOF_CLASS_CTOR) \
@@ -2201,7 +2365,7 @@
      *
      *   Category: Variables and Scopes
      *   Type: Block-local Scope
-     *   Operands: uint32_t scopeIndex
+     *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
     MACRO(JSOP_PUSHLEXICALENV, "pushlexicalenv", NULL, 5, 0, 0, JOF_SCOPE) \
