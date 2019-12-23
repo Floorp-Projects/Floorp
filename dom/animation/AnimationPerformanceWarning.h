@@ -22,7 +22,6 @@ struct AnimationPerformanceWarning {
     ContentTooLarge,
     ContentTooLargeArea,
     TransformBackfaceVisibilityHidden,
-    TransformPreserve3D,
     TransformSVG,
     TransformWithGeometricProperties,
     TransformWithSyncGeometricAnimations,

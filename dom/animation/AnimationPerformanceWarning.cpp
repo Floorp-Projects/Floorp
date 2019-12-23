@@ -44,9 +44,6 @@ bool AnimationPerformanceWarning::ToLocalizedString(
     case Type::TransformBackfaceVisibilityHidden:
       key = "CompositorAnimationWarningTransformBackfaceVisibilityHidden";
       break;
-    case Type::TransformPreserve3D:
-      key = "CompositorAnimationWarningTransformPreserve3D";
-      break;
     case Type::TransformSVG:
       key = "CompositorAnimationWarningTransformSVG";
       break;
