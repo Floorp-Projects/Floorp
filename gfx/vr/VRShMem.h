@@ -46,6 +46,9 @@ class VRShMem final {
   void PushWindowState(VRWindowState& aState);
   void PullWindowState(VRWindowState& aState);
 
+  void PushTelemetryState(VRTelemetryState& aState);
+  void PullTelemetryState(VRTelemetryState& aState);
+
   void SendIMEState(uint64_t aWindowID, mozilla::gfx::VRFxEventState aImeState);
   void SendFullscreenState(uint64_t aWindowID, bool aFullscreen);
   void SendShutdowmState(uint64_t aWindowID);

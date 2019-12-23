@@ -261,6 +261,13 @@ void VRManager::UpdateRequestedDevices() {
  * at the VR display's native refresh rate.
  **/
 void VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp) {
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  // For Firefox Reality PC telemetry only.
+  if (PR_GetEnv("MOZ_FXR")) {
+    ProcessTelemetryEvent();
+  }
+#endif
+
   if (mState != VRManagerState::Active) {
     return;
   }
@@ -418,6 +425,39 @@ void VRManager::Run100msTasks() {
   RefreshVRDisplays();
   CheckForInactiveTimeout();
   CheckForShutdown();
+}
+
+void VRManager::ProcessTelemetryEvent() {
+  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+  MOZ_ASSERT(!shmem.HasExternalShmem());
+  if (shmem.JoinShMem()) {
+    mozilla::gfx::VRTelemetryState telemetryState = {0};
+    shmem.PullTelemetryState(telemetryState);
+
+    if (telemetryState.uid != 0) {
+      if (telemetryState.installedFrom) {
+        MOZ_ASSERT(telemetryState.installedFromValue <= 0x07,
+                   "VRTelemetryId::INSTALLED_FROM only allows 3 bits.");
+        Telemetry::Accumulate(Telemetry::FXRPC_FF_INSTALLATION_FROM,
+                              telemetryState.installedFromValue);
+      }
+      if (telemetryState.entryMethod) {
+        MOZ_ASSERT(telemetryState.entryMethodValue <= 0x07,
+                   "VRTelemetryId::ENTRY_METHOD only allows 3 bits.");
+        Telemetry::Accumulate(Telemetry::FXRPC_ENTRY_METHOD,
+                              telemetryState.entryMethodValue);
+      }
+      if (telemetryState.firstRun) {
+        MOZ_ASSERT(telemetryState.firstRunValue <= 0x01,
+                   "VRTelemetryId::FIRST_RUN only allows 1 bit.");
+        Telemetry::ScalarSet(Telemetry::ScalarID::FXRPC_ISFIRSTRUN,
+                             telemetryState.firstRunValue);
+      }
+
+      telemetryState = {0};
+      shmem.PushTelemetryState(telemetryState);
+    }
+  }
 }
 
 void VRManager::CheckForInactiveTimeout() {
