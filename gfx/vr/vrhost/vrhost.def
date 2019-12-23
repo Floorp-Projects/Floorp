@@ -12,4 +12,3 @@ EXPORTS
                CloseVRWindow        PRIVATE
                SendUIMessageToVRWindow  PRIVATE
                WaitForVREvent       PRIVATE
-               SendVRTelemetry      PRIVATE
