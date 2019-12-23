@@ -294,8 +294,7 @@ var BrowserUtils = {
       mimeType == "application/x-javascript" ||
       mimeType == "application/javascript" ||
       mimeType == "application/json" ||
-      mimeType == "application/xml" ||
-      mimeType == "mozilla.application/cached-xul"
+      mimeType == "application/xml"
     );
   },
 
