@@ -611,6 +611,16 @@ class WasmFlags(TargetCompileFlags):
 
         TargetCompileFlags.__init__(self, context)
 
+    def _optimize_flags(self):
+        if not self._context.config.substs.get('MOZ_OPTIMIZE'):
+            return []
+
+        # We don't want `MOZ_{PGO_,}OPTIMIZE_FLAGS here because they may contain
+        # optimization flags that aren't suitable for wasm (e.g. -freorder-blocks).
+        # Just optimize for size in all cases; we may want to make this
+        # configurable.
+        return ['-Os']
+
 
 class FinalTargetValue(ContextDerivedValue, six.text_type):
     def __new__(cls, context, value=""):
