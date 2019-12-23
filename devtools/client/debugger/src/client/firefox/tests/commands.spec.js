@@ -20,7 +20,7 @@ function makeDependencies() {
   return {
     debuggerClient: (null: any),
     supportsWasm: true,
-    tabTarget: (null: any),
+    currentTarget: (null: any),
   };
 }
 

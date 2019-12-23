@@ -26,7 +26,7 @@ const {
 
 type Dependencies = {
   threadFront: ThreadFront,
-  tabTarget: Target,
+  currentTarget: Target,
   actions: typeof Actions,
   debuggerClient: DebuggerClient,
 };
@@ -45,15 +45,15 @@ function attachAllTargets(currentTarget: Target) {
 }
 
 function setupEvents(dependencies: Dependencies) {
-  const { tabTarget, threadFront, debuggerClient } = dependencies;
+  const { currentTarget, threadFront, debuggerClient } = dependencies;
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
   addThreadEventListeners(threadFront);
-  tabTarget.on("workerListChanged", () => threadListChanged());
+  currentTarget.on("workerListChanged", () => threadListChanged());
   debuggerClient.mainRoot.on("processListChanged", () => threadListChanged());
 
-  if (features.windowlessServiceWorkers || attachAllTargets(tabTarget)) {
+  if (features.windowlessServiceWorkers || attachAllTargets(currentTarget)) {
     const workersListener = new WorkersListener(debuggerClient.mainRoot);
     workersListener.addListener(() => threadListChanged());
   }
