@@ -405,7 +405,7 @@ bool PeerConnectionMedia::GetPrefObfuscateHostAddresses() const {
   obfuscate_host_addresses &=
       !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
   obfuscate_host_addresses &=
-      !HostInObfuscationWhitelist(mParent->GetWindow()->GetDocBaseURI());
+      !HostInObfuscationWhitelist(mParent->GetWindow()->GetDocumentURI());
   obfuscate_host_addresses &= XRE_IsContentProcess();
 
   return obfuscate_host_addresses;
