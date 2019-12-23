@@ -8,11 +8,13 @@
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
+#include "mozilla/NativeNt.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Types.h"
@@ -116,7 +118,7 @@ class FuncHook final {
   ~FuncHook() = default;
 
   bool Set(InterceptorT& aInterceptor, const char* aName, FuncPtrT aHookDest) {
-    LPVOID addHookOk;
+    LPVOID addHookOk = nullptr;
     InitOnceContext ctx(this, &aInterceptor, aName, aHookDest, false);
 
     return ::InitOnceExecuteOnce(&mInitOnce, &InitOnceCallback, &ctx,
@@ -126,7 +128,7 @@ class FuncHook final {
 
   bool SetDetour(InterceptorT& aInterceptor, const char* aName,
                  FuncPtrT aHookDest) {
-    LPVOID addHookOk;
+    LPVOID addHookOk = nullptr;
     InitOnceContext ctx(this, &aInterceptor, aName, aHookDest, true);
 
     return ::InitOnceExecuteOnce(&mInitOnce, &InitOnceCallback, &ctx,
@@ -446,6 +448,253 @@ class WindowsDllInterceptor final
   friend class FuncHookCrossProcess;
 };
 
+/**
+ * IAT patching is intended for use when we only want to intercept a function
+ * call originating from a specific module.
+ */
+class WindowsIATPatcher final {
+ public:
+  template <typename FuncPtrT>
+  using FuncHookType = FuncHook<WindowsIATPatcher, FuncPtrT>;
+
+ private:
+  static bool CheckASCII(const char* aInStr) {
+    while (*aInStr) {
+      if (*aInStr & 0x80) {
+        return false;
+      }
+      ++aInStr;
+    }
+    return true;
+  }
+
+  static bool AddHook(HMODULE aFromModule, const char* aToModuleName,
+                      const char* aTargetFnName, void* aHookDest,
+                      Atomic<void*>* aOutOrigFunc) {
+    if (!aFromModule || !aToModuleName || !aTargetFnName || !aOutOrigFunc) {
+      return false;
+    }
+
+    // PE Spec requires ASCII names for imported module names
+    const bool isModuleNameAscii = CheckASCII(aToModuleName);
+    MOZ_ASSERT(isModuleNameAscii);
+    if (!isModuleNameAscii) {
+      return false;
+    }
+
+    // PE Spec requires ASCII names for imported function names
+    const bool isTargetFnNameAscii = CheckASCII(aTargetFnName);
+    MOZ_ASSERT(isTargetFnNameAscii);
+    if (!isTargetFnNameAscii) {
+      return false;
+    }
+
+    nt::PEHeaders headers(aFromModule);
+    if (!headers) {
+      return false;
+    }
+
+    PIMAGE_IMPORT_DESCRIPTOR impDesc =
+        headers.GetImportDescriptor(aToModuleName);
+    if (!nt::PEHeaders::IsValid(impDesc)) {
+      // Either aFromModule does not import aToModuleName at load-time, or
+      // aToModuleName is a (currently unsupported) delay-load import.
+      return false;
+    }
+
+    // Resolve the import name table (INT).
+    auto firstINTThunk = headers.template RVAToPtr<PIMAGE_THUNK_DATA>(
+        impDesc->OriginalFirstThunk);
+    if (!nt::PEHeaders::IsValid(firstINTThunk)) {
+      return false;
+    }
+
+    Maybe<ptrdiff_t> thunkIndex;
+
+    // Scan the INT for the location of the thunk for the function named
+    // 'aTargetFnName'.
+    for (PIMAGE_THUNK_DATA curINTThunk = firstINTThunk;
+         nt::PEHeaders::IsValid(curINTThunk); ++curINTThunk) {
+      if (IMAGE_SNAP_BY_ORDINAL(curINTThunk->u1.Ordinal)) {
+        // Currently not supporting import by ordinal; this isn't hard to add,
+        // but we won't bother unless necessary.
+        continue;
+      }
+
+      PIMAGE_IMPORT_BY_NAME curThunkFnName =
+          headers.template RVAToPtr<PIMAGE_IMPORT_BY_NAME>(
+              curINTThunk->u1.AddressOfData);
+      MOZ_ASSERT(curThunkFnName);
+      if (!curThunkFnName) {
+        // Looks like we have a bad name descriptor. Try to continue.
+        continue;
+      }
+
+      // Function name checks MUST be case-sensitive!
+      if (!strcmp(aTargetFnName, curThunkFnName->Name)) {
+        // We found the thunk. Save the index of this thunk, as the IAT thunk
+        // is located at the same index in that table as in the INT.
+        thunkIndex = Some(curINTThunk - firstINTThunk);
+        break;
+      }
+    }
+
+    if (thunkIndex.isNothing()) {
+      // We never found a thunk for that function. Perhaps it's not imported?
+      return false;
+    }
+
+    if (thunkIndex.value() < 0) {
+      // That's just wrong.
+      return false;
+    }
+
+    auto firstIATThunk =
+        headers.template RVAToPtr<PIMAGE_THUNK_DATA>(impDesc->FirstThunk);
+    if (!nt::PEHeaders::IsValid(firstIATThunk)) {
+      return false;
+    }
+
+    // Resolve the IAT thunk for the function we want
+    PIMAGE_THUNK_DATA targetThunk = &firstIATThunk[thunkIndex.value()];
+    if (!nt::PEHeaders::IsValid(targetThunk)) {
+      return false;
+    }
+
+    auto fnPtr = reinterpret_cast<Atomic<void*>*>(&targetThunk->u1.Function);
+
+    // Now we can just change out its pointer with our hook function.
+    AutoVirtualProtect prot(fnPtr, sizeof(void*), PAGE_EXECUTE_READWRITE);
+    if (!prot) {
+      return false;
+    }
+
+    // We do the exchange this way to ensure that *aOutOrigFunc is always valid
+    // once the atomic exchange has taken place.
+    void* tmp;
+
+    do {
+      tmp = *fnPtr;
+      *aOutOrigFunc = tmp;
+    } while (!fnPtr->compareExchange(tmp, aHookDest));
+
+    return true;
+  }
+
+  template <typename InterceptorT, typename FuncPtrT>
+  friend class FuncHook;
+};
+
+template <typename FuncPtrT>
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS
+    FuncHook<WindowsIATPatcher, FuncPtrT>
+        final {
+ public:
+  using ThisType = FuncHook<WindowsIATPatcher, FuncPtrT>;
+  using ReturnType = typename OriginalFunctionPtrTraits<FuncPtrT>::ReturnType;
+
+  constexpr FuncHook()
+      : mInitOnce(INIT_ONCE_STATIC_INIT),
+        mFromModule(nullptr),
+        mOrigFunc(nullptr) {}
+
+#if defined(DEBUG)
+  ~FuncHook() = default;
+#endif  // defined(DEBUG)
+
+  bool Set(const wchar_t* aFromModuleName, const char* aToModuleName,
+           const char* aFnName, FuncPtrT aHookDest) {
+    nsModuleHandle fromModule(::LoadLibraryW(aFromModuleName));
+    if (!fromModule) {
+      return false;
+    }
+
+    return Set(fromModule, aToModuleName, aFnName, aHookDest);
+  }
+
+  // We offer this overload in case the client wants finer-grained control over
+  // loading aFromModule.
+  bool Set(nsModuleHandle& aFromModule, const char* aToModuleName,
+           const char* aFnName, FuncPtrT aHookDest) {
+    LPVOID addHookOk = nullptr;
+    InitOnceContext ctx(this, aFromModule, aToModuleName, aFnName, aHookDest);
+
+    bool result = ::InitOnceExecuteOnce(&mInitOnce, &InitOnceCallback, &ctx,
+                                        &addHookOk) &&
+                  addHookOk;
+    if (!result) {
+      return result;
+    }
+
+    // If we successfully set the hook then we must retain a strong reference
+    // to the module that we modified.
+    mFromModule = aFromModule.disown();
+    return result;
+  }
+
+  explicit operator bool() const { return !!mOrigFunc; }
+
+  template <typename... ArgsType>
+  ReturnType operator()(ArgsType&&... aArgs) const {
+    return mOrigFunc(std::forward<ArgsType>(aArgs)...);
+  }
+
+  FuncPtrT GetStub() const { return mOrigFunc; }
+
+#if defined(DEBUG)
+  // One-time init stuff cannot be moved or copied
+  FuncHook(const FuncHook&) = delete;
+  FuncHook(FuncHook&&) = delete;
+  FuncHook& operator=(const FuncHook&) = delete;
+  FuncHook& operator=(FuncHook&& aOther) = delete;
+#endif  // defined(DEBUG)
+
+ private:
+  struct MOZ_RAII InitOnceContext final {
+    InitOnceContext(ThisType* aHook, const nsModuleHandle& aFromModule,
+                    const char* aToModuleName, const char* aFnName,
+                    FuncPtrT aHookDest)
+        : mHook(aHook),
+          mFromModule(aFromModule),
+          mToModuleName(aToModuleName),
+          mFnName(aFnName),
+          mHookDest(reinterpret_cast<void*>(aHookDest)) {}
+
+    ThisType* mHook;
+    const nsModuleHandle& mFromModule;
+    const char* mToModuleName;
+    const char* mFnName;
+    void* mHookDest;
+  };
+
+ private:
+  bool Apply(const nsModuleHandle& aFromModule, const char* aToModuleName,
+             const char* aFnName, void* aHookDest) {
+    return WindowsIATPatcher::AddHook(
+        aFromModule, aToModuleName, aFnName, aHookDest,
+        reinterpret_cast<Atomic<void*>*>(&mOrigFunc));
+  }
+
+  static BOOL CALLBACK InitOnceCallback(PINIT_ONCE aInitOnce, PVOID aParam,
+                                        PVOID* aOutContext) {
+    MOZ_ASSERT(aOutContext);
+
+    auto ctx = reinterpret_cast<InitOnceContext*>(aParam);
+    bool result = ctx->mHook->Apply(ctx->mFromModule, ctx->mToModuleName,
+                                    ctx->mFnName, ctx->mHookDest);
+
+    *aOutContext =
+        result ? reinterpret_cast<PVOID>(1U << INIT_ONCE_CTX_RESERVED_BITS)
+               : nullptr;
+    return TRUE;
+  }
+
+ private:
+  INIT_ONCE mInitOnce;
+  HMODULE mFromModule;  // never freed
+  FuncPtrT mOrigFunc;
+};
+
 }  // namespace interceptor
 
 using WindowsDllInterceptor = interceptor::WindowsDllInterceptor<>;
@@ -453,6 +702,8 @@ using WindowsDllInterceptor = interceptor::WindowsDllInterceptor<>;
 using CrossProcessDllInterceptor = interceptor::WindowsDllInterceptor<
     mozilla::interceptor::VMSharingPolicyUnique<
         mozilla::interceptor::MMPolicyOutOfProcess>>;
+
+using WindowsIATPatcher = interceptor::WindowsIATPatcher;
 
 }  // namespace mozilla
 
