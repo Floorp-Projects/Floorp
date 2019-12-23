@@ -709,9 +709,6 @@
      */ \
     MACRO(JSOP_TABLESWITCH, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
-     */ \
-    MACRO(JSOP_UNUSED71, "unused71", NULL, 1, 0, 0, JOF_BYTE) \
-    /*
      * Pops the top two values from the stack, then pushes the result of
      * applying the operator to the two values.
      *
@@ -1078,9 +1075,6 @@
      */ \
     MACRO(JSOP_STRICTSETPROP_SUPER, "strictsetprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
-     */ \
-    MACRO(JSOP_UNUSED106, "unused", NULL, 1, 0, 0, JOF_BYTE) \
-    /*
      * Pops the top three values on the stack as 'val', 'obj' and 'receiver',
      * and performs 'obj.prop = val', pushing 'val' back onto the stack.
      *
@@ -1236,9 +1230,6 @@
      *   Stack: =>
      */ \
     MACRO(JSOP_LINENO, "lineno", NULL, 5, 0, 0, JOF_UINT32) \
-    /*
-     */ \
-    MACRO(JSOP_UNUSED120, "unused", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values on the stack as 'val' and 'cond'. If 'cond' is
      * 'true', jumps to a 32-bit offset from the current bytecode, re-pushes
@@ -1566,9 +1557,6 @@
      *   Stack: => new.target
      */ \
     MACRO(JSOP_NEWTARGET, "newtarget", NULL, 1, 0, 1, JOF_BYTE) \
-    /*
-     */ \
-    MACRO(JSOP_UNUSED149, "unused149", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'Math.pow(lval, rval)'.
@@ -2413,9 +2401,6 @@
      */ \
     MACRO(JSOP_IMPLICITTHIS, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     */ \
-    MACRO(JSOP_UNUSED227, "unused", NULL, 1, 0, 0, JOF_BYTE) \
-    /*
      * Converts the value on the top of the stack to a String.
      *
      *   Category: Other
@@ -2559,6 +2544,11 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(238)                                   \
+  MACRO(239)                                   \
+  MACRO(240)                                   \
+  MACRO(241)                                   \
+  MACRO(242)                                   \
   MACRO(243)                                   \
   MACRO(244)                                   \
   MACRO(245)                                   \
