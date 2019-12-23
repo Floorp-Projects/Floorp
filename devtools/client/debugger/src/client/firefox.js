@@ -9,9 +9,9 @@ import { setupEvents, clientEvents } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
 
 export async function onConnect(connection: any, actions: Object) {
-  const {
-    tabConnection: { tabTarget, threadFront, debuggerClient },
-  } = connection;
+  const { debuggerClient, targetList } = connection;
+  const tabTarget = targetList.targetFront;
+  const threadFront = tabTarget.threadFront;
 
   if (!tabTarget || !threadFront || !debuggerClient) {
     return;
