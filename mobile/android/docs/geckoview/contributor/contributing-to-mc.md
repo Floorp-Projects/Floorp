@@ -110,15 +110,8 @@ You may have noticed when using Arcanist that it wraps all of your carefully cur
 
 #### Installing `moz-phab`
 
-
-N.B. If each individual patch does not compile and pass tests you will not be able to land each patch individually. In this case, please use Arcanist.
-
-* Download the latest version of [`moz-phab`](https://github.com/mozilla-conduit/review/releases/tags) from the repository.
-* Add it to your path
-
 ```bash
-export PATH="$PATH:/somewhere/moz-phab/bin/"
-echo PATH="$PATH:/somewhere/moz-phab/bin/" >> ~/.bash_profile
+pip install MozPhab [--user]
 ```
 
 #### Submitting a patch using `moz-phab`.
