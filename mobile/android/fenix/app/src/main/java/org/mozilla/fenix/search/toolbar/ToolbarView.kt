@@ -28,6 +28,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
+import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
@@ -93,7 +94,10 @@ class ToolbarView(
                 false
             }
 
-            background = null
+            background =
+                AppCompatResources.getDrawable(
+                    container.context, ThemeManager.resolveAttribute(R.attr.foundation, context)
+                )
 
             layoutParams.height = CoordinatorLayout.LayoutParams.MATCH_PARENT
 
