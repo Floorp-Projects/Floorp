@@ -14371,6 +14371,28 @@
     "description": "Measure the time how long the cursor is hovering before opening the unselcted tab. Only record the data if someone requests for sending unselected tab hover msg.",
     "releaseChannelCollection": "opt-out"
   },
+  "FXRPC_FF_INSTALLATION_FROM": {
+    "record_in_processes": ["main", "gpu"],
+    "products": ["firefox"],
+    "alert_emails": ["fxr-telemetry@mozilla.com", "dmu@mozilla.com"],
+    "bug_numbers": [1603539],
+    "expires_in_version": "79",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["User", "FxR", "HTC", "Valve"],
+    "description": "Determine if FireFox is installed at user's PC already, or they are new installation from Firefox Reality PC distribution channels."
+  },
+  "FXRPC_ENTRY_METHOD": {
+    "record_in_processes": ["main", "gpu"],
+    "products": ["firefox"],
+    "alert_emails": ["fxr-telemetry@mozilla.com", "dmu@mozilla.com"],
+    "bug_numbers": [1603539],
+    "expires_in_version": "79",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["SysBtn", "Library", "Gaze"],
+    "description": "The approach of users enter Firefox Reality PC."
+  },
   "WEBVR_USERS_VIEW_IN": {
     "record_in_processes": ["main", "gpu", "content"],
     "products": ["firefox", "fennec", "geckoview"],

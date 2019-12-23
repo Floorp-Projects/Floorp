@@ -4986,6 +4986,24 @@ deletion.request:
     record_into_store:
       - 'deletion-request'
 
+fxrPC:
+  isFirstRun:
+    bug_numbers:
+      - 1603539
+    description: >
+      Determine if this user is first time to run Firefox Reality PC.
+    expires: "79"
+    kind: boolean
+    notification_emails:
+      - fxr-telemetry@mozilla.com
+      - dmu@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
