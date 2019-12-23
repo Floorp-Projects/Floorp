@@ -758,8 +758,8 @@ impl Tile {
 
         // Determine if the fractional offset of the transform is different this frame
         // from the currently cached tile set.
-        let fract_changed = (self.fract_offset.x - ctx.fract_offset.x).abs() > 0.01 ||
-                            (self.fract_offset.y - ctx.fract_offset.y).abs() > 0.01;
+        let fract_changed = (self.fract_offset.x - ctx.fract_offset.x).abs() > 0.001 ||
+                            (self.fract_offset.y - ctx.fract_offset.y).abs() > 0.001;
         if fract_changed {
             self.invalidate(None, InvalidationReason::FractionalOffset);
             self.fract_offset = ctx.fract_offset;
@@ -3245,9 +3245,9 @@ impl PicturePrimitive {
 
             // Round the scale up to the nearest power of 2, but don't exceed 8.
             let scale = scale_factors.0.max(scale_factors.1).min(8.0);
-            let rounded_up = 2.0f32.powf(scale.log2().ceil());
+            let rounded_up = 1 << scale.log2().ceil() as u32;
 
-            RasterSpace::Local(rounded_up)
+            RasterSpace::Local(rounded_up as f32)
         } else {
             self.requested_raster_space
         }
