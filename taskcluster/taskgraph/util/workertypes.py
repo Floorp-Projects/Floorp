@@ -74,7 +74,6 @@ def _get(graph_config, alias, level, release_level):
     return worker_config
 
 
-@memoize
 def worker_type_implementation(graph_config, worker_type):
     """Get the worker implementation and OS for the given workerType, where the
     OS represents the host system, not the target OS, in the case of
@@ -83,12 +82,10 @@ def worker_type_implementation(graph_config, worker_type):
     return worker_config['implementation'], worker_config.get('os')
 
 
-@memoize
 def get_worker_type(graph_config, worker_type, level, release_level):
     """
     Get the worker type provisioner and worker-type, optionally evaluating
     aliases from the graph config.
     """
     worker_config = _get(graph_config, worker_type, level, release_level)
-
     return worker_config['provisioner'], worker_config['worker-type']
