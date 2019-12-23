@@ -231,6 +231,5 @@
 
 #define APPLICATION_DIRECTORY \
   "application/directory" /* text/x-vcard is synonym */
-#define APPLICATION_CACHED_XUL "mozilla.application/cached-xul"
 
 #endif /* nsMimeTypes_h_ */
