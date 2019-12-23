@@ -9,6 +9,10 @@ import { prefs, asyncStore, features } from "./prefs";
 import { isDevelopment, isTesting } from "devtools-environment";
 import { getDocument } from "./editor/source-documents";
 
+function getThreadFront(dbg: Object) {
+  return dbg.connection.targetList.targetFront.threadFront;
+}
+
 function findSource(dbg: any, url: string) {
   const sources = dbg.selectors.getSourceList();
   return sources.find(s => (s.url || "").includes(url));
@@ -25,7 +29,7 @@ function sendPacket(dbg: any, packet: any) {
 
 function sendPacketToThread(dbg: Object, packet: any) {
   return sendPacket(dbg, {
-    to: dbg.connection.tabConnection.threadFront.actor,
+    to: getThreadFront(dbg).actor,
     ...packet,
   });
 }
@@ -88,7 +92,7 @@ export function setupHelper(obj: Object) {
       evaluate: expression => evaluate(dbg, expression),
       sendPacketToThread: packet => sendPacketToThread(dbg, packet),
       sendPacket: packet => sendPacket(dbg, packet),
-      dumpThread: () => dbg.connection.tabConnection.threadFront.dumpThread(),
+      dumpThread: () => getThreadFront(dbg).dumpThread(),
       getDocument: url => getDocumentForUrl(dbg, url),
     },
     formatters: {
