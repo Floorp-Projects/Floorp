@@ -103,15 +103,14 @@ class CommentInfo:
         self.ndefs_override = ''
 
 # Holds the information stored in the macro with the following format:
-#   MACRO({name}, {value}, {display_name}, {image}, {length}, {nuses}, {ndefs},
-#         {flags})
+#   MACRO({name}, {display_name}, {image}, {length}, {nuses}, {ndefs}, {flags})
 # and the information from CommentInfo.
 
 
 class OpcodeInfo:
-    def __init__(self, comment_info):
+    def __init__(self, value, comment_info):
         self.name = ''
-        self.value = ''
+        self.value = value
         self.display_name = ''
         self.image = ''
         self.length = ''
@@ -203,7 +202,6 @@ def get_opcodes(dir):
                           r"|"
                           r"MACRO\("      # or a MACRO(...) call
                           r"(?P<name>[^,]+),\s*"
-                          r"(?P<value>[0-9]+),\s*"
                           r"(?P<display_name>[^,]+,)\s*"
                           r"(?P<image>[^,]+),\s*"
                           r"(?P<length>[0-9\-]+),\s*"
@@ -226,6 +224,7 @@ def get_opcodes(dir):
 
     # The first opcode after the comment.
     group_head = None
+    next_opcode_value = 0
 
     for m in re.finditer(iter_pat, data):
         comment = m.group(1)
@@ -300,11 +299,12 @@ def get_opcodes(dir):
             if m2:
                 comment_info.stack_uses = m2.group('uses')
                 comment_info.stack_defs = m2.group('defs')
-        elif name and not name.startswith('JSOP_UNUSED'):
-            opcode = OpcodeInfo(comment_info)
+        else:
+            assert name is not None
+            opcode = OpcodeInfo(next_opcode_value, comment_info)
+            next_opcode_value += 1
 
             opcode.name = name
-            opcode.value = int(m.group('value'))
             opcode.display_name = parse_name(m.group('display_name'))
             opcode.image = parse_name(m.group('image'))
             opcode.length = m.group('length')
