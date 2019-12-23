@@ -531,6 +531,12 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     if (AppConstants.platform == "win") {
       await WindowsSupport.install(this);
     }
+
+    Services.obs.notifyObservers(
+      null,
+      "site-specific-browser-install",
+      this.id
+    );
   }
 
   /**
@@ -549,6 +555,12 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     this._config.persisted = false;
     let kvstore = await SiteSpecificBrowserService.getKVStore();
     await kvstore.delete(storeKey(this.id));
+
+    Services.obs.notifyObservers(
+      null,
+      "site-specific-browser-uninstall",
+      this.id
+    );
   }
 
   /**
@@ -598,6 +610,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    * are no icons at all.
    *
    * @param {Number} size the size of the desired icon in pixels.
+   * @return {IconResource} the icon resource for the icon.
    */
   getIcon(size) {
     if (!this._iconSizes) {
@@ -616,6 +629,25 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     return i < this._iconSizes.length
       ? this._iconSizes[i].icon
       : this._iconSizes[this._iconSizes.length - 1].icon;
+  }
+
+  /**
+   * Gets the best icon for the requested size. If there isn't a perfect match
+   * the closest match will be scaled.
+   *
+   * @param {Number} size the size of the desired icon in pixels.
+   * @return {string|null} a data URI for the icon.
+   */
+  async getScaledIcon(size) {
+    let icon = this.getIcon(size);
+    if (!icon) {
+      return null;
+    }
+
+    let { container } = await ImageTools.loadImage(
+      Services.io.newURI(icon.src)
+    );
+    return ImageTools.scaleImage(container, size, size);
   }
 
   /**
