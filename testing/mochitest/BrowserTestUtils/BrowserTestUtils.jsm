@@ -1818,6 +1818,34 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Returns a promise that is resolved when element loses an attribute.
+   * @param {String} attr
+   *        The attribute to wait for
+   * @param {Element} element
+   *        The element which should lose the attribute
+   *
+   * @returns {Promise}
+   */
+  waitForAttributeRemoval(attr, element) {
+    if (!element.hasAttribute(attr)) {
+      return Promise.resolve();
+    }
+
+    let MutationObserver = element.ownerGlobal.MutationObserver;
+    return new Promise(resolve => {
+      dump("Waiting for removal\n");
+      let mut = new MutationObserver(mutations => {
+        if (!element.hasAttribute(attr)) {
+          resolve();
+          mut.disconnect();
+        }
+      });
+
+      mut.observe(element, { attributeFilter: [attr] });
+    });
+  },
+
+  /**
    * Version of EventUtils' `sendChar` function; it will synthesize a keypress
    * event in a child process and returns a Promise that will resolve when the
    * event was fired. Instead of a Window, a Browser or Browsing Context

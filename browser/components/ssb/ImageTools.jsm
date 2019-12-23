@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -19,6 +20,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/image/tools;1",
   Ci.imgITools
 );
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["Blob"]);
 
 const ImageTools = {
   /**
@@ -55,6 +58,60 @@ const ImageTools = {
         },
         null
       );
+    });
+  },
+
+  scaleImage(container, width, height) {
+    return new Promise((resolve, reject) => {
+      let stream = ImgTools.encodeScaledImage(
+        container,
+        "image/png",
+        width,
+        height,
+        ""
+      );
+
+      try {
+        stream.QueryInterface(Ci.nsIAsyncInputStream);
+      } catch (e) {
+        reject(
+          Components.Exception(
+            "imgIEncoder must implement nsIAsyncInputStream",
+            e
+          )
+        );
+      }
+
+      let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+        Ci.nsIBinaryInputStream
+      );
+      binaryStream.setInputStream(stream);
+
+      let buffers = [];
+      let callback = () => {
+        try {
+          let available = binaryStream.available();
+          if (available) {
+            let buffer = new ArrayBuffer(available);
+            binaryStream.readArrayBuffer(available, buffer);
+            buffers.push(buffer);
+
+            stream.asyncWait(callback, 0, 0, Services.tm.mainThread);
+            return;
+          }
+
+          // No data available, assume the encoding is done.
+          resolve(new Blob(buffers));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      try {
+        stream.asyncWait(callback, 0, 0, Services.tm.mainThread);
+      } catch (e) {
+        reject(e);
+      }
     });
   },
 
