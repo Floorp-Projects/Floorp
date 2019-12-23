@@ -12,5 +12,5 @@ add_task(async function() {
   await waitForSources(dbg, "doc-bfcache1.html");
   invokeInTab("goForward");
   await waitForSources(dbg, "doc-bfcache2.html");
-  ok("Found sources after BFCache navigations");
+  ok(true, "Found sources after BFCache navigations");
 });

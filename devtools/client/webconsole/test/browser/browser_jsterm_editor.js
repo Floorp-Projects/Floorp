@@ -41,7 +41,7 @@ add_task(async function() {
   await toggleLayout(hud);
   getInlineOpenEditorButton(hud).click();
   await waitFor(() => isEditorModeEnabled(hud));
-  ok("Editor is open when clicking on the button");
+  ok(true, "Editor is open when clicking on the button");
 });
 
 function getInlineOpenEditorButton(hud) {
