@@ -14,6 +14,7 @@ EXPORTS
                CloseVRWindow        PRIVATE
                SendUIMessageToVRWindow  PRIVATE
                WaitForVREvent       PRIVATE
+               SendVRTelemetry      PRIVATE
 
 ;+= Exports only available in Nightlies for testing
                SampleExport         PRIVATE
