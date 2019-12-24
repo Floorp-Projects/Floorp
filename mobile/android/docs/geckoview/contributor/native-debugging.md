@@ -13,7 +13,7 @@ exclude: true
 {:toc}
 
 # Debugging Native Code in Android Studio.
-If you want to work on the C++ code that powers GeckoView, you will need to be able to perform native debugging inside Android Studio. This article will guide you through how to do that. 
+If you want to work on the C++ code that powers GeckoView, you will need to be able to perform native debugging inside Android Studio. This article will guide you through how to do that.
 
 If you need to get set up with GeckoView for the first time, follow the [Quick Start Guide](geckoview-quick-start).
 
@@ -40,9 +40,9 @@ ac_add_options --with-android-ndk="<path>/.mozbuild/android-ndk-r17b"
 ./mach build
 ```
 ## Set up lldb to find your symbols
-Edit your `~/.lldbinit` file (or create one if one does not already exist) and add the following lines. 
+Edit your `~/.lldbinit` file (or create one if one does not already exist) and add the following lines.
 
-The first line tells LLDB to enable inline breakpoints - Android Studio will need this if you want to use visual breakpoints. 
+The first line tells LLDB to enable inline breakpoints - Android Studio will need this if you want to use visual breakpoints.
 
 The remaining lines tell LLDB where to go to find the symbols for debugging.
 
@@ -62,7 +62,7 @@ settings append target.exec-search-paths <PATH>/objdir-android-opt/mozglue/build
 # Debug Native code in Android Studio
 
 1. The first time you are running a debug session for your app, it's best to start from a completely clean build. Click `Build -> Rebuild Project` to clean and rebuild. You can also choose to remove any existing builds from your emulator to be completely sure, but this may not be necessary.
-2. If using Android Studio visual breakpoints, set your breakpoints in your native code. 
+2. If using Android Studio visual breakpoints, set your breakpoints in your native code.
 3. Run the app in debug mode as usual.
 4. When debugging Fennec or geckoview_example, you will almost immediately hit a breakpoint in `ElfLoader.cpp`. This is expected. If you are not using Android Studio visual breakpoints, you can set your breakpoints here using the lldb console that is available now this breakpoint has been hit. To set a breakpoint, select the app tab (if running Dual, there will also be an `<app> java` tab) from the debug window, and then select the `lldb` console tab. Type the following into the console:
 
@@ -99,6 +99,12 @@ Set `MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=suffix` in the environment to make c
 
 ```shell
 MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab
+```
+
+An easy way to set this is with `./mach run`:
+
+```shell
+./mach run --setenv MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab
 ```
 
 ### Attaching a Java debugger to a waiting child process
