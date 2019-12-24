@@ -13723,7 +13723,7 @@ void CodeGenerator::visitNaNToZero(LNaNToZero* lir) {
 
 static void BoundFunctionLength(MacroAssembler& masm, Register target,
                                 Register targetFlags, Register argCount,
-                                Register output) {
+                                Register output, Label* slowPath) {
   const size_t boundLengthOffset =
       FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT);
 
@@ -13741,6 +13741,8 @@ static void BoundFunctionLength(MacroAssembler& masm, Register target,
   masm.bind(&isBound);
   {
     // Load the length property of a bound function.
+    masm.branchTestInt32(Assembler::NotEqual,
+                         Address(target, boundLengthOffset), slowPath);
     masm.unboxInt32(Address(target, boundLengthOffset), output);
     masm.jump(&lengthLoaded);
   }
@@ -13749,6 +13751,7 @@ static void BoundFunctionLength(MacroAssembler& masm, Register target,
     // Load the length property of an interpreted function.
     masm.loadPtr(Address(target, JSFunction::offsetOfScript()), output);
     masm.loadPtr(Address(output, JSScript::offsetOfSharedData()), output);
+    masm.branchTestPtr(Assembler::Zero, output, output, slowPath);
     masm.loadPtr(Address(output, RuntimeScriptData::offsetOfISD()), output);
     masm.load16ZeroExtend(
         Address(output, ImmutableScriptData::offsetOfFunLength()), output);
@@ -13820,6 +13823,10 @@ void CodeGenerator::visitFinishBoundFunctionInit(
             FunctionFlags::RESOLVED_LENGTH),
       slowPath);
 
+  // Store the bound function's length into the extended slot.
+  BoundFunctionLength(masm, target, temp1, argCount, temp2, slowPath);
+  masm.storeValue(JSVAL_TYPE_INT32, temp2, Address(bound, boundLengthOffset));
+
   Label notBoundTarget, loadName;
   masm.branchTest32(Assembler::Zero, temp1, Imm32(FunctionFlags::BOUND_FUN),
                     &notBoundTarget);
@@ -13829,10 +13836,6 @@ void CodeGenerator::visitFinishBoundFunctionInit(
     masm.branchTest32(Assembler::NonZero, temp1,
                       Imm32(FunctionFlags::HAS_BOUND_FUNCTION_NAME_PREFIX),
                       slowPath);
-
-    // We also take the slow path when target's length isn't an int32.
-    masm.branchTestInt32(Assembler::NotEqual,
-                         Address(target, boundLengthOffset), slowPath);
 
     // Bound functions reuse HAS_GUESSED_ATOM for
     // HAS_BOUND_FUNCTION_NAME_PREFIX, so skip the guessed atom check below.
@@ -13870,10 +13873,6 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   // Update the bound function's flags.
   BoundFunctionFlags(masm, temp1, bound, temp2);
   masm.store16(temp2, Address(bound, JSFunction::offsetOfFlags()));
-
-  // Store the bound function's length into the extended slot.
-  BoundFunctionLength(masm, target, temp1, argCount, temp2);
-  masm.storeValue(JSVAL_TYPE_INT32, temp2, Address(bound, boundLengthOffset));
 
   masm.bind(ool->rejoin());
 }
