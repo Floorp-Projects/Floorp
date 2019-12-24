@@ -67,14 +67,110 @@ TextureClient* D3D11ShareHandleImage::GetTextureClient(
 
 already_AddRefed<gfx::SourceSurface>
 D3D11ShareHandleImage::GetAsSourceSurface() {
-  RefPtr<ID3D11Texture2D> src = GetTexture();
-  if (!src) {
+  RefPtr<ID3D11Texture2D> texture = GetTexture();
+  if (!texture) {
     gfxWarning() << "Cannot readback from shared texture because no texture is "
                     "available.";
     return nullptr;
   }
 
-  return gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(src);
+  RefPtr<ID3D11Device> device;
+  texture->GetDevice(getter_AddRefs(device));
+
+  D3D11_TEXTURE2D_DESC desc;
+  texture->GetDesc(&desc);
+
+  HRESULT hr;
+
+  if (desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
+    nsAutoCString error;
+    std::unique_ptr<DXVA2Manager> manager(
+        DXVA2Manager::CreateD3D11DXVA(nullptr, error, device));
+
+    if (!manager) {
+      gfxWarning() << "Failed to create DXVA2 manager!";
+      return nullptr;
+    }
+
+    RefPtr<ID3D11Texture2D> outTexture;
+
+    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
+
+    if (FAILED(hr)) {
+      gfxWarning() << "Failed to copy to BGRA texture.";
+      return nullptr;
+    }
+
+    texture = outTexture;
+    texture->GetDesc(&desc);
+  }
+
+  CD3D11_TEXTURE2D_DESC softDesc(desc.Format, desc.Width, desc.Height);
+  softDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  softDesc.BindFlags = 0;
+  softDesc.MiscFlags = 0;
+  softDesc.MipLevels = 1;
+  softDesc.Usage = D3D11_USAGE_STAGING;
+
+  RefPtr<ID3D11Texture2D> softTexture;
+  hr = device->CreateTexture2D(
+      &softDesc, NULL,
+      static_cast<ID3D11Texture2D**>(getter_AddRefs(softTexture)));
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to create 2D staging texture.");
+    return nullptr;
+  }
+
+  RefPtr<ID3D11DeviceContext> context;
+  device->GetImmediateContext(getter_AddRefs(context));
+  if (!context) {
+    gfxCriticalError() << "Failed to get immediate context.";
+    return nullptr;
+  }
+
+  RefPtr<IDXGIKeyedMutex> mutex;
+  hr = texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+
+  if (SUCCEEDED(hr) && mutex) {
+    hr = mutex->AcquireSync(0, 2000);
+    if (hr != S_OK) {
+      NS_WARNING("Acquire sync didn't manage to return within 2 seconds.");
+    }
+  }
+  context->CopyResource(softTexture, texture);
+  if (SUCCEEDED(hr) && mutex) {
+    mutex->ReleaseSync(0);
+  }
+
+  RefPtr<gfx::DataSourceSurface> surface =
+      gfx::Factory::CreateDataSourceSurface(mSize,
+                                            gfx::SurfaceFormat::B8G8R8A8);
+  if (NS_WARN_IF(!surface)) {
+    return nullptr;
+  }
+
+  gfx::DataSourceSurface::MappedSurface mappedSurface;
+  if (!surface->Map(gfx::DataSourceSurface::WRITE, &mappedSurface)) {
+    return nullptr;
+  }
+
+  D3D11_MAPPED_SUBRESOURCE map;
+  hr = context->Map(softTexture, 0, D3D11_MAP_READ, 0, &map);
+  if (!SUCCEEDED(hr)) {
+    surface->Unmap();
+    return nullptr;
+  }
+
+  for (int y = 0; y < mSize.height; y++) {
+    memcpy(mappedSurface.mData + mappedSurface.mStride * y,
+           (unsigned char*)(map.pData) + map.RowPitch * y, mSize.width * 4);
+  }
+
+  context->Unmap(softTexture, 0);
+  surface->Unmap();
+
+  return surface.forget();
 }
 
 ID3D11Texture2D* D3D11ShareHandleImage::GetTexture() const { return mTexture; }

@@ -134,11 +134,11 @@ bool VideoBridgeParent::AllocUnsafeShmem(
   return PVideoBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-bool VideoBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
+void VideoBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
   if (mClosed) {
-    return false;
+    return;
   }
-  return PVideoBridgeParent::DeallocShmem(aShmem);
+  PVideoBridgeParent::DeallocShmem(aShmem);
 }
 
 bool VideoBridgeParent::IsSameProcess() const {

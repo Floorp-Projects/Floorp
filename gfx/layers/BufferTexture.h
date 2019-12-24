@@ -22,16 +22,13 @@ bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
 
 class BufferTextureData : public TextureData {
  public:
-  // ShmemAllocator needs to implement IShmemAllocator and IsSameProcess,
-  // as done in LayersIPCChannel and ISurfaceAllocator.
-  template <typename ShmemAllocator>
   static BufferTextureData* Create(gfx::IntSize aSize,
                                    gfx::SurfaceFormat aFormat,
                                    gfx::BackendType aMoz2DBackend,
                                    LayersBackend aLayersBackend,
                                    TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
-                                   ShmemAllocator aAllocator);
+                                   LayersIPCChannel* aAllocator);
 
   static BufferTextureData* CreateForYCbCr(
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
@@ -72,12 +69,6 @@ class BufferTextureData : public TextureData {
 
   gfx::SurfaceFormat GetFormat() const;
 
-  static BufferTextureData* Create(
-      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-      gfx::BackendType aMoz2DBackend, LayersBackend aLayersBackend,
-      TextureFlags aFlags, TextureAllocationFlags aAllocFlags,
-      mozilla::ipc::IShmemAllocator* aAllocator, bool aIsSameProcess);
-
   static BufferTextureData* CreateInternal(LayersIPCChannel* aAllocator,
                                            const BufferDescriptor& aDesc,
                                            gfx::BackendType aMoz2DBackend,
@@ -94,26 +85,6 @@ class BufferTextureData : public TextureData {
   BufferDescriptor mDescriptor;
   gfx::BackendType mMoz2DBackend;
 };
-
-template <typename ShmemAllocator>
-inline BufferTextureData* BufferTextureData::Create(
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-    gfx::BackendType aMoz2DBackend, LayersBackend aLayersBackend,
-    TextureFlags aFlags, TextureAllocationFlags aAllocFlags,
-    ShmemAllocator aAllocator) {
-  return Create(aSize, aFormat, aMoz2DBackend, aLayersBackend, aFlags,
-                aAllocFlags, aAllocator, aAllocator->IsSameProcess());
-}
-
-// nullptr allocator specialization
-template <>
-inline BufferTextureData* BufferTextureData::Create(
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-    gfx::BackendType aMoz2DBackend, LayersBackend aLayersBackend,
-    TextureFlags aFlags, TextureAllocationFlags aAllocFlags, std::nullptr_t) {
-  return Create(aSize, aFormat, aMoz2DBackend, aLayersBackend, aFlags,
-                aAllocFlags, nullptr, true);
-}
 
 }  // namespace layers
 }  // namespace mozilla
