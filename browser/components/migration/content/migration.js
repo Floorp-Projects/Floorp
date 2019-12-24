@@ -203,7 +203,6 @@ var MigrationWizard = {
 
       this._wiz.canAdvance = false;
 
-      document.getElementById("importBookmarks").hidden = true;
       document.getElementById("importAll").hidden = true;
     }
 
