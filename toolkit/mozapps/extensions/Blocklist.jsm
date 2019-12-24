@@ -61,6 +61,93 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/UpdateUtils.jsm"
 );
 
+// The whole ID should be surrounded by literal ().
+// IDs may contain alphanumerics, _, -, {}, @ and a literal '.'
+// They may also contain backslashes (needed to escape the {} and dot)
+// We filter out backslash escape sequences (like `\w`) separately
+// (see kEscapeSequences).
+const kIdSubRegex =
+  "\\([" +
+  "\\\\" + // note: just a backslash, but between regex and string it needs escaping.
+  "\\w .{}@-]+\\)";
+
+// prettier-ignore
+// Find regular expressions of the form:
+// /^((id1)|(id2)|(id3)|...|(idN))$/
+// The outer set of parens enclosing the entire list of IDs is optional.
+const kIsMultipleIds = new RegExp(
+  // Start with literal sequence /^(
+  //  (the `(` is optional)
+  "^/\\^\\(?" +
+    // Then at least one ID in parens ().
+    kIdSubRegex +
+    // Followed by any number of IDs in () separated by pipes.
+    // Note: using a non-capturing group because we don't care about the value.
+    "(?:\\|" + kIdSubRegex + ")*" +
+  // Finally, we need to end with literal sequence )$/
+  //  (the leading `)` is optional like at the start)
+  "\\)?\\$/$"
+);
+
+// Check for a backslash followed by anything other than a literal . or curlies
+const kEscapeSequences = /\\[^.{}]/;
+
+// Used to remove the following 3 things:
+// leading literal /^(
+//    plus an optional (
+// any backslash
+// trailing literal )$/
+//    plus an optional ) before the )$/
+const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
+
+// For a given input string matcher, produce either a string to compare with,
+// a regular expression, or a set of strings to compare with.
+function processMatcher(str) {
+  if (!str.startsWith("/")) {
+    return str;
+  }
+  // Process regexes matching multiple IDs into a set.
+  if (kIsMultipleIds.test(str) && !kEscapeSequences.test(str)) {
+    // Remove the regexp gunk at the start and end of the string, as well
+    // as all backslashes, and split by )|( to leave the list of IDs.
+    return new Set(str.replace(kRegExpRemovalRegExp, "").split(")|("));
+  }
+  let lastSlash = str.lastIndexOf("/");
+  let pattern = str.slice(1, lastSlash);
+  let flags = str.slice(lastSlash + 1);
+  return new RegExp(pattern, flags);
+}
+
+// Returns true if the addonProps object passes the constraints set by matches.
+// (For every non-null property in matches, the same key must exist in
+// addonProps and its value must match)
+function doesAddonEntryMatch(matches, addonProps) {
+  for (let [key, value] of Object.entries(matches)) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+    if (addonProps[key]) {
+      // If this property matches (member of the set, matches regex, or
+      // an exact string match), continue to look at the other properties of
+      // the `matches` object.
+      // If not, return false immediately.
+      if (value.has && value.has(addonProps[key])) {
+        continue;
+      }
+      if (value.test && value.test(addonProps[key])) {
+        continue;
+      }
+      if (typeof value == "string" && value === addonProps[key]) {
+        continue;
+      }
+    }
+    // If we get here, the property doesn't match, so this entry doesn't match.
+    return false;
+  }
+  // If we get here, all the properties must have matched.
+  return true;
+}
+
 /**
 #    The blocklist XML file looks something like this:
 #
@@ -1152,24 +1239,15 @@ this.ExtensionBlocklistRS = {
       return;
     }
     this._entries.forEach(entry => {
-      function getCriteria(str) {
-        if (!str.startsWith("/")) {
-          return str;
-        }
-        let lastSlash = str.lastIndexOf("/");
-        let pattern = str.slice(1, lastSlash);
-        let flags = str.slice(lastSlash + 1);
-        return new RegExp(pattern, flags);
-      }
       entry.matches = {};
       if (entry.guid) {
-        entry.matches.id = getCriteria(entry.guid);
+        entry.matches.id = processMatcher(entry.guid);
       }
       for (let key of EXTENSION_BLOCK_FILTERS) {
         if (key == "id" || !entry[key]) {
           continue;
         }
-        entry.matches[key] = getCriteria(entry[key]);
+        entry.matches[key] = processMatcher(entry[key]);
       }
       Utils.ensureVersionRangeIsSane(entry);
     });
@@ -1335,16 +1413,9 @@ this.ExtensionBlocklistRS = {
       addonProps.creator = addonProps.creator.name;
     }
 
-    let propMatches = ([k, v]) => {
-      return (
-        !v ||
-        addonProps[k] == v ||
-        (v instanceof RegExp && v.test(addonProps[k]))
-      );
-    };
     for (let entry of addonEntries) {
       // First check if it matches our properties. If not, just skip to the next item.
-      if (!Object.entries(entry.matches).every(propMatches)) {
+      if (!doesAddonEntryMatch(entry.matches, addonProps)) {
         continue;
       }
       // If those match, check the app or toolkit version works:
@@ -1770,38 +1841,16 @@ var BlocklistXML = {
     if (!aAddon) {
       return null;
     }
-    // Returns true if the params object passes the constraints set by entry.
-    // (For every non-null property in entry, the same key must exist in
-    // params and value must be the same)
-    function checkEntry(entry, params) {
-      for (let [key, value] of Object.entries(entry)) {
-        if (value === null || value === undefined) {
-          continue;
-        }
-        if (params[key]) {
-          if (value instanceof RegExp) {
-            if (!value.test(params[key])) {
-              return false;
-            }
-          } else if (value !== params[key]) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-      return true;
-    }
 
-    let params = {};
+    let addonProps = {};
     for (let filter of EXTENSION_BLOCK_FILTERS) {
-      params[filter] = aAddon[filter];
+      addonProps[filter] = aAddon[filter];
     }
-    if (params.creator) {
-      params.creator = params.creator.name;
+    if (addonProps.creator) {
+      addonProps.creator = addonProps.creator.name;
     }
     for (let entry of aAddonEntries) {
-      if (checkEntry(entry.attributes, params)) {
+      if (doesAddonEntryMatch(entry.attributes, addonProps)) {
         return entry;
       }
     }
@@ -2310,16 +2359,7 @@ var BlocklistXML = {
     for (let filter of EXTENSION_BLOCK_FILTERS) {
       let attr = blocklistElement.getAttribute(filter);
       if (attr) {
-        // Any filter starting with '/' is interpreted as a regex. So if an attribute
-        // starts with a '/' it must be checked via a regex.
-        if (attr.startsWith("/")) {
-          let lastSlash = attr.lastIndexOf("/");
-          let pattern = attr.slice(1, lastSlash);
-          let flags = attr.slice(lastSlash + 1);
-          blockEntry.attributes[filter] = new RegExp(pattern, flags);
-        } else {
-          blockEntry.attributes[filter] = attr;
-        }
+        blockEntry.attributes[filter] = processMatcher(attr);
       }
     }
 
