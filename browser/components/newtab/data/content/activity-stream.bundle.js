@@ -1059,8 +1059,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       pasteFromClipboard: false,
       attributionParameters: {
         source: "addons.mozilla.org",
+        medium: "referral",
         campaign: "non-fx-button",
-        content: "iridium@particlecore.github.io"
+        content: "iridium@particlecore.github.io",
+        experiment: "ua-onboarding",
+        variation: "chrome",
+        ua: "Google Chrome 123"
       }
     };
   }
@@ -1608,6 +1612,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       placeholder: "addons.mozilla.org",
       value: this.state.attributionParameters.source,
       onChange: this.onChangeAttributionParameters
+    }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, " Medium ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      type: "text",
+      name: "medium",
+      placeholder: "referral",
+      value: this.state.attributionParameters.medium,
+      onChange: this.onChangeAttributionParameters
     }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, " Campaign ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       type: "text",
       name: "campaign",
@@ -1619,6 +1629,24 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       name: "content",
       placeholder: "iridium@particlecore.github.io",
       value: this.state.attributionParameters.content,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, " Experiment ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      type: "text",
+      name: "experiment",
+      placeholder: "ua-onboarding",
+      value: this.state.attributionParameters.experiment,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, " Variation ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      type: "text",
+      name: "variation",
+      placeholder: "chrome",
+      value: this.state.attributionParameters.variation,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, " User Agent ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      type: "text",
+      name: "ua",
+      placeholder: "Google Chrome 123",
+      value: this.state.attributionParameters.ua,
       onChange: this.onChangeAttributionParameters
     }), " ")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton primary button",

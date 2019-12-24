@@ -147,6 +147,7 @@ describe("ASRouter", () => {
     getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
 
     fakeAttributionCode = {
+      allowedCodeKeys: ["foo", "bar", "baz"],
       _clearCache: () => sinon.stub(),
       getAttrDataAsync: () => Promise.resolve({ content: "addonID" }),
     };
@@ -2826,9 +2827,11 @@ describe("ASRouter", () => {
       });
     });
     describe("#onMessage: FORCE_ATTRIBUTION", () => {
+      let setReferrerUrl;
       beforeEach(() => {
+        setReferrerUrl = sinon.spy();
         global.Cc["@mozilla.org/mac-attribution;1"] = {
-          getService: () => ({ setReferrerUrl: sinon.spy() }),
+          getService: () => ({ setReferrerUrl }),
         };
         global.Cc["@mozilla.org/process/environment;1"] = {
           getService: () => ({ set: sandbox.stub() }),
@@ -2864,6 +2867,25 @@ describe("ASRouter", () => {
         assert.calledOnce(fakeAttributionCode.getAttrDataAsync);
         assert.calledOnce(Router._updateMessageProviders);
         assert.calledOnce(Router.loadMessagesFromAllProviders);
+      });
+      it("should double encode on windows", async () => {
+        sandbox.stub(Router, "_writeAttributionFile");
+
+        Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
+
+        assert.notCalled(setReferrerUrl);
+        assert.calledWithMatch(
+          Router._writeAttributionFile,
+          "foo%3DFOO!%26bar%3DBAR%253F"
+        );
+      });
+      it("should set referrer on mac", async () => {
+        sandbox.stub(AppConstants, "platform").value("macosx");
+
+        Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
+
+        assert.calledOnce(setReferrerUrl);
+        assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
       });
     });
     describe("#onMessage: default", () => {

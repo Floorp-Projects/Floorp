@@ -42,7 +42,11 @@ const TEST_GLOBAL = {
       return Promise.resolve({ addons: [], fullData: false });
     },
   },
-  AppConstants: { MOZILLA_OFFICIAL: true, MOZ_APP_VERSION: "69.0a1" },
+  AppConstants: {
+    MOZILLA_OFFICIAL: true,
+    MOZ_APP_VERSION: "69.0a1",
+    platform: "win",
+  },
   UpdateUtils: { getUpdateChannel() {} },
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {

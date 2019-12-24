@@ -82,6 +82,7 @@ Structure:
           content: <string>, // identifier to indicate the particular link within a campaign
           variation: <string>, // name/id of the variation cohort used in the enrolled funnel experiment
           experiment: <string>, // name/id of the enrolled funnel experiment
+          ua: <string>, // identifier derived from the user agent downloading the installer, e.g., chrome, Google Chrome 123
         },
         sandbox: {
           effectiveContentProcessLevel: <integer>,

@@ -1797,12 +1797,13 @@ class _ASRouter {
    * attribution data (see Return to AMO flow in bug 1475354 for example). Note - OSX and Windows only
    * @param {data} Object an object containing the attribtion data that came from asrouter admin page
    */
-  /* istanbul ignore next */
   async forceAttribution(data) {
     // Extract the parameters from data that will make up the referrer url
-    const { source, campaign, content } = data;
+    const attributionData = AttributionCode.allowedCodeKeys
+      .map(key => `${key}=${encodeURIComponent(data[key] || "")}`)
+      .join("&");
     if (AppConstants.platform === "win") {
-      const attributionData = `source=${source}&campaign=${campaign}&content=${content}`;
+      // The whole attribution data is encoded (again) for windows
       this._writeAttributionFile(encodeURIComponent(attributionData));
     } else if (AppConstants.platform === "macosx") {
       let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
@@ -1810,9 +1811,8 @@ class _ASRouter {
         Ci.nsIMacAttributionService
       );
 
-      let referrer = `https://www.mozilla.org/anything/?utm_campaign=${campaign}&utm_source=${source}&utm_content=${encodeURIComponent(
-        content
-      )}`;
+      // The attribution data is treated as a url query for mac
+      let referrer = `https://www.mozilla.org/anything/?${attributionData}`;
 
       // This sets the Attribution to be the referrer
       attributionSvc.setReferrerUrl(appPath, referrer, true);

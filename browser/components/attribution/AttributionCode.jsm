@@ -21,7 +21,7 @@ ChromeUtils.defineModuleGetter(
 );
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const ATTR_CODE_MAX_LENGTH = 200;
+const ATTR_CODE_MAX_LENGTH = 1010;
 const ATTR_CODE_VALUE_REGEX = /[a-zA-Z0-9_%\\-\\.\\(\\)]*/;
 const ATTR_CODE_FIELD_SEPARATOR = "%26"; // URL-encoded &
 const ATTR_CODE_KEY_VALUE_SEPARATOR = "%3D"; // URL-encoded =
@@ -32,6 +32,7 @@ const ATTR_CODE_KEYS = [
   "content",
   "experiment",
   "variation",
+  "ua",
 ];
 
 let gCachedAttrData = null;
@@ -49,6 +50,13 @@ function getAttributionFile() {
 }
 
 var AttributionCode = {
+  /**
+   * Returns an array of allowed attribution code keys.
+   */
+  get allowedCodeKeys() {
+    return [...ATTR_CODE_KEYS];
+  },
+
   /**
    * Returns an object containing a key-value pair for each piece of attribution
    * data included in the passed-in attribution code string.
