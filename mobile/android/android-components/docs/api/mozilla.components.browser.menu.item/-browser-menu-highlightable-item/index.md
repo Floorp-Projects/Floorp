@@ -2,7 +2,7 @@
 
 # BrowserMenuHighlightableItem
 
-`class BrowserMenuHighlightableItem : `[`BrowserMenuImageText`](../-browser-menu-image-text/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L32)
+`class BrowserMenuHighlightableItem : `[`BrowserMenuImageText`](../-browser-menu-image-text/index.md)`, `[`HighlightableMenuItem`](../../mozilla.components.browser.menu/-highlightable-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L33)
 
 A menu item for displaying text with an image icon and a highlight state which sets the
 background of the menu item and a second image icon to the right of the text.
