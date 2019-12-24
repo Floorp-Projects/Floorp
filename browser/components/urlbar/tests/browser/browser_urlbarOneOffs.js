@@ -38,6 +38,11 @@ add_task(async function init() {
 // Keys up and down through the history panel, i.e., the panel that's shown when
 // there's no text in the textbox.
 add_task(async function history() {
+  // If this pref is true, we get the Top Sites view here. It does not show
+  // one-offs.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.openViewOnFocus", false]],
+  });
   gURLBar.focus();
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -62,6 +67,7 @@ add_task(async function history() {
   assertState(-1, -1, "");
 
   await hidePopup();
+  await SpecialPowers.popPrefEnv();
 });
 
 // Keys up and down through the non-history panel, i.e., the panel that's shown
