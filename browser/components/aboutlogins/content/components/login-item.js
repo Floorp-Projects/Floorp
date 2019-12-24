@@ -746,11 +746,6 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    let titleId = this._revealCheckbox.checked
-      ? "login-item-password-reveal-checkbox-hide"
-      : "login-item-password-reveal-checkbox-show";
-    document.l10n.setAttributes(this._revealCheckbox, titleId);
-
     let { checked } = this._revealCheckbox;
     let inputType = checked ? "text" : "password";
     this._passwordInput.type = inputType;
