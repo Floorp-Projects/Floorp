@@ -712,7 +712,15 @@ class FennecMigrator private constructor(
     }
 
     private fun migrateSharedPrefs(): Result<SettingsMigrationResult> {
-        val result = FennecSettingsMigration.migrateSharedPrefs(context)
+        val result = try {
+            FennecSettingsMigration.migrateSharedPrefs(context)
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateSettingsException(e)
+            )
+            return Result.Failure(e)
+        }
+
         if (result is Result.Failure<SettingsMigrationResult>) {
             val migrationFailureWrapper = result.throwables.first() as SettingsMigrationException
             return when (val failure = migrationFailureWrapper.failure) {
