@@ -713,23 +713,26 @@
         }
       }
 
-      // If we can, rename the file
+      // If we can, rename the file.
       let result = UnixFile.rename(sourcePath, destPath);
       if (result != -1) {
+        // Succeeded.
         return;
       }
 
-      // If the error is not EXDEV ("not on the same device"),
-      // or if the error is EXDEV and we have passed an option
-      // that prevents us from crossing devices, throw the
-      // error.
-      if (ctypes.errno != Const.EXDEV || options.noCopy) {
+      // In some cases, we cannot rename, e.g. because we're crossing
+      // devices. In such cases, if permitted, we'll need to copy then
+      // erase the original.
+      if (options.noCopy) {
         throw new File.Error("move", ctypes.errno, sourcePath);
       }
 
-      // Otherwise, copy and remove.
       File.copy(sourcePath, destPath, options);
-      // FIXME: Clean-up in case of copy error?
+      // Note that we do not attempt to clean-up in case of copy error.
+      // I'm sure that there are edge cases in which this could end up
+      // removing an important file by accident. I'd rather leave
+      // a file lying around by error than removing a critical file.
+
       File.remove(sourcePath);
     };
 
