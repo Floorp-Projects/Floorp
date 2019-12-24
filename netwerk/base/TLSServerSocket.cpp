@@ -296,7 +296,19 @@ TLSServerConnectionInfo::SetSecurityObserver(
     nsITLSServerSecurityObserver* aObserver) {
   {
     MutexAutoLock lock(mLock);
+    if (!aObserver) {
+      mSecurityObserver = nullptr;
+      return NS_OK;
+    }
+
     mSecurityObserver = new TLSServerSecurityObserverProxy(aObserver);
+    // Call `OnHandshakeDone` if TLS handshake is already completed.
+    if (mTlsVersionUsed != TLS_VERSION_UNKNOWN) {
+      nsCOMPtr<nsITLSServerSocket> serverSocket;
+      GetServerSocket(getter_AddRefs(serverSocket));
+      mSecurityObserver->OnHandshakeDone(serverSocket, this);
+      mSecurityObserver = nullptr;
+    }
   }
   return NS_OK;
 }
@@ -405,7 +417,6 @@ nsresult TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  mTlsVersionUsed = channelInfo.protocolVersion;
 
   SSLCipherSuiteInfo cipherInfo;
   rv = MapSECStatus(SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
@@ -421,6 +432,7 @@ nsresult TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD) {
   nsCOMPtr<nsITLSServerSecurityObserver> observer;
   {
     MutexAutoLock lock(mLock);
+    mTlsVersionUsed = channelInfo.protocolVersion;
     if (!mSecurityObserver) {
       return NS_OK;
     }
