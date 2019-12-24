@@ -92,9 +92,9 @@ static gint moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t* cr,
 
 static GtkBorder GetMarginBorderPadding(GtkStyleContext* aStyle);
 
-static void Inset(GdkRectangle* rect, const GtkBorder& aBorder);
+static void Inset(GdkRectangle*, const GtkBorder&);
 
-static void InsetByMargin(GdkRectangle* rect, GtkStyleContext* style);
+static void InsetByMargin(GdkRectangle*, GtkStyleContext* style);
 
 static void moz_gtk_add_style_margin(GtkStyleContext* style, gint* left,
                                      gint* top, gint* right, gint* bottom) {
@@ -497,7 +497,7 @@ static gint moz_gtk_window_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_button_paint(cairo_t* cr, GdkRectangle* rect,
+static gint moz_gtk_button_paint(cairo_t* cr, const GdkRectangle* rect,
                                  GtkWidgetState* state, GtkReliefStyle relief,
                                  GtkWidget* widget,
                                  GtkTextDirection direction) {
@@ -549,7 +549,8 @@ static gint moz_gtk_button_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_header_bar_button_paint(cairo_t* cr, GdkRectangle* rect,
+static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
+                                            const GdkRectangle* aRect,
                                             GtkWidgetState* state,
                                             GtkReliefStyle relief,
                                             WidgetNodeType aIconWidgetType,
@@ -559,14 +560,15 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr, GdkRectangle* rect,
           ? MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE
           : aIconWidgetType;
 
+  GdkRectangle rect = *aRect;
   // We need to inset our calculated margin because it also
   // contains titlebar button spacing.
   const ToolbarButtonGTKMetrics* metrics =
       GetToolbarButtonMetrics(buttonWidgetType);
-  Inset(rect, metrics->buttonMargin);
+  Inset(&rect, metrics->buttonMargin);
 
   GtkWidget* buttonWidget = GetWidget(buttonWidgetType);
-  moz_gtk_button_paint(cr, rect, state, relief, buttonWidget, direction);
+  moz_gtk_button_paint(cr, &rect, state, relief, buttonWidget, direction);
 
   GtkWidget* iconWidget =
       gtk_bin_get_child(GTK_BIN(GetWidget(aIconWidgetType)));
@@ -588,8 +590,8 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr, GdkRectangle* rect,
                   gdouble))dlsym(RTLD_DEFAULT, "gtk_render_icon_surface");
 
     sGtkRenderIconSurfacePtr(style, cr, surface,
-                             rect->x + metrics->iconXPosition,
-                             rect->y + metrics->iconYPosition);
+                             rect.x + metrics->iconXPosition,
+                             rect.y + metrics->iconYPosition);
     gtk_style_context_restore(style);
   }
 
@@ -665,7 +667,8 @@ static gint moz_gtk_toggle_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
+static gint calculate_button_inner_rect(GtkWidget* button,
+                                        const GdkRectangle* rect,
                                         GdkRectangle* inner_rect,
                                         GtkTextDirection direction) {
   GtkStyleContext* style;
@@ -758,7 +761,6 @@ static MozGtkSize GetMinMarginBox(GtkStyleContext* style) {
 }
 
 static void Inset(GdkRectangle* rect, const GtkBorder& aBorder) {
-  MOZ_ASSERT(rect);
   rect->x += aBorder.left;
   rect->y += aBorder.top;
   rect->width -= aBorder.left + aBorder.right;
@@ -767,9 +769,7 @@ static void Inset(GdkRectangle* rect, const GtkBorder& aBorder) {
 
 // Inset a rectangle by the margins specified in a style context.
 static void InsetByMargin(GdkRectangle* rect, GtkStyleContext* style) {
-  MOZ_ASSERT(rect);
   GtkBorder margin;
-
   gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
                                &margin);
   Inset(rect, margin);
@@ -1158,28 +1158,28 @@ static gint moz_gtk_vpaned_paint(cairo_t* cr, GdkRectangle* rect,
 }
 
 // See gtk_entry_draw() for reference.
-static gint moz_gtk_entry_paint(cairo_t* cr, GdkRectangle* rect,
+static gint moz_gtk_entry_paint(cairo_t* cr, const GdkRectangle* aRect,
                                 GtkWidgetState* state, GtkStyleContext* style,
                                 WidgetNodeType widget) {
-  int draw_focus_outline_only =
-      state->depressed;  // StyleAppearance::FocusOutline
+  // StyleAppearance::FocusOutline
+  int draw_focus_outline_only = state->depressed;
+  GdkRectangle rect = *aRect;
 
   if (draw_focus_outline_only) {
     // Inflate the given 'rect' with the focus outline size.
     gint h, v;
     moz_gtk_get_focus_outline_size(style, &h, &v);
-    rect->x -= h;
-    rect->width += 2 * h;
-    rect->y -= v;
-    rect->height += 2 * v;
+    rect.x -= h;
+    rect.width += 2 * h;
+    rect.y -= v;
+    rect.height += 2 * v;
   } else {
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
-                          rect->height);
+    gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
   }
 
   // Paint the border, except for 'menulist-textfield' that isn't focused:
   if (widget != MOZ_GTK_DROPDOWN_ENTRY || state->focused) {
-    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+    gtk_render_frame(style, cr, rect.x, rect.y, rect.width, rect.height);
   }
 
   return MOZ_GTK_SUCCESS;
@@ -1250,11 +1250,12 @@ static gint moz_gtk_treeview_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_tree_header_cell_paint(cairo_t* cr, GdkRectangle* rect,
+static gint moz_gtk_tree_header_cell_paint(cairo_t* cr,
+                                           const GdkRectangle* aRect,
                                            GtkWidgetState* state,
                                            gboolean isSorted,
                                            GtkTextDirection direction) {
-  moz_gtk_button_paint(cr, rect, state, GTK_RELIEF_NORMAL,
+  moz_gtk_button_paint(cr, aRect, state, GTK_RELIEF_NORMAL,
                        GetWidget(MOZ_GTK_TREE_HEADER_CELL), direction);
   return MOZ_GTK_SUCCESS;
 }
@@ -1333,7 +1334,7 @@ static gint moz_gtk_treeview_expander_paint(cairo_t* cr, GdkRectangle* rect,
 
 /* See gtk_separator_draw() for reference.
  */
-static gint moz_gtk_combo_box_paint(cairo_t* cr, GdkRectangle* rect,
+static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
                                     GtkWidgetState* state,
                                     GtkTextDirection direction) {
   GdkRectangle arrow_rect, real_arrow_rect;
@@ -1347,10 +1348,10 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, GdkRectangle* rect,
 
   /* Also sets the direction on gComboBoxButtonWidget, which is then
    * inherited by the separator and arrow */
-  moz_gtk_button_paint(cr, rect, state, GTK_RELIEF_NORMAL, comboBoxButton,
+  moz_gtk_button_paint(cr, aRect, state, GTK_RELIEF_NORMAL, comboBoxButton,
                        direction);
 
-  calculate_button_inner_rect(comboBoxButton, rect, &arrow_rect, direction);
+  calculate_button_inner_rect(comboBoxButton, aRect, &arrow_rect, direction);
   /* Now arrow_rect contains the inner rect ; we want to correct the width
    * to what the arrow needs (see gtk_combo_box_size_allocate) */
   gtk_widget_get_preferred_size(comboBoxArrow, NULL, &arrow_req);
