@@ -139,6 +139,7 @@ add_task(async function search_for_password_show_passwordGroup() {
       child.id == "startupGroup" ||
       child.id == "languagesGroup" ||
       child.id == "fontsGroup" ||
+      child.id == "zoomGroup" ||
       child.id == "downloadsGroup" ||
       child.id == "applicationsGroup" ||
       child.id == "drmGroup" ||

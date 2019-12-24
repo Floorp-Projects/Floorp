@@ -180,9 +180,6 @@ var FullZoom = {
       return;
     }
 
-    this._globalValue =
-      aValue === undefined ? aValue : this._ensureValid(aValue);
-
     // If the current page doesn't have a site-specific preference, then its
     // zoom should be set to the new global preference now that the global
     // preference has changed.
@@ -386,7 +383,7 @@ var FullZoom = {
       browser.messageManager.sendAsyncMessage("PDFJS:ZoomReset");
     }
     let token = this._getBrowserToken(browser);
-    let result = this._getGlobalValue(browser).then(value => {
+    let result = ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
         ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
         this._ignorePendingZoomAccesses(browser);
@@ -445,7 +442,7 @@ var FullZoom = {
     }
 
     let token = this._getBrowserToken(aBrowser);
-    this._getGlobalValue(aBrowser).then(value => {
+    ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
         ZoomManager.setZoomForBrowser(
           aBrowser,
@@ -596,35 +593,6 @@ var FullZoom = {
     }
 
     return aValue;
-  },
-
-  /**
-   * Gets the global browser.content.full-zoom content preference.
-   *
-   * @param browser   The browser pertaining to the zoom.
-   * @returns Promise<prefValue>
-   *                  Resolves to the preference value when done.
-   */
-  _getGlobalValue: function FullZoom__getGlobalValue(browser) {
-    // * !("_globalValue" in this) => global value not yet cached.
-    // * this._globalValue === undefined => global value known not to exist.
-    // * Otherwise, this._globalValue is a number, the global value.
-    return new Promise(resolve => {
-      if ("_globalValue" in this) {
-        resolve(this._globalValue);
-        return;
-      }
-      let value = undefined;
-      this._cps2.getGlobal(this.name, this._loadContextFromBrowser(browser), {
-        handleResult(pref) {
-          value = pref.value;
-        },
-        handleCompletion: reason => {
-          this._globalValue = this._ensureValid(value);
-          resolve(this._globalValue);
-        },
-      });
-    });
   },
 
   /**
