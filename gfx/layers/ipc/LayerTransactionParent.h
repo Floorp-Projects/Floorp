@@ -33,7 +33,7 @@ class CompositorBridgeParentBase;
 
 class LayerTransactionParent final : public PLayerTransactionParent,
                                      public CompositableParentManager,
-                                     public mozilla::ipc::IShmemAllocator {
+                                     public ShmemAllocator {
   typedef nsTArray<Edit> EditArray;
   typedef nsTArray<OpDestroy> OpDestroyArray;
   typedef nsTArray<PluginWindowData> PluginsArray;
@@ -61,7 +61,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   LayersObserverEpoch GetChildEpoch() const { return mChildEpoch; }
   bool ShouldParentObserveEpoch();
 
-  IShmemAllocator* AsShmemAllocator() override { return this; }
+  ShmemAllocator* AsShmemAllocator() override { return this; }
 
   bool AllocShmem(size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
                   ipc::Shmem* aShmem) override;
@@ -69,7 +69,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   bool AllocUnsafeShmem(size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
                         ipc::Shmem* aShmem) override;
 
-  bool DeallocShmem(ipc::Shmem& aShmem) override;
+  void DeallocShmem(ipc::Shmem& aShmem) override;
 
   bool IsSameProcess() const override;
 

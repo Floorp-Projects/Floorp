@@ -32,7 +32,7 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/ISurfaceAllocator.h"  // for IShmemAllocator
+#include "mozilla/layers/ISurfaceAllocator.h"  // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"     // for TargetConfig
 #include "mozilla/layers/MetricsSharingController.h"
 #include "mozilla/layers/PCompositorBridgeTypes.h"
@@ -106,7 +106,7 @@ struct ScopedLayerTreeRegistration {
 
 class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    public HostIPCAllocator,
-                                   public mozilla::ipc::IShmemAllocator,
+                                   public ShmemAllocator,
                                    public MetricsSharingController {
   friend class PCompositorBridgeParent;
 
@@ -149,7 +149,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual void RegisterPayloads(LayerTransactionParent* aLayerTree,
                                 const nsTArray<CompositionPayload>& aPayload) {}
 
-  IShmemAllocator* AsShmemAllocator() override { return this; }
+  ShmemAllocator* AsShmemAllocator() override { return this; }
 
   CompositorBridgeParentBase* AsCompositorBridgeParentBase() override {
     return this;
@@ -170,14 +170,14 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   void SendAsyncMessage(
       const nsTArray<AsyncParentMessageData>& aMessage) override;
 
-  // IShmemAllocator
+  // ShmemAllocator
   bool AllocShmem(size_t aSize,
                   mozilla::ipc::SharedMemory::SharedMemoryType aType,
                   mozilla::ipc::Shmem* aShmem) override;
   bool AllocUnsafeShmem(size_t aSize,
                         mozilla::ipc::SharedMemory::SharedMemoryType aType,
                         mozilla::ipc::Shmem* aShmem) override;
-  bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+  void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   // MetricsSharingController
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override {

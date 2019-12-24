@@ -18,7 +18,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"                           // for Transport
 #include "mozilla/media/MediaSystemResourceManagerParent.h"  // for MediaSystemResourceManagerParent
-#include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply
@@ -404,11 +403,11 @@ bool ImageBridgeParent::AllocUnsafeShmem(
   return PImageBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-bool ImageBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
+void ImageBridgeParent::DeallocShmem(ipc::Shmem& aShmem) {
   if (mClosed) {
-    return false;
+    return;
   }
-  return PImageBridgeParent::DeallocShmem(aShmem);
+  PImageBridgeParent::DeallocShmem(aShmem);
 }
 
 bool ImageBridgeParent::IsSameProcess() const {
@@ -587,40 +586,36 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvReadbackAsyncPluginSurface(
   }
 
   auto& textures = itTextures->value();
-  D3D11TextureData* displayTexData = textures->mDisplayTextureData.get();
-  MOZ_RELEASE_ASSERT(displayTexData);
-  if ((!displayTexData) || (!displayTexData->GetD3D11Texture())) {
-    NS_WARNING("Error in plugin display texture");
+  MOZ_RELEASE_ASSERT(textures->mDisplayTextureData);
+  RefPtr<DrawTarget> displayAsDT =
+      textures->mDisplayTextureData->BorrowDrawTarget();
+  RefPtr<SourceSurface> source = displayAsDT->Snapshot();
+  if (!source) {
     return IPC_OK();
   }
-  MOZ_ASSERT(displayTexData->GetSurfaceFormat() == SurfaceFormat::B8G8R8A8 ||
-             displayTexData->GetSurfaceFormat() == SurfaceFormat::B8G8R8X8);
+  SurfaceFormat format = source->GetFormat();
+  IntSize size = source->GetSize();
+  size_t length = ImageDataSerializer::ComputeRGBBufferSize(size, format);
 
-  RefPtr<ID3D11Device> device;
-  displayTexData->GetD3D11Texture()->GetDevice(getter_AddRefs(device));
-  if (!device) {
-    NS_WARNING("Failed to get D3D11 device for plugin display");
-    return IPC_OK();
-  }
-
-  UniquePtr<BufferTextureData> shmemTexData(BufferTextureData::Create(
-      displayTexData->GetSize(), displayTexData->GetSurfaceFormat(),
-      gfx::BackendType::SKIA, LayersBackend::LAYERS_NONE,
-      displayTexData->GetTextureFlags(), TextureAllocationFlags::ALLOC_DEFAULT,
-      this));
-  if (!shmemTexData) {
-    NS_WARNING("Could not create BufferTextureData");
+  Shmem buffer;
+  if (!length ||
+      !AllocShmem(length, Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
     return IPC_OK();
   }
 
-  if (!gfx::Factory::ReadbackSharedTexture(shmemTexData.get(),
-                                           displayTexData->GetD3D11Texture())) {
-    NS_WARNING("Failed to read plugin texture into Shmem");
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
+      gfx::BackendType::CAIRO, buffer.get<uint8_t>(), size,
+      ImageDataSerializer::ComputeRGBStride(format, size.width), format);
+  if (!dt) {
+    DeallocShmem(buffer);
     return IPC_OK();
   }
 
-  // Take the Shmem from the TextureData.
-  shmemTexData->Serialize(*aResult);
+  dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
+  dt->Flush();
+
+  *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format, true),
+                                     MemoryOrShmem(std::move(buffer)));
 #endif  // defined(OS_WIN)
   return IPC_OK();
 }

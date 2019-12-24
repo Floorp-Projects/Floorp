@@ -83,10 +83,6 @@ namespace mozilla {
 
 class Mutex;
 
-namespace layers {
-class TextureData;
-}
-
 namespace wr {
 struct FontInstanceOptions;
 struct FontInstancePlatformOptions;
@@ -1899,15 +1895,6 @@ class GFX2D_API Factory {
 
   static void SetSystemTextQuality(uint8_t aQuality);
 
-  static already_AddRefed<DataSourceSurface>
-  CreateBGRA8DataSourceSurfaceForD3D11Texture(ID3D11Texture2D* aSrcTexture);
-
-  static bool ReadbackSharedTexture(layers::TextureData* aDestCpuTexture,
-                                    ID3D11Texture2D* aSrcTexture);
-
-  static bool ReadbackSharedTexture(DataSourceSurface* aDestCpuTexture,
-                                    ID3D11Texture2D* aSrcTexture);
-
  private:
   static StaticRefPtr<ID2D1Device> mD2D1Device;
   static StaticRefPtr<ID3D11Device> mD3D11Device;
@@ -1916,14 +1903,6 @@ class GFX2D_API Factory {
   static StaticRefPtr<IDWriteFontCollection> mDWriteSystemFonts;
   static StaticRefPtr<ID2D1DeviceContext> mMTDC;
   static StaticRefPtr<ID2D1DeviceContext> mOffMTDC;
-
-  static bool ReadbackSharedTexture(uint8_t* aDestData, int32_t aDestStride,
-                                    ID3D11Texture2D* aSrcTexture);
-
-  // DestTextureT can be TextureData or DataSourceSurface.
-  template <typename DestTextureT>
-  static bool ConvertSourceAndRetryReadback(DestTextureT* aDestCpuTexture,
-                                            ID3D11Texture2D* aSrcTexture);
 
  protected:
   // This guards access to the singleton devices above, as well as the
@@ -1934,7 +1913,7 @@ class GFX2D_API Factory {
   static StaticMutex mDTDependencyLock;
 
   friend class DrawTargetD2D1;
-#endif  // WIN32
+#endif
 
  private:
   static DrawEventRecorder* mRecorder;
