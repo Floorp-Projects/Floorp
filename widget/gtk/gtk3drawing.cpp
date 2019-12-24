@@ -1161,7 +1161,6 @@ static gint moz_gtk_vpaned_paint(cairo_t* cr, GdkRectangle* rect,
 static gint moz_gtk_entry_paint(cairo_t* cr, GdkRectangle* rect,
                                 GtkWidgetState* state, GtkStyleContext* style,
                                 WidgetNodeType widget) {
-  gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
   int draw_focus_outline_only =
       state->depressed;  // StyleAppearance::FocusOutline
 
@@ -1173,15 +1172,14 @@ static gint moz_gtk_entry_paint(cairo_t* cr, GdkRectangle* rect,
     rect->width += 2 * h;
     rect->y -= v;
     rect->height += 2 * v;
-    width = rect->width;
-    height = rect->height;
   } else {
-    gtk_render_background(style, cr, x, y, width, height);
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
+                          rect->height);
   }
 
   // Paint the border, except for 'menulist-textfield' that isn't focused:
   if (widget != MOZ_GTK_DROPDOWN_ENTRY || state->focused) {
-    gtk_render_frame(style, cr, x, y, width, height);
+    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
   }
 
   return MOZ_GTK_SUCCESS;
