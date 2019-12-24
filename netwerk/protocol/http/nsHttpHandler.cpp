@@ -294,6 +294,8 @@ nsHttpHandler::nsHttpHandler()
       mNextChannelId(1),
       mLastActiveTabLoadOptimizationLock(
           "nsHttpConnectionMgr::LastActiveTabLoadOptimization"),
+      mSpdyBlacklistLock(
+          "nsHttpHandler::SpdyBlacklist"),
       mThroughCaptivePortal(false) {
   LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -2669,11 +2671,17 @@ bool nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(
 }
 
 void nsHttpHandler::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
   mConnMgr->BlacklistSpdy(ci);
-  mBlacklistedSpdyOrigins.PutEntry(ci->GetOrigin());
+  if (!mBlacklistedSpdyOrigins.Contains(ci->GetOrigin())) {
+    MutexAutoLock lock(mSpdyBlacklistLock);
+    mBlacklistedSpdyOrigins.PutEntry(ci->GetOrigin());
+  }
 }
 
 bool nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo* ci) {
+  MutexAutoLock lock(mSpdyBlacklistLock);
   return mBlacklistedSpdyOrigins.Contains(ci->GetOrigin());
 }
 
