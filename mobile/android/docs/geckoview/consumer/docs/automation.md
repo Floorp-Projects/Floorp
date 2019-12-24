@@ -25,6 +25,15 @@ Not all actions and features have GeckoView API interfaces.  Generally, actions 
 
 Automation-specific configuration is generally in this category.
 
+## Running GeckoView with environment variables
+
+After a successful `./mach build`, `./mach run --setenv` can be used to run GeckoView with
+the given environment variables.
+
+For example, to wait for attaching a debugger when starting a content tab process, use
+`./mach run --setenv MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab` and then attach to that
+process within Android Studio.
+
 ## Reading configuration from a file
 
 When GeckoView is embedded into a debugabble application (i.e., when your manifest includes `android:debuggable="true"`), by default GeckoView reads configuration from a file named `/data/local/tmp/$PACKAGE-geckoview-config.yaml`.  For example, if your Android package name is `com.yourcompany.yourapp`, GeckoView will read configuration from
