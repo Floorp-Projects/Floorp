@@ -62,14 +62,14 @@ function startTest() {
     let numberOfPaintsSincePause = 0;
     window.requestAnimationFrame(function draw() {
       numberOfPaintsSincePause++;
-      if (numberOfPaintsSincePause == 4) {
+      if (numberOfPaintsSincePause == 8) {
         canvas.width = canvas.height = new_canvas_size;
         helper.drawColor(canvas, helper.blue);
-      } else if (numberOfPaintsSincePause == 64) {
+      } else if (numberOfPaintsSincePause == 60) {
         canvas.width = canvas.height = canvas_size;
         helper.drawColor(canvas, helper.green);
-      } else if (numberOfPaintsSincePause == 62) {
-        // Waited 2 draws since changing canvas to green, should be safe to resume
+      } else if (numberOfPaintsSincePause == 68) {
+        // Waited 8 draws since changing canvas to green, should be safe to resume
         mediaRecorder.resume();
       } else if (numberOfPaintsSincePause > 120) {
         mediaRecorder.stop();
