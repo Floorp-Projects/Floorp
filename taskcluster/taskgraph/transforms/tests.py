@@ -571,7 +571,10 @@ def set_defaults(config, tests):
         test.setdefault('loopback-audio', False)
         test.setdefault('loopback-video', False)
         test.setdefault('limit-platforms', [])
-        if config.params['try_task_config'].get('ubuntu-bionic'):
+        # Bug 1602863 - temporarily in place while ubuntu1604 and ubuntu1804
+        # both exist in the CI.
+        if ('linux1804' in test['test-platform'] or
+                config.params['try_task_config'].get('ubuntu-bionic')):
             test.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
         else:
             test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
