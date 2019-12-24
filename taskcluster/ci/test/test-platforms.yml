@@ -19,7 +19,7 @@
 ##
 # Linux platforms (matching /linux.*/)
 
-linux32-shippable/opt:
+linux1804-32-shippable/opt:
     build-platform: linux-shippable/opt
     test-sets:
         - linux32-tests
