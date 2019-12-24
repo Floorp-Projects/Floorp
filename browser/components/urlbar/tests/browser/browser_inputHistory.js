@@ -55,6 +55,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_adaptive_no_search_terms() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // We get different Top Sites behaviour when this pref is on.
+      ["browser.urlbar.openViewOnFocus", false],
+    ],
+  });
   let url1 = "http://site.tld/1";
   let url2 = "http://site.tld/2";
 
@@ -97,6 +103,8 @@ add_task(async function test_adaptive_no_search_terms() {
   Assert.equal(result.url, url2, "Check first result");
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.url, url1, "Check second result");
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_adaptive_with_search_terms() {

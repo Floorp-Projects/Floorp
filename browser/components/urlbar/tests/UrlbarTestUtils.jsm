@@ -132,6 +132,7 @@ var UrlbarTestUtils = {
     details.url = url;
     details.postData = postData;
     details.type = result.type;
+    details.source = result.source;
     details.heuristic = result.heuristic;
     details.autofill = !!result.autofill;
     details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
