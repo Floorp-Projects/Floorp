@@ -38,9 +38,3 @@ unset AR
 unset NM
 unset RANLIB
 unset NASM
-
-unset WASM_SANDBOXED_LIBRARIES
-unset WASM_CC
-unset WASM_CXX
-unset LUCETC
-unset WASI_SYSROOT
