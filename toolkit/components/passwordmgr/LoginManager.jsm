@@ -370,15 +370,18 @@ LoginManager.prototype = {
    * Remove the specified login from the stored logins.
    */
   removeLogin(login) {
-    log.debug("Removing login");
+    log.debug("Removing login", login.QueryInterface(Ci.nsILoginMetaInfo).guid);
     return this._storage.removeLogin(login);
   },
 
   /**
-   * Change the specified login to match the new login.
+   * Change the specified login to match the new login or new properties.
    */
   modifyLogin(oldLogin, newLogin) {
-    log.debug("Modifying login");
+    log.debug(
+      "Modifying login",
+      oldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid
+    );
     return this._storage.modifyLogin(oldLogin, newLogin);
   },
 

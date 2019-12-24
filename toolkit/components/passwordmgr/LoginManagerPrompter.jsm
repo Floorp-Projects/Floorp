@@ -114,7 +114,7 @@ class LoginManagerPrompter {
    *        An optional string ID to override the default message.
    * @param {string} [options.autoSavedLoginGuid = ""]
    *        A string guid value for the auto-saved login to be removed if the changes
-   *        match it to an different login
+   *        match it to a different login
    */
   static _showLoginCaptureDoorhanger(
     browser,
@@ -316,12 +316,17 @@ class LoginManagerPrompter {
         loginToRemove = logins.shift();
       }
       if (logins.length) {
-        log.debug(
-          "multiple logins, loginToRemove:",
+        log.warn(
+          logins.length,
+          "other updatable logins!",
+          logins.map(l => l.guid),
+          "loginToUpdate:",
+          loginToUpdate && loginToUpdate.guid,
+          "loginToRemove:",
           loginToRemove && loginToRemove.guid
         );
-        Cu.reportError("Unexpected match of multiple logins.");
-        return;
+        // Proceed with updating the login with the best username match rather
+        // than returning and losing the edit.
       }
 
       if (!loginToUpdate) {
@@ -349,7 +354,7 @@ class LoginManagerPrompter {
       } else {
         log.debug("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
-        // notify that this auto-saved login been merged
+        // notify that this auto-saved login has been merged
         if (loginToRemove && loginToRemove.guid == autoSavedLoginGuid) {
           Services.obs.notifyObservers(
             loginToRemove,
