@@ -383,8 +383,12 @@ export class ASRouterAdminInner extends React.PureComponent {
       pasteFromClipboard: false,
       attributionParameters: {
         source: "addons.mozilla.org",
+        medium: "referral",
         campaign: "non-fx-button",
         content: "iridium@particlecore.github.io",
+        experiment: "ua-onboarding",
+        variation: "chrome",
+        ua: "Google Chrome 123",
       },
     };
   }
@@ -1098,6 +1102,21 @@ export class ASRouterAdminInner extends React.PureComponent {
           </tr>
           <tr>
             <td>
+              <b> Medium </b>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                name="medium"
+                placeholder="referral"
+                value={this.state.attributionParameters.medium}
+                onChange={this.onChangeAttributionParameters}
+              />{" "}
+            </td>
+          </tr>
+          <tr>
+            <td>
               <b> Campaign </b>
             </td>
             <td>
@@ -1122,6 +1141,51 @@ export class ASRouterAdminInner extends React.PureComponent {
                 name="content"
                 placeholder="iridium@particlecore.github.io"
                 value={this.state.attributionParameters.content}
+                onChange={this.onChangeAttributionParameters}
+              />{" "}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b> Experiment </b>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                name="experiment"
+                placeholder="ua-onboarding"
+                value={this.state.attributionParameters.experiment}
+                onChange={this.onChangeAttributionParameters}
+              />{" "}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b> Variation </b>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                name="variation"
+                placeholder="chrome"
+                value={this.state.attributionParameters.variation}
+                onChange={this.onChangeAttributionParameters}
+              />{" "}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b> User Agent </b>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                name="ua"
+                placeholder="Google Chrome 123"
+                value={this.state.attributionParameters.ua}
                 onChange={this.onChangeAttributionParameters}
               />{" "}
             </td>

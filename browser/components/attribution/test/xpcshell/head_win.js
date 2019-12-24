@@ -43,6 +43,10 @@ let validAttrCodes = [
     parsed: { experiment: "experimental" },
   },
   { code: "variation%3Dvaried", parsed: { variation: "varied" } },
+  {
+    code: "ua%3DGoogle%20Chrome%20123",
+    parsed: { ua: "Google%20Chrome%20123" },
+  },
 ];
 
 let invalidAttrCodes = [
@@ -51,7 +55,7 @@ let invalidAttrCodes = [
   // Not escaped
   "source=google.com&medium=organic&campaign=(not set)&content=(not set)",
   // Too long
-  "source%3Dreallyreallyreallyreallyreallyreallyreallyreallyreallylongdomain.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3Dalmostexactlyenoughcontenttomakethisstringlongerthanthe200characterlimit",
+  "campaign%3D" + "a".repeat(1000),
   // Unknown key name
   "source%3Dgoogle.com%26medium%3Dorganic%26large%3Dgeneticallymodified",
   // Empty key name
