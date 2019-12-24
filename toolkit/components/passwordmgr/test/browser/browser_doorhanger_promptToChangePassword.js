@@ -331,8 +331,11 @@ let tests = [
     },
     promptTextboxValues: {},
     expectedButtonLabel: "Update",
-    resultDescription: "Multiple login matches, persistData will bail early",
-    expectedStorageChange: false,
+    // We can't end up with duplicates (bob:xyz and bob:ABC) so the following seems reasonable.
+    // We could delete the emptyXYZ but we would want to intelligently merge metadata.
+    resultDescription:
+      "Multiple login matches but user indicated they want bob:xyz in the prompt so modify bob to give that",
+    expectedStorageChange: true,
     expectedResultLogins: [
       {
         username: "",
@@ -340,7 +343,7 @@ let tests = [
       },
       {
         username: "bob",
-        password: "abc",
+        password: "xyz",
       },
     ],
     resultCheck() {
@@ -348,13 +351,23 @@ let tests = [
       is(
         finalLogins[0].timeLastUsed,
         savedLoginsByName.emptyXYZ.timeLastUsed,
-        "Check timeLastUsed didnt change"
+        "Check timeLastUsed didn't change"
       );
-      is(finalLogins[1].guid, savedLoginsByName.bobABC.guid, "Check guid");
       is(
-        finalLogins[1].timeLastUsed,
-        savedLoginsByName.bobABC.timeLastUsed,
-        "Check timeLastUsed didnt change"
+        finalLogins[0].timePasswordChanged,
+        savedLoginsByName.emptyXYZ.timePasswordChanged,
+        "Check timePasswordChanged didn't change"
+      );
+
+      is(finalLogins[1].guid, savedLoginsByName.bobABC.guid, "Check guid");
+      ok(
+        finalLogins[1].timeLastUsed > savedLoginsByName.bobABC.timeLastUsed,
+        "Check timeLastUsed did change"
+      );
+      ok(
+        finalLogins[1].timePasswordChanged >
+          savedLoginsByName.bobABC.timePasswordChanged,
+        "Check timePasswordChanged did change"
       );
     },
   },
