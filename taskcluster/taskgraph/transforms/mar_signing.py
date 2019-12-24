@@ -12,6 +12,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted_unique_list
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
+    get_worker_type_for_scope,
 )
 from taskgraph.util.partials import get_balrog_platform_name, get_partials_artifacts_from_params
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -147,7 +148,7 @@ def make_task_description(config, jobs):
             'label': label,
             'description': "{} {}".format(
                 dep_job.task["metadata"]["description"], job['description-suffix']),
-            'worker-type': 'linux-signing',
+            'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
                        'max-run-time': 3600},
