@@ -221,10 +221,10 @@ void I420Buffer::CropAndScaleFrom(const I420BufferInterface& src,
 }
 
 void I420Buffer::CropAndScaleFrom(const I420BufferInterface& src) {
-  const int crop_width =
-      std::min(src.width(), width() * src.height() / height());
-  const int crop_height =
-      std::min(src.height(), height() * src.width() / width());
+  const int crop_width = height() ?
+      std::min(src.width(), width() * src.height() / height()) : src.width();
+  const int crop_height = width() ?
+      std::min(src.height(), height() * src.width() / width()) : src.height();
 
   CropAndScaleFrom(
       src,
