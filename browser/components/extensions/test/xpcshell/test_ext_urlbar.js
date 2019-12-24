@@ -1414,14 +1414,14 @@ add_task(async function test_nonPrivateBrowsing() {
   await ext.unload();
 });
 
-// Tests the openViewOnFocus property.
+// Tests that extensions can toggle openViewOnFocus.
 add_task(async function test_setOpenViewOnFocus() {
   let getPrefValue = () => UrlbarPrefs.get("openViewOnFocus");
 
   Assert.equal(
     getPrefValue(),
-    false,
-    "Open-view-on-focus mode should be disabled by default"
+    true,
+    "Open-view-on-focus mode should be enabled by default"
   );
 
   let ext = ExtensionTestUtils.loadExtension({
@@ -1432,7 +1432,7 @@ add_task(async function test_setOpenViewOnFocus() {
     incognitoOverride: "spanning",
     useAddonManager: "temporary",
     async background() {
-      await browser.urlbar.openViewOnFocus.set({ value: true });
+      await browser.urlbar.openViewOnFocus.set({ value: false });
       browser.test.sendMessage("ready");
     },
   });
@@ -1441,8 +1441,8 @@ add_task(async function test_setOpenViewOnFocus() {
 
   Assert.equal(
     getPrefValue(),
-    true,
-    "Successfully enabled the open-view-on-focus mode"
+    false,
+    "Successfully disabled the open-view-on-focus mode"
   );
 
   let completed = promiseUninstallCompleted(ext.id);
@@ -1451,7 +1451,7 @@ add_task(async function test_setOpenViewOnFocus() {
 
   Assert.equal(
     getPrefValue(),
-    false,
+    true,
     "Open-view-on-focus mode should be reset after unloading the add-on"
   );
 });
