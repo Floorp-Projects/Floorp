@@ -65,9 +65,6 @@ class MediaControlService final : public nsIObserver {
   void Init();
   void Shutdown();
 
-  void PlayAllControllers() const;
-  void PauseAllControllers() const;
-  void StopAllControllers() const;
   void ShutdownAllControllers() const;
 
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
