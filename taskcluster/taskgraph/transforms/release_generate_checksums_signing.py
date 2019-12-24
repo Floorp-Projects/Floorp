@@ -12,6 +12,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope,
+    get_worker_type_for_scope,
 )
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.task import task_description_schema
@@ -67,7 +68,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': 'linux-signing',
+            'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
                        'max-run-time': 3600},

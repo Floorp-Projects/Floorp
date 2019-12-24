@@ -1824,8 +1824,7 @@ def build_task(config, tasks):
         provisioner_id, worker_type = get_worker_type(
             config.graph_config,
             task['worker-type'],
-            level=level,
-            release_level=config.params.release_level(),
+            level,
         )
         task['worker-type'] = '/'.join([provisioner_id, worker_type])
         project = config.params['project']
