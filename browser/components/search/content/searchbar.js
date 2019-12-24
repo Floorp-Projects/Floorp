@@ -838,24 +838,22 @@
 
     _buildContextMenu() {
       const raw = `
-        <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+        <menuitem data-l10n-id="text-action-undo" cmd="cmd_undo"/>
         <menuseparator/>
-        <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
-        <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
-        <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+        <menuitem data-l10n-id="text-action-cut" cmd="cmd_cut"/>
+        <menuitem data-l10n-id="text-action-copy" cmd="cmd_copy"/>
+        <menuitem data-l10n-id="text-action-paste" cmd="cmd_paste"/>
         <menuitem class="searchbar-paste-and-search"/>
-        <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
+        <menuitem data-l10n-id="text-action-delete" cmd="cmd_delete"/>
         <menuseparator/>
-        <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+        <menuitem data-l10n-id="text-action-select-all" cmd="cmd_selectAll"/>
         <menuseparator/>
         <menuitem class="searchbar-clear-history"/>
       `;
 
       this._menupopup = this.querySelector(".textbox-contextmenu");
 
-      let frag = MozXULElement.parseXULToFragment(raw, [
-        "chrome://global/locale/textcontext.dtd",
-      ]);
+      let frag = MozXULElement.parseXULToFragment(raw);
 
       // Insert attributes that come from localized properties
       this._pasteAndSearchMenuItem = frag.querySelector(
