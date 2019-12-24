@@ -2109,7 +2109,26 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
     // now try the system proxy settings for this particular url
     if (NS_SUCCEEDED(mSystemProxySettings->GetProxyForURI(spec, scheme, host,
                                                           port, pacString))) {
-      ProcessPACString(pacString, 0, result);
+      nsCOMPtr<nsIProxyInfo> pi;
+      ProcessPACString(pacString, 0, getter_AddRefs(pi));
+
+      if (flags & RESOLVE_PREFER_SOCKS_PROXY &&
+          flags & RESOLVE_PREFER_HTTPS_PROXY) {
+        nsAutoCString type;
+        pi->GetType(type);
+        // DIRECT from ProcessPACString indicates that system proxy settings
+        // are not configured to use SOCKS proxy. Try https proxy as a
+        // secondary preferrable proxy. This is mainly for websocket whose
+        // proxy precedence is SOCKS > HTTPS > DIRECT.
+        if (type.EqualsLiteral(kProxyType_DIRECT)) {
+          scheme.AssignLiteral(kProxyType_HTTPS);
+          if (NS_SUCCEEDED(mSystemProxySettings->GetProxyForURI(
+                  spec, scheme, host, port, pacString))) {
+            ProcessPACString(pacString, 0, getter_AddRefs(pi));
+          }
+        }
+      }
+      pi.forget(result);
       return NS_OK;
     }
   }

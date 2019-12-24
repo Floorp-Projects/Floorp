@@ -22,8 +22,11 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
       if (aPort != -1) {
         return "SOCKS5 http://localhost:9050";
       }
-      if (aScheme == "http" || aScheme == "https" || aScheme == "ftp") {
+      if (aScheme == "http" || aScheme == "ftp") {
         return "PROXY http://localhost:8080";
+      }
+      if (aScheme == "https") {
+        return "HTTPS https://localhost:8080";
       }
       return "DIRECT";
     },
@@ -79,7 +82,7 @@ add_task(async function testHttpsProxy() {
   let pi = await TestProxyTypeByURI("https://www.mozilla.org/");
   equal(pi.host, "localhost", "Expected proxy host to be localhost");
   equal(pi.port, 8080, "Expected proxy port to be 8080");
-  equal(pi.type, "http", "Expected proxy type to be http");
+  equal(pi.type, "https", "Expected proxy type to be https");
 });
 
 add_task(async function testFtpProxy() {
@@ -137,6 +140,7 @@ add_task(async function testWebSocketProxy() {
     .finalize();
 
   let proxyFlags =
+    Ci.nsIProtocolProxyService.RESOLVE_PREFER_SOCKS_PROXY |
     Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
     Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
 
@@ -157,5 +161,32 @@ add_task(async function testWebSocketProxy() {
   let pi = await TestProxyType(chan, proxyFlags);
   equal(pi.host, "localhost", "Expected proxy host to be localhost");
   equal(pi.port, 8080, "Expected proxy port to be 8080");
-  equal(pi.type, "http", "Expected proxy type to be http");
+  equal(pi.type, "https", "Expected proxy type to be https");
+});
+
+add_task(async function testPreferHttpsProxy() {
+  let uri = Cc["@mozilla.org/network/standard-url-mutator;1"]
+    .createInstance(Ci.nsIURIMutator)
+    .setSpec("http://mozilla.org/")
+    .finalize();
+  let proxyFlags = Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY;
+
+  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+    Ci.nsIIOService
+  );
+  let chan = ioService.newChannelFromURIWithProxyFlags(
+    uri,
+    null,
+    proxyFlags,
+    null,
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
+
+  let pi = await TestProxyType(chan, proxyFlags);
+  equal(pi.host, "localhost", "Expected proxy host to be localhost");
+  equal(pi.port, 8080, "Expected proxy port to be 8080");
+  equal(pi.type, "https", "Expected proxy type to be https");
 });
