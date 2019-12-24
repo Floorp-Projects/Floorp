@@ -35,6 +35,7 @@ add_task(async function() {
   let textBoxRect = gURLBar
     .querySelector("moz-input-box")
     .getBoundingClientRect();
+  let historyDropmarkerRect = gURLBar.dropmarker.getBoundingClientRect();
   let fxaAccountsButton = document
     .getElementById("fxa-toolbar-menu-button")
     .getBoundingClientRect();
@@ -121,6 +122,14 @@ add_task(async function() {
               r.x2 <= firstTabLabelRect.right &&
               r.y1 >= firstTabLabelRect.y &&
               r.y2 <= firstTabLabelRect.bottom,
+          },
+          {
+            name: "bug 1547341 - addressbar history dropmarker is shown",
+            condition: r =>
+              r.x1 >= historyDropmarkerRect.x &&
+              r.x2 <= historyDropmarkerRect.right &&
+              r.y1 >= historyDropmarkerRect.y &&
+              r.y2 <= historyDropmarkerRect.bottom,
           },
           {
             name:

@@ -8,12 +8,7 @@
 
 add_task(async function init() {
   await PlacesUtils.history.clear();
-  // Enough vists to get this site into Top Sites.
-  for (let i = 0; i < 5; i++) {
-    await PlacesTestUtils.addVisits("http://example.com/");
-  }
-
-  await updateTopSites(sites => sites && sites[0].url == "http://example.com/");
+  await PlacesTestUtils.addVisits("http://example.com/");
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
   });

@@ -7,12 +7,6 @@
 // This test ensures that a search for "empty" strings doesn't break the urlbar.
 
 add_task(async function test_setup() {
-  await SpecialPowers.pushPrefEnv({
-    // When this pref is true, Top Sites are shown on an empty search. That
-    // behaviour is covered by browser_urlbar_top_sites.js. This test will be
-    // irrelevant when this pref is removed.
-    set: [["browser.urlbar.openViewOnFocus", false]],
-  });
   await PlacesTestUtils.addVisits([
     {
       uri: `http://one.mozilla.org/`,
