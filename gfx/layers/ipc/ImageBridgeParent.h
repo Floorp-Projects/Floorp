@@ -39,7 +39,7 @@ struct ImageCompositeNotificationInfo;
  */
 class ImageBridgeParent final : public PImageBridgeParent,
                                 public CompositableParentManager,
-                                public mozilla::ipc::IShmemAllocator {
+                                public ShmemAllocator {
  public:
   typedef nsTArray<CompositableOperation> EditArray;
   typedef nsTArray<OpDestroy> OpDestroyArray;
@@ -60,7 +60,7 @@ class ImageBridgeParent final : public PImageBridgeParent,
   static bool CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint);
   static void Shutdown();
 
-  IShmemAllocator* AsShmemAllocator() override { return this; }
+  ShmemAllocator* AsShmemAllocator() override { return this; }
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -100,7 +100,7 @@ class ImageBridgeParent final : public PImageBridgeParent,
 
   MessageLoop* GetMessageLoop() const { return mMessageLoop; }
 
-  // IShmemAllocator
+  // ShmemAllocator
 
   bool AllocShmem(size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
                   ipc::Shmem* aShmem) override;
@@ -108,7 +108,7 @@ class ImageBridgeParent final : public PImageBridgeParent,
   bool AllocUnsafeShmem(size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
                         ipc::Shmem* aShmem) override;
 
-  bool DeallocShmem(ipc::Shmem& aShmem) override;
+  void DeallocShmem(ipc::Shmem& aShmem) override;
 
   bool IsSameProcess() const override;
 
