@@ -18,10 +18,10 @@ add_task(async function() {
   // This test will involve localized strings, make sure the necessary FTL file is
   // available in the toolbox top window.
   toolbox.topWindow.MozXULElement.insertFTLIfNeeded(
-    "toolkit/main-window/editmenu.ftl"
+    "toolkit/global/textActions.ftl"
   );
 
-  loadFTL(toolbox, "toolkit/main-window/editmenu.ftl");
+  loadFTL(toolbox, "toolkit/global/textActions.ftl");
 
   await testMenuItems();
   await testMenuPopup(toolbox);
@@ -72,7 +72,7 @@ async function testMenuPopup(toolbox) {
       disabled: true,
     }),
     new MenuItem({
-      l10nID: "editmenu-undo",
+      l10nID: "text-action-undo",
     }),
   ];
 
@@ -151,7 +151,7 @@ async function testSubmenu(toolbox) {
   );
   menu.append(
     new MenuItem({
-      l10nID: "editmenu-copy",
+      l10nID: "text-action-copy",
       submenu: submenu,
     })
   );
@@ -182,7 +182,7 @@ async function testSubmenu(toolbox) {
   ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
   is(
     menus[0].getAttribute("data-l10n-id"),
-    "editmenu-copy",
+    "text-action-copy",
     "Correct localization attribute"
   );
 
