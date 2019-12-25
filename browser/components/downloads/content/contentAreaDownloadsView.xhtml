@@ -39,14 +39,12 @@
   </keyset>
 #endif
 
-  <stack flex="1">
-    <richlistbox flex="1"
-                 seltype="multiple"
-                 id="downloadsRichListBox"
-                 context="downloadsContextMenu"/>
-    <description id="downloadsListEmptyDescription"
-                 value="&downloadsListEmpty.label;"/>
-  </stack>
+  <richlistbox flex="1"
+               seltype="multiple"
+               id="downloadsRichListBox"
+               context="downloadsContextMenu"/>
+  <description id="downloadsListEmptyDescription"
+               value="&downloadsListEmpty.label;"/>
 #include downloadsCommands.inc.xhtml
 #include downloadsStrings.inc.xhtml
 #include downloadsContextMenu.inc.xhtml
