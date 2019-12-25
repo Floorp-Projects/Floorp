@@ -78,14 +78,17 @@ add_task(async function() {
     6,
     "The context menu has the right number of entries."
   );
-  is(actualEntries[0], "#editmenu-undo (editmenu-undo) [disabled]");
-  is(actualEntries[1], "#editmenu-cut (editmenu-cut) [disabled]");
-  is(actualEntries[2], "#editmenu-copy (editmenu-copy) [disabled]");
+  is(actualEntries[0], "#editmenu-undo (text-action-undo) [disabled]");
+  is(actualEntries[1], "#editmenu-cut (text-action-cut) [disabled]");
+  is(actualEntries[2], "#editmenu-copy (text-action-copy) [disabled]");
   // Paste may or may not be enabled depending on what ran before this.
   // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
-  ok(actualEntries[3].startsWith("#editmenu-paste (editmenu-paste)"));
-  is(actualEntries[4], "#editmenu-delete (editmenu-delete) [disabled]");
-  is(actualEntries[5], "#editmenu-selectAll (editmenu-select-all) [disabled]");
+  ok(actualEntries[3].startsWith("#editmenu-paste (text-action-paste)"));
+  is(actualEntries[4], "#editmenu-delete (text-action-delete) [disabled]");
+  is(
+    actualEntries[5],
+    "#editmenu-selectAll (text-action-select-all) [disabled]"
+  );
 
   const node = hud.jsterm.node;
   const inputContainer = node.closest(".jsterm-input-container");
@@ -97,14 +100,17 @@ add_task(async function() {
     6,
     "The context menu has the right number of entries."
   );
-  is(actualEntries[0], "#editmenu-undo (editmenu-undo) [disabled]");
-  is(actualEntries[1], "#editmenu-cut (editmenu-cut) [disabled]");
-  is(actualEntries[2], "#editmenu-copy (editmenu-copy) [disabled]");
+  is(actualEntries[0], "#editmenu-undo (text-action-undo) [disabled]");
+  is(actualEntries[1], "#editmenu-cut (text-action-cut) [disabled]");
+  is(actualEntries[2], "#editmenu-copy (text-action-copy) [disabled]");
   // Paste may or may not be enabled depending on what ran before this.
   // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
-  ok(actualEntries[3].startsWith("#editmenu-paste (editmenu-paste)"));
-  is(actualEntries[4], "#editmenu-delete (editmenu-delete) [disabled]");
-  is(actualEntries[5], "#editmenu-selectAll (editmenu-select-all) [disabled]");
+  ok(actualEntries[3].startsWith("#editmenu-paste (text-action-paste)"));
+  is(actualEntries[4], "#editmenu-delete (text-action-delete) [disabled]");
+  is(
+    actualEntries[5],
+    "#editmenu-selectAll (text-action-select-all) [disabled]"
+  );
 
   await hideContextMenu(hud);
   // Close the browser console.

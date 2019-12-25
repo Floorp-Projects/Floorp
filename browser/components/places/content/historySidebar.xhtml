@@ -20,6 +20,7 @@
 <window id="history-panel"
         class="sidebar-panel"
         orient="vertical"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistorySidebarInit();"
         onunload="PlacesUIUtils.setMouseoverURL('', window);"
@@ -31,6 +32,10 @@
   <script src="chrome://browser/content/contentTheme.js"/>
   <script src="chrome://browser/content/places/places-tree.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+  </linkset>
 
 #include placesCommands.inc.xhtml
 
