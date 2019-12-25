@@ -2,27 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-text-action-undo =
+### This file contains the entities needed for the 'edit' menu
+### It's currently only used for the Browser Console and Developer Toolbox
+
+editmenu-undo =
     .label = Undo
     .accesskey = U
 
-text-action-cut =
+editmenu-redo =
+    .label = Redo
+    .accesskey = R
+
+editmenu-cut =
     .label = Cut
     .accesskey = t
 
-text-action-copy =
+editmenu-copy =
     .label = Copy
     .accesskey = C
 
-text-action-paste =
+editmenu-paste =
     .label = Paste
     .accesskey = P
 
-text-action-delete =
+editmenu-delete =
     .label = Delete
     .accesskey = D
 
-text-action-select-all =
+editmenu-select-all =
     .label = Select All
     .accesskey = A
-

@@ -42,10 +42,6 @@
         toggletoolbar="true"
         persist="width height screenX screenY sizemode">
 
-  <linkset>
-    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
-  </linkset>
-
   <script src="chrome://browser/content/places/places.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
 #ifndef XP_MACOSX
@@ -202,41 +198,48 @@
 
             <menuitem id="orgUndo"
                       command="cmd_undo"
-                      data-l10n-id="text-action-undo"
-                      key="key_undo"/>
+                      label="&undoCmd.label;"
+                      key="key_undo"
+                      accesskey="&undoCmd.accesskey;"/>
             <menuitem id="orgRedo"
                       command="cmd_redo"
-                      data-l10n-id="text-action-redo"
-                      key="key_redo"/>
+                      label="&redoCmd.label;"
+                      key="key_redo"
+                      accesskey="&redoCmd.accesskey;"/>
 
             <menuseparator id="orgCutSeparator"/>
 
             <menuitem id="orgCut"
                       command="cmd_cut"
-                      data-l10n-id="text-action-cut"
+                      label="&cutCmd.label;"
                       key="key_cut"
+                      accesskey="&cutCmd.accesskey;"
                       selection="separator|link|folder|mixed"/>
             <menuitem id="orgCopy"
                       command="cmd_copy"
-                      data-l10n-id="text-action-copy"
+                      label="&copyCmd.label;"
                       key="key_copy"
+                      accesskey="&copyCmd.accesskey;"
                       selection="separator|link|folder|mixed"/>
             <menuitem id="orgPaste"
                       command="cmd_paste"
-                      data-l10n-id="text-action-paste"
+                      label="&pasteCmd.label;"
                       key="key_paste"
+                      accesskey="&pasteCmd.accesskey;"
                       selection="mutable"/>
             <menuitem id="orgDelete"
                       command="cmd_delete"
-                      data-l10n-id="text-action-delete"
-                      key="key_delete"/>
+                      label="&deleteCmd.label;"
+                      key="key_delete"
+                      accesskey="&deleteCmd.accesskey;"/>
 
             <menuseparator id="selectAllSeparator"/>
 
             <menuitem id="orgSelectAll"
                       command="cmd_selectAll"
-                      data-l10n-id="text-action-select-all"
-                      key="key_selectAll"/>
+                      label="&selectAllCmd.label;"
+                      key="key_selectAll"
+                      accesskey="&selectAllCmd.accesskey;"/>
 
             <menuseparator id="orgCloseSeparator"/>
 

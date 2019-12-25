@@ -109,18 +109,18 @@ window.addEventListener("contextmenu", e => {
 
   let popup = document.getElementById("textbox-contextmenu");
   if (!popup) {
-    MozXULElement.insertFTLIfNeeded("toolkit/global/textActions.ftl");
+    MozXULElement.insertFTLIfNeeded("toolkit/main-window/editmenu.ftl");
     document.documentElement.appendChild(
       MozXULElement.parseXULToFragment(`
       <menupopup id="textbox-contextmenu" class="textbox-contextmenu">
-        <menuitem data-l10n-id="text-action-undo" command="cmd_undo"></menuitem>
+        <menuitem data-l10n-id="editmenu-undo" command="cmd_undo"></menuitem>
         <menuseparator></menuseparator>
-        <menuitem data-l10n-id="text-action-cut" command="cmd_cut"></menuitem>
-        <menuitem data-l10n-id="text-action-copy" command="cmd_copy"></menuitem>
-        <menuitem data-l10n-id="text-action-paste" command="cmd_paste"></menuitem>
-        <menuitem data-l10n-id="text-action-delete" command="cmd_delete"></menuitem>
+        <menuitem data-l10n-id="editmenu-cut" command="cmd_cut"></menuitem>
+        <menuitem data-l10n-id="editmenu-copy" command="cmd_copy"></menuitem>
+        <menuitem data-l10n-id="editmenu-paste" command="cmd_paste"></menuitem>
+        <menuitem data-l10n-id="editmenu-delete" command="cmd_delete"></menuitem>
         <menuseparator></menuseparator>
-        <menuitem data-l10n-id="text-action-select-all" command="cmd_selectAll"></menuitem>
+        <menuitem data-l10n-id="editmenu-select-all" command="cmd_selectAll"></menuitem>
       </menupopup>
     `)
     );

@@ -96,27 +96,27 @@
                          onpopuphidden="updateEditUIVisibility()">
                 <menuitem id="menu_undo"
                           key="key_undo"
-                          command="cmd_undo" data-l10n-id="text-action-undo"/>
+                          command="cmd_undo" data-l10n-id="menu-edit-undo"/>
                 <menuitem id="menu_redo"
                           key="key_redo"
-                          command="cmd_redo" data-l10n-id="text-action-redo"/>
+                          command="cmd_redo" data-l10n-id="menu-edit-redo"/>
                 <menuseparator/>
                 <menuitem id="menu_cut"
                           key="key_cut"
-                          command="cmd_cut" data-l10n-id="text-action-cut"/>
+                          command="cmd_cut" data-l10n-id="menu-edit-cut"/>
                 <menuitem id="menu_copy"
                           key="key_copy"
-                          command="cmd_copy" data-l10n-id="text-action-copy"/>
+                          command="cmd_copy" data-l10n-id="menu-edit-copy"/>
                 <menuitem id="menu_paste"
                           key="key_paste"
-                          command="cmd_paste" data-l10n-id="text-action-paste"/>
+                          command="cmd_paste" data-l10n-id="menu-edit-paste"/>
                 <menuitem id="menu_delete"
                           key="key_delete"
-                          command="cmd_delete" data-l10n-id="text-action-delete"/>
+                          command="cmd_delete" data-l10n-id="menu-edit-delete"/>
                 <menuseparator/>
                 <menuitem id="menu_selectAll"
                           key="key_selectAll"
-                          command="cmd_selectAll" data-l10n-id="text-action-select-all"/>
+                          command="cmd_selectAll" data-l10n-id="menu-edit-select-all"/>
                 <menuseparator/>
                 <menuitem id="menu_find"
                           key="key_find"
