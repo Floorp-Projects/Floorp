@@ -37,6 +37,7 @@ enum class SurfaceType : int8_t {
   CAPTURE,                /* Data from a DrawTargetCapture */
   DATA_RECYCLING_SHARED,  /* Data surface using shared memory */
   OFFSET,                 /* Offset */
+  DATA_ALIGNED,           /* Data surface using aligned heap memory */
 };
 
 enum class SurfaceFormat : int8_t {
