@@ -62,6 +62,10 @@ function isnot(aLeft, aRight, aMessage)
   window.arguments[0].SimpleTest.isnot(aLeft, aRight, aMessage);
 }
 
+function isfuzzy(aLeft, aRight, aEpsilon, aMessage) {
+  window.arguments[0].SimpleTest.isfuzzy(aLeft, aRight, aEpsilon, aMessage);
+}
+
 function todo(aCondition, aMessage)
 {
   window.arguments[0].SimpleTest.todo(aCondition, aMessage);
@@ -254,6 +258,21 @@ function checkRect(aRect, aExpectedRect, aMessage)
          aRect.top == aExpectedRect.top &&
          aRect.width == aExpectedRect.width &&
          aRect.height == aExpectedRect.height;
+}
+
+function checkRectFuzzy(aRect, aExpectedRect, aEpsilon, aMessage) {
+  isfuzzy(aRect.left, aExpectedRect.left, aEpsilon.left, aMessage + ": left is wrong");
+  isfuzzy(aRect.top, aExpectedRect.top, aEpsilon.top, aMessage + " top is wrong");
+  isfuzzy(aRect.width, aExpectedRect.width, aEpsilon.width, aMessage + ": width is wrong");
+  isfuzzy(aRect.height, aExpectedRect.height, aEpsilon.height, aMessage + ": height is wrong");
+  return aRect.left <= aExpectedRect.left - aEpsilon.left &&
+         aRect.left <= aExpectedRect.left + aEpsilon.left &&
+         aRect.top == aExpectedRect.top - aEpsilon.top &&
+         aRect.top == aExpectedRect.top + aEpsilon.top &&
+         aRect.width == aExpectedRect.width - aEpsilon.width &&
+         aRect.width == aExpectedRect.width + aEpsilon.width &&
+         aRect.height == aExpectedRect.height - aEpsilon.height &&
+         aRect.height == aExpectedRect.height + aEpsilon.height;
 }
 
 function checkRectArray(aQueryTextRectArrayResult, aExpectedTextRectArray, aMessage)
@@ -1257,7 +1276,7 @@ function runCompositionTest()
   is(caretRect.top, caretRects[2].top,
      "runCompositionTest: caret rects are different (#1-3-1, top)");
   // by bug 335359, the caret width depends on the right side's character.
-  is(caretRect.width, caretRects[2].width + 1,
+  is(caretRect.width, caretRects[2].width + Math.round(window.devicePixelRatio),
      "runCompositionTest: caret rects are different (#1-3-1, width)");
   is(caretRect.height, caretRects[2].height,
      "runCompositionTest: caret rects are different (#1-3-1, height)");
@@ -1292,7 +1311,7 @@ function runCompositionTest()
   is(caretRect.top, caretRects[1].top,
      "runCompositionTest: caret rects are different (#1-3-2, top)");
   // by bug 335359, the caret width depends on the right side's character.
-  is(caretRect.width, caretRects[1].width + 1,
+  is(caretRect.width, caretRects[1].width + Math.round(window.devicePixelRatio),
      "runCompositionTest: caret rects are different (#1-3-2, width)");
   is(caretRect.height, caretRects[1].height,
      "runCompositionTest: caret rects are different (#1-3-2, height)");
@@ -5301,43 +5320,48 @@ function runCSSTransformTest()
 
   try {
     textarea.style.transform = "translate(10px, 15px)";
-    function movedRect(aRect, aX, aY)
+    function movedRect(aRect, aCSS_CX, aCSS_CY)
     {
-      return { left: aRect.left + aX, top: aRect.top + aY, width: aRect.width, height: aRect.height }
+      return {
+        left: aRect.left + Math.round(aCSS_CX * window.devicePixelRatio),
+        top: aRect.top + Math.round(aCSS_CY * window.devicePixelRatio),
+        width: aRect.width,
+        height: aRect.height
+      };
     }
 
     let editorRectTranslated = synthesizeQueryEditorRect();
     if (!checkQueryContentResult(editorRectTranslated,
           "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform) ||
-        !checkRect(editorRectTranslated, movedRect(editorRect, 10, 15),
+        !checkRectFuzzy(editorRectTranslated, movedRect(editorRect, 10, 15), {left: 1, top: 1, width: 1, height: 1},
           "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform)) {
       return;
     }
     let firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
     if (!checkQueryContentResult(firstCharRectTranslated,
           "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform) ||
-        !checkRect(firstCharRectTranslated, movedRect(firstCharRect, 10, 15),
+        !checkRectFuzzy(firstCharRectTranslated, movedRect(firstCharRect, 10, 15), {left: 1, top: 1, width: 1, height: 1},
           "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
     let lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
     if (!checkQueryContentResult(lastCharRectTranslated,
           "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform) ||
-        !checkRect(lastCharRectTranslated, movedRect(lastCharRect, 10, 15),
+        !checkRectFuzzy(lastCharRectTranslated, movedRect(lastCharRect, 10, 15), {left: 1, top: 1, width: 1, height: 1},
           "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
     let caretRectTranslated = synthesizeQueryCaretRect(textarea.selectionStart);
     if (!checkQueryContentResult(caretRectTranslated,
           "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform) ||
-        !checkRect(caretRectTranslated, movedRect(caretRect, 10, 15),
+        !checkRectFuzzy(caretRectTranslated, movedRect(caretRect, 10, 15), {left: 1, top: 1, width: 1, height: 1},
           "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform)) {
       return;
     }
     let caretRectBeforeFirstCharTranslated = synthesizeQueryCaretRect(0);
     if (!checkQueryContentResult(caretRectBeforeFirstCharTranslated,
           "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform) ||
-        !checkRect(caretRectBeforeFirstCharTranslated, movedRect(caretRectBeforeFirstChar, 10, 15),
+        !checkRectFuzzy(caretRectBeforeFirstCharTranslated, movedRect(caretRectBeforeFirstChar, 10, 15), {left: 1, top: 1, width: 1, height: 1},
           "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform)) {
       return;
     }
@@ -5428,7 +5452,8 @@ function runBug722639Test()
     }
     is(firstLineLF.top, firstLine.top, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.left, firstLine.left, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
-    is(firstLineLF.height, firstLine.height, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
+    isfuzzy(firstLineLF.height, firstLine.height, 1,
+            "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.width, firstLine.width, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     let firstLineLFAsArray = synthesizeQueryTextRectArray(1, 1);
     if (!checkQueryContentResult(firstLineLFAsArray, "runBug722639Test: 1st line's \\n rect as array") ||
@@ -5455,7 +5480,8 @@ function runBug722639Test()
     }
     is(secondLineLF.top, secondLine.top, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.left, secondLine.left, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
-    is(secondLineLF.height, secondLine.height, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
+    isfuzzy(secondLineLF.height, secondLine.height, 1,
+            "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.width, secondLine.width, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     let secondLineLFAsArray = synthesizeQueryTextRectArray(kLFLen + 1, 1);
     if (!checkQueryContentResult(secondLineLFAsArray, "runBug722639Test: 2nd line's \\n rect as array") ||
@@ -5468,7 +5494,7 @@ function runBug722639Test()
      "runBug722639Test: lineHeight must be positive");
   is(secondLine.left, firstLine.left,
      "runBug722639Test: the left value must be always same value");
-  is(secondLine.height, firstLine.height,
+  isfuzzy(secondLine.height, firstLine.height, 1,
      "runBug722639Test: the height must be always same value");
   let previousTop = secondLine.top;
   for (let i = 3; i <= textarea.value.length + 1; i++) {
@@ -5493,8 +5519,8 @@ function runBug722639Test()
     }
     is(currentLine.left, firstLine.left,
        "runBug722639Test: " + i + "th line's left is unexpected");
-    is(currentLine.height, firstLine.height,
-       "runBug722639Test: " + i + "th line's height is unexpected");
+    isfuzzy(currentLine.height, firstLine.height, 1,
+            `runBug722639Test: ${i}th line's height is unexpected`);
     if (kLFLen > 1) {
       let currentLineLF = synthesizeQueryTextRect(kLFLen * (i - 1) + 1, 1);
       if (!checkQueryContentResult(currentLineLF,
@@ -5503,7 +5529,8 @@ function runBug722639Test()
       }
       is(currentLineLF.top, currentLine.top, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       is(currentLineLF.left, currentLine.left, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
-      is(currentLineLF.height, currentLine.height, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
+      isfuzzy(currentLineLF.height, currentLine.height, 1,
+              `runBug722639Test: ${i}th line's \\n rect should be same as same line's \\r rect`);
       is(currentLineLF.width, currentLine.width, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       let currentLineLFAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1) + 1, 1);
       if (!checkQueryContentResult(currentLineLFAsArray, "runBug722639Test: " + i + "th line's \\n rect as array") ||
@@ -7196,8 +7223,12 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   let r = aPanelOrFrame.getBoundingClientRect();
-  let parentRect = { "left": r.left, "top": r.top, "width": r.right - r.left,
-                     "height": r.bottom - r.top };
+  let parentRect = {
+    left: r.left * window.devicePixelRatio,
+    top: r.top * window.devicePixelRatio,
+    width: (r.right - r.left) * window.devicePixelRatio,
+    height: (r.bottom - r.top) * window.devicePixelRatio,
+  };
   checkRectContainsRect(editorRect, parentRect, aTestName +
                         ": the editor rect coordinates are wrong");
 
