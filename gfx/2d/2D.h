@@ -366,9 +366,15 @@ class SourceSurface : public external::AtomicRefCounted<SourceSurface> {
    * DataSourceSurface and if GetDataSurface will return the same object.
    */
   bool IsDataSourceSurface() const {
-    SurfaceType type = GetType();
-    return type == SurfaceType::DATA || type == SurfaceType::DATA_SHARED ||
-           type == SurfaceType::DATA_RECYCLING_SHARED;
+    switch (GetType()) {
+      case SurfaceType::DATA:
+      case SurfaceType::DATA_SHARED:
+      case SurfaceType::DATA_RECYCLING_SHARED:
+      case SurfaceType::DATA_ALIGNED:
+        return true;
+      default:
+        return false;
+    }
   }
 
   /**
