@@ -21,7 +21,7 @@ function loadEditMenuStrings(win) {
 
   if (win.MozXULElement) {
     stringsLoaded.set(win, true);
-    win.MozXULElement.insertFTLIfNeeded("toolkit/global/textActions.ftl");
+    win.MozXULElement.insertFTLIfNeeded("toolkit/main-window/editmenu.ftl");
   }
 }
 
@@ -46,7 +46,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-undo",
-      l10nID: "text-action-undo",
+      l10nID: "editmenu-undo",
       disabled: !docshell.isCommandEnabled("cmd_undo"),
       click: () => {
         docshell.doCommand("cmd_undo");
@@ -61,7 +61,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-cut",
-      l10nID: "text-action-cut",
+      l10nID: "editmenu-cut",
       disabled: !docshell.isCommandEnabled("cmd_cut"),
       click: () => {
         docshell.doCommand("cmd_cut");
@@ -71,7 +71,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-copy",
-      l10nID: "text-action-copy",
+      l10nID: "editmenu-copy",
       disabled: !docshell.isCommandEnabled("cmd_copy"),
       click: () => {
         docshell.doCommand("cmd_copy");
@@ -81,7 +81,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-paste",
-      l10nID: "text-action-paste",
+      l10nID: "editmenu-paste",
       disabled: !docshell.isCommandEnabled("cmd_paste"),
       click: () => {
         docshell.doCommand("cmd_paste");
@@ -91,7 +91,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-delete",
-      l10nID: "text-action-delete",
+      l10nID: "editmenu-delete",
       disabled: !docshell.isCommandEnabled("cmd_delete"),
       click: () => {
         docshell.doCommand("cmd_delete");
@@ -106,7 +106,7 @@ function createEditContextMenu(win, id) {
   menu.append(
     new MenuItem({
       id: "editmenu-selectAll",
-      l10nID: "text-action-select-all",
+      l10nID: "editmenu-select-all",
       disabled: !docshell.isCommandEnabled("cmd_selectAll"),
       click: () => {
         docshell.doCommand("cmd_selectAll");
