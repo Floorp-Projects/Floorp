@@ -23,10 +23,6 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         id="style-editor-chrome-window">
 
-  <linkset>
-    <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
-  </linkset>
-
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://browser/content/utilityOverlay.js"/>
@@ -48,20 +44,20 @@
     <menupopup id="sourceEditorContextMenu"
                incontentshell="false"
                onpopupshowing="goUpdateSourceEditorMenuItems()">
-      <menuitem id="cMenu_undo"
-                data-l10n-id="text-action-undo" command="cmd_undo"/>
+      <menuitem id="cMenu_undo" label="&undoCmd.label;"
+                accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
       <menuseparator/>
-      <menuitem id="cMenu_cut" 
-                data-l10n-id="text-action-cut" command="cmd_cut"/>
-      <menuitem id="cMenu_copy"
-                data-l10n-id="text-action-copy" command="cmd_copy"/>
-      <menuitem id="cMenu_paste"
-                data-l10n-id="text-action-paste" command="cmd_paste"/>
-      <menuitem id="cMenu_delete"
-                data-l10n-id="text-action-delete" command="cmd_delete"/>
+      <menuitem id="cMenu_cut" label="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
+      <menuitem id="cMenu_copy" label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+      <menuitem id="cMenu_paste" label="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
+      <menuitem id="cMenu_delete" label="&deleteCmd.label;"
+                accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
       <menuseparator/>
-      <menuitem id="cMenu_selectAll"
-                data-l10n-id="text-action-select-all" command="cmd_selectAll"/>
+      <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="se-menu-find"
         label="&findCmd.label;" accesskey="&findCmd.accesskey;" command="cmd_find"/>

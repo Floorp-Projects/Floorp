@@ -13,14 +13,14 @@
     },
     get editMenuItems() {
       return `
-      <menuitem data-l10n-id="text-action-undo" cmd="cmd_undo"></menuitem>
+      <menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"></menuitem>
       <menuseparator></menuseparator>
-      <menuitem data-l10n-id="text-action-cut" cmd="cmd_cut"></menuitem>
-      <menuitem data-l10n-id="text-action-copy" cmd="cmd_copy"></menuitem>
-      <menuitem data-l10n-id="text-action-paste" cmd="cmd_paste"></menuitem>
-      <menuitem data-l10n-id="text-action-delete" cmd="cmd_delete"></menuitem>
+      <menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"></menuitem>
+      <menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"></menuitem>
+      <menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"></menuitem>
+      <menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"></menuitem>
       <menuseparator></menuseparator>
-      <menuitem data-l10n-id="text-action-select-all" cmd="cmd_selectAll"></menuitem>
+      <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"></menuitem>
     `;
     },
     get normal() {
@@ -30,9 +30,9 @@
       <menupopup class="textbox-contextmenu">
         ${this.editMenuItems}
       </menupopup>
-    `
+    `,
+        this.entities
       );
-      MozXULElement.insertFTLIfNeeded("toolkit/global/textActions.ftl");
       return this.normal;
     },
     get spellcheck() {
