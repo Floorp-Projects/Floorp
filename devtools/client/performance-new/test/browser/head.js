@@ -107,6 +107,22 @@ async function getElementFromPopupByText(text) {
 }
 
 /**
+ * This function looks inside of a document for some element that contains
+ * the given text. It runs in a loop every requestAnimationFrame until it
+ * finds the element. If it doesn't find the element it throws an error.
+ *
+ * @param {HTMLDocument} document
+ * @param {string} text
+ * @returns {Promise<HTMLElement>}
+ */
+async function getElementFromDocumentByText(document, text) {
+  const xpath = `//*[contains(text(), '${text}')]`;
+  return waitUntil(
+    () => getElementByXPath(document, xpath),
+    `Trying to find the element with the text "${text}".`
+  );
+}
+/**
  * This function is similar to getElementFromPopupByText, but it immediately
  * returns and does not wait for an element to exist.
  * @param {string} text
@@ -277,4 +293,91 @@ async function closePopup() {
     }
     await tick();
   }
+}
+
+/**
+ * Open about:profiling in a new tab, and output helpful log messages.
+ *
+ * @template T
+ * @param {(Document) => T} callback
+ * @returns {Promise<T>}
+ */
+function openAboutProfiling(callback) {
+  info("Begin to open about:profiling in a new tab.");
+  return BrowserTestUtils.withNewTab(
+    "about:profiling",
+    async contentBrowser => {
+      info("about:profiling is now open in a tab.");
+      return callback(contentBrowser.contentDocument);
+    }
+  );
+}
+
+/**
+ * Start and stop the profiler to get the current active configuration. This is
+ * done programmtically through the nsIProfiler interface, rather than through click
+ * interactions, since the about:profiling page does not include buttons to control
+ * the recording.
+ *
+ * @returns {Object}
+ */
+function getActiveConfiguration() {
+  const { startProfiler, stopProfiler } = ChromeUtils.import(
+    "resource://devtools/client/performance-new/popup/background.jsm.js"
+  );
+
+  info("Start the profiler with the current about:profiling configuration.");
+  startProfiler();
+
+  // Immediately pause the sampling, to make sure the test runs fast. The profiler
+  // only needs to be started to initialize the configuration.
+  Services.profiler.PauseSampling();
+
+  const { activeConfiguration } = Services.profiler;
+  if (!activeConfiguration) {
+    throw new Error(
+      "Expected to find an active configuration for the profile."
+    );
+  }
+
+  info("Stop the profiler after getting the active configuration.");
+  stopProfiler();
+
+  return activeConfiguration;
+}
+
+/**
+ * Start the profiler programmatically and check that the active configuration has
+ * a feature enabled
+ *
+ * @param {string} feature
+ * @return {boolean}
+ */
+function activeConfigurationHasFeature(feature) {
+  const { features } = getActiveConfiguration();
+  return features.includes(feature);
+}
+
+/**
+ * Start the profiler programmatically and check that the active configuration is
+ * tracking a thread.
+ *
+ * @param {string} thread
+ * @return {boolean}
+ */
+function activeConfigurationHasThread(thread) {
+  const { threads } = getActiveConfiguration();
+  return threads.includes(thread);
+}
+
+/**
+ * @param {HTMLElement} featureTextElement
+ * @param {HTMLInputElement}
+ */
+function getFeatureInputFromLabel(featureTextElement) {
+  const input = featureTextElement.parentElement.querySelector("input");
+  if (!input) {
+    throw new Error("Could not find the input near text element.");
+  }
+  return input;
 }
