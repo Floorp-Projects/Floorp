@@ -93,21 +93,22 @@ void MediaControlService::Shutdown() {
   mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
 }
 
-MediaController* MediaControlService::GetOrCreateControllerById(
+RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(
     const uint64_t aId) const {
-  MediaController* controller = GetControllerById(aId);
+  RefPtr<MediaController> controller = mControllers.Get(aId);
   if (!controller) {
     controller = new MediaController(aId);
   }
   return controller;
 }
 
-MediaController* MediaControlService::GetControllerById(
+RefPtr<MediaController> MediaControlService::GetControllerById(
     const uint64_t aId) const {
-  return mControllers.Get(aId).get();
+  return mControllers.Get(aId);
 }
 
-void MediaControlService::AddMediaController(MediaController* aController) {
+void MediaControlService::AddMediaController(
+    const RefPtr<MediaController>& aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   const uint64_t cId = aController->Id();
   MOZ_DIAGNOSTIC_ASSERT(!mControllers.GetValue(cId),
@@ -119,7 +120,8 @@ void MediaControlService::AddMediaController(MediaController* aController) {
   mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
 }
 
-void MediaControlService::RemoveMediaController(MediaController* aController) {
+void MediaControlService::RemoveMediaController(
+    const RefPtr<MediaController>& aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   const uint64_t cId = aController->Id();
   MOZ_DIAGNOSTIC_ASSERT(mControllers.GetValue(cId),
@@ -129,6 +131,27 @@ void MediaControlService::RemoveMediaController(MediaController* aController) {
   LOG("Remove media controller %" PRId64 ", currentNum=%" PRId64, cId,
       GetControllersNum());
   mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
+}
+
+void MediaControlService::PlayAllControllers() const {
+  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
+    const RefPtr<MediaController>& controller = iter.Data();
+    controller->Play();
+  }
+}
+
+void MediaControlService::PauseAllControllers() const {
+  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
+    const RefPtr<MediaController>& controller = iter.Data();
+    controller->Pause();
+  }
+}
+
+void MediaControlService::StopAllControllers() const {
+  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
+    const RefPtr<MediaController>& controller = iter.Data();
+    controller->Stop();
+  }
 }
 
 void MediaControlService::ShutdownAllControllers() const {
@@ -142,11 +165,12 @@ uint64_t MediaControlService::GetControllersNum() const {
   return mControllers.Count();
 }
 
-MediaController* MediaControlService::GetLastAddedController() const {
+already_AddRefed<MediaController>
+MediaControlService::GetLastAddedController() {
   if (mControllerHistory.IsEmpty()) {
     return nullptr;
   }
-  return GetControllerById(mControllerHistory.LastElement());
+  return GetControllerById(mControllerHistory.LastElement()).forget();
 }
 
 void MediaControlService::GenerateMediaControlKeysTestEvent(
