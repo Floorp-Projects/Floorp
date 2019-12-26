@@ -22,8 +22,7 @@ Unable to install correct version of yamllint
 Try to install it manually with:
     $ pip install -U --require-hashes -r {}
 """.strip().format(YAMLLINT_REQUIREMENTS_PATH)
-
-YAMLLINT_FORMAT_REGEX = re.compile(b'(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
+YAMLLINT_FORMAT_REGEX = re.compile('(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
 
 results = []
 
