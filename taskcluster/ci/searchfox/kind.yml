@@ -54,6 +54,8 @@ jobs:
                 - linux64-node
                 - linux64-rust
                 - linux64-cbindgen
+                - lucetc
+                - wasi-sysroot
 
     macosx64-searchfox/debug:
         description: "MacOS X x64 Debug Cross-compile Searchfox"

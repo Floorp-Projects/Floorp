@@ -63,6 +63,8 @@ jobs:
                 - linux64-cbindgen
                 - linux64-nasm
                 - linux64-node
+                - lucetc
+                - wasi-sysroot
 
     win64-st-autotest/debug:
         description: "Win64 Debug Static Analysis Autotest"
