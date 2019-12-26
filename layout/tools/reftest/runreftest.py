@@ -7,6 +7,8 @@ Runs the reftest test harness.
 """
 from __future__ import print_function
 
+from __future__ import absolute_import, print_function
+
 import copy
 import json
 import multiprocessing
@@ -82,6 +84,18 @@ summaryLines = [('Successful', [('pass', 'pass'), ('loadOnly', 'load only')]),
                                     ('slow', 'slow')])]
 
 
+if sys.version_info[0] == 3:
+    def reraise_(tp_, value_, tb_=None):
+        if value_ is None:
+            value_ = tp_()
+        if value_.__traceback__ is not tb_:
+            raise value_.with_traceback(tb_)
+        raise value_
+
+else:
+    exec("def reraise_(tp_, value_, tb_=None):\n    raise tp_, value_, tb_\n")
+
+
 def update_mozinfo():
     """walk up directories to find mozinfo.json update the info"""
     # TODO: This should go in a more generic place, e.g. mozinfo
@@ -116,7 +130,7 @@ class ReftestThread(threading.Thread):
         process = subprocess.Popen(self.cmdargs, stdout=subprocess.PIPE)
         for chunk in self.chunkForMergedOutput(process.stdout):
             with printLock:
-                print(chunk,)
+                print(chunk, end=' ')
                 sys.stdout.flush()
         self.retcode = process.wait()
 
@@ -671,8 +685,9 @@ class RefTest(object):
         for (summaryObj, (text, categories)) in zip(summaryObjects, summaryLines):
             details = ', '.join(["%d %s" % (summaryObj[attribute], description) for (
                 attribute, description) in categories])
-            print('REFTEST INFO | ' + text + ': ' + str(summaryObj['total']) +
-                  ' (' + details + ')')
+            print(
+                'REFTEST INFO | ' + text + ': ' + str(summaryObj['total']) + ' (' + details + ')'
+                )
 
         return int(any(t.retcode != 0 for t in threads))
 
