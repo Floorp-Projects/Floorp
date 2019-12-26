@@ -75,24 +75,24 @@ class TestTestManifest(unittest.TestCase):
 
         # 6 tests total
         tests = manifest.active_tests(exists=False, **info)
-        self.assertEquals(len(tests), 6)
+        self.assertEqual(len(tests), 6)
 
         # only 3 tests for subsuite bar when foo==bar
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite('bar')],
                                       **info)
-        self.assertEquals(len(tests), 3)
+        self.assertEqual(len(tests), 3)
 
         # only 1 test for subsuite baz, regardless of conditions
         other = {'something': 'else'}
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite('baz')],
                                       **info)
-        self.assertEquals(len(tests), 1)
+        self.assertEqual(len(tests), 1)
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite('baz')],
                                       **other)
-        self.assertEquals(len(tests), 1)
+        self.assertEqual(len(tests), 1)
 
         # 4 tests match when the condition doesn't match (all tests except
         # the unconditional subsuite)
@@ -100,7 +100,7 @@ class TestTestManifest(unittest.TestCase):
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite()],
                                       **info)
-        self.assertEquals(len(tests), 5)
+        self.assertEqual(len(tests), 5)
 
         # test for illegal subsuite value
         manifest.tests[0]['subsuite'] = 'subsuite=bar,foo=="bar",type="nothing"'
