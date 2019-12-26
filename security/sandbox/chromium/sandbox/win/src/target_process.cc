@@ -290,15 +290,6 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
     return SBOX_ERROR_CREATE_FILE_MAPPING;
   }
 
-  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE | SECTION_QUERY;
-  HANDLE target_shared_section;
-  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
-                         sandbox_process_info_.process_handle(),
-                         &target_shared_section, access, false, 0)) {
-    *win_error = ::GetLastError();
-    return SBOX_ERROR_DUPLICATE_SHARED_SECTION;
-  }
-
   void* shared_memory = ::MapViewOfFile(
       shared_section_.Get(), FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
   if (!shared_memory) {
@@ -311,14 +302,6 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
 
   ResultCode ret;
   // Set the global variables in the target. These are not used on the broker.
-  g_shared_section = target_shared_section;
-  ret = TransferVariable("g_shared_section", &g_shared_section,
-                         sizeof(g_shared_section));
-  g_shared_section = nullptr;
-  if (SBOX_ALL_OK != ret) {
-    *win_error = ::GetLastError();
-    return ret;
-  }
   g_shared_IPC_size = shared_IPC_size;
   ret = TransferVariable("g_shared_IPC_size", &g_shared_IPC_size,
                          sizeof(g_shared_IPC_size));
@@ -342,6 +325,24 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
 
   if (!ipc_server_->Init(shared_memory, shared_IPC_size, kIPCChannelSize))
     return SBOX_ERROR_NO_SPACE;
+
+  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE | SECTION_QUERY;
+  HANDLE target_shared_section;
+  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
+                         sandbox_process_info_.process_handle(),
+                         &target_shared_section, access, false, 0)) {
+    *win_error = ::GetLastError();
+    return SBOX_ERROR_DUPLICATE_SHARED_SECTION;
+  }
+
+  g_shared_section = target_shared_section;
+  ret = TransferVariable("g_shared_section", &g_shared_section,
+                         sizeof(g_shared_section));
+  g_shared_section = nullptr;
+  if (SBOX_ALL_OK != ret) {
+    *win_error = ::GetLastError();
+    return ret;
+  }
 
   // After this point we cannot use this handle anymore.
   ::CloseHandle(sandbox_process_info_.TakeThreadHandle());
