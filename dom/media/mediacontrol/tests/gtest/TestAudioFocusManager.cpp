@@ -56,7 +56,7 @@ TEST(AudioFocusManager, TestAudioFocusNumsWhenEnableAudioFocusManagement)
 
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
-  service->AddMediaController(controller1);
+  service->AddMediaController(controller1.get());
   manager.RequestAudioFocus(FIRST_CONTROLLER_ID);
   ASSERT_TRUE(manager.GetAudioFocusNums() == 1);
 
@@ -64,15 +64,15 @@ TEST(AudioFocusManager, TestAudioFocusNumsWhenEnableAudioFocusManagement)
   // there would only one audio focus existing.
   RefPtr<MediaController> controller2 =
       new MediaController(SECOND_CONTROLLER_ID);
-  service->AddMediaController(controller2);
+  service->AddMediaController(controller2.get());
   manager.RequestAudioFocus(SECOND_CONTROLLER_ID);
   ASSERT_TRUE(manager.GetAudioFocusNums() == 1);
 
   manager.RevokeAudioFocus(SECOND_CONTROLLER_ID);
   ASSERT_TRUE(manager.GetAudioFocusNums() == 0);
 
-  service->RemoveMediaController(controller1);
-  service->RemoveMediaController(controller2);
+  service->RemoveMediaController(controller1.get());
+  service->RemoveMediaController(controller2.get());
 }
 
 TEST(AudioFocusManager, TestAudioFocusNumsWhenDisableAudioFocusManagement)
