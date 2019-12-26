@@ -45,9 +45,9 @@ static void NotifyMediaActiveChanged(const RefPtr<BrowsingContext>& aBc,
     ContentChild* contentChild = ContentChild::GetSingleton();
     Unused << contentChild->SendNotifyMediaActiveChanged(aBc, aActive);
   } else {
-    MediaControlService::GetService()
-        ->GetOrCreateControllerById(aBc->Id())
-        ->NotifyMediaActiveChanged(aActive);
+    RefPtr<MediaController> controller =
+        MediaControlService::GetService()->GetOrCreateControllerById(aBc->Id());
+    controller->NotifyMediaActiveChanged(aActive);
   }
 }
 
