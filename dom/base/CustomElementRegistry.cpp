@@ -1020,7 +1020,6 @@ void CustomElementRegistry::SetElementCreationCallback(
 
   RefPtr<CustomElementCreationCallback> callback = &aCallback;
   mElementCreationCallbacks.Put(nameAtom, callback.forget());
-  return;
 }
 
 void CustomElementRegistry::Upgrade(nsINode& aRoot) {
