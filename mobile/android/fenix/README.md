@@ -105,15 +105,7 @@ You will **need to sign `forPerformanceTest` variants.** For local development, 
 
 ```groovy
 android { // this line already exists
-
-    signingConfigs {
-        forPerformanceTest {
-            storeFile file("/Users/<user-name>/.android/debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
-        }
-    }
+    // ...
 
     buildTypes { // this line already exists
         // ...
@@ -121,13 +113,11 @@ android { // this line already exists
         forPerformanceTest releaseTemplate >> { // this line already exists.
             // ...
 
-            signingConfig signingConfigs.forPerformanceTest
+            signingConfig signingConfigs.debug
         }
     }
 }
 ```
-
-Where `<user-name>` is your OS user name. This sample assumes you are using macOS: if you're on another OS, please update the path appropriately.
 
 This recommendation will let you use AS just like you do with debug builds but **please do not check in these changes.**
 
