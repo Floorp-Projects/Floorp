@@ -36,18 +36,18 @@ class MediaControlService final : public nsIObserver {
 
   static RefPtr<MediaControlService> GetService();
 
-  RefPtr<MediaController> GetOrCreateControllerById(const uint64_t aId) const;
-  RefPtr<MediaController> GetControllerById(const uint64_t aId) const;
+  MediaController* GetOrCreateControllerById(const uint64_t aId) const;
+  MediaController* GetControllerById(const uint64_t aId) const;
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
   MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
     return mMediaControlKeysManager;
   }
 
-  void AddMediaController(const RefPtr<MediaController>& aController);
-  void RemoveMediaController(const RefPtr<MediaController>& aController);
+  void AddMediaController(MediaController* aController);
+  void RemoveMediaController(MediaController* aController);
   uint64_t GetControllersNum() const;
 
-  already_AddRefed<MediaController> GetLastAddedController();
+  MediaController* GetLastAddedController() const;
 
   // This event is used to generate a media event indicating media controller
   // amount changed.
