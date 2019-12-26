@@ -21,9 +21,8 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   webgl::DriverUnpackInfo dui;
   const GLint* swizzle = nullptr;
 
-  const auto fnAdd = [&](webgl::EffectiveFormat effFormat) {
-    MOZ_ASSERT_IF(swizzle, gl->IsSupported(gl::GLFeature::texture_swizzle));
-
+  const auto fnAdd = [&fua, &pi, &dui,
+                      &swizzle](webgl::EffectiveFormat effFormat) {
     auto usage = fua->EditUsage(effFormat);
     usage->textureSwizzleRGBA = swizzle;
     fua->AddTexUnpack(usage, pi, dui);
@@ -31,11 +30,10 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
     fua->AllowUnsizedTexFormat(pi, usage);
   };
 
-  bool useSizedFormats = true;
-  const bool hasSizedLegacyFormats = gl->IsCompatibilityProfile();
-  if (gl->IsGLES() && gl->Version() < 300) {
-    useSizedFormats = false;
-  }
+  const bool needsSwizzle = gl->IsCoreProfile();
+  MOZ_ASSERT_IF(needsSwizzle, gl->IsSupported(gl::GLFeature::texture_swizzle));
+
+  const bool needsSizedFormat = !gl->IsGLES();
 
   GLenum driverUnpackType = LOCAL_GL_HALF_FLOAT;
   if (!gl->IsSupported(gl::GLFeature::texture_half_float)) {
@@ -48,7 +46,7 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   pi = {LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT_OES};
   dui = {pi.format, pi.format, driverUnpackType};
   swizzle = nullptr;
-  if (useSizedFormats) {
+  if (needsSizedFormat) {
     dui.internalFormat = LOCAL_GL_RGBA16F;
   }
   fnAdd(webgl::EffectiveFormat::RGBA16F);
@@ -58,7 +56,7 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   pi = {LOCAL_GL_RGB, LOCAL_GL_HALF_FLOAT_OES};
   dui = {pi.format, pi.format, driverUnpackType};
   swizzle = nullptr;
-  if (useSizedFormats) {
+  if (needsSizedFormat) {
     dui.internalFormat = LOCAL_GL_RGB16F;
   }
   fnAdd(webgl::EffectiveFormat::RGB16F);
@@ -68,14 +66,11 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   pi = {LOCAL_GL_LUMINANCE, LOCAL_GL_HALF_FLOAT_OES};
   dui = {pi.format, pi.format, driverUnpackType};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_LUMINANCE16F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_R16F;
-      dui.unpackFormat = LOCAL_GL_RED;
-      swizzle = webgl::FormatUsageInfo::kLuminanceSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_R16F, LOCAL_GL_RED, driverUnpackType};
+    swizzle = webgl::FormatUsageInfo::kLuminanceSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_LUMINANCE16F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Luminance16F);
 
@@ -84,14 +79,11 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   pi = {LOCAL_GL_ALPHA, LOCAL_GL_HALF_FLOAT_OES};
   dui = {pi.format, pi.format, driverUnpackType};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_ALPHA16F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_R16F;
-      dui.unpackFormat = LOCAL_GL_RED;
-      swizzle = webgl::FormatUsageInfo::kAlphaSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_R16F, LOCAL_GL_RED, driverUnpackType};
+    swizzle = webgl::FormatUsageInfo::kAlphaSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_ALPHA16F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Alpha16F);
 
@@ -100,14 +92,11 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
   pi = {LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_HALF_FLOAT_OES};
   dui = {pi.format, pi.format, driverUnpackType};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_LUMINANCE_ALPHA16F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_RG16F;
-      dui.unpackFormat = LOCAL_GL_RG;
-      swizzle = webgl::FormatUsageInfo::kLumAlphaSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_RG16F, LOCAL_GL_RG, driverUnpackType};
+    swizzle = webgl::FormatUsageInfo::kLumAlphaSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_LUMINANCE_ALPHA16F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Luminance16FAlpha16F);
 }
