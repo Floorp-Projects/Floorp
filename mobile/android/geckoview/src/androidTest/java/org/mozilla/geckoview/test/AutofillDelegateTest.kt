@@ -408,6 +408,35 @@ class AutofillDelegateTest : BaseSessionTest() {
                 countAutofillNodes({ it.focused }), equalTo(1))
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test fun autofillAutocompleteAttribute() {
+        mainSession.loadTestPath(FORMS_AUTOCOMPLETE_HTML_PATH)
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
+            @AssertCalled(count = 3)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+            }
+        });
+
+        fun checkAutofillChild(child: Autofill.Node): Int {
+            var sum = 0
+            for (c in child.children) {
+               sum += checkAutofillChild(c!!)
+            }
+            if (child.hint == Autofill.Hint.NONE) {
+                return sum
+            }
+            assertThat("Should have HTML tag", child.tag, equalTo("input"))
+            return sum + 1
+        }
+
+        val root = mainSession.autofillSession.root
+        // Each page has 3 nodes for autofill.
+        assertThat("autofill hint count",
+                   checkAutofillChild(root), equalTo(6))
+    }
+
     class MockViewNode : ViewStructure() {
         private var mClassName: String? = null
         private var mEnabled = false
