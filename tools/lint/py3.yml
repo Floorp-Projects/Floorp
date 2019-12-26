@@ -10,7 +10,6 @@ py3:
         - ipc/ipdl
         - layout/reftests
         - layout/style/ServoCSSPropList.mako.py
-        - layout/tools/reftest
         - security/manager/ssl
         - testing/awsy
         - testing/condprofile/condprof/android.py
