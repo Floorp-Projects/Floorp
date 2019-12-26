@@ -5,11 +5,11 @@ ignore: |
 extends: default
 
 rules:
-  document-end:
-     present: false
-  document-start:
-     present: true
-  indentation:
-     spaces: 4
-  # Checks currently failing
-  line-length: disable
+    document-end:
+        present: false
+    document-start:
+        present: true
+    indentation:
+        spaces: 4
+    # Checks currently failing
+    line-length: disable
