@@ -11,7 +11,7 @@ def test_basic(lint, paths):
 
     assert len(results) == 2
 
-    assert "line too long (122 > 80 characters)'" in results[0].message
+    assert "line too long (122 > 80 characters)" in results[0].message
     assert results[0].level == "error"
     assert "bad.yml" in results[0].relpath
     assert results[0].lineno == 3
